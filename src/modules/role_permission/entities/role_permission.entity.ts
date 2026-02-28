@@ -1,7 +1,7 @@
 import { Permission } from 'src/modules/permission/entities/permission.entity';
-import { Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Entity, Index, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { Role } from '../../role/entities/role.entity';
-
+@Index('IDX_role_permissions_permission', ['permission_id'])
 @Entity('role_permissions')
 export class RolePermission {
   @PrimaryColumn('uuid')

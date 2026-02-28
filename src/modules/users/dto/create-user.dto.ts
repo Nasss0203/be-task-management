@@ -8,3 +8,14 @@ export class CreateUserDto {
   updatedAt?: Date;
   deletedAt?: Date | null;
 }
+
+export class RegisterUserDto {
+  email: string;
+  username: string;
+  password: string;
+}
+
+export class LoginUserDto {
+  email: string;
+  password: string;
+}
