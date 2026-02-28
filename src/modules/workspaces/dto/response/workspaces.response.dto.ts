@@ -1,6 +1,6 @@
-import { PlanTypeWorkspace } from '../domain/entities/workspace.entity';
+import { PlanTypeWorkspace } from '../../domain/entities/workspace.entity';
 
-export class CreateWorkspaceDto {
+export class WorkspaceResponseDto {
   id: string;
 
   name: string;

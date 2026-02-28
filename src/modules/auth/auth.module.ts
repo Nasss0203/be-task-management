@@ -7,12 +7,13 @@ import { JwtStrategy } from 'src/common/strategy/jwt.strategy';
 import { LocalStrategy } from 'src/common/strategy/local.strategy';
 import { RefreshToken } from '../refresh_token/entities/refresh_token.entity';
 import { User } from '../users/entities/user.entity';
+import { Workspace } from '../workspaces/domain/entities/workspace.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, RefreshToken]),
+    TypeOrmModule.forFeature([User, RefreshToken, Workspace]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({

@@ -1,7 +1,8 @@
 import { Role } from 'src/modules/role/entities/role.entity';
-import { Workspace } from 'src/modules/workspaces/entities/workspace.entity';
+import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   Index,
   JoinColumn,
@@ -32,5 +33,6 @@ export class WorkspaceMember {
   @JoinColumn({ name: 'role_id' })
   role: Role;
 
-  // user relation tuỳ bạn
+  @CreateDateColumn({ name: 'joined_at' })
+  joinedAt: Date;
 }

@@ -23,7 +23,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @ResponseMessage('Login user successfully!!')
   async login(@Auth() auth: IAuth, @Res({ passthrough: true }) res: Response) {
-    const { refresn_token, ...safeData } = await this.authService.login(auth);
+    const { access_token, refresn_token } = await this.authService.login(auth);
 
     res.cookie('refresh_token', refresn_token, {
       httpOnly: true,
@@ -33,6 +33,6 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return safeData;
+    return { access_token, refresn_token };
   }
 }

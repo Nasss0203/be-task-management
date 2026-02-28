@@ -1,4 +1,4 @@
-import { Workspace } from 'src/modules/workspaces/entities/workspace.entity';
+import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import {
   Column,
   CreateDateColumn,
@@ -12,6 +12,7 @@ import {
 export enum RoleName {
   OWNER = 'OWNER',
   MEMBER = 'MEMBER',
+  ADMIN = 'ADMIN',
 }
 @Index('UQ_role_workspace_name', ['workspace_id', 'name'], { unique: true })
 @Entity('roles')

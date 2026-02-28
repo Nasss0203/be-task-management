@@ -8,7 +8,7 @@ import { Role } from 'src/modules/role/entities/role.entity';
 import { RolePermission } from 'src/modules/role_permission/entities/role_permission.entity';
 import { UserProfile } from 'src/modules/user_profiles/entities/user_profile.entity';
 import { User } from 'src/modules/users/entities/user.entity';
-import { Workspace } from 'src/modules/workspaces/entities/workspace.entity';
+import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 
 @Module({
   imports: [

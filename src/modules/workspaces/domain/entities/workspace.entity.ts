@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
 export enum PlanTypeWorkspace {
   FREE = 'free',
   PRO = 'pro',

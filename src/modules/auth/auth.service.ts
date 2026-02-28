@@ -66,7 +66,7 @@ export class AuthService {
       // permissions: permissionCodes,
     };
 
-    const accessToken = this.jwt.sign(payload);
+    const accessToken = this.jwt.sign(payload, { expiresIn: '15m' });
 
     const newRefreshToken = randomBytes(64).toString('hex');
 
