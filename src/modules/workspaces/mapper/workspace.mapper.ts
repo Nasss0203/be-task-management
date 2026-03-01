@@ -1,6 +1,7 @@
 import { Workspace } from '../domain/entities/workspace.entity';
 import { WorkspaceModel } from '../domain/models/workspaces.model';
 import { WorkspaceResponseDto } from '../dto/response/workspaces.response.dto';
+import type { SaveWorkspaceInput } from '../interfaces/repositories/workspace.repository.interface';
 
 export class WorkspaceMapper {
   static toModel(entity: Workspace): WorkspaceModel {
@@ -15,15 +16,16 @@ export class WorkspaceMapper {
     );
   }
 
-  static toEntity(model: WorkspaceModel): Workspace {
+  /** Chấp nhận cả WorkspaceModel đủ field hoặc SaveWorkspaceInput (create mới, thiếu id/timestamps). */
+  static toEntity(model: WorkspaceModel | SaveWorkspaceInput): Workspace {
     const e = new Workspace();
-    e.id = model.id;
+    if (model.id != null) e.id = model.id;
     e.name = model.name;
     e.slug = model.slug;
     e.planType = model.planType;
-    e.createdAt = model.createdAt;
-    e.updatedAt = model.updatedAt;
-    e.deletedAt = model.deletedAt;
+    if (model.createdAt != null) e.createdAt = model.createdAt;
+    if (model.updatedAt != null) e.updatedAt = model.updatedAt;
+    if (model.deletedAt !== undefined) e.deletedAt = model.deletedAt;
     return e;
   }
 
@@ -35,7 +37,6 @@ export class WorkspaceMapper {
       planType: model.planType,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
-      deletedAt: model.deletedAt,
     };
   }
 }

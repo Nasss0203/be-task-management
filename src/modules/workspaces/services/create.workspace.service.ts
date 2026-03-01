@@ -27,10 +27,7 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
     userId: string;
     createWorkspaceDto: CreateWorkspaceDto;
   }): Promise<WorkspaceModel> {
-    console.log('🚀 ~ userId~', userId);
-    console.log('🚀 ~ createWorkspaceDto~', createWorkspaceDto);
     const slug = generateSlug(createWorkspaceDto.name).toLowerCase();
-    console.log('🚀 ~ slug~', slug);
 
     return this.uow.runInTransaction(async () => {
       const exists = await this.workspaceRepo.existsBySlug(slug);
@@ -43,9 +40,8 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
       const workspace = await this.workspaceRepo.save({
         ...createWorkspaceDto,
         slug,
-        planType: PlanTypeWorkspace.FREE,
+        planType: createWorkspaceDto.planType ?? PlanTypeWorkspace.FREE,
       });
-      console.log('🚀 ~ workspace~', workspace);
 
       //  // 3) đảm bảo roles của tenant đã có (owner/member/...)
       //   const { ownerRole } = await this.rbacHelper.ensureTenantRoles(tenant.id);

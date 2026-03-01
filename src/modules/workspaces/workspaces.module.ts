@@ -5,15 +5,13 @@ import { CreateWorkspaceApplicationImpl } from './applications/create.workspace.
 import { WorkspacesController } from './controller/workspaces.controller';
 import { Workspace } from './domain/entities/workspace.entity';
 import { WORKSPACETYPES } from './interfaces/types';
-import { WorkspaceTypeOrmRepository } from './repositories/workspace.typeorm.repository';
+import { WorkspaceRepositoryImpl } from './repositories/workspace.repository';
 import { CreateWorkSpaceServiceImpl } from './services/create.workspace.service';
-import { WorkspacesService } from './workspaces.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Workspace])],
   controllers: [WorkspacesController],
   providers: [
-    WorkspacesService,
     {
       provide: WORKSPACETYPES.applications.CreateWorkspaceApplication,
       useClass: CreateWorkspaceApplicationImpl,
@@ -24,7 +22,7 @@ import { WorkspacesService } from './workspaces.service';
     },
     {
       provide: WORKSPACETYPES.repositories.WorkspaceRepository,
-      useClass: WorkspaceTypeOrmRepository,
+      useClass: WorkspaceRepositoryImpl,
     },
 
     {
@@ -32,11 +30,6 @@ import { WorkspacesService } from './workspaces.service';
       useClass: TypeOrmUnitOfWork,
     },
   ],
-  exports: [
-    {
-      provide: WORKSPACETYPES.repositories.WorkspaceRepository,
-      useClass: WorkspaceTypeOrmRepository,
-    },
-  ],
+  exports: [WORKSPACETYPES.repositories.WorkspaceRepository],
 })
 export class WorkspacesModule {}

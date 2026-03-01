@@ -7,7 +7,7 @@ import { WorkspaceRepository } from '../interfaces/repositories/workspace.reposi
 import { WorkspaceMapper } from '../mapper/workspace.mapper';
 
 @Injectable()
-export class WorkspaceTypeOrmRepository implements WorkspaceRepository {
+export class WorkspaceRepositoryImpl implements WorkspaceRepository {
   constructor(
     @InjectRepository(Workspace)
     private readonly repo: Repository<Workspace>,
