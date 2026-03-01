@@ -5,8 +5,10 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filter/http-exception';
+import { JwtAuthGuard } from './common/guard/jwt-auth.guard';
 import { TransformInterceptor } from './common/interceptor/transform.interceptor';
 import { MyLogger } from './log/my.logger';
+import { RbacSeedService } from './modules/seed/rbac.seed.service';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -17,6 +19,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalInterceptors(new TransformInterceptor(reflector));
   app.useGlobalFilters(new HttpExceptionFilter(httpAdapterHost));
+  app.useGlobalGuards(new JwtAuthGuard(reflector));
 
   app.use(cookieParser());
   app.enableCors({
@@ -39,6 +42,14 @@ async function bootstrap() {
     type: VersioningType.URI,
     defaultVersion: ['1'],
   });
+
+  const isSeed = process.argv.includes('seed');
+  if (isSeed) {
+    const seed = app.get(RbacSeedService);
+    console.log(await seed.seedAll());
+    await app.close();
+    return;
+  }
   await app.listen(configService.get<string | any>('PORT'));
 }
 bootstrap();
