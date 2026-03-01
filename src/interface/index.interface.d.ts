@@ -1,3 +1,5 @@
+import type { EntityManager } from 'typeorm';
+
 export interface UnitOfWork {
-  runInTransaction<T>(fn: () => Promise<T>): Promise<T>;
+  runInTransaction<T>(fn: (manager: EntityManager) => Promise<T>): Promise<T>;
 }

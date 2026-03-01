@@ -1,0 +1,7 @@
+export class WorkspaceMemberResponseDto {
+  id: string;
+  workspace_id: string;
+  user_id: string;
+  role_id: string;
+  joinedAt: Date;
+}

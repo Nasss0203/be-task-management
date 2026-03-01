@@ -4,12 +4,12 @@ import { ResponseMessage } from 'src/common/decorator/response-message.decorator
 import { type IAuth } from 'src/types/auth';
 import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
 import { type CreateWorkspaceApplication } from '../interfaces/applications/create.workspace.application.interface';
-import { WORKSPACETYPES } from '../interfaces/types';
+import { WORKSPACE_TYPES } from '../interfaces/types';
 
 @Controller('workspaces')
 export class WorkspacesController {
   constructor(
-    @Inject(WORKSPACETYPES.applications.CreateWorkspaceApplication)
+    @Inject(WORKSPACE_TYPES.applications.CreateWorkspaceApplication)
     private readonly createWorkspaceApp: CreateWorkspaceApplication,
   ) {}
 

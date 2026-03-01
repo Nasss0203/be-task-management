@@ -28,7 +28,7 @@ export class Role {
 
   @ManyToOne(() => Workspace, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'workspace_id' })
-  workspace?: Workspace | null;
+  workspace: Workspace | null;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;

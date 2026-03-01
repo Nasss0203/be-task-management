@@ -1,4 +1,4 @@
-export const WORKSPACETYPES = {
+export const WORKSPACE_TYPES = {
   services: {
     CreateWorkspaceService: 'CreateWorkspaceService',
     RbacHelper: 'RbacHelper',
