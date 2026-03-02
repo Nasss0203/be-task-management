@@ -1,23 +1,31 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { type UnitOfWork } from 'src/interface/index.interface';
+import { Role } from 'src/modules/role/entities/role.entity';
+import { type CreateUserWorkspaceService } from 'src/modules/workspace_members/interfaces/services/create.user_workspace.service.interface';
+import { USER_WORKSPACE_TYPES } from 'src/modules/workspace_members/interfaces/types';
 import { generateSlug } from 'src/utils';
+import { Repository } from 'typeorm';
 import { PlanTypeWorkspace } from '../domain/entities/workspace.entity';
 import { WorkspaceModel } from '../domain/models/workspaces.model';
 import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
 import { type WorkspaceRepository } from '../interfaces/repositories/workspace.repository.interface';
 import { CreateWorkspaceService } from '../interfaces/services/create.workspace.service.interface';
-import { WORKSPACETYPES } from '../interfaces/types';
+import { WORKSPACE_TYPES } from '../interfaces/types';
 
 @Injectable()
 export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
   constructor(
-    @Inject(WORKSPACETYPES.repositories.WorkspaceRepository)
+    @Inject(WORKSPACE_TYPES.repositories.WorkspaceRepository)
     private readonly workspaceRepo: WorkspaceRepository,
 
-    // @Inject(WORKSPACETYPES.services.RbacHelper)
-    // private readonly rbacHelper: RbacHelper,
+    @Inject(USER_WORKSPACE_TYPES.services.CreateUserWorkspaceService)
+    private readonly createUserWorkspaceService: CreateUserWorkspaceService,
 
-    @Inject(WORKSPACETYPES.uow.UnitOfWork)
+    @InjectRepository(Role)
+    private readonly roleRepo: Repository<Role>,
+
+    @Inject(WORKSPACE_TYPES.uow.UnitOfWork)
     private readonly uow: UnitOfWork,
   ) {}
   async create({
@@ -43,15 +51,15 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
         planType: createWorkspaceDto.planType ?? PlanTypeWorkspace.FREE,
       });
 
-      //  // 3) đảm bảo roles của tenant đã có (owner/member/...)
-      //   const { ownerRole } = await this.rbacHelper.ensureTenantRoles(tenant.id);
+      //join membership
+      await this.createUserWorkspaceService.create({
+        user_id: userId,
+        workspace_id: workspace.id,
+      });
 
-      //   // 4) gán owner membership cho user tạo workspace
-      //   await this.userTenantRepo.addMember({
-      //     userId,
-      //     tenantId: tenant.id,
-      //     roleId: ownerRole.id,
-      //   });
+      // Todo: ensure roles
+
+      // Todo: assign OWNER to user_roles
 
       return workspace;
     });

@@ -13,7 +13,7 @@ import { RbacSeedService } from './modules/seed/rbac.seed.service';
 import { SeedsModule } from './modules/seed/seeds.module';
 import { UserProfilesModule } from './modules/user_profiles/user_profiles.module';
 import { UsersModule } from './modules/users/users.module';
-import { WorkspaceMembersModule } from './modules/workspace_members/workspace_members.module';
+import { UserWorkspacesModule } from './modules/workspace_members/user_workspace.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 
 @Module({
@@ -39,7 +39,7 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
     RolePermissionModule,
     RefreshTokenModule,
     UserProfilesModule,
-    WorkspaceMembersModule,
+    UserWorkspacesModule,
   ],
   controllers: [AppController],
   providers: [
