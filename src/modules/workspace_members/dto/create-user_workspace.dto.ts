@@ -1,7 +1,7 @@
-export class CreateWorkspaceMemberDto {
+export class CreateUserWorkspaceDto {
   id?: string;
   workspace_id: string;
   user_id: string;
-  role_id: string;
   joinedAt?: Date;
+  lastOpenedAt?: Date;
 }

@@ -1,9 +1,9 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { type UnitOfWork } from 'src/interface/index.interface';
-import { Role, RoleName } from 'src/modules/role/entities/role.entity';
-import { type CreateWorkspaceMemberService } from 'src/modules/workspace_members/interfaces/services/create.workspace-member.service.interface';
-import { WORKSPACE_MEMBER_TYPES } from 'src/modules/workspace_members/interfaces/types';
+import { Role } from 'src/modules/role/entities/role.entity';
+import { type CreateUserWorkspaceService } from 'src/modules/workspace_members/interfaces/services/create.user_workspace.service.interface';
+import { USER_WORKSPACE_TYPES } from 'src/modules/workspace_members/interfaces/types';
 import { generateSlug } from 'src/utils';
 import { Repository } from 'typeorm';
 import { PlanTypeWorkspace } from '../domain/entities/workspace.entity';
@@ -19,8 +19,8 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
     @Inject(WORKSPACE_TYPES.repositories.WorkspaceRepository)
     private readonly workspaceRepo: WorkspaceRepository,
 
-    @Inject(WORKSPACE_MEMBER_TYPES.services.CreateWorkspaceMemberService)
-    private readonly createWorkspaceMemberService: CreateWorkspaceMemberService,
+    @Inject(USER_WORKSPACE_TYPES.services.CreateUserWorkspaceService)
+    private readonly createUserWorkspaceService: CreateUserWorkspaceService,
 
     @InjectRepository(Role)
     private readonly roleRepo: Repository<Role>,
@@ -51,19 +51,15 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
         planType: createWorkspaceDto.planType ?? PlanTypeWorkspace.FREE,
       });
 
-      // Todo: Create module role
-      const ownerRole = await this.roleRepo.save(
-        this.roleRepo.create({
-          workspace_id: workspace.id,
-          name: RoleName.OWNER,
-        }),
-      );
-
-      await this.createWorkspaceMemberService.create({
+      //join membership
+      await this.createUserWorkspaceService.create({
         user_id: userId,
-        role_id: ownerRole.id,
         workspace_id: workspace.id,
       });
+
+      // Todo: ensure roles
+
+      // Todo: assign OWNER to user_roles
 
       return workspace;
     });

@@ -1,11 +1,11 @@
-export const WORKSPACE_MEMBER_TYPES = {
+export const USER_WORKSPACE_TYPES = {
   services: {
-    CreateWorkspaceMemberService: 'CreateWorkspaceMemberService',
+    CreateUserWorkspaceService: 'CreateUserWorkspaceService',
   },
   applications: {
-    CreateWorkspaceMemberApplication: 'CreateWorkspaceMemberApplication',
+    CreateUserWorkspaceApplication: 'CreateUserWorkspaceApplication',
   },
   repositories: {
-    WorkspaceMemberRepository: 'IWorkspaceMemberRepository',
+    UserWorkspaceRepository: 'IUserWorkspaceRepository',
   },
 };
