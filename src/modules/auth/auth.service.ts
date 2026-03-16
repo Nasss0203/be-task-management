@@ -62,8 +62,6 @@ export class AuthService {
       id: user.id,
       email: user.email,
       username: user.username,
-      // tenantId,
-      // permissions: permissionCodes,
     };
 
     const accessToken = this.jwt.sign(payload, { expiresIn: '15m' });

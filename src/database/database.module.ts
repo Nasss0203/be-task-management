@@ -7,8 +7,8 @@ import { RefreshToken } from 'src/modules/refresh_token/entities/refresh_token.e
 import { Role } from 'src/modules/role/entities/role.entity';
 import { RolePermission } from 'src/modules/role_permission/entities/role_permission.entity';
 import { UserProfile } from 'src/modules/user_profiles/entities/user_profile.entity';
+import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
 import { User } from 'src/modules/users/entities/user.entity';
-import { UserWorkspace } from 'src/modules/workspace_members/domain/entities/user_workspace.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 
 @Module({
