@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { UserWorkspace } from '../domain/entities/user_workspace.entity';
 import { UserWorkspaceModel } from '../domain/models/user_workspace.model';
 import {
@@ -16,9 +16,17 @@ export class UserWorkspaceRepositoryImpl implements UserWorkspaceRepository {
     private readonly repo: Repository<UserWorkspace>,
   ) {}
 
-  async create(input: SaveUserWorkspaceInput): Promise<UserWorkspaceModel> {
+  private resolveRepo(manager?: EntityManager): Repository<UserWorkspace> {
+    return manager ? manager.getRepository(UserWorkspace) : this.repo;
+  }
+
+  async create(
+    input: SaveUserWorkspaceInput,
+    manager?: EntityManager,
+  ): Promise<UserWorkspaceModel> {
+    const repo = this.resolveRepo(manager);
     const entity = WorkspaceMemeberMapper.toEntity(input);
-    const saved = await this.repo.save(entity);
+    const saved = await repo.save(entity);
 
     return WorkspaceMemeberMapper.toModel(saved);
   }

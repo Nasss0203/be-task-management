@@ -1,3 +1,4 @@
+import { EntityManager } from 'typeorm';
 import { WorkspaceModel } from '../../domain/models/workspaces.model';
 
 export type SaveWorkspaceInput = Pick<
@@ -7,6 +8,9 @@ export type SaveWorkspaceInput = Pick<
   Partial<Pick<WorkspaceModel, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>>;
 
 export interface WorkspaceRepository {
-  existsBySlug(slug: string): Promise<boolean>;
-  save(workspace: WorkspaceModel | SaveWorkspaceInput): Promise<WorkspaceModel>;
+  existsBySlug(slug: string, manager?: EntityManager): Promise<boolean>;
+  save(
+    workspace: WorkspaceModel | SaveWorkspaceInput,
+    manager?: EntityManager,
+  ): Promise<WorkspaceModel>;
 }

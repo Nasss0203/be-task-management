@@ -32,28 +32,31 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
     const slug = generateSlug(createWorkspaceDto.name).toLowerCase();
 
     return this.uow.runInTransaction(async (manager) => {
-      const exists = await this.workspaceRepo.existsBySlug(slug);
-      if (exists)
+      const exists = await this.workspaceRepo.existsBySlug(slug, manager);
+      if (exists) {
         throw new HttpException(
           'Workspace slug already exists',
           HttpStatus.CONFLICT,
         );
+      }
 
-      const workspace = await this.workspaceRepo.save({
-        ...createWorkspaceDto,
-        slug,
-        planType: createWorkspaceDto.planType ?? PlanTypeWorkspace.FREE,
-      });
+      const workspace = await this.workspaceRepo.save(
+        {
+          ...createWorkspaceDto,
+          slug,
+          planType: createWorkspaceDto.planType ?? PlanTypeWorkspace.FREE,
+        },
+        manager,
+      );
+      console.log('🚀 ~ workspace~', workspace);
 
-      //join membership
-      await this.createUserWorkspaceService.create({
-        user_id: userId,
-        workspace_id: workspace.id,
-      });
-
-      // Todo: ensure roles
-
-      // Todo: assign OWNER to user_roles
+      await this.createUserWorkspaceService.create(
+        {
+          user_id: userId,
+          workspace_id: workspace.id,
+        },
+        manager,
+      );
 
       return workspace;
     });
