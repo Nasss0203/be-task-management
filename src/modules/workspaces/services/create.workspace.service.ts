@@ -1,11 +1,8 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { type UnitOfWork } from 'src/interface/index.interface';
-import { Role } from 'src/modules/role/entities/role.entity';
-import { type CreateUserWorkspaceService } from 'src/modules/workspace_members/interfaces/services/create.user_workspace.service.interface';
-import { USER_WORKSPACE_TYPES } from 'src/modules/workspace_members/interfaces/types';
+import { type CreateUserWorkspaceService } from 'src/modules/user_workspace/interfaces/services/create.user_workspace.service.interface';
+import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/types';
 import { generateSlug } from 'src/utils';
-import { Repository } from 'typeorm';
 import { PlanTypeWorkspace } from '../domain/entities/workspace.entity';
 import { WorkspaceModel } from '../domain/models/workspaces.model';
 import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
@@ -22,9 +19,6 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
     @Inject(USER_WORKSPACE_TYPES.services.CreateUserWorkspaceService)
     private readonly createUserWorkspaceService: CreateUserWorkspaceService,
 
-    @InjectRepository(Role)
-    private readonly roleRepo: Repository<Role>,
-
     @Inject(WORKSPACE_TYPES.uow.UnitOfWork)
     private readonly uow: UnitOfWork,
   ) {}
@@ -37,29 +31,32 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
   }): Promise<WorkspaceModel> {
     const slug = generateSlug(createWorkspaceDto.name).toLowerCase();
 
-    return this.uow.runInTransaction(async () => {
-      const exists = await this.workspaceRepo.existsBySlug(slug);
-      if (exists)
+    return this.uow.runInTransaction(async (manager) => {
+      const exists = await this.workspaceRepo.existsBySlug(slug, manager);
+      if (exists) {
         throw new HttpException(
           'Workspace slug already exists',
           HttpStatus.CONFLICT,
         );
+      }
 
-      const workspace = await this.workspaceRepo.save({
-        ...createWorkspaceDto,
-        slug,
-        planType: createWorkspaceDto.planType ?? PlanTypeWorkspace.FREE,
-      });
+      const workspace = await this.workspaceRepo.save(
+        {
+          ...createWorkspaceDto,
+          slug,
+          planType: createWorkspaceDto.planType ?? PlanTypeWorkspace.FREE,
+        },
+        manager,
+      );
+      console.log('🚀 ~ workspace~', workspace);
 
-      //join membership
-      await this.createUserWorkspaceService.create({
-        user_id: userId,
-        workspace_id: workspace.id,
-      });
-
-      // Todo: ensure roles
-
-      // Todo: assign OWNER to user_roles
+      await this.createUserWorkspaceService.create(
+        {
+          user_id: userId,
+          workspace_id: workspace.id,
+        },
+        manager,
+      );
 
       return workspace;
     });

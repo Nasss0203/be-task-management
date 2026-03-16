@@ -16,7 +16,6 @@ export class WorkspaceMapper {
     );
   }
 
-  /** Chấp nhận cả WorkspaceModel đủ field hoặc SaveWorkspaceInput (create mới, thiếu id/timestamps). */
   static toEntity(model: WorkspaceModel | SaveWorkspaceInput): Workspace {
     const e = new Workspace();
     if (model.id != null) e.id = model.id;

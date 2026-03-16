@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { EntityManager } from 'typeorm';
 import { UserWorkspaceModel } from '../domain/models/user_workspace.model';
 import { CreateUserWorkspaceDto } from '../dto/create-user_workspace.dto';
 import { type UserWorkspaceRepository } from '../interfaces/repositories/user_workspace.repository.interface';
@@ -13,8 +14,9 @@ export class CreateUserWorkspaceServiceImpl implements CreateUserWorkspaceServic
   ) {}
   async create(
     createUserWorkspaceDto: CreateUserWorkspaceDto,
+    manager?: EntityManager,
   ): Promise<UserWorkspaceModel> {
-    const create = await this.repo.create(createUserWorkspaceDto);
+    const create = await this.repo.create(createUserWorkspaceDto, manager);
 
     return create;
   }

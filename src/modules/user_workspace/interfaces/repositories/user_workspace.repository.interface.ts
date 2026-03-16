@@ -1,3 +1,4 @@
+import { EntityManager } from 'typeorm';
 import { UserWorkspaceModel } from '../../domain/models/user_workspace.model';
 
 export type SaveUserWorkspaceInput = Pick<
@@ -7,5 +8,8 @@ export type SaveUserWorkspaceInput = Pick<
   Partial<Pick<UserWorkspaceModel, 'id' | 'joinedAt' | 'lastOpenedAt'>>;
 
 export interface UserWorkspaceRepository {
-  create(input: SaveUserWorkspaceInput): Promise<UserWorkspaceModel>;
+  create(
+    input: SaveUserWorkspaceInput,
+    manager?: EntityManager,
+  ): Promise<UserWorkspaceModel>;
 }

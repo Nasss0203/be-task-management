@@ -12,8 +12,8 @@ import { RolePermissionModule } from './modules/role_permission/role_permission.
 import { RbacSeedService } from './modules/seed/rbac.seed.service';
 import { SeedsModule } from './modules/seed/seeds.module';
 import { UserProfilesModule } from './modules/user_profiles/user_profiles.module';
+import { UserWorkspacesModule } from './modules/user_workspace/user_workspace.module';
 import { UsersModule } from './modules/users/users.module';
-import { UserWorkspacesModule } from './modules/workspace_members/user_workspace.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 
 @Module({
