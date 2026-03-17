@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
-import { Role } from '../role/entities/role.entity';
+import { Role } from '../role/domain/entities/role.entity';
 import { UserWorkspace } from '../user_workspace/domain/entities/user_workspace.entity';
 import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
 import { CreateWorkspaceApplicationImpl } from './applications/create.workspace.application';

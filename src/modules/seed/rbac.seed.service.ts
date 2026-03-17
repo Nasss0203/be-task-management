@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Permission } from 'src/modules/permission/entities/permission.entity';
-import { Role, RoleName } from 'src/modules/role/entities/role.entity';
+import { Role, RoleName } from 'src/modules/role/domain/entities/role.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import { DataSource, In } from 'typeorm';
 import { RolePermission } from '../role_permission/entities/role_permission.entity';

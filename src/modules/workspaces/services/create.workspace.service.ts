@@ -40,6 +40,7 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
         );
       }
 
+      // Create workspace
       const workspace = await this.workspaceRepo.save(
         {
           ...createWorkspaceDto,
@@ -48,8 +49,8 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
         },
         manager,
       );
-      console.log('🚀 ~ workspace~', workspace);
 
+      // creator joined workspace
       await this.createUserWorkspaceService.create(
         {
           user_id: userId,
@@ -57,6 +58,17 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
         },
         manager,
       );
+
+      // 3. Seed roles mặc định
+
+      // 4. Create user_roles (assign Owner cho creator)
+      // 5. Prepare / show templates
+      // 6. Nếu user chọn template:
+      // 6.1 Create project
+      // 6.2 Create board
+      // 6.3 Seed task status
+      // 6.4 Seed task priority
+      // 6.5 Create sample tasks
 
       return workspace;
     });

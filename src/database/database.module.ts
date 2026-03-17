@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Permission } from 'src/modules/permission/entities/permission.entity';
 import { RefreshToken } from 'src/modules/refresh_token/entities/refresh_token.entity';
-import { Role } from 'src/modules/role/entities/role.entity';
+import { Role } from 'src/modules/role/domain/entities/role.entity';
 import { RolePermission } from 'src/modules/role_permission/entities/role_permission.entity';
 import { UserProfile } from 'src/modules/user_profiles/entities/user_profile.entity';
 import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
