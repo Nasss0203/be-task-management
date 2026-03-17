@@ -13,15 +13,14 @@ export class RoleMapper {
     );
   }
 
-  static toEntity(model: RoleModel | SaveRoleInput): Role {
-    const e = new Role();
-    if (model.id != null) e.id = model.id;
-    e.name = model.name;
-    if (model.workspace_id != null) e.workspace_id = model.workspace_id;
-    if (model.created_at != null) e.created_at = model.created_at;
-    return e;
+  static toEntity(data: RoleModel | SaveRoleInput): Role {
+    const entity = new Role();
+    entity.id = data.id!;
+    entity.name = data.name;
+    entity.workspace_id = data.workspace_id;
+    entity.created_at = data.created_at!;
+    return entity;
   }
-
   static toResponse(model: RoleModel): RoleResponseDto {
     return {
       id: model.id,

@@ -1,5 +1,8 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { type UnitOfWork } from 'src/interface/index.interface';
+import { RoleName } from 'src/modules/role/domain/entities/role.entity';
+import { type RoleRepository } from 'src/modules/role/interfaces/repositories/role.repository.interface';
+import { ROLE_TYPES } from 'src/modules/role/interfaces/types';
 import { type CreateUserWorkspaceService } from 'src/modules/user_workspace/interfaces/services/create.user_workspace.service.interface';
 import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/types';
 import { generateSlug } from 'src/utils';
@@ -18,6 +21,9 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
 
     @Inject(USER_WORKSPACE_TYPES.services.CreateUserWorkspaceService)
     private readonly createUserWorkspaceService: CreateUserWorkspaceService,
+
+    @Inject(ROLE_TYPES.repositories.RoleRepository)
+    private readonly roleRepository: RoleRepository,
 
     @Inject(WORKSPACE_TYPES.uow.UnitOfWork)
     private readonly uow: UnitOfWork,
@@ -60,6 +66,30 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
       );
 
       // 3. Seed roles mặc định
+      const roles = await this.roleRepository.saveMany(
+        [
+          {
+            name: RoleName.OWNER,
+            workspace_id: workspace.id,
+          },
+          {
+            name: RoleName.MEMBER,
+            workspace_id: workspace.id,
+          },
+        ],
+        manager,
+      );
+      console.log('🚀 ~ roles~', roles);
+
+      const ownerRole = roles.find((role: any) => role.name === RoleName.OWNER);
+      console.log('🚀 ~ ownerRole~', ownerRole);
+
+      if (!ownerRole) {
+        throw new HttpException(
+          'Owner role was not created',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
 
       // 4. Create user_roles (assign Owner cho creator)
       // 5. Prepare / show templates

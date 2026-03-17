@@ -9,4 +9,9 @@ export interface RoleRepository {
     workspace: RoleModel | SaveRoleInput,
     manager?: EntityManager,
   ): Promise<RoleModel>;
+
+  saveMany(
+    roles: Array<RoleModel | SaveRoleInput>,
+    manager?: EntityManager,
+  ): Promise<RoleModel[]>;
 }

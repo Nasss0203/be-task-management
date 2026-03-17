@@ -1,7 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { UserRolesService } from './user_roles.service';
-import { CreateUserRoleDto } from './dto/create-user_role.dto';
-import { UpdateUserRoleDto } from './dto/update-user_role.dto';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { CreateUserRoleDto } from '../dto/create-user_role.dto';
+import { UpdateUserRoleDto } from '../dto/update-user_role.dto';
+import { UserRolesService } from '../user_roles.service';
 
 @Controller('user-roles')
 export class UserRolesController {
@@ -23,7 +31,10 @@ export class UserRolesController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserRoleDto: UpdateUserRoleDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateUserRoleDto: UpdateUserRoleDto,
+  ) {
     return this.userRolesService.update(+id, updateUserRoleDto);
   }
 

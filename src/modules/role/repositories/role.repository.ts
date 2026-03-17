@@ -19,12 +19,22 @@ export class RoleRepositoryImpl implements RoleRepository {
     return manager ? manager.getRepository(Role) : this.repo;
   }
   async save(
-    workspace: RoleModel | SaveRoleInput,
+    role: RoleModel | SaveRoleInput,
     manager?: EntityManager,
   ): Promise<RoleModel> {
     const repo = this.getRepo(manager);
-    const entity = RoleMapper.toEntity(workspace as RoleModel);
+    const entity = RoleMapper.toEntity(role as RoleModel);
     const saved = await repo.save(entity);
     return RoleMapper.toModel(saved);
+  }
+
+  async saveMany(
+    roles: Array<RoleModel | SaveRoleInput>,
+    manager?: EntityManager,
+  ): Promise<RoleModel[]> {
+    const repo = this.getRepo(manager);
+    const entities = roles.map((role) => RoleMapper.toEntity(role));
+    const saved = await repo.save(entities);
+    return saved.map((item) => RoleMapper.toModel(item));
   }
 }

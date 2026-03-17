@@ -9,7 +9,7 @@ import { ROLE_TYPES } from '../interfaces/types';
 export class CreateRoleServiceImpl implements CreateRoleService {
   constructor(
     @Inject(ROLE_TYPES.repositories.RoleRepository)
-    private readonly workspaceRepo: RoleRepository,
+    private readonly roleRepo: RoleRepository,
   ) {}
   async create(createRoleDto: CreateRoleDto): Promise<RoleModel> {
     throw new Error('Method not implemented.');
