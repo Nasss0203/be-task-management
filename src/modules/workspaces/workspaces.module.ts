@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { Role } from '../role/domain/entities/role.entity';
 import { RoleModule } from '../role/role.module';
+import { UserRolesModule } from '../user_roles/user_roles.module';
 import { UserWorkspace } from '../user_workspace/domain/entities/user_workspace.entity';
 import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
 import { CreateWorkspaceApplicationImpl } from './applications/create.workspace.application';
@@ -17,6 +18,7 @@ import { CreateWorkSpaceServiceImpl } from './services/create.workspace.service'
     TypeOrmModule.forFeature([Workspace, Role, UserWorkspace]),
     UserWorkspacesModule,
     RoleModule,
+    UserRolesModule,
   ],
   controllers: [WorkspacesController],
   providers: [

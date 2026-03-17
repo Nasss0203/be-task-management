@@ -3,6 +3,8 @@ import { type UnitOfWork } from 'src/interface/index.interface';
 import { RoleName } from 'src/modules/role/domain/entities/role.entity';
 import { type RoleRepository } from 'src/modules/role/interfaces/repositories/role.repository.interface';
 import { ROLE_TYPES } from 'src/modules/role/interfaces/types';
+import { type CreateUserRoleService } from 'src/modules/user_roles/interfaces/services/create.user_role.service.interface';
+import { USER_ROLE_TYPES } from 'src/modules/user_roles/interfaces/types';
 import { type CreateUserWorkspaceService } from 'src/modules/user_workspace/interfaces/services/create.user_workspace.service.interface';
 import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/types';
 import { generateSlug } from 'src/utils';
@@ -27,7 +29,11 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
 
     @Inject(WORKSPACE_TYPES.uow.UnitOfWork)
     private readonly uow: UnitOfWork,
+
+    @Inject(USER_ROLE_TYPES.services.CreateUserRoleService)
+    private readonly createUserRoleService: CreateUserRoleService,
   ) {}
+
   async create({
     userId,
     createWorkspaceDto,
@@ -79,10 +85,8 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
         ],
         manager,
       );
-      console.log('🚀 ~ roles~', roles);
 
       const ownerRole = roles.find((role: any) => role.name === RoleName.OWNER);
-      console.log('🚀 ~ ownerRole~', ownerRole);
 
       if (!ownerRole) {
         throw new HttpException(
@@ -92,12 +96,29 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
       }
 
       // 4. Create user_roles (assign Owner cho creator)
+      await this.createUserRoleService.create(
+        {
+          ...this.createUserRoleService,
+          user_id: userId,
+          role_id: ownerRole.id,
+          workspace_id: workspace.id,
+          assigned_by: userId,
+        },
+        manager,
+      );
+
       // 5. Prepare / show templates
+
       // 6. Nếu user chọn template:
+
       // 6.1 Create project
+
       // 6.2 Create board
+
       // 6.3 Seed task status
+
       // 6.4 Seed task priority
+
       // 6.5 Create sample tasks
 
       return workspace;

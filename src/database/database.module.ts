@@ -7,6 +7,7 @@ import { RefreshToken } from 'src/modules/refresh_token/entities/refresh_token.e
 import { Role } from 'src/modules/role/domain/entities/role.entity';
 import { RolePermission } from 'src/modules/role_permission/entities/role_permission.entity';
 import { UserProfile } from 'src/modules/user_profiles/entities/user_profile.entity';
+import { UserRole } from 'src/modules/user_roles/domain/entities/user_role.entity';
 import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
@@ -36,6 +37,7 @@ import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.enti
           UserProfile,
           RefreshToken,
           UserWorkspace,
+          UserRole,
         ],
       }),
     }),

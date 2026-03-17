@@ -30,7 +30,7 @@ export class UserRole {
   assigned_at: Date;
 
   @Column({ name: 'assigned_by', type: 'uuid', nullable: true })
-  assigned_by?: string | null;
+  assigned_by: string;
 
   @Column({ name: 'revoked_at', type: 'timestamp', nullable: true })
   revoked_at?: Date | null;
