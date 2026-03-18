@@ -13,16 +13,18 @@ import { RoleModule } from './modules/role/role.module';
 import { RolePermissionModule } from './modules/role_permission/role_permission.module';
 import { RbacSeedService } from './modules/seed/rbac.seed.service';
 import { SeedsModule } from './modules/seed/seeds.module';
+import { SprintsModule } from './modules/sprints/sprints.module';
+import { TaskPriorityModule } from './modules/task_priority/task_priority.module';
+import { TaskStatusModule } from './modules/task_status/task_status.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { UserProfilesModule } from './modules/user_profiles/user_profiles.module';
+import { UserRolesModule } from './modules/user_roles/user_roles.module';
 import { UserWorkspacesModule } from './modules/user_workspace/user_workspace.module';
 import { UsersModule } from './modules/users/users.module';
-import { WorkspaceTemplatesModule } from './modules/workspace_templates/workspace_templates.module';
+
+import { PageModule } from './modules/page/page.module';
+import { PageBlockModule } from './modules/page_block/page_block.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
-import { TaskStatusModule } from './modules/task_status/task_status.module';
-import { TaskPriorityModule } from './modules/task_priority/task_priority.module';
-import { SprintsModule } from './modules/sprints/sprints.module';
-import { UserRolesModule } from './modules/user_roles/user_roles.module';
 
 @Module({
   imports: [
@@ -51,11 +53,12 @@ import { UserRolesModule } from './modules/user_roles/user_roles.module';
     ProjectsModule,
     BoardsModule,
     TasksModule,
-    WorkspaceTemplatesModule,
     TaskStatusModule,
     TaskPriorityModule,
     SprintsModule,
     UserRolesModule,
+    PageModule,
+    PageBlockModule,
   ],
   controllers: [AppController],
   providers: [

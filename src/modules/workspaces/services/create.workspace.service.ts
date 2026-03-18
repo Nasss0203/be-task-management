@@ -1,5 +1,7 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { type UnitOfWork } from 'src/interface/index.interface';
+import { type CreatePageService } from 'src/modules/page/interfaces/services/create.page.service.interface';
+import { PAGE_TYPES } from 'src/modules/page/interfaces/types';
 import { RoleName } from 'src/modules/role/domain/entities/role.entity';
 import { type RoleRepository } from 'src/modules/role/interfaces/repositories/role.repository.interface';
 import { ROLE_TYPES } from 'src/modules/role/interfaces/types';
@@ -32,6 +34,9 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
 
     @Inject(USER_ROLE_TYPES.services.CreateUserRoleService)
     private readonly createUserRoleService: CreateUserRoleService,
+
+    @Inject(PAGE_TYPES.services.CreatePageService)
+    private readonly createPageService: CreatePageService,
   ) {}
 
   async create({
@@ -98,7 +103,6 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
       // 4. Create user_roles (assign Owner cho creator)
       await this.createUserRoleService.create(
         {
-          ...this.createUserRoleService,
           user_id: userId,
           role_id: ownerRole.id,
           workspace_id: workspace.id,
@@ -107,9 +111,17 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
         manager,
       );
 
-      // 5. Prepare / show templates
+      // 6. Nếu chọn page:
 
-      // 6. Nếu user chọn template:
+      const createPage = await this.createPageService.create(
+        {
+          workspace_id: workspace.id,
+          title: workspace.name,
+          slug: workspace.slug,
+          created_by: userId,
+        },
+        manager,
+      );
 
       // 6.1 Create project
 

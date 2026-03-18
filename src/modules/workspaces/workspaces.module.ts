@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
+import { PageModule } from '../page/page.module';
 import { Role } from '../role/domain/entities/role.entity';
 import { RoleModule } from '../role/role.module';
 import { UserRolesModule } from '../user_roles/user_roles.module';
@@ -19,6 +20,7 @@ import { CreateWorkSpaceServiceImpl } from './services/create.workspace.service'
     UserWorkspacesModule,
     RoleModule,
     UserRolesModule,
+    PageModule,
   ],
   controllers: [WorkspacesController],
   providers: [

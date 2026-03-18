@@ -1,4 +1,4 @@
-import { Task } from 'src/modules/tasks/entities/task.entity';
+import { Task } from 'src/modules/tasks/domain/entities/task.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import {
   Column,

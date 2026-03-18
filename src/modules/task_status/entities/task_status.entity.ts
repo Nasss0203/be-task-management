@@ -1,6 +1,6 @@
 import { Board } from 'src/modules/boards/entities/board.entity';
 import { Project } from 'src/modules/projects/entities/project.entity';
-import { Task } from 'src/modules/tasks/entities/task.entity';
+import { Task } from 'src/modules/tasks/domain/entities/task.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import {
   Column,

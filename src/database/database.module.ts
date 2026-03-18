@@ -2,6 +2,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Page } from 'src/modules/page/domain/entities/page.entity';
+import { PageBlock } from 'src/modules/page_block/domain/entities/page_block.entity';
 import { Permission } from 'src/modules/permission/entities/permission.entity';
 import { RefreshToken } from 'src/modules/refresh_token/entities/refresh_token.entity';
 import { Role } from 'src/modules/role/domain/entities/role.entity';
@@ -38,6 +40,8 @@ import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.enti
           RefreshToken,
           UserWorkspace,
           UserRole,
+          Page,
+          PageBlock,
         ],
       }),
     }),
