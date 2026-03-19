@@ -3,7 +3,6 @@ import { PageBlockType } from 'src/modules/page_block/domain/entities/page_block
 import { type CreatePageBlockService } from 'src/modules/page_block/interfaces/services/create.page_block.service.interface';
 import { PAGE_BLOCK_TYPES } from 'src/modules/page_block/interfaces/types';
 import { EntityManager } from 'typeorm';
-import { PageModel } from '../domain/models/page.model';
 import { CreatePageDto } from '../dto/create-page.dto';
 import { type PageRepository } from '../interfaces/repositories/page.repository.interface';
 import { CreatePageService } from '../interfaces/services/create.page.service.interface';
@@ -14,19 +13,20 @@ export class CreatePageServiceImpl implements CreatePageService {
   constructor(
     @Inject(PAGE_TYPES.repositories.PageRepository)
     private readonly repo: PageRepository,
+
     @Inject(PAGE_BLOCK_TYPES.services.CreatePageBlockService)
     private readonly createPageBlockService: CreatePageBlockService,
   ) {}
   async create(
     createWorkspaceDto: CreatePageDto,
     manager: EntityManager,
-  ): Promise<PageModel> {
+  ): Promise<any> {
     const page = await this.repo.save(createWorkspaceDto, manager);
 
-    const createBlock = await this.createPageBlockService.create(
+    const pageBlock = await this.createPageBlockService.create(
       {
         page_id: page.id,
-        type: PageBlockType.PAGE,
+        type: PageBlockType.BOARD,
         title: page.title,
         position_x: 0,
         position_y: 0,
@@ -39,8 +39,10 @@ export class CreatePageServiceImpl implements CreatePageService {
       },
       manager,
     );
-    console.log('🚀 ~ createBlock~', createBlock);
 
-    return page;
+    return {
+      page,
+      pageBlock,
+    };
   }
 }

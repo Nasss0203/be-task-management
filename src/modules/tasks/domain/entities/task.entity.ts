@@ -1,11 +1,18 @@
 import { Board } from 'src/modules/boards/entities/board.entity';
-import { Project } from 'src/modules/projects/entities/project.entity';
+import { Project } from 'src/modules/projects/domain/entities/project.entity';
 import { Sprint } from 'src/modules/sprints/entities/sprint.entity';
 import { TaskPriority } from 'src/modules/task_priority/entities/task_priority.entity';
 import { TaskStatus } from 'src/modules/task_status/entities/task_status.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('tasks')
 @Index(['projectId', 'projectSeq'], { unique: true })
@@ -16,6 +23,8 @@ import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 @Index(['reporterId'])
 @Index(['sprintId'])
 export class Task {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
   @Column({ name: 'workspace_id', type: 'uuid' })
   workspaceId: string;
 

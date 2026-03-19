@@ -2,6 +2,10 @@ import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { type UnitOfWork } from 'src/interface/index.interface';
 import { type CreatePageService } from 'src/modules/page/interfaces/services/create.page.service.interface';
 import { PAGE_TYPES } from 'src/modules/page/interfaces/types';
+import { type UpdatePageBlockService } from 'src/modules/page_block/interfaces/services/update.page_block.service.interface';
+import { PAGE_BLOCK_TYPES } from 'src/modules/page_block/interfaces/types';
+import { type CreateProjectService } from 'src/modules/projects/interfaces/services/create.project.service.interface';
+import { PROJECT_TYPES } from 'src/modules/projects/interfaces/types';
 import { RoleName } from 'src/modules/role/domain/entities/role.entity';
 import { type RoleRepository } from 'src/modules/role/interfaces/repositories/role.repository.interface';
 import { ROLE_TYPES } from 'src/modules/role/interfaces/types';
@@ -37,6 +41,12 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
 
     @Inject(PAGE_TYPES.services.CreatePageService)
     private readonly createPageService: CreatePageService,
+
+    @Inject(PROJECT_TYPES.services.CreateProjectService)
+    private readonly createProjectService: CreateProjectService,
+
+    @Inject(PAGE_BLOCK_TYPES.services.UpdatePageBlockService)
+    private readonly updatePageBlockService: UpdatePageBlockService,
   ) {}
 
   async create({
@@ -124,6 +134,29 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
       );
 
       // 6.1 Create project
+      const project = await this.createProjectService.create(
+        {
+          workspace_id: workspace.id,
+          name: workspace.name,
+          key: 'TASK',
+          created_by: userId,
+        },
+        manager,
+      );
+
+      const pageBlock_id = createPage.pageBlock.id;
+
+      await this.updatePageBlockService.update(
+        {
+          id: pageBlock_id,
+          data_config: {
+            entity_type: 'PROJECT',
+            entity_id: project.id,
+            view: 'board',
+          },
+        },
+        manager,
+      );
 
       // 6.2 Create board
 

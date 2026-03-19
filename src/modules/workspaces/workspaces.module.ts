@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { PageModule } from '../page/page.module';
+import { PageBlockModule } from '../page_block/page_block.module';
+import { Project } from '../projects/domain/entities/project.entity';
+import { ProjectsModule } from '../projects/projects.module';
 import { Role } from '../role/domain/entities/role.entity';
 import { RoleModule } from '../role/role.module';
 import { UserRolesModule } from '../user_roles/user_roles.module';
@@ -16,12 +19,15 @@ import { CreateWorkSpaceServiceImpl } from './services/create.workspace.service'
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Workspace, Role, UserWorkspace]),
+    TypeOrmModule.forFeature([Workspace, Role, UserWorkspace, Project]),
     UserWorkspacesModule,
     RoleModule,
     UserRolesModule,
     PageModule,
+    ProjectsModule,
+    PageBlockModule,
   ],
+
   controllers: [WorkspacesController],
   providers: [
     {

@@ -7,11 +7,15 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 
 @Entity('task_priorities')
 @Index(['workspaceId', 'name'], { unique: true })
 export class TaskPriority {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
   @Column({ name: 'workspace_id', type: 'uuid' })
   workspaceId: string;
 

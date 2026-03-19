@@ -1,5 +1,5 @@
 import { Board } from 'src/modules/boards/entities/board.entity';
-import { Project } from 'src/modules/projects/entities/project.entity';
+import { Project } from 'src/modules/projects/domain/entities/project.entity';
 import { Task } from 'src/modules/tasks/domain/entities/task.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import {
@@ -9,12 +9,16 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 
 @Entity('task_statuses')
 @Index(['projectId', 'name'], { unique: true })
 @Index(['boardId', 'position'])
 export class TaskStatus {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
   @Column({ name: 'workspace_id', type: 'uuid' })
   workspaceId: string;
 

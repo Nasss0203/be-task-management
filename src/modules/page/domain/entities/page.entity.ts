@@ -14,7 +14,8 @@ import {
 } from 'typeorm';
 
 @Entity('pages')
-@Index('UQ_PAGES_WORKSPACE_ID', ['workspace_id'], { unique: true })
+@Index('IDX_PAGES_WORKSPACE_ID', ['workspace_id'])
+@Index('UQ_PAGES_WORKSPACE_SLUG', ['workspace_id', 'slug'], { unique: true })
 export class Page {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -45,9 +46,9 @@ export class Page {
   @OneToMany(() => PageBlock, (block) => block.page)
   blocks: PageBlock[];
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
   updatedAt: Date;
 }

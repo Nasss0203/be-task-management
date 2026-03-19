@@ -1,8 +1,10 @@
+import { Project } from 'src/modules/projects/domain/entities/project.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -30,6 +32,9 @@ export class Workspace {
     name: 'plan_type',
   })
   planType: PlanTypeWorkspace;
+
+  @OneToMany(() => Project, (project) => project.workspace)
+  projects: Project[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

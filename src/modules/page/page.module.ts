@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PageBlockModule } from '../page_block/page_block.module';
+import { PageController } from './controller/page.controller';
 import { Page } from './domain/entities/page.entity';
 import { PAGE_TYPES } from './interfaces/types';
-import { PageController } from './page.controller';
 import { PageService } from './page.service';
 import { PageRepositoryImpl } from './repositories/page.repository';
 import { CreatePageServiceImpl } from './services/create.page.service';

@@ -1,4 +1,4 @@
-import { Project } from 'src/modules/projects/entities/project.entity';
+import { Project } from 'src/modules/projects/domain/entities/project.entity';
 import { Task } from 'src/modules/tasks/domain/entities/task.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import {
@@ -8,12 +8,15 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 
 @Entity('sprints')
 @Index(['workspaceId'])
 @Index(['projectId'])
 export class Sprint {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
   @Column({ name: 'workspace_id', type: 'uuid' })
   workspaceId: string;
 

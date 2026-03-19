@@ -5,11 +5,14 @@ import { User } from 'src/modules/users/entities/user.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 export enum ProjectVisibility {
@@ -18,14 +21,17 @@ export enum ProjectVisibility {
 }
 
 @Entity('projects')
-@Index(['workspaceId', 'key'], { unique: true })
-@Index(['workspaceId'])
+@Index('UQ_PROJECTS_WORKSPACE_KEY', ['workspace_id', 'key'], { unique: true })
+@Index('IDX_PROJECTS_WORKSPACE_ID', ['workspace_id'])
 export class Project {
-  @Column({ name: 'workspace_id', type: 'uuid' })
-  workspaceId: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column({ name: 'template_id', type: 'uuid', nullable: true })
-  templateId?: string | null;
+  @Column({ name: 'workspace_id', type: 'uuid' })
+  workspace_id: string;
+
+  // @Column({ name: 'template_id', type: 'uuid', nullable: true })
+  // template_id: string | null;
 
   @Column({ name: 'name', type: 'varchar', length: 255 })
   name: string;
@@ -42,21 +48,22 @@ export class Project {
   visibility: ProjectVisibility;
 
   @Column({ name: 'task_seq', type: 'int', default: 0 })
-  taskSeq: number;
+  task_seq: number;
 
   @Column({ name: 'created_by', type: 'uuid' })
-  createdBy: string;
+  created_by: string;
 
-  @ManyToOne(() => Workspace, { onDelete: 'CASCADE' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
+  created_at: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
+  updated_at: Date;
+
+  @ManyToOne(() => Workspace, (workspace) => workspace.projects, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'workspace_id' })
   workspace: Workspace;
-
-  // @ManyToOne(() => WorkspaceTemplate, {
-  //   nullable: true,
-  //   onDelete: 'SET NULL',
-  // })
-  // @JoinColumn({ name: 'template_id' })
-  // template?: WorkspaceTemplate | null;
 
   @ManyToOne(() => User, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'created_by' })
@@ -69,5 +76,5 @@ export class Project {
   boards: Board[];
 
   @OneToMany(() => Task, (task) => task.project)
-  tasks: Task;
+  tasks: Task[];
 }

@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -11,17 +12,20 @@ import {
 } from 'typeorm';
 
 export enum PageBlockType {
-  PROJECT_LIST = 'PROJECT_LIST',
-  PAGE = 'PAGE',
+  PROJECT = 'PROJECT',
   BOARD = 'BOARD',
-  TASK_LIST = 'TASK_LIST',
   TABLE = 'TABLE',
   CHART = 'CHART',
   STATS = 'STATS',
   TEXT = 'TEXT',
+  HEADER = 'HEADER',
 }
 
 @Entity('page_blocks')
+@Index('IDX_PAGE_BLOCKS_PAGE_ID', ['page_id'])
+@Index('UQ_PAGE_BLOCKS_PAGE_ORDER', ['page_id', 'order_index'], {
+  unique: true,
+})
 export class PageBlock {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -48,10 +52,10 @@ export class PageBlock {
   @Column({ type: 'int', default: 0 })
   position_y: number;
 
-  @Column({ type: 'int', default: 4 })
+  @Column({ type: 'int', default: 12 })
   width: number;
 
-  @Column({ type: 'int', default: 2 })
+  @Column({ type: 'int', default: 1 })
   height: number;
 
   @Column({ type: 'int', default: 0 })
@@ -70,9 +74,9 @@ export class PageBlock {
   @JoinColumn({ name: 'created_by' })
   creator: User;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
   updated_at: Date;
 }
