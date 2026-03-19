@@ -1,4 +1,4 @@
-import { Board } from 'src/modules/boards/entities/board.entity';
+import { Board } from 'src/modules/boards/domain/entities/board.entity';
 import { Project } from 'src/modules/projects/domain/entities/project.entity';
 import { Sprint } from 'src/modules/sprints/entities/sprint.entity';
 import { TaskPriority } from 'src/modules/task_priority/entities/task_priority.entity';

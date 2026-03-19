@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
+import { BoardsModule } from '../boards/boards.module';
 import { PageModule } from '../page/page.module';
 import { PageBlockModule } from '../page_block/page_block.module';
 import { Project } from '../projects/domain/entities/project.entity';
@@ -26,6 +27,7 @@ import { CreateWorkSpaceServiceImpl } from './services/create.workspace.service'
     PageModule,
     ProjectsModule,
     PageBlockModule,
+    BoardsModule,
   ],
 
   controllers: [WorkspacesController],

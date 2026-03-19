@@ -1,5 +1,8 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { type UnitOfWork } from 'src/interface/index.interface';
+import { BoardViewType } from 'src/modules/boards/domain/entities/board.entity';
+import { type CreateBoardService } from 'src/modules/boards/interfaces/services/create.board.service.interface';
+import { BOARD_TYPES } from 'src/modules/boards/interfaces/types';
 import { type CreatePageService } from 'src/modules/page/interfaces/services/create.page.service.interface';
 import { PAGE_TYPES } from 'src/modules/page/interfaces/types';
 import { type UpdatePageBlockService } from 'src/modules/page_block/interfaces/services/update.page_block.service.interface';
@@ -47,6 +50,9 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
 
     @Inject(PAGE_BLOCK_TYPES.services.UpdatePageBlockService)
     private readonly updatePageBlockService: UpdatePageBlockService,
+
+    @Inject(BOARD_TYPES.services.CreateBoardService)
+    private readonly createBoardService: CreateBoardService,
   ) {}
 
   async create({
@@ -144,6 +150,7 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
         manager,
       );
 
+      // update page block
       const pageBlock_id = createPage.pageBlock.id;
 
       await this.updatePageBlockService.update(
@@ -159,6 +166,16 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
       );
 
       // 6.2 Create board
+      const board = await this.createBoardService.create(
+        {
+          projectId: project.id,
+          createdBy: userId,
+          name: workspace.name,
+          viewType: BoardViewType.TABLE,
+          workspaceId: workspace.id,
+        },
+        manager,
+      );
 
       // 6.3 Seed task status
 

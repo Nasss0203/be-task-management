@@ -1,4 +1,4 @@
-import { Board } from 'src/modules/boards/entities/board.entity';
+import { Board } from 'src/modules/boards/domain/entities/board.entity';
 import { Project } from 'src/modules/projects/domain/entities/project.entity';
 import { Task } from 'src/modules/tasks/domain/entities/task.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';

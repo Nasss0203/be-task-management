@@ -2,7 +2,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Board } from 'src/modules/boards/entities/board.entity';
+import { Board } from 'src/modules/boards/domain/entities/board.entity';
 import { Page } from 'src/modules/page/domain/entities/page.entity';
 import { PageBlock } from 'src/modules/page_block/domain/entities/page_block.entity';
 import { Permission } from 'src/modules/permission/entities/permission.entity';
