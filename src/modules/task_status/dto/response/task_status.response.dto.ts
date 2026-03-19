@@ -1,4 +1,6 @@
-export class CreateTaskStatusDto {
+export class TaskStatusResponseDto {
+  id: string;
+
   workspaceId: string;
 
   projectId: string;
@@ -9,7 +11,11 @@ export class CreateTaskStatusDto {
 
   position: number;
 
-  color: string | null;
+  color?: string | null;
 
   isDone: boolean;
+
+  createdAt: Date;
+
+  updatedAt: Date;
 }

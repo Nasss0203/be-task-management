@@ -8,6 +8,9 @@ import { Project } from '../projects/domain/entities/project.entity';
 import { ProjectsModule } from '../projects/projects.module';
 import { Role } from '../role/domain/entities/role.entity';
 import { RoleModule } from '../role/role.module';
+import { TaskPriorityModule } from '../task_priority/task_priority.module';
+import { TaskStatusModule } from '../task_status/task_status.module';
+import { TasksModule } from '../tasks/tasks.module';
 import { UserRolesModule } from '../user_roles/user_roles.module';
 import { UserWorkspace } from '../user_workspace/domain/entities/user_workspace.entity';
 import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
@@ -28,6 +31,9 @@ import { CreateWorkSpaceServiceImpl } from './services/create.workspace.service'
     ProjectsModule,
     PageBlockModule,
     BoardsModule,
+    TaskStatusModule,
+    TaskPriorityModule,
+    TasksModule,
   ],
 
   controllers: [WorkspacesController],

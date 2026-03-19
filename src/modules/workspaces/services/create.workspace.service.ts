@@ -12,6 +12,12 @@ import { PROJECT_TYPES } from 'src/modules/projects/interfaces/types';
 import { RoleName } from 'src/modules/role/domain/entities/role.entity';
 import { type RoleRepository } from 'src/modules/role/interfaces/repositories/role.repository.interface';
 import { ROLE_TYPES } from 'src/modules/role/interfaces/types';
+import { type CreateTaskPriorityService } from 'src/modules/task_priority/interfaces/services/create.task_priority.service.interface';
+import { TASK_PRIORITY_TYPES } from 'src/modules/task_priority/interfaces/types';
+import { type CreateTaskStatusService } from 'src/modules/task_status/interfaces/services/create.task_status.service.interface';
+import { TASK_STATUS_TYPES } from 'src/modules/task_status/interfaces/types';
+import { type CreateTaskService } from 'src/modules/tasks/interfaces/services/create.task.repository.interface';
+import { TASK_TYPES } from 'src/modules/tasks/interfaces/types';
 import { type CreateUserRoleService } from 'src/modules/user_roles/interfaces/services/create.user_role.service.interface';
 import { USER_ROLE_TYPES } from 'src/modules/user_roles/interfaces/types';
 import { type CreateUserWorkspaceService } from 'src/modules/user_workspace/interfaces/services/create.user_workspace.service.interface';
@@ -53,6 +59,15 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
 
     @Inject(BOARD_TYPES.services.CreateBoardService)
     private readonly createBoardService: CreateBoardService,
+
+    @Inject(TASK_STATUS_TYPES.services.CreateTaskStatusService)
+    private readonly createTaskStatusService: CreateTaskStatusService,
+
+    @Inject(TASK_PRIORITY_TYPES.services.CreateTaskPriorityService)
+    private readonly createTaskPriorityService: CreateTaskPriorityService,
+
+    @Inject(TASK_TYPES.services.CreateTaskService)
+    private readonly createTaskService: CreateTaskService,
   ) {}
 
   async create({
@@ -177,11 +192,138 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
         manager,
       );
 
-      // 6.3 Seed task status
+      const createdStatuses = await this.createTaskStatusService.createMany(
+        [
+          {
+            workspaceId: workspace.id,
+            projectId: project.id,
+            boardId: board.id,
+            name: 'Todo',
+            position: 0,
+            color: '#94A3B8',
+            isDone: false,
+          },
+          {
+            workspaceId: workspace.id,
+            projectId: project.id,
+            boardId: board.id,
+            name: 'In Progress',
+            position: 1,
+            color: '#3B82F6',
+            isDone: false,
+          },
+          {
+            workspaceId: workspace.id,
+            projectId: project.id,
+            boardId: board.id,
+            name: 'Done',
+            position: 2,
+            color: '#22C55E',
+            isDone: true,
+          },
+        ],
+        manager,
+      );
 
       // 6.4 Seed task priority
+      const createdPriorities = await this.createTaskPriorityService.createMany(
+        [
+          {
+            workspaceId: workspace.id,
+            projectId: project.id,
+            name: 'Low',
+            level: 1,
+            color: '#94A3B8',
+          },
+          {
+            workspaceId: workspace.id,
+            projectId: project.id,
+            name: 'Medium',
+            level: 2,
+            color: '#3B82F6',
+          },
+          {
+            workspaceId: workspace.id,
+            projectId: project.id,
+            name: 'High',
+            level: 3,
+            color: '#F59E0B',
+          },
+          {
+            workspaceId: workspace.id,
+            projectId: project.id,
+            name: 'Urgent',
+            level: 4,
+            color: '#EF4444',
+          },
+        ],
+        manager,
+      );
+
+      const todoStatus = createdStatuses.find((item) => item.name === 'Todo');
+      const inProgressStatus = createdStatuses.find(
+        (item) => item.name === 'In Progress',
+      );
+      const doneStatus = createdStatuses.find((item) => item.name === 'Done');
+
+      const lowPriority = createdPriorities.find((item) => item.name === 'Low');
+      const mediumPriority = createdPriorities.find(
+        (item) => item.name === 'Medium',
+      );
+      const highPriority = createdPriorities.find(
+        (item) => item.name === 'High',
+      );
+
+      if (!todoStatus || !inProgressStatus || !doneStatus) {
+        throw new Error('Default task statuses were not seeded correctly');
+      }
+
+      if (!lowPriority || !mediumPriority || !highPriority) {
+        throw new Error('Default task priorities were not seeded correctly');
+      }
 
       // 6.5 Create sample tasks
+      await this.createTaskService.createMany(
+        [
+          {
+            workspaceId: workspace.id,
+            projectId: project.id,
+            boardId: board.id,
+            projectSeq: 1,
+            title: 'Create first task',
+            description: 'This is the first default task for your project.',
+            statusId: todoStatus.id,
+            priorityId: mediumPriority.id,
+            reporterId: userId,
+            estimateMinutes: 30,
+          },
+          {
+            workspaceId: workspace.id,
+            projectId: project.id,
+            boardId: board.id,
+            projectSeq: 2,
+            title: 'Move task across columns',
+            description: 'Try moving this task from Todo to In Progress.',
+            statusId: inProgressStatus.id,
+            priorityId: lowPriority.id,
+            reporterId: userId,
+            estimateMinutes: 20,
+          },
+          {
+            workspaceId: workspace.id,
+            projectId: project.id,
+            boardId: board.id,
+            projectSeq: 3,
+            title: 'Complete your first workflow',
+            description: 'Mark this task as Done when you finish setup.',
+            statusId: doneStatus.id,
+            priorityId: highPriority.id,
+            reporterId: userId,
+            estimateMinutes: 45,
+          },
+        ],
+        manager,
+      );
 
       return workspace;
     });

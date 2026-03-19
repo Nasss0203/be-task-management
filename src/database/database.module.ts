@@ -11,8 +11,8 @@ import { RefreshToken } from 'src/modules/refresh_token/entities/refresh_token.e
 import { Role } from 'src/modules/role/domain/entities/role.entity';
 import { RolePermission } from 'src/modules/role_permission/entities/role_permission.entity';
 import { Sprint } from 'src/modules/sprints/entities/sprint.entity';
-import { TaskPriority } from 'src/modules/task_priority/entities/task_priority.entity';
-import { TaskStatus } from 'src/modules/task_status/entities/task_status.entity';
+import { TaskPriority } from 'src/modules/task_priority/domain/entities/task_priority.entity';
+import { TaskStatus } from 'src/modules/task_status/domain/entities/task_status.entity';
 import { Task } from 'src/modules/tasks/domain/entities/task.entity';
 import { UserProfile } from 'src/modules/user_profiles/entities/user_profile.entity';
 import { UserRole } from 'src/modules/user_roles/domain/entities/user_role.entity';

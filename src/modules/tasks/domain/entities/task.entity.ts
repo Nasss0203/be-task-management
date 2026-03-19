@@ -1,17 +1,19 @@
 import { Board } from 'src/modules/boards/domain/entities/board.entity';
 import { Project } from 'src/modules/projects/domain/entities/project.entity';
 import { Sprint } from 'src/modules/sprints/entities/sprint.entity';
-import { TaskPriority } from 'src/modules/task_priority/entities/task_priority.entity';
-import { TaskStatus } from 'src/modules/task_status/entities/task_status.entity';
+import { TaskPriority } from 'src/modules/task_priority/domain/entities/task_priority.entity';
+import { TaskStatus } from 'src/modules/task_status/domain/entities/task_status.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('tasks')
@@ -61,6 +63,11 @@ export class Task {
   @Column({ name: 'estimate_minutes', type: 'int', nullable: true })
   estimateMinutes?: number | null;
 
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
+  updatedAt: Date;
   @ManyToOne(() => Workspace, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'workspace_id' })
   workspace: Workspace;

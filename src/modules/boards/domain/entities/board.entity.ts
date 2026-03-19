@@ -1,5 +1,5 @@
 import { Project } from 'src/modules/projects/domain/entities/project.entity';
-import { TaskStatus } from 'src/modules/task_status/entities/task_status.entity';
+import { TaskStatus } from 'src/modules/task_status/domain/entities/task_status.entity';
 import { Task } from 'src/modules/tasks/domain/entities/task.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
