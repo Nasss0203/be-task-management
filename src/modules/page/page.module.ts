@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PageBlockModule } from '../page_block/page_block.module';
 import { Page } from './domain/entities/page.entity';
 import { PAGE_TYPES } from './interfaces/types';
 import { PageController } from './page.controller';
@@ -8,7 +9,7 @@ import { PageRepositoryImpl } from './repositories/page.repository';
 import { CreatePageServiceImpl } from './services/create.page.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Page])],
+  imports: [TypeOrmModule.forFeature([Page]), PageBlockModule],
   controllers: [PageController],
   providers: [
     PageService,

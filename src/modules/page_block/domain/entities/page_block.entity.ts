@@ -1,4 +1,5 @@
 import { Page } from 'src/modules/page/domain/entities/page.entity';
+import { User } from 'src/modules/users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -11,6 +12,7 @@ import {
 
 export enum PageBlockType {
   PROJECT_LIST = 'PROJECT_LIST',
+  PAGE = 'PAGE',
   BOARD = 'BOARD',
   TASK_LIST = 'TASK_LIST',
   TABLE = 'TABLE',
@@ -61,8 +63,12 @@ export class PageBlock {
   @Column({ type: 'jsonb', nullable: true })
   data_config: Record<string, any> | null;
 
-  @Column('uuid')
+  @Column('uuid', { name: 'created_by' })
   created_by: string;
+
+  @ManyToOne(() => User, { nullable: false, onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'created_by' })
+  creator: User;
 
   @CreateDateColumn()
   created_at: Date;

@@ -1,6 +1,7 @@
-import { PageBlockType } from '../domain/entities/page_block.entity';
+import { PageBlockType } from '../../domain/entities/page_block.entity';
 
-export class CreatePageBlockDto {
+export class PageBlockResponseDto {
+  id: string;
   page_id: string;
   type: PageBlockType;
   title: string;
@@ -12,4 +13,6 @@ export class CreatePageBlockDto {
   style_config: Record<string, any> | null;
   data_config: Record<string, any> | null;
   created_by: string;
+  created_at: Date;
+  updated_at: Date;
 }

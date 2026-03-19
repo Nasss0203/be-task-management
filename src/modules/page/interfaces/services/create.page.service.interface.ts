@@ -4,7 +4,7 @@ import { CreatePageDto } from '../../dto/create-page.dto';
 
 export interface CreatePageService {
   create(
-    createWorkspaceDto: CreatePageDto,
+    createPageDto: CreatePageDto,
     manager: EntityManager,
   ): Promise<PageModel>;
 }
