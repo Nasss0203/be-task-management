@@ -15,11 +15,14 @@ import { UserRolesModule } from '../user_roles/user_roles.module';
 import { UserWorkspace } from '../user_workspace/domain/entities/user_workspace.entity';
 import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
 import { CreateWorkspaceApplicationImpl } from './applications/create.workspace.application';
+import { FindWorkspaceApplicationImpl } from './applications/find.workspace.application';
 import { WorkspacesController } from './controller/workspaces.controller';
 import { Workspace } from './domain/entities/workspace.entity';
 import { WORKSPACE_TYPES } from './interfaces/types';
+import { FindWorkspaceRepositoryImpl } from './repositories/find.workspace.repository';
 import { WorkspaceRepositoryImpl } from './repositories/workspace.repository';
 import { CreateWorkSpaceServiceImpl } from './services/create.workspace.service';
+import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
 
 @Module({
   imports: [
@@ -38,17 +41,34 @@ import { CreateWorkSpaceServiceImpl } from './services/create.workspace.service'
 
   controllers: [WorkspacesController],
   providers: [
+    //Application
     {
       provide: WORKSPACE_TYPES.applications.CreateWorkspaceApplication,
       useClass: CreateWorkspaceApplicationImpl,
     },
     {
+      provide: WORKSPACE_TYPES.applications.FindWorkspaceApplication,
+      useClass: FindWorkspaceApplicationImpl,
+    },
+
+    //Service
+    {
       provide: WORKSPACE_TYPES.services.CreateWorkspaceService,
       useClass: CreateWorkSpaceServiceImpl,
     },
     {
+      provide: WORKSPACE_TYPES.services.FindWorkspaceService,
+      useClass: FindWorkspaceServiceImpl,
+    },
+
+    //Repository
+    {
       provide: WORKSPACE_TYPES.repositories.WorkspaceRepository,
       useClass: WorkspaceRepositoryImpl,
+    },
+    {
+      provide: WORKSPACE_TYPES.repositories.FindWorkspaceRepository,
+      useClass: FindWorkspaceRepositoryImpl,
     },
 
     {

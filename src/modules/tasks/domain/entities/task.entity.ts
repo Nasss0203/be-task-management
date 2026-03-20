@@ -17,16 +17,17 @@ import {
 } from 'typeorm';
 
 @Entity('tasks')
-@Index(['projectId', 'projectSeq'], { unique: true })
-@Index(['workspaceId'])
-@Index(['projectId'])
-@Index(['boardId'])
-@Index(['statusId'])
-@Index(['reporterId'])
-@Index(['sprintId'])
+@Index('UQ_TASKS_PROJECT_SEQ', ['projectId', 'projectSeq'], { unique: true })
+@Index('IDX_TASKS_WORKSPACE_ID', ['workspaceId'])
+@Index('IDX_TASKS_PROJECT_ID', ['projectId'])
+@Index('IDX_TASKS_BOARD_ID', ['boardId'])
+@Index('IDX_TASKS_STATUS_ID', ['statusId'])
+@Index('IDX_TASKS_REPORTER_ID', ['reporterId'])
+@Index('IDX_TASKS_SPRINT_ID', ['sprintId'])
 export class Task {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
   @Column({ name: 'workspace_id', type: 'uuid' })
   workspaceId: string;
 
@@ -37,7 +38,7 @@ export class Task {
   boardId: string;
 
   @Column({ name: 'sprint_id', type: 'uuid', nullable: true })
-  sprintId?: string | null;
+  sprintId: string | null;
 
   @Column({ name: 'project_seq', type: 'int' })
   projectSeq: number;
@@ -46,28 +47,29 @@ export class Task {
   title: string;
 
   @Column({ name: 'description', type: 'text', nullable: true })
-  description?: string | null;
+  description: string | null;
 
   @Column({ name: 'status_id', type: 'uuid' })
   statusId: string;
 
   @Column({ name: 'priority_id', type: 'uuid', nullable: true })
-  priorityId?: string | null;
+  priorityId: string | null;
 
   @Column({ name: 'reporter_id', type: 'uuid' })
   reporterId: string;
 
   @Column({ name: 'due_at', type: 'timestamp', nullable: true })
-  dueAt?: Date | null;
+  dueAt: Date | null;
 
   @Column({ name: 'estimate_minutes', type: 'int', nullable: true })
-  estimateMinutes?: number | null;
+  estimateMinutes: number | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
   updatedAt: Date;
+
   @ManyToOne(() => Workspace, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'workspace_id' })
   workspace: Workspace;
@@ -89,7 +91,7 @@ export class Task {
     onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'sprint_id' })
-  sprint?: Sprint | null;
+  sprint: Sprint | null;
 
   @ManyToOne(() => TaskStatus, (status) => status.tasks, {
     onDelete: 'RESTRICT',
@@ -102,7 +104,7 @@ export class Task {
     onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'priority_id' })
-  priority?: TaskPriority | null;
+  priority: TaskPriority | null;
 
   @ManyToOne(() => User, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'reporter_id' })

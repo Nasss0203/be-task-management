@@ -12,6 +12,7 @@ export class CreateWorkspaceApplicationImpl implements CreateWorkspaceApplicatio
     @Inject(WORKSPACE_TYPES.services.CreateWorkspaceService)
     private readonly service: CreateWorkspaceService,
   ) {}
+
   async create({
     userId,
     createWorkspaceDto,
