@@ -1,0 +1,49 @@
+import { PageBlock } from 'src/modules/page_block/domain/entities/page_block.entity';
+import { Page } from '../domain/entities/page.entity';
+import { PageModel } from '../domain/models/page.model';
+import { PageResponseDto } from '../dto/response/page.response.dto';
+import { SavePageInput } from '../interfaces/repositories/page.repository.interface';
+
+export class PageMapper {
+  static toModel(entity: Page): PageModel {
+    return new PageModel(
+      entity.id,
+      entity.workspace_id,
+      entity.slug ?? '',
+      entity.title,
+      entity.is_template,
+      entity.created_by,
+      entity.blocks ?? ([] as PageBlock[]),
+      entity.createdAt,
+      entity.updatedAt,
+    );
+  }
+
+  static toEntity(model: PageModel | SavePageInput): Page {
+    const e = new Page();
+    if (model.id != null) e.id = model.id;
+    e.workspace_id = model.workspace_id;
+    e.slug = model.slug;
+    e.title = model.title;
+    if (model.blocks != null) e.blocks = model.blocks;
+    if (model.is_template != null) e.is_template = model.is_template;
+    if (model.created_by != null) e.created_by = model.created_by;
+    if (model.createdAt != null) e.createdAt = model.createdAt;
+    if (model.updatedAt != null) e.updatedAt = model.updatedAt;
+    return e;
+  }
+
+  static toResponse(model: PageModel): PageResponseDto {
+    return {
+      id: model.id,
+      blocks: model.blocks,
+      title: model.title,
+      slug: model.slug,
+      is_template: model.is_template,
+      workspace_id: model.workspace_id,
+      created_by: model.created_by,
+      createdAt: model.createdAt,
+      updatedAt: model.updatedAt,
+    };
+  }
+}

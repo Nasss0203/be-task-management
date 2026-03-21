@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { type Response } from 'express';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { Public } from 'src/common/decorator/public.decorator';
@@ -34,5 +42,11 @@ export class AuthController {
     });
 
     return { access_token, refresn_token };
+  }
+
+  @Get('me')
+  @ResponseMessage('Get me')
+  async getProfile(@Req() req: any) {
+    return this.authService.getProfile(req.user);
   }
 }

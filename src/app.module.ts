@@ -5,15 +5,25 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { BoardsModule } from './modules/boards/boards.module';
 import { PermissionModule } from './modules/permission/permission.module';
+import { ProjectsModule } from './modules/projects/projects.module';
 import { RefreshTokenModule } from './modules/refresh_token/refresh_token.module';
 import { RoleModule } from './modules/role/role.module';
 import { RolePermissionModule } from './modules/role_permission/role_permission.module';
 import { RbacSeedService } from './modules/seed/rbac.seed.service';
 import { SeedsModule } from './modules/seed/seeds.module';
+import { SprintsModule } from './modules/sprints/sprints.module';
+import { TaskPriorityModule } from './modules/task_priority/task_priority.module';
+import { TaskStatusModule } from './modules/task_status/task_status.module';
+import { TasksModule } from './modules/tasks/tasks.module';
 import { UserProfilesModule } from './modules/user_profiles/user_profiles.module';
+import { UserRolesModule } from './modules/user_roles/user_roles.module';
 import { UserWorkspacesModule } from './modules/user_workspace/user_workspace.module';
 import { UsersModule } from './modules/users/users.module';
+
+import { PageModule } from './modules/page/page.module';
+import { PageBlockModule } from './modules/page_block/page_block.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 
 @Module({
@@ -40,6 +50,15 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
     RefreshTokenModule,
     UserProfilesModule,
     UserWorkspacesModule,
+    ProjectsModule,
+    BoardsModule,
+    TasksModule,
+    TaskStatusModule,
+    TaskPriorityModule,
+    SprintsModule,
+    UserRolesModule,
+    PageModule,
+    PageBlockModule,
   ],
   controllers: [AppController],
   providers: [

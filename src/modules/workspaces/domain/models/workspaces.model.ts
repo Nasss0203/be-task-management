@@ -6,6 +6,7 @@ export class WorkspaceModel {
     public readonly name: string,
     public readonly slug: string,
     public readonly planType: PlanTypeWorkspace,
+
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
     public readonly deletedAt: Date | null,

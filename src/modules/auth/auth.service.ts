@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { RefreshToken } from '../refresh_token/entities/refresh_token.entity';
 import { RegisterUserDto } from '../users/dto/create-user.dto';
 import { User } from '../users/entities/user.entity';
+import { IUserJwtPayload } from './interfaces/type';
 
 @Injectable()
 export class AuthService {
@@ -109,5 +110,29 @@ export class AuthService {
   }
   comparePassword(password: string, hash: string) {
     return compareSync(password, hash);
+  }
+
+  async getProfile(payload: IUserJwtPayload) {
+    const user = await this.userRepo.findOne({
+      where: { id: payload.id },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    if (!user.isActive) {
+      throw new HttpException('User is inactive', HttpStatus.UNAUTHORIZED);
+    }
+
+    return user;
   }
 }

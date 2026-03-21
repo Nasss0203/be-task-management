@@ -1,0 +1,17 @@
+import { Inject, Injectable } from '@nestjs/common';
+import { WorkspaceModel } from '../domain/models/workspaces.model';
+import { type FindWorkspaceRepository } from '../interfaces/repositories/find.workspace.repository.interface';
+import { FindWorkspaceService } from '../interfaces/services/find.workspace.service.interface';
+import { WORKSPACE_TYPES } from '../interfaces/types';
+
+@Injectable()
+export class FindWorkspaceServiceImpl implements FindWorkspaceService {
+  constructor(
+    @Inject(WORKSPACE_TYPES.repositories.FindWorkspaceRepository)
+    private readonly findWorkspaceRepository: FindWorkspaceRepository,
+  ) {}
+
+  async findAllByUserId(userId: string): Promise<WorkspaceModel[]> {
+    return await this.findWorkspaceRepository.findWorkspacesByUserId(userId);
+  }
+}
