@@ -5,7 +5,7 @@ import { CreateTaskDto } from '../../dto/create-task.dto';
 export interface CreateTaskService {
   create(
     createTaskDto: CreateTaskDto,
-    manager: EntityManager,
+    manager?: EntityManager,
   ): Promise<TaskModel>;
   createMany(
     createTaskDtos: CreateTaskDto[],

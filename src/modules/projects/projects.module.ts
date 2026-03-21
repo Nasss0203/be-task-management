@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CreateProjectApplicationImpl } from './applications/create-project.application';
 import { FindProjectApplicationImpl } from './applications/find.project.application';
 import { ProjectsController } from './controller/projects.controller';
 import { Project } from './domain/entities/project.entity';
@@ -18,6 +19,10 @@ import { FindProjectServiceImpl } from './services/find.project.service';
     {
       provide: PROJECT_TYPES.applications.FindProjectApplication,
       useClass: FindProjectApplicationImpl,
+    },
+    {
+      provide: PROJECT_TYPES.applications.CreateProjectApplication,
+      useClass: CreateProjectApplicationImpl,
     },
     {
       provide: PROJECT_TYPES.repositories.CreateProjectRepository,

@@ -16,17 +16,24 @@ import { type FindTaskApplication } from '../interfaces/applications/find-task.a
 import { TASK_TYPES } from '../interfaces/types';
 import { TasksService } from '../tasks.service';
 
+import { Auth } from 'src/common/decorator/auth.decorator';
+import { type IAuth } from 'src/types/auth';
+import { type CreateTaskApplication } from '../interfaces/applications/create-task.application.interface';
+
 @Controller('tasks')
 export class TasksController {
   constructor(
     private readonly tasksService: TasksService,
     @Inject(TASK_TYPES.applications.FindTaskApplication)
     private readonly app: FindTaskApplication,
+
+    @Inject(TASK_TYPES.applications.CreateTaskApplication)
+    private readonly createTaskApplication: CreateTaskApplication,
   ) {}
 
   @Get('/workspace/:workspaceId/project/:projectId/board/:boardId')
   @ResponseMessage('Find all task')
-  async findAllByProjectId(
+  async findAllByTaskId(
     @Param('projectId') projectId: string,
     @Param('workspaceId') workspaceId: string,
     @Param('boardId') boardId: string,
@@ -35,8 +42,12 @@ export class TasksController {
   }
 
   @Post()
-  create(@Body() createTaskDto: CreateTaskDto) {
-    return this.tasksService.create(createTaskDto);
+  @ResponseMessage('Create Task')
+  create(@Body() createTaskDto: CreateTaskDto, @Auth() auth: IAuth) {
+    return this.createTaskApplication.create({
+      ...createTaskDto,
+      reporterId: auth.id,
+    });
   }
 
   @Get()

@@ -4,7 +4,7 @@ export const TASK_TYPES = {
     FindTaskService: 'FindTaskService',
   },
   applications: {
-    CreateTaskService: 'CreateTaskService',
+    CreateTaskApplication: 'CreateTaskApplication',
     FindTaskApplication: 'FindTaskApplication',
   },
   repositories: {

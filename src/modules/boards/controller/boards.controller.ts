@@ -8,11 +8,14 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { Auth } from 'src/common/decorator/auth.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { type IAuth } from 'src/types/auth';
 import { BoardsService } from '../boards.service';
 import { CreateBoardDto } from '../dto/create-board.dto';
 import { BoardResponseDto } from '../dto/response/board.response.dto';
 import { UpdateBoardDto } from '../dto/update-board.dto';
+import { type CreateBoardApplication } from '../interfaces/applications/create-board.application.interface';
 import { type FindBoardApplication } from '../interfaces/applications/find-board.application.interface';
 import { BOARD_TYPES } from '../interfaces/types';
 
@@ -22,6 +25,8 @@ export class BoardsController {
     private readonly boardsService: BoardsService,
     @Inject(BOARD_TYPES.applications.FindBoardApplication)
     private readonly app: FindBoardApplication,
+    @Inject(BOARD_TYPES.applications.CreateBoardApplication)
+    private readonly createBoardApplication: CreateBoardApplication,
   ) {}
 
   @Get(':id')
@@ -40,8 +45,12 @@ export class BoardsController {
   }
 
   @Post()
-  create(@Body() createBoardDto: CreateBoardDto) {
-    return this.boardsService.create(createBoardDto);
+  @ResponseMessage('Create board')
+  create(@Body() createBoardDto: CreateBoardDto, @Auth() auth: IAuth) {
+    return this.createBoardApplication.create({
+      ...createBoardDto,
+      createdBy: auth.id,
+    });
   }
 
   @Get()

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CreateBoardApplicationImpl } from './applications/create-board.application';
 import { FindBoardApplicationImpl } from './applications/find-board.application';
 import { BoardsService } from './boards.service';
 import { BoardsController } from './controller/boards.controller';
@@ -19,6 +20,10 @@ import { FindBoardServiceImpl } from './services/find-board.service';
     {
       provide: BOARD_TYPES.applications.FindBoardApplication,
       useClass: FindBoardApplicationImpl,
+    },
+    {
+      provide: BOARD_TYPES.applications.CreateBoardApplication,
+      useClass: CreateBoardApplicationImpl,
     },
     // Repo
     {

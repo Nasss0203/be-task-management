@@ -1,17 +1,24 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { TaskPriorityModule } from '../task_priority/task_priority.module';
+import { TaskStatusModule } from '../task_status/task_status.module';
+import { CreateTaskApplicationImpl } from './applications/create-task.application';
 import { FindTaskApplicationImpl } from './applications/find-task.application';
 import { TasksController } from './controller/tasks.controller';
 import { Task } from './domain/entities/task.entity';
 import { TASK_TYPES } from './interfaces/types';
 import { CreateTaskRepositoryImpl } from './repositories/create.tasks.repository';
 import { FindTaskRepositoryImpl } from './repositories/find-task.repository';
-import { CreateTaskServiceImpl } from './services/create.tasks.service';
+import { CreateTaskServiceImpl } from './services/create-tasks.service';
 import { FindTaskServiceImpl } from './services/find-task.service';
 import { TasksService } from './tasks.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Task])],
+  imports: [
+    TypeOrmModule.forFeature([Task]),
+    TaskStatusModule,
+    TaskPriorityModule,
+  ],
   controllers: [TasksController],
   providers: [
     TasksService,
@@ -19,6 +26,10 @@ import { TasksService } from './tasks.service';
     {
       provide: TASK_TYPES.applications.FindTaskApplication,
       useClass: FindTaskApplicationImpl,
+    },
+    {
+      provide: TASK_TYPES.applications.CreateTaskApplication,
+      useClass: CreateTaskApplicationImpl,
     },
     // Repo
     {

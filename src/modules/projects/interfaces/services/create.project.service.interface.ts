@@ -5,6 +5,6 @@ import { CreateProjectDto } from '../../dto/create-project.dto';
 export interface CreateProjectService {
   create(
     createProjectDto: CreateProjectDto,
-    manager: EntityManager,
+    manager?: EntityManager,
   ): Promise<ProjectModel>;
 }
