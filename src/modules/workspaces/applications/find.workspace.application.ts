@@ -17,4 +17,14 @@ export class FindWorkspaceApplicationImpl implements FindWorkspaceApplication {
 
     return workspaces.map((workspace) => WorkspaceMapper.toResponse(workspace));
   }
+  async findOneWorkspaceById(
+    userId: string,
+    workspaceId: string,
+  ): Promise<WorkspaceResponseDto> {
+    const workspace = await this.service.findOneByWorkspaceId(
+      userId,
+      workspaceId,
+    );
+    return WorkspaceMapper.toResponse(workspace);
+  }
 }

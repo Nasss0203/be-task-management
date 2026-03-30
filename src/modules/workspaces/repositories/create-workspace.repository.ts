@@ -4,13 +4,13 @@ import { EntityManager, Repository } from 'typeorm';
 import { Workspace } from '../domain/entities/workspace.entity';
 import { WorkspaceModel } from '../domain/models/workspaces.model';
 import {
+  CreateWorkspaceMultiRepository,
   SaveWorkspaceInput,
-  WorkspaceRepository,
-} from '../interfaces/repositories/workspace.repository.interface';
+} from '../interfaces/repositories/create-workspace.repository.interface';
 import { WorkspaceMapper } from '../mapper/workspace.mapper';
 
 @Injectable()
-export class WorkspaceRepositoryImpl implements WorkspaceRepository {
+export class WorkspaceRepositoryImpl implements CreateWorkspaceMultiRepository {
   constructor(
     @InjectRepository(Workspace)
     private readonly repo: Repository<Workspace>,

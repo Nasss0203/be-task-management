@@ -14,14 +14,14 @@ import { TasksModule } from '../tasks/tasks.module';
 import { UserRolesModule } from '../user_roles/user_roles.module';
 import { UserWorkspace } from '../user_workspace/domain/entities/user_workspace.entity';
 import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
-import { CreateWorkspaceApplicationImpl } from './applications/create.workspace.application';
+import { CreateWorkspaceApplicationImpl } from './applications/create-workspace.application';
 import { FindWorkspaceApplicationImpl } from './applications/find.workspace.application';
 import { WorkspacesController } from './controller/workspaces.controller';
 import { Workspace } from './domain/entities/workspace.entity';
 import { WORKSPACE_TYPES } from './interfaces/types';
+import { WorkspaceRepositoryImpl } from './repositories/create-workspace.repository';
 import { FindWorkspaceRepositoryImpl } from './repositories/find.workspace.repository';
-import { WorkspaceRepositoryImpl } from './repositories/workspace.repository';
-import { CreateWorkSpaceServiceImpl } from './services/create.workspace.service';
+import { CreateWorkspaceServiceImpl } from './services/create-workspace-multi.service';
 import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
 
 @Module({
@@ -54,7 +54,7 @@ import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
     //Service
     {
       provide: WORKSPACE_TYPES.services.CreateWorkspaceService,
-      useClass: CreateWorkSpaceServiceImpl,
+      useClass: CreateWorkspaceServiceImpl,
     },
     {
       provide: WORKSPACE_TYPES.services.FindWorkspaceService,
@@ -76,6 +76,9 @@ import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
       useClass: TypeOrmUnitOfWork,
     },
   ],
-  exports: [WORKSPACE_TYPES.repositories.WorkspaceRepository],
+  exports: [
+    WORKSPACE_TYPES.repositories.WorkspaceRepository,
+    WORKSPACE_TYPES.services.CreateWorkspaceService,
+  ],
 })
 export class WorkspacesModule {}

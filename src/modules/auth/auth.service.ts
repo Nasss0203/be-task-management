@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { compareSync } from 'bcrypt';
@@ -9,6 +9,8 @@ import { Repository } from 'typeorm';
 import { RefreshToken } from '../refresh_token/entities/refresh_token.entity';
 import { RegisterUserDto } from '../users/dto/create-user.dto';
 import { User } from '../users/entities/user.entity';
+import { type CreateWorkspaceService } from '../workspaces/interfaces/services/create-workspace.service.interface';
+import { WORKSPACE_TYPES } from '../workspaces/interfaces/types';
 import { IUserJwtPayload } from './interfaces/type';
 
 @Injectable()
@@ -20,6 +22,9 @@ export class AuthService {
 
     @InjectRepository(RefreshToken)
     private refreshRepo: Repository<RefreshToken>,
+
+    @Inject(WORKSPACE_TYPES.services.CreateWorkspaceService)
+    private readonly createWorkspaceService: CreateWorkspaceService,
   ) {}
 
   async register(registerUserDto: RegisterUserDto) {
@@ -46,6 +51,11 @@ export class AuthService {
     const saved = await this.userRepo.save(user);
 
     const { id, email, username } = saved;
+
+    await this.createWorkspaceService.createDefault({
+      userId: id,
+    });
+
     return { id, email, username };
   }
 

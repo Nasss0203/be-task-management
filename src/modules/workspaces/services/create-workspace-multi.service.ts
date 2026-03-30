@@ -25,16 +25,16 @@ import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/type
 import { generateSlug } from 'src/utils';
 import { PlanTypeWorkspace } from '../domain/entities/workspace.entity';
 import { WorkspaceModel } from '../domain/models/workspaces.model';
-import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
-import { type WorkspaceRepository } from '../interfaces/repositories/workspace.repository.interface';
-import { CreateWorkspaceService } from '../interfaces/services/create.workspace.service.interface';
+import { CreateWorkspaceMultiServiceDto } from '../dto/create-workspace.dto';
+import { type CreateWorkspaceMultiRepository } from '../interfaces/repositories/create-workspace.repository.interface';
+import { CreateWorkspaceService } from '../interfaces/services/create-workspace.service.interface';
 import { WORKSPACE_TYPES } from '../interfaces/types';
 
 @Injectable()
-export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
+export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
   constructor(
     @Inject(WORKSPACE_TYPES.repositories.WorkspaceRepository)
-    private readonly workspaceRepo: WorkspaceRepository,
+    private readonly workspaceRepo: CreateWorkspaceMultiRepository,
 
     @Inject(USER_WORKSPACE_TYPES.services.CreateUserWorkspaceService)
     private readonly createUserWorkspaceService: CreateUserWorkspaceService,
@@ -70,14 +70,10 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
     private readonly createTaskService: CreateTaskService,
   ) {}
 
-  async create({
-    userId,
-    createWorkspaceDto,
-  }: {
-    userId: string;
-    createWorkspaceDto: CreateWorkspaceDto;
-  }): Promise<WorkspaceModel> {
-    const slug = generateSlug(createWorkspaceDto.name).toLowerCase();
+  async createDefault({ userId }: { userId: string }): Promise<WorkspaceModel> {
+    const slug = generateSlug(
+      CreateWorkspaceMultiServiceDto.name,
+    ).toLowerCase();
 
     return this.uow.runInTransaction(async (manager) => {
       const exists = await this.workspaceRepo.existsBySlug(slug, manager);
@@ -91,9 +87,10 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
       // Create workspace
       const workspace = await this.workspaceRepo.save(
         {
-          ...createWorkspaceDto,
+          ...CreateWorkspaceMultiServiceDto,
+          name: 'Hello Task management',
           slug,
-          planType: createWorkspaceDto.planType ?? PlanTypeWorkspace.FREE,
+          planType: PlanTypeWorkspace.FREE,
         },
         manager,
       );
@@ -322,6 +319,85 @@ export class CreateWorkSpaceServiceImpl implements CreateWorkspaceService {
             estimateMinutes: 45,
           },
         ],
+        manager,
+      );
+
+      return workspace;
+    });
+  }
+
+  async create({
+    userId,
+    CreateWorkspaceMultiServiceDto,
+  }: {
+    userId: string;
+    CreateWorkspaceMultiServiceDto: CreateWorkspaceMultiServiceDto;
+  }): Promise<WorkspaceModel> {
+    const slug = generateSlug(
+      CreateWorkspaceMultiServiceDto.name,
+    ).toLowerCase();
+
+    return this.uow.runInTransaction(async (manager) => {
+      const exists = await this.workspaceRepo.existsBySlug(slug, manager);
+      if (exists) {
+        throw new HttpException(
+          'Workspace slug already exists',
+          HttpStatus.CONFLICT,
+        );
+      }
+
+      // Create workspace
+      const workspace = await this.workspaceRepo.save(
+        {
+          ...CreateWorkspaceMultiServiceDto,
+          slug,
+          planType:
+            CreateWorkspaceMultiServiceDto.planType ?? PlanTypeWorkspace.FREE,
+        },
+        manager,
+      );
+
+      // creator joined workspace
+      await this.createUserWorkspaceService.create(
+        {
+          user_id: userId,
+          workspace_id: workspace.id,
+        },
+        manager,
+      );
+
+      // 3. Seed roles mặc định
+      const roles = await this.roleRepository.saveMany(
+        [
+          {
+            name: RoleName.OWNER,
+            workspace_id: workspace.id,
+          },
+          {
+            name: RoleName.MEMBER,
+            workspace_id: workspace.id,
+          },
+        ],
+        manager,
+      );
+
+      const ownerRole = roles.find((role: any) => role.name === RoleName.OWNER);
+
+      if (!ownerRole) {
+        throw new HttpException(
+          'Owner role was not created',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
+      // 4. Create user_roles (assign Owner cho creator)
+      await this.createUserRoleService.create(
+        {
+          user_id: userId,
+          role_id: ownerRole.id,
+          workspace_id: workspace.id,
+          assigned_by: userId,
+        },
         manager,
       );
 

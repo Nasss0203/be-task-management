@@ -7,7 +7,7 @@ export type SaveWorkspaceInput = Pick<
 > &
   Partial<Pick<WorkspaceModel, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>>;
 
-export interface WorkspaceRepository {
+export interface CreateWorkspaceMultiRepository {
   existsBySlug(slug: string, manager?: EntityManager): Promise<boolean>;
   save(
     workspace: WorkspaceModel | SaveWorkspaceInput,

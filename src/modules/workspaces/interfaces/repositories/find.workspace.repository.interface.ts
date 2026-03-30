@@ -6,4 +6,10 @@ export interface FindWorkspaceRepository {
     userId: string,
     manager?: EntityManager,
   ): Promise<WorkspaceModel[]>;
+
+  findOneWorkspaceById(
+    userId: string,
+    workspaceId: string,
+    manager?: EntityManager,
+  ): Promise<WorkspaceModel | null>;
 }

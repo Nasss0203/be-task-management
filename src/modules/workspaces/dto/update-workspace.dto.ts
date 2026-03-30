@@ -1,4 +1,6 @@
 import { PartialType } from '@nestjs/swagger';
-import { CreateWorkspaceDto } from './create-workspace.dto';
+import { CreateWorkspaceMultiServiceDto } from './create-workspace.dto';
 
-export class UpdateWorkspaceDto extends PartialType(CreateWorkspaceDto) {}
+export class UpdateWorkspaceDto extends PartialType(
+  CreateWorkspaceMultiServiceDto,
+) {}

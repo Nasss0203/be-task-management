@@ -8,6 +8,7 @@ import { LocalStrategy } from 'src/common/strategy/local.strategy';
 import { RefreshToken } from '../refresh_token/entities/refresh_token.entity';
 import { User } from '../users/entities/user.entity';
 import { Workspace } from '../workspaces/domain/entities/workspace.entity';
+import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
@@ -26,6 +27,7 @@ import { AuthService } from './auth.service';
       inject: [ConfigService],
     }),
     PassportModule,
+    WorkspacesModule,
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy],
   controllers: [AuthController],
