@@ -1,7 +1,6 @@
 export class CreateTaskDto {
   workspaceId: string;
   projectId: string;
-  boardId: string;
   sprintId?: string | null;
   projectSeq: number;
   title: string;

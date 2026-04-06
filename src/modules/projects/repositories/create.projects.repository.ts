@@ -28,4 +28,14 @@ export class CreateProjectRepositoryImpl implements CreateProjectRepository {
     const saved = await repo.save(entity);
     return ProjectMapper.toModel(saved);
   }
+
+  async createProjectWithPageBlock(
+    project: ProjectModel | SaveProjectInput,
+    manager?: EntityManager,
+  ): Promise<ProjectModel> {
+    const repo = this.getRepo(manager);
+    const entity = ProjectMapper.toEntity(project as ProjectModel);
+    const saved = await repo.save(entity);
+    return ProjectMapper.toModel(saved);
+  }
 }

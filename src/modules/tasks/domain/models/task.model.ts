@@ -3,7 +3,6 @@ export class TaskModel {
     public readonly id: string,
     public readonly workspaceId: string,
     public readonly projectId: string,
-    public readonly boardId: string,
     public readonly sprintId: string | null = null,
     public readonly projectSeq: number,
     public readonly title: string,

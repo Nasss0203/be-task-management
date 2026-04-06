@@ -30,9 +30,6 @@ export class Project {
   @Column({ name: 'workspace_id', type: 'uuid' })
   workspace_id: string;
 
-  // @Column({ name: 'template_id', type: 'uuid', nullable: true })
-  // template_id: string | null;
-
   @Column({ name: 'name', type: 'varchar', length: 255 })
   name: string;
 

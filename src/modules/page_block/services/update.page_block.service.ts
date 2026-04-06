@@ -17,6 +17,12 @@ export class UpdatePageBlockServiceImpl implements UpdatePageBlockService {
     updatePageBlockDto: UpdatePageBlockDto,
     manager: EntityManager,
   ): Promise<PageBlockModel> {
-    return this.repo.save(updatePageBlockDto, manager);
+    return this.repo.save(
+      {
+        ...updatePageBlockDto,
+        data_config: updatePageBlockDto.data_config,
+      },
+      manager,
+    );
   }
 }

@@ -5,6 +5,7 @@ import { type CreateBoardService } from 'src/modules/boards/interfaces/services/
 import { BOARD_TYPES } from 'src/modules/boards/interfaces/types';
 import { type CreatePageService } from 'src/modules/page/interfaces/services/create.page.service.interface';
 import { PAGE_TYPES } from 'src/modules/page/interfaces/types';
+import { PageBlockType } from 'src/modules/page_block/domain/entities/page_block.entity';
 import { type UpdatePageBlockService } from 'src/modules/page_block/interfaces/services/update.page_block.service.interface';
 import { PAGE_BLOCK_TYPES } from 'src/modules/page_block/interfaces/types';
 import { type CreateProjectService } from 'src/modules/projects/interfaces/services/create.project.service.interface';
@@ -25,7 +26,7 @@ import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/type
 import { generateSlug } from 'src/utils';
 import { PlanTypeWorkspace } from '../domain/entities/workspace.entity';
 import { WorkspaceModel } from '../domain/models/workspaces.model';
-import { CreateWorkspaceMultiServiceDto } from '../dto/create-workspace.dto';
+import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
 import { type CreateWorkspaceMultiRepository } from '../interfaces/repositories/create-workspace.repository.interface';
 import { CreateWorkspaceService } from '../interfaces/services/create-workspace.service.interface';
 import { WORKSPACE_TYPES } from '../interfaces/types';
@@ -71,9 +72,9 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
   ) {}
 
   async createDefault({ userId }: { userId: string }): Promise<WorkspaceModel> {
-    const slug = generateSlug(
-      CreateWorkspaceMultiServiceDto.name,
-    ).toLowerCase();
+    const defaultName = 'Task management';
+    const baseSlug = generateSlug(defaultName).toLowerCase();
+    const slug = `${baseSlug}-${userId.slice(0, 6)}-${Date.now()}`;
 
     return this.uow.runInTransaction(async (manager) => {
       const exists = await this.workspaceRepo.existsBySlug(slug, manager);
@@ -84,18 +85,17 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
         );
       }
 
-      // Create workspace
+      // 1. Create workspace
       const workspace = await this.workspaceRepo.save(
         {
-          ...CreateWorkspaceMultiServiceDto,
-          name: 'Hello Task management',
+          name: defaultName,
           slug,
           planType: PlanTypeWorkspace.FREE,
         },
         manager,
       );
 
-      // creator joined workspace
+      // 2. Creator joins workspace
       await this.createUserWorkspaceService.create(
         {
           user_id: userId,
@@ -104,7 +104,7 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
         manager,
       );
 
-      // 3. Seed roles mặc định
+      // 3. Seed default roles
       const roles = await this.roleRepository.saveMany(
         [
           {
@@ -119,7 +119,7 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
         manager,
       );
 
-      const ownerRole = roles.find((role: any) => role.name === RoleName.OWNER);
+      const ownerRole = roles.find((role) => role.name === RoleName.OWNER);
 
       if (!ownerRole) {
         throw new HttpException(
@@ -128,7 +128,7 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
         );
       }
 
-      // 4. Create user_roles (assign Owner cho creator)
+      // 4. Assign owner role to creator
       await this.createUserRoleService.create(
         {
           user_id: userId,
@@ -139,9 +139,8 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
         manager,
       );
 
-      // 6. Nếu chọn page:
-
-      const createPage = await this.createPageService.create(
+      // 5. Create home page
+      const createdPage = await this.createPageService.create(
         {
           workspace_id: workspace.id,
           title: workspace.name,
@@ -151,50 +150,35 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
         manager,
       );
 
-      // 6.1 Create project
+      // 6. Create default project
       const project = await this.createProjectService.create(
         {
           workspace_id: workspace.id,
-          name: workspace.name,
+          name: `${workspace.name} project`,
           key: 'TASK',
           created_by: userId,
         },
         manager,
       );
 
-      // update page block
-      const pageBlock_id = createPage.pageBlock.id;
-
-      await this.updatePageBlockService.update(
-        {
-          id: pageBlock_id,
-          data_config: {
-            entity_type: 'PROJECT',
-            entity_id: project.id,
-            view: 'board',
-          },
-        },
-        manager,
-      );
-
-      // 6.2 Create board
+      // 7. Create default board
       const board = await this.createBoardService.create(
         {
-          projectId: project.id,
-          createdBy: userId,
-          name: workspace.name,
-          viewType: BoardViewType.TABLE,
           workspaceId: workspace.id,
+          projectId: project.id,
+          name: workspace.name,
+          createdBy: userId,
+          viewType: BoardViewType.BOARD, // đồng bộ với view mặc định bên dưới
         },
         manager,
       );
 
+      // 8. Seed default task statuses
       const createdStatuses = await this.createTaskStatusService.createMany(
         [
           {
             workspaceId: workspace.id,
             projectId: project.id,
-            boardId: board.id,
             name: 'Todo',
             position: 0,
             color: '#94A3B8',
@@ -203,7 +187,6 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
           {
             workspaceId: workspace.id,
             projectId: project.id,
-            boardId: board.id,
             name: 'In Progress',
             position: 1,
             color: '#3B82F6',
@@ -212,7 +195,6 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
           {
             workspaceId: workspace.id,
             projectId: project.id,
-            boardId: board.id,
             name: 'Done',
             position: 2,
             color: '#22C55E',
@@ -222,7 +204,7 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
         manager,
       );
 
-      // 6.4 Seed task priority
+      // 9. Seed default priorities
       const createdPriorities = await this.createTaskPriorityService.createMany(
         [
           {
@@ -272,20 +254,25 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
       );
 
       if (!todoStatus || !inProgressStatus || !doneStatus) {
-        throw new Error('Default task statuses were not seeded correctly');
+        throw new HttpException(
+          'Default task statuses were not seeded correctly',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
 
       if (!lowPriority || !mediumPriority || !highPriority) {
-        throw new Error('Default task priorities were not seeded correctly');
+        throw new HttpException(
+          'Default task priorities were not seeded correctly',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
 
-      // 6.5 Create sample tasks
+      // 10. Create sample tasks
       await this.createTaskService.createMany(
         [
           {
             workspaceId: workspace.id,
             projectId: project.id,
-            boardId: board.id,
             projectSeq: 1,
             title: 'Create first task',
             description: 'This is the first default task for your project.',
@@ -297,7 +284,6 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
           {
             workspaceId: workspace.id,
             projectId: project.id,
-            boardId: board.id,
             projectSeq: 2,
             title: 'Move task across columns',
             description: 'Try moving this task from Todo to In Progress.',
@@ -309,7 +295,6 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
           {
             workspaceId: workspace.id,
             projectId: project.id,
-            boardId: board.id,
             projectSeq: 3,
             title: 'Complete your first workflow',
             description: 'Mark this task as Done when you finish setup.',
@@ -322,20 +307,39 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
         manager,
       );
 
+      // 11. Update page block sau khi đã có project + board
+      if (createdPage.pageBlock?.id) {
+        await this.updatePageBlockService.update(
+          {
+            id: createdPage.pageBlock.id,
+            type: PageBlockType.PROJECT,
+            title: project.name,
+            data_config: {
+              entity_type: 'PROJECT',
+              project_id: project.id,
+              workspace_id: workspace.id,
+              board_id: board.id,
+              view: BoardViewType.BOARD,
+              is_open: false,
+            },
+          },
+          manager,
+        );
+      }
+
       return workspace;
     });
   }
 
   async create({
     userId,
-    CreateWorkspaceMultiServiceDto,
+    createWorkspaceDto,
   }: {
     userId: string;
-    CreateWorkspaceMultiServiceDto: CreateWorkspaceMultiServiceDto;
+    createWorkspaceDto: CreateWorkspaceDto;
   }): Promise<WorkspaceModel> {
-    const slug = generateSlug(
-      CreateWorkspaceMultiServiceDto.name,
-    ).toLowerCase();
+    const baseSlug = generateSlug(createWorkspaceDto.name).toLowerCase();
+    const slug = `${baseSlug}-${userId.slice(0, 6)}-${Date.now()}`;
 
     return this.uow.runInTransaction(async (manager) => {
       const exists = await this.workspaceRepo.existsBySlug(slug, manager);
@@ -349,10 +353,9 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
       // Create workspace
       const workspace = await this.workspaceRepo.save(
         {
-          ...CreateWorkspaceMultiServiceDto,
+          ...createWorkspaceDto,
           slug,
-          planType:
-            CreateWorkspaceMultiServiceDto.planType ?? PlanTypeWorkspace.FREE,
+          planType: createWorkspaceDto.planType ?? PlanTypeWorkspace.FREE,
         },
         manager,
       );
@@ -397,6 +400,16 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
           role_id: ownerRole.id,
           workspace_id: workspace.id,
           assigned_by: userId,
+        },
+        manager,
+      );
+
+      await this.createPageService.create(
+        {
+          workspace_id: workspace.id,
+          title: workspace.name,
+          slug: workspace.slug,
+          created_by: userId,
         },
         manager,
       );

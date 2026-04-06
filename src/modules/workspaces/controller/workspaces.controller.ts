@@ -2,7 +2,7 @@ import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { type IAuth } from 'src/types/auth';
-import { CreateWorkspaceMultiServiceDto } from '../dto/create-workspace.dto';
+import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
 import { type CreateWorkspaceApplication } from '../interfaces/applications/create-workspace.application.interface';
 import { type FindWorkspaceApplication } from '../interfaces/applications/find.workspace.application.interface';
 import { WORKSPACE_TYPES } from '../interfaces/types';
@@ -20,24 +20,24 @@ export class WorkspacesController {
   @Post('default')
   @ResponseMessage('Workspaces created')
   async create(
-    @Body() CreateWorkspaceMultiServiceDto: CreateWorkspaceMultiServiceDto,
+    @Body() createWorkspaceDto: CreateWorkspaceDto,
     @Auth() auth: IAuth,
   ) {
     return await this.CreateWorkspaceMultiServiceAppImpl.createDeault({
       userId: auth.id,
-      CreateWorkspaceMultiServiceDto,
+      createWorkspaceDto,
     });
   }
 
   @Post()
   @ResponseMessage('Workspaces created')
   async createV2(
-    @Body() CreateWorkspaceMultiServiceDto: CreateWorkspaceMultiServiceDto,
+    @Body() createWorkspaceDto: CreateWorkspaceDto,
     @Auth() auth: IAuth,
   ) {
     return await this.CreateWorkspaceMultiServiceAppImpl.create({
       userId: auth.id,
-      CreateWorkspaceMultiServiceDto,
+      createWorkspaceDto,
     });
   }
 

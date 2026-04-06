@@ -3,8 +3,6 @@ export class CreateTaskStatusDto {
 
   projectId: string;
 
-  boardId: string;
-
   name: string;
 
   position: number;

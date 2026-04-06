@@ -1,20 +1,20 @@
-import { CreateWorkspaceMultiServiceDto } from '../../dto/create-workspace.dto';
+import { CreateWorkspaceDto } from '../../dto/create-workspace.dto';
 import { WorkspaceResponseDto } from '../../dto/response/workspaces.response.dto';
 
 export interface CreateWorkspaceApplication {
   create({
     userId,
-    CreateWorkspaceMultiServiceDto,
+    createWorkspaceDto,
   }: {
     userId: string;
-    CreateWorkspaceMultiServiceDto: CreateWorkspaceMultiServiceDto;
+    createWorkspaceDto: CreateWorkspaceDto;
   }): Promise<WorkspaceResponseDto>;
 
   createDeault({
     userId,
-    CreateWorkspaceMultiServiceDto,
+    createWorkspaceDto,
   }: {
     userId: string;
-    CreateWorkspaceMultiServiceDto: CreateWorkspaceMultiServiceDto;
+    createWorkspaceDto: CreateWorkspaceDto;
   }): Promise<WorkspaceResponseDto>;
 }

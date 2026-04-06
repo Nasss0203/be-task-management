@@ -9,7 +9,6 @@ export class TaskMapper {
       entity.id,
       entity.workspaceId,
       entity.projectId,
-      entity.boardId,
       entity.sprintId ?? null,
       entity.projectSeq,
       entity.title,
@@ -32,7 +31,6 @@ export class TaskMapper {
     if (model.id != null) e.id = model.id;
     e.workspaceId = model.workspaceId;
     e.projectId = model.projectId;
-    e.boardId = model.boardId;
 
     if (model.sprintId !== undefined) e.sprintId = model.sprintId;
     e.projectSeq = model.projectSeq;
@@ -60,7 +58,6 @@ export class TaskMapper {
       id: model.id,
       workspaceId: model.workspaceId,
       projectId: model.projectId,
-      boardId: model.boardId,
       sprintId: model.sprintId,
       projectSeq: model.projectSeq,
       title: model.title,

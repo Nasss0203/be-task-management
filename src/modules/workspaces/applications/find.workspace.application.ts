@@ -17,6 +17,7 @@ export class FindWorkspaceApplicationImpl implements FindWorkspaceApplication {
 
     return workspaces.map((workspace) => WorkspaceMapper.toResponse(workspace));
   }
+
   async findOneWorkspaceById(
     userId: string,
     workspaceId: string,

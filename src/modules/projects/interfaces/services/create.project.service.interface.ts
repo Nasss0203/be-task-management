@@ -7,4 +7,9 @@ export interface CreateProjectService {
     createProjectDto: CreateProjectDto,
     manager?: EntityManager,
   ): Promise<ProjectModel>;
+
+  createProjectWithPageBlock(
+    createProjectDto: CreateProjectDto,
+    manager?: EntityManager,
+  ): Promise<ProjectModel>;
 }

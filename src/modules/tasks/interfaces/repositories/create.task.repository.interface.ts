@@ -3,7 +3,6 @@ import { TaskModel } from '../../domain/models/task.model';
 
 export type SaveTaskInput = Pick<
   TaskModel,
-  | 'boardId'
   | 'description'
   | 'priorityId'
   | 'projectId'

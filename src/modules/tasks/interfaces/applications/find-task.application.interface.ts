@@ -4,6 +4,5 @@ export interface FindTaskApplication {
   findAllTask(
     projectId: string,
     workspaceId: string,
-    boardId: string,
   ): Promise<TaskResponseDto[]>;
 }

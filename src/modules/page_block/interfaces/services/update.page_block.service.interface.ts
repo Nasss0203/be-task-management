@@ -5,6 +5,6 @@ import { UpdatePageBlockDto } from '../../dto/update-page_block.dto';
 export interface UpdatePageBlockService {
   update(
     updatePageBlockDto: UpdatePageBlockDto,
-    manager: EntityManager,
+    manager?: EntityManager,
   ): Promise<PageBlockModel>;
 }

@@ -5,9 +5,13 @@ export const PAGE_BLOCK_TYPES = {
   },
   applications: {
     CreatePageBlockApplication: 'CreatePageBlockApplication',
+    UpdatePageBlockApplication: 'UpdatePageBlockApplication',
   },
   repositories: {
     CreatePageBlockRepository: 'CreatePageBlockRepository',
     UpdatePageBlockRepository: 'UpdatePageBlockRepository',
+  },
+  uow: {
+    UnitOfWork: 'UnitOfWork',
   },
 };

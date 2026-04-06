@@ -3,4 +3,8 @@ import { ProjectResponseDto } from '../../dto/reponse/project.response.dto';
 
 export interface CreateProjectApplication {
   create(createProjectDto: CreateProjectDto): Promise<ProjectResponseDto>;
+
+  createProjectWithPageBlock(
+    createProjectDto: CreateProjectDto,
+  ): Promise<ProjectResponseDto>;
 }

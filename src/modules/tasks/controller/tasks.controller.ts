@@ -31,14 +31,13 @@ export class TasksController {
     private readonly createTaskApplication: CreateTaskApplication,
   ) {}
 
-  @Get('/workspace/:workspaceId/project/:projectId/board/:boardId')
+  @Get('/workspace/:workspaceId/project/:projectId')
   @ResponseMessage('Find all task')
   async findAllByTaskId(
     @Param('projectId') projectId: string,
     @Param('workspaceId') workspaceId: string,
-    @Param('boardId') boardId: string,
   ): Promise<TaskResponseDto[]> {
-    return await this.app.findAllTask(projectId, workspaceId, boardId);
+    return await this.app.findAllTask(projectId, workspaceId);
   }
 
   @Post()

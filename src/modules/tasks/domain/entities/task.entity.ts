@@ -1,4 +1,3 @@
-import { Board } from 'src/modules/boards/domain/entities/board.entity';
 import { Project } from 'src/modules/projects/domain/entities/project.entity';
 import { Sprint } from 'src/modules/sprints/entities/sprint.entity';
 import { TaskPriority } from 'src/modules/task_priority/domain/entities/task_priority.entity';
@@ -20,7 +19,6 @@ import {
 @Index('UQ_TASKS_PROJECT_SEQ', ['projectId', 'projectSeq'], { unique: true })
 @Index('IDX_TASKS_WORKSPACE_ID', ['workspaceId'])
 @Index('IDX_TASKS_PROJECT_ID', ['projectId'])
-@Index('IDX_TASKS_BOARD_ID', ['boardId'])
 @Index('IDX_TASKS_STATUS_ID', ['statusId'])
 @Index('IDX_TASKS_REPORTER_ID', ['reporterId'])
 @Index('IDX_TASKS_SPRINT_ID', ['sprintId'])
@@ -33,9 +31,6 @@ export class Task {
 
   @Column({ name: 'project_id', type: 'uuid' })
   projectId: string;
-
-  @Column({ name: 'board_id', type: 'uuid' })
-  boardId: string;
 
   @Column({ name: 'sprint_id', type: 'uuid', nullable: true })
   sprintId: string | null;
@@ -79,12 +74,6 @@ export class Task {
   })
   @JoinColumn({ name: 'project_id' })
   project: Project;
-
-  @ManyToOne(() => Board, (board) => board.tasks, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'board_id' })
-  board: Board;
 
   @ManyToOne(() => Sprint, (sprint) => sprint.tasks, {
     nullable: true,

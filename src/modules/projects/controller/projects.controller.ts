@@ -25,8 +25,11 @@ export class ProjectsController {
 
   @Post()
   @ResponseMessage('Create Project')
-  create(@Body() createProjectDto: CreateProjectDto, @Auth() auth: IAuth) {
-    return this.createProjectApplication.create({
+  createProjectWithPageBlock(
+    @Body() createProjectDto: CreateProjectDto,
+    @Auth() auth: IAuth,
+  ) {
+    return this.createProjectApplication.createProjectWithPageBlock({
       ...createProjectDto,
       created_by: auth.id,
     });

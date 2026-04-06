@@ -14,12 +14,10 @@ export class FindTaskServiceImpl implements FindTaskService {
   async findAllTask(
     projectId: string,
     workspaceId: string,
-    boardId: string,
   ): Promise<TaskModel[]> {
     return this.findTaskRepository.findAllTask({
       projectId,
       workspaceId,
-      boardId,
     });
   }
 }
