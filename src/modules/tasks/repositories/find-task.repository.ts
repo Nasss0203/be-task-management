@@ -19,6 +19,7 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
   private getRepo(manager?: EntityManager): Repository<Task> {
     return manager ? manager.getRepository(Task) : this.repo;
   }
+
   async findAllTask(
     params: ParamTask,
     manager?: EntityManager,

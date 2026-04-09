@@ -6,8 +6,8 @@ import { TASK_STATUS_TYPES } from 'src/modules/task_status/interfaces/types';
 import { EntityManager } from 'typeorm';
 import { TaskModel } from '../domain/models/task.model';
 import { CreateTaskDto } from '../dto/create-task.dto';
-import { type CreateTaskRepository } from '../interfaces/repositories/create.task.repository.interface';
-import { CreateTaskService } from '../interfaces/services/create.task.repository.interface';
+import { type CreateTaskRepository } from '../interfaces/repositories/create-task.repository.interface';
+import { CreateTaskService } from '../interfaces/services/create-task.service.interface';
 import { TASK_TYPES } from '../interfaces/types';
 
 @Injectable()
@@ -24,20 +24,37 @@ export class CreateTaskServiceImpl implements CreateTaskService {
 
   async create(
     createTaskDto: CreateTaskDto,
-    manager: EntityManager,
+    manager?: EntityManager,
   ): Promise<TaskModel> {
     return await this.repo.save(
       {
         ...createTaskDto,
+        projectSeq: null,
+        priorityId: createTaskDto.priorityId ?? null,
+        assigneeId: createTaskDto.assigneeId ?? null,
+        description: createTaskDto.description ?? null,
+        startAt: createTaskDto.startAt ?? null,
+        estimateMinutes: createTaskDto.estimateMinutes ?? null,
+        sprintId: createTaskDto.sprintId ?? null,
       },
       manager,
     );
   }
-
   async createMany(
     createTaskDtos: CreateTaskDto[],
     manager: EntityManager,
   ): Promise<TaskModel[]> {
-    return await this.repo.saveMany(createTaskDtos, manager);
+    return await this.repo.saveMany(
+      createTaskDtos.map((item) => ({
+        ...item,
+        priorityId: item.priorityId ?? null,
+        assigneeId: item.assigneeId ?? null,
+        description: item.description ?? null,
+        startAt: item.startAt ?? null,
+        estimateMinutes: item.estimateMinutes ?? null,
+        sprintId: item.sprintId ?? null,
+      })),
+      manager,
+    );
   }
 }

@@ -10,6 +10,7 @@ export class RoleMapper {
       entity.name,
       entity.workspace_id,
       entity.created_at,
+      entity.updated_at,
     );
   }
 
@@ -19,6 +20,7 @@ export class RoleMapper {
     entity.name = data.name;
     entity.workspace_id = data.workspace_id;
     entity.created_at = data.created_at!;
+    entity.updated_at = data.updated_at!;
     return entity;
   }
   static toResponse(model: RoleModel): RoleResponseDto {
@@ -27,6 +29,7 @@ export class RoleMapper {
       name: model.name,
       created_at: model.created_at,
       workspace_id: model.workspace_id,
+      updated_at: model.updated_at,
     };
   }
 }

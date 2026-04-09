@@ -3,18 +3,23 @@ import { TaskModel } from '../../domain/models/task.model';
 
 export type SaveTaskInput = Pick<
   TaskModel,
+  | 'workspaceId'
+  | 'projectId'
+  | 'projectSeq'
+  | 'title'
+  | 'statusId'
+  | 'createdBy'
   | 'description'
   | 'priorityId'
-  | 'projectId'
+  | 'assigneeId'
+  | 'startAt'
   | 'estimateMinutes'
-  | 'projectSeq'
-  | 'reporterId'
-  | 'statusId'
-  | 'title'
-  | 'workspaceId'
 > &
   Partial<
-    Pick<TaskModel, 'updatedAt' | 'createdAt' | 'id' | 'sprintId' | 'dueAt'>
+    Pick<
+      TaskModel,
+      'id' | 'sprintId' | 'dueAt' | 'completedAt' | 'createdAt' | 'updatedAt'
+    >
   >;
 
 export interface CreateTaskRepository {

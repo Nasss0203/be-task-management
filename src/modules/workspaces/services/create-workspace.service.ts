@@ -17,7 +17,7 @@ import { type CreateTaskPriorityService } from 'src/modules/task_priority/interf
 import { TASK_PRIORITY_TYPES } from 'src/modules/task_priority/interfaces/types';
 import { type CreateTaskStatusService } from 'src/modules/task_status/interfaces/services/create.task_status.service.interface';
 import { TASK_STATUS_TYPES } from 'src/modules/task_status/interfaces/types';
-import { type CreateTaskService } from 'src/modules/tasks/interfaces/services/create.task.repository.interface';
+import { type CreateTaskService } from 'src/modules/tasks/interfaces/services/create-task.service.interface';
 import { TASK_TYPES } from 'src/modules/tasks/interfaces/types';
 import { type CreateUserRoleService } from 'src/modules/user_roles/interfaces/services/create.user_role.service.interface';
 import { USER_ROLE_TYPES } from 'src/modules/user_roles/interfaces/types';
@@ -278,7 +278,7 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
             description: 'This is the first default task for your project.',
             statusId: todoStatus.id,
             priorityId: mediumPriority.id,
-            reporterId: userId,
+            createdBy: userId,
             estimateMinutes: 30,
           },
           {
@@ -289,7 +289,7 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
             description: 'Try moving this task from Todo to In Progress.',
             statusId: inProgressStatus.id,
             priorityId: lowPriority.id,
-            reporterId: userId,
+            createdBy: userId,
             estimateMinutes: 20,
           },
           {
@@ -300,7 +300,7 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
             description: 'Mark this task as Done when you finish setup.',
             statusId: doneStatus.id,
             priorityId: highPriority.id,
-            reporterId: userId,
+            createdBy: userId,
             estimateMinutes: 45,
           },
         ],

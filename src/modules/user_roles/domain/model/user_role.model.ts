@@ -4,7 +4,7 @@ export class UserRoleModel {
     public readonly workspace_id: string,
     public readonly role_id: string,
     public readonly assigned_at: Date,
-    public readonly assigned_by: string,
-    public readonly revoked_at: Date | null,
+    public readonly assigned_by: string | null,
+    // public readonly revoked_at: Date | null,
   ) {}
 }

@@ -3,16 +3,29 @@ export class TaskResponseDto {
   workspaceId: string;
   projectId: string;
   sprintId: string | null;
-  projectSeq: number;
+
+  projectSeq: number | null;
   title: string;
   description: string | null;
+
   statusId: string;
   statusName: string | null;
+
   priorityId: string | null;
   priorityName: string | null;
-  reporterId: string;
-  dueAt?: Date | null;
-  estimateMinutes?: number | null;
+
+  createdBy: string;
+
+  assigneeId: string | null;
+  assigneeName: string | null;
+
+  startAt: Date | null;
+  dueAt: Date | null;
+  completedAt: Date | null;
+
+  estimateMinutes: number | null;
+
   createdAt?: Date;
   updatedAt?: Date;
+  deletedAt?: Date | null;
 }

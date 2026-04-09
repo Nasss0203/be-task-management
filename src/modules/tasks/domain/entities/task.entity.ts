@@ -2,11 +2,13 @@ import { Project } from 'src/modules/projects/domain/entities/project.entity';
 import { Sprint } from 'src/modules/sprints/entities/sprint.entity';
 import { TaskPriority } from 'src/modules/task_priority/domain/entities/task_priority.entity';
 import { TaskStatus } from 'src/modules/task_status/domain/entities/task_status.entity';
+
 import { User } from 'src/modules/users/entities/user.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   Index,
   JoinColumn,
@@ -20,7 +22,9 @@ import {
 @Index('IDX_TASKS_WORKSPACE_ID', ['workspaceId'])
 @Index('IDX_TASKS_PROJECT_ID', ['projectId'])
 @Index('IDX_TASKS_STATUS_ID', ['statusId'])
-@Index('IDX_TASKS_REPORTER_ID', ['reporterId'])
+@Index('IDX_TASKS_PRIORITY_ID', ['priorityId'])
+@Index('IDX_TASKS_CREATED_BY', ['createdBy'])
+@Index('IDX_TASKS_ASSIGNEE_ID', ['assigneeId'])
 @Index('IDX_TASKS_SPRINT_ID', ['sprintId'])
 export class Task {
   @PrimaryGeneratedColumn('uuid')
@@ -35,8 +39,8 @@ export class Task {
   @Column({ name: 'sprint_id', type: 'uuid', nullable: true })
   sprintId: string | null;
 
-  @Column({ name: 'project_seq', type: 'int' })
-  projectSeq: number;
+  @Column({ name: 'project_seq', type: 'int', nullable: true })
+  projectSeq: number | null;
 
   @Column({ name: 'title', type: 'varchar', length: 255 })
   title: string;
@@ -51,10 +55,19 @@ export class Task {
   priorityId: string | null;
 
   @Column({ name: 'reporter_id', type: 'uuid' })
-  reporterId: string;
+  createdBy: string;
+
+  @Column({ name: 'assignee_id', type: 'uuid', nullable: true })
+  assigneeId: string | null;
+
+  @Column({ name: 'start_at', type: 'timestamp', nullable: true })
+  startAt: Date | null;
 
   @Column({ name: 'due_at', type: 'timestamp', nullable: true })
   dueAt: Date | null;
+
+  @Column({ name: 'completed_at', type: 'timestamp', nullable: true })
+  completedAt: Date | null;
 
   @Column({ name: 'estimate_minutes', type: 'int', nullable: true })
   estimateMinutes: number | null;
@@ -64,6 +77,9 @@ export class Task {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
   updatedAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
+  deletedAt: Date | null;
 
   @ManyToOne(() => Workspace, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'workspace_id' })
@@ -98,4 +114,8 @@ export class Task {
   @ManyToOne(() => User, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'reporter_id' })
   reporter: User;
+
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'assignee_id' })
+  assignee: User | null;
 }

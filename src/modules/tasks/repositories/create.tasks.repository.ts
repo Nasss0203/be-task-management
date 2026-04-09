@@ -7,7 +7,7 @@ import { TaskModel } from '../domain/models/task.model';
 import {
   CreateTaskRepository,
   SaveTaskInput,
-} from '../interfaces/repositories/create.task.repository.interface';
+} from '../interfaces/repositories/create-task.repository.interface';
 import { TaskMapper } from '../mapper/tasks.mapper';
 
 @Injectable()

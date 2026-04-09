@@ -11,7 +11,6 @@ export class UserRoleMapper {
       entity.workspace_id,
       entity.assigned_at,
       entity.assigned_by,
-      entity.revoked_at ?? null,
     );
   }
 
@@ -21,7 +20,7 @@ export class UserRoleMapper {
     if (model.user_id != null) e.user_id = model.user_id;
     if (model.workspace_id != null) e.workspace_id = model.workspace_id;
     if (model.assigned_by != null) e.assigned_by = model.assigned_by;
-    if (model.revoked_at != null) e.revoked_at = model.revoked_at;
+    // if (model.revoked_at != null) e.revoked_at = model.revoked_at;
     if (model.assigned_at != null) e.assigned_at = model.assigned_at;
     return e;
   }
@@ -33,7 +32,7 @@ export class UserRoleMapper {
       user_id: model.user_id,
       assigned_at: model.assigned_at,
       assigned_by: model.assigned_by,
-      revoked_at: model.revoked_at,
+      // revoked_at: model.revoked_at,
     };
   }
 }

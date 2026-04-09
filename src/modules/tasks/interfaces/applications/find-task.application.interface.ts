@@ -1,4 +1,4 @@
-import { TaskResponseDto } from '../../dto/response/task.response.dto';
+import { TaskResponseDto } from '../../dto/response/task-response.dto';
 
 export interface FindTaskApplication {
   findAllTask(

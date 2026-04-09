@@ -2,7 +2,7 @@ import { EntityManager } from 'typeorm';
 import { RoleModel } from '../../domain/model/role.model';
 
 export type SaveRoleInput = Pick<RoleModel, 'name' | 'workspace_id'> &
-  Partial<Pick<RoleModel, 'id' | 'created_at'>>;
+  Partial<Pick<RoleModel, 'id' | 'created_at' | 'updated_at'>>;
 
 export interface RoleRepository {
   save(

@@ -12,10 +12,9 @@ export class Permission {
 
   @Column({ type: 'varchar', length: 100, unique: true })
   code: string;
-  // ví dụ: user:create, user:update, task:delete
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  description: string;
+  description: string | null;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;

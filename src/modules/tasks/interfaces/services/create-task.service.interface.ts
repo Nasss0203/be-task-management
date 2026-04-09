@@ -7,6 +7,7 @@ export interface CreateTaskService {
     createTaskDto: CreateTaskDto,
     manager?: EntityManager,
   ): Promise<TaskModel>;
+
   createMany(
     createTaskDtos: CreateTaskDto[],
     manager: EntityManager,
