@@ -52,6 +52,7 @@ export class PermissionGuard implements CanActivate {
         userId,
         workspaceId,
       );
+    console.log('🚀 ~ userPermissions~', userPermissions);
 
     const hasAllPermissions = requiredPermissions.every((permission) =>
       userPermissions.includes(permission),

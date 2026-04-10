@@ -16,13 +16,16 @@ import { TasksModule } from '../tasks/tasks.module';
 import { UserRolesModule } from '../user_roles/user_roles.module';
 import { UserWorkspace } from '../user_workspace/domain/entities/user_workspace.entity';
 import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
+import { AccessWorkspaceApplicationImpl } from './applications/access-workspace.application';
 import { CreateWorkspaceApplicationImpl } from './applications/create-workspace.application';
 import { FindWorkspaceApplicationImpl } from './applications/find.workspace.application';
 import { WorkspacesController } from './controller/workspaces.controller';
 import { Workspace } from './domain/entities/workspace.entity';
 import { WORKSPACE_TYPES } from './interfaces/types';
+import { AccessWorkspaceRepositoryImpl } from './repositories/access-workspace.repository';
 import { WorkspaceRepositoryImpl } from './repositories/create-workspace.repository';
 import { FindWorkspaceRepositoryImpl } from './repositories/find.workspace.repository';
+import { AccessWorkspaceServiceImpl } from './services/access-workspace.service';
 import { CreateWorkspaceServiceImpl } from './services/create-workspace.service';
 import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
 
@@ -54,7 +57,10 @@ import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
       provide: WORKSPACE_TYPES.applications.FindWorkspaceApplication,
       useClass: FindWorkspaceApplicationImpl,
     },
-
+    {
+      provide: WORKSPACE_TYPES.applications.AccessWorkspaceApplication,
+      useClass: AccessWorkspaceApplicationImpl,
+    },
     //Service
     {
       provide: WORKSPACE_TYPES.services.CreateWorkspaceService,
@@ -63,6 +69,10 @@ import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
     {
       provide: WORKSPACE_TYPES.services.FindWorkspaceService,
       useClass: FindWorkspaceServiceImpl,
+    },
+    {
+      provide: WORKSPACE_TYPES.services.AccessWorkspaceService,
+      useClass: AccessWorkspaceServiceImpl,
     },
 
     //Repository
@@ -73,6 +83,10 @@ import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
     {
       provide: WORKSPACE_TYPES.repositories.FindWorkspaceRepository,
       useClass: FindWorkspaceRepositoryImpl,
+    },
+    {
+      provide: WORKSPACE_TYPES.repositories.AccessWorkspaceRepository,
+      useClass: AccessWorkspaceRepositoryImpl,
     },
     {
       provide: WORKSPACE_TYPES.uow.UnitOfWork,

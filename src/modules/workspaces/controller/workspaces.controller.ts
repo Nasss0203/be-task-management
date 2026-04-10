@@ -3,6 +3,7 @@ import { Auth } from 'src/common/decorator/auth.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { type IAuth } from 'src/types/auth';
 import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
+import { type AccessWorkspaceApplication } from '../interfaces/applications/access-workspace.application.interface';
 import { type CreateWorkspaceApplication } from '../interfaces/applications/create-workspace.application.interface';
 import { type FindWorkspaceApplication } from '../interfaces/applications/find.workspace.application.interface';
 import { WORKSPACE_TYPES } from '../interfaces/types';
@@ -15,6 +16,9 @@ export class WorkspacesController {
 
     @Inject(WORKSPACE_TYPES.applications.FindWorkspaceApplication)
     private readonly findWorkspaceApplicationImpl: FindWorkspaceApplication,
+
+    @Inject(WORKSPACE_TYPES.applications.AccessWorkspaceApplication)
+    private readonly accessWorkspaceApplication: AccessWorkspaceApplication,
   ) {}
 
   @Post('default')
@@ -54,6 +58,18 @@ export class WorkspacesController {
     @Param('workspaceId') workspaceId: string,
   ) {
     return this.findWorkspaceApplicationImpl.findOneWorkspaceById(
+      auth.id,
+      workspaceId,
+    );
+  }
+
+  @Get(':workspaceId/access')
+  @ResponseMessage('Get access workspace')
+  async getWorkspaceAccess(
+    @Param('workspaceId') workspaceId: string,
+    @Auth() auth: IAuth,
+  ) {
+    return this.accessWorkspaceApplication.getWorkspaceAccess(
       auth.id,
       workspaceId,
     );
