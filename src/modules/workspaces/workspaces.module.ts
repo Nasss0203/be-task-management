@@ -4,10 +4,12 @@ import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { BoardsModule } from '../boards/boards.module';
 import { PageModule } from '../page/page.module';
 import { PageBlockModule } from '../page_block/page_block.module';
+import { PermissionModule } from '../permission/permission.module';
 import { Project } from '../projects/domain/entities/project.entity';
 import { ProjectsModule } from '../projects/projects.module';
 import { Role } from '../role/domain/entities/role.entity';
 import { RoleModule } from '../role/role.module';
+import { RolePermissionModule } from '../role_permission/role_permission.module';
 import { TaskPriorityModule } from '../task_priority/task_priority.module';
 import { TaskStatusModule } from '../task_status/task_status.module';
 import { TasksModule } from '../tasks/tasks.module';
@@ -37,6 +39,8 @@ import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
     TaskStatusModule,
     TaskPriorityModule,
     TasksModule,
+    PermissionModule,
+    RolePermissionModule,
   ],
 
   controllers: [WorkspacesController],

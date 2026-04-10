@@ -1,7 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { RolePermissionService } from './role_permission.service';
-import { CreateRolePermissionDto } from './dto/create-role_permission.dto';
-import { UpdateRolePermissionDto } from './dto/update-role_permission.dto';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { CreateRolePermissionDto } from '../dto/create-role_permission.dto';
+import { UpdateRolePermissionDto } from '../dto/update-role_permission.dto';
+import { RolePermissionService } from '../role_permission.service';
 
 @Controller('role-permission')
 export class RolePermissionController {
@@ -23,7 +31,10 @@ export class RolePermissionController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRolePermissionDto: UpdateRolePermissionDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateRolePermissionDto: UpdateRolePermissionDto,
+  ) {
     return this.rolePermissionService.update(+id, updateRolePermissionDto);
   }
 

@@ -26,5 +26,8 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "strictPropertyInitialization": false
+  },
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
   }
 }

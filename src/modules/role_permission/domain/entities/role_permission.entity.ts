@@ -1,6 +1,6 @@
-import { Permission } from 'src/modules/permission/entities/permission.entity';
+import { Permission } from 'src/modules/permission/domain/entities/permission.entity';
 import { Entity, Index, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
-import { Role } from '../../role/domain/entities/role.entity';
+import { Role } from '../../../role/domain/entities/role.entity';
 
 @Index('IDX_role_permissions_role', ['role_id'])
 @Index('IDX_role_permissions_permission', ['permission_id'])

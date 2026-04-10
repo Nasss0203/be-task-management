@@ -1,7 +1,7 @@
-// src/database/database.module.ts
-import { Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import 'dotenv/config';
+import 'reflect-metadata';
+import { DataSource } from 'typeorm';
+
 import { Board } from 'src/modules/boards/domain/entities/board.entity';
 import { Page } from 'src/modules/page/domain/entities/page.entity';
 import { PageBlock } from 'src/modules/page_block/domain/entities/page_block.entity';
@@ -20,43 +20,35 @@ import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_w
 import { User } from 'src/modules/users/entities/user.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 
-@Module({
-  imports: [
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get('DB_HOST'),
-        port: config.get<number>('DB_PORT'),
-        username: config.get<string>('DB_USER'),
-        password: config.get<string>('DB_PASSWORD'),
-        database: config.get<string>('DB_NAME'),
-        autoLoadEntities: false,
-        synchronize: false,
-        migrationsRun: false,
-        schema: 'public',
-        logging: true,
-        entities: [
-          User,
-          Workspace,
-          Permission,
-          Role,
-          RolePermission,
-          UserProfile,
-          RefreshToken,
-          UserWorkspace,
-          UserRole,
-          Page,
-          PageBlock,
-          Project,
-          Sprint,
-          Task,
-          Board,
-          TaskStatus,
-          TaskPriority,
-        ],
-      }),
-    }),
+export default new DataSource({
+  type: 'postgres',
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT ?? 5432),
+  username: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  schema: 'public',
+  synchronize: false,
+  migrationsRun: false,
+  logging: true,
+  entities: [
+    User,
+    Workspace,
+    Permission,
+    Role,
+    RolePermission,
+    UserProfile,
+    RefreshToken,
+    UserWorkspace,
+    UserRole,
+    Page,
+    PageBlock,
+    Project,
+    Sprint,
+    Task,
+    Board,
+    TaskStatus,
+    TaskPriority,
   ],
-})
-export class DatabaseModule {}
+  migrations: ['src/database/migrations/*{.ts,.js}'],
+});

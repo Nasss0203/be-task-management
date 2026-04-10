@@ -11,8 +11,6 @@ import { ProjectsModule } from './modules/projects/projects.module';
 import { RefreshTokenModule } from './modules/refresh_token/refresh_token.module';
 import { RoleModule } from './modules/role/role.module';
 import { RolePermissionModule } from './modules/role_permission/role_permission.module';
-import { RbacSeedService } from './modules/seed/rbac.seed.service';
-import { SeedsModule } from './modules/seed/seeds.module';
 import { SprintsModule } from './modules/sprints/sprints.module';
 import { TaskPriorityModule } from './modules/task_priority/task_priority.module';
 import { TaskStatusModule } from './modules/task_status/task_status.module';
@@ -24,6 +22,7 @@ import { UsersModule } from './modules/users/users.module';
 
 import { PageModule } from './modules/page/page.module';
 import { PageBlockModule } from './modules/page_block/page_block.module';
+import { SeedsModule } from './modules/seed/seed.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 
 @Module({
@@ -63,8 +62,7 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
   controllers: [AppController],
   providers: [
     AppService,
-    RbacSeedService,
-    AppService,
+    // RbacSeedService,
     // {
     //   provide: APP_GUARD,
     //   useClass: JwtAuthGuard,
