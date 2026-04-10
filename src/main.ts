@@ -5,7 +5,6 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filter/http-exception';
-import { JwtAuthGuard } from './common/guard/jwt-auth.guard';
 import { TransformInterceptor } from './common/interceptor/transform.interceptor';
 import { MyLogger } from './log/my.logger';
 
@@ -18,7 +17,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalInterceptors(new TransformInterceptor(reflector));
   app.useGlobalFilters(new HttpExceptionFilter(httpAdapterHost));
-  app.useGlobalGuards(new JwtAuthGuard(reflector));
+  // app.useGlobalGuards(new JwtAuthGuard(reflector));
 
   app.use(cookieParser());
   app.enableCors({

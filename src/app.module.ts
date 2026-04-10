@@ -20,6 +20,9 @@ import { UserRolesModule } from './modules/user_roles/user_roles.module';
 import { UserWorkspacesModule } from './modules/user_workspace/user_workspace.module';
 import { UsersModule } from './modules/users/users.module';
 
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './common/guard/jwt-auth.guard';
+import { PermissionGuard } from './common/guard/permission.guard';
 import { PageModule } from './modules/page/page.module';
 import { PageBlockModule } from './modules/page_block/page_block.module';
 import { SeedsModule } from './modules/seed/seed.module';
@@ -63,10 +66,14 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
   providers: [
     AppService,
     // RbacSeedService,
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: JwtAuthGuard,
-    // },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionGuard,
+    },
   ],
 })
 export class AppModule {}
