@@ -7,7 +7,7 @@ import {
   type SaveUserWorkspaceInput,
   UserWorkspaceRepository,
 } from '../interfaces/repositories/user_workspace.repository.interface';
-import { WorkspaceMemeberMapper } from '../mapper/user_workspace.mapper';
+import { UserWorkspaceMapper } from '../mapper/user_workspace.mapper';
 
 @Injectable()
 export class UserWorkspaceRepositoryImpl implements UserWorkspaceRepository {
@@ -25,9 +25,9 @@ export class UserWorkspaceRepositoryImpl implements UserWorkspaceRepository {
     manager?: EntityManager,
   ): Promise<UserWorkspaceModel> {
     const repo = this.resolveRepo(manager);
-    const entity = WorkspaceMemeberMapper.toEntity(input);
+    const entity = UserWorkspaceMapper.toEntity(input);
     const saved = await repo.save(entity);
 
-    return WorkspaceMemeberMapper.toModel(saved);
+    return UserWorkspaceMapper.toModel(saved);
   }
 }

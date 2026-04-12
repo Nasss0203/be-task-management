@@ -8,5 +8,6 @@ export const ROLE_TYPES = {
   repositories: {
     /** Token cho interface WorkspaceRepository (tránh trùng với token TypeORM 'WorkspaceRepository') */
     RoleRepository: 'IRoleRepository',
+    FindRoleRepository: 'FindRoleRepository',
   },
 };

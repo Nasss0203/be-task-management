@@ -2,7 +2,11 @@ export const PERMISSIONS = {
   WORKSPACE_READ: 'workspace.read',
   WORKSPACE_UPDATE: 'workspace.update',
   WORKSPACE_DELETE: 'workspace.delete',
-  WORKSPACE_MANAGE_MEMBERS: 'workspace.manage_members',
+
+  WORKSPACE_MEMBER_READ: 'workspace.member.read',
+  WORKSPACE_MEMBER_ADD: 'workspace.member.add',
+  WORKSPACE_MEMBER_UPDATE_ROLE: 'workspace.member.update_role',
+  WORKSPACE_MEMBER_REMOVE: 'workspace.member.remove',
 
   PROJECT_CREATE: 'project.create',
   PROJECT_READ: 'project.read',
@@ -19,7 +23,7 @@ export const PERMISSIONS = {
   TASK_UPDATE: 'task.update',
   TASK_DELETE: 'task.delete',
 
-  ROLE_MANAGE: 'role.manage',
+  WORKSPACE_ROLE_MANAGE: 'workspace.role.manage',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -31,9 +35,22 @@ export const PERMISSION_SEED_DATA: {
   { code: PERMISSIONS.WORKSPACE_READ, description: 'Read workspace' },
   { code: PERMISSIONS.WORKSPACE_UPDATE, description: 'Update workspace' },
   { code: PERMISSIONS.WORKSPACE_DELETE, description: 'Delete workspace' },
+
   {
-    code: PERMISSIONS.WORKSPACE_MANAGE_MEMBERS,
-    description: 'Manage workspace members',
+    code: PERMISSIONS.WORKSPACE_MEMBER_READ,
+    description: 'Read workspace members',
+  },
+  {
+    code: PERMISSIONS.WORKSPACE_MEMBER_ADD,
+    description: 'Add member to workspace',
+  },
+  {
+    code: PERMISSIONS.WORKSPACE_MEMBER_UPDATE_ROLE,
+    description: 'Update member role in workspace',
+  },
+  {
+    code: PERMISSIONS.WORKSPACE_MEMBER_REMOVE,
+    description: 'Remove member from workspace',
   },
 
   { code: PERMISSIONS.PROJECT_CREATE, description: 'Create project' },
@@ -51,5 +68,8 @@ export const PERMISSION_SEED_DATA: {
   { code: PERMISSIONS.TASK_UPDATE, description: 'Update task' },
   { code: PERMISSIONS.TASK_DELETE, description: 'Delete task' },
 
-  { code: PERMISSIONS.ROLE_MANAGE, description: 'Manage roles' },
+  {
+    code: PERMISSIONS.WORKSPACE_ROLE_MANAGE,
+    description: 'Manage workspace roles',
+  },
 ];

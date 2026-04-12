@@ -24,6 +24,9 @@ import { UserRolesService } from './user_roles.service';
       useClass: UserRoleRepositoryImpl,
     },
   ],
-  exports: [USER_ROLE_TYPES.services.CreateUserRoleService],
+  exports: [
+    USER_ROLE_TYPES.services.CreateUserRoleService,
+    USER_ROLE_TYPES.repositories.UserRoleRepository,
+  ],
 })
 export class UserRolesModule {}
