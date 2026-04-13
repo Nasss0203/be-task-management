@@ -27,6 +27,8 @@ import { PageModule } from './modules/page/page.module';
 import { PageBlockModule } from './modules/page_block/page_block.module';
 import { SeedsModule } from './modules/seed/seed.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
+import { MailModule } from './modules/mail/mail.module';
+import { WorkspaceInvitesModule } from './modules/workspace_invites/workspace_invites.module';
 
 @Module({
   imports: [
@@ -61,6 +63,8 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
     UserRolesModule,
     PageModule,
     PageBlockModule,
+    MailModule,
+    WorkspaceInvitesModule,
   ],
   controllers: [AppController],
   providers: [

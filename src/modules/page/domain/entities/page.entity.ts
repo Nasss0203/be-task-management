@@ -1,5 +1,5 @@
 import { PageBlock } from 'src/modules/page_block/domain/entities/page_block.entity';
-import { User } from 'src/modules/users/entities/user.entity';
+import { User } from 'src/modules/users/domain/entities/user.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import {
   Column,

@@ -1,5 +1,5 @@
 import { Page } from 'src/modules/page/domain/entities/page.entity';
-import { User } from 'src/modules/users/entities/user.entity';
+import { User } from 'src/modules/users/domain/entities/user.entity';
 import {
   Column,
   CreateDateColumn,

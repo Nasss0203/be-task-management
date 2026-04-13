@@ -1,0 +1,19 @@
+import { RoleName } from 'src/modules/role/domain/entities/role.entity';
+import { WorkspaceInviteStatus } from '../entities/workspace_invite.entity';
+
+export class WorkspaceInviteModel {
+  constructor(
+    public readonly id: string,
+    public readonly workspace_id: string,
+    public readonly user_id: string | null,
+    public readonly email: string,
+    public readonly role_name: RoleName,
+    public readonly invited_by: string,
+    public readonly token: string,
+    public readonly status: WorkspaceInviteStatus,
+    public readonly accepted_at: Date | null,
+    public readonly expires_at: Date,
+    public readonly created_at: Date,
+    public readonly updated_at: Date,
+  ) {}
+}

@@ -3,7 +3,7 @@ import { Sprint } from 'src/modules/sprints/entities/sprint.entity';
 import { TaskPriority } from 'src/modules/task_priority/domain/entities/task_priority.entity';
 import { TaskStatus } from 'src/modules/task_status/domain/entities/task_status.entity';
 
-import { User } from 'src/modules/users/entities/user.entity';
+import { User } from 'src/modules/users/domain/entities/user.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import {
   Column,
