@@ -15,3 +15,8 @@ export class CreateWorkspaceInviteDto {
 
   workspaceId: string;
 }
+
+export class AcceptWorkspaceInviteDto {
+  @IsUUID()
+  token: string;
+}

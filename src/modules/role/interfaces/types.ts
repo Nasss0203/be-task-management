@@ -1,6 +1,7 @@
 export const ROLE_TYPES = {
   services: {
     CreateRoleService: 'CreateRoleService',
+    FindRoleService: 'FindRoleService',
   },
   applications: {
     CreateRoleApplication: 'CreateRoleApplication',

@@ -14,9 +14,13 @@ import { RequirePermissions } from 'src/common/decorator/require-permissions.dec
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
-import { CreateWorkspaceInviteDto } from '../dto/create-workspace_invite.dto';
+import {
+  AcceptWorkspaceInviteDto,
+  CreateWorkspaceInviteDto,
+} from '../dto/create-workspace_invite.dto';
 import { WorkspaceInviteResponseDto } from '../dto/response/workspace_invites-response.dto';
 import { UpdateWorkspaceInviteDto } from '../dto/update-workspace_invite.dto';
+import { type AcceptWorkspaceInviteApplication } from '../interfaces/applications/accept-workspace-invite.application.interface';
 import { type InviteWorkspaceMemberApplication } from '../interfaces/applications/invite-workspace-member.application.interface';
 import { WORKSPACE_INVITE_TYPES } from '../interfaces/types';
 import { WorkspaceInvitesService } from '../workspace_invites.service';
@@ -29,6 +33,11 @@ export class WorkspaceInvitesController {
       WORKSPACE_INVITE_TYPES.applications.InviteWorkspaceMemberApplication,
     )
     private readonly inviteWorkspaceMemberApplication: InviteWorkspaceMemberApplication,
+
+    @Inject(
+      WORKSPACE_INVITE_TYPES.applications.AcceptWorkspaceInviteApplication,
+    )
+    private readonly acceptWorkspaceInviteApplication: AcceptWorkspaceInviteApplication,
   ) {}
 
   @Post()
@@ -51,6 +60,23 @@ export class WorkspaceInvitesController {
       dto,
     );
   }
+
+  @Post('accept')
+  @ResponseMessage('Accept workspace invite successfully')
+  async acceptInvite(
+    @Body() dto: AcceptWorkspaceInviteDto,
+    @Auth() auth: IAuth,
+  ): Promise<WorkspaceInviteResponseDto> {
+    if (!auth?.id) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
+    return this.acceptWorkspaceInviteApplication.acceptWorkspaceInvite(
+      dto.token,
+      auth.id,
+    );
+  }
+
   @Post()
   create(@Body() createWorkspaceInviteDto: CreateWorkspaceInviteDto) {
     return this.workspaceInvitesService.create(createWorkspaceInviteDto);

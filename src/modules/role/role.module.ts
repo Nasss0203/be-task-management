@@ -3,13 +3,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CreateRoleApplicationImpl } from './applications/create.role.application';
 import { Role } from './domain/entities/role.entity';
 import { ROLE_TYPES } from './interfaces/types';
-import { FindRoleRepositoryImpl } from './repositories/find-role.repository.interface';
+import { FindRoleRepositoryImpl } from './repositories/find-role.repository';
 import { RoleRepositoryImpl } from './repositories/role.repository';
 import { CreateRoleServiceImpl } from './services/create.role.service';
+import { FindRoleServiceImpl } from './services/find-role.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Role])],
   providers: [
+    // Repository
     {
       provide: ROLE_TYPES.repositories.RoleRepository,
       useClass: RoleRepositoryImpl,
@@ -23,6 +25,10 @@ import { CreateRoleServiceImpl } from './services/create.role.service';
       useClass: CreateRoleServiceImpl,
     },
     {
+      provide: ROLE_TYPES.services.FindRoleService,
+      useClass: FindRoleServiceImpl,
+    },
+    {
       provide: ROLE_TYPES.applications.CreateRoleApplication,
       useClass: CreateRoleApplicationImpl,
     },
@@ -32,6 +38,7 @@ import { CreateRoleServiceImpl } from './services/create.role.service';
     ROLE_TYPES.services.CreateRoleService,
     ROLE_TYPES.applications.CreateRoleApplication,
     ROLE_TYPES.repositories.FindRoleRepository,
+    ROLE_TYPES.services.FindRoleService,
   ],
 })
 export class RoleModule {}
