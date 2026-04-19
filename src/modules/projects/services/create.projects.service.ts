@@ -246,7 +246,7 @@ export class CreateProjectServiceImpl implements CreateProjectService {
         await this.createPageBlockService.create(
           {
             page_id: page.id,
-            type: PageBlockType.PROJECT,
+            type: PageBlockType.DATABASE_VIEW,
             title: project.name,
             position_x: 0,
             position_y: 0,
@@ -254,15 +254,16 @@ export class CreateProjectServiceImpl implements CreateProjectService {
             height: 1,
             order_index: nextOrderIndex,
             style_config: null,
-            data_config: {
-              entity_type: 'PROJECT',
-              project_id: project.id,
-              workspace_id: workspaceId,
-              board_id: board?.id ?? null,
-              view: board?.viewType ?? initialView,
-              is_open: false,
-            },
+            data_config: [
+              {
+                project_id: project.id,
+                workspace_id: workspaceId,
+                board_id: board?.id ?? null,
+                view: board?.viewType ?? initialView,
+              },
+            ],
             created_by: userId,
+            content: null,
           },
           manager,
         );

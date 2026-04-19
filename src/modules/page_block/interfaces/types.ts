@@ -2,6 +2,7 @@ export const PAGE_BLOCK_TYPES = {
   services: {
     CreatePageBlockService: 'CreatePageBlockService',
     UpdatePageBlockService: 'UpdatePageBlockService',
+    FindPageBlockService: 'FindPageBlockService',
   },
   applications: {
     CreatePageBlockApplication: 'CreatePageBlockApplication',
@@ -10,8 +11,9 @@ export const PAGE_BLOCK_TYPES = {
   repositories: {
     CreatePageBlockRepository: 'CreatePageBlockRepository',
     UpdatePageBlockRepository: 'UpdatePageBlockRepository',
+    FindPageBlockRepository: 'FindPageBlockRepository',
   },
   uow: {
     UnitOfWork: 'UnitOfWork',
   },
-};
+} as const;

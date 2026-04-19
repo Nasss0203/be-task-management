@@ -15,7 +15,6 @@ export class UpdateTaskApplicationImpl implements UpdateTaskApplication {
 
   async updateTask(updateTaskDto: UpdateTaskDto): Promise<TaskResponseDto> {
     const task = await this.updateTaskService.updateTask(updateTaskDto);
-    console.log('🚀 ~ task~', task);
     return TaskMapper.toResponse(task);
   }
 }

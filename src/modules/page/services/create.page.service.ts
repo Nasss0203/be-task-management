@@ -26,7 +26,7 @@ export class CreatePageServiceImpl implements CreatePageService {
     const pageBlock = await this.createPageBlockService.create(
       {
         page_id: page.id,
-        type: PageBlockType.BOARD,
+        type: PageBlockType.DATABASE_VIEW,
         title: page.title,
         position_x: 0,
         position_y: 0,
@@ -36,6 +36,7 @@ export class CreatePageServiceImpl implements CreatePageService {
         style_config: null,
         data_config: null,
         created_by: page.created_by,
+        content: null,
       },
       manager,
     );

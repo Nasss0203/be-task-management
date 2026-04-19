@@ -8,8 +8,8 @@ export class UserMapper {
     return new UserModel(
       entity.id,
       entity.email,
-      entity.passwordHash,
       entity.username,
+      entity.passwordHash,
       entity.isActive,
       entity.createdAt,
       entity.updatedAt,

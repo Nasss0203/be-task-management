@@ -362,16 +362,16 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
     await this.updatePageBlockService.update(
       {
         id: createdPage.pageBlock.id,
-        type: PageBlockType.PROJECT,
+        type: PageBlockType.DATABASE_VIEW,
         title: projectName,
-        data_config: {
-          entity_type: 'PROJECT',
-          project_id: projectId,
-          workspace_id: workspaceId,
-          board_id: boardId,
-          view: BoardViewType.BOARD,
-          is_open: false,
-        },
+        data_config: [
+          {
+            project_id: projectId,
+            workspace_id: workspaceId,
+            board_id: boardId,
+            view: BoardViewType.BOARD,
+          },
+        ],
       },
       manager,
     );

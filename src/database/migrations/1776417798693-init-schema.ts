@@ -1,14 +1,17 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitSchema1775747598603 implements MigrationInterface {
-    name = 'InitSchema1775747598603'
+export class InitSchema1776417798693 implements MigrationInterface {
+    name = 'InitSchema1776417798693'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`CREATE TABLE "users" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "email" character varying(255) NOT NULL, "username" character varying(100) NOT NULL, "password_hash" character varying(255) NOT NULL, "is_active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "users" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "email" character varying(255) NOT NULL, "username" character varying(100) NOT NULL, "google_id" character varying(255), "avatar_url" character varying(500), "password_hash" character varying(255), "is_active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE UNIQUE INDEX "IDX_97672ac88f789774dd47f7c8be" ON "users" ("email") `);
         await queryRunner.query(`CREATE UNIQUE INDEX "IDX_fe0bb3f6520ee0469504521e71" ON "users" ("username") `);
-        await queryRunner.query(`CREATE TABLE "user_workspaces" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "workspace_id" uuid NOT NULL, "user_id" uuid NOT NULL, "joined_at" TIMESTAMP NOT NULL DEFAULT now(), "last_opened_at" TIMESTAMP, CONSTRAINT "PK_3c26b2f35801149e8f0af2e4fb0" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE UNIQUE INDEX "UQ_user_workspaces" ON "user_workspaces" ("workspace_id", "user_id") `);
+        await queryRunner.query(`CREATE UNIQUE INDEX "IDX_0bd5012aeb82628e07f6a1be53" ON "users" ("google_id") `);
+        await queryRunner.query(`CREATE TABLE "user_workspaces" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "workspace_id" uuid NOT NULL, "user_id" uuid NOT NULL, "joined_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "last_opened_at" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_3c26b2f35801149e8f0af2e4fb0" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_user_workspaces_workspace_id" ON "user_workspaces" ("workspace_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_user_workspaces_user_id" ON "user_workspaces" ("user_id") `);
+        await queryRunner.query(`CREATE UNIQUE INDEX "UQ_user_workspaces_workspace_user" ON "user_workspaces" ("workspace_id", "user_id") `);
         await queryRunner.query(`CREATE TYPE "public"."workspaces_plan_type_enum" AS ENUM('free', 'pro')`);
         await queryRunner.query(`CREATE TABLE "workspaces" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(255) NOT NULL, "slug" character varying(255) NOT NULL, "plan_type" "public"."workspaces_plan_type_enum" NOT NULL DEFAULT 'free', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "UQ_b8e9fe62e93d60089dfc4f175f3" UNIQUE ("slug"), CONSTRAINT "PK_098656ae401f3e1a4586f47fd8e" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "task_priorities" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "workspace_id" uuid NOT NULL, "project_id" uuid NOT NULL, "name" character varying(100) NOT NULL, "level" integer NOT NULL, "color" character varying(30), "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_aa148974939142ee75716ee34e3" PRIMARY KEY ("id"))`);
@@ -37,8 +40,8 @@ export class InitSchema1775747598603 implements MigrationInterface {
         await queryRunner.query(`CREATE UNIQUE INDEX "UQ_BOARDS_PROJECT_NAME" ON "boards" ("project_id", "name") `);
         await queryRunner.query(`CREATE INDEX "IDX_BOARDS_PROJECT_ID" ON "boards" ("project_id") `);
         await queryRunner.query(`CREATE INDEX "IDX_BOARDS_WORKSPACE_ID" ON "boards" ("workspace_id") `);
-        await queryRunner.query(`CREATE TYPE "public"."page_blocks_type_enum" AS ENUM('PROJECT', 'BOARD', 'TABLE', 'CHART', 'STATS', 'TEXT', 'HEADER')`);
-        await queryRunner.query(`CREATE TABLE "page_blocks" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "page_id" uuid NOT NULL, "type" "public"."page_blocks_type_enum" NOT NULL, "title" character varying, "position_x" integer NOT NULL DEFAULT '0', "position_y" integer NOT NULL DEFAULT '0', "width" integer NOT NULL DEFAULT '12', "height" integer NOT NULL DEFAULT '1', "order_index" integer NOT NULL DEFAULT '0', "style_config" jsonb, "data_config" jsonb, "created_by" uuid NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_da57feac0f4c851a6419487176b" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TYPE "public"."page_blocks_type_enum" AS ENUM('TEXT', 'HEADER', 'QUOTE', 'DIVIDER', 'CODE', 'TODO', 'IMAGE', 'VIDEO', 'FILE', 'BOOKMARK', 'EMBED', 'FIGMA', 'GITHUB_GIST', 'GOOGLE_MAPS', 'TWEET', 'DATABASE_VIEW', 'TABLE_SIMPLE', 'MERMAID', 'BUTTON')`);
+        await queryRunner.query(`CREATE TABLE "page_blocks" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "page_id" uuid NOT NULL, "type" "public"."page_blocks_type_enum" NOT NULL, "title" character varying, "order_index" integer NOT NULL DEFAULT '0', "position_x" integer, "position_y" integer, "width" integer, "height" integer, "content" jsonb, "data_config" jsonb, "style_config" jsonb, "created_by" uuid NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_da57feac0f4c851a6419487176b" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE UNIQUE INDEX "UQ_PAGE_BLOCKS_PAGE_ORDER" ON "page_blocks" ("page_id", "order_index") `);
         await queryRunner.query(`CREATE INDEX "IDX_PAGE_BLOCKS_PAGE_ID" ON "page_blocks" ("page_id") `);
         await queryRunner.query(`CREATE TABLE "pages" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "workspace_id" uuid NOT NULL, "title" character varying(255) NOT NULL, "slug" character varying(255), "is_template" boolean NOT NULL DEFAULT false, "created_by" uuid NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_8f21ed625aa34c8391d636b7d3b" PRIMARY KEY ("id"))`);
@@ -56,6 +59,15 @@ export class InitSchema1775747598603 implements MigrationInterface {
         await queryRunner.query(`CREATE INDEX "IDX_role_permissions_role" ON "role_permissions" ("role_id") `);
         await queryRunner.query(`CREATE TABLE "user_roles" ("user_id" uuid NOT NULL, "workspace_id" uuid NOT NULL, "role_id" uuid NOT NULL, "assigned_at" TIMESTAMP NOT NULL DEFAULT now(), "assigned_by" uuid, CONSTRAINT "PK_3868a216bfe72626b8b80e1dc4f" PRIMARY KEY ("user_id", "workspace_id", "role_id"))`);
         await queryRunner.query(`CREATE INDEX "IDX_user_roles_workspace_user" ON "user_roles" ("workspace_id", "user_id") `);
+        await queryRunner.query(`CREATE TYPE "public"."workspace_invites_role_name_enum" AS ENUM('OWNER', 'MEMBER', 'ADMIN')`);
+        await queryRunner.query(`CREATE TYPE "public"."workspace_invites_status_enum" AS ENUM('PENDING', 'ACCEPTED', 'EXPIRED', 'REVOKED')`);
+        await queryRunner.query(`CREATE TABLE "workspace_invites" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "workspace_id" uuid NOT NULL, "user_id" uuid, "email" character varying(255) NOT NULL, "role_name" "public"."workspace_invites_role_name_enum" NOT NULL DEFAULT 'MEMBER', "invited_by" uuid NOT NULL, "token" character varying(255) NOT NULL, "status" "public"."workspace_invites_status_enum" NOT NULL DEFAULT 'PENDING', "accepted_at" TIMESTAMP, "expires_at" TIMESTAMP NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_43f7a0e0b0549fe2581e9cb57bc" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_workspace_invites_user_id" ON "workspace_invites" ("user_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_workspace_invites_invited_by" ON "workspace_invites" ("invited_by") `);
+        await queryRunner.query(`CREATE INDEX "IDX_workspace_invites_status" ON "workspace_invites" ("status") `);
+        await queryRunner.query(`CREATE INDEX "IDX_workspace_invites_email" ON "workspace_invites" ("email") `);
+        await queryRunner.query(`CREATE INDEX "IDX_workspace_invites_workspace_id" ON "workspace_invites" ("workspace_id") `);
+        await queryRunner.query(`CREATE UNIQUE INDEX "UQ_workspace_invites_token" ON "workspace_invites" ("token") `);
         await queryRunner.query(`ALTER TABLE "user_workspaces" ADD CONSTRAINT "FK_b2c27397c6389ce190d492d30da" FOREIGN KEY ("workspace_id") REFERENCES "workspaces"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "user_workspaces" ADD CONSTRAINT "FK_87fe6693df535a622eaf4248697" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "task_priorities" ADD CONSTRAINT "FK_9f5351226f12f052b9da79af93f" FOREIGN KEY ("workspace_id") REFERENCES "workspaces"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
@@ -88,9 +100,15 @@ export class InitSchema1775747598603 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "user_roles" ADD CONSTRAINT "FK_87b8888186ca9769c960e926870" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "user_roles" ADD CONSTRAINT "FK_4cd2a0a1566d9ddcab3068ac642" FOREIGN KEY ("workspace_id") REFERENCES "workspaces"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "user_roles" ADD CONSTRAINT "FK_b23c65e50a758245a33ee35fda1" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "workspace_invites" ADD CONSTRAINT "FK_9ffc4e5b893e8fb91d66d466f6d" FOREIGN KEY ("workspace_id") REFERENCES "workspaces"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "workspace_invites" ADD CONSTRAINT "FK_93d8174e8b1537da7b092621c7f" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "workspace_invites" ADD CONSTRAINT "FK_cf390e54ae1d8871cb74aad9c89" FOREIGN KEY ("invited_by") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`ALTER TABLE "workspace_invites" DROP CONSTRAINT "FK_cf390e54ae1d8871cb74aad9c89"`);
+        await queryRunner.query(`ALTER TABLE "workspace_invites" DROP CONSTRAINT "FK_93d8174e8b1537da7b092621c7f"`);
+        await queryRunner.query(`ALTER TABLE "workspace_invites" DROP CONSTRAINT "FK_9ffc4e5b893e8fb91d66d466f6d"`);
         await queryRunner.query(`ALTER TABLE "user_roles" DROP CONSTRAINT "FK_b23c65e50a758245a33ee35fda1"`);
         await queryRunner.query(`ALTER TABLE "user_roles" DROP CONSTRAINT "FK_4cd2a0a1566d9ddcab3068ac642"`);
         await queryRunner.query(`ALTER TABLE "user_roles" DROP CONSTRAINT "FK_87b8888186ca9769c960e926870"`);
@@ -123,6 +141,15 @@ export class InitSchema1775747598603 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "task_priorities" DROP CONSTRAINT "FK_9f5351226f12f052b9da79af93f"`);
         await queryRunner.query(`ALTER TABLE "user_workspaces" DROP CONSTRAINT "FK_87fe6693df535a622eaf4248697"`);
         await queryRunner.query(`ALTER TABLE "user_workspaces" DROP CONSTRAINT "FK_b2c27397c6389ce190d492d30da"`);
+        await queryRunner.query(`DROP INDEX "public"."UQ_workspace_invites_token"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_workspace_invites_workspace_id"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_workspace_invites_email"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_workspace_invites_status"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_workspace_invites_invited_by"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_workspace_invites_user_id"`);
+        await queryRunner.query(`DROP TABLE "workspace_invites"`);
+        await queryRunner.query(`DROP TYPE "public"."workspace_invites_status_enum"`);
+        await queryRunner.query(`DROP TYPE "public"."workspace_invites_role_name_enum"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_user_roles_workspace_user"`);
         await queryRunner.query(`DROP TABLE "user_roles"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_role_permissions_role"`);
@@ -170,8 +197,11 @@ export class InitSchema1775747598603 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE "task_priorities"`);
         await queryRunner.query(`DROP TABLE "workspaces"`);
         await queryRunner.query(`DROP TYPE "public"."workspaces_plan_type_enum"`);
-        await queryRunner.query(`DROP INDEX "public"."UQ_user_workspaces"`);
+        await queryRunner.query(`DROP INDEX "public"."UQ_user_workspaces_workspace_user"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_user_workspaces_user_id"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_user_workspaces_workspace_id"`);
         await queryRunner.query(`DROP TABLE "user_workspaces"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_0bd5012aeb82628e07f6a1be53"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_fe0bb3f6520ee0469504521e71"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_97672ac88f789774dd47f7c8be"`);
         await queryRunner.query(`DROP TABLE "users"`);

@@ -11,10 +11,11 @@ import { type Request, type Response } from 'express';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { Public } from 'src/common/decorator/public.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { SkipTransform } from 'src/common/decorator/skip.transform';
 import { GoogleAuthGuard } from 'src/common/guard/google-auth.guard';
 import { LocalAuthGuard } from 'src/common/guard/local-auth.guard';
 import { type IAuth } from 'src/types/auth';
-import { GoogleUserPayload } from 'src/types/google-user-payload.interface';
+import { type GoogleUserPayload } from 'src/types/google-user-payload.interface';
 import { RegisterUserDto } from '../users/dto/create-user.dto';
 import { AuthService } from './auth.service';
 import { IUserJwtPayload } from './interfaces/type';
@@ -60,29 +61,25 @@ export class AuthController {
   }
 
   @Public()
+  @SkipTransform()
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   async googleAuthCallback(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const googleUser = req.user as GoogleUserPayload;
-
+    @Auth() googleUser: GoogleUserPayload,
+    @Res() res: Response,
+  ): Promise<void> {
     const { access_token, refresh_token } =
       await this.authGoogleService.loginWithGoogle(googleUser);
 
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       path: '/api/v1/auth/refresh',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return {
-      access_token,
-      refresh_token,
-    };
+    res.redirect(`http://localhost:3000/callback?access_token=${access_token}`);
   }
 
   @Get('me')

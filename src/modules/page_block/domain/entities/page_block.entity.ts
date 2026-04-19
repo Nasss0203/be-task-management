@@ -12,14 +12,53 @@ import {
 } from 'typeorm';
 
 export enum PageBlockType {
-  PROJECT = 'PROJECT',
-  BOARD = 'BOARD',
-  TABLE = 'TABLE',
-  CHART = 'CHART',
-  STATS = 'STATS',
   TEXT = 'TEXT',
   HEADER = 'HEADER',
+  QUOTE = 'QUOTE',
+  DIVIDER = 'DIVIDER',
+  CODE = 'CODE',
+  TODO = 'TODO',
+
+  IMAGE = 'IMAGE',
+  VIDEO = 'VIDEO',
+  FILE = 'FILE',
+  BOOKMARK = 'BOOKMARK',
+
+  EMBED = 'EMBED',
+  FIGMA = 'FIGMA',
+  GITHUB_GIST = 'GITHUB_GIST',
+  GOOGLE_MAPS = 'GOOGLE_MAPS',
+  TWEET = 'TWEET',
+
+  DATABASE_VIEW = 'DATABASE_VIEW',
+  TABLE_SIMPLE = 'TABLE_SIMPLE',
+  MERMAID = 'MERMAID',
+  BUTTON = 'BUTTON',
 }
+
+export enum DatabaseViewMode {
+  BOARD = 'BOARD',
+  TABLE = 'TABLE',
+  LIST = 'LIST',
+  CALENDAR = 'CALENDAR',
+  TIMELINE = 'TIMELINE',
+  GALLERY = 'GALLERY',
+  CHART = 'CHART',
+}
+
+export type PageBlockdDatabaseViewDataConfig = {
+  view: DatabaseViewMode;
+  board_id: string | null;
+  workspace_id: string;
+  project_id: string;
+};
+
+export type PageBlockJson =
+  | Record<string, unknown>
+  | unknown[]
+  | PageBlockdDatabaseViewDataConfig
+  | null;
+export type PageBlockStyleConfig = Record<string, unknown> | null;
 
 @Entity('page_blocks')
 @Index('IDX_PAGE_BLOCKS_PAGE_ID', ['page_id'])
@@ -43,32 +82,38 @@ export class PageBlock {
   })
   type: PageBlockType;
 
-  @Column({ nullable: true })
-  title: string;
-
-  @Column({ type: 'int', default: 0 })
-  position_x: number;
-
-  @Column({ type: 'int', default: 0 })
-  position_y: number;
-
-  @Column({ type: 'int', default: 12 })
-  width: number;
-
-  @Column({ type: 'int', default: 1 })
-  height: number;
+  @Column({ type: 'varchar', nullable: true })
+  title: string | null;
 
   @Column({ type: 'int', default: 0 })
   order_index: number;
 
-  @Column({ type: 'jsonb', nullable: true })
-  style_config: Record<string, any> | null;
+  @Column({ type: 'int', nullable: true })
+  position_x: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  position_y: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  width: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  height: number | null;
 
   @Column({ type: 'jsonb', nullable: true })
-  data_config: Record<string, any> | null;
+  content: PageBlockJson;
+
+  @Column({ type: 'jsonb', nullable: true })
+  data_config: PageBlockJson;
+
+  @Column({ type: 'jsonb', nullable: true })
+  style_config: PageBlockStyleConfig;
 
   @Column('uuid', { name: 'created_by' })
   created_by: string;
+
+  @Column({ type: 'boolean', default: true })
+  is_open: boolean;
 
   @ManyToOne(() => User, { nullable: false, onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'created_by' })

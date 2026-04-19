@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Inject } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { type UnitOfWork } from 'src/interface/index.interface';
 import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
 import { PageBlockResponseDto } from '../dto/response/page_block.response.dto';
@@ -8,6 +8,7 @@ import { type UpdatePageBlockService } from '../interfaces/services/update.page_
 import { PAGE_BLOCK_TYPES } from '../interfaces/types';
 import { PageBlockMapper } from '../mapper/page_block.mapper';
 
+@Injectable()
 export class UpdatePageBlockApplicationImpl implements UpdatePageBlockApplication {
   constructor(
     @Inject(PAGE_BLOCK_TYPES.services.UpdatePageBlockService)
