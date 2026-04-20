@@ -58,7 +58,7 @@ export class CreateBoardAndAttachToPageApplicationImpl implements CreateBoardAnd
 
       const pageBlockId = findPageBlock?.id as string;
 
-      const block = await this.createPageBlockService.addDatabaseViewToBlock(
+      await this.createPageBlockService.addDatabaseViewToBlock(
         pageBlockId,
         {
           board_id: board.id,

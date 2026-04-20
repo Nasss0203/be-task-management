@@ -80,7 +80,7 @@ export class AuthService {
       username: user.username,
     };
 
-    const access_token = this.jwt.sign(payload, { expiresIn: '15m' });
+    const access_token = this.jwt.sign(payload, { expiresIn: '180m' });
     const refresh_token = randomBytes(64).toString('hex');
 
     await this.refreshRepo.save({

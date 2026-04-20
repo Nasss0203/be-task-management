@@ -12,7 +12,7 @@ import { WORKSPACE_TYPES } from '../interfaces/types';
 export class WorkspacesController {
   constructor(
     @Inject(WORKSPACE_TYPES.applications.CreateWorkspaceApplication)
-    private readonly CreateWorkspaceMultiServiceAppImpl: CreateWorkspaceApplication,
+    private readonly createWorkspaceMultiServiceAppImpl: CreateWorkspaceApplication,
 
     @Inject(WORKSPACE_TYPES.applications.FindWorkspaceApplication)
     private readonly findWorkspaceApplicationImpl: FindWorkspaceApplication,
@@ -27,7 +27,7 @@ export class WorkspacesController {
     @Body() createWorkspaceDto: CreateWorkspaceDto,
     @Auth() auth: IAuth,
   ) {
-    return await this.CreateWorkspaceMultiServiceAppImpl.createDeault({
+    return await this.createWorkspaceMultiServiceAppImpl.createDeault({
       userId: auth.id,
       createWorkspaceDto,
     });
@@ -39,7 +39,7 @@ export class WorkspacesController {
     @Body() createWorkspaceDto: CreateWorkspaceDto,
     @Auth() auth: IAuth,
   ) {
-    return await this.CreateWorkspaceMultiServiceAppImpl.create({
+    return await this.createWorkspaceMultiServiceAppImpl.create({
       userId: auth.id,
       createWorkspaceDto,
     });

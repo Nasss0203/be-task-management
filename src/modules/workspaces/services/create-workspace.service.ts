@@ -4,8 +4,9 @@ import { BoardViewType } from 'src/modules/boards/domain/entities/board.entity';
 import { type CreateBoardService } from 'src/modules/boards/interfaces/services/create.board.service.interface';
 import { BOARD_TYPES } from 'src/modules/boards/interfaces/types';
 import { PageModel } from 'src/modules/page/domain/models/page.model';
-import { type CreatePageService } from 'src/modules/page/interfaces/services/create.page.service.interface';
 import { PAGE_TYPES } from 'src/modules/page/interfaces/types';
+
+import { type CreatePageService } from 'src/modules/page/interfaces/services/create.page.service.interface';
 import { PageBlockType } from 'src/modules/page_block/domain/entities/page_block.entity';
 import { type UpdatePageBlockService } from 'src/modules/page_block/interfaces/services/update.page_block.service.interface';
 import { PAGE_BLOCK_TYPES } from 'src/modules/page_block/interfaces/types';
@@ -86,7 +87,7 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
     private readonly createRolePermissionService: CreateRolePermissionService,
   ) {}
 
-  private async createWorkspaceCore({
+  private async createWorkspaceCoreDefault({
     name,
     planType,
     userId,
@@ -134,7 +135,7 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
       manager,
     });
 
-    const createdPage = await this.createPageService.create(
+    const createdPage = await this.createPageService.createDefault(
       {
         workspace_id: workspace.id,
         title: workspace.name,
@@ -369,7 +370,7 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
             project_id: projectId,
             workspace_id: workspaceId,
             board_id: boardId,
-            view: BoardViewType.BOARD,
+            view_type: BoardViewType.BOARD,
           },
         ],
       },
@@ -379,7 +380,7 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
 
   async createDefault({ userId }: { userId: string }): Promise<WorkspaceModel> {
     return this.uow.runInTransaction(async (manager) => {
-      const { workspace, createdPage } = await this.createWorkspaceCore({
+      const { workspace, createdPage } = await this.createWorkspaceCoreDefault({
         name: 'Task management',
         planType: PlanTypeWorkspace.FREE,
         userId,
@@ -425,6 +426,67 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
 
       return workspace;
     });
+  }
+
+  private async createWorkspaceCore({
+    name,
+    planType,
+    userId,
+    manager,
+  }: {
+    name: string;
+    planType?: PlanTypeWorkspace;
+    userId: string;
+    manager: EntityManager;
+  }): Promise<{
+    workspace: WorkspaceModel;
+    createdPage: PageModel;
+  }> {
+    const baseSlug = generateSlug(name).toLowerCase();
+    const slug = `${baseSlug}-${userId.slice(0, 6)}-${Date.now()}`;
+
+    const exists = await this.workspaceRepo.existsBySlug(slug, manager);
+    if (exists) {
+      throw new HttpException(
+        'Workspace slug already exists',
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    const workspace = await this.workspaceRepo.save(
+      {
+        name,
+        slug,
+        planType: planType ?? PlanTypeWorkspace.FREE,
+      },
+      manager,
+    );
+
+    await this.createUserWorkspaceService.create(
+      {
+        user_id: userId,
+        workspace_id: workspace.id,
+      },
+      manager,
+    );
+
+    await this.seedWorkspaceRbac({
+      workspaceId: workspace.id,
+      userId,
+      manager,
+    });
+
+    const createdPage = await this.createPageService.create(
+      {
+        workspace_id: workspace.id,
+        title: workspace.name,
+        slug: workspace.slug,
+        created_by: userId,
+      },
+      manager,
+    );
+
+    return { workspace, createdPage };
   }
 
   async create({

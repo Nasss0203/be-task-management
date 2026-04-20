@@ -259,7 +259,7 @@ export class CreateProjectServiceImpl implements CreateProjectService {
                 project_id: project.id,
                 workspace_id: workspaceId,
                 board_id: board?.id ?? null,
-                view: board?.viewType ?? initialView,
+                view_type: board?.viewType ?? initialView,
               },
             ],
             created_by: userId,

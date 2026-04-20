@@ -37,8 +37,6 @@ export class PageController {
     @Param('workspaceId') workspaceId: string,
     @Auth() auth: IAuth,
   ) {
-    console.log('🚀 ~ workspaceId~', workspaceId);
-    console.log('🚀 ~ auth~', auth);
     return await this.findPageApplication.findPageByWorkspaceId(
       auth.id,
       workspaceId,

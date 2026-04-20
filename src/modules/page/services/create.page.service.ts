@@ -5,6 +5,7 @@ import { PAGE_BLOCK_TYPES } from 'src/modules/page_block/interfaces/types';
 import { EntityManager } from 'typeorm';
 import { CreatePageDto } from '../dto/create-page.dto';
 import { type PageRepository } from '../interfaces/repositories/page.repository.interface';
+
 import { CreatePageService } from '../interfaces/services/create.page.service.interface';
 import { PAGE_TYPES } from '../interfaces/types';
 
@@ -18,6 +19,15 @@ export class CreatePageServiceImpl implements CreatePageService {
     private readonly createPageBlockService: CreatePageBlockService,
   ) {}
   async create(
+    CreateWorkspaceMultiServiceDto: CreatePageDto,
+    manager: EntityManager,
+  ): Promise<any> {
+    const page = await this.repo.save(CreateWorkspaceMultiServiceDto, manager);
+
+    return page;
+  }
+
+  async createDefault(
     CreateWorkspaceMultiServiceDto: CreatePageDto,
     manager: EntityManager,
   ): Promise<any> {

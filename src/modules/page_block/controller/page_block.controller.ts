@@ -26,10 +26,13 @@ export class PageBlockController {
 
   @Post(':blockId/database-views')
   @ResponseMessage('Add database view')
-  addDatabaseViewToBlock(
+  async addDatabaseViewToBlock(
     @Param('blockId') blockId: string,
     @Body() dto: AddDatabaseViewToBlockDto,
   ): Promise<PageBlockResponseDto> {
-    return this.createPageBlockApplication.addDatabaseViewToBlock(blockId, dto);
+    return await this.createPageBlockApplication.addDatabaseViewToBlock(
+      blockId,
+      dto,
+    );
   }
 }

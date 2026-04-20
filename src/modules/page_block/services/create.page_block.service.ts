@@ -51,6 +51,7 @@ export class CreatePageBlockServiceImpl implements CreatePageBlockService {
       blockId,
       manager,
     );
+
     if (!findPageBlock) {
       throw new NotFoundException('Page block not found');
     }
@@ -73,12 +74,14 @@ export class CreatePageBlockServiceImpl implements CreatePageBlockService {
 
     const next = [...current, newView];
 
-    return this.updatePageBlockRepository.save(
+    const block = await this.updatePageBlockRepository.save(
       {
         id: blockId,
         data_config: next,
       },
       manager,
     );
+
+    return block;
   }
 }
