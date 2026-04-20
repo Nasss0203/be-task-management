@@ -3,7 +3,7 @@ import { UserWorkspaceModel } from '../domain/models/user_workspace.model';
 import { UserWorkspaceResponseDto } from '../dto/response/user_workspace.response.dto';
 import { SaveUserWorkspaceInput } from '../interfaces/repositories/user_workspace.repository.interface';
 
-export class WorkspaceMemeberMapper {
+export class UserWorkspaceMapper {
   static toModel(entity: UserWorkspace): UserWorkspaceModel {
     return new UserWorkspaceModel(
       entity.id,

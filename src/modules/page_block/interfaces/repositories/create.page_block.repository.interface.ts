@@ -3,19 +3,25 @@ import { PageBlockModel } from '../../domain/models/page_block.model';
 
 export type SavePageBlockInput = Pick<
   PageBlockModel,
-  | 'page_id'
-  | 'data_config'
-  | 'style_config'
-  | 'height'
-  | 'order_index'
-  | 'position_x'
-  | 'position_y'
-  | 'title'
-  | 'type'
-  | 'width'
-  | 'created_by'
+  'page_id' | 'type' | 'created_by'
 > &
-  Partial<Pick<PageBlockModel, 'created_at' | 'id' | 'updated_at'>>;
+  Partial<
+    Pick<
+      PageBlockModel,
+      | 'title'
+      | 'position_x'
+      | 'position_y'
+      | 'width'
+      | 'height'
+      | 'order_index'
+      | 'content'
+      | 'style_config'
+      | 'data_config'
+      | 'id'
+      | 'created_at'
+      | 'updated_at'
+    >
+  >;
 
 export interface CreatePageBlockRepository {
   save(

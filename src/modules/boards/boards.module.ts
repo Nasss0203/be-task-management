@@ -1,5 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
+import { PageModule } from '../page/page.module';
+import { PageBlockModule } from '../page_block/page_block.module';
+import { WORKSPACE_TYPES } from '../workspaces/interfaces/types';
+import { CreateBoardAndAttachToPageApplicationImpl } from './applications/create-board-page.application';
 import { CreateBoardApplicationImpl } from './applications/create-board.application';
 import { FindBoardApplicationImpl } from './applications/find-board.application';
 import { BoardsService } from './boards.service';
@@ -12,7 +17,7 @@ import { CreateBoardServiceImpl } from './services/create.boards.service';
 import { FindBoardServiceImpl } from './services/find-board.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Board])],
+  imports: [TypeOrmModule.forFeature([Board]), PageBlockModule, PageModule],
   controllers: [BoardsController],
   providers: [
     BoardsService,
@@ -24,6 +29,10 @@ import { FindBoardServiceImpl } from './services/find-board.service';
     {
       provide: BOARD_TYPES.applications.CreateBoardApplication,
       useClass: CreateBoardApplicationImpl,
+    },
+    {
+      provide: BOARD_TYPES.applications.CreateBoardAndAttachToPageApplication,
+      useClass: CreateBoardAndAttachToPageApplicationImpl,
     },
     // Repo
     {
@@ -42,6 +51,11 @@ import { FindBoardServiceImpl } from './services/find-board.service';
     {
       provide: BOARD_TYPES.services.FindBoardService,
       useClass: FindBoardServiceImpl,
+    },
+
+    {
+      provide: WORKSPACE_TYPES.uow.UnitOfWork,
+      useClass: TypeOrmUnitOfWork,
     },
   ],
   exports: [BOARD_TYPES.services.CreateBoardService],

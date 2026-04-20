@@ -19,16 +19,16 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
   private getRepo(manager?: EntityManager): Repository<Task> {
     return manager ? manager.getRepository(Task) : this.repo;
   }
+
   async findAllTask(
     params: ParamTask,
     manager?: EntityManager,
   ): Promise<TaskModel[]> {
-    const { projectId, workspaceId, boardId } = params;
+    const { projectId, workspaceId } = params;
     const entities = await this.getRepo(manager).find({
       where: {
         projectId: projectId,
         workspaceId: workspaceId,
-        boardId: boardId,
       },
       relations: {
         status: true,

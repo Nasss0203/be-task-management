@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { compareSync } from 'bcrypt';
@@ -7,77 +7,91 @@ import { IAuth } from 'src/types/auth';
 import { hashPassword, hashToken } from 'src/utils';
 import { Repository } from 'typeorm';
 import { RefreshToken } from '../refresh_token/entities/refresh_token.entity';
+import { User } from '../users/domain/entities/user.entity';
 import { RegisterUserDto } from '../users/dto/create-user.dto';
-import { User } from '../users/entities/user.entity';
+import { type CreateWorkspaceService } from '../workspaces/interfaces/services/create-workspace.service.interface';
+import { WORKSPACE_TYPES } from '../workspaces/interfaces/types';
 import { IUserJwtPayload } from './interfaces/type';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwt: JwtService,
+
     @InjectRepository(User)
-    private userRepo: Repository<User>,
+    private readonly userRepo: Repository<User>,
 
     @InjectRepository(RefreshToken)
-    private refreshRepo: Repository<RefreshToken>,
+    private readonly refreshRepo: Repository<RefreshToken>,
+
+    @Inject(WORKSPACE_TYPES.services.CreateWorkspaceService)
+    private readonly createWorkspaceService: CreateWorkspaceService,
   ) {}
 
   async register(registerUserDto: RegisterUserDto) {
     const exists = await this.userRepo.findOne({
       where: [
-        {
-          email: registerUserDto.email,
-        },
-        {
-          username: registerUserDto.username,
-        },
+        { email: registerUserDto.email },
+        { username: registerUserDto.username },
       ],
     });
 
-    if (exists)
+    if (exists) {
       throw new HttpException('User already exists', HttpStatus.BAD_REQUEST);
+    }
 
     const user = this.userRepo.create({
-      ...registerUserDto,
+      email: registerUserDto.email,
+      username: registerUserDto.username,
       passwordHash: hashPassword(registerUserDto.password),
       isActive: true,
+      googleId: null,
+      avatarUrl: null,
     });
 
     const saved = await this.userRepo.save(user);
 
-    const { id, email, username } = saved;
-    return { id, email, username };
+    await this.createWorkspaceService.createDefault({
+      userId: saved.id,
+    });
+
+    return {
+      id: saved.id,
+      email: saved.email,
+      username: saved.username,
+    };
   }
 
   async login(auth: IAuth) {
     const { email, username } = auth;
-    const user = await this.userRepo.findOne({ where: { email, username } });
 
-    if (!user || !user.isActive)
+    const user = await this.userRepo.findOne({
+      where: { email, username },
+    });
+
+    if (!user || !user.isActive) {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+    }
 
-    // Create workspaces
-
-    const payload = {
+    const payload: IUserJwtPayload = {
       sub: user.id,
       id: user.id,
       email: user.email,
       username: user.username,
     };
 
-    const accessToken = this.jwt.sign(payload, { expiresIn: '15m' });
-
-    const newRefreshToken = randomBytes(64).toString('hex');
+    const access_token = this.jwt.sign(payload, { expiresIn: '180m' });
+    const refresh_token = randomBytes(64).toString('hex');
 
     await this.refreshRepo.save({
       user_id: user.id,
-      token: hashToken(newRefreshToken),
+      token: hashToken(refresh_token),
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
     return {
-      access_token: accessToken,
-      refresn_token: newRefreshToken,
+      access_token,
+      refresh_token,
     };
   }
 
@@ -96,18 +110,23 @@ export class AuthService {
     return { success: true };
   }
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userRepo.findOne({
       where: { email },
     });
-    if (user) {
-      const isValid = this.comparePassword(password, user.passwordHash);
-      if (isValid === true) {
-        return user;
-      }
+
+    if (!user || !user.isActive) {
+      return null;
     }
-    return null;
+
+    if (!user.passwordHash) {
+      return null;
+    }
+
+    const isValid = this.comparePassword(password, user.passwordHash);
+    return isValid ? user : null;
   }
+
   comparePassword(password: string, hash: string) {
     return compareSync(password, hash);
   }
@@ -119,6 +138,8 @@ export class AuthService {
         id: true,
         email: true,
         username: true,
+        googleId: true,
+        avatarUrl: true,
         isActive: true,
         createdAt: true,
         updatedAt: true,

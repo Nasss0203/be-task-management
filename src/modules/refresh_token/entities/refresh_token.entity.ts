@@ -7,7 +7,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
+import { User } from '../../users/domain/entities/user.entity';
 
 @Entity('refresh_tokens')
 @Index('idx_refresh_token_token', ['token'])

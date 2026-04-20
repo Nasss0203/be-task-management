@@ -1,5 +1,5 @@
 import { Role } from 'src/modules/role/domain/entities/role.entity';
-import { User } from 'src/modules/users/entities/user.entity';
+import { User } from 'src/modules/users/domain/entities/user.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import {
   Column,
@@ -11,7 +11,7 @@ import {
 } from 'typeorm';
 
 @Entity('user_roles')
-@Index(['workspace_id', 'user_id'])
+@Index('IDX_user_roles_workspace_user', ['workspace_id', 'user_id'])
 export class UserRole {
   @PrimaryColumn('uuid', { name: 'user_id' })
   user_id: string;
@@ -30,10 +30,7 @@ export class UserRole {
   assigned_at: Date;
 
   @Column({ name: 'assigned_by', type: 'uuid', nullable: true })
-  assigned_by: string;
-
-  @Column({ name: 'revoked_at', type: 'timestamp', nullable: true })
-  revoked_at?: Date | null;
+  assigned_by: string | null;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })

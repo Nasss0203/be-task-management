@@ -1,7 +1,7 @@
 import { Workspace } from '../domain/entities/workspace.entity';
 import { WorkspaceModel } from '../domain/models/workspaces.model';
 import { WorkspaceResponseDto } from '../dto/response/workspaces.response.dto';
-import type { SaveWorkspaceInput } from '../interfaces/repositories/workspace.repository.interface';
+import type { SaveWorkspaceInput } from '../interfaces/repositories/create-workspace.repository.interface';
 
 export class WorkspaceMapper {
   static toModel(entity: Workspace): WorkspaceModel {

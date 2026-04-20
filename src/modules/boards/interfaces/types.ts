@@ -6,6 +6,8 @@ export const BOARD_TYPES = {
   applications: {
     CreateBoardApplication: 'CreateBoardApplication',
     FindBoardApplication: 'FindBoardApplication',
+    CreateBoardAndAttachToPageApplication:
+      'CreateBoardAndAttachToPageApplication',
   },
   repositories: {
     CreateBoardRepository: 'CreateBoardRepository',

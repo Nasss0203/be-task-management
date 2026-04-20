@@ -4,7 +4,14 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "webpack": true
+    "webpack": true,
+    "assets": [
+      {
+        "include": "modules/mail/templates/**/*",
+        "outDir": "dist/templates"
+      }
+    ],
+    "watchAssets": true
   },
   "generateOptions": {
     "spec": false

@@ -8,4 +8,5 @@ export class RoleResponseDto {
   workspace_id: string;
 
   created_at: Date;
+  updated_at: Date;
 }

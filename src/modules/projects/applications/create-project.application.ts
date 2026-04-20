@@ -12,10 +12,20 @@ export class CreateProjectApplicationImpl implements CreateProjectApplication {
     @Inject(PROJECT_TYPES.services.CreateProjectService)
     private readonly service: CreateProjectService,
   ) {}
+
   async create(
     createProjectDto: CreateProjectDto,
   ): Promise<ProjectResponseDto> {
     const model = await this.service.create(createProjectDto);
+
+    return ProjectMapper.toResponse(model);
+  }
+
+  async createProjectWithPageBlock(
+    createProjectDto: CreateProjectDto,
+  ): Promise<ProjectResponseDto> {
+    const model =
+      await this.service.createProjectWithPageBlock(createProjectDto);
 
     return ProjectMapper.toResponse(model);
   }

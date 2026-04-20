@@ -1,4 +1,3 @@
-import { Board } from 'src/modules/boards/domain/entities/board.entity';
 import { Project } from 'src/modules/projects/domain/entities/project.entity';
 import { Task } from 'src/modules/tasks/domain/entities/task.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
@@ -16,7 +15,6 @@ import {
 
 @Entity('task_statuses')
 @Index(['projectId', 'name'], { unique: true })
-@Index(['boardId', 'position'])
 export class TaskStatus {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -26,9 +24,6 @@ export class TaskStatus {
 
   @Column({ name: 'project_id', type: 'uuid' })
   projectId: string;
-
-  @Column({ name: 'board_id', type: 'uuid' })
-  boardId: string;
 
   @Column({ name: 'name', type: 'varchar', length: 100 })
   name: string;
@@ -55,12 +50,6 @@ export class TaskStatus {
   @ManyToOne(() => Project, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'project_id' })
   project: Project;
-
-  @ManyToOne(() => Board, (board) => board.statuses, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'board_id' })
-  board: Board;
 
   @OneToMany(() => Task, (task) => task.status)
   tasks: Task[];

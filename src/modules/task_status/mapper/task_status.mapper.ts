@@ -9,7 +9,6 @@ export class TaskStatusMapper {
       entity.id,
       entity.workspaceId,
       entity.projectId,
-      entity.boardId,
       entity.name,
       entity.position,
       entity.color ?? null,
@@ -25,7 +24,6 @@ export class TaskStatusMapper {
     if (model.id != null) e.id = model.id;
     e.workspaceId = model.workspaceId;
     e.projectId = model.projectId;
-    e.boardId = model.boardId;
     e.name = model.name;
     e.position = model.position;
 
@@ -42,7 +40,6 @@ export class TaskStatusMapper {
       id: model.id,
       workspaceId: model.workspaceId,
       projectId: model.projectId,
-      boardId: model.boardId,
       name: model.name,
       position: model.position,
       color: model.color,

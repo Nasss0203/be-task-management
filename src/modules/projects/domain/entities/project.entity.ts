@@ -1,7 +1,7 @@
 import { Board } from 'src/modules/boards/domain/entities/board.entity';
 import { Sprint } from 'src/modules/sprints/entities/sprint.entity';
 import { Task } from 'src/modules/tasks/domain/entities/task.entity';
-import { User } from 'src/modules/users/entities/user.entity';
+import { User } from 'src/modules/users/domain/entities/user.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import {
   Column,
@@ -29,9 +29,6 @@ export class Project {
 
   @Column({ name: 'workspace_id', type: 'uuid' })
   workspace_id: string;
-
-  // @Column({ name: 'template_id', type: 'uuid', nullable: true })
-  // template_id: string | null;
 
   @Column({ name: 'name', type: 'varchar', length: 255 })
   name: string;

@@ -7,6 +7,7 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 export enum RoleName {
@@ -14,6 +15,7 @@ export enum RoleName {
   MEMBER = 'MEMBER',
   ADMIN = 'ADMIN',
 }
+
 @Index('UQ_role_workspace_name', ['workspace_id', 'name'], { unique: true })
 @Entity('roles')
 export class Role {
@@ -23,13 +25,16 @@ export class Role {
   @Column({ type: 'enum', enum: RoleName })
   name: RoleName;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', nullable: false })
   workspace_id: string;
 
-  @ManyToOne(() => Workspace, { nullable: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => Workspace, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'workspace_id' })
-  workspace: Workspace | null;
+  workspace: Workspace;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
+
+  @UpdateDateColumn({ type: 'timestamp' })
+  updated_at: Date;
 }

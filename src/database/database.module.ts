@@ -5,11 +5,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Board } from 'src/modules/boards/domain/entities/board.entity';
 import { Page } from 'src/modules/page/domain/entities/page.entity';
 import { PageBlock } from 'src/modules/page_block/domain/entities/page_block.entity';
-import { Permission } from 'src/modules/permission/entities/permission.entity';
+import { Permission } from 'src/modules/permission/domain/entities/permission.entity';
 import { Project } from 'src/modules/projects/domain/entities/project.entity';
 import { RefreshToken } from 'src/modules/refresh_token/entities/refresh_token.entity';
 import { Role } from 'src/modules/role/domain/entities/role.entity';
-import { RolePermission } from 'src/modules/role_permission/entities/role_permission.entity';
+import { RolePermission } from 'src/modules/role_permission/domain/entities/role_permission.entity';
 import { Sprint } from 'src/modules/sprints/entities/sprint.entity';
 import { TaskPriority } from 'src/modules/task_priority/domain/entities/task_priority.entity';
 import { TaskStatus } from 'src/modules/task_status/domain/entities/task_status.entity';
@@ -17,7 +17,8 @@ import { Task } from 'src/modules/tasks/domain/entities/task.entity';
 import { UserProfile } from 'src/modules/user_profiles/entities/user_profile.entity';
 import { UserRole } from 'src/modules/user_roles/domain/entities/user_role.entity';
 import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
-import { User } from 'src/modules/users/entities/user.entity';
+import { User } from 'src/modules/users/domain/entities/user.entity';
+import { WorkspaceInvite } from 'src/modules/workspace_invites/domain/entities/workspace_invite.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 
 @Module({
@@ -32,8 +33,8 @@ import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.enti
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_NAME'),
         autoLoadEntities: false,
-        synchronize: true,
-        migrationsRun: true,
+        synchronize: false,
+        migrationsRun: false,
         schema: 'public',
         logging: true,
         entities: [
@@ -54,6 +55,7 @@ import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.enti
           Board,
           TaskStatus,
           TaskPriority,
+          WorkspaceInvite,
         ],
       }),
     }),

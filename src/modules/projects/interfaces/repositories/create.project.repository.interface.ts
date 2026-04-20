@@ -18,4 +18,9 @@ export interface CreateProjectRepository {
     project: ProjectModel | SaveProjectInput,
     manager?: EntityManager,
   ): Promise<ProjectModel>;
+
+  createProjectWithPageBlock(
+    project: ProjectModel | SaveProjectInput,
+    manager?: EntityManager,
+  ): Promise<ProjectModel>;
 }

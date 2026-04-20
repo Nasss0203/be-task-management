@@ -8,11 +8,12 @@ import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { RESPONSE_MESSAGE } from '../decorator/response-message.decorator';
+import { SKIP_TRANSFORM_KEY } from '../decorator/skip.transform';
 
 export interface Response<T> {
   statusCode: number;
   message?: string;
-  data: Record<string, any>;
+  data: T;
 }
 
 @Injectable()
@@ -20,18 +21,28 @@ export class TransformInterceptor<T> implements NestInterceptor<
   T,
   Response<T>
 > {
-  constructor(private reflector: Reflector) {}
+  constructor(private readonly reflector: Reflector) {}
+
   intercept(
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<Response<T>> {
+    const skipTransform = this.reflector.getAllAndOverride<boolean>(
+      SKIP_TRANSFORM_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
+    if (skipTransform) {
+      return next.handle();
+    }
+
     return next.handle().pipe(
       map((data) => ({
         statusCode: context.switchToHttp().getResponse().statusCode,
         message:
           this.reflector.get<string>(RESPONSE_MESSAGE, context.getHandler()) ||
           '',
-        data: data,
+        data,
       })),
     );
   }

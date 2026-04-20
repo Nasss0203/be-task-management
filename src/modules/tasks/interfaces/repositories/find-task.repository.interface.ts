@@ -4,7 +4,6 @@ import { TaskModel } from '../../domain/models/task.model';
 export type ParamTask = {
   projectId: string;
   workspaceId: string;
-  boardId: string;
 };
 
 export interface FindTaskRepository {

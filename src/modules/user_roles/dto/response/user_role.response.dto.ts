@@ -7,7 +7,7 @@ export class UserRoleResponseDto {
 
   assigned_at: Date;
 
-  assigned_by: string;
+  assigned_by: string | null;
 
-  revoked_at?: Date | null;
+  // revoked_at?: Date | null;
 }

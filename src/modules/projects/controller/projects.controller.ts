@@ -1,6 +1,8 @@
 import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
 import { CreateProjectDto } from '../dto/create-project.dto';
 import { type CreateProjectApplication } from '../interfaces/applications/create-project.application.interface';
@@ -24,9 +26,13 @@ export class ProjectsController {
   }
 
   @Post()
+  @RequirePermissions(PERMISSIONS.PROJECT_CREATE)
   @ResponseMessage('Create Project')
-  create(@Body() createProjectDto: CreateProjectDto, @Auth() auth: IAuth) {
-    return this.createProjectApplication.create({
+  async createProjectWithPageBlock(
+    @Body() createProjectDto: CreateProjectDto,
+    @Auth() auth: IAuth,
+  ) {
+    return await this.createProjectApplication.createProjectWithPageBlock({
       ...createProjectDto,
       created_by: auth.id,
     });

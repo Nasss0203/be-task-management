@@ -5,8 +5,6 @@ export class TaskStatusResponseDto {
 
   projectId: string;
 
-  boardId: string;
-
   name: string;
 
   position: number;

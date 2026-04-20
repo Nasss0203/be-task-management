@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { TaskResponseDto } from '../dto/response/task.response.dto';
+import { TaskResponseDto } from '../dto/response/task-response.dto';
 import { FindTaskApplication } from '../interfaces/applications/find-task.application.interface';
 import { type FindTaskService } from '../interfaces/services/find-task.service.interface';
 import { TASK_TYPES } from '../interfaces/types';
@@ -15,13 +15,8 @@ export class FindTaskApplicationImpl implements FindTaskApplication {
   async findAllTask(
     projectId: string,
     workspaceId: string,
-    boardId: string,
   ): Promise<TaskResponseDto[]> {
-    const tasks = await this.service.findAllTask(
-      projectId,
-      workspaceId,
-      boardId,
-    );
+    const tasks = await this.service.findAllTask(projectId, workspaceId);
     return tasks.map((task) => TaskMapper.toResponse(task));
   }
 }

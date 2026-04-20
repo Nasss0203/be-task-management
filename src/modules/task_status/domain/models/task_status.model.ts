@@ -3,7 +3,6 @@ export class TaskStatusModel {
     public readonly id: string,
     public readonly workspaceId: string,
     public readonly projectId: string,
-    public readonly boardId: string,
     public readonly name: string,
     public readonly position: number,
     public readonly color: string | null,

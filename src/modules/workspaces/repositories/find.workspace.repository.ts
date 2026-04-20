@@ -3,17 +3,24 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { Workspace } from '../domain/entities/workspace.entity';
+import { WorkspaceModel } from '../domain/models/workspaces.model';
 import { FindWorkspaceRepository } from '../interfaces/repositories/find.workspace.repository.interface';
+import { WorkspaceMapper } from '../mapper/workspace.mapper';
 
 @Injectable()
 export class FindWorkspaceRepositoryImpl implements FindWorkspaceRepository {
   constructor(
     @InjectRepository(UserWorkspace)
-    private readonly repo: Repository<UserWorkspace>,
+    private readonly repoUserWorkspace: Repository<UserWorkspace>,
+
+    @InjectRepository(Workspace)
+    private readonly repoWorkspace: Repository<Workspace>,
   ) {}
 
   private getRepo(manager?: EntityManager): Repository<UserWorkspace> {
-    return manager ? manager.getRepository(UserWorkspace) : this.repo;
+    return manager
+      ? manager.getRepository(UserWorkspace)
+      : this.repoUserWorkspace;
   }
 
   // Version 1
@@ -38,7 +45,7 @@ export class FindWorkspaceRepositoryImpl implements FindWorkspaceRepository {
   async findWorkspacesByUserId(
     userId: string,
     manager?: EntityManager,
-  ): Promise<Workspace[]> {
+  ): Promise<WorkspaceModel[]> {
     const rows = await this.getRepo(manager).find({
       where: {
         user_id: userId,
@@ -54,5 +61,27 @@ export class FindWorkspaceRepositoryImpl implements FindWorkspaceRepository {
     return rows
       .filter((row) => row.workspace && !row.workspace.deletedAt)
       .map((row) => row.workspace);
+  }
+
+  async findOneWorkspaceById(
+    userId: string,
+    workspaceId: string,
+    manager?: EntityManager,
+  ): Promise<WorkspaceModel | null> {
+    const row = await this.getRepo(manager).findOne({
+      where: {
+        user_id: userId,
+        workspace_id: workspaceId,
+      },
+      relations: {
+        workspace: true,
+      },
+    });
+
+    if (!row || !row.workspace || row.workspace.deletedAt) {
+      return null;
+    }
+
+    return WorkspaceMapper.toModel(row.workspace);
   }
 }

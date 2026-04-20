@@ -5,7 +5,7 @@ export type SaveUserRoleInput = Pick<
   UserRoleModel,
   'role_id' | 'user_id' | 'workspace_id'
 > &
-  Partial<Pick<UserRoleModel, 'assigned_at' | 'revoked_at' | 'assigned_by'>>;
+  Partial<Pick<UserRoleModel, 'assigned_at' | 'assigned_by'>>;
 
 export interface UserRoleRepository {
   save(

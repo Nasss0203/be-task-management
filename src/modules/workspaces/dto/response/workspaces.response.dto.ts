@@ -13,3 +13,10 @@ export class WorkspaceResponseDto {
 
   updatedAt: Date;
 }
+
+export type WorkspaceAccessResponseDto = {
+  user_id: string;
+  workspace_id: string;
+  roles: string[];
+  permissions: string[];
+};

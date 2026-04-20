@@ -1,7 +1,5 @@
 import { Project } from 'src/modules/projects/domain/entities/project.entity';
-import { TaskStatus } from 'src/modules/task_status/domain/entities/task_status.entity';
-import { Task } from 'src/modules/tasks/domain/entities/task.entity';
-import { User } from 'src/modules/users/entities/user.entity';
+import { User } from 'src/modules/users/domain/entities/user.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import {
   Column,
@@ -10,7 +8,6 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -83,10 +80,4 @@ export class Board {
   @ManyToOne(() => User, { onDelete: 'RESTRICT', nullable: true })
   @JoinColumn({ name: 'updated_by' })
   updater: User | null;
-
-  @OneToMany(() => TaskStatus, (status) => status.board)
-  statuses: TaskStatus[];
-
-  @OneToMany(() => Task, (task) => task.board)
-  tasks: Task[];
 }

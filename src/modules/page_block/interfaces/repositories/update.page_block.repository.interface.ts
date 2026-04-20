@@ -21,6 +21,6 @@ export type UpdatePageBlockInput = Pick<PageBlockModel, 'id'> &
 export interface UpdatePageBlockRepository {
   save(
     pageBlock: UpdatePageBlockInput,
-    manager: EntityManager,
+    manager?: EntityManager,
   ): Promise<PageBlockModel>;
 }

@@ -6,5 +6,6 @@ export class RoleModel {
     public readonly name: RoleName,
     public readonly workspace_id: string,
     public readonly created_at: Date,
+    public readonly updated_at: Date,
   ) {}
 }

@@ -1,4 +1,4 @@
-import { User } from 'src/modules/users/entities/user.entity';
+import { User } from 'src/modules/users/domain/entities/user.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import {
   Column,
@@ -11,29 +11,32 @@ import {
 } from 'typeorm';
 
 @Entity('user_workspaces')
-@Index('UQ_user_workspaces', ['workspace_id', 'user_id'], { unique: true })
+@Index('UQ_user_workspaces_workspace_user', ['workspace_id', 'user_id'], {
+  unique: true,
+})
+@Index('IDX_user_workspaces_user_id', ['user_id'])
+@Index('IDX_user_workspaces_workspace_id', ['workspace_id'])
 export class UserWorkspace {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('uuid')
+  @Column({ type: 'uuid' })
   workspace_id: string;
 
-  @Column('uuid')
+  @Column({ type: 'uuid' })
   user_id: string;
 
-  @ManyToOne(() => Workspace, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Workspace, { onDelete: 'CASCADE', nullable: false })
   @JoinColumn({ name: 'workspace_id' })
   workspace: Workspace;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, { onDelete: 'CASCADE', nullable: false })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @CreateDateColumn({ name: 'joined_at' })
+  @CreateDateColumn({ type: 'timestamptz', name: 'joined_at' })
   joinedAt: Date;
 
-  // Lần gần nhất user mở workspace (tự update bằng service)
-  @Column({ type: 'timestamp', name: 'last_opened_at', nullable: true })
+  @Column({ type: 'timestamptz', name: 'last_opened_at', nullable: true })
   lastOpenedAt: Date | null;
 }
