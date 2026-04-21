@@ -1,20 +1,10 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Inject,
-  Param,
-  Patch,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { type IAuth } from 'src/types/auth';
 import { BoardsService } from '../boards.service';
 import { CreateBoardDto } from '../dto/create-board.dto';
 import { BoardResponseDto } from '../dto/response/board.response.dto';
-import { UpdateBoardDto } from '../dto/update-board.dto';
 import { type CreateBoardAndAttachToPageApplication } from '../interfaces/applications/create-board-page.application.interface';
 import { type CreateBoardApplication } from '../interfaces/applications/create-board.application.interface';
 import { type FindBoardApplication } from '../interfaces/applications/find-board.application.interface';
@@ -67,20 +57,5 @@ export class BoardsController {
       ...dto,
       createdBy: auth.id,
     });
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.boardsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBoardDto: UpdateBoardDto) {
-    return this.boardsService.update(+id, updateBoardDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.boardsService.remove(+id);
   }
 }

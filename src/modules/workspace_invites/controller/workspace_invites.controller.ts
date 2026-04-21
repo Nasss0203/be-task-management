@@ -1,11 +1,7 @@
 import {
   Body,
   Controller,
-  Delete,
-  Get,
   Inject,
-  Param,
-  Patch,
   Post,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -19,7 +15,6 @@ import {
   CreateWorkspaceInviteDto,
 } from '../dto/create-workspace_invite.dto';
 import { WorkspaceInviteResponseDto } from '../dto/response/workspace_invites-response.dto';
-import { UpdateWorkspaceInviteDto } from '../dto/update-workspace_invite.dto';
 import { type AcceptWorkspaceInviteApplication } from '../interfaces/applications/accept-workspace-invite.application.interface';
 import { type InviteWorkspaceMemberApplication } from '../interfaces/applications/invite-workspace-member.application.interface';
 import { WORKSPACE_INVITE_TYPES } from '../interfaces/types';
@@ -75,33 +70,5 @@ export class WorkspaceInvitesController {
       dto.token,
       auth.id,
     );
-  }
-
-  @Post()
-  create(@Body() createWorkspaceInviteDto: CreateWorkspaceInviteDto) {
-    return this.workspaceInvitesService.create(createWorkspaceInviteDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.workspaceInvitesService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.workspaceInvitesService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateWorkspaceInviteDto: UpdateWorkspaceInviteDto,
-  ) {
-    return this.workspaceInvitesService.update(+id, updateWorkspaceInviteDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.workspaceInvitesService.remove(+id);
   }
 }

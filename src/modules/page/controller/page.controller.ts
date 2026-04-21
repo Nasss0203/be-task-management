@@ -1,18 +1,8 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Inject,
-  Param,
-  Patch,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { type IAuth } from 'src/types/auth';
 import { CreatePageDto } from '../dto/create-page.dto';
-import { UpdatePageDto } from '../dto/update-page.dto';
 import { type FindPageApplication } from '../interfaces/applications/find-page.application.interface';
 import { PAGE_TYPES } from '../interfaces/types';
 import { PageService } from '../page.service';
@@ -41,20 +31,5 @@ export class PageController {
       auth.id,
       workspaceId,
     );
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.pageService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePageDto: UpdatePageDto) {
-    return this.pageService.update(+id, updatePageDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.pageService.remove(+id);
   }
 }

@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Inject,
   Param,
@@ -53,16 +52,6 @@ export class TasksController {
     });
   }
 
-  @Get()
-  findAll() {
-    return this.tasksService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.tasksService.findOne(+id);
-  }
-
   @Patch(':id')
   @ResponseMessage('Update task successfully')
   async updateTask(
@@ -73,10 +62,5 @@ export class TasksController {
       ...updateTaskDto,
       id,
     });
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.tasksService.remove(+id);
   }
 }

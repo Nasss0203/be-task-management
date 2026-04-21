@@ -1,24 +1,11 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Inject,
-  Param,
-  Patch,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
-import {
-  AddWorkspaceMemberDto,
-  CreateUserWorkspaceDto,
-} from '../dto/create-user_workspace.dto';
+import { AddWorkspaceMemberDto } from '../dto/create-user_workspace.dto';
 import { MemberWorkspaceResponseDto } from '../dto/response/user_workspace.response.dto';
-import { UpdateUserWorkspaceDto } from '../dto/update-user_workspace.dto';
 import { type AddWorkspaceMemberApplication } from '../interfaces/applications/add-member-workspace.application.interface';
 import { type FindAllMemberApplication } from '../interfaces/applications/find-user-workspace.application.interface';
 import { USER_WORKSPACE_TYPES } from '../interfaces/types';
@@ -35,11 +22,6 @@ export class UserWorkspacesController {
     @Inject(USER_WORKSPACE_TYPES.applications.FindAllMemberApplication)
     private readonly findAllMemberApplication: FindAllMemberApplication,
   ) {}
-
-  @Post()
-  create(@Body() createUserWorkspaceDto: CreateUserWorkspaceDto) {
-    return this.UserWorkspacesService.create(createUserWorkspaceDto);
-  }
 
   @Post(':workspaceId/members')
   @ResponseMessage('Add member')
@@ -63,28 +45,5 @@ export class UserWorkspacesController {
     @Param('workspaceId') workspaceId: string,
   ): Promise<MemberWorkspaceResponseDto[]> {
     return this.findAllMemberApplication.findAllMember(workspaceId);
-  }
-
-  @Get()
-  findAll() {
-    return this.UserWorkspacesService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.UserWorkspacesService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateUserWorkspaceDto: UpdateUserWorkspaceDto,
-  ) {
-    return this.UserWorkspacesService.update(+id, updateUserWorkspaceDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.UserWorkspacesService.remove(+id);
   }
 }
