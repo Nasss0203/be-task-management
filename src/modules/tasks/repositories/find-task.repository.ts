@@ -38,4 +38,21 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
 
     return entities.map((entity) => TaskMapper.toModel(entity));
   }
+
+  async findAllTaskByWorkspace(
+    workspaceId: string,
+    manager?: EntityManager,
+  ): Promise<TaskModel[]> {
+    const entities = await this.getRepo(manager).find({
+      where: {
+        workspaceId,
+      },
+      relations: {
+        status: true,
+        priority: true,
+      },
+    });
+
+    return entities.map((entity) => TaskMapper.toModel(entity));
+  }
 }

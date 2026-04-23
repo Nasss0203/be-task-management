@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitSchema1776417798693 implements MigrationInterface {
-    name = 'InitSchema1776417798693'
+export class InitSchema1776935210359 implements MigrationInterface {
+    name = 'InitSchema1776935210359'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TABLE "users" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "email" character varying(255) NOT NULL, "username" character varying(100) NOT NULL, "google_id" character varying(255), "avatar_url" character varying(500), "password_hash" character varying(255), "is_active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`);
@@ -41,7 +41,7 @@ export class InitSchema1776417798693 implements MigrationInterface {
         await queryRunner.query(`CREATE INDEX "IDX_BOARDS_PROJECT_ID" ON "boards" ("project_id") `);
         await queryRunner.query(`CREATE INDEX "IDX_BOARDS_WORKSPACE_ID" ON "boards" ("workspace_id") `);
         await queryRunner.query(`CREATE TYPE "public"."page_blocks_type_enum" AS ENUM('TEXT', 'HEADER', 'QUOTE', 'DIVIDER', 'CODE', 'TODO', 'IMAGE', 'VIDEO', 'FILE', 'BOOKMARK', 'EMBED', 'FIGMA', 'GITHUB_GIST', 'GOOGLE_MAPS', 'TWEET', 'DATABASE_VIEW', 'TABLE_SIMPLE', 'MERMAID', 'BUTTON')`);
-        await queryRunner.query(`CREATE TABLE "page_blocks" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "page_id" uuid NOT NULL, "type" "public"."page_blocks_type_enum" NOT NULL, "title" character varying, "order_index" integer NOT NULL DEFAULT '0', "position_x" integer, "position_y" integer, "width" integer, "height" integer, "content" jsonb, "data_config" jsonb, "style_config" jsonb, "created_by" uuid NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_da57feac0f4c851a6419487176b" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "page_blocks" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "page_id" uuid NOT NULL, "type" "public"."page_blocks_type_enum" NOT NULL, "title" character varying, "order_index" integer NOT NULL DEFAULT '0', "position_x" integer, "position_y" integer, "width" integer, "height" integer, "content" jsonb, "data_config" jsonb, "style_config" jsonb, "created_by" uuid NOT NULL, "is_open" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_da57feac0f4c851a6419487176b" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE UNIQUE INDEX "UQ_PAGE_BLOCKS_PAGE_ORDER" ON "page_blocks" ("page_id", "order_index") `);
         await queryRunner.query(`CREATE INDEX "IDX_PAGE_BLOCKS_PAGE_ID" ON "page_blocks" ("page_id") `);
         await queryRunner.query(`CREATE TABLE "pages" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "workspace_id" uuid NOT NULL, "title" character varying(255) NOT NULL, "slug" character varying(255), "is_template" boolean NOT NULL DEFAULT false, "created_by" uuid NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_8f21ed625aa34c8391d636b7d3b" PRIMARY KEY ("id"))`);

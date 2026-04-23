@@ -65,6 +65,9 @@ import { UserWorkspacesService } from './user_workspace.service';
       useClass: TypeOrmUnitOfWork,
     },
   ],
-  exports: [USER_WORKSPACE_TYPES.services.CreateUserWorkspaceService],
+  exports: [
+    USER_WORKSPACE_TYPES.services.CreateUserWorkspaceService,
+    USER_WORKSPACE_TYPES.services.FindAllMemberService,
+  ],
 })
 export class UserWorkspacesModule {}

@@ -66,6 +66,9 @@ import { FindProjectServiceImpl } from './services/find.project.service';
       useClass: TypeOrmUnitOfWork,
     },
   ],
-  exports: [PROJECT_TYPES.services.CreateProjectService],
+  exports: [
+    PROJECT_TYPES.services.CreateProjectService,
+    PROJECT_TYPES.services.FindProjectService,
+  ],
 })
 export class ProjectsModule {}

@@ -17,6 +17,7 @@ import { UserRolesModule } from '../user_roles/user_roles.module';
 import { UserWorkspace } from '../user_workspace/domain/entities/user_workspace.entity';
 import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
 import { AccessWorkspaceApplicationImpl } from './applications/access-workspace.application';
+import { AdminFindAllWorkspaceApplicationImpl } from './applications/admin-findAll-workspace.application';
 import { CreateWorkspaceApplicationImpl } from './applications/create-workspace.application';
 import { FindWorkspaceApplicationImpl } from './applications/find.workspace.application';
 import { WorkspacesController } from './controller/workspaces.controller';
@@ -30,7 +31,6 @@ import { AccessWorkspaceServiceImpl } from './services/access-workspace.service'
 import { AdminFindAllWorkspaceServiceImpl } from './services/admin-findAll-workspace.service.interface';
 import { CreateWorkspaceServiceImpl } from './services/create-workspace.service';
 import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
-import { AdminFindAllWorkspaceApplicationImpl } from './applications/admin-findAll-workspace.application';
 
 @Module({
   imports: [
@@ -112,6 +112,7 @@ import { AdminFindAllWorkspaceApplicationImpl } from './applications/admin-findA
     WORKSPACE_TYPES.repositories.WorkspaceRepository,
     WORKSPACE_TYPES.services.CreateWorkspaceService,
     WORKSPACE_TYPES.services.AdminFindAllWorkspaceService,
+    WORKSPACE_TYPES.services.FindWorkspaceService,
   ],
 })
 export class WorkspacesModule {}

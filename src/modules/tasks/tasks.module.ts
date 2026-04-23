@@ -65,6 +65,9 @@ import { TasksService } from './tasks.service';
       useClass: UpdateTaskServiceImpl,
     },
   ],
-  exports: [TASK_TYPES.services.CreateTaskService],
+  exports: [
+    TASK_TYPES.services.CreateTaskService,
+    TASK_TYPES.services.FindTaskService,
+  ],
 })
 export class TasksModule {}

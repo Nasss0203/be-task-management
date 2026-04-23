@@ -10,6 +10,9 @@ export class FindTaskServiceImpl implements FindTaskService {
     @Inject(TASK_TYPES.repositories.FindTaskRepository)
     private readonly findTaskRepository: FindTaskRepository,
   ) {}
+  findAllTaskByWorkspace(workspaceId: string): Promise<TaskModel[]> {
+    return this.findTaskRepository.findAllTaskByWorkspace(workspaceId);
+  }
 
   async findAllTask(
     projectId: string,

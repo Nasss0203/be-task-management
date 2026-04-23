@@ -8,4 +8,8 @@ export type ParamTask = {
 
 export interface FindTaskRepository {
   findAllTask(params: ParamTask, manager?: EntityManager): Promise<TaskModel[]>;
+  findAllTaskByWorkspace(
+    workspaceId: string,
+    manager?: EntityManager,
+  ): Promise<TaskModel[]>;
 }
