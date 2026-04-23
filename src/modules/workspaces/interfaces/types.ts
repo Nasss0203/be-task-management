@@ -1,6 +1,8 @@
 export const WORKSPACE_TYPES = {
   services: {
     CreateWorkspaceService: 'CreateWorkspaceService',
+    CreateWorkspaceTemplateService: 'CreateWorkspaceTemplateService',
+
     FindWorkspaceService: 'FindWorkspaceService',
     RbacHelper: 'RbacHelper',
     AccessWorkspaceService: 'AccessWorkspaceService',
@@ -8,6 +10,8 @@ export const WORKSPACE_TYPES = {
   },
   applications: {
     CreateWorkspaceApplication: 'CreateWorkspaceApplication',
+    CreateWorkspaceTemplateApplication: 'CreateWorkspaceTemplateApplication',
+
     FindWorkspaceApplication: 'FindWorkspaceApplication',
     AccessWorkspaceApplication: 'AccessWorkspaceApplication',
     AdminFindAllWorkspaceApplication: 'AdminFindAllWorkspaceApplication',
@@ -18,6 +22,7 @@ export const WORKSPACE_TYPES = {
     FindWorkspaceRepository: 'FindWorkspaceRepository',
     AccessWorkspaceRepository: 'AccessWorkspaceRepository',
     AdminFindAllWorkspaceRepository: 'AdminFindAllWorkspaceRepository',
+    CreateWorkspaceTemplateRepository: 'CreateWorkspaceTemplateRepository',
   },
   uow: {
     UnitOfWork: 'UnitOfWork',

@@ -4,6 +4,10 @@ import { ResponseMessage } from 'src/common/decorator/response-message.decorator
 import { type IAuth } from 'src/types/auth';
 import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
 import { type AccessWorkspaceApplication } from '../interfaces/applications/access-workspace.application.interface';
+import {
+  type CreateWorkspaceTemplateApplication,
+  type CreateWorkspaceTemplateDto,
+} from '../interfaces/applications/create-workspace-template.application.interface';
 import { type CreateWorkspaceApplication } from '../interfaces/applications/create-workspace.application.interface';
 import { type FindWorkspaceApplication } from '../interfaces/applications/find.workspace.application.interface';
 import { WORKSPACE_TYPES } from '../interfaces/types';
@@ -13,6 +17,9 @@ export class WorkspacesController {
   constructor(
     @Inject(WORKSPACE_TYPES.applications.CreateWorkspaceApplication)
     private readonly createWorkspaceMultiServiceAppImpl: CreateWorkspaceApplication,
+
+    @Inject(WORKSPACE_TYPES.applications.CreateWorkspaceTemplateApplication)
+    private readonly createWorkspaceTemplateApplication: CreateWorkspaceTemplateApplication,
 
     @Inject(WORKSPACE_TYPES.applications.FindWorkspaceApplication)
     private readonly findWorkspaceApplicationImpl: FindWorkspaceApplication,
@@ -34,12 +41,12 @@ export class WorkspacesController {
   }
 
   @Post()
-  @ResponseMessage('Workspaces created')
-  async createV2(
-    @Body() createWorkspaceDto: CreateWorkspaceDto,
+  @ResponseMessage('Create workspace template')
+  async createByTemplate(
+    @Body() createWorkspaceDto: CreateWorkspaceTemplateDto,
     @Auth() auth: IAuth,
   ) {
-    return await this.createWorkspaceMultiServiceAppImpl.create({
+    return this.createWorkspaceTemplateApplication.create({
       userId: auth.id,
       createWorkspaceDto,
     });
