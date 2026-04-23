@@ -23,11 +23,14 @@ import { WorkspacesController } from './controller/workspaces.controller';
 import { Workspace } from './domain/entities/workspace.entity';
 import { WORKSPACE_TYPES } from './interfaces/types';
 import { AccessWorkspaceRepositoryImpl } from './repositories/access-workspace.repository';
+import { AdminFindAllWorkspaceRepositoryImpl } from './repositories/admin-findAll-workspace.repository';
 import { WorkspaceRepositoryImpl } from './repositories/create-workspace.repository';
 import { FindWorkspaceRepositoryImpl } from './repositories/find.workspace.repository';
 import { AccessWorkspaceServiceImpl } from './services/access-workspace.service';
+import { AdminFindAllWorkspaceServiceImpl } from './services/admin-findAll-workspace.service.interface';
 import { CreateWorkspaceServiceImpl } from './services/create-workspace.service';
 import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
+import { AdminFindAllWorkspaceApplicationImpl } from './applications/admin-findAll-workspace.application';
 
 @Module({
   imports: [
@@ -74,6 +77,10 @@ import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
       provide: WORKSPACE_TYPES.services.AccessWorkspaceService,
       useClass: AccessWorkspaceServiceImpl,
     },
+    {
+      provide: WORKSPACE_TYPES.services.AdminFindAllWorkspaceService,
+      useClass: AdminFindAllWorkspaceServiceImpl,
+    },
 
     //Repository
     {
@@ -89,13 +96,22 @@ import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
       useClass: AccessWorkspaceRepositoryImpl,
     },
     {
+      provide: WORKSPACE_TYPES.repositories.AdminFindAllWorkspaceRepository,
+      useClass: AdminFindAllWorkspaceRepositoryImpl,
+    },
+    {
       provide: WORKSPACE_TYPES.uow.UnitOfWork,
       useClass: TypeOrmUnitOfWork,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.AdminFindAllWorkspaceApplication,
+      useClass: AdminFindAllWorkspaceApplicationImpl,
     },
   ],
   exports: [
     WORKSPACE_TYPES.repositories.WorkspaceRepository,
     WORKSPACE_TYPES.services.CreateWorkspaceService,
+    WORKSPACE_TYPES.services.AdminFindAllWorkspaceService,
   ],
 })
 export class WorkspacesModule {}
