@@ -7,6 +7,8 @@ export const WORKSPACE_INVITE_TYPES = {
   applications: {
     InviteWorkspaceMemberApplication: 'InviteWorkspaceMemberApplication',
     AcceptWorkspaceInviteApplication: 'AcceptWorkspaceInviteApplication',
+    CreateWorkspaceInviteLinkApplication:
+      'CreateWorkspaceInviteLinkApplication',
   },
   repositories: {
     CreateWorkspaceInviteRepository: 'CreateWorkspaceInviteRepository',

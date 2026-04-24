@@ -67,10 +67,6 @@ export class AcceptWorkspaceInviteApplicationImpl implements AcceptWorkspaceInvi
       throw new BadRequestException('userId is required');
     }
 
-    if (!input.email || !input.email.trim()) {
-      throw new BadRequestException('email is required');
-    }
-
     const invite = await this.findWorkspaceInviteService.findByToken(token);
 
     if (!invite) {
@@ -85,14 +81,6 @@ export class AcceptWorkspaceInviteApplicationImpl implements AcceptWorkspaceInvi
       throw new BadRequestException('Workspace invite has expired');
     }
 
-    if (invite.type !== WorkspaceInviteType.EMAIL) {
-      throw new BadRequestException('This invite is not an email invite');
-    }
-
-    if (!invite.email) {
-      throw new BadRequestException('Invite email is missing');
-    }
-
     if (invite.max_uses && invite.used_count >= invite.max_uses) {
       throw new BadRequestException('Workspace invite usage limit reached');
     }
@@ -103,19 +91,29 @@ export class AcceptWorkspaceInviteApplicationImpl implements AcceptWorkspaceInvi
       throw new NotFoundException('User not found');
     }
 
-    const inviteEmail = invite.email.trim().toLowerCase();
-    const currentUserEmail = input.email.trim().toLowerCase();
+    if (invite.type === WorkspaceInviteType.EMAIL) {
+      if (!input.email || !input.email.trim()) {
+        throw new BadRequestException('email is required');
+      }
 
-    if (inviteEmail !== currentUserEmail) {
-      throw new ForbiddenException(
-        'This invite does not belong to the current account',
-      );
-    }
+      if (!invite.email) {
+        throw new BadRequestException('Invite email is missing');
+      }
 
-    if (invite.user_id && invite.user_id !== user.id) {
-      throw new ForbiddenException(
-        'This invite does not belong to the current user',
-      );
+      const inviteEmail = invite.email.trim().toLowerCase();
+      const currentUserEmail = input.email.trim().toLowerCase();
+
+      if (inviteEmail !== currentUserEmail) {
+        throw new ForbiddenException(
+          'This invite does not belong to the current account',
+        );
+      }
+
+      if (invite.user_id && invite.user_id !== user.id) {
+        throw new ForbiddenException(
+          'This invite does not belong to the current user',
+        );
+      }
     }
 
     const acceptedInvite = await this.uow.runInTransaction(async (manager) => {

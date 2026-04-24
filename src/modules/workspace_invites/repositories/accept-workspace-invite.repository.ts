@@ -4,6 +4,7 @@ import { EntityManager, Repository } from 'typeorm';
 import {
   WorkspaceInvite,
   WorkspaceInviteStatus,
+  WorkspaceInviteType,
 } from '../domain/entities/workspace_invite.entity';
 import { WorkspaceInviteModel } from '../domain/models/workspace_invite.model';
 import {
@@ -39,10 +40,19 @@ export class AcceptWorkspaceInviteRepositoryImpl implements AcceptWorkspaceInvit
       throw new NotFoundException('Workspace invite not found');
     }
 
-    invite.user_id = input.userId;
-    invite.status = WorkspaceInviteStatus.ACCEPTED;
-    invite.accepted_at = new Date();
     invite.used_count = invite.used_count + 1;
+
+    if (invite.type === WorkspaceInviteType.EMAIL) {
+      invite.user_id = input.userId;
+      invite.status = WorkspaceInviteStatus.ACCEPTED;
+      invite.accepted_at = new Date();
+    }
+
+    if (invite.type === WorkspaceInviteType.LINK) {
+      if (invite.max_uses && invite.used_count >= invite.max_uses) {
+        invite.status = WorkspaceInviteStatus.EXPIRED;
+      }
+    }
 
     const saved = await repo.save(invite);
 

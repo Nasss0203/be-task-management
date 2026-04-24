@@ -8,6 +8,7 @@ import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
 import { UsersModule } from '../users/users.module';
 import { WORKSPACE_TYPES } from '../workspaces/interfaces/types';
 import { AcceptWorkspaceInviteApplicationImpl } from './applications/accept-workspace-invite.application';
+import { CreateWorkspaceInviteLinkApplicationImpl } from './applications/create-workspace-invite-link.application';
 import { InviteWorkspaceMemberApplicationImpl } from './applications/invite-workspace-member.application';
 import { WorkspaceInvitesController } from './controller/workspace_invites.controller';
 import { WorkspaceInvite } from './domain/entities/workspace_invite.entity';
@@ -42,6 +43,12 @@ import { WorkspaceInvitesService } from './workspace_invites.service';
       provide:
         WORKSPACE_INVITE_TYPES.applications.AcceptWorkspaceInviteApplication,
       useClass: AcceptWorkspaceInviteApplicationImpl,
+    },
+    {
+      provide:
+        WORKSPACE_INVITE_TYPES.applications
+          .CreateWorkspaceInviteLinkApplication,
+      useClass: CreateWorkspaceInviteLinkApplicationImpl,
     },
     // Repository
     {
