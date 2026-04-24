@@ -11,4 +11,6 @@ export interface FindPageBlockRepository {
     pageId: string,
     manager?: EntityManager,
   ): Promise<PageBlockModel | null>;
+
+  getNextOrderIndex(pageId: string, manager?: EntityManager): Promise<number>;
 }
