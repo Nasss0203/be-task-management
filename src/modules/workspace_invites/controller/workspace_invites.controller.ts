@@ -11,17 +11,20 @@ import { RequirePermissions } from 'src/common/decorator/require-permissions.dec
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
-import { CreateWorkspaceInviteDto } from '../dto/create-workspace_invite.dto';
+import {
+  CreateWorkspaceInviteDto,
+  CreateWorkspaceInviteLinkDto,
+} from '../dto/create-workspace_invite.dto';
+import { WorkspaceInviteLinkResponseDto } from '../dto/response/workspace-invite-link-response.dto';
 import { WorkspaceInviteResponseDto } from '../dto/response/workspace_invites-response.dto';
 import { type AcceptWorkspaceInviteApplication } from '../interfaces/applications/accept-workspace-invite.application.interface';
+import { type CreateWorkspaceInviteLinkApplication } from '../interfaces/applications/create-workspace-invite-link.application.interface';
 import { type InviteWorkspaceMemberApplication } from '../interfaces/applications/invite-workspace-member.application.interface';
 import { WORKSPACE_INVITE_TYPES } from '../interfaces/types';
-import { WorkspaceInvitesService } from '../workspace_invites.service';
 
 @Controller('workspace-invites')
 export class WorkspaceInvitesController {
   constructor(
-    private readonly workspaceInvitesService: WorkspaceInvitesService,
     @Inject(
       WORKSPACE_INVITE_TYPES.applications.InviteWorkspaceMemberApplication,
     )
@@ -31,6 +34,11 @@ export class WorkspaceInvitesController {
       WORKSPACE_INVITE_TYPES.applications.AcceptWorkspaceInviteApplication,
     )
     private readonly acceptWorkspaceInviteApplication: AcceptWorkspaceInviteApplication,
+
+    @Inject(
+      WORKSPACE_INVITE_TYPES.applications.CreateWorkspaceInviteLinkApplication,
+    )
+    private readonly createWorkspaceInviteLinkApplication: CreateWorkspaceInviteLinkApplication,
   ) {}
 
   @Post()
@@ -72,5 +80,26 @@ export class WorkspaceInvitesController {
       userId: auth.id,
       email: auth.email,
     });
+  }
+
+  @Post(':workspaceId/link')
+  @ResponseMessage('Create workspace invite link successfully')
+  @RequirePermissions(PERMISSIONS.WORKSPACE_MEMBER_ADD)
+  async createInviteLink(
+    @Param('workspaceId') workspaceId: string,
+    @Body() dto: CreateWorkspaceInviteLinkDto,
+    @Auth() auth: IAuth,
+  ): Promise<WorkspaceInviteLinkResponseDto> {
+    const invitedBy = auth?.id;
+
+    if (!invitedBy) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
+    return this.createWorkspaceInviteLinkApplication.createLink(
+      workspaceId,
+      invitedBy,
+      dto,
+    );
   }
 }
