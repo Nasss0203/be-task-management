@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitSchema1776935210359 implements MigrationInterface {
-    name = 'InitSchema1776935210359'
+export class InitSchema1777017484499 implements MigrationInterface {
+    name = 'InitSchema1777017484499'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TABLE "users" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "email" character varying(255) NOT NULL, "username" character varying(100) NOT NULL, "google_id" character varying(255), "avatar_url" character varying(500), "password_hash" character varying(255), "is_active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`);
@@ -59,9 +59,11 @@ export class InitSchema1776935210359 implements MigrationInterface {
         await queryRunner.query(`CREATE INDEX "IDX_role_permissions_role" ON "role_permissions" ("role_id") `);
         await queryRunner.query(`CREATE TABLE "user_roles" ("user_id" uuid NOT NULL, "workspace_id" uuid NOT NULL, "role_id" uuid NOT NULL, "assigned_at" TIMESTAMP NOT NULL DEFAULT now(), "assigned_by" uuid, CONSTRAINT "PK_3868a216bfe72626b8b80e1dc4f" PRIMARY KEY ("user_id", "workspace_id", "role_id"))`);
         await queryRunner.query(`CREATE INDEX "IDX_user_roles_workspace_user" ON "user_roles" ("workspace_id", "user_id") `);
+        await queryRunner.query(`CREATE TYPE "public"."workspace_invites_type_enum" AS ENUM('EMAIL', 'LINK')`);
         await queryRunner.query(`CREATE TYPE "public"."workspace_invites_role_name_enum" AS ENUM('OWNER', 'MEMBER', 'ADMIN')`);
         await queryRunner.query(`CREATE TYPE "public"."workspace_invites_status_enum" AS ENUM('PENDING', 'ACCEPTED', 'EXPIRED', 'REVOKED')`);
-        await queryRunner.query(`CREATE TABLE "workspace_invites" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "workspace_id" uuid NOT NULL, "user_id" uuid, "email" character varying(255) NOT NULL, "role_name" "public"."workspace_invites_role_name_enum" NOT NULL DEFAULT 'MEMBER', "invited_by" uuid NOT NULL, "token" character varying(255) NOT NULL, "status" "public"."workspace_invites_status_enum" NOT NULL DEFAULT 'PENDING', "accepted_at" TIMESTAMP, "expires_at" TIMESTAMP NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_43f7a0e0b0549fe2581e9cb57bc" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "workspace_invites" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "workspace_id" uuid NOT NULL, "user_id" uuid, "email" character varying(255), "type" "public"."workspace_invites_type_enum" NOT NULL DEFAULT 'EMAIL', "role_name" "public"."workspace_invites_role_name_enum" NOT NULL DEFAULT 'MEMBER', "invited_by" uuid NOT NULL, "token" character varying(255) NOT NULL, "status" "public"."workspace_invites_status_enum" NOT NULL DEFAULT 'PENDING', "accepted_at" TIMESTAMP, "expires_at" TIMESTAMP NOT NULL, "max_uses" integer, "used_count" integer NOT NULL DEFAULT '0', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_43f7a0e0b0549fe2581e9cb57bc" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_workspace_invites_type" ON "workspace_invites" ("type") `);
         await queryRunner.query(`CREATE INDEX "IDX_workspace_invites_user_id" ON "workspace_invites" ("user_id") `);
         await queryRunner.query(`CREATE INDEX "IDX_workspace_invites_invited_by" ON "workspace_invites" ("invited_by") `);
         await queryRunner.query(`CREATE INDEX "IDX_workspace_invites_status" ON "workspace_invites" ("status") `);
@@ -147,9 +149,11 @@ export class InitSchema1776935210359 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX "public"."IDX_workspace_invites_status"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_workspace_invites_invited_by"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_workspace_invites_user_id"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_workspace_invites_type"`);
         await queryRunner.query(`DROP TABLE "workspace_invites"`);
         await queryRunner.query(`DROP TYPE "public"."workspace_invites_status_enum"`);
         await queryRunner.query(`DROP TYPE "public"."workspace_invites_role_name_enum"`);
+        await queryRunner.query(`DROP TYPE "public"."workspace_invites_type_enum"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_user_roles_workspace_user"`);
         await queryRunner.query(`DROP TABLE "user_roles"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_role_permissions_role"`);

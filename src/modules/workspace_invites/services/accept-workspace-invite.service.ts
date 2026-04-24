@@ -1,15 +1,22 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
-import { WorkspaceInviteStatus } from '../domain/entities/workspace_invite.entity';
+import {
+  WorkspaceInviteStatus,
+  WorkspaceInviteType,
+} from '../domain/entities/workspace_invite.entity';
 import { WorkspaceInviteModel } from '../domain/models/workspace_invite.model';
 import { type AcceptWorkspaceInviteRepository } from '../interfaces/repositories/accept-workspace-invite.repository.interface';
 import { type FindWorkspaceInviteRepository } from '../interfaces/repositories/find-workspace-invite.repository.interface';
-import { AcceptWorkspaceInviteService } from '../interfaces/services/accept-workspace-invite.service.interface';
+import {
+  AcceptWorkspaceInviteInput,
+  AcceptWorkspaceInviteService,
+} from '../interfaces/services/accept-workspace-invite.service.interface';
 import { WORKSPACE_INVITE_TYPES } from '../interfaces/types';
 
 @Injectable()
@@ -23,11 +30,21 @@ export class AcceptWorkspaceInviteServiceImpl implements AcceptWorkspaceInviteSe
   ) {}
 
   async acceptWorkspaceInvite(
-    token: string,
+    input: AcceptWorkspaceInviteInput,
     manager?: EntityManager,
   ): Promise<WorkspaceInviteModel> {
-    if (!token || !token.trim()) {
+    const token = input.token?.trim();
+
+    if (!token) {
       throw new BadRequestException('token is required');
+    }
+
+    if (!input.userId) {
+      throw new BadRequestException('userId is required');
+    }
+
+    if (!input.email || !input.email.trim()) {
+      throw new BadRequestException('email is required');
     }
 
     const invite = await this.findWorkspaceInviteRepository.findByToken(
@@ -47,8 +64,30 @@ export class AcceptWorkspaceInviteServiceImpl implements AcceptWorkspaceInviteSe
       throw new BadRequestException('Workspace invite has expired');
     }
 
+    if (invite.type !== WorkspaceInviteType.EMAIL) {
+      throw new BadRequestException('This invite is not an email invite');
+    }
+
+    if (!invite.email) {
+      throw new BadRequestException('Invite email is missing');
+    }
+
+    const inviteEmail = invite.email.trim().toLowerCase();
+    const currentUserEmail = input.email.trim().toLowerCase();
+
+    if (inviteEmail !== currentUserEmail) {
+      throw new ForbiddenException('This invite is not for your email');
+    }
+
+    if (invite.max_uses && invite.used_count >= invite.max_uses) {
+      throw new BadRequestException('Workspace invite usage limit reached');
+    }
+
     return this.acceptWorkspaceInviteRepository.acceptWorkspaceInvite(
-      token,
+      {
+        token,
+        userId: input.userId,
+      },
       manager,
     );
   }
