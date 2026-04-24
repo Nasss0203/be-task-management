@@ -43,6 +43,10 @@ export class InviteWorkspaceMemberApplicationImpl implements InviteWorkspaceMemb
       throw new BadRequestException('user_id or email is required');
     }
 
+    if (!dto.role_name) {
+      throw new BadRequestException('role_name is required');
+    }
+
     let targetUserId: string | null = null;
     let targetEmail: string | null = null;
 
@@ -55,18 +59,15 @@ export class InviteWorkspaceMemberApplicationImpl implements InviteWorkspaceMemb
 
       targetUserId = user.id;
       targetEmail = user.email.trim().toLowerCase();
-    } else if (dto.email) {
+    }
+
+    if (!targetEmail && dto.email) {
       targetEmail = dto.email.trim().toLowerCase();
     }
 
     if (!targetEmail) {
       throw new BadRequestException('Target email is required');
     }
-
-    // TODO:
-    // 1. check invitedBy có quyền mời member trong workspace không
-    // 2. check target user/email đã là member của workspace chưa
-    // 3. check workspace đã có invite PENDING với email này chưa
 
     const invite = await this.createWorkspaceInviteService.save({
       workspace_id: workspaceId,
@@ -76,7 +77,7 @@ export class InviteWorkspaceMemberApplicationImpl implements InviteWorkspaceMemb
       invited_by: invitedBy,
     });
 
-    const email = await this.mailService.sendEmailTemplates({
+    await this.mailService.sendEmailTemplates({
       to: targetEmail,
       subject: 'Lời mời tham gia workspace',
       template: 'invite-member',
@@ -85,12 +86,13 @@ export class InviteWorkspaceMemberApplicationImpl implements InviteWorkspaceMemb
         workspaceName: 'Task Management',
         inviterName: 'Nass',
         roleName: dto.role_name,
-        acceptUrl: `http://localhost:3000/invite/accept?token=${invite.token}`,
+        acceptUrl: `http://localhost:3000/invite/workspace?token=${invite.token}`,
         expiredAt: '7 ngày kể từ lúc nhận email',
         year: new Date().getFullYear(),
         appName: 'Task Management',
       },
     });
+
     return WorkspaceInviteMapper.toResponse(invite);
   }
 }

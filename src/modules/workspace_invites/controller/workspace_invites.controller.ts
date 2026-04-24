@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Inject,
+  Param,
   Post,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -10,10 +11,7 @@ import { RequirePermissions } from 'src/common/decorator/require-permissions.dec
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
-import {
-  AcceptWorkspaceInviteDto,
-  CreateWorkspaceInviteDto,
-} from '../dto/create-workspace_invite.dto';
+import { CreateWorkspaceInviteDto } from '../dto/create-workspace_invite.dto';
 import { WorkspaceInviteResponseDto } from '../dto/response/workspace_invites-response.dto';
 import { type AcceptWorkspaceInviteApplication } from '../interfaces/applications/accept-workspace-invite.application.interface';
 import { type InviteWorkspaceMemberApplication } from '../interfaces/applications/invite-workspace-member.application.interface';
@@ -43,7 +41,6 @@ export class WorkspaceInvitesController {
     @Auth() auth: IAuth,
   ): Promise<WorkspaceInviteResponseDto> {
     const invitedBy = auth.id;
-    console.log('invitedBy', invitedBy);
 
     if (!invitedBy) {
       throw new UnauthorizedException('User not authenticated');
@@ -56,19 +53,24 @@ export class WorkspaceInvitesController {
     );
   }
 
-  @Post('accept')
+  @Post(':token/accept')
   @ResponseMessage('Accept workspace invite successfully')
   async acceptInvite(
-    @Body() dto: AcceptWorkspaceInviteDto,
+    @Param('token') token: string,
     @Auth() auth: IAuth,
   ): Promise<WorkspaceInviteResponseDto> {
     if (!auth?.id) {
       throw new UnauthorizedException('User not authenticated');
     }
 
-    return this.acceptWorkspaceInviteApplication.acceptWorkspaceInvite(
-      dto.token,
-      auth.id,
-    );
+    if (!auth?.email) {
+      throw new UnauthorizedException('User email not found');
+    }
+
+    return this.acceptWorkspaceInviteApplication.acceptWorkspaceInvite({
+      token,
+      userId: auth.id,
+      email: auth.email,
+    });
   }
 }
