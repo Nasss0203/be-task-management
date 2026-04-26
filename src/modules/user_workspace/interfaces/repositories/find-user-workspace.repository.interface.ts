@@ -1,15 +1,12 @@
 import { EntityManager } from 'typeorm';
-import {
-  MemberWorkspaceModel,
-  UserWorkspaceModel,
-} from '../../domain/models/user_workspace.model';
+import { MemberWorkspaceModel } from '../../domain/models/user_workspace.model';
 
 export interface FindUserWorkspaceRepository {
-  findByWorkspaceAndUser(
+  findMemberInWorkspace(
     workspaceId: string,
     userId: string,
     manager?: EntityManager,
-  ): Promise<UserWorkspaceModel | null>;
+  ): Promise<MemberWorkspaceModel | null>;
 
   findAllMember(
     workspaceId: string,

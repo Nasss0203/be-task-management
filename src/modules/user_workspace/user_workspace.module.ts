@@ -13,7 +13,7 @@ import { FindUserWorkspaceRepositoryImpl } from './repositories/find-user-worksp
 import { UserWorkspaceRepositoryImpl } from './repositories/user_workspace.repository';
 import { AddMemberWorkspaceServiceImpl } from './services/add-member-workspace.service';
 import { CreateUserWorkspaceServiceImpl } from './services/create.user_workspace.service';
-import { FindAllMemberServiceImpl } from './services/find-user-workspace.service';
+import { FindMemberServiceImpl } from './services/find-user-workspace.service';
 import { UserWorkspacesService } from './user_workspace.service';
 
 @Module({
@@ -57,8 +57,8 @@ import { UserWorkspacesService } from './user_workspace.service';
       useClass: AddMemberWorkspaceServiceImpl,
     },
     {
-      provide: USER_WORKSPACE_TYPES.services.FindAllMemberService,
-      useClass: FindAllMemberServiceImpl,
+      provide: USER_WORKSPACE_TYPES.services.FindMemberService,
+      useClass: FindMemberServiceImpl,
     },
     {
       provide: USER_WORKSPACE_TYPES.uow.UnitOfWork,
@@ -67,7 +67,7 @@ import { UserWorkspacesService } from './user_workspace.service';
   ],
   exports: [
     USER_WORKSPACE_TYPES.services.CreateUserWorkspaceService,
-    USER_WORKSPACE_TYPES.services.FindAllMemberService,
+    USER_WORKSPACE_TYPES.services.FindMemberService,
   ],
 })
 export class UserWorkspacesModule {}

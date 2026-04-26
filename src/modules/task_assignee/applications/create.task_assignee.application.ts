@@ -1,8 +1,20 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { RoleName } from 'src/modules/role/domain/entities/role.entity';
+import { type FindTaskService } from 'src/modules/tasks/interfaces/services/find-task.service.interface';
+import { TASK_TYPES } from 'src/modules/tasks/interfaces/types';
+import { type FindMemberService } from 'src/modules/user_workspace/interfaces/services/find-user-workspace.service.interface';
+import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/types';
 import { TaskAssigneeResponseDto } from '../dto/response/task_assignee.response.dto';
-import { CreateTaskAssigneeApplication } from '../interfaces/applications/create.task_assignee.application.interface';
-
-import { CreateTaskAssigneeDto } from '../dto/create-task_assignee.dto';
+import {
+  CreateTaskAssigneeApplication,
+  CreateTaskAssigneeApplicationInput,
+} from '../interfaces/applications/create.task_assignee.application.interface';
 import { type CreateTaskAssigneeService } from '../interfaces/services/create.task_assignee.service.interface';
 import { TASK_ASSIGNEE_TYPES } from '../interfaces/types';
 import { TaskAssigneeMapper } from '../mapper/task_assignee.mapper';
@@ -12,16 +24,64 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
   constructor(
     @Inject(TASK_ASSIGNEE_TYPES.services.CreateTaskAssigneeService)
     private readonly createTaskAssigneeService: CreateTaskAssigneeService,
+
+    @Inject(USER_WORKSPACE_TYPES.services.FindMemberService)
+    private readonly findMemberService: FindMemberService,
+
+    @Inject(TASK_TYPES.services.FindTaskService)
+    private readonly findTaskService: FindTaskService,
   ) {}
 
-  async assign(input: CreateTaskAssigneeDto): Promise<TaskAssigneeResponseDto> {
-    // Transaction db
-    // todo: Check user member trong workspace không
+  async assign(
+    input: CreateTaskAssigneeApplicationInput,
+  ): Promise<TaskAssigneeResponseDto> {
+    const task = await this.findTaskService.findOneTask(input.taskId);
+    console.log('🚀 ~ task~', task);
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    const actorMember = await this.findMemberService.findMemberInWorkspace(
+      task.workspaceId,
+      input.assignedBy,
+    );
+    console.log('🚀 ~ actorMember~', actorMember);
+
+    if (!actorMember) {
+      throw new ForbiddenException('You are not a member of this workspace');
+    }
+
+    const targetMember = await this.findMemberService.findMemberInWorkspace(
+      task.workspaceId,
+      input.userId,
+    );
+    console.log('🚀 ~ targetMember~', targetMember);
+
+    if (!targetMember) {
+      throw new BadRequestException(
+        'Target user is not a member of this workspace',
+      );
+    }
+
+    const isSelfAssign = input.userId === input.assignedBy;
+    console.log('🚀 ~ isSelfAssign~', isSelfAssign);
+
+    const canAssignOther = actorMember.role_name === RoleName.OWNER;
+    console.log('🚀 ~ canAssignOther~', canAssignOther);
+
+    if (!isSelfAssign && !canAssignOther) {
+      throw new ForbiddenException(
+        'You do not have permission to assign task to others',
+      );
+    }
+
     const result = await this.createTaskAssigneeService.assign({
       taskId: input.taskId,
       userId: input.userId,
       assignedBy: input.assignedBy,
     });
+    console.log('🚀 ~ result~', result);
 
     return TaskAssigneeMapper.toResponse(result);
   }

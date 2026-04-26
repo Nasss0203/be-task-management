@@ -4,11 +4,11 @@ import { EntityManager, Repository } from 'typeorm';
 import { UserWorkspace } from '../domain/entities/user_workspace.entity';
 import { MemberWorkspaceModel } from '../domain/models/user_workspace.model';
 import { type FindUserWorkspaceRepository } from '../interfaces/repositories/find-user-workspace.repository.interface';
-import { FindAllMemberService } from '../interfaces/services/find-user-workspace.service.interface';
+import { FindMemberService } from '../interfaces/services/find-user-workspace.service.interface';
 import { USER_WORKSPACE_TYPES } from '../interfaces/types';
 
 @Injectable()
-export class FindAllMemberServiceImpl implements FindAllMemberService {
+export class FindMemberServiceImpl implements FindMemberService {
   constructor(
     @InjectRepository(UserWorkspace)
     private readonly repoUserworkspace: Repository<UserWorkspace>,
@@ -16,12 +16,6 @@ export class FindAllMemberServiceImpl implements FindAllMemberService {
     @Inject(USER_WORKSPACE_TYPES.repositories.FindUserWorkspaceRepository)
     private readonly findUserWorkspaceRepository: FindUserWorkspaceRepository,
   ) {}
-
-  private getRepo(manager?: EntityManager): Repository<UserWorkspace> {
-    return manager
-      ? manager.getRepository(UserWorkspace)
-      : this.repoUserworkspace;
-  }
 
   async findAllMember(
     workspaceId: string,
@@ -32,5 +26,25 @@ export class FindAllMemberServiceImpl implements FindAllMemberService {
     }
 
     return this.findUserWorkspaceRepository.findAllMember(workspaceId, manager);
+  }
+
+  async findMemberInWorkspace(
+    workspaceId: string,
+    userId: string,
+    manager?: EntityManager,
+  ): Promise<MemberWorkspaceModel | null> {
+    if (!workspaceId?.trim()) {
+      throw new BadRequestException('workspaceId is required');
+    }
+
+    if (!userId?.trim()) {
+      throw new BadRequestException('userId is required');
+    }
+
+    return await this.findUserWorkspaceRepository.findMemberInWorkspace(
+      workspaceId,
+      userId,
+      manager,
+    );
   }
 }

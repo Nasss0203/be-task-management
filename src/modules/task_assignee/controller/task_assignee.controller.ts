@@ -25,12 +25,12 @@ export class TaskAssigneeController {
     private readonly deleteTaskAssigneeApplication: DeleteTaskAssigneeApplication,
   ) {}
 
-  @Post('')
+  @Post()
   @ResponseMessage('Assign Task')
-  assignTask(@Body() dto: CreateTaskAssigneeDto, @Auth() auth: IAuth) {
-    return this.createTaskAssigneeApplication.assign({
+  async assignTask(@Body() dto: CreateTaskAssigneeDto, @Auth() auth: IAuth) {
+    return await this.createTaskAssigneeApplication.assign({
       taskId: dto.taskId,
-      userId: dto.userId,
+      userId: dto.userId ?? auth.id,
       assignedBy: auth.id,
     });
   }

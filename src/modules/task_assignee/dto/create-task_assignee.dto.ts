@@ -1,4 +1,4 @@
-import { IsOptional, IsUUID } from 'class-validator';
+import { IsUUID } from 'class-validator';
 
 export class CreateTaskAssigneeDto {
   @IsUUID()
@@ -6,8 +6,4 @@ export class CreateTaskAssigneeDto {
 
   @IsUUID()
   userId: string;
-
-  @IsOptional()
-  @IsUUID()
-  assignedBy: string;
 }

@@ -2,7 +2,7 @@ export const USER_WORKSPACE_TYPES = {
   services: {
     CreateUserWorkspaceService: 'CreateUserWorkspaceService',
     AddMemberWorkspaceService: 'AddMemberWorkspaceService',
-    FindAllMemberService: 'FindAllMemberService',
+    FindMemberService: 'FindMemberService',
   },
   applications: {
     CreateUserWorkspaceApplication: 'CreateUserWorkspaceApplication',

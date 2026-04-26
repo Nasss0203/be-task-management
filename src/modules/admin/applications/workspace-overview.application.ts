@@ -3,7 +3,7 @@ import { type FindProjectService } from 'src/modules/projects/interfaces/service
 import { PROJECT_TYPES } from 'src/modules/projects/interfaces/types';
 import { type FindTaskService } from 'src/modules/tasks/interfaces/services/find-task.service.interface';
 import { TASK_TYPES } from 'src/modules/tasks/interfaces/types';
-import { type FindAllMemberService } from 'src/modules/user_workspace/interfaces/services/find-user-workspace.service.interface';
+import { type FindMemberService } from 'src/modules/user_workspace/interfaces/services/find-user-workspace.service.interface';
 import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/types';
 import { type FindWorkspaceService } from 'src/modules/workspaces/interfaces/services/find.workspace.service.interface';
 import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
@@ -16,8 +16,8 @@ export class AdminWorkspaceOverviewApplicationImpl implements AdminWorkspaceOver
     @Inject(WORKSPACE_TYPES.services.FindWorkspaceService)
     private readonly findWorkspaceService: FindWorkspaceService,
 
-    @Inject(USER_WORKSPACE_TYPES.services.FindAllMemberService)
-    private readonly findUserWorkspaceService: FindAllMemberService,
+    @Inject(USER_WORKSPACE_TYPES.services.FindMemberService)
+    private readonly findUserWorkspaceService: FindMemberService,
 
     @Inject(PROJECT_TYPES.services.FindProjectService)
     private readonly findProjectService: FindProjectService,

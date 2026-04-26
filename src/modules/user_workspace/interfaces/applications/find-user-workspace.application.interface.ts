@@ -2,4 +2,9 @@ import { MemberWorkspaceResponseDto } from '../../dto/response/user_workspace.re
 
 export interface FindAllMemberApplication {
   findAllMember(workspaceId: string): Promise<MemberWorkspaceResponseDto[]>;
+
+  findMemberInWorkspace(
+    workspaceId: string,
+    userId: string,
+  ): Promise<MemberWorkspaceResponseDto | null>;
 }
