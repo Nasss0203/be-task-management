@@ -11,6 +11,7 @@ import { RefreshToken } from 'src/modules/refresh_token/entities/refresh_token.e
 import { Role } from 'src/modules/role/domain/entities/role.entity';
 import { RolePermission } from 'src/modules/role_permission/domain/entities/role_permission.entity';
 import { Sprint } from 'src/modules/sprints/entities/sprint.entity';
+import { TaskAssignee } from 'src/modules/task_assignee/domain/entities/task_assignee.entity';
 import { TaskPriority } from 'src/modules/task_priority/domain/entities/task_priority.entity';
 import { TaskStatus } from 'src/modules/task_status/domain/entities/task_status.entity';
 import { Task } from 'src/modules/tasks/domain/entities/task.entity';
@@ -53,6 +54,7 @@ export default new DataSource({
     TaskStatus,
     TaskPriority,
     WorkspaceInvite,
+    TaskAssignee,
   ],
   migrations: ['src/database/migrations/*{.ts,.js}'],
 });

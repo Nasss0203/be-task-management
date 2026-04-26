@@ -31,6 +31,7 @@ import { MailModule } from './modules/mail/mail.module';
 import { WorkspaceInvitesModule } from './modules/workspace_invites/workspace_invites.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { UserActivityModule } from './modules/user_activity/user_activity.module';
+import { TaskAssigneeModule } from './modules/task_assignee/task_assignee.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { UserActivityModule } from './modules/user_activity/user_activity.module
     WorkspaceInvitesModule,
     AdminModule,
     UserActivityModule,
+    TaskAssigneeModule,
   ],
   controllers: [AppController],
   providers: [

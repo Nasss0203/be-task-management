@@ -2,14 +2,19 @@ import { EntityManager } from 'typeorm';
 import { TaskModel } from '../../domain/models/task.model';
 import { CreateTaskDto } from '../../dto/create-task.dto';
 
+export type CreateTaskServiceInput = CreateTaskDto & {
+  createdBy: string;
+  projectSeq?: number;
+};
+
 export interface CreateTaskService {
   create(
-    createTaskDto: CreateTaskDto,
+    input: CreateTaskServiceInput,
     manager?: EntityManager,
   ): Promise<TaskModel>;
 
   createMany(
-    createTaskDtos: CreateTaskDto[],
-    manager: EntityManager,
+    inputs: CreateTaskServiceInput[],
+    manager?: EntityManager,
   ): Promise<TaskModel[]>;
 }

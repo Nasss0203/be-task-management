@@ -3,16 +3,12 @@ export class CreateTaskDto {
   projectId: string;
   sprintId?: string | null;
 
-  projectSeq: number;
-
   title: string;
   description?: string | null;
+  createdBy: string;
 
   statusId: string;
   priorityId?: string | null;
-
-  createdBy: string;
-  assigneeId?: string | null;
 
   startAt?: Date | null;
   dueAt?: Date | null;
