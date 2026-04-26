@@ -1,20 +1,19 @@
 export const WORKSPACE_TYPES = {
   services: {
     CreateWorkspaceService: 'CreateWorkspaceService',
-    CreateWorkspaceTemplateService: 'CreateWorkspaceTemplateService',
-
     FindWorkspaceService: 'FindWorkspaceService',
     RbacHelper: 'RbacHelper',
     AccessWorkspaceService: 'AccessWorkspaceService',
     AdminFindAllWorkspaceService: 'AdminFindAllWorkspaceService',
+    AdminWorkspaceMemberSummaryService: 'AdminWorkspaceMemberSummaryService',
   },
   applications: {
     CreateWorkspaceApplication: 'CreateWorkspaceApplication',
-    CreateWorkspaceTemplateApplication: 'CreateWorkspaceTemplateApplication',
-
     FindWorkspaceApplication: 'FindWorkspaceApplication',
     AccessWorkspaceApplication: 'AccessWorkspaceApplication',
     AdminFindAllWorkspaceApplication: 'AdminFindAllWorkspaceApplication',
+    AdminWorkspaceMemberSummaryApplication:
+      'AdminWorkspaceMemberSummaryApplication',
   },
   repositories: {
     /** Token cho interface WorkspaceRepository (tránh trùng với token TypeORM 'WorkspaceRepository') */
@@ -22,7 +21,8 @@ export const WORKSPACE_TYPES = {
     FindWorkspaceRepository: 'FindWorkspaceRepository',
     AccessWorkspaceRepository: 'AccessWorkspaceRepository',
     AdminFindAllWorkspaceRepository: 'AdminFindAllWorkspaceRepository',
-    CreateWorkspaceTemplateRepository: 'CreateWorkspaceTemplateRepository',
+    AdminWorkspaceMemberSummaryRepository:
+      'AdminWorkspaceMemberSummaryRepository',
   },
   uow: {
     UnitOfWork: 'UnitOfWork',

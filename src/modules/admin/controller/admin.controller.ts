@@ -10,6 +10,10 @@ import { type AdminFindAllWorkspaceApplication } from '../interfaces/application
 import { type AdminWorkspaceOverviewApplication } from '../interfaces/applications/workspace-overview.application.interface';
 import { ADMIN_TYPES } from '../interfaces/types';
 
+import { WorkspaceMemberSummaryResponseDto } from 'src/modules/workspaces/dto/response/workspace-member-summary.response.dto';
+import { type AdminWorkspaceMemberSummaryApplication } from 'src/modules/workspaces/interfaces/applications/admin-workspace-member-summary.application.interface';
+import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
+
 @Controller('admin')
 export class AdminController {
   constructor(
@@ -19,6 +23,9 @@ export class AdminController {
 
     @Inject(ADMIN_TYPES.applications.AdminWorkspaceOverviewApplication)
     private readonly adminWorkspaceOverviewApplication: AdminWorkspaceOverviewApplication,
+
+    @Inject(WORKSPACE_TYPES.applications.AdminWorkspaceMemberSummaryApplication)
+    private readonly adminWorkspaceMemberSummaryApplication: AdminWorkspaceMemberSummaryApplication,
   ) {}
 
   @Get('findAll-workspaces')
@@ -37,6 +44,15 @@ export class AdminController {
   ): Promise<WorkspaceOverviewResponseDto> {
     return this.adminWorkspaceOverviewApplication.getOverview(
       auth.id,
+      workspaceId,
+    );
+  }
+  @Get('workspaces/:workspaceId/member-summary')
+  @ResponseMessage('Get workspace member summary successfully')
+  getWorkspaceMemberSummary(
+    @Param('workspaceId') workspaceId: string,
+  ): Promise<WorkspaceMemberSummaryResponseDto> {
+    return this.adminWorkspaceMemberSummaryApplication.getMemberSummary(
       workspaceId,
     );
   }

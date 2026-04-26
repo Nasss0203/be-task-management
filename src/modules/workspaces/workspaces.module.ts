@@ -13,12 +13,15 @@ import { RolePermissionModule } from '../role_permission/role_permission.module'
 import { TaskPriorityModule } from '../task_priority/task_priority.module';
 import { TaskStatusModule } from '../task_status/task_status.module';
 import { TasksModule } from '../tasks/tasks.module';
+import { UserRole } from '../user_roles/domain/entities/user_role.entity';
 import { UserRolesModule } from '../user_roles/user_roles.module';
 import { UserWorkspace } from '../user_workspace/domain/entities/user_workspace.entity';
 import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
+import { User } from '../users/domain/entities/user.entity';
+import { WorkspaceInvite } from '../workspace_invites/domain/entities/workspace_invite.entity';
 import { AccessWorkspaceApplicationImpl } from './applications/access-workspace.application';
 import { AdminFindAllWorkspaceApplicationImpl } from './applications/admin-findAll-workspace.application';
-import { CreateWorkspaceTemplateApplicationImpl } from './applications/create-workspace-template.application';
+import { AdminWorkspaceMemberSummaryApplicationImpl } from './applications/admin-workspace-member-summary.application';
 import { CreateWorkspaceApplicationImpl } from './applications/create-workspace.application';
 import { FindWorkspaceApplicationImpl } from './applications/find.workspace.application';
 import { WorkspacesController } from './controller/workspaces.controller';
@@ -26,18 +29,26 @@ import { Workspace } from './domain/entities/workspace.entity';
 import { WORKSPACE_TYPES } from './interfaces/types';
 import { AccessWorkspaceRepositoryImpl } from './repositories/access-workspace.repository';
 import { AdminFindAllWorkspaceRepositoryImpl } from './repositories/admin-findAll-workspace.repository';
-import { CreateWorkspaceTemplateRepositoryImpl } from './repositories/create-workspace-template.repository';
+import { AdminWorkspaceMemberSummaryRepositoryImpl } from './repositories/admin-workspace-member-summary.repository';
 import { WorkspaceRepositoryImpl } from './repositories/create-workspace.repository';
 import { FindWorkspaceRepositoryImpl } from './repositories/find.workspace.repository';
 import { AccessWorkspaceServiceImpl } from './services/access-workspace.service';
 import { AdminFindAllWorkspaceServiceImpl } from './services/admin-findAll-workspace.service.interface';
-import { CreateWorkspaceTemplateServiceImpl } from './services/create-workspace-template.service';
+import { AdminWorkspaceMemberSummaryServiceImpl } from './services/admin-workspace-member-summary.service';
 import { CreateWorkspaceServiceImpl } from './services/create-workspace.service';
 import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Workspace, Role, UserWorkspace, Project]),
+    TypeOrmModule.forFeature([
+      Workspace,
+      Role,
+      UserWorkspace,
+      Project,
+      WorkspaceInvite,
+      UserRole,
+      User,
+    ]),
     UserWorkspacesModule,
     RoleModule,
     UserRolesModule,
@@ -58,10 +69,6 @@ import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
     {
       provide: WORKSPACE_TYPES.applications.CreateWorkspaceApplication,
       useClass: CreateWorkspaceApplicationImpl,
-    },
-    {
-      provide: WORKSPACE_TYPES.applications.CreateWorkspaceTemplateApplication,
-      useClass: CreateWorkspaceTemplateApplicationImpl,
     },
     {
       provide: WORKSPACE_TYPES.applications.FindWorkspaceApplication,
@@ -88,10 +95,7 @@ import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
       provide: WORKSPACE_TYPES.services.AdminFindAllWorkspaceService,
       useClass: AdminFindAllWorkspaceServiceImpl,
     },
-    {
-      provide: WORKSPACE_TYPES.services.CreateWorkspaceTemplateService,
-      useClass: CreateWorkspaceTemplateServiceImpl,
-    },
+
     //Repository
     {
       provide: WORKSPACE_TYPES.repositories.WorkspaceRepository,
@@ -110,11 +114,6 @@ import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
       useClass: AdminFindAllWorkspaceRepositoryImpl,
     },
     {
-      provide: WORKSPACE_TYPES.repositories.CreateWorkspaceTemplateRepository,
-      useClass: CreateWorkspaceTemplateRepositoryImpl,
-    },
-    // Manager
-    {
       provide: WORKSPACE_TYPES.uow.UnitOfWork,
       useClass: TypeOrmUnitOfWork,
     },
@@ -122,12 +121,27 @@ import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
       provide: WORKSPACE_TYPES.applications.AdminFindAllWorkspaceApplication,
       useClass: AdminFindAllWorkspaceApplicationImpl,
     },
+    {
+      provide:
+        WORKSPACE_TYPES.repositories.AdminWorkspaceMemberSummaryRepository,
+      useClass: AdminWorkspaceMemberSummaryRepositoryImpl,
+    },
+    {
+      provide: WORKSPACE_TYPES.services.AdminWorkspaceMemberSummaryService,
+      useClass: AdminWorkspaceMemberSummaryServiceImpl,
+    },
+    {
+      provide:
+        WORKSPACE_TYPES.applications.AdminWorkspaceMemberSummaryApplication,
+      useClass: AdminWorkspaceMemberSummaryApplicationImpl,
+    },
   ],
   exports: [
     WORKSPACE_TYPES.repositories.WorkspaceRepository,
     WORKSPACE_TYPES.services.CreateWorkspaceService,
     WORKSPACE_TYPES.services.AdminFindAllWorkspaceService,
     WORKSPACE_TYPES.services.FindWorkspaceService,
+    WORKSPACE_TYPES.applications.AdminWorkspaceMemberSummaryApplication,
   ],
 })
 export class WorkspacesModule {}
