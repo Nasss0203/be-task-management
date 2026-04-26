@@ -33,6 +33,11 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
       relations: {
         status: true,
         priority: true,
+        // hiện thị người được thêm task
+        assignees: {
+          user: true,
+          assignedByUser: true,
+        },
       },
     });
 

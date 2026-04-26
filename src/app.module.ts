@@ -30,6 +30,7 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { MailModule } from './modules/mail/mail.module';
 import { WorkspaceInvitesModule } from './modules/workspace_invites/workspace_invites.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { TaskAssigneeModule } from './modules/task_assignee/task_assignee.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { AdminModule } from './modules/admin/admin.module';
     MailModule,
     WorkspaceInvitesModule,
     AdminModule,
+    TaskAssigneeModule,
   ],
   controllers: [AppController],
   providers: [

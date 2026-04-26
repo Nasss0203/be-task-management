@@ -204,6 +204,7 @@ export class CreateProjectServiceImpl implements CreateProjectService {
               workspaceId,
               projectId: project.id,
               projectSeq: 1,
+
               title: 'Create first task',
               description: 'This is the first default task for your project.',
               statusId: todoStatus.id,

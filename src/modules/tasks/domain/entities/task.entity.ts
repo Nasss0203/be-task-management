@@ -1,5 +1,6 @@
 import { Project } from 'src/modules/projects/domain/entities/project.entity';
 import { Sprint } from 'src/modules/sprints/entities/sprint.entity';
+import { TaskAssignee } from 'src/modules/task_assignee/domain/entities/task_assignee.entity';
 import { TaskPriority } from 'src/modules/task_priority/domain/entities/task_priority.entity';
 import { TaskStatus } from 'src/modules/task_status/domain/entities/task_status.entity';
 
@@ -13,6 +14,7 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -24,7 +26,6 @@ import {
 @Index('IDX_TASKS_STATUS_ID', ['statusId'])
 @Index('IDX_TASKS_PRIORITY_ID', ['priorityId'])
 @Index('IDX_TASKS_CREATED_BY', ['createdBy'])
-@Index('IDX_TASKS_ASSIGNEE_ID', ['assigneeId'])
 @Index('IDX_TASKS_SPRINT_ID', ['sprintId'])
 export class Task {
   @PrimaryGeneratedColumn('uuid')
@@ -56,9 +57,6 @@ export class Task {
 
   @Column({ name: 'reporter_id', type: 'uuid' })
   createdBy: string;
-
-  @Column({ name: 'assignee_id', type: 'uuid', nullable: true })
-  assigneeId: string | null;
 
   @Column({ name: 'start_at', type: 'timestamp', nullable: true })
   startAt: Date | null;
@@ -115,7 +113,6 @@ export class Task {
   @JoinColumn({ name: 'reporter_id' })
   reporter: User;
 
-  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'assignee_id' })
-  assignee: User | null;
+  @OneToMany(() => TaskAssignee, (taskAssignee) => taskAssignee.task)
+  assignees: TaskAssignee[];
 }

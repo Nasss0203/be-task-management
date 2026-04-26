@@ -11,25 +11,27 @@ export type SaveTaskInput = Pick<
   | 'createdBy'
   | 'description'
   | 'priorityId'
-  | 'assigneeId'
   | 'startAt'
   | 'estimateMinutes'
 > &
   Partial<
     Pick<
       TaskModel,
-      'id' | 'sprintId' | 'dueAt' | 'completedAt' | 'createdAt' | 'updatedAt'
+      | 'id'
+      | 'sprintId'
+      | 'dueAt'
+      | 'completedAt'
+      | 'createdAt'
+      | 'updatedAt'
+      | 'deletedAt'
     >
   >;
 
 export interface CreateTaskRepository {
-  save(
-    task: TaskModel | SaveTaskInput,
-    manager?: EntityManager,
-  ): Promise<TaskModel>;
+  save(input: SaveTaskInput, manager?: EntityManager): Promise<TaskModel>;
 
   saveMany(
-    tasks: Array<TaskModel | SaveTaskInput>,
+    inputs: SaveTaskInput[],
     manager?: EntityManager,
   ): Promise<TaskModel[]>;
 }

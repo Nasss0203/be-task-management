@@ -13,7 +13,6 @@ import { TaskResponseDto } from '../dto/response/task-response.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
 import { type FindTaskApplication } from '../interfaces/applications/find-task.application.interface';
 import { TASK_TYPES } from '../interfaces/types';
-import { TasksService } from '../tasks.service';
 
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { type IAuth } from 'src/types/auth';
@@ -23,7 +22,6 @@ import { type UpdateTaskApplication } from '../interfaces/applications/update-ta
 @Controller('tasks')
 export class TasksController {
   constructor(
-    private readonly tasksService: TasksService,
     @Inject(TASK_TYPES.applications.FindTaskApplication)
     private readonly app: FindTaskApplication,
 
@@ -48,6 +46,7 @@ export class TasksController {
   create(@Body() createTaskDto: CreateTaskDto, @Auth() auth: IAuth) {
     return this.createTaskApplication.create({
       ...createTaskDto,
+
       createdBy: auth.id,
     });
   }

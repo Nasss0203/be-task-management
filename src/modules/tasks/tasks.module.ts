@@ -14,7 +14,6 @@ import { UpdateTaskRepositoryImpl } from './repositories/update.task.repository'
 import { CreateTaskServiceImpl } from './services/create-tasks.service';
 import { FindTaskServiceImpl } from './services/find-task.service';
 import { UpdateTaskServiceImpl } from './services/update-task.service';
-import { TasksService } from './tasks.service';
 
 @Module({
   imports: [
@@ -24,7 +23,6 @@ import { TasksService } from './tasks.service';
   ],
   controllers: [TasksController],
   providers: [
-    TasksService,
     //Application
     {
       provide: TASK_TYPES.applications.FindTaskApplication,
