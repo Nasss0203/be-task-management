@@ -38,7 +38,7 @@ export class AddMemberWorkspaceServiceImpl implements AddMemberWorkspaceService 
     const roleName = input.role_name ?? RoleName.MEMBER;
 
     const existed =
-      await this.findUserWorkspaceRepository.findByWorkspaceAndUser(
+      await this.findUserWorkspaceRepository.findMemberInWorkspace(
         input.workspace_id,
         input.user_id,
         manager,

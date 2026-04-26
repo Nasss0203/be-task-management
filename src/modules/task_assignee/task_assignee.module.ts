@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { TasksModule } from '../tasks/tasks.module';
+import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
 import { CreateTaskAssigneeApplicationImpl } from './applications/create.task_assignee.application';
 import { DeleteTaskAssigneeApplicationImpl } from './applications/delete.task_assignee.application';
 import { TaskAssigneeController } from './controller/task_assignee.controller';
@@ -11,7 +13,11 @@ import { CreateTaskAssigneeServiceImpl } from './services/create.task_assignee.s
 import { DeleteTaskAssigneeServiceImpl } from './services/delete.task_assignee.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([TaskAssignee])],
+  imports: [
+    TypeOrmModule.forFeature([TaskAssignee]),
+    UserWorkspacesModule,
+    TasksModule,
+  ],
   controllers: [TaskAssigneeController],
   providers: [
     // Application

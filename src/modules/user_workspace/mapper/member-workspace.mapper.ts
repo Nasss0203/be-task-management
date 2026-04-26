@@ -2,7 +2,7 @@ import { RoleName } from 'src/modules/role/domain/entities/role.entity';
 import { MemberWorkspaceModel } from '../domain/models/user_workspace.model';
 import { MemberWorkspaceResponseDto } from '../dto/response/user_workspace.response.dto';
 
-type MemberWorkspaceRaw = {
+export type MemberWorkspaceRaw = {
   id: string;
   workspace_id: string;
   user_id: string;

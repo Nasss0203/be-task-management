@@ -4,7 +4,7 @@ import { TaskAssigneeModel } from '../../domain/models/task_assignee.model';
 export type TaskAssigneeInput = {
   taskId: string;
   userId: string;
-  assignedBy: string;
+  assignedBy: string | null;
 };
 
 export interface CreateTaskAssigneeService {

@@ -5,4 +5,6 @@ export interface FindTaskApplication {
     projectId: string,
     workspaceId: string,
   ): Promise<TaskResponseDto[]>;
+
+  findOneTask(taskId: string): Promise<TaskResponseDto | null>;
 }

@@ -60,4 +60,29 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
 
     return entities.map((entity) => TaskMapper.toModel(entity));
   }
+
+  async findOneTask(
+    taskId: string,
+    manager?: EntityManager,
+  ): Promise<TaskModel | null> {
+    const entities = await this.getRepo(manager).findOne({
+      where: {
+        id: taskId,
+      },
+      relations: {
+        status: true,
+        priority: true,
+        assignees: {
+          user: true,
+          assignedByUser: true,
+        },
+      },
+    });
+
+    if (!entities) {
+      return null;
+    }
+
+    return TaskMapper.toModel(entities);
+  }
 }

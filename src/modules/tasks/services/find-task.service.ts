@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { EntityManager } from 'typeorm';
 import { TaskModel } from '../domain/models/task.model';
 import { type FindTaskRepository } from '../interfaces/repositories/find-task.repository.interface';
 import { FindTaskService } from '../interfaces/services/find-task.service.interface';
@@ -10,6 +11,7 @@ export class FindTaskServiceImpl implements FindTaskService {
     @Inject(TASK_TYPES.repositories.FindTaskRepository)
     private readonly findTaskRepository: FindTaskRepository,
   ) {}
+
   findAllTaskByWorkspace(workspaceId: string): Promise<TaskModel[]> {
     return this.findTaskRepository.findAllTaskByWorkspace(workspaceId);
   }
@@ -22,5 +24,12 @@ export class FindTaskServiceImpl implements FindTaskService {
       projectId,
       workspaceId,
     });
+  }
+
+  async findOneTask(
+    taskId: string,
+    manager?: EntityManager,
+  ): Promise<TaskModel | null> {
+    return await this.findTaskRepository.findOneTask(taskId, manager);
   }
 }

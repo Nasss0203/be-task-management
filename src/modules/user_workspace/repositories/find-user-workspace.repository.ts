@@ -2,13 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { UserWorkspace } from '../domain/entities/user_workspace.entity';
-import {
-  MemberWorkspaceModel,
-  UserWorkspaceModel,
-} from '../domain/models/user_workspace.model';
+import { MemberWorkspaceModel } from '../domain/models/user_workspace.model';
 import { FindUserWorkspaceRepository } from '../interfaces/repositories/find-user-workspace.repository.interface';
-import { MemberWorkspaceMapper } from '../mapper/member-workspace.mapper';
-import { UserWorkspaceMapper } from '../mapper/user_workspace.mapper';
+import {
+  MemberWorkspaceMapper,
+  MemberWorkspaceRaw,
+} from '../mapper/member-workspace.mapper';
 
 @Injectable()
 export class FindUserWorkspaceRepositoryImpl implements FindUserWorkspaceRepository {
@@ -25,21 +24,42 @@ export class FindUserWorkspaceRepositoryImpl implements FindUserWorkspaceReposit
       : this.repoUserworkspace;
   }
 
-  async findByWorkspaceAndUser(
+  async findMemberInWorkspace(
     workspaceId: string,
     userId: string,
     manager?: EntityManager,
-  ): Promise<UserWorkspaceModel | null> {
-    const row = await this.getRepo(manager).findOne({
-      where: {
-        user_id: userId,
-        workspace_id: workspaceId,
-      },
-    });
+  ): Promise<MemberWorkspaceModel | null> {
+    const repo = manager
+      ? manager.getRepository(UserWorkspace)
+      : this.dataSource.getRepository(UserWorkspace);
 
-    if (!row) return null;
+    const raw = await repo
+      .createQueryBuilder('uw')
+      .innerJoin('users', 'u', 'u.id = uw.user_id')
+      .innerJoin(
+        'user_roles',
+        'ur',
+        'ur.user_id = uw.user_id AND ur.workspace_id = uw.workspace_id',
+      )
+      .innerJoin('roles', 'r', 'r.id = ur.role_id')
+      .select([
+        'uw.id as id',
+        'uw.workspace_id as workspace_id',
+        'uw.user_id as user_id',
+        'u.username as full_name',
+        'u.email as email',
+        'NULL::text as avatar_url',
+        'r.name as role_name',
+        'uw.last_opened_at as "lastOpenedAt"',
+        'uw.joined_at as "joinedAt"',
+      ])
+      .where('uw.workspace_id = :workspaceId', { workspaceId })
+      .andWhere('uw.user_id = :userId', { userId })
+      .getRawOne<MemberWorkspaceRaw>();
 
-    return UserWorkspaceMapper.toModel(row);
+    if (!raw) return null;
+
+    return MemberWorkspaceMapper.toModel(raw);
   }
 
   async findAllMember(
