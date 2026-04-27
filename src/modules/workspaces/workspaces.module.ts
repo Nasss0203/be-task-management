@@ -22,6 +22,7 @@ import { WorkspaceInvite } from '../workspace_invites/domain/entities/workspace_
 import { AccessWorkspaceApplicationImpl } from './applications/access-workspace.application';
 import { AdminFindAllWorkspaceApplicationImpl } from './applications/admin-findAll-workspace.application';
 import { AdminWorkspaceMemberSummaryApplicationImpl } from './applications/admin-workspace-member-summary.application';
+import { CreateWorkspaceTemplateApplicationImpl } from './applications/create-workspace-template.application';
 import { CreateWorkspaceApplicationImpl } from './applications/create-workspace.application';
 import { FindWorkspaceApplicationImpl } from './applications/find.workspace.application';
 import { WorkspacesController } from './controller/workspaces.controller';
@@ -35,6 +36,7 @@ import { FindWorkspaceRepositoryImpl } from './repositories/find.workspace.repos
 import { AccessWorkspaceServiceImpl } from './services/access-workspace.service';
 import { AdminFindAllWorkspaceServiceImpl } from './services/admin-findAll-workspace.service.interface';
 import { AdminWorkspaceMemberSummaryServiceImpl } from './services/admin-workspace-member-summary.service';
+import { CreateWorkspaceTemplateServiceImpl } from './services/create-workspace-template.service';
 import { CreateWorkspaceServiceImpl } from './services/create-workspace.service';
 import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
 
@@ -134,6 +136,14 @@ import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
       provide:
         WORKSPACE_TYPES.applications.AdminWorkspaceMemberSummaryApplication,
       useClass: AdminWorkspaceMemberSummaryApplicationImpl,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.CreateWorkspaceTemplateApplication,
+      useClass: CreateWorkspaceTemplateApplicationImpl,
+    },
+    {
+      provide: WORKSPACE_TYPES.services.CreateWorkspaceTemplateService,
+      useClass: CreateWorkspaceTemplateServiceImpl,
     },
   ],
   exports: [

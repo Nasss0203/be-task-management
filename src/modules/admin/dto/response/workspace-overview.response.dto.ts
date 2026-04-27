@@ -10,4 +10,5 @@ export class WorkspaceOverviewResponseDto {
   memberCount: number;
   projectCount: number;
   taskCount: number;
+  boardCount: number;
 }

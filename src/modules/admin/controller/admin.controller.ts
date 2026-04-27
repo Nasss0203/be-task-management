@@ -1,9 +1,7 @@
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common';
-import { Auth } from 'src/common/decorator/auth.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { WorkspaceResponseDto } from 'src/modules/workspaces/dto/response/workspaces.response.dto';
 import { AdminFindAllWorkspaceQueryDto } from 'src/modules/workspaces/dto/search-workspace.dto';
-import { type IAuth } from 'src/types/auth';
 import { AdminService } from '../admin.service';
 import { WorkspaceOverviewResponseDto } from '../dto/response/workspace-overview.response.dto';
 import { type AdminFindAllWorkspaceApplication } from '../interfaces/applications/admin-findAll-workspace.application.interface';
@@ -37,15 +35,11 @@ export class AdminController {
   }
 
   @Get('findAll-workspaces-overview/:workspaceId')
-  @ResponseMessage('get all workspaces by admin successfully')
+  @ResponseMessage('Get workspace overview successfully')
   findAllWorkspaceOverview(
     @Param('workspaceId') workspaceId: string,
-    @Auth() auth: IAuth,
   ): Promise<WorkspaceOverviewResponseDto> {
-    return this.adminWorkspaceOverviewApplication.getOverview(
-      auth.id,
-      workspaceId,
-    );
+    return this.adminWorkspaceOverviewApplication.getOverview(workspaceId);
   }
   @Get('workspaces/:workspaceId/member-summary')
   @ResponseMessage('Get workspace member summary successfully')

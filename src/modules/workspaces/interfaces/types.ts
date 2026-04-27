@@ -6,6 +6,7 @@ export const WORKSPACE_TYPES = {
     AccessWorkspaceService: 'AccessWorkspaceService',
     AdminFindAllWorkspaceService: 'AdminFindAllWorkspaceService',
     AdminWorkspaceMemberSummaryService: 'AdminWorkspaceMemberSummaryService',
+    CreateWorkspaceTemplateService: 'CreateWorkspaceTemplateService',
   },
   applications: {
     CreateWorkspaceApplication: 'CreateWorkspaceApplication',
@@ -14,9 +15,9 @@ export const WORKSPACE_TYPES = {
     AdminFindAllWorkspaceApplication: 'AdminFindAllWorkspaceApplication',
     AdminWorkspaceMemberSummaryApplication:
       'AdminWorkspaceMemberSummaryApplication',
+    CreateWorkspaceTemplateApplication: 'CreateWorkspaceTemplateApplication',
   },
   repositories: {
-    /** Token cho interface WorkspaceRepository (tránh trùng với token TypeORM 'WorkspaceRepository') */
     WorkspaceRepository: 'IWorkspaceRepository',
     FindWorkspaceRepository: 'FindWorkspaceRepository',
     AccessWorkspaceRepository: 'AccessWorkspaceRepository',
