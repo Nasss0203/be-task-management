@@ -2,6 +2,7 @@ export const TASK_ASSIGNEE_TYPES = {
   services: {
     CreateTaskAssigneeService: 'CreateTaskAssigneeService',
     DeleteTaskAssigneeService: 'DeleteTaskAssigneeService',
+    FindTaskAssigneeService: 'FindTaskAssigneeService',
   },
   applications: {
     CreateTaskAssigneeApplication: 'CreateTaskAssigneeApplication',
@@ -10,5 +11,6 @@ export const TASK_ASSIGNEE_TYPES = {
   repositories: {
     CreateTaskAssigneeRepository: 'CreateTaskAssigneeRepository',
     DeleteTaskAssigneeRepository: 'DeleteTaskAssigneeRepository',
+    FindTaskAssigneeRepository: 'FindTaskAssigneeRepository',
   },
 };

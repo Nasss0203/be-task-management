@@ -36,7 +36,6 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
     input: CreateTaskAssigneeApplicationInput,
   ): Promise<TaskAssigneeResponseDto> {
     const task = await this.findTaskService.findOneTask(input.taskId);
-    console.log('🚀 ~ task~', task);
 
     if (!task) {
       throw new NotFoundException('Task not found');
@@ -46,7 +45,6 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
       task.workspaceId,
       input.assignedBy,
     );
-    console.log('🚀 ~ actorMember~', actorMember);
 
     if (!actorMember) {
       throw new ForbiddenException('You are not a member of this workspace');
@@ -56,7 +54,6 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
       task.workspaceId,
       input.userId,
     );
-    console.log('🚀 ~ targetMember~', targetMember);
 
     if (!targetMember) {
       throw new BadRequestException(
@@ -65,10 +62,8 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
     }
 
     const isSelfAssign = input.userId === input.assignedBy;
-    console.log('🚀 ~ isSelfAssign~', isSelfAssign);
 
     const canAssignOther = actorMember.role_name === RoleName.OWNER;
-    console.log('🚀 ~ canAssignOther~', canAssignOther);
 
     if (!isSelfAssign && !canAssignOther) {
       throw new ForbiddenException(
@@ -81,7 +76,6 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
       userId: input.userId,
       assignedBy: input.assignedBy,
     });
-    console.log('🚀 ~ result~', result);
 
     return TaskAssigneeMapper.toResponse(result);
   }

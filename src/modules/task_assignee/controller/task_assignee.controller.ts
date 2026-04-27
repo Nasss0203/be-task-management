@@ -49,7 +49,7 @@ export class TaskAssigneeController {
     return this.deleteTaskAssigneeApplication.unassign({
       taskId,
       userId,
-      deletedBy: auth.id,
+      deletedBy: auth.id ?? userId,
     });
   }
 }
