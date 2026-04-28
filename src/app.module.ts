@@ -23,14 +23,16 @@ import { UsersModule } from './modules/users/users.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './common/guard/jwt-auth.guard';
 import { PermissionGuard } from './common/guard/permission.guard';
+import { AdminModule } from './modules/admin/admin.module';
+import { AttachmentModule } from './modules/attachment/attachment.module';
+import { MailModule } from './modules/mail/mail.module';
 import { PageModule } from './modules/page/page.module';
 import { PageBlockModule } from './modules/page_block/page_block.module';
 import { SeedsModule } from './modules/seed/seed.module';
-import { WorkspacesModule } from './modules/workspaces/workspaces.module';
-import { MailModule } from './modules/mail/mail.module';
-import { WorkspaceInvitesModule } from './modules/workspace_invites/workspace_invites.module';
-import { AdminModule } from './modules/admin/admin.module';
+import { StorageModule } from './modules/storage/storage.module';
 import { TaskAssigneeModule } from './modules/task_assignee/task_assignee.module';
+import { WorkspaceInvitesModule } from './modules/workspace_invites/workspace_invites.module';
+import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 
 @Module({
   imports: [
@@ -69,6 +71,8 @@ import { TaskAssigneeModule } from './modules/task_assignee/task_assignee.module
     WorkspaceInvitesModule,
     AdminModule,
     TaskAssigneeModule,
+    StorageModule,
+    AttachmentModule,
   ],
   controllers: [AppController],
   providers: [

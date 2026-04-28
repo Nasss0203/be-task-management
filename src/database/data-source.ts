@@ -2,6 +2,7 @@ import 'dotenv/config';
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 
+import { Attachment } from 'src/modules/attachment/entities/attachment.entity';
 import { Board } from 'src/modules/boards/domain/entities/board.entity';
 import { Page } from 'src/modules/page/domain/entities/page.entity';
 import { PageBlock } from 'src/modules/page_block/domain/entities/page_block.entity';
@@ -53,6 +54,7 @@ export default new DataSource({
     TaskPriority,
     WorkspaceInvite,
     TaskAssignee,
+    Attachment,
   ],
   migrations: ['src/database/migrations/*{.ts,.js}'],
 });
