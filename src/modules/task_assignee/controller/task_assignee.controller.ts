@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Inject,
-  Param,
-  Post,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Inject, Param, Post } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { type IAuth } from 'src/types/auth';
@@ -37,16 +29,12 @@ export class TaskAssigneeController {
 
   @Delete('task/:taskId/user/:userId')
   @ResponseMessage('Unassign Task')
-  unassignTask(
+  async unassignTask(
     @Param('taskId') taskId: string,
     @Param('userId') userId: string,
     @Auth() auth: IAuth,
   ) {
-    if (!auth.id) {
-      throw new UnauthorizedException('User not authenticated');
-    }
-
-    return this.deleteTaskAssigneeApplication.unassign({
+    return await this.deleteTaskAssigneeApplication.unassign({
       taskId,
       userId,
       deletedBy: auth.id ?? userId,

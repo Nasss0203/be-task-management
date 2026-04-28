@@ -2,6 +2,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Attachment } from 'src/modules/attachment/entities/attachment.entity';
 import { Board } from 'src/modules/boards/domain/entities/board.entity';
 import { Page } from 'src/modules/page/domain/entities/page.entity';
 import { PageBlock } from 'src/modules/page_block/domain/entities/page_block.entity';
@@ -22,7 +23,6 @@ import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_w
 import { User } from 'src/modules/users/domain/entities/user.entity';
 import { WorkspaceInvite } from 'src/modules/workspace_invites/domain/entities/workspace_invite.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
-
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
@@ -60,6 +60,7 @@ import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.enti
           TaskPriority,
           WorkspaceInvite,
           TaskAssignee,
+          Attachment,
         ],
       }),
     }),
