@@ -14,8 +14,11 @@ import {
   ALLOWED_EXTENSIONS,
   ALLOWED_MIME_TYPES,
 } from './constants/attachment-file.constants';
+import {
+  Attachment,
+  AttachmentStatus,
+} from './domain/entities/attachment.entity';
 import { UploadAttachmentDto } from './dto/create-attachment.dto';
-import { Attachment, AttachmentStatus } from './entities/attachment.entity';
 
 @Injectable()
 export class AttachmentsService {

@@ -1,5 +1,5 @@
 import { Board } from 'src/modules/boards/domain/entities/board.entity';
-import { Sprint } from 'src/modules/sprints/entities/sprint.entity';
+import { Sprint } from 'src/modules/sprints/domain/entities/sprint.entity';
 import { Task } from 'src/modules/tasks/domain/entities/task.entity';
 import { User } from 'src/modules/users/domain/entities/user.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';

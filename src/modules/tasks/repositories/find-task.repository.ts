@@ -38,6 +38,7 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
           user: true,
           assignedByUser: true,
         },
+        // sprint: true,
       },
     });
 

@@ -1,0 +1,21 @@
+import { EntityManager } from 'typeorm';
+import { SprintsModel } from '../../domain/models/sprints.model';
+
+export interface FindSprintRepository {
+  existsByProjectIdAndName(
+    projectId: string,
+    name: string,
+    manager?: EntityManager,
+  ): Promise<boolean>;
+
+  findOneSprint(
+    sprintId: string,
+    manager?: EntityManager,
+  ): Promise<SprintsModel | null>;
+
+  findAllSprintByProject(
+    workspaceId: string,
+    projectId: string,
+    manager?: EntityManager,
+  ): Promise<SprintsModel[]>;
+}

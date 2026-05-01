@@ -5,7 +5,7 @@ import { MulterConfigService } from 'src/config/multer.config';
 import { StorageModule } from '../storage/storage.module';
 import { AttachmentController } from './attachment.controller';
 import { AttachmentsService } from './attachment.service';
-import { Attachment } from './entities/attachment.entity';
+import { Attachment } from './domain/entities/attachment.entity';
 
 @Module({
   imports: [

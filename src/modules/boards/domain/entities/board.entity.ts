@@ -24,6 +24,7 @@ export enum BoardViewType {
   FORM = 'FORM',
   MAP = 'MAP',
   FEED = 'FEED',
+  BACKLOG = 'BACKLOG',
 }
 
 @Entity('boards')
