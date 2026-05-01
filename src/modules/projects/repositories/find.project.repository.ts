@@ -28,4 +28,19 @@ export class FindProjectRepositoryImpl implements FindProjectRepository {
 
     return rows.map(ProjectMapper.toModel);
   }
+
+  async findOneProjectById(
+    projectId: string,
+    manager?: EntityManager,
+  ): Promise<ProjectModel | null> {
+    const rows = await this.getRepo(manager).findOne({
+      where: { id: projectId },
+    });
+
+    if (!rows) {
+      return null;
+    }
+
+    return ProjectMapper.toModel(rows);
+  }
 }

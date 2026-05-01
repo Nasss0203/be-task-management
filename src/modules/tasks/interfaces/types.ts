@@ -3,15 +3,18 @@ export const TASK_TYPES = {
     CreateTaskService: 'CreateTaskService',
     UpdateTaskService: 'UpdateTaskService',
     FindTaskService: 'FindTaskService',
+    MoveTaskSprintService: 'MoveTaskSprintService',
   },
   applications: {
     CreateTaskApplication: 'CreateTaskApplication',
     UpdateTaskApplication: 'UpdateTaskApplication',
     FindTaskApplication: 'FindTaskApplication',
+    MoveTaskSprintApplication: 'MoveTaskSprintApplication',
   },
   repositories: {
     CreateTaskRepository: 'CreateTaskRepository',
     UpdateTaskRepository: 'UpdateTaskRepository',
     FindTaskRepository: 'FindTaskRepository',
+    MoveTaskSprintRepository: 'MoveTaskSprintRepository',
   },
 };

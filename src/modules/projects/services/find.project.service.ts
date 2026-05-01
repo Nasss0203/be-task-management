@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 
+import { EntityManager } from 'typeorm';
 import { ProjectModel } from '../domain/models/projects.model';
 import { type FindProjectRepository } from '../interfaces/repositories/find.project.repository.interface';
 import { FindProjectService } from '../interfaces/services/find.project.service.interface';
@@ -15,5 +16,14 @@ export class FindProjectServiceImpl implements FindProjectService {
   async findAllByWorkspaceId(workspaceId: string): Promise<ProjectModel[]> {
     return this.findProjectRepository.findAllByWorkspaceId(workspaceId);
   }
-  s;
+
+  async findOneProjectById(
+    projectId: string,
+    manager?: EntityManager,
+  ): Promise<ProjectModel | null> {
+    return await this.findProjectRepository.findOneProjectById(
+      projectId,
+      manager,
+    );
+  }
 }

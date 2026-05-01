@@ -1,0 +1,50 @@
+import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
+import { Auth } from 'src/common/decorator/auth.decorator';
+import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { type IAuth } from 'src/types/auth';
+import { CreateSprintDto } from '../dto/create-sprint.dto';
+import { SprintResponseDto } from '../dto/response/sprint.response.dto';
+import { type CreateSprintApplication } from '../interfaces/applications/create-sprint.application.interface';
+import { type FindSprintApplication } from '../interfaces/applications/find-sprint.application.interface';
+import { SPRINT_TYPES } from '../interfaces/types';
+
+@Controller('sprints')
+export class SprintsController {
+  constructor(
+    @Inject(SPRINT_TYPES.applications.CreateSprintApplication)
+    private readonly createSprintApplication: CreateSprintApplication,
+
+    @Inject(SPRINT_TYPES.applications.FindSprintApplication)
+    private readonly findSprintApplication: FindSprintApplication,
+  ) {}
+
+  @Post('workspaces/:workspaceId/projects/:projectId')
+  @ResponseMessage('Create sprint successfully')
+  async create(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Body() dto: CreateSprintDto,
+    @Auth() auth: IAuth,
+  ) {
+    return this.createSprintApplication.create({
+      workspaceId,
+      projectId,
+      userId: auth.id,
+      dto,
+    });
+  }
+
+  @Get('workspaces/:workspaceId/projects/:projectId')
+  @ResponseMessage('Find all sprint successfully')
+  async findAllSprintByProject(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Auth() auth: IAuth,
+  ): Promise<SprintResponseDto[]> {
+    return this.findSprintApplication.findAllSprintByProject({
+      workspaceId,
+      projectId,
+      userId: auth.id,
+    });
+  }
+}

@@ -1,5 +1,5 @@
 import { Project } from 'src/modules/projects/domain/entities/project.entity';
-import { Sprint } from 'src/modules/sprints/entities/sprint.entity';
+import { Sprint } from 'src/modules/sprints/domain/entities/sprint.entity';
 import { TaskAssignee } from 'src/modules/task_assignee/domain/entities/task_assignee.entity';
 import { TaskPriority } from 'src/modules/task_priority/domain/entities/task_priority.entity';
 import { TaskStatus } from 'src/modules/task_status/domain/entities/task_status.entity';

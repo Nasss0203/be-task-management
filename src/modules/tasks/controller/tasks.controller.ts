@@ -16,7 +16,9 @@ import { TASK_TYPES } from '../interfaces/types';
 
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { type IAuth } from 'src/types/auth';
+import { MoveTaskSprintDto } from '../dto/move-task-sprint.dto';
 import { type CreateTaskApplication } from '../interfaces/applications/create-task.application.interface';
+import { type MoveTaskSprintApplication } from '../interfaces/applications/move-task-sprint.application.interface';
 import { type UpdateTaskApplication } from '../interfaces/applications/update-task.application.interface';
 
 @Controller('tasks')
@@ -30,6 +32,9 @@ export class TasksController {
 
     @Inject(TASK_TYPES.applications.UpdateTaskApplication)
     private readonly updateTaskApplication: UpdateTaskApplication,
+
+    @Inject(TASK_TYPES.applications.MoveTaskSprintApplication)
+    private readonly moveTaskSprintApplication: MoveTaskSprintApplication,
   ) {}
 
   @Get('/workspace/:workspaceId/project/:projectId')
@@ -60,6 +65,20 @@ export class TasksController {
     return this.updateTaskApplication.updateTask({
       ...updateTaskDto,
       id,
+    });
+  }
+
+  @Patch(':id/move-sprint')
+  @ResponseMessage('Move task to sprint successfully')
+  async moveTaskToSprint(
+    @Param('id') id: string,
+    @Body() dto: MoveTaskSprintDto,
+    @Auth() auth: IAuth,
+  ): Promise<TaskResponseDto> {
+    return this.moveTaskSprintApplication.move({
+      taskId: id,
+      sprintId: dto.sprintId ?? null,
+      userId: auth.id,
     });
   }
 }

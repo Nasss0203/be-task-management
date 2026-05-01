@@ -6,4 +6,9 @@ export interface FindProjectRepository {
     workspaceId: string,
     manager?: EntityManager,
   ): Promise<ProjectModel[]>;
+
+  findOneProjectById(
+    projectId: string,
+    manager?: EntityManager,
+  ): Promise<ProjectModel | null>;
 }
