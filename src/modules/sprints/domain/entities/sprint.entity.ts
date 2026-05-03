@@ -25,7 +25,11 @@ export enum SprintStatus {
 @Index(['workspaceId'])
 @Index(['projectId'])
 @Index(['workspaceId', 'projectId'])
-@Index('UQ_SPRINTS_PROJECT_NAME', ['projectId', 'name'], { unique: true })
+@Index('IDX_SPRINTS_DELETED_AT', ['deletedAt'])
+@Index('UQ_SPRINTS_PROJECT_NAME_ACTIVE', ['projectId', 'name'], {
+  unique: true,
+  where: '"deleted_at" IS NULL',
+})
 @Index('UQ_SPRINTS_PROJECT_ACTIVE', ['projectId'], {
   unique: true,
   where: `"status" = 'ACTIVE' AND "deleted_at" IS NULL`,
@@ -91,4 +95,7 @@ export class Sprint {
 
   @DeleteDateColumn({ name: 'deleted_at', nullable: true })
   deletedAt: Date | null;
+
+  @Column({ name: 'deleted_by', type: 'uuid', nullable: true })
+  deletedBy: string | null;
 }

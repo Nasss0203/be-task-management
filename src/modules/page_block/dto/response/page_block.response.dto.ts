@@ -20,4 +20,7 @@ export class PageBlockResponseDto {
   is_open: boolean;
   created_at: Date;
   updated_at: Date;
+
+  deleted_at: Date | null;
+  deleted_by: string | null;
 }

@@ -15,6 +15,9 @@ export class BoardMapper {
       entity.updatedBy ?? null,
       entity.createdAt,
       entity.updatedAt,
+
+      entity.deletedAt ?? null,
+      entity.deletedBy ?? null,
     );
   }
 
@@ -22,6 +25,7 @@ export class BoardMapper {
     const e = new Board();
 
     if (model.id != null) e.id = model.id;
+
     e.workspaceId = model.workspaceId;
     e.projectId = model.projectId;
     e.name = model.name;
@@ -31,6 +35,14 @@ export class BoardMapper {
     if (model.updatedBy !== undefined) e.updatedBy = model.updatedBy;
     if (model.createdAt != null) e.createdAt = model.createdAt;
     if (model.updatedAt != null) e.updatedAt = model.updatedAt;
+
+    if ('deletedAt' in model && model.deletedAt !== undefined) {
+      e.deletedAt = model.deletedAt ?? null;
+    }
+
+    if ('deletedBy' in model && model.deletedBy !== undefined) {
+      e.deletedBy = model.deletedBy ?? null;
+    }
 
     return e;
   }
@@ -46,6 +58,9 @@ export class BoardMapper {
       updatedBy: model.updatedBy,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+
+      deletedAt: model.deletedAt,
+      deletedBy: model.deletedBy,
     };
   }
 }

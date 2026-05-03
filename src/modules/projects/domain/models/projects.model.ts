@@ -11,5 +11,8 @@ export class ProjectModel {
     public readonly created_by: string,
     public readonly created_at: Date,
     public readonly updated_at: Date,
+
+    public readonly deletedAt: Date | null = null,
+    public readonly deletedBy: string | null = null,
   ) {}
 }

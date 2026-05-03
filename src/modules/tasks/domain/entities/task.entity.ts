@@ -27,6 +27,7 @@ import {
 @Index('IDX_TASKS_PRIORITY_ID', ['priorityId'])
 @Index('IDX_TASKS_CREATED_BY', ['createdBy'])
 @Index('IDX_TASKS_SPRINT_ID', ['sprintId'])
+@Index('IDX_TASKS_DELETED_AT', ['deletedAt'])
 export class Task {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -78,6 +79,9 @@ export class Task {
 
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
   deletedAt: Date | null;
+
+  @Column({ name: 'deleted_by', type: 'uuid', nullable: true })
+  deletedBy: string | null;
 
   @ManyToOne(() => Workspace, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'workspace_id' })

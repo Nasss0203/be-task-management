@@ -34,4 +34,5 @@ export class TaskResponseDto {
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date | null;
+  deletedBy?: string | null;
 }

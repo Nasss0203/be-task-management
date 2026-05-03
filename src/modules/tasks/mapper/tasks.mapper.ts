@@ -13,6 +13,7 @@ export class TaskMapper {
         userId: item.userId,
         username: item.user?.username ?? null,
       })) ?? [];
+
     return new TaskModel(
       entity.id,
       entity.workspaceId,
@@ -41,6 +42,7 @@ export class TaskMapper {
       entity.createdAt,
       entity.updatedAt,
       entity.deletedAt ?? null,
+      entity.deletedBy ?? null,
     );
   }
 
@@ -101,6 +103,10 @@ export class TaskMapper {
       e.deletedAt = model.deletedAt ?? null;
     }
 
+    if ('deletedBy' in model && model.deletedBy !== undefined) {
+      e.deletedBy = model.deletedBy ?? null;
+    }
+
     return e;
   }
 
@@ -141,6 +147,7 @@ export class TaskMapper {
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
       deletedAt: model.deletedAt,
+      deletedBy: model.deletedBy,
     };
   }
 }

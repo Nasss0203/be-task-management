@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  Index,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -16,6 +17,7 @@ export enum PlanTypeWorkspace {
 }
 
 @Entity('workspaces')
+@Index('IDX_WORKSPACES_DELETED_AT', ['deletedAt'])
 export class Workspace {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -48,4 +50,7 @@ export class Workspace {
 
   @DeleteDateColumn({ name: 'deleted_at', nullable: true })
   deletedAt: Date | null;
+
+  @Column({ name: 'deleted_by', type: 'uuid', nullable: true })
+  deletedBy: string | null;
 }

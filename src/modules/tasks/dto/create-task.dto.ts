@@ -5,7 +5,6 @@ export class CreateTaskDto {
 
   title: string;
   description?: string | null;
-  createdBy: string;
 
   statusId: string;
   priorityId?: string | null;

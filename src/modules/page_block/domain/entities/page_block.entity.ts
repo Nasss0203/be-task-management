@@ -3,6 +3,7 @@ import { User } from 'src/modules/users/domain/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   Index,
   JoinColumn,
@@ -62,8 +63,10 @@ export type PageBlockStyleConfig = Record<string, unknown> | null;
 
 @Entity('page_blocks')
 @Index('IDX_PAGE_BLOCKS_PAGE_ID', ['page_id'])
-@Index('UQ_PAGE_BLOCKS_PAGE_ORDER', ['page_id', 'order_index'], {
+@Index('IDX_PAGE_BLOCKS_DELETED_AT', ['deleted_at'])
+@Index('UQ_PAGE_BLOCKS_PAGE_ORDER_ACTIVE', ['page_id', 'order_index'], {
   unique: true,
+  where: '"deleted_at" IS NULL',
 })
 export class PageBlock {
   @PrimaryGeneratedColumn('uuid')
@@ -124,4 +127,10 @@ export class PageBlock {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
   updated_at: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
+  deleted_at: Date | null;
+
+  @Column({ name: 'deleted_by', type: 'uuid', nullable: true })
+  deleted_by: string | null;
 }

@@ -1,5 +1,3 @@
-// src/modules/sprints/dto/response/create-sprint.response.dto.ts
-
 import { SprintStatus } from '../../domain/entities/sprint.entity';
 
 export class SprintResponseDto {
@@ -11,7 +9,10 @@ export class SprintResponseDto {
   status: SprintStatus;
   startAt: Date | null;
   endAt: Date | null;
+  completedAt: Date | null;
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
+  deletedBy: string | null;
 }
