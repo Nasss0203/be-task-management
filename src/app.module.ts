@@ -41,6 +41,7 @@ import { UserActivityModule } from './modules/user_activity/user_activity.module
 import { StorageModule } from './modules/storage/storage.module';
 import { TaskAssigneeModule } from './modules/task_assignee/task_assignee.module';
 import { TaskCommnentModule } from './modules/task_commnent/task_commnent.module';
+import { UserActivityModule } from './modules/user_activity/user_activity.module';
 import { WorkspaceInvitesModule } from './modules/workspace_invites/workspace_invites.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 
@@ -92,6 +93,7 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
     AuditLogsModule,
     BillingModule,
     NotificationModule,
+    UserActivityModule,
   ],
   controllers: [AppController],
   providers: [
