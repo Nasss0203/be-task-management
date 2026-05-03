@@ -10,9 +10,11 @@ export class SprintsModel {
     public readonly status: SprintStatus,
     public readonly startAt: Date | null,
     public readonly endAt: Date | null,
+    public readonly completedAt: Date | null,
     public readonly createdBy: string,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
     public readonly deletedAt: Date | null,
+    public readonly deletedBy: string | null,
   ) {}
 }

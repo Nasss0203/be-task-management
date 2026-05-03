@@ -12,19 +12,31 @@ export class WorkspaceMapper {
       entity.planType,
       entity.createdAt,
       entity.updatedAt,
-      entity.deletedAt,
+      entity.deletedAt ?? null,
+      entity.deletedBy ?? null,
     );
   }
 
   static toEntity(model: WorkspaceModel | SaveWorkspaceInput): Workspace {
     const e = new Workspace();
+
     if (model.id != null) e.id = model.id;
+
     e.name = model.name;
     e.slug = model.slug;
     e.planType = model.planType;
+
     if (model.createdAt != null) e.createdAt = model.createdAt;
     if (model.updatedAt != null) e.updatedAt = model.updatedAt;
-    if (model.deletedAt !== undefined) e.deletedAt = model.deletedAt;
+
+    if (model.deletedAt !== undefined) {
+      e.deletedAt = model.deletedAt ?? null;
+    }
+
+    if ('deletedBy' in model && model.deletedBy !== undefined) {
+      e.deletedBy = model.deletedBy ?? null;
+    }
+
     return e;
   }
 
@@ -36,6 +48,8 @@ export class WorkspaceMapper {
       planType: model.planType,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+      deletedAt: model.deletedAt,
+      deletedBy: model.deletedBy,
     };
   }
 }

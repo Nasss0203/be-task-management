@@ -14,10 +14,12 @@ export class SprintsMapper {
       entity.status,
       entity.startAt ?? null,
       entity.endAt ?? null,
+      entity.completedAt ?? null,
       entity.createdBy,
       entity.createdAt,
       entity.updatedAt,
       entity.deletedAt ?? null,
+      entity.deletedBy ?? null,
     );
   }
 
@@ -35,6 +37,10 @@ export class SprintsMapper {
     e.endAt = model.endAt ?? null;
     e.createdBy = model.createdBy;
 
+    if ('completedAt' in model && model.completedAt !== undefined) {
+      e.completedAt = model.completedAt ?? null;
+    }
+
     if ('createdAt' in model && model.createdAt != null) {
       e.createdAt = model.createdAt;
     }
@@ -44,7 +50,11 @@ export class SprintsMapper {
     }
 
     if ('deletedAt' in model && model.deletedAt !== undefined) {
-      e.deletedAt = model.deletedAt;
+      e.deletedAt = model.deletedAt ?? null;
+    }
+
+    if ('deletedBy' in model && model.deletedBy !== undefined) {
+      e.deletedBy = model.deletedBy ?? null;
     }
 
     return e;
@@ -60,9 +70,12 @@ export class SprintsMapper {
       status: model.status,
       startAt: model.startAt,
       endAt: model.endAt,
+      completedAt: model.completedAt,
       createdBy: model.createdBy,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+      deletedAt: model.deletedAt,
+      deletedBy: model.deletedBy,
     };
   }
 }

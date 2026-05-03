@@ -22,6 +22,9 @@ export class PageBlockMapper {
       entity.is_open,
       entity.created_at,
       entity.updated_at,
+
+      entity.deleted_at ?? null,
+      entity.deleted_by ?? null,
     );
   }
 
@@ -45,12 +48,24 @@ export class PageBlockMapper {
     e.data_config = model.data_config ?? null;
     e.created_by = model.created_by;
 
+    if ('is_open' in model && model.is_open !== undefined) {
+      e.is_open = model.is_open;
+    }
+
     if ('created_at' in model && model.created_at != null) {
       e.created_at = model.created_at;
     }
 
     if ('updated_at' in model && model.updated_at != null) {
       e.updated_at = model.updated_at;
+    }
+
+    if ('deleted_at' in model && model.deleted_at !== undefined) {
+      e.deleted_at = model.deleted_at ?? null;
+    }
+
+    if ('deleted_by' in model && model.deleted_by !== undefined) {
+      e.deleted_by = model.deleted_by ?? null;
     }
 
     return e;
@@ -74,6 +89,9 @@ export class PageBlockMapper {
       is_open: model.is_open,
       created_at: model.created_at,
       updated_at: model.updated_at,
+
+      deleted_at: model.deleted_at,
+      deleted_by: model.deleted_by,
     };
   }
 }

@@ -4,6 +4,7 @@ import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.enti
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   Index,
   JoinColumn,
@@ -15,7 +16,11 @@ import {
 
 @Entity('pages')
 @Index('IDX_PAGES_WORKSPACE_ID', ['workspace_id'])
-@Index('UQ_PAGES_WORKSPACE_SLUG', ['workspace_id', 'slug'], { unique: true })
+@Index('IDX_PAGES_DELETED_AT', ['deletedAt'])
+@Index('UQ_PAGES_WORKSPACE_SLUG_ACTIVE', ['workspace_id', 'slug'], {
+  unique: true,
+  where: '"deleted_at" IS NULL',
+})
 export class Page {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -51,4 +56,10 @@ export class Page {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
   updatedAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
+  deletedAt: Date | null;
+
+  @Column({ name: 'deleted_by', type: 'uuid', nullable: true })
+  deletedBy: string | null;
 }

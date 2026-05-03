@@ -11,5 +11,8 @@ export class BoardModel {
     public readonly updatedBy: string | null,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
+
+    public readonly deletedAt: Date | null = null,
+    public readonly deletedBy: string | null = null,
   ) {}
 }

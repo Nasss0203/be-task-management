@@ -6,6 +6,7 @@ import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.enti
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   Index,
   JoinColumn,
@@ -21,8 +22,12 @@ export enum ProjectVisibility {
 }
 
 @Entity('projects')
-@Index('UQ_PROJECTS_WORKSPACE_KEY', ['workspace_id', 'key'], { unique: true })
+@Index('UQ_PROJECTS_WORKSPACE_KEY_ACTIVE', ['workspace_id', 'key'], {
+  unique: true,
+  where: '"deleted_at" IS NULL',
+})
 @Index('IDX_PROJECTS_WORKSPACE_ID', ['workspace_id'])
+@Index('IDX_PROJECTS_DELETED_AT', ['deleted_at'])
 export class Project {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -55,6 +60,12 @@ export class Project {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
   updated_at: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt: Date | null;
+
+  @Column({ name: 'deleted_by', type: 'uuid', nullable: true })
+  deletedBy: string | null;
 
   @ManyToOne(() => Workspace, (workspace) => workspace.projects, {
     onDelete: 'CASCADE',

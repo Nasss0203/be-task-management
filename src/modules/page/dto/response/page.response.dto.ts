@@ -18,4 +18,8 @@ export class PageResponseDto {
   createdAt: Date;
 
   updatedAt: Date;
+
+  deletedAt: Date | null;
+
+  deletedBy: string | null;
 }

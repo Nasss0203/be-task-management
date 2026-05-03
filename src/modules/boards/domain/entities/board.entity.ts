@@ -4,6 +4,7 @@ import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.enti
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   Index,
   JoinColumn,
@@ -30,7 +31,11 @@ export enum BoardViewType {
 @Entity('boards')
 @Index('IDX_BOARDS_WORKSPACE_ID', ['workspaceId'])
 @Index('IDX_BOARDS_PROJECT_ID', ['projectId'])
-@Index('UQ_BOARDS_PROJECT_NAME', ['projectId', 'name'], { unique: true })
+@Index('IDX_BOARDS_DELETED_AT', ['deletedAt'])
+@Index('UQ_BOARDS_PROJECT_NAME_ACTIVE', ['projectId', 'name'], {
+  unique: true,
+  where: '"deleted_at" IS NULL',
+})
 export class Board {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -63,6 +68,12 @@ export class Board {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
   updatedAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
+  deletedAt: Date | null;
+
+  @Column({ name: 'deleted_by', type: 'uuid', nullable: true })
+  deletedBy: string | null;
 
   @ManyToOne(() => Workspace, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'workspace_id' })
