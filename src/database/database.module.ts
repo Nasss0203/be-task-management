@@ -14,6 +14,7 @@ import { Sprint } from 'src/modules/sprints/entities/sprint.entity';
 import { TaskPriority } from 'src/modules/task_priority/domain/entities/task_priority.entity';
 import { TaskStatus } from 'src/modules/task_status/domain/entities/task_status.entity';
 import { Task } from 'src/modules/tasks/domain/entities/task.entity';
+import { UserActivity } from 'src/modules/user_activity/domain/entities/user_activity.entity';
 import { UserProfile } from 'src/modules/user_profiles/entities/user_profile.entity';
 import { UserRole } from 'src/modules/user_roles/domain/entities/user_role.entity';
 import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
@@ -39,6 +40,7 @@ import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.enti
         logging: true,
         entities: [
           User,
+          UserActivity,
           Workspace,
           Permission,
           Role,

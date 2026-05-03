@@ -1,11 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AdminWorkspaceItemResponseDto } from 'src/modules/admin/dto/response/workspace-overview.response.dto';
 import { EntityManager, Repository } from 'typeorm';
 import { Workspace } from '../domain/entities/workspace.entity';
-import { WorkspaceModel } from '../domain/models/workspaces.model';
 import { AdminFindAllWorkspaceRepository } from '../interfaces/repositories/admin-findAll-workspace.repository.interface';
 import { AdminFindAllWorkspaceFilter } from '../interfaces/workspace-filter.type';
-import { WorkspaceMapper } from '../mapper/workspace.mapper';
+
+type AdminWorkspaceRaw = {
+  id: string;
+  name: string;
+  slug: string;
+  plan: Workspace['planType'];
+  createdAt: Date;
+  updatedAt: Date;
+  owner: string | null;
+  membersCount: string;
+  projectsCount: string;
+  tasksCount: string;
+  userCount: string;
+};
 
 @Injectable()
 export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspaceRepository {
@@ -21,9 +34,32 @@ export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspac
   async findAllWorkspace(
     filter: AdminFindAllWorkspaceFilter,
     manager?: EntityManager,
-  ): Promise<WorkspaceModel[]> {
+  ): Promise<AdminWorkspaceItemResponseDto[]> {
     const qb = this.getRepo(manager)
       .createQueryBuilder('workspace')
+      .leftJoin('user_workspaces', 'uw', 'uw.workspace_id = workspace.id')
+      .leftJoin('projects', 'project', 'project.workspace_id = workspace.id')
+      .leftJoin('tasks', 'task', 'task.workspace_id = workspace.id')
+      .leftJoin('user_roles', 'ur', 'ur.workspace_id = workspace.id')
+      .leftJoin('roles', 'role', 'role.id = ur.role_id')
+      .leftJoin(
+        'users',
+        'ownerUser',
+        'ownerUser.id = ur.user_id AND role.name = :ownerRole',
+        { ownerRole: 'OWNER' },
+      )
+      .select('workspace.id', 'id')
+      .addSelect('workspace.name', 'name')
+      .addSelect('workspace.slug', 'slug')
+      .addSelect('workspace.planType', 'plan')
+      .addSelect('workspace.createdAt', 'createdAt')
+      .addSelect('workspace.updatedAt', 'updatedAt')
+      .addSelect('MAX(ownerUser.email)', 'owner')
+      .addSelect('COUNT(DISTINCT uw.user_id)', 'membersCount')
+      .addSelect('COUNT(DISTINCT project.id)', 'projectsCount')
+      .addSelect('COUNT(DISTINCT task.id)', 'tasksCount')
+      .addSelect('COUNT(DISTINCT uw.user_id)', 'userCount')
+      .groupBy('workspace.id')
       .orderBy('workspace.createdAt', 'DESC');
 
     if (filter.search?.trim()) {
@@ -72,10 +108,20 @@ export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspac
       }
     }
 
-    const workspaces = await qb.getMany();
+    const rows = await qb.getRawMany<AdminWorkspaceRaw>();
 
-    return workspaces.map(
-      (workspace): WorkspaceModel => WorkspaceMapper.toModel(workspace),
-    );
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      plan: row.plan,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      owner: row.owner ?? undefined,
+      membersCount: Number(row.membersCount ?? 0),
+      projectsCount: Number(row.projectsCount ?? 0),
+      tasksCount: Number(row.tasksCount ?? 0),
+      userCount: Number(row.userCount ?? 0),
+    }));
   }
 }

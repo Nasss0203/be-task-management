@@ -1,22 +1,22 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { AdminWorkspaceItemResponseDto } from 'src/modules/admin/dto/response/workspace-overview.response.dto';
 import { EntityManager } from 'typeorm';
-import { WorkspaceModel } from '../domain/models/workspaces.model';
-import { AdminFindAllWorkspaceService } from '../interfaces/services/admin-fileAll-workspace.service.interface';
+import { type AdminFindAllWorkspaceRepository } from '../interfaces/repositories/admin-findAll-workspace.repository.interface';
+import { AdminFindAllWorkspaceService } from '../interfaces/services/admin-findAll-workspace.service.interface';
 import { WORKSPACE_TYPES } from '../interfaces/types';
 import { AdminFindAllWorkspaceFilter } from '../interfaces/workspace-filter.type';
-import { AdminFindAllWorkspaceRepositoryImpl } from '../repositories/admin-findAll-workspace.repository';
 
 @Injectable()
 export class AdminFindAllWorkspaceServiceImpl implements AdminFindAllWorkspaceService {
   constructor(
     @Inject(WORKSPACE_TYPES.repositories.AdminFindAllWorkspaceRepository)
-    private readonly adminFindAllWorkspaceRepository: AdminFindAllWorkspaceRepositoryImpl,
+    private readonly adminFindAllWorkspaceRepository: AdminFindAllWorkspaceRepository,
   ) {}
 
   findAllWorkspace(
     filter: AdminFindAllWorkspaceFilter,
     manager?: EntityManager,
-  ): Promise<WorkspaceModel[]> {
+  ): Promise<AdminWorkspaceItemResponseDto[]> {
     return this.adminFindAllWorkspaceRepository.findAllWorkspace(
       filter,
       manager,

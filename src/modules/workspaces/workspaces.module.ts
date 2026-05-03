@@ -34,7 +34,7 @@ import { AdminWorkspaceMemberSummaryRepositoryImpl } from './repositories/admin-
 import { WorkspaceRepositoryImpl } from './repositories/create-workspace.repository';
 import { FindWorkspaceRepositoryImpl } from './repositories/find.workspace.repository';
 import { AccessWorkspaceServiceImpl } from './services/access-workspace.service';
-import { AdminFindAllWorkspaceServiceImpl } from './services/admin-findAll-workspace.service.interface';
+import { AdminFindAllWorkspaceServiceImpl } from './services/admin-findAll-workspace.service';
 import { AdminWorkspaceMemberSummaryServiceImpl } from './services/admin-workspace-member-summary.service';
 import { CreateWorkspaceTemplateServiceImpl } from './services/create-workspace-template.service';
 import { CreateWorkspaceServiceImpl } from './services/create-workspace.service';

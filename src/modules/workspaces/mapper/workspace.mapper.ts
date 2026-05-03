@@ -1,8 +1,21 @@
+import { AdminWorkspaceItemResponseDto } from 'src/modules/admin/dto/response/workspace-overview.response.dto';
 import { Workspace } from '../domain/entities/workspace.entity';
 import { WorkspaceModel } from '../domain/models/workspaces.model';
 import { WorkspaceResponseDto } from '../dto/response/workspaces.response.dto';
 import type { SaveWorkspaceInput } from '../interfaces/repositories/create-workspace.repository.interface';
-
+type AdminWorkspaceRaw = {
+  id: string;
+  name: string;
+  slug: string;
+  plan: WorkspaceModel['planType'];
+  createdAt: Date;
+  updatedAt: Date;
+  owner?: string | null;
+  membersCount?: string | number | null;
+  projectsCount?: string | number | null;
+  tasksCount?: string | number | null;
+  userCount?: string | number | null;
+};
 export class WorkspaceMapper {
   static toModel(entity: Workspace): WorkspaceModel {
     return new WorkspaceModel(
@@ -36,6 +49,23 @@ export class WorkspaceMapper {
       planType: model.planType,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+    };
+  }
+  static toAdminWorkspaceItemResponse(
+    raw: AdminWorkspaceRaw,
+  ): AdminWorkspaceItemResponseDto {
+    return {
+      id: raw.id,
+      name: raw.name,
+      slug: raw.slug,
+      plan: raw.plan,
+      createdAt: raw.createdAt,
+      updatedAt: raw.updatedAt,
+      owner: raw.owner ?? undefined,
+      membersCount: Number(raw.membersCount ?? 0),
+      projectsCount: Number(raw.projectsCount ?? 0),
+      tasksCount: Number(raw.tasksCount ?? 0),
+      userCount: Number(raw.userCount ?? 0),
     };
   }
 }

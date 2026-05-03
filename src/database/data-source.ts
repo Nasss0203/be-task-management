@@ -20,6 +20,7 @@ import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_w
 import { User } from 'src/modules/users/domain/entities/user.entity';
 import { WorkspaceInvite } from 'src/modules/workspace_invites/domain/entities/workspace_invite.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
+import { UserActivity } from 'src/modules/user_activity/domain/entities/user_activity.entity';
 
 export default new DataSource({
   type: 'postgres',
@@ -34,6 +35,7 @@ export default new DataSource({
   logging: true,
   entities: [
     User,
+    UserActivity,
     Workspace,
     Permission,
     Role,
