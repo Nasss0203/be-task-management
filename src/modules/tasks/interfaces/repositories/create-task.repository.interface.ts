@@ -34,4 +34,10 @@ export interface CreateTaskRepository {
     inputs: SaveTaskInput[],
     manager?: EntityManager,
   ): Promise<TaskModel[]>;
+
+  getNextProjectSeq(
+    workspaceId: string,
+    projectId: string,
+    manager?: EntityManager,
+  ): Promise<number>;
 }
