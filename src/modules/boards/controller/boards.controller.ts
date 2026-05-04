@@ -3,6 +3,7 @@ import { Auth } from 'src/common/decorator/auth.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { type IAuth } from 'src/types/auth';
 import { BoardsService } from '../boards.service';
+import { CreateBoardAndAttachDto } from '../dto/create-board-and-attach.dto';
 import { CreateBoardDto } from '../dto/create-board.dto';
 import { BoardResponseDto } from '../dto/response/board.response.dto';
 import { type CreateBoardAndAttachToPageApplication } from '../interfaces/applications/create-board-page.application.interface';
@@ -50,7 +51,7 @@ export class BoardsController {
   @Post('create-and-attach')
   @ResponseMessage('Create board and attach')
   createAndAttachToPage(
-    @Body() dto: CreateBoardDto,
+    @Body() dto: CreateBoardAndAttachDto,
     @Auth() auth: IAuth,
   ): Promise<BoardResponseDto> {
     return this.createBoardAndAttachToPageApplication.execute({

@@ -19,11 +19,16 @@ export class CreateTaskServiceImpl implements CreateTaskService {
     input: CreateTaskServiceInput,
     manager?: EntityManager,
   ): Promise<TaskModel> {
+    const nextProjectSeq = await this.repo.getNextProjectSeq(
+      input.workspaceId,
+      input.projectId,
+      manager,
+    );
     return await this.repo.save(
       {
         workspaceId: input.workspaceId,
         projectId: input.projectId,
-        projectSeq: input.projectSeq ?? 1,
+        projectSeq: nextProjectSeq,
 
         title: input.title,
         description: input.description ?? null,
