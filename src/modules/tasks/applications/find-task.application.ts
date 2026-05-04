@@ -29,4 +29,13 @@ export class FindTaskApplicationImpl implements FindTaskApplication {
 
     return TaskMapper.toResponse(tasks);
   }
+
+  async findDeletedTasks(
+    workspaceId: string,
+    projectId?: string,
+  ): Promise<TaskResponseDto[]> {
+    const tasks = await this.service.findDeletedTasks(workspaceId, projectId);
+
+    return tasks.map(TaskMapper.toResponse);
+  }
 }

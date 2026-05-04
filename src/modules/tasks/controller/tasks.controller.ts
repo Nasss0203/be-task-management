@@ -1,11 +1,14 @@
 import {
+  BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Inject,
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { CreateTaskDto } from '../dto/create-task.dto';
@@ -18,6 +21,7 @@ import { Auth } from 'src/common/decorator/auth.decorator';
 import { type IAuth } from 'src/types/auth';
 import { MoveTaskSprintDto } from '../dto/move-task-sprint.dto';
 import { type CreateTaskApplication } from '../interfaces/applications/create-task.application.interface';
+import { type DeleteTaskApplication } from '../interfaces/applications/delete-task.application.interface';
 import { type MoveTaskSprintApplication } from '../interfaces/applications/move-task-sprint.application.interface';
 import { type UpdateTaskApplication } from '../interfaces/applications/update-task.application.interface';
 
@@ -35,6 +39,12 @@ export class TasksController {
 
     @Inject(TASK_TYPES.applications.MoveTaskSprintApplication)
     private readonly moveTaskSprintApplication: MoveTaskSprintApplication,
+
+    @Inject(TASK_TYPES.applications.DeleteTaskApplication)
+    private readonly deleteTaskApplication: DeleteTaskApplication,
+
+    @Inject(TASK_TYPES.applications.FindTaskApplication)
+    private readonly findTaskApplication: FindTaskApplication,
   ) {}
 
   @Get('/workspace/:workspaceId/project/:projectId')
@@ -80,5 +90,51 @@ export class TasksController {
       sprintId: dto.sprintId ?? null,
       userId: auth.id,
     });
+  }
+
+  @Delete(':taskId')
+  async deleteTask(
+    @Param('taskId') taskId: string,
+    @Query('workspaceId') workspaceId: string,
+    @Auth() auth: IAuth,
+  ) {
+    await this.deleteTaskApplication.delete({
+      workspaceId,
+      taskId,
+      userId: auth.id,
+    });
+
+    return {
+      success: true,
+    };
+  }
+
+  @Patch(':taskId/restore')
+  async restoreTask(
+    @Param('taskId') taskId: string,
+    @Query('workspaceId') workspaceId: string,
+    @Auth() auth: IAuth,
+  ) {
+    await this.deleteTaskApplication.restore({
+      workspaceId,
+      taskId,
+      userId: auth.id,
+    });
+
+    return {
+      success: true,
+    };
+  }
+
+  @Get('trash')
+  async findDeletedTasks(
+    @Query('workspaceId') workspaceId: string,
+    @Query('projectId') projectId?: string,
+  ) {
+    if (!workspaceId) {
+      throw new BadRequestException('workspaceId is required');
+    }
+
+    return this.findTaskApplication.findDeletedTasks(workspaceId, projectId);
   }
 }
