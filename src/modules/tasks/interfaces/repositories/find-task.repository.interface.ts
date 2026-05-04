@@ -6,6 +6,15 @@ export type ParamTask = {
   workspaceId: string;
 };
 
+export type TaskRestoreLookup = {
+  id: string;
+  workspaceId: string;
+  projectId: string;
+  deletedAt: Date | null;
+  workspaceDeletedAt: Date | null;
+  projectDeletedAt: Date | null;
+};
+
 export interface FindTaskRepository {
   findAllTask(params: ParamTask, manager?: EntityManager): Promise<TaskModel[]>;
   findAllTaskByWorkspace(
@@ -17,4 +26,14 @@ export interface FindTaskRepository {
     taskId: string,
     manager?: EntityManager,
   ): Promise<TaskModel | null>;
+
+  findDeletedTasks(
+    workspaceId: string,
+    projectId: string,
+  ): Promise<TaskModel[]>;
+
+  findOneTaskForRestore(
+    workspaceId: string,
+    taskId: string,
+  ): Promise<TaskRestoreLookup | null>;
 }

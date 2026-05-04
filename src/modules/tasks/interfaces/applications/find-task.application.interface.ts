@@ -7,4 +7,9 @@ export interface FindTaskApplication {
   ): Promise<TaskResponseDto[]>;
 
   findOneTask(taskId: string): Promise<TaskResponseDto | null>;
+
+  findDeletedTasks(
+    workspaceId: string,
+    projectId?: string,
+  ): Promise<TaskResponseDto[]>;
 }

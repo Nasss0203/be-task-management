@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { TaskModel } from '../domain/models/task.model';
-import { type FindTaskRepository } from '../interfaces/repositories/find-task.repository.interface';
+import { TaskRestoreLookup, type FindTaskRepository } from '../interfaces/repositories/find-task.repository.interface';
 import { FindTaskService } from '../interfaces/services/find-task.service.interface';
 import { TASK_TYPES } from '../interfaces/types';
 
@@ -31,5 +31,18 @@ export class FindTaskServiceImpl implements FindTaskService {
     manager?: EntityManager,
   ): Promise<TaskModel | null> {
     return await this.findTaskRepository.findOneTask(taskId, manager);
+  }
+  findDeletedTasks(
+    workspaceId: string,
+    projectId: string,
+  ): Promise<TaskModel[]> {
+    return this.findTaskRepository.findDeletedTasks(workspaceId, projectId);
+  }
+
+  findOneTaskForRestore(
+    workspaceId: string,
+    taskId: string,
+  ): Promise<TaskRestoreLookup | null> {
+    return this.findTaskRepository.findOneTaskForRestore(workspaceId, taskId);
   }
 }

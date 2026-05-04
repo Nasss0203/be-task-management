@@ -19,6 +19,9 @@ import { CreateTaskServiceImpl } from './services/create-tasks.service';
 import { FindTaskServiceImpl } from './services/find-task.service';
 import { MoveTaskSprintServiceImpl } from './services/move-task-sprint.service';
 import { UpdateTaskServiceImpl } from './services/update-task.service';
+import { DeleteTaskRepositoryImpl } from './repositories/delete-task.repository';
+import { DeleteTaskServiceImpl } from './services/delete-task.service';
+import { DeleteTaskApplicationImpl } from './applications/delete-task.application';
 
 @Module({
   imports: [
@@ -47,6 +50,10 @@ import { UpdateTaskServiceImpl } from './services/update-task.service';
       provide: TASK_TYPES.applications.MoveTaskSprintApplication,
       useClass: MoveTaskSprintApplicationImpl,
     },
+    {
+      provide: TASK_TYPES.applications.DeleteTaskApplication,
+      useClass: DeleteTaskApplicationImpl,
+    },
     // Repository
     {
       provide: TASK_TYPES.repositories.CreateTaskRepository,
@@ -64,6 +71,10 @@ import { UpdateTaskServiceImpl } from './services/update-task.service';
       provide: TASK_TYPES.repositories.MoveTaskSprintRepository,
       useClass: MoveTaskSprintRepositoryImpl,
     },
+    {
+      provide: TASK_TYPES.repositories.DeleteTaskRepository,
+      useClass: DeleteTaskRepositoryImpl,
+    },
     // Service
     {
       provide: TASK_TYPES.services.CreateTaskService,
@@ -80,6 +91,10 @@ import { UpdateTaskServiceImpl } from './services/update-task.service';
     {
       provide: TASK_TYPES.services.MoveTaskSprintService,
       useClass: MoveTaskSprintServiceImpl,
+    },
+    {
+      provide: TASK_TYPES.services.DeleteTaskService,
+      useClass: DeleteTaskServiceImpl,
     },
   ],
   exports: [
