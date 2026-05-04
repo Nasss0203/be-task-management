@@ -12,4 +12,11 @@ export interface FindSprintService {
     projectId: string,
     manager?: EntityManager,
   ): Promise<SprintsModel[]>;
+
+  findTasksBySprint(
+    workspaceId: string,
+    projectId: string,
+    sprintId: string,
+    manager?: EntityManager,
+  ): Promise<SprintsModel | null>;
 }

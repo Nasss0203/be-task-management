@@ -34,11 +34,17 @@ export class FindSprintRepositoryImpl implements FindSprintRepository {
     sprintId: string,
     manager?: EntityManager,
   ): Promise<SprintsModel | null> {
-    return await this.getRepo(manager).findOne({
+    const sprint = await this.getRepo(manager).findOne({
       where: {
         id: sprintId,
       },
     });
+
+    if (!sprint) {
+      return null;
+    }
+
+    return SprintsMapper.toModel(sprint);
   }
 
   async findAllSprintByProject(
@@ -60,5 +66,29 @@ export class FindSprintRepositoryImpl implements FindSprintRepository {
     });
 
     return sprints.map(SprintsMapper.toModel);
+  }
+
+  async findTasksBySprint(
+    workspaceId: string,
+    projectId: string,
+    sprintId: string,
+    manager?: EntityManager,
+  ): Promise<SprintsModel | null> {
+    const sprint = await this.getRepo(manager).findOne({
+      where: {
+        workspaceId,
+        projectId,
+        id: sprintId,
+      },
+      relations: {
+        tasks: true,
+      },
+    });
+
+    if (!sprint) {
+      return null;
+    }
+
+    return SprintsMapper.toModel(sprint);
   }
 }

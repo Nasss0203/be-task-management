@@ -19,7 +19,7 @@ export class ProjectResponseDto {
 
   updated_at: Date;
 
-  deletedAt: Date | null;
+  deleted_at: Date | null;
 
-  deletedBy: string | null;
+  deleted_by: string | null;
 }

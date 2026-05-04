@@ -14,4 +14,6 @@ export class CreateTaskDto {
   completedAt?: Date | null;
 
   estimateMinutes?: number | null;
+
+  createdBy: string;
 }

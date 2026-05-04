@@ -47,4 +47,20 @@ export class SprintsController {
       userId: auth.id,
     });
   }
+
+  @Get('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/tasks')
+  @ResponseMessage('Find tasks by sprint successfully')
+  async findTasksBySprint(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('sprintId') sprintId: string,
+    @Auth() auth: IAuth,
+  ): Promise<SprintResponseDto> {
+    return this.findSprintApplication.findTasksBySprint({
+      workspaceId,
+      projectId,
+      sprintId,
+      userId: auth.id,
+    });
+  }
 }

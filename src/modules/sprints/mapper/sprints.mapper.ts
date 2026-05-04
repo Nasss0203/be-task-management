@@ -1,3 +1,4 @@
+import { TaskMapper } from 'src/modules/tasks/mapper/tasks.mapper';
 import { Sprint, SprintStatus } from '../domain/entities/sprint.entity';
 import { SprintsModel } from '../domain/models/sprints.model';
 import { SprintResponseDto } from '../dto/response/sprint.response.dto';
@@ -20,6 +21,8 @@ export class SprintsMapper {
       entity.updatedAt,
       entity.deletedAt ?? null,
       entity.deletedBy ?? null,
+
+      entity.tasks?.map(TaskMapper.toModel) ?? [],
     );
   }
 
@@ -76,6 +79,7 @@ export class SprintsMapper {
       updatedAt: model.updatedAt,
       deletedAt: model.deletedAt,
       deletedBy: model.deletedBy,
+      tasks: model.tasks?.map(TaskMapper.toResponse),
     };
   }
 }

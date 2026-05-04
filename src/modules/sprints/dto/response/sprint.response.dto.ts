@@ -1,3 +1,4 @@
+import { TaskResponseDto } from 'src/modules/tasks/dto/response/task-response.dto';
 import { SprintStatus } from '../../domain/entities/sprint.entity';
 
 export class SprintResponseDto {
@@ -15,4 +16,5 @@ export class SprintResponseDto {
   updatedAt: Date;
   deletedAt: Date | null;
   deletedBy: string | null;
+  tasks?: TaskResponseDto[];
 }

@@ -1,3 +1,4 @@
+import { TaskModel } from 'src/modules/tasks/domain/models/task.model';
 import { SprintStatus } from '../entities/sprint.entity';
 
 export class SprintsModel {
@@ -16,5 +17,7 @@ export class SprintsModel {
     public readonly updatedAt: Date,
     public readonly deletedAt: Date | null,
     public readonly deletedBy: string | null,
+
+    public readonly tasks?: TaskModel[],
   ) {}
 }
