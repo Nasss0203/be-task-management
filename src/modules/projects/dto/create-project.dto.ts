@@ -15,4 +15,5 @@ export class CreateProjectDto {
   create_default_board?: boolean;
 
   default_board_view_type?: BoardViewType;
+  created_by: string;
 }

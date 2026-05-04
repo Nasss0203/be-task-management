@@ -39,4 +39,18 @@ export class FindSprintServiceImpl implements FindSprintService {
       manager,
     );
   }
+
+  async findTasksBySprint(
+    workspaceId: string,
+    projectId: string,
+    sprintId: string,
+    manager?: EntityManager,
+  ): Promise<SprintsModel | null> {
+    return this.findSprintRepository.findTasksBySprint(
+      workspaceId,
+      projectId,
+      sprintId,
+      manager,
+    );
+  }
 }

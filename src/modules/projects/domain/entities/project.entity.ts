@@ -61,11 +61,11 @@ export class Project {
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
   updated_at: Date;
 
-  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
-  deletedAt: Date | null;
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
+  deleted_at: Date | null;
 
   @Column({ name: 'deleted_by', type: 'uuid', nullable: true })
-  deletedBy: string | null;
+  deleted_by: string | null;
 
   @ManyToOne(() => Workspace, (workspace) => workspace.projects, {
     onDelete: 'CASCADE',

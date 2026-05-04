@@ -1,8 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { SprintResponseDto } from '../dto/response/sprint.response.dto';
 import {
   FindAllSprintApplicationInput,
   FindSprintApplication,
+  FindTasksBySprintApplicationInput,
 } from '../interfaces/applications/find-sprint.application.interface';
 import { type FindSprintService } from '../interfaces/services/find-sprint.service.interface';
 import { SPRINT_TYPES } from '../interfaces/types';
@@ -24,5 +25,21 @@ export class FindSprintApplicationImpl implements FindSprintApplication {
     );
 
     return sprints.map((sprint) => SprintsMapper.toResponse(sprint));
+  }
+
+  async findTasksBySprint(
+    input: FindTasksBySprintApplicationInput,
+  ): Promise<SprintResponseDto> {
+    const sprint = await this.findSprintService.findTasksBySprint(
+      input.workspaceId,
+      input.projectId,
+      input.sprintId,
+    );
+
+    if (!sprint) {
+      throw new NotFoundException('Sprint not found');
+    }
+
+    return SprintsMapper.toResponse(sprint);
   }
 }
