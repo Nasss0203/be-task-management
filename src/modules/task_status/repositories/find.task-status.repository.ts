@@ -31,4 +31,23 @@ export class FindTaskStatusRepositoryImpl implements FindTaskStatusRepository {
 
     return entities.map((entity) => TaskStatusMapper.toModel(entity));
   }
+
+  async findDoneStatus(
+    projectId: string,
+    workspaceId: string,
+    manager?: EntityManager,
+  ): Promise<TaskStatusModel | null> {
+    const repo = this.getRepo(manager);
+
+    const status = await repo.findOne({
+      where: {
+        projectId,
+        workspaceId,
+        name: 'Done',
+        isDone: true,
+      },
+    });
+
+    return status ? TaskStatusMapper.toModel(status) : null;
+  }
 }

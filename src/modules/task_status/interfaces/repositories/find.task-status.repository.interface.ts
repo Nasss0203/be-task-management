@@ -7,4 +7,10 @@ export interface FindTaskStatusRepository {
     workspaceId: string,
     manager?: EntityManager,
   ): Promise<TaskStatusModel[]>;
+
+  findDoneStatus(
+    projectId: string,
+    workspaceId: string,
+    manager?: EntityManager,
+  ): Promise<TaskStatusModel | null>;
 }

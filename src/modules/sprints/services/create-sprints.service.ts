@@ -35,20 +35,22 @@ export class CreateSprintServiceImpl implements CreateSprintService {
     manager?: EntityManager,
   ): Promise<SprintsModel> {
     const projectId = input.projectId;
+
     const findProject =
       await this.findProjectRepository.findOneProjectById(projectId);
 
     if (!findProject) {
       throw new HttpException('Project not found', HttpStatus.NOT_FOUND);
     }
+
     if (findProject.workspace_id !== input.workspaceId) {
       throw new BadRequestException('Project does not belong to workspace');
     }
 
     const isSprintNameExists =
       await this.findSprintRepository.existsByProjectIdAndName(
-        input.name,
         projectId,
+        input.name,
       );
 
     if (isSprintNameExists) {

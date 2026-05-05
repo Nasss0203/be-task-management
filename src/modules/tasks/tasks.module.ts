@@ -5,23 +5,27 @@ import { TaskPriorityModule } from '../task_priority/task_priority.module';
 import { TaskStatusModule } from '../task_status/task_status.module';
 import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
 import { CreateTaskApplicationImpl } from './applications/create-task.application';
+import { DeleteTaskApplicationImpl } from './applications/delete-task.application';
 import { FindTaskApplicationImpl } from './applications/find-task.application';
 import { MoveTaskSprintApplicationImpl } from './applications/move-task-sprint.application';
+import { RemoveTaskFromSprintApplicationImpl } from './applications/remove-task-sprint.application';
 import { UpdateTaskApplicationImpl } from './applications/update-task.application';
 import { TasksController } from './controller/tasks.controller';
 import { Task } from './domain/entities/task.entity';
 import { TASK_TYPES } from './interfaces/types';
 import { CreateTaskRepositoryImpl } from './repositories/create.tasks.repository';
+import { DeleteTaskRepositoryImpl } from './repositories/delete-task.repository';
 import { FindTaskRepositoryImpl } from './repositories/find-task.repository';
 import { MoveTaskSprintRepositoryImpl } from './repositories/move-task-sprint.repository';
+import { MoveUnfinishedTasksToBacklogRepositoryImpl } from './repositories/move-unfinished-tasks-to-backlog.repository';
 import { UpdateTaskRepositoryImpl } from './repositories/update.task.repository';
 import { CreateTaskServiceImpl } from './services/create-tasks.service';
+import { DeleteTaskServiceImpl } from './services/delete-task.service';
 import { FindTaskServiceImpl } from './services/find-task.service';
 import { MoveTaskSprintServiceImpl } from './services/move-task-sprint.service';
+import { MoveUnfinishedTasksToBacklogServiceImpl } from './services/move-unfinished-tasks-to-backlog.service';
+import { RemoveTaskFromSprintServiceImpl } from './services/remove-task-sprint.service';
 import { UpdateTaskServiceImpl } from './services/update-task.service';
-import { DeleteTaskRepositoryImpl } from './repositories/delete-task.repository';
-import { DeleteTaskServiceImpl } from './services/delete-task.service';
-import { DeleteTaskApplicationImpl } from './applications/delete-task.application';
 
 @Module({
   imports: [
@@ -54,6 +58,10 @@ import { DeleteTaskApplicationImpl } from './applications/delete-task.applicatio
       provide: TASK_TYPES.applications.DeleteTaskApplication,
       useClass: DeleteTaskApplicationImpl,
     },
+    {
+      provide: TASK_TYPES.applications.RemoveTaskFromSprintApplication,
+      useClass: RemoveTaskFromSprintApplicationImpl,
+    },
     // Repository
     {
       provide: TASK_TYPES.repositories.CreateTaskRepository,
@@ -74,6 +82,10 @@ import { DeleteTaskApplicationImpl } from './applications/delete-task.applicatio
     {
       provide: TASK_TYPES.repositories.DeleteTaskRepository,
       useClass: DeleteTaskRepositoryImpl,
+    },
+    {
+      provide: TASK_TYPES.repositories.MoveUnfinishedTasksToBacklogRepository,
+      useClass: MoveUnfinishedTasksToBacklogRepositoryImpl,
     },
     // Service
     {
@@ -96,10 +108,19 @@ import { DeleteTaskApplicationImpl } from './applications/delete-task.applicatio
       provide: TASK_TYPES.services.DeleteTaskService,
       useClass: DeleteTaskServiceImpl,
     },
+    {
+      provide: TASK_TYPES.services.RemoveTaskFromSprintService,
+      useClass: RemoveTaskFromSprintServiceImpl,
+    },
+    {
+      provide: TASK_TYPES.services.MoveUnfinishedTasksToBacklogService,
+      useClass: MoveUnfinishedTasksToBacklogServiceImpl,
+    },
   ],
   exports: [
     TASK_TYPES.services.CreateTaskService,
     TASK_TYPES.services.FindTaskService,
+    TASK_TYPES.services.MoveUnfinishedTasksToBacklogService,
   ],
 })
 export class TasksModule {}
