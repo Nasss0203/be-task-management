@@ -40,6 +40,9 @@ import { TaskStatusService } from './task_status.service';
       useClass: FindTaskStatusApplicationImpl,
     },
   ],
-  exports: [TASK_STATUS_TYPES.services.CreateTaskStatusService],
+  exports: [
+    TASK_STATUS_TYPES.services.CreateTaskStatusService,
+    TASK_STATUS_TYPES.repositories.FindTaskStatusRepository,
+  ],
 })
 export class TaskStatusModule {}

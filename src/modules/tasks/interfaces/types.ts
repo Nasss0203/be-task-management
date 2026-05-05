@@ -5,6 +5,8 @@ export const TASK_TYPES = {
     FindTaskService: 'FindTaskService',
     MoveTaskSprintService: 'MoveTaskSprintService',
     DeleteTaskService: 'DeleteTaskService',
+    RemoveTaskFromSprintService: 'RemoveTaskFromSprintService',
+    MoveUnfinishedTasksToBacklogService: 'MoveUnfinishedTasksToBacklogService',
   },
   applications: {
     CreateTaskApplication: 'CreateTaskApplication',
@@ -12,6 +14,7 @@ export const TASK_TYPES = {
     FindTaskApplication: 'FindTaskApplication',
     MoveTaskSprintApplication: 'MoveTaskSprintApplication',
     DeleteTaskApplication: 'DeleteTaskApplication',
+    RemoveTaskFromSprintApplication: 'RemoveTaskFromSprintApplication',
   },
   repositories: {
     CreateTaskRepository: 'CreateTaskRepository',
@@ -19,5 +22,7 @@ export const TASK_TYPES = {
     FindTaskRepository: 'FindTaskRepository',
     MoveTaskSprintRepository: 'MoveTaskSprintRepository',
     DeleteTaskRepository: 'DeleteTaskRepository',
+    MoveUnfinishedTasksToBacklogRepository:
+      'MoveUnfinishedTasksToBacklogRepository',
   },
 };
