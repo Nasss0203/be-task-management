@@ -1,5 +1,6 @@
 import { EntityManager } from 'typeorm';
 import { PageBlockModel } from '../../domain/models/page_block.model';
+import { PageBlockRestoreLookup } from '../repositories/find.page_block.repository.interface';
 
 export interface FindPageBlockService {
   findAllById(
@@ -12,5 +13,16 @@ export interface FindPageBlockService {
     manager?: EntityManager,
   ): Promise<PageBlockModel | null>;
 
-  getNextOrderIndex(pageId: string, manager?: EntityManager): Promise<number>;
+  getNextOrderIndex(pageId: string, manager?: EntityManager): Promise<number>; 
+
+   findDeletedPageBlocks(
+    workspaceId: string,
+    pageId?: string,
+  ): Promise<PageBlockModel[]>;
+
+  findOnePageBlockForRestore(
+    workspaceId: string,
+    blockId: string,
+  ): Promise<PageBlockRestoreLookup | null>;
 }
+

@@ -1,7 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { PageBlockModel } from '../domain/models/page_block.model';
-import { type FindPageBlockRepository } from '../interfaces/repositories/find.page_block.repository.interface';
+import {
+  type FindPageBlockRepository,
+  PageBlockRestoreLookup,
+} from '../interfaces/repositories/find.page_block.repository.interface';
 import { FindPageBlockService } from '../interfaces/services/find.page_block.service.interface';
 import { PAGE_BLOCK_TYPES } from '../interfaces/types';
 
@@ -16,13 +19,14 @@ export class FindPageBlockServiceImpl implements FindPageBlockService {
     blockId: string,
     manager?: EntityManager,
   ): Promise<PageBlockModel | null> {
-    return await this.findPageBlockRepository.findAllById(blockId, manager);
+    return this.findPageBlockRepository.findAllById(blockId, manager);
   }
+
   async findAllByPageId(
     pageId: string,
     manager?: EntityManager,
   ): Promise<PageBlockModel | null> {
-    return await this.findPageBlockRepository.findAllByPageId(pageId, manager);
+    return this.findPageBlockRepository.findAllByPageId(pageId, manager);
   }
 
   async getNextOrderIndex(
@@ -30,5 +34,25 @@ export class FindPageBlockServiceImpl implements FindPageBlockService {
     manager?: EntityManager,
   ): Promise<number> {
     return this.findPageBlockRepository.getNextOrderIndex(pageId, manager);
+  }
+
+  findDeletedPageBlocks(
+    workspaceId: string,
+    pageId?: string,
+  ): Promise<PageBlockModel[]> {
+    return this.findPageBlockRepository.findDeletedPageBlocks(
+      workspaceId,
+      pageId,
+    );
+  }
+
+  findOnePageBlockForRestore(
+    workspaceId: string,
+    blockId: string,
+  ): Promise<PageBlockRestoreLookup | null> {
+    return this.findPageBlockRepository.findOnePageBlockForRestore(
+      workspaceId,
+      blockId,
+    );
   }
 }

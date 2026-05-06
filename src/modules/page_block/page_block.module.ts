@@ -14,6 +14,10 @@ import { UpdatePageBlockRepositoryImpl } from './repositories/update.page_block.
 import { CreatePageBlockServiceImpl } from './services/create.page_block.service';
 import { FindPageBlockServiceImpl } from './services/find.page_block.service';
 import { UpdatePageBlockServiceImpl } from './services/update.page_block.service';
+import { FindPageBlockApplicationImpl } from './applications/find.page_block.application';
+import { DeletePageBlockApplicationImpl } from './applications/delete.page-block.application';
+import { DeletePageBlockRepositoryImpl } from './repositories/delete.page-block.repository';
+import { DeletePageBlockServiceImpl } from './services/delete.page-block.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([PageBlock])],
@@ -28,6 +32,14 @@ import { UpdatePageBlockServiceImpl } from './services/update.page_block.service
       provide: PAGE_BLOCK_TYPES.applications.CreatePageBlockApplication,
       useClass: CreatePageBlockApplicationImpl,
     },
+    {
+      provide: PAGE_BLOCK_TYPES.applications.FindPageBlockApplication,
+      useClass: FindPageBlockApplicationImpl,
+    },
+    {
+      provide: PAGE_BLOCK_TYPES.applications.DeletePageBlockApplication,
+      useClass: DeletePageBlockApplicationImpl,
+    },
     // Repository
     {
       provide: PAGE_BLOCK_TYPES.repositories.UpdatePageBlockRepository,
@@ -40,6 +52,10 @@ import { UpdatePageBlockServiceImpl } from './services/update.page_block.service
     {
       provide: PAGE_BLOCK_TYPES.repositories.FindPageBlockRepository,
       useClass: FindPageBlockRepositoryImpl,
+    },
+    {
+      provide: PAGE_BLOCK_TYPES.repositories.DeletePageBlockRepository,
+      useClass: DeletePageBlockRepositoryImpl,
     },
     // Serivice
     {
@@ -57,6 +73,10 @@ import { UpdatePageBlockServiceImpl } from './services/update.page_block.service
     {
       provide: WORKSPACE_TYPES.uow.UnitOfWork,
       useClass: TypeOrmUnitOfWork,
+    },
+    {
+      provide: PAGE_BLOCK_TYPES.services.DeletePageBlockService,
+      useClass: DeletePageBlockServiceImpl,
     },
   ],
   exports: [
