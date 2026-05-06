@@ -12,4 +12,9 @@ export interface FindTaskApplication {
     workspaceId: string,
     projectId?: string,
   ): Promise<TaskResponseDto[]>;
+
+  findBacklogTasks(
+    projectId: string,
+    workspaceId: string,
+  ): Promise<TaskResponseDto[]>;
 }

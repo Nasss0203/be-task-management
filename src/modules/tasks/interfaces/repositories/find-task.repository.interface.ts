@@ -36,4 +36,10 @@ export interface FindTaskRepository {
     workspaceId: string,
     taskId: string,
   ): Promise<TaskRestoreLookup | null>;
+
+  findAllBacklogTasks(
+    projectId: string,
+    workspaceId: string,
+    manager?: EntityManager,
+  ): Promise<TaskModel[]>;
 }

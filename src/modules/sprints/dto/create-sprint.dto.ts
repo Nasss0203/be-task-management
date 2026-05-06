@@ -21,9 +21,9 @@ export class CreateSprintDto {
 
   @IsDateString()
   @IsOptional()
-  startAt?: string;
+  startAt?: string | null;
 
   @IsDateString()
   @IsOptional()
-  endAt?: string;
+  endAt?: string | null;
 }

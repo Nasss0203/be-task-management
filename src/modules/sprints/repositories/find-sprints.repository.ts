@@ -38,6 +38,9 @@ export class FindSprintRepositoryImpl implements FindSprintRepository {
       where: {
         id: sprintId,
       },
+      relations: {
+        tasks: true,
+      },
     });
 
     if (!sprint) {
