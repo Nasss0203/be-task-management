@@ -20,6 +20,7 @@ import { SPRINT_TYPES } from '../interfaces/types';
 // đổi path theo module task_status của bạn
 import { type FindTaskStatusRepository } from 'src/modules/task_status/interfaces/repositories/find.task-status.repository.interface';
 import { TASK_STATUS_TYPES } from 'src/modules/task_status/interfaces/types';
+import { type MarkDoneTasksCompletedAtInSprintService } from 'src/modules/tasks/interfaces/services/mark-done-tasks-completed-at-in-sprint.service.interface';
 
 @Injectable()
 export class CompleteSprintServiceImpl implements CompleteSprintService {
@@ -35,6 +36,9 @@ export class CompleteSprintServiceImpl implements CompleteSprintService {
 
     @Inject(TASK_STATUS_TYPES.repositories.FindTaskStatusRepository)
     private readonly findTaskStatusRepository: FindTaskStatusRepository,
+
+    @Inject(TASK_TYPES.services.MarkDoneTasksCompletedAtInSprintService)
+    private readonly markDoneTasksCompletedAtInSprintService: MarkDoneTasksCompletedAtInSprintService,
   ) {}
 
   async completeSprint(
@@ -65,13 +69,25 @@ export class CompleteSprintServiceImpl implements CompleteSprintService {
     const doneStatus = await this.findTaskStatusRepository.findDoneStatus(
       input.projectId,
       input.workspaceId,
-
       manager,
     );
 
     if (!doneStatus) {
       throw new BadRequestException('Done status not found');
     }
+
+    const now = new Date();
+
+    await this.markDoneTasksCompletedAtInSprintService.mark(
+      {
+        workspaceId: input.workspaceId,
+        projectId: input.projectId,
+        sprintId: input.sprintId,
+        doneStatusId: doneStatus.id,
+        completedAt: now,
+      },
+      manager,
+    );
 
     await this.moveUnfinishedTasksToBacklogService.move(
       {

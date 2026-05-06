@@ -12,6 +12,7 @@ import { ResponseMessage } from 'src/common/decorator/response-message.decorator
 import { type IAuth } from 'src/types/auth';
 import { CreateSprintDto } from '../dto/create-sprint.dto';
 import { SprintResponseDto } from '../dto/response/sprint.response.dto';
+import { type CancelSprintApplication } from '../interfaces/applications/cancel-sprint.application.interface';
 import { type CompleteSprintApplication } from '../interfaces/applications/complete-sprint.application.interface';
 import { type CreateSprintApplication } from '../interfaces/applications/create-sprint.application.interface';
 import { type FindSprintApplication } from '../interfaces/applications/find-sprint.application.interface';
@@ -32,6 +33,8 @@ export class SprintsController {
 
     @Inject(SPRINT_TYPES.applications.CompleteSprintApplication)
     private readonly completeSprintApplication: CompleteSprintApplication,
+    @Inject(SPRINT_TYPES.applications.CancelSprintApplication)
+    private readonly cancelSprintApplication: CancelSprintApplication,
   ) {}
 
   @Post('workspaces/:workspaceId/projects/:projectId')
@@ -111,6 +114,19 @@ export class SprintsController {
       projectId,
       sprintId,
       userId: auth.id,
+    });
+  }
+
+  @Patch('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/cancel')
+  async cancelSprint(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('sprintId') sprintId: string,
+  ): Promise<SprintResponseDto> {
+    return await this.cancelSprintApplication.cancelSprint({
+      workspaceId,
+      projectId,
+      sprintId,
     });
   }
 }
