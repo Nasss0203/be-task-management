@@ -1,7 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { PageModel } from '../domain/models/page.model';
-import { type FindPageRepository } from '../interfaces/repositories/find-page.repository.interface';
+import {
+  PageRestoreLookup,
+  type FindPageRepository,
+} from '../interfaces/repositories/find-page.repository.interface';
 import { FindPageService } from '../interfaces/services/find-page.service.interface';
 import { PAGE_TYPES } from '../interfaces/types';
 
@@ -11,6 +14,23 @@ export class FindPageServiceImpl implements FindPageService {
     @Inject(PAGE_TYPES.repositories.FindPageRepository)
     private readonly findPageRepository: FindPageRepository,
   ) {}
+  findDeletedPages(
+    workspaceId: string,
+    manager?: EntityManager,
+  ): Promise<PageModel[]> {
+    return this.findPageRepository.findDeletedPages(workspaceId, manager);
+  }
+  findOnePageForRestore(
+    workspaceId: string,
+    pageId: string,
+    manager?: EntityManager,
+  ): Promise<PageRestoreLookup | null> {
+    return this.findPageRepository.findOnePageForRestore(
+      workspaceId,
+      pageId,
+      manager,
+    );
+  }
   async findPageByWorkspaceId(
     userId: string,
     workspaceId: string,

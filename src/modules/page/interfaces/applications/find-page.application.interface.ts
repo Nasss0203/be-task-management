@@ -5,4 +5,7 @@ export interface FindPageApplication {
     userId: string,
     workspaceId: string,
   ): Promise<PageResponseDto | null>;
-}
+  findDeletedPages(workspaceId: string): Promise<PageResponseDto[]>;
+} 
+
+

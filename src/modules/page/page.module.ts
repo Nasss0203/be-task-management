@@ -10,6 +10,9 @@ import { FindPageRepositoryImpl } from './repositories/find-page.repository';
 import { PageRepositoryImpl } from './repositories/page.repository';
 import { CreatePageServiceImpl } from './services/create.page.service';
 import { FindPageServiceImpl } from './services/find-page.service';
+import { DeletePageApplicationImpl } from './applications/delete.page.application';
+import { DeletePageServiceImpl } from './services/delete.page.service';
+import { DeletePageRepositoryImpl } from './repositories/delete-page.repository';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Page]), PageBlockModule],
@@ -21,6 +24,10 @@ import { FindPageServiceImpl } from './services/find-page.service';
       provide: PAGE_TYPES.applications.FindPageApplication,
       useClass: FindPageApplicationImpl,
     },
+    {
+      provide: PAGE_TYPES.applications.DeletePageApplication,
+      useClass: DeletePageApplicationImpl,
+    },
     // Repo
     {
       provide: PAGE_TYPES.repositories.PageRepository,
@@ -30,6 +37,10 @@ import { FindPageServiceImpl } from './services/find-page.service';
       provide: PAGE_TYPES.repositories.FindPageRepository,
       useClass: FindPageRepositoryImpl,
     },
+    {
+      provide: PAGE_TYPES.repositories.DeletePageRepository,
+      useClass: DeletePageRepositoryImpl,
+    },
     // Service
     {
       provide: PAGE_TYPES.services.CreatePageService,
@@ -38,6 +49,10 @@ import { FindPageServiceImpl } from './services/find-page.service';
     {
       provide: PAGE_TYPES.services.FindPageService,
       useClass: FindPageServiceImpl,
+    },
+    {
+      provide: PAGE_TYPES.services.DeletePageService,
+      useClass: DeletePageServiceImpl,
     },
   ],
   exports: [

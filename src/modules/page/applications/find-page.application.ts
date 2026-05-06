@@ -11,6 +11,11 @@ export class FindPageApplicationImpl implements FindPageApplication {
     @Inject(PAGE_TYPES.services.FindPageService)
     private readonly findPageService: FindPageService,
   ) {}
+  async findDeletedPages(workspaceId: string): Promise<PageResponseDto[]> {
+    const pages = await this.findPageService.findDeletedPages(workspaceId);
+
+    return pages.map((page) => PageMapper.toResponse(page));
+  }
 
   async findPageByWorkspaceId(
     userId: string,
