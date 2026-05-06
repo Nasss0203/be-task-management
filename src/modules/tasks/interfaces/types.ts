@@ -7,6 +7,9 @@ export const TASK_TYPES = {
     DeleteTaskService: 'DeleteTaskService',
     RemoveTaskFromSprintService: 'RemoveTaskFromSprintService',
     MoveUnfinishedTasksToBacklogService: 'MoveUnfinishedTasksToBacklogService',
+    MarkDoneTasksCompletedAtInSprintService:
+      'MarkDoneTasksCompletedAtInSprintService',
+    MoveTasksToBacklogBySprintService: 'MoveTasksToBacklogBySprintService',
   },
   applications: {
     CreateTaskApplication: 'CreateTaskApplication',
@@ -24,5 +27,9 @@ export const TASK_TYPES = {
     DeleteTaskRepository: 'DeleteTaskRepository',
     MoveUnfinishedTasksToBacklogRepository:
       'MoveUnfinishedTasksToBacklogRepository',
+    MarkDoneTasksCompletedAtInSprintRepository:
+      'MarkDoneTasksCompletedAtInSprintRepository',
+    MoveTasksToBacklogBySprintRepository:
+      'MoveTasksToBacklogBySprintRepository',
   },
 };

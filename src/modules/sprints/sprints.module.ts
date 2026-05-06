@@ -4,6 +4,7 @@ import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { ProjectsModule } from '../projects/projects.module';
 import { TaskStatusModule } from '../task_status/task_status.module';
 import { TasksModule } from '../tasks/tasks.module';
+import { CancelSprintApplicationImpl } from './applications/cancel-sprint.application';
 import { CompleteSprintApplicationImpl } from './applications/complete-sprint.application';
 import { CreateSprintApplicationImpl } from './applications/create-sprint.application';
 import { FindSprintApplicationImpl } from './applications/find-sprint.application';
@@ -11,10 +12,12 @@ import { StartSprintApplicationImpl } from './applications/start-sprint.applicat
 import { SprintsController } from './controller/sprints.controller';
 import { Sprint } from './domain/entities/sprint.entity';
 import { SPRINT_TYPES } from './interfaces/types';
+import { CancelSprintRepositoryImpl } from './repositories/cancel-sprint.repository';
 import { CompleteSprintRepositoryImpl } from './repositories/complete-sprint.repository';
 import { CreateSprintRepositoryImpl } from './repositories/create-sprints.repository';
 import { FindSprintRepositoryImpl } from './repositories/find-sprints.repository';
 import { StartSprintRepositoryImpl } from './repositories/start-sprint.repository';
+import { CancelSprintServiceImpl } from './services/cancel-sprint.service';
 import { CompleteSprintServiceImpl } from './services/complete-sprint.service';
 import { CreateSprintServiceImpl } from './services/create-sprints.service';
 import { FindSprintServiceImpl } from './services/find-sprint-service';
@@ -46,6 +49,10 @@ import { StartSprintServiceImpl } from './services/start-sprint.service';
       provide: SPRINT_TYPES.applications.CompleteSprintApplication,
       useClass: CompleteSprintApplicationImpl,
     },
+    {
+      provide: SPRINT_TYPES.applications.CancelSprintApplication,
+      useClass: CancelSprintApplicationImpl,
+    },
     // Service
     {
       provide: SPRINT_TYPES.services.CreateSprintService,
@@ -62,6 +69,10 @@ import { StartSprintServiceImpl } from './services/start-sprint.service';
     {
       provide: SPRINT_TYPES.services.CompleteSprintService,
       useClass: CompleteSprintServiceImpl,
+    },
+    {
+      provide: SPRINT_TYPES.services.CancelSprintService,
+      useClass: CancelSprintServiceImpl,
     },
     // Repository
     {
@@ -80,6 +91,11 @@ import { StartSprintServiceImpl } from './services/start-sprint.service';
       provide: SPRINT_TYPES.repositories.CompleteSprintRepository,
       useClass: CompleteSprintRepositoryImpl,
     },
+    {
+      provide: SPRINT_TYPES.repositories.CancelSprintRepository,
+      useClass: CancelSprintRepositoryImpl,
+    },
+    // Transaction
     {
       provide: SPRINT_TYPES.uow.UnitOfWork,
       useClass: TypeOrmUnitOfWork,

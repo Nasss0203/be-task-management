@@ -52,8 +52,11 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
     const { projectId, workspaceId } = params;
     const entities = await this.getRepo(manager).find({
       where: {
-        projectId: projectId,
-        workspaceId: workspaceId,
+        projectId,
+        workspaceId,
+        // sprintId: IsNull(),
+        // completedAt: IsNull(),
+        // deletedAt: IsNull(),
       },
       relations: {
         status: true,

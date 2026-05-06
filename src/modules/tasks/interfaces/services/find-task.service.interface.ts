@@ -8,6 +8,7 @@ export interface FindTaskService {
     workspaceId: string,
     manager?: EntityManager,
   ): Promise<TaskModel[]>;
+
   findAllTaskByWorkspace(
     workspaceId: string,
     manager?: EntityManager,
@@ -21,11 +22,10 @@ export interface FindTaskService {
   findDeletedTasks(
     workspaceId: string,
     projectId?: string,
-  ): Promise<TaskModel[]>; 
+  ): Promise<TaskModel[]>;
 
-   findOneTaskForRestore(
+  findOneTaskForRestore(
     workspaceId: string,
     taskId: string,
   ): Promise<TaskRestoreLookup | null>;
 }
-

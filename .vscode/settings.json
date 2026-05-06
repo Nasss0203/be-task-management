@@ -1,0 +1,22 @@
+{
+  "tailwindCSS.validate": false,
+  "tailwindCSS.experimental.classRegex": [],
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/coverage/**": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/coverage": true
+  },
+  "files.exclude": {
+    "**/dist": true,
+    "**/coverage": true
+  }
+}
