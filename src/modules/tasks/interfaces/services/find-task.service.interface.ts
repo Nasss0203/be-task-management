@@ -28,4 +28,10 @@ export interface FindTaskService {
     workspaceId: string,
     taskId: string,
   ): Promise<TaskRestoreLookup | null>;
+
+  findBacklogTasks(
+    projectId: string,
+    workspaceId: string,
+    manager?: EntityManager,
+  ): Promise<TaskModel[]>;
 }

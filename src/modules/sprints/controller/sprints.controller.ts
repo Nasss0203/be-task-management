@@ -12,11 +12,14 @@ import { ResponseMessage } from 'src/common/decorator/response-message.decorator
 import { type IAuth } from 'src/types/auth';
 import { CreateSprintDto } from '../dto/create-sprint.dto';
 import { SprintResponseDto } from '../dto/response/sprint.response.dto';
+import { UpdateSprintDto } from '../dto/update-sprint.dto';
 import { type CancelSprintApplication } from '../interfaces/applications/cancel-sprint.application.interface';
 import { type CompleteSprintApplication } from '../interfaces/applications/complete-sprint.application.interface';
 import { type CreateSprintApplication } from '../interfaces/applications/create-sprint.application.interface';
 import { type FindSprintApplication } from '../interfaces/applications/find-sprint.application.interface';
+import { type GetSprintDetailApplication } from '../interfaces/applications/get-sprint-detail.application.interface';
 import { type StartSprintApplication } from '../interfaces/applications/start-sprint.application.interface';
+import { type UpdateSprintApplication } from '../interfaces/applications/update-sprint.application.interface';
 import { SPRINT_TYPES } from '../interfaces/types';
 
 @Controller('sprints')
@@ -35,6 +38,12 @@ export class SprintsController {
     private readonly completeSprintApplication: CompleteSprintApplication,
     @Inject(SPRINT_TYPES.applications.CancelSprintApplication)
     private readonly cancelSprintApplication: CancelSprintApplication,
+
+    @Inject(SPRINT_TYPES.applications.UpdateSprintApplication)
+    private readonly updateSprintApplication: UpdateSprintApplication,
+
+    @Inject(SPRINT_TYPES.applications.GetSprintDetailApplication)
+    private readonly getSprintDetailApplication: GetSprintDetailApplication,
   ) {}
 
   @Post('workspaces/:workspaceId/projects/:projectId')
@@ -83,6 +92,20 @@ export class SprintsController {
     });
   }
 
+  @Get('workspaces/:workspaceId/projects/:projectId/sprint/:sprintId/detail')
+  @ResponseMessage('Find sprint detail successfully')
+  async getSprintDetail(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('sprintId') sprintId: string,
+  ): Promise<SprintResponseDto> {
+    return await this.getSprintDetailApplication.getSprintDetail({
+      workspaceId,
+      projectId,
+      sprintId,
+    });
+  }
+
   @Patch('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/start')
   @ResponseMessage('Start sprint successfully')
   async startSprint(
@@ -127,6 +150,34 @@ export class SprintsController {
       workspaceId,
       projectId,
       sprintId,
+    });
+  }
+
+  @Patch('workspaces/:workspaceId/projects/:projectId/sprint/:sprintId')
+  async updateSprint(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('sprintId') sprintId: string,
+    @Body() body: UpdateSprintDto,
+  ): Promise<SprintResponseDto> {
+    return await this.updateSprintApplication.updateSprint({
+      workspaceId,
+      projectId,
+      sprintId,
+      name: body.name,
+      goal: body.goal,
+      startAt:
+        body.startAt === undefined
+          ? undefined
+          : body.startAt === null
+            ? null
+            : new Date(body.startAt),
+      endAt:
+        body.endAt === undefined
+          ? undefined
+          : body.endAt === null
+            ? null
+            : new Date(body.endAt),
     });
   }
 }

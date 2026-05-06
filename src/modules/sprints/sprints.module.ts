@@ -8,7 +8,9 @@ import { CancelSprintApplicationImpl } from './applications/cancel-sprint.applic
 import { CompleteSprintApplicationImpl } from './applications/complete-sprint.application';
 import { CreateSprintApplicationImpl } from './applications/create-sprint.application';
 import { FindSprintApplicationImpl } from './applications/find-sprint.application';
+import { GetSprintDetailApplicationImpl } from './applications/get-sprint-detail.application';
 import { StartSprintApplicationImpl } from './applications/start-sprint.application';
+import { UpdateSprintApplicationImpl } from './applications/update-sprint.application';
 import { SprintsController } from './controller/sprints.controller';
 import { Sprint } from './domain/entities/sprint.entity';
 import { SPRINT_TYPES } from './interfaces/types';
@@ -17,11 +19,14 @@ import { CompleteSprintRepositoryImpl } from './repositories/complete-sprint.rep
 import { CreateSprintRepositoryImpl } from './repositories/create-sprints.repository';
 import { FindSprintRepositoryImpl } from './repositories/find-sprints.repository';
 import { StartSprintRepositoryImpl } from './repositories/start-sprint.repository';
+import { UpdateSprintRepositoryImpl } from './repositories/udpdate-sprint.repository';
 import { CancelSprintServiceImpl } from './services/cancel-sprint.service';
 import { CompleteSprintServiceImpl } from './services/complete-sprint.service';
 import { CreateSprintServiceImpl } from './services/create-sprints.service';
 import { FindSprintServiceImpl } from './services/find-sprint-service';
+import { GetSprintDetailServiceImpl } from './services/get-sprint-detail.service';
 import { StartSprintServiceImpl } from './services/start-sprint.service';
+import { UpdateSprintServiceImpl } from './services/udpdate-sprint.service';
 
 @Module({
   imports: [
@@ -53,6 +58,14 @@ import { StartSprintServiceImpl } from './services/start-sprint.service';
       provide: SPRINT_TYPES.applications.CancelSprintApplication,
       useClass: CancelSprintApplicationImpl,
     },
+    {
+      provide: SPRINT_TYPES.applications.UpdateSprintApplication,
+      useClass: UpdateSprintApplicationImpl,
+    },
+    {
+      provide: SPRINT_TYPES.applications.GetSprintDetailApplication,
+      useClass: GetSprintDetailApplicationImpl,
+    },
     // Service
     {
       provide: SPRINT_TYPES.services.CreateSprintService,
@@ -74,6 +87,14 @@ import { StartSprintServiceImpl } from './services/start-sprint.service';
       provide: SPRINT_TYPES.services.CancelSprintService,
       useClass: CancelSprintServiceImpl,
     },
+    {
+      provide: SPRINT_TYPES.services.UpdateSprintService,
+      useClass: UpdateSprintServiceImpl,
+    },
+    {
+      provide: SPRINT_TYPES.services.GetSprintDetailService,
+      useClass: GetSprintDetailServiceImpl,
+    },
     // Repository
     {
       provide: SPRINT_TYPES.repositories.CreateSprintRepository,
@@ -94,6 +115,10 @@ import { StartSprintServiceImpl } from './services/start-sprint.service';
     {
       provide: SPRINT_TYPES.repositories.CancelSprintRepository,
       useClass: CancelSprintRepositoryImpl,
+    },
+    {
+      provide: SPRINT_TYPES.repositories.UpdateSprintRepository,
+      useClass: UpdateSprintRepositoryImpl,
     },
     // Transaction
     {

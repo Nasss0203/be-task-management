@@ -60,6 +60,15 @@ export class TasksController {
     return await this.app.findAllTask(projectId, workspaceId);
   }
 
+  @Get('/workspace/:workspaceId/project/:projectId/backlog')
+  @ResponseMessage('Find all backlog task')
+  async findAllBacklogTask(
+    @Param('projectId') projectId: string,
+    @Param('workspaceId') workspaceId: string,
+  ): Promise<TaskResponseDto[]> {
+    return await this.app.findBacklogTasks(projectId, workspaceId);
+  }
+
   @Post()
   @ResponseMessage('Create Task')
   create(@Body() createTaskDto: CreateTaskDto, @Auth() auth: IAuth) {

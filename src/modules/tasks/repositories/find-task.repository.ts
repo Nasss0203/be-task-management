@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, IsNull, Repository } from 'typeorm';
 import { Task } from '../domain/entities/task.entity';
 import { TaskModel } from '../domain/models/task.model';
 import {
@@ -143,6 +143,34 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
     }
 
     const entities = await qb.getMany();
+
+    return entities.map((entity) => TaskMapper.toModel(entity));
+  }
+
+  async findAllBacklogTasks(
+    projectId: string,
+    workspaceId: string,
+    manager?: EntityManager,
+  ): Promise<TaskModel[]> {
+    const entities = await this.getRepo(manager).find({
+      where: {
+        projectId,
+        workspaceId,
+        sprintId: IsNull(),
+        completedAt: IsNull(),
+        deletedAt: IsNull(),
+      },
+      relations: {
+        status: true,
+        priority: true,
+        // hiện thị người được thêm task
+        assignees: {
+          user: true,
+          assignedByUser: true,
+        },
+        // sprint: true,
+      },
+    });
 
     return entities.map((entity) => TaskMapper.toModel(entity));
   }
