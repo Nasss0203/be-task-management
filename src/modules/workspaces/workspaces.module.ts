@@ -51,7 +51,6 @@ import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
     PermissionModule,
     RolePermissionModule,
   ],
-
   controllers: [WorkspacesController],
   providers: [
     //Application
