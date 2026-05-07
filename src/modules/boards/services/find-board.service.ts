@@ -1,6 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { BoardModel } from '../domain/models/board.model';
-import { type FindBoardRepository } from '../interfaces/repositories/find-board.repository.interface';
+import {
+  BoardRestoreLookup,
+  type FindBoardRepository,
+} from '../interfaces/repositories/find-board.repository.interface';
 import { FindBoardService } from '../interfaces/services/find-board.service.interface';
 import { BOARD_TYPES } from '../interfaces/types';
 
@@ -10,6 +13,23 @@ export class FindBoardServiceImpl implements FindBoardService {
     @Inject(BOARD_TYPES.repositories.FindBoardRepository)
     private readonly findBoardRepository: FindBoardRepository,
   ) {}
+  findDeletedBoards(
+    workspaceId: string,
+    projectId?: string,
+  ): Promise<BoardModel[]> {
+    return this.findBoardRepository.findDeletedBoards(workspaceId, projectId);
+  }
+  findOneBoardForRestore(
+    workspaceId: string,
+    projectId: string,
+    boardId: string,
+  ): Promise<BoardRestoreLookup | null> {
+    return this.findBoardRepository.findOneBoardForRestore(
+      workspaceId,
+      projectId,
+      boardId,
+    );
+  }
 
   async findById(id: string): Promise<BoardModel | null> {
     return this.findBoardRepository.findById(id);

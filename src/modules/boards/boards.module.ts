@@ -15,6 +15,9 @@ import { CreateBoardRepositoryImpl } from './repositories/create.boards.reposito
 import { FindBoardRepositoryImpl } from './repositories/find-board.repository';
 import { CreateBoardServiceImpl } from './services/create.boards.service';
 import { FindBoardServiceImpl } from './services/find-board.service';
+import { DeleteBoardApplicationImpl } from './applications/delete-board.application';
+import { DeleteBoardServiceImpl } from './services/delete-board.service';
+import { DeleteBoardRepositoryImpl } from './repositories/delete-board.repository';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Board]), PageBlockModule, PageModule],
@@ -34,6 +37,10 @@ import { FindBoardServiceImpl } from './services/find-board.service';
       provide: BOARD_TYPES.applications.CreateBoardAndAttachToPageApplication,
       useClass: CreateBoardAndAttachToPageApplicationImpl,
     },
+    {
+      provide: BOARD_TYPES.applications.DeleteBoardApplication,
+      useClass: DeleteBoardApplicationImpl,
+    },
     // Repo
     {
       provide: BOARD_TYPES.repositories.CreateBoardRepository,
@@ -42,6 +49,10 @@ import { FindBoardServiceImpl } from './services/find-board.service';
     {
       provide: BOARD_TYPES.repositories.FindBoardRepository,
       useClass: FindBoardRepositoryImpl,
+    },
+    {
+      provide: BOARD_TYPES.repositories.DeleteBoardRepository,
+      useClass: DeleteBoardRepositoryImpl,
     },
     // Service
     {
@@ -56,6 +67,10 @@ import { FindBoardServiceImpl } from './services/find-board.service';
     {
       provide: WORKSPACE_TYPES.uow.UnitOfWork,
       useClass: TypeOrmUnitOfWork,
+    },
+    {
+      provide: BOARD_TYPES.services.DeleteBoardService,
+      useClass: DeleteBoardServiceImpl,
     },
   ],
   exports: [BOARD_TYPES.services.CreateBoardService],

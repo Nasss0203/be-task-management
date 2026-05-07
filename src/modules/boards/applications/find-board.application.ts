@@ -12,6 +12,15 @@ export class FindBoardApplicationImpl implements FindBoardApplication {
     private readonly service: FindBoardService,
   ) {}
 
+  async findDeletedBoards(
+    workspaceId: string,
+    projectId?: string,
+  ): Promise<BoardResponseDto[]> {
+    const boards = await this.service.findDeletedBoards(workspaceId, projectId);
+
+    return boards.map((board) => BoardMapper.toResponse(board));
+  }
+
   async findById(id: string): Promise<BoardResponseDto> {
     const board = await this.service.findById(id);
 
