@@ -9,13 +9,16 @@ export class WorkspaceInviteMapper {
       entity.id,
       entity.workspace_id,
       entity.user_id ?? null,
-      entity.email,
+      entity.email ?? null,
+      entity.type,
       entity.role_name,
       entity.invited_by,
       entity.token,
       entity.status,
       entity.accepted_at ?? null,
       entity.expires_at,
+      entity.max_uses ?? null,
+      entity.used_count,
       entity.created_at,
       entity.updated_at,
     );
@@ -27,18 +30,33 @@ export class WorkspaceInviteMapper {
     const e = new WorkspaceInvite();
 
     if (model.id != null) e.id = model.id;
+
     e.workspace_id = model.workspace_id;
-    e.email = model.email;
+    e.email = model.email ?? null;
+    e.type = model.type;
     e.role_name = model.role_name;
     e.invited_by = model.invited_by;
     e.token = model.token;
     e.status = model.status;
     e.expires_at = model.expires_at;
+    e.max_uses = model.max_uses ?? null;
+    e.used_count = model.used_count ?? 0;
 
-    if (model.user_id !== undefined) e.user_id = model.user_id;
-    if (model.accepted_at !== undefined) e.accepted_at = model.accepted_at;
-    if (model.created_at != null) e.created_at = model.created_at;
-    if (model.updated_at != null) e.updated_at = model.updated_at;
+    if (model.user_id !== undefined) {
+      e.user_id = model.user_id;
+    }
+
+    if (model.accepted_at !== undefined) {
+      e.accepted_at = model.accepted_at;
+    }
+
+    if (model.created_at != null) {
+      e.created_at = model.created_at;
+    }
+
+    if (model.updated_at != null) {
+      e.updated_at = model.updated_at;
+    }
 
     return e;
   }
@@ -49,11 +67,14 @@ export class WorkspaceInviteMapper {
       workspace_id: model.workspace_id,
       user_id: model.user_id,
       email: model.email,
+      type: model.type,
       role_name: model.role_name,
       invited_by: model.invited_by,
       status: model.status,
       accepted_at: model.accepted_at,
       expires_at: model.expires_at,
+      max_uses: model.max_uses,
+      used_count: model.used_count,
       created_at: model.created_at,
       updated_at: model.updated_at,
     };

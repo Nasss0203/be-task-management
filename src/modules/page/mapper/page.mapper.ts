@@ -9,27 +9,42 @@ export class PageMapper {
     return new PageModel(
       entity.id,
       entity.workspace_id,
-      entity.slug ?? '',
+      entity.slug ?? null,
       entity.title,
       entity.is_template,
       entity.created_by,
       entity.blocks ?? ([] as PageBlock[]),
       entity.createdAt,
       entity.updatedAt,
+
+      entity.deletedAt ?? null,
+      entity.deletedBy ?? null,
     );
   }
 
   static toEntity(model: PageModel | SavePageInput): Page {
     const e = new Page();
+
     if (model.id != null) e.id = model.id;
+
     e.workspace_id = model.workspace_id;
-    e.slug = model.slug;
+    e.slug = model.slug ?? null;
     e.title = model.title;
+
     if (model.blocks != null) e.blocks = model.blocks;
     if (model.is_template != null) e.is_template = model.is_template;
     if (model.created_by != null) e.created_by = model.created_by;
     if (model.createdAt != null) e.createdAt = model.createdAt;
     if (model.updatedAt != null) e.updatedAt = model.updatedAt;
+
+    if ('deletedAt' in model && model.deletedAt !== undefined) {
+      e.deletedAt = model.deletedAt ?? null;
+    }
+
+    if ('deletedBy' in model && model.deletedBy !== undefined) {
+      e.deletedBy = model.deletedBy ?? null;
+    }
+
     return e;
   }
 
@@ -44,6 +59,9 @@ export class PageMapper {
       created_by: model.created_by,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+
+      deletedAt: model.deletedAt,
+      deletedBy: model.deletedBy,
     };
   }
 }

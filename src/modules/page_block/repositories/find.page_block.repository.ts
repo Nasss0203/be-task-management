@@ -49,4 +49,19 @@ export class FindPageBlockRepositoryImpl implements FindPageBlockRepository {
 
     return PageBlockMapper.toModel(row);
   }
+
+  async getNextOrderIndex(
+    pageId: string,
+    manager?: EntityManager,
+  ): Promise<number> {
+    const repo = this.getRepo(manager);
+
+    const result = await repo
+      .createQueryBuilder('page_block')
+      .select('MAX(page_block.order_index)', 'max')
+      .where('page_block.page_id = :pageId', { pageId })
+      .getRawOne<{ max: string | null }>();
+
+    return Number(result?.max ?? 0) + 1;
+  }
 }

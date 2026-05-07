@@ -8,6 +8,7 @@ import { type FindPageService } from 'src/modules/page/interfaces/services/find-
 import { PAGE_TYPES } from 'src/modules/page/interfaces/types';
 import { PageBlockType } from 'src/modules/page_block/domain/entities/page_block.entity';
 import { type CreatePageBlockService } from 'src/modules/page_block/interfaces/services/create.page_block.service.interface';
+import { type FindPageBlockService } from 'src/modules/page_block/interfaces/services/find.page_block.service.interface';
 import { PAGE_BLOCK_TYPES } from 'src/modules/page_block/interfaces/types';
 import { type CreateTaskPriorityService } from 'src/modules/task_priority/interfaces/services/create.task_priority.service.interface';
 import { TASK_PRIORITY_TYPES } from 'src/modules/task_priority/interfaces/types';
@@ -44,6 +45,9 @@ export class CreateProjectServiceImpl implements CreateProjectService {
 
     @Inject(PAGE_BLOCK_TYPES.services.CreatePageBlockService)
     private readonly createPageBlockService: CreatePageBlockService,
+
+    @Inject(PAGE_BLOCK_TYPES.services.FindPageBlockService)
+    private readonly findPageBlockService: FindPageBlockService,
 
     @Inject(TASK_STATUS_TYPES.services.CreateTaskStatusService)
     private readonly createTaskStatusService: CreateTaskStatusService,
@@ -200,6 +204,7 @@ export class CreateProjectServiceImpl implements CreateProjectService {
               workspaceId,
               projectId: project.id,
               projectSeq: 1,
+
               title: 'Create first task',
               description: 'This is the first default task for your project.',
               statusId: todoStatus.id,
@@ -241,7 +246,8 @@ export class CreateProjectServiceImpl implements CreateProjectService {
       );
 
       if (page) {
-        const nextOrderIndex = page.blocks?.length ?? 0;
+        const nextOrderIndex =
+          await this.findPageBlockService.getNextOrderIndex(page.id, manager);
 
         await this.createPageBlockService.create(
           {

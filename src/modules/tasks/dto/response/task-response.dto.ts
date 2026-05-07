@@ -1,3 +1,10 @@
+export class TaskAssigneeResponseDto {
+  userId: string;
+  username: string | null;
+  fullName?: string | null;
+  avatarUrl?: string | null;
+}
+
 export class TaskResponseDto {
   id: string;
   workspaceId: string;
@@ -16,8 +23,7 @@ export class TaskResponseDto {
 
   createdBy: string;
 
-  assigneeId: string | null;
-  assigneeName: string | null;
+  assignees: TaskAssigneeResponseDto[];
 
   startAt: Date | null;
   dueAt: Date | null;
@@ -28,4 +34,5 @@ export class TaskResponseDto {
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date | null;
+  deletedBy?: string | null;
 }

@@ -21,6 +21,24 @@ export class CreateTaskRepositoryImpl implements CreateTaskRepository {
     return manager ? manager.getRepository(Task) : this.repo;
   }
 
+  async getNextProjectSeq(
+    workspaceId: string,
+    projectId: string,
+    manager?: EntityManager,
+  ): Promise<number> {
+    const repo = this.getRepo(manager);
+
+    const raw = await repo
+      .createQueryBuilder('task')
+      .withDeleted()
+      .select('COALESCE(MAX(task.projectSeq), 0)', 'max')
+      .where('task.workspaceId = :workspaceId', { workspaceId })
+      .andWhere('task.projectId = :projectId', { projectId })
+      .getRawOne<{ max: string }>();
+
+    return Number(raw?.max ?? 0) + 1;
+  }
+
   async save(
     task: TaskModel | SaveTaskInput,
     manager?: EntityManager,

@@ -1,30 +1,37 @@
 import { Task } from '../domain/entities/task.entity';
-import { TaskModel } from '../domain/models/task.model';
-import { TaskResponseDto } from '../dto/response/task-response.dto';
+import { TaskAssigneeModel, TaskModel } from '../domain/models/task.model';
+import {
+  TaskAssigneeResponseDto,
+  TaskResponseDto,
+} from '../dto/response/task-response.dto';
 import { SaveTaskInput } from '../interfaces/repositories/create-task.repository.interface';
 
 export class TaskMapper {
   static toModel(entity: Task): TaskModel {
+    const assignees: TaskAssigneeModel[] =
+      entity.assignees?.map((item) => ({
+        userId: item.userId,
+        username: item.user?.username ?? null,
+      })) ?? [];
+
     return new TaskModel(
       entity.id,
       entity.workspaceId,
       entity.projectId,
-      entity.sprintId ?? null,
       entity.projectSeq,
       entity.title,
+      entity.statusId,
+      entity.createdBy,
+
+      entity.sprintId ?? null,
       entity.description ?? null,
 
-      entity.statusId,
       entity.status?.name ?? null,
 
       entity.priorityId ?? null,
       entity.priority?.name ?? null,
 
-      entity.createdBy,
-
-      entity.assigneeId ?? null,
-      // đổi "name" thành field đúng của User entity nếu cần
-      entity.assignee?.username ?? null,
+      assignees,
 
       entity.startAt ?? null,
       entity.dueAt ?? null,
@@ -35,6 +42,7 @@ export class TaskMapper {
       entity.createdAt,
       entity.updatedAt,
       entity.deletedAt ?? null,
+      entity.deletedBy ?? null,
     );
   }
 
@@ -67,10 +75,6 @@ export class TaskMapper {
 
     e.createdBy = model.createdBy;
 
-    if ('assigneeId' in model && model.assigneeId !== undefined) {
-      e.assigneeId = model.assigneeId ?? null;
-    }
-
     if ('startAt' in model && model.startAt !== undefined) {
       e.startAt = model.startAt ?? null;
     }
@@ -99,15 +103,27 @@ export class TaskMapper {
       e.deletedAt = model.deletedAt ?? null;
     }
 
+    if ('deletedBy' in model && model.deletedBy !== undefined) {
+      e.deletedBy = model.deletedBy ?? null;
+    }
+
     return e;
   }
 
   static toResponse(model: TaskModel): TaskResponseDto {
+    const assignees: TaskAssigneeResponseDto[] = model.assignees.map(
+      (item) => ({
+        userId: item.userId,
+        username: item.username,
+      }),
+    );
+
     return {
       id: model.id,
       workspaceId: model.workspaceId,
       projectId: model.projectId,
       sprintId: model.sprintId,
+
       projectSeq: model.projectSeq,
       title: model.title,
       description: model.description,
@@ -120,8 +136,7 @@ export class TaskMapper {
 
       createdBy: model.createdBy,
 
-      assigneeId: model.assigneeId,
-      assigneeName: model.assigneeName,
+      assignees,
 
       startAt: model.startAt,
       dueAt: model.dueAt,
@@ -132,6 +147,7 @@ export class TaskMapper {
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
       deletedAt: model.deletedAt,
+      deletedBy: model.deletedBy,
     };
   }
 }

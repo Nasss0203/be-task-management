@@ -1,8 +1,13 @@
 import { WorkspaceInviteResponseDto } from '../../dto/response/workspace_invites-response.dto';
 
+export type AcceptWorkspaceInviteApplicationInput = {
+  token: string;
+  userId: string;
+  email: string;
+};
+
 export interface AcceptWorkspaceInviteApplication {
   acceptWorkspaceInvite(
-    token: string,
-    userId: string,
+    input: AcceptWorkspaceInviteApplicationInput,
   ): Promise<WorkspaceInviteResponseDto>;
 }

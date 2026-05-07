@@ -18,5 +18,8 @@ export class PageBlockModel {
     public readonly is_open: boolean,
     public readonly created_at: Date,
     public readonly updated_at: Date,
+
+    public readonly deleted_at: Date | null = null,
+    public readonly deleted_by: string | null = null,
   ) {}
 }

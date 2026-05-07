@@ -14,6 +14,9 @@ export class ProjectMapper {
       entity.created_by,
       entity.created_at,
       entity.updated_at,
+
+      entity.deleted_at ?? null,
+      entity.deleted_by ?? null,
     );
   }
 
@@ -30,6 +33,9 @@ export class ProjectMapper {
     entity.created_at = model.created_at;
     entity.updated_at = model.updated_at;
 
+    entity.deleted_at = model.deleted_at;
+    entity.deleted_by = model.deleted_by;
+
     return entity;
   }
 
@@ -44,6 +50,9 @@ export class ProjectMapper {
       created_by: model.created_by,
       created_at: model.created_at,
       updated_at: model.updated_at,
+
+      deleted_at: model.deleted_at,
+      deleted_by: model.deleted_by,
     };
   }
 }

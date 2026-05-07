@@ -36,7 +36,6 @@ import { generateSlug } from 'src/utils';
 import { EntityManager } from 'typeorm';
 import { PlanTypeWorkspace } from '../domain/entities/workspace.entity';
 import { WorkspaceModel } from '../domain/models/workspaces.model';
-import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
 import { type CreateWorkspaceMultiRepository } from '../interfaces/repositories/create-workspace.repository.interface';
 import { CreateWorkspaceService } from '../interfaces/services/create-workspace.service.interface';
 import { WORKSPACE_TYPES } from '../interfaces/types';
@@ -421,86 +420,6 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
         projectId: project.id,
         projectName: project.name,
         boardId: board.id,
-        manager,
-      });
-
-      return workspace;
-    });
-  }
-
-  private async createWorkspaceCore({
-    name,
-    planType,
-    userId,
-    manager,
-  }: {
-    name: string;
-    planType?: PlanTypeWorkspace;
-    userId: string;
-    manager: EntityManager;
-  }): Promise<{
-    workspace: WorkspaceModel;
-    createdPage: PageModel;
-  }> {
-    const baseSlug = generateSlug(name).toLowerCase();
-    const slug = `${baseSlug}-${userId.slice(0, 6)}-${Date.now()}`;
-
-    const exists = await this.workspaceRepo.existsBySlug(slug, manager);
-    if (exists) {
-      throw new HttpException(
-        'Workspace slug already exists',
-        HttpStatus.CONFLICT,
-      );
-    }
-
-    const workspace = await this.workspaceRepo.save(
-      {
-        name,
-        slug,
-        planType: planType ?? PlanTypeWorkspace.FREE,
-      },
-      manager,
-    );
-
-    await this.createUserWorkspaceService.create(
-      {
-        user_id: userId,
-        workspace_id: workspace.id,
-      },
-      manager,
-    );
-
-    await this.seedWorkspaceRbac({
-      workspaceId: workspace.id,
-      userId,
-      manager,
-    });
-
-    const createdPage = await this.createPageService.create(
-      {
-        workspace_id: workspace.id,
-        title: workspace.name,
-        slug: workspace.slug,
-        created_by: userId,
-      },
-      manager,
-    );
-
-    return { workspace, createdPage };
-  }
-
-  async create({
-    userId,
-    createWorkspaceDto,
-  }: {
-    userId: string;
-    createWorkspaceDto: CreateWorkspaceDto;
-  }): Promise<WorkspaceModel> {
-    return this.uow.runInTransaction(async (manager) => {
-      const { workspace } = await this.createWorkspaceCore({
-        name: createWorkspaceDto.name,
-        planType: createWorkspaceDto.planType,
-        userId,
         manager,
       });
 

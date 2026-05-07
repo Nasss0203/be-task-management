@@ -13,7 +13,6 @@ import { FindProjectApplicationImpl } from './applications/find.project.applicat
 import { ProjectsController } from './controller/projects.controller';
 import { Project } from './domain/entities/project.entity';
 import { PROJECT_TYPES } from './interfaces/types';
-import { ProjectsService } from './projects.service';
 import { CreateProjectRepositoryImpl } from './repositories/create.projects.repository';
 import { FindProjectRepositoryImpl } from './repositories/find.project.repository';
 import { CreateProjectServiceImpl } from './services/create.projects.service';
@@ -31,7 +30,6 @@ import { FindProjectServiceImpl } from './services/find.project.service';
   ],
   controllers: [ProjectsController],
   providers: [
-    ProjectsService,
     //Application
     {
       provide: PROJECT_TYPES.applications.FindProjectApplication,
@@ -66,6 +64,10 @@ import { FindProjectServiceImpl } from './services/find.project.service';
       useClass: TypeOrmUnitOfWork,
     },
   ],
-  exports: [PROJECT_TYPES.services.CreateProjectService],
+  exports: [
+    PROJECT_TYPES.services.CreateProjectService,
+    PROJECT_TYPES.services.FindProjectService,
+    PROJECT_TYPES.repositories.FindProjectRepository,
+  ],
 })
 export class ProjectsModule {}

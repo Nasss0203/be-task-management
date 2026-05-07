@@ -18,4 +18,8 @@ export class ProjectResponseDto {
   created_at: Date;
 
   updated_at: Date;
+
+  deleted_at: Date | null;
+
+  deleted_by: string | null;
 }

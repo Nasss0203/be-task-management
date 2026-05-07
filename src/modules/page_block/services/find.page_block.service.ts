@@ -24,4 +24,11 @@ export class FindPageBlockServiceImpl implements FindPageBlockService {
   ): Promise<PageBlockModel | null> {
     return await this.findPageBlockRepository.findAllByPageId(pageId, manager);
   }
+
+  async getNextOrderIndex(
+    pageId: string,
+    manager?: EntityManager,
+  ): Promise<number> {
+    return this.findPageBlockRepository.getNextOrderIndex(pageId, manager);
+  }
 }

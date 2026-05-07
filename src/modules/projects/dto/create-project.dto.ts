@@ -12,8 +12,8 @@ export class CreateProjectDto {
 
   task_seq?: number;
 
-  created_by: string;
-
   create_default_board?: boolean;
+
   default_board_view_type?: BoardViewType;
+  created_by: string;
 }

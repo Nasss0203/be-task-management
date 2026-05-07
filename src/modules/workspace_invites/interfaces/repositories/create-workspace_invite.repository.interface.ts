@@ -5,6 +5,7 @@ export type SaveWorkspaceInviteInput = Pick<
   WorkspaceInviteModel,
   | 'workspace_id'
   | 'email'
+  | 'type'
   | 'role_name'
   | 'invited_by'
   | 'token'
@@ -14,7 +15,13 @@ export type SaveWorkspaceInviteInput = Pick<
   Partial<
     Pick<
       WorkspaceInviteModel,
-      'id' | 'user_id' | 'accepted_at' | 'created_at' | 'updated_at'
+      | 'id'
+      | 'user_id'
+      | 'accepted_at'
+      | 'max_uses'
+      | 'used_count'
+      | 'created_at'
+      | 'updated_at'
     >
   >;
 
