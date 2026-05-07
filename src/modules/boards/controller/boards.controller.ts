@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { type IAuth } from 'src/types/auth';
@@ -8,6 +19,7 @@ import { CreateBoardDto } from '../dto/create-board.dto';
 import { BoardResponseDto } from '../dto/response/board.response.dto';
 import { type CreateBoardAndAttachToPageApplication } from '../interfaces/applications/create-board-page.application.interface';
 import { type CreateBoardApplication } from '../interfaces/applications/create-board.application.interface';
+import { type DeleteBoardApplication } from '../interfaces/applications/delete-board.application.interface';
 import { type FindBoardApplication } from '../interfaces/applications/find-board.application.interface';
 import { BOARD_TYPES } from '../interfaces/types';
 
@@ -22,7 +34,25 @@ export class BoardsController {
 
     @Inject(BOARD_TYPES.applications.CreateBoardAndAttachToPageApplication)
     private readonly createBoardAndAttachToPageApplication: CreateBoardAndAttachToPageApplication,
+
+    @Inject(BOARD_TYPES.applications.DeleteBoardApplication)
+    private readonly deleteBoardApplication: DeleteBoardApplication,
+
+    @Inject(BOARD_TYPES.applications.FindBoardApplication)
+    private readonly findBoardApplication: FindBoardApplication,
   ) {}
+
+  @Get('trash')
+  async findDeletedBoards(
+    @Query('workspaceId') workspaceId: string,
+    @Query('projectId') projectId?: string,
+  ) {
+    if (!workspaceId) {
+      throw new BadRequestException('workspaceId is required');
+    }
+
+    return this.findBoardApplication.findDeletedBoards(workspaceId, projectId);
+  }
 
   @Get(':id')
   @ResponseMessage('Find board by id')
@@ -58,5 +88,43 @@ export class BoardsController {
       ...dto,
       createdBy: auth.id,
     });
+  }
+
+  @Delete('workspaces/:workspaceId/projects/:projectId/boards/:boardId')
+  async deleteBoard(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('boardId') boardId: string,
+    @Auth() auth: IAuth,
+  ) {
+    await this.deleteBoardApplication.delete({
+      workspaceId,
+      projectId,
+      boardId,
+      userId: auth.id,
+    });
+
+    return {
+      success: true,
+    };
+  }
+
+  @Patch('workspaces/:workspaceId/projects/:projectId/boards/:boardId/restore')
+  async restoreBoard(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('boardId') boardId: string,
+    @Auth() auth: IAuth,
+  ) {
+    await this.deleteBoardApplication.restore({
+      workspaceId,
+      projectId,
+      boardId,
+      userId: auth.id,
+    });
+
+    return {
+      success: true,
+    };
   }
 }

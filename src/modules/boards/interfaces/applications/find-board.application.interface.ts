@@ -6,4 +6,9 @@ export interface FindBoardApplication {
     projectId: string,
     workspaceId: string,
   ): Promise<BoardResponseDto[]>;
+
+  findDeletedBoards(
+    workspaceId: string,
+    projectId?: string,
+  ): Promise<BoardResponseDto[]>;
 }
