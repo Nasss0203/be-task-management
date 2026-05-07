@@ -23,6 +23,18 @@ export class FindSprintApplicationImpl implements FindSprintApplication {
     private readonly findSprintService: FindSprintService,
   ) {}
 
+  async findDeletedSprints(
+    workspaceId: string,
+    projectId?: string,
+  ): Promise<SprintResponseDto[]> {
+    const sprints = await this.findSprintService.findDeletedSprints(
+      workspaceId,
+      projectId,
+    );
+
+    return sprints.map((sprint) => SprintsMapper.toResponse(sprint));
+  }
+
   async findAllSprintByProject(
     input: FindAllSprintApplicationInput,
   ): Promise<SprintResponseDto[]> {
