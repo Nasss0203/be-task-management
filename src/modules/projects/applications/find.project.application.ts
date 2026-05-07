@@ -12,6 +12,14 @@ export class FindProjectApplicationImpl implements FindProjectApplication {
     private readonly service: FindProjectService,
   ) {}
 
+  async findDeletedProjects(
+    workspaceId: string,
+  ): Promise<ProjectResponseDto[]> {
+    const projects = await this.service.findDeletedProjects(workspaceId);
+
+    return projects.map((project) => ProjectMapper.toResponse(project));
+  }
+
   async findAllByWorkspaceId(
     workspaceId: string,
   ): Promise<ProjectResponseDto[]> {
