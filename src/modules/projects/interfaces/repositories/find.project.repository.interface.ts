@@ -11,4 +11,25 @@ export interface FindProjectRepository {
     projectId: string,
     manager?: EntityManager,
   ): Promise<ProjectModel | null>;
+
+  findDeletedProjects(workspaceId: string): Promise<ProjectModel[]>;
+
+  findOneProjectForRestore(
+    workspaceId: string,
+    projectId: string,
+  ): Promise<ProjectRestoreLookup | null>;
+
+  existsActiveProjectKey(
+    workspaceId: string,
+    key: string,
+    excludeProjectId?: string,
+  ): Promise<boolean>;
 }
+export type ProjectRestoreLookup = {
+  id: string;
+  workspaceId: string;
+  name: string;
+  key: string;
+  deletedAt: Date | null;
+  workspaceDeletedAt: Date | null;
+};
