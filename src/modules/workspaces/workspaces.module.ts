@@ -31,6 +31,7 @@ import { WORKSPACE_TYPES } from './interfaces/types';
 import { AccessWorkspaceRepositoryImpl } from './repositories/access-workspace.repository';
 import { AdminFindAllWorkspaceRepositoryImpl } from './repositories/admin-findAll-workspace.repository';
 import { AdminWorkspaceMemberSummaryRepositoryImpl } from './repositories/admin-workspace-member-summary.repository';
+import { CreateWorkspaceTemplateRepositoryImpl } from './repositories/create-workspace-template.repository';
 import { WorkspaceRepositoryImpl } from './repositories/create-workspace.repository';
 import { FindWorkspaceRepositoryImpl } from './repositories/find.workspace.repository';
 import { AccessWorkspaceServiceImpl } from './services/access-workspace.service';
@@ -39,6 +40,9 @@ import { AdminWorkspaceMemberSummaryServiceImpl } from './services/admin-workspa
 import { CreateWorkspaceTemplateServiceImpl } from './services/create-workspace-template.service';
 import { CreateWorkspaceServiceImpl } from './services/create-workspace.service';
 import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
+import { WorkspaceTrashApplicationImpl } from './applications/workspace-trash.application';
+import { WorkspaceTrashServiceImpl } from './services/workspace-trash.service';
+import { WorkspaceTrashRepositoryImpl } from './repositories/workspace-trash.repository';
 
 @Module({
   imports: [
@@ -79,6 +83,10 @@ import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
       provide: WORKSPACE_TYPES.applications.AccessWorkspaceApplication,
       useClass: AccessWorkspaceApplicationImpl,
     },
+    {
+      provide: WORKSPACE_TYPES.applications.WorkspaceTrashApplication,
+      useClass: WorkspaceTrashApplicationImpl,
+    },
     //Service
     {
       provide: WORKSPACE_TYPES.services.CreateWorkspaceService,
@@ -96,7 +104,14 @@ import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
       provide: WORKSPACE_TYPES.services.AdminFindAllWorkspaceService,
       useClass: AdminFindAllWorkspaceServiceImpl,
     },
-
+    {
+      provide: WORKSPACE_TYPES.services.CreateWorkspaceTemplateService,
+      useClass: CreateWorkspaceTemplateServiceImpl,
+    },
+    {
+      provide: WORKSPACE_TYPES.services.WorkspaceTrashService,
+      useClass: WorkspaceTrashServiceImpl,
+    },
     //Repository
     {
       provide: WORKSPACE_TYPES.repositories.WorkspaceRepository,
@@ -114,6 +129,15 @@ import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
       provide: WORKSPACE_TYPES.repositories.AdminFindAllWorkspaceRepository,
       useClass: AdminFindAllWorkspaceRepositoryImpl,
     },
+    {
+      provide: WORKSPACE_TYPES.repositories.CreateWorkspaceTemplateRepository,
+      useClass: CreateWorkspaceTemplateRepositoryImpl,
+    },
+    {
+      provide: WORKSPACE_TYPES.repositories.WorkspaceTrashRepository,
+      useClass: WorkspaceTrashRepositoryImpl,
+    },
+    // Manager
     {
       provide: WORKSPACE_TYPES.uow.UnitOfWork,
       useClass: TypeOrmUnitOfWork,
@@ -139,10 +163,6 @@ import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
     {
       provide: WORKSPACE_TYPES.applications.CreateWorkspaceTemplateApplication,
       useClass: CreateWorkspaceTemplateApplicationImpl,
-    },
-    {
-      provide: WORKSPACE_TYPES.services.CreateWorkspaceTemplateService,
-      useClass: CreateWorkspaceTemplateServiceImpl,
     },
   ],
   exports: [

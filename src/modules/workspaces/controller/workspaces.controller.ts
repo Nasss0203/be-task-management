@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Param, Patch, Post } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { type IAuth } from 'src/types/auth';
@@ -9,6 +9,9 @@ import { type CreateWorkspaceTemplateApplication } from '../interfaces/applicati
 import { type CreateWorkspaceApplication } from '../interfaces/applications/create-workspace.application.interface';
 import { type FindWorkspaceApplication } from '../interfaces/applications/find.workspace.application.interface';
 import { WORKSPACE_TYPES } from '../interfaces/types';
+import { type WorkspaceTrashApplication } from '../interfaces/applications/workspace-trash.application.interface';
+import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 
 @Controller('workspaces')
 export class WorkspacesController {
@@ -24,6 +27,9 @@ export class WorkspacesController {
 
     @Inject(WORKSPACE_TYPES.applications.AccessWorkspaceApplication)
     private readonly accessWorkspaceApplication: AccessWorkspaceApplication,
+
+    @Inject(WORKSPACE_TYPES.applications.WorkspaceTrashApplication)
+    private readonly workspaceTrashApplication: WorkspaceTrashApplication,
   ) {}
 
   @Post('default')
@@ -56,6 +62,14 @@ export class WorkspacesController {
     return await this.findWorkspaceApplicationImpl.findAllByUserId(auth.id);
   }
 
+  @Get('trash')
+  @ResponseMessage('Find deleted workspaces')
+  async findDeletedWorkspaces(@Auth() auth: IAuth) {
+    return this.workspaceTrashApplication.findDeletedWorkspacesByUserId(
+      auth.id,
+    );
+  }
+
   @Get(':workspaceId')
   @ResponseMessage('Find one workspace')
   findOneWorkspaceById(
@@ -75,6 +89,32 @@ export class WorkspacesController {
     @Auth() auth: IAuth,
   ) {
     return this.accessWorkspaceApplication.getWorkspaceAccess(
+      auth.id,
+      workspaceId,
+    );
+  }
+
+  @Delete(':workspaceId')
+  @RequirePermissions(PERMISSIONS.WORKSPACE_DELETE)
+  @ResponseMessage('Workspace moved to trash')
+  async softDeleteWorkspace(
+    @Auth() auth: IAuth,
+    @Param('workspaceId') workspaceId: string,
+  ) {
+    return this.workspaceTrashApplication.softDeleteWorkspace(
+      auth.id,
+      workspaceId,
+    );
+  }
+
+  @Patch(':workspaceId/restore')
+  @RequirePermissions(PERMISSIONS.WORKSPACE_DELETE)
+  @ResponseMessage('Workspace restored')
+  async restoreWorkspace(
+    @Auth() auth: IAuth,
+    @Param('workspaceId') workspaceId: string,
+  ) {
+    return this.workspaceTrashApplication.restoreWorkspace(
       auth.id,
       workspaceId,
     );

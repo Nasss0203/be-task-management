@@ -7,6 +7,7 @@ export const WORKSPACE_TYPES = {
     AdminFindAllWorkspaceService: 'AdminFindAllWorkspaceService',
     AdminWorkspaceMemberSummaryService: 'AdminWorkspaceMemberSummaryService',
     CreateWorkspaceTemplateService: 'CreateWorkspaceTemplateService',
+    WorkspaceTrashService: 'WorkspaceTrashService',
   },
   applications: {
     CreateWorkspaceApplication: 'CreateWorkspaceApplication',
@@ -16,6 +17,7 @@ export const WORKSPACE_TYPES = {
     AdminWorkspaceMemberSummaryApplication:
       'AdminWorkspaceMemberSummaryApplication',
     CreateWorkspaceTemplateApplication: 'CreateWorkspaceTemplateApplication',
+    WorkspaceTrashApplication: 'WorkspaceTrashApplication',
   },
   repositories: {
     WorkspaceRepository: 'IWorkspaceRepository',
@@ -24,6 +26,8 @@ export const WORKSPACE_TYPES = {
     AdminFindAllWorkspaceRepository: 'AdminFindAllWorkspaceRepository',
     AdminWorkspaceMemberSummaryRepository:
       'AdminWorkspaceMemberSummaryRepository',
+    CreateWorkspaceTemplateRepository: 'CreateWorkspaceTemplateRepository',
+    WorkspaceTrashRepository: 'WorkspaceTrashRepository',
   },
   uow: {
     UnitOfWork: 'UnitOfWork',
