@@ -7,6 +7,7 @@ export const WORKSPACE_TYPES = {
     RbacHelper: 'RbacHelper',
     AccessWorkspaceService: 'AccessWorkspaceService',
     AdminFindAllWorkspaceService: 'AdminFindAllWorkspaceService',
+    WorkspaceTrashService: 'WorkspaceTrashService',
   },
   applications: {
     CreateWorkspaceApplication: 'CreateWorkspaceApplication',
@@ -15,6 +16,7 @@ export const WORKSPACE_TYPES = {
     FindWorkspaceApplication: 'FindWorkspaceApplication',
     AccessWorkspaceApplication: 'AccessWorkspaceApplication',
     AdminFindAllWorkspaceApplication: 'AdminFindAllWorkspaceApplication',
+    WorkspaceTrashApplication: 'WorkspaceTrashApplication',
   },
   repositories: {
     /** Token cho interface WorkspaceRepository (tránh trùng với token TypeORM 'WorkspaceRepository') */
@@ -23,6 +25,7 @@ export const WORKSPACE_TYPES = {
     AccessWorkspaceRepository: 'AccessWorkspaceRepository',
     AdminFindAllWorkspaceRepository: 'AdminFindAllWorkspaceRepository',
     CreateWorkspaceTemplateRepository: 'CreateWorkspaceTemplateRepository',
+    WorkspaceTrashRepository: 'WorkspaceTrashRepository',
   },
   uow: {
     UnitOfWork: 'UnitOfWork',
