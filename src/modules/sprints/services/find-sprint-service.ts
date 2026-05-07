@@ -1,9 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { SprintsModel } from '../domain/models/sprints.model';
+<<<<<<< HEAD
 import { SprintProgressResponseDto } from '../dto/sprint-progress.response.dto';
 import { FindSprintQuery } from '../interfaces/find-sprint-query.interface';
 import { type FindSprintRepository } from '../interfaces/repositories/find-sprint.repository.interface';
+=======
+import {
+  SprintRestoreLookup,
+  type FindSprintRepository,
+} from '../interfaces/repositories/find-sprint.repository.interface';
+>>>>>>> b7802d9 (feat(workspace): add soft delete and restore sprint)
 import { FindSprintService } from '../interfaces/services/find-sprint.service.interface';
 import { SPRINT_TYPES } from '../interfaces/types';
 
@@ -13,6 +20,24 @@ export class FindSprintServiceImpl implements FindSprintService {
     @Inject(SPRINT_TYPES.repositories.FindSprintRepository)
     private readonly findSprintRepository: FindSprintRepository,
   ) {}
+  findDeletedSprints(
+    workspaceId: string,
+    projectId?: string,
+  ): Promise<SprintsModel[]> {
+    return this.findSprintRepository.findDeletedSprints(workspaceId, projectId);
+  }
+
+  findOneSprintForRestore(
+    workspaceId: string,
+    projectId: string,
+    sprintId: string,
+  ): Promise<SprintRestoreLookup | null> {
+    return this.findSprintRepository.findOneSprintForRestore(
+      workspaceId,
+      projectId,
+      sprintId,
+    );
+  }
 
   async findOneSprint(
     sprintId: string,

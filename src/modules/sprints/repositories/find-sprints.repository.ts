@@ -5,7 +5,7 @@ import { Sprint } from '../domain/entities/sprint.entity';
 import { SprintsModel } from '../domain/models/sprints.model';
 import { SprintProgressResponseDto } from '../dto/sprint-progress.response.dto';
 import { FindSprintQuery } from '../interfaces/find-sprint-query.interface';
-import { FindSprintRepository } from '../interfaces/repositories/find-sprint.repository.interface';
+import { FindSprintRepository, SprintRestoreLookup } from '../interfaces/repositories/find-sprint.repository.interface';
 import { SprintsMapper } from '../mapper/sprints.mapper';
 
 @Injectable()
@@ -14,6 +14,58 @@ export class FindSprintRepositoryImpl implements FindSprintRepository {
     @InjectRepository(Sprint)
     private readonly repo: Repository<Sprint>,
   ) {}
+
+  async findDeletedSprints(
+    workspaceId: string,
+    projectId?: string,
+  ): Promise<SprintsModel[]> {
+    const qb = this.repo
+      .createQueryBuilder('sprint')
+      .withDeleted()
+      .innerJoin('sprint.project', 'project')
+      .innerJoin('sprint.workspace', 'workspace')
+      .where('sprint.workspace_id = :workspaceId', { workspaceId })
+      .andWhere('sprint.deleted_at IS NOT NULL')
+      .andWhere('project.deleted_at IS NULL')
+      .andWhere('workspace.deleted_at IS NULL')
+      .orderBy('sprint.deleted_at', 'DESC');
+
+    if (projectId) {
+      qb.andWhere('sprint.project_id = :projectId', { projectId });
+    }
+
+    const entities = await qb.getMany();
+
+    return entities.map((entity) => SprintsMapper.toModel(entity));
+  }
+
+  async findOneSprintForRestore(
+    workspaceId: string,
+    projectId: string,
+    sprintId: string,
+  ): Promise<SprintRestoreLookup | null> {
+    const row = await this.repo
+      .createQueryBuilder('sprint')
+      .withDeleted()
+      .innerJoin('sprint.project', 'project')
+      .innerJoin('sprint.workspace', 'workspace')
+      .select([
+        'sprint.id AS "id"',
+        'sprint.workspace_id AS "workspaceId"',
+        'sprint.project_id AS "projectId"',
+        'sprint.status AS "status"',
+        'sprint.deleted_at AS "deletedAt"',
+        'workspace.deleted_at AS "workspaceDeletedAt"',
+        'project.deleted_at AS "projectDeletedAt"',
+      ])
+      .where('sprint.id = :sprintId', { sprintId })
+      .andWhere('sprint.workspace_id = :workspaceId', { workspaceId })
+      .andWhere('sprint.project_id = :projectId', { projectId })
+      .andWhere('project.workspace_id = :workspaceId', { workspaceId })
+      .getRawOne<SprintRestoreLookup>();
+
+    return row ?? null;
+  }
 
   private getRepo(manager?: EntityManager): Repository<Sprint> {
     return manager ? manager.getRepository(Sprint) : this.repo;
