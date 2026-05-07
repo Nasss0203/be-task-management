@@ -6,12 +6,15 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { type IAuth } from 'src/types/auth';
 import { CreateSprintDto } from '../dto/create-sprint.dto';
+import { FindSprintQueryDto } from '../dto/find-sprint-query.dto';
 import { SprintResponseDto } from '../dto/response/sprint.response.dto';
+import { SprintProgressResponseDto } from '../dto/sprint-progress.response.dto';
 import { UpdateSprintDto } from '../dto/update-sprint.dto';
 import { type CancelSprintApplication } from '../interfaces/applications/cancel-sprint.application.interface';
 import { type CompleteSprintApplication } from '../interfaces/applications/complete-sprint.application.interface';
@@ -67,12 +70,17 @@ export class SprintsController {
   async findAllSprintByProject(
     @Param('workspaceId') workspaceId: string,
     @Param('projectId') projectId: string,
+    @Query() query: FindSprintQueryDto,
     @Auth() auth: IAuth,
   ): Promise<SprintResponseDto[]> {
     return this.findSprintApplication.findAllSprintByProject({
       workspaceId,
       projectId,
       userId: auth.id,
+      keyword: query.keyword,
+      status: query.status,
+      from: query.from,
+      to: query.to,
     });
   }
 
@@ -178,6 +186,22 @@ export class SprintsController {
           : body.endAt === null
             ? null
             : new Date(body.endAt),
+    });
+  }
+
+  @Get('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/progress')
+  @ResponseMessage('Get sprint progress successfully')
+  async getSprintProgress(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('sprintId') sprintId: string,
+    @Auth() auth: IAuth,
+  ): Promise<SprintProgressResponseDto> {
+    return this.findSprintApplication.getSprintProgress({
+      workspaceId,
+      projectId,
+      sprintId,
+      userId: auth.id,
     });
   }
 }
