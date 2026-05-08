@@ -21,6 +21,7 @@ import { AdminFindAllWorkspaceApplicationImpl } from './applications/admin-findA
 import { CreateWorkspaceTemplateApplicationImpl } from './applications/create-workspace-template.application';
 import { CreateWorkspaceApplicationImpl } from './applications/create-workspace.application';
 import { FindWorkspaceApplicationImpl } from './applications/find.workspace.application';
+import { WorkspaceTrashApplicationImpl } from './applications/workspace-trash.application';
 import { WorkspacesController } from './controller/workspaces.controller';
 import { Workspace } from './domain/entities/workspace.entity';
 import { WORKSPACE_TYPES } from './interfaces/types';
@@ -29,14 +30,13 @@ import { AdminFindAllWorkspaceRepositoryImpl } from './repositories/admin-findAl
 import { CreateWorkspaceTemplateRepositoryImpl } from './repositories/create-workspace-template.repository';
 import { WorkspaceRepositoryImpl } from './repositories/create-workspace.repository';
 import { FindWorkspaceRepositoryImpl } from './repositories/find.workspace.repository';
+import { WorkspaceTrashRepositoryImpl } from './repositories/workspace-trash.repository';
 import { AccessWorkspaceServiceImpl } from './services/access-workspace.service';
 import { AdminFindAllWorkspaceServiceImpl } from './services/admin-findAll-workspace.service.interface';
 import { CreateWorkspaceTemplateServiceImpl } from './services/create-workspace-template.service';
 import { CreateWorkspaceServiceImpl } from './services/create-workspace.service';
 import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
-import { WorkspaceTrashApplicationImpl } from './applications/workspace-trash.application';
 import { WorkspaceTrashServiceImpl } from './services/workspace-trash.service';
-import { WorkspaceTrashRepositoryImpl } from './repositories/workspace-trash.repository';
 
 @Module({
   imports: [
