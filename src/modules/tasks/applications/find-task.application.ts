@@ -1,4 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { FindTaskQueryDto } from '../dto/find-task-query.dto';
+import { PaginatedResponseDto } from '../dto/paginated-response.dto';
 import { TaskResponseDto } from '../dto/response/task-response.dto';
 import { FindTaskApplication } from '../interfaces/applications/find-task.application.interface';
 import { type FindTaskService } from '../interfaces/services/find-task.service.interface';
@@ -15,9 +17,18 @@ export class FindTaskApplicationImpl implements FindTaskApplication {
   async findAllTask(
     projectId: string,
     workspaceId: string,
-  ): Promise<TaskResponseDto[]> {
-    const tasks = await this.service.findAllTask(projectId, workspaceId);
-    return tasks.map((task) => TaskMapper.toResponse(task));
+    query: FindTaskQueryDto,
+  ): Promise<PaginatedResponseDto<TaskResponseDto>> {
+    const result = await this.service.findAllTask(
+      projectId,
+      workspaceId,
+      query,
+    );
+
+    return {
+      data: result.data.map((task) => TaskMapper.toResponse(task)),
+      meta: result.meta,
+    };
   }
 
   async findBacklogTasks(
@@ -29,13 +40,13 @@ export class FindTaskApplicationImpl implements FindTaskApplication {
   }
 
   async findOneTask(taskId: string): Promise<TaskResponseDto | null> {
-    const tasks = await this.service.findOneTask(taskId);
+    const task = await this.service.findOneTask(taskId);
 
-    if (!tasks) {
+    if (!task) {
       return null;
     }
 
-    return TaskMapper.toResponse(tasks);
+    return TaskMapper.toResponse(task);
   }
 
   async findDeletedTasks(

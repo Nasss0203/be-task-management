@@ -12,6 +12,8 @@ import {
 } from '@nestjs/common';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { CreateTaskDto } from '../dto/create-task.dto';
+import { FindTaskQueryDto } from '../dto/find-task-query.dto';
+import { PaginatedResponseDto } from '../dto/paginated-response.dto';
 import { TaskResponseDto } from '../dto/response/task-response.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
 import { type FindTaskApplication } from '../interfaces/applications/find-task.application.interface';
@@ -56,8 +58,9 @@ export class TasksController {
   async findAllByTaskId(
     @Param('projectId') projectId: string,
     @Param('workspaceId') workspaceId: string,
-  ): Promise<TaskResponseDto[]> {
-    return await this.app.findAllTask(projectId, workspaceId);
+    @Query() query: FindTaskQueryDto,
+  ): Promise<PaginatedResponseDto<TaskResponseDto>> {
+    return this.findTaskApplication.findAllTask(projectId, workspaceId, query);
   }
 
   @Get('/workspace/:workspaceId/project/:projectId/backlog')
@@ -66,7 +69,7 @@ export class TasksController {
     @Param('projectId') projectId: string,
     @Param('workspaceId') workspaceId: string,
   ): Promise<TaskResponseDto[]> {
-    return await this.app.findBacklogTasks(projectId, workspaceId);
+    return this.findTaskApplication.findBacklogTasks(projectId, workspaceId);
   }
 
   @Post()

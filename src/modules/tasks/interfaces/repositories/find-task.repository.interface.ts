@@ -1,9 +1,13 @@
 import { EntityManager } from 'typeorm';
 import { TaskModel } from '../../domain/models/task.model';
+import { FindTaskQueryDto } from '../../dto/find-task-query.dto';
+import { PaginatedResponseDto } from '../../dto/paginated-response.dto';
 
 export type ParamTask = {
   projectId: string;
   workspaceId: string;
+  query: FindTaskQueryDto;
+  manager?: EntityManager;
 };
 
 export type TaskRestoreLookup = {
@@ -16,7 +20,8 @@ export type TaskRestoreLookup = {
 };
 
 export interface FindTaskRepository {
-  findAllTask(params: ParamTask, manager?: EntityManager): Promise<TaskModel[]>;
+  findAllTask(params: ParamTask): Promise<PaginatedResponseDto<TaskModel>>;
+
   findAllTaskByWorkspace(
     workspaceId: string,
     manager?: EntityManager,
@@ -29,7 +34,7 @@ export interface FindTaskRepository {
 
   findDeletedTasks(
     workspaceId: string,
-    projectId: string,
+    projectId?: string,
   ): Promise<TaskModel[]>;
 
   findOneTaskForRestore(

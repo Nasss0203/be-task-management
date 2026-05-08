@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { TaskModel } from '../domain/models/task.model';
+import { FindTaskQueryDto } from '../dto/find-task-query.dto';
+import { PaginatedResponseDto } from '../dto/paginated-response.dto';
 import {
   TaskRestoreLookup,
   type FindTaskRepository,
@@ -22,10 +24,14 @@ export class FindTaskServiceImpl implements FindTaskService {
   async findAllTask(
     projectId: string,
     workspaceId: string,
-  ): Promise<TaskModel[]> {
+    query: FindTaskQueryDto,
+    manager?: EntityManager,
+  ): Promise<PaginatedResponseDto<TaskModel>> {
     return this.findTaskRepository.findAllTask({
       projectId,
       workspaceId,
+      query,
+      manager,
     });
   }
 
@@ -37,7 +43,7 @@ export class FindTaskServiceImpl implements FindTaskService {
   }
   findDeletedTasks(
     workspaceId: string,
-    projectId: string,
+    projectId?: string,
   ): Promise<TaskModel[]> {
     return this.findTaskRepository.findDeletedTasks(workspaceId, projectId);
   }

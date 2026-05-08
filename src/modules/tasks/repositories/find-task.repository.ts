@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, IsNull, Repository } from 'typeorm';
+import { Brackets, EntityManager, IsNull, Repository } from 'typeorm';
 import { Task } from '../domain/entities/task.entity';
 import { TaskModel } from '../domain/models/task.model';
+import { TaskSortBy } from '../dto/find-task-query.dto';
+import { PaginatedResponseDto } from '../dto/paginated-response.dto';
 import {
   ParamTask,
   TaskRestoreLookup,
@@ -47,30 +49,109 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
 
   async findAllTask(
     params: ParamTask,
-    manager?: EntityManager,
-  ): Promise<TaskModel[]> {
-    const { projectId, workspaceId } = params;
-    const entities = await this.getRepo(manager).find({
-      where: {
-        projectId,
-        workspaceId,
-        // sprintId: IsNull(),
-        // completedAt: IsNull(),
-        // deletedAt: IsNull(),
-      },
-      relations: {
-        status: true,
-        priority: true,
-        // hiện thị người được thêm task
-        assignees: {
-          user: true,
-          assignedByUser: true,
-        },
-        // sprint: true,
-      },
-    });
+  ): Promise<PaginatedResponseDto<TaskModel>> {
+    const { projectId, workspaceId, query, manager } = params;
 
-    return entities.map((entity) => TaskMapper.toModel(entity));
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const skip = (page - 1) * limit;
+
+    const repo = this.getRepo(manager);
+
+    const qb = repo
+      .createQueryBuilder('task')
+      .distinct(true)
+      .leftJoinAndSelect('task.status', 'status')
+      .leftJoinAndSelect('task.priority', 'priority')
+      .leftJoinAndSelect('task.sprint', 'sprint')
+      .leftJoinAndSelect('task.assignees', 'assignees')
+      .leftJoinAndSelect('assignees.user', 'assigneeUser')
+      .leftJoinAndSelect('assignees.assignedByUser', 'assignedByUser')
+      .where('task.workspaceId = :workspaceId', { workspaceId })
+      .andWhere('task.projectId = :projectId', { projectId })
+      .andWhere('task.deletedAt IS NULL');
+
+    const search = query.search?.trim();
+
+    if (search) {
+      qb.andWhere(
+        new Brackets((subQb) => {
+          subQb
+            .where('task.title ILIKE :search', {
+              search: `%${search}%`,
+            })
+            .orWhere('task.description ILIKE :search', {
+              search: `%${search}%`,
+            });
+        }),
+      );
+    }
+
+    if (query.statusId) {
+      qb.andWhere('task.statusId = :statusId', {
+        statusId: query.statusId,
+      });
+    }
+
+    if (query.priorityId) {
+      qb.andWhere('task.priorityId = :priorityId', {
+        priorityId: query.priorityId,
+      });
+    }
+
+    if (query.sprintId) {
+      qb.andWhere('task.sprintId = :sprintId', {
+        sprintId: query.sprintId,
+      });
+    }
+
+    if (query.assigneeId) {
+      qb.andWhere('assignees.userId = :assigneeId', {
+        assigneeId: query.assigneeId,
+      });
+    }
+
+    if (query.dueFrom) {
+      qb.andWhere('task.dueAt >= :dueFrom', {
+        dueFrom: query.dueFrom,
+      });
+    }
+
+    if (query.dueTo) {
+      qb.andWhere('task.dueAt <= :dueTo', {
+        dueTo: query.dueTo,
+      });
+    }
+
+    const sortColumnMap: Record<TaskSortBy, string> = {
+      [TaskSortBy.CREATED_AT]: 'task.createdAt',
+      [TaskSortBy.UPDATED_AT]: 'task.updatedAt',
+      [TaskSortBy.DUE_AT]: 'task.dueAt',
+      [TaskSortBy.TITLE]: 'task.title',
+      [TaskSortBy.PRIORITY]: 'priority.name',
+      [TaskSortBy.STATUS]: 'status.name',
+    };
+
+    const sortColumn = sortColumnMap[query.sortBy ?? TaskSortBy.CREATED_AT];
+
+    qb.orderBy(sortColumn, query.sortOrder ?? 'DESC')
+      .addOrderBy('task.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit);
+
+    const [entities, total] = await qb.getManyAndCount();
+
+    return {
+      data: entities.map((entity) => TaskMapper.toModel(entity)),
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: page * limit < total,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 
   async findAllTaskByWorkspace(

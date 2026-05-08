@@ -1,10 +1,13 @@
+import { FindTaskQueryDto } from '../../dto/find-task-query.dto';
+import { PaginatedResponseDto } from '../../dto/paginated-response.dto';
 import { TaskResponseDto } from '../../dto/response/task-response.dto';
 
 export interface FindTaskApplication {
   findAllTask(
     projectId: string,
     workspaceId: string,
-  ): Promise<TaskResponseDto[]>;
+    query: FindTaskQueryDto,
+  ): Promise<PaginatedResponseDto<TaskResponseDto>>;
 
   findOneTask(taskId: string): Promise<TaskResponseDto | null>;
 
