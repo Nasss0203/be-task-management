@@ -1,11 +1,8 @@
 import { EntityManager } from 'typeorm';
+import { SprintStatus } from '../../domain/entities/sprint.entity';
 import { SprintsModel } from '../../domain/models/sprints.model';
-<<<<<<< HEAD
 import { SprintProgressResponseDto } from '../../dto/sprint-progress.response.dto';
 import { FindSprintQuery } from '../find-sprint-query.interface';
-=======
-import { SprintStatus } from '../../domain/entities/sprint.entity';
->>>>>>> b7802d9 (feat(workspace): add soft delete and restore sprint)
 
 export interface FindSprintRepository {
   existsByProjectIdAndName(
@@ -33,14 +30,12 @@ export interface FindSprintRepository {
     manager?: EntityManager,
   ): Promise<SprintsModel | null>;
 
-<<<<<<< HEAD
   getSprintProgress(
     workspaceId: string,
     projectId: string,
     sprintId: string,
     manager?: EntityManager,
   ): Promise<SprintProgressResponseDto | null>;
-=======
   findDeletedSprints(
     workspaceId: string,
     projectId?: string,
@@ -51,7 +46,6 @@ export interface FindSprintRepository {
     projectId: string,
     sprintId: string,
   ): Promise<SprintRestoreLookup | null>;
->>>>>>> b7802d9 (feat(workspace): add soft delete and restore sprint)
 }
 export type SprintRestoreLookup = {
   id: string;
