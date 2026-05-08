@@ -34,6 +34,13 @@ import { TaskAssigneeModule } from './modules/task_assignee/task_assignee.module
 import { WorkspaceInvitesModule } from './modules/workspace_invites/workspace_invites.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { TaskCommnentModule } from './modules/task_commnent/task_commnent.module';
+import { ActivityModule } from './modules/activity/activity.module';
+import { PageTemplatesModule } from './modules/page_templates/page_templates.module';
+import { PageTemplateBlocksModule } from './modules/page_template_blocks/page_template_blocks.module';
+import { MentionsModule } from './modules/mentions/mentions.module';
+import { AuditLogsModule } from './modules/audit_logs/audit_logs.module';
+import { BillingModule } from './modules/billing/billing.module';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -75,6 +82,13 @@ import { TaskCommnentModule } from './modules/task_commnent/task_commnent.module
     StorageModule,
     AttachmentModule,
     TaskCommnentModule,
+    ActivityModule,
+    PageTemplatesModule,
+    PageTemplateBlocksModule,
+    MentionsModule,
+    AuditLogsModule,
+    BillingModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [

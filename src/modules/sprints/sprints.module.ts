@@ -21,7 +21,7 @@ import { CreateSprintRepositoryImpl } from './repositories/create-sprints.reposi
 import { DeleteSprintRepositoryImpl } from './repositories/delete-sprint.repository';
 import { FindSprintRepositoryImpl } from './repositories/find-sprints.repository';
 import { StartSprintRepositoryImpl } from './repositories/start-sprint.repository';
-import { UpdateSprintRepositoryImpl } from './repositories/udpdate-sprint.repository';
+import { UpdateSprintRepositoryImpl } from './repositories/update-sprint.repository';
 import { CancelSprintServiceImpl } from './services/cancel-sprint.service';
 import { CompleteSprintServiceImpl } from './services/complete-sprint.service';
 import { CreateSprintServiceImpl } from './services/create-sprints.service';

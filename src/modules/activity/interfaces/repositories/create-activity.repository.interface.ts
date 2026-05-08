@@ -1,0 +1,30 @@
+// src/modules/activities/interfaces/repositories/create-activity.repository.interface.ts
+
+import { EntityManager } from 'typeorm';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from '../../domain/entities/activity.entity';
+import { ActivityModel } from '../../domain/models/activity.model';
+
+export type SaveActivityInput = {
+  id?: string;
+  workspaceId: string;
+  projectId?: string | null;
+  entityType: ActivityEntityType;
+  entityId: string;
+  actorId?: string | null;
+  action: ActivityAction;
+  field?: string | null;
+  oldValue?: unknown | null;
+  newValue?: unknown | null;
+  metadata?: Record<string, unknown> | null;
+  isSystem?: boolean;
+};
+
+export interface CreateActivityRepository {
+  save(
+    activity: SaveActivityInput,
+    manager?: EntityManager,
+  ): Promise<ActivityModel>;
+}

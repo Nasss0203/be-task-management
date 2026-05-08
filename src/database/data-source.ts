@@ -2,10 +2,22 @@ import 'dotenv/config';
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 
+import { Subscription } from 'rxjs';
+import { Activity } from 'src/modules/activity/domain/entities/activity.entity';
 import { Attachment } from 'src/modules/attachment/domain/entities/attachment.entity';
+import { AuditLog } from 'src/modules/audit_logs/domain/entities/audit_log.entity';
+import { BillingWebhook } from 'src/modules/billing/domain/entities/billing-webhook.entity';
+import { Invoice } from 'src/modules/billing/domain/entities/invoice.entity';
+import { Payment } from 'src/modules/billing/domain/entities/payment.entity';
+import { Plan } from 'src/modules/billing/domain/entities/plan.entity';
+import { UsageLimit } from 'src/modules/billing/domain/entities/usage-limit.entity';
 import { Board } from 'src/modules/boards/domain/entities/board.entity';
+import { Mention } from 'src/modules/mentions/domain/entities/mention.entity';
+import { Notification } from 'src/modules/notification/domain/entities/notification.entity';
 import { Page } from 'src/modules/page/domain/entities/page.entity';
 import { PageBlock } from 'src/modules/page_block/domain/entities/page_block.entity';
+import { PageTemplateBlock } from 'src/modules/page_template_blocks/domain/entities/page_template_block.entity';
+import { PageTemplate } from 'src/modules/page_templates/domain/entities/page_template.entity';
 import { Permission } from 'src/modules/permission/domain/entities/permission.entity';
 import { Project } from 'src/modules/projects/domain/entities/project.entity';
 import { RefreshToken } from 'src/modules/refresh_token/entities/refresh_token.entity';
@@ -57,6 +69,18 @@ export default new DataSource({
     TaskAssignee,
     Attachment,
     TaskComment,
+    Activity,
+    AuditLog,
+    BillingWebhook,
+    Invoice,
+    Payment,
+    Plan,
+    Subscription,
+    UsageLimit,
+    Mention,
+    Notification,
+    PageTemplateBlock,
+    PageTemplate,
   ],
   migrations: ['src/database/migrations/*{.ts,.js}'],
 });
