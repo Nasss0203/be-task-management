@@ -7,6 +7,7 @@ import { TasksModule } from '../tasks/tasks.module';
 import { CancelSprintApplicationImpl } from './applications/cancel-sprint.application';
 import { CompleteSprintApplicationImpl } from './applications/complete-sprint.application';
 import { CreateSprintApplicationImpl } from './applications/create-sprint.application';
+import { DeleteSprintApplicationImpl } from './applications/delete-sprint.application';
 import { FindSprintApplicationImpl } from './applications/find-sprint.application';
 import { GetSprintDetailApplicationImpl } from './applications/get-sprint-detail.application';
 import { StartSprintApplicationImpl } from './applications/start-sprint.application';
@@ -17,22 +18,18 @@ import { SPRINT_TYPES } from './interfaces/types';
 import { CancelSprintRepositoryImpl } from './repositories/cancel-sprint.repository';
 import { CompleteSprintRepositoryImpl } from './repositories/complete-sprint.repository';
 import { CreateSprintRepositoryImpl } from './repositories/create-sprints.repository';
+import { DeleteSprintRepositoryImpl } from './repositories/delete-sprint.repository';
 import { FindSprintRepositoryImpl } from './repositories/find-sprints.repository';
 import { StartSprintRepositoryImpl } from './repositories/start-sprint.repository';
 import { UpdateSprintRepositoryImpl } from './repositories/udpdate-sprint.repository';
 import { CancelSprintServiceImpl } from './services/cancel-sprint.service';
 import { CompleteSprintServiceImpl } from './services/complete-sprint.service';
 import { CreateSprintServiceImpl } from './services/create-sprints.service';
+import { DeleteSprintServiceImpl } from './services/delete-sprint.service';
 import { FindSprintServiceImpl } from './services/find-sprint-service';
-<<<<<<< HEAD
 import { GetSprintDetailServiceImpl } from './services/get-sprint-detail.service';
 import { StartSprintServiceImpl } from './services/start-sprint.service';
 import { UpdateSprintServiceImpl } from './services/udpdate-sprint.service';
-=======
-import { DeleteSprintApplicationImpl } from './applications/delete-sprint.application';
-import { DeleteSprintServiceImpl } from './services/delete-sprint.service';
-import { DeleteSprintRepositoryImpl } from './repositories/delete-sprint.repository';
->>>>>>> b7802d9 (feat(workspace): add soft delete and restore sprint)
 
 @Module({
   imports: [
@@ -53,7 +50,6 @@ import { DeleteSprintRepositoryImpl } from './repositories/delete-sprint.reposit
       useClass: FindSprintApplicationImpl,
     },
     {
-<<<<<<< HEAD
       provide: SPRINT_TYPES.applications.StartSprintApplication,
       useClass: StartSprintApplicationImpl,
     },
@@ -72,10 +68,10 @@ import { DeleteSprintRepositoryImpl } from './repositories/delete-sprint.reposit
     {
       provide: SPRINT_TYPES.applications.GetSprintDetailApplication,
       useClass: GetSprintDetailApplicationImpl,
-=======
+    },
+    {
       provide: SPRINT_TYPES.applications.DeleteSprintApplication,
       useClass: DeleteSprintApplicationImpl,
->>>>>>> b7802d9 (feat(workspace): add soft delete and restore sprint)
     },
     // Service
     {
@@ -87,7 +83,6 @@ import { DeleteSprintRepositoryImpl } from './repositories/delete-sprint.reposit
       useClass: FindSprintServiceImpl,
     },
     {
-<<<<<<< HEAD
       provide: SPRINT_TYPES.services.StartSprintService,
       useClass: StartSprintServiceImpl,
     },
@@ -106,10 +101,10 @@ import { DeleteSprintRepositoryImpl } from './repositories/delete-sprint.reposit
     {
       provide: SPRINT_TYPES.services.GetSprintDetailService,
       useClass: GetSprintDetailServiceImpl,
-=======
+    },
+    {
       provide: SPRINT_TYPES.services.DeleteSprintService,
       useClass: DeleteSprintServiceImpl,
->>>>>>> b7802d9 (feat(workspace): add soft delete and restore sprint)
     },
     // Repository
     {
@@ -121,7 +116,6 @@ import { DeleteSprintRepositoryImpl } from './repositories/delete-sprint.reposit
       useClass: FindSprintRepositoryImpl,
     },
     {
-<<<<<<< HEAD
       provide: SPRINT_TYPES.repositories.StartSprintRepository,
       useClass: StartSprintRepositoryImpl,
     },
@@ -137,6 +131,10 @@ import { DeleteSprintRepositoryImpl } from './repositories/delete-sprint.reposit
       provide: SPRINT_TYPES.repositories.UpdateSprintRepository,
       useClass: UpdateSprintRepositoryImpl,
     },
+    {
+      provide: SPRINT_TYPES.repositories.DeleteSprintRepository,
+      useClass: DeleteSprintRepositoryImpl,
+    },
     // Transaction
     {
       provide: SPRINT_TYPES.uow.UnitOfWork,
@@ -146,11 +144,6 @@ import { DeleteSprintRepositoryImpl } from './repositories/delete-sprint.reposit
   exports: [
     SPRINT_TYPES.services.FindSprintService,
     SPRINT_TYPES.repositories.FindSprintRepository,
-=======
-      provide: SPRINT_TYPES.repositories.DeleteSprintRepository,
-      useClass: DeleteSprintRepositoryImpl,
-    },
->>>>>>> b7802d9 (feat(workspace): add soft delete and restore sprint)
   ],
 })
 export class SprintsModule {}
