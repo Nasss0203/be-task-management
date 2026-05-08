@@ -1,9 +1,12 @@
 import { EntityManager } from 'typeorm';
 import { ProjectModel } from '../../domain/models/projects.model';
+import { FindProjectFilter } from '../find-project-filter.type';
 import { ProjectRestoreLookup } from '../repositories/find.project.repository.interface';
-
 export interface FindProjectService {
-  findAllByWorkspaceId(workspaceId: string): Promise<ProjectModel[]>;
+  findAllByWorkspaceId(
+    workspaceId: string,
+    filter?: FindProjectFilter,
+  ): Promise<ProjectModel[]>;
 
   findOneProjectById(
     projectId: string,

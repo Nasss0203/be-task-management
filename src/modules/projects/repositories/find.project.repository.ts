@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { Brackets, EntityManager, Repository } from 'typeorm';
 import { Project } from '../domain/entities/project.entity';
 import { ProjectModel } from '../domain/models/projects.model';
 import {
@@ -8,6 +8,7 @@ import {
   type FindProjectRepository,
 } from '../interfaces/repositories/find.project.repository.interface';
 import { ProjectMapper } from '../mapper/projects.mapper';
+import { FindProjectFilter } from '../interfaces/find-project-filter.type';
 
 @Injectable()
 export class FindProjectRepositoryImpl implements FindProjectRepository {
@@ -51,8 +52,8 @@ export class FindProjectRepositoryImpl implements FindProjectRepository {
       .getRawOne<ProjectRestoreLookup>();
 
     return row ?? null;
-  } 
-  
+  }
+
   async existsActiveProjectKey(
     workspaceId: string,
     key: string,
@@ -77,12 +78,40 @@ export class FindProjectRepositoryImpl implements FindProjectRepository {
 
   async findAllByWorkspaceId(
     workspaceId: string,
+    filter?: FindProjectFilter,
     manager?: EntityManager,
   ): Promise<ProjectModel[]> {
-    const rows = await this.getRepo(manager).find({
-      where: { workspace_id: workspaceId },
-      order: { created_at: 'DESC' },
-    });
+    const qb = this.getRepo(manager)
+      .createQueryBuilder('project')
+      .where('project.workspace_id = :workspaceId', { workspaceId })
+      .andWhere('project.deleted_at IS NULL')
+      .orderBy('project.created_at', 'DESC');
+
+    if (filter?.keyword?.trim()) {
+      const keyword = `%${filter.keyword.trim()}%`;
+
+      qb.andWhere(
+        new Brackets((subQb) => {
+          subQb
+            .where('project.name ILIKE :keyword', { keyword })
+            .orWhere('project.key ILIKE :keyword', { keyword });
+        }),
+      );
+    }
+
+    if (filter?.visibility) {
+      qb.andWhere('project.visibility = :visibility', {
+        visibility: filter.visibility,
+      });
+    }
+
+    if (filter?.createdBy) {
+      qb.andWhere('project.created_by = :createdBy', {
+        createdBy: filter.createdBy,
+      });
+    }
+
+    const rows = await qb.getMany();
 
     return rows.map(ProjectMapper.toModel);
   }

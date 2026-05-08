@@ -2,13 +2,13 @@ import { Inject, Injectable } from '@nestjs/common';
 
 import { EntityManager } from 'typeorm';
 import { ProjectModel } from '../domain/models/projects.model';
+import { FindProjectFilter } from '../interfaces/find-project-filter.type';
 import {
   ProjectRestoreLookup,
   type FindProjectRepository,
 } from '../interfaces/repositories/find.project.repository.interface';
 import { FindProjectService } from '../interfaces/services/find.project.service.interface';
 import { PROJECT_TYPES } from '../interfaces/types';
-
 @Injectable()
 export class FindProjectServiceImpl implements FindProjectService {
   constructor(
@@ -42,8 +42,11 @@ export class FindProjectServiceImpl implements FindProjectService {
     );
   }
 
-  async findAllByWorkspaceId(workspaceId: string): Promise<ProjectModel[]> {
-    return this.findProjectRepository.findAllByWorkspaceId(workspaceId);
+  async findAllByWorkspaceId(
+    workspaceId: string,
+    filter?: FindProjectFilter,
+  ): Promise<ProjectModel[]> {
+    return this.findProjectRepository.findAllByWorkspaceId(workspaceId, filter);
   }
 
   async findOneProjectById(

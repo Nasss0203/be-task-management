@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ProjectResponseDto } from '../dto/reponse/project.response.dto';
 import { FindProjectApplication } from '../interfaces/applications/find.project.application.interface';
+import { FindProjectFilter } from '../interfaces/find-project-filter.type';
 import { type FindProjectService } from '../interfaces/services/find.project.service.interface';
 import { PROJECT_TYPES } from '../interfaces/types';
 import { ProjectMapper } from '../mapper/projects.mapper';
@@ -22,8 +23,12 @@ export class FindProjectApplicationImpl implements FindProjectApplication {
 
   async findAllByWorkspaceId(
     workspaceId: string,
+    filter?: FindProjectFilter,
   ): Promise<ProjectResponseDto[]> {
-    const projects = await this.service.findAllByWorkspaceId(workspaceId);
+    const projects = await this.service.findAllByWorkspaceId(
+      workspaceId,
+      filter,
+    );
     return projects.map((project) => ProjectMapper.toResponse(project));
   }
 }

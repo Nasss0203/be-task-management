@@ -1,9 +1,11 @@
 import { EntityManager } from 'typeorm';
 import { ProjectModel } from '../../domain/models/projects.model';
+import { FindProjectFilter } from '../find-project-filter.type';
 
 export interface FindProjectRepository {
   findAllByWorkspaceId(
     workspaceId: string,
+    filter?: FindProjectFilter,
     manager?: EntityManager,
   ): Promise<ProjectModel[]>;
 
@@ -25,6 +27,7 @@ export interface FindProjectRepository {
     excludeProjectId?: string,
   ): Promise<boolean>;
 }
+
 export type ProjectRestoreLookup = {
   id: string;
   workspaceId: string;

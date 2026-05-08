@@ -1,14 +1,26 @@
-import { BadRequestException, Body, Controller, Delete, Get, Inject, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
 import { CreateProjectDto } from '../dto/create-project.dto';
+import { FindProjectQueryDto } from '../dto/find-project.query.dto';
 import { type CreateProjectApplication } from '../interfaces/applications/create-project.application.interface';
+import { type DeleteProjectApplication } from '../interfaces/applications/delete-project.application.interface';
 import { type FindProjectApplication } from '../interfaces/applications/find.project.application.interface';
 import { PROJECT_TYPES } from '../interfaces/types';
-import { type DeleteProjectApplication } from '../interfaces/applications/delete-project.application.interface';
 
 @Controller('projects')
 export class ProjectsController {
@@ -25,8 +37,15 @@ export class ProjectsController {
 
   @Get('/workspace/:workspaceId')
   @ResponseMessage('Find all project')
-  async findAllByWorkspaceId(@Param('workspaceId') workspaceId: string) {
-    return this.findProjectApplication.findAllByWorkspaceId(workspaceId);
+  async findAllByWorkspaceId(
+    @Param('workspaceId') workspaceId: string,
+    @Query() query: FindProjectQueryDto,
+  ) {
+    return this.findProjectApplication.findAllByWorkspaceId(workspaceId, {
+      keyword: query.keyword,
+      visibility: query.visibility,
+      createdBy: query.createdBy,
+    });
   }
 
   @Post()
