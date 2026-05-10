@@ -10,6 +10,7 @@ import { type FindTaskService } from 'src/modules/tasks/interfaces/services/find
 import { TASK_TYPES } from 'src/modules/tasks/interfaces/types';
 import { type FindMemberService } from 'src/modules/user_workspace/interfaces/services/find-user-workspace.service.interface';
 import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/types';
+import { EntityManager } from 'typeorm';
 import { TaskAssigneeResponseDto } from '../dto/response/task_assignee.response.dto';
 import {
   CreateTaskAssigneeApplication,
@@ -34,8 +35,9 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
 
   async assign(
     input: CreateTaskAssigneeApplicationInput,
+    manager?: EntityManager,
   ): Promise<TaskAssigneeResponseDto> {
-    const task = await this.findTaskService.findOneTask(input.taskId);
+    const task = await this.findTaskService.findOneTask(input.taskId, manager);
 
     if (!task) {
       throw new NotFoundException('Task not found');
@@ -44,6 +46,7 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
     const actorMember = await this.findMemberService.findMemberInWorkspace(
       task.workspaceId,
       input.assignedBy,
+      manager,
     );
 
     if (!actorMember) {
@@ -53,6 +56,7 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
     const targetMember = await this.findMemberService.findMemberInWorkspace(
       task.workspaceId,
       input.userId,
+      manager,
     );
 
     if (!targetMember) {
@@ -71,11 +75,14 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
       );
     }
 
-    const result = await this.createTaskAssigneeService.assign({
-      taskId: input.taskId,
-      userId: input.userId,
-      assignedBy: input.assignedBy,
-    });
+    const result = await this.createTaskAssigneeService.assign(
+      {
+        taskId: input.taskId,
+        userId: input.userId,
+        assignedBy: input.assignedBy,
+      },
+      manager,
+    );
 
     return TaskAssigneeMapper.toResponse(result);
   }

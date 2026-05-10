@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TasksModule } from '../tasks/tasks.module';
 import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
@@ -18,7 +18,7 @@ import { FindTaskAssigneeServiceImpl } from './services/find.task_assignee.servi
   imports: [
     TypeOrmModule.forFeature([TaskAssignee]),
     UserWorkspacesModule,
-    TasksModule,
+    forwardRef(() => TasksModule),
   ],
   controllers: [TaskAssigneeController],
   providers: [
@@ -59,6 +59,6 @@ import { FindTaskAssigneeServiceImpl } from './services/find.task_assignee.servi
       useClass: FindTaskAssigneeRepositoryImpl,
     },
   ],
-  exports: [],
+  exports: [TASK_ASSIGNEE_TYPES.applications.CreateTaskAssigneeApplication],
 })
 export class TaskAssigneeModule {}

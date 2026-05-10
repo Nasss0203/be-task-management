@@ -1,4 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { EntityManager } from 'typeorm';
+
 import { TaskAssigneeModel } from '../domain/models/task_assignee.model';
 import { type CreateTaskAssigneeRepository } from '../interfaces/repositories/create.task_assignee.repository.interface';
 import {
@@ -14,11 +16,17 @@ export class CreateTaskAssigneeServiceImpl implements CreateTaskAssigneeService 
     private readonly createTaskAssigneeRepository: CreateTaskAssigneeRepository,
   ) {}
 
-  async assign(input: TaskAssigneeInput): Promise<TaskAssigneeModel> {
-    return await this.createTaskAssigneeRepository.save({
-      taskId: input.taskId,
-      userId: input.userId,
-      assignedBy: input.assignedBy,
-    });
+  async assign(
+    input: TaskAssigneeInput,
+    manager?: EntityManager,
+  ): Promise<TaskAssigneeModel> {
+    return await this.createTaskAssigneeRepository.save(
+      {
+        taskId: input.taskId,
+        userId: input.userId,
+        assignedBy: input.assignedBy,
+      },
+      manager,
+    );
   }
 }

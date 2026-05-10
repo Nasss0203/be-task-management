@@ -1,3 +1,4 @@
+import { EntityManager } from 'typeorm';
 import { TaskAssigneeResponseDto } from '../../dto/response/task_assignee.response.dto';
 
 export type CreateTaskAssigneeApplicationInput = {
@@ -9,5 +10,6 @@ export type CreateTaskAssigneeApplicationInput = {
 export interface CreateTaskAssigneeApplication {
   assign(
     input: CreateTaskAssigneeApplicationInput,
+    manager?: EntityManager,
   ): Promise<TaskAssigneeResponseDto>;
 }

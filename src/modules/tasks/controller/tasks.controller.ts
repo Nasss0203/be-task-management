@@ -84,9 +84,11 @@ export class TasksController {
   async updateTask(
     @Param('id') id: string,
     @Body() updateTaskDto: UpdateTaskDto,
+    @Auth() auth: IAuth,
   ): Promise<TaskResponseDto> {
     return this.updateTaskApplication.updateTask({
       ...updateTaskDto,
+      actorId: auth.id,
       id,
     });
   }

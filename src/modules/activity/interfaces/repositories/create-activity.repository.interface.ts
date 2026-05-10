@@ -1,5 +1,3 @@
-// src/modules/activities/interfaces/repositories/create-activity.repository.interface.ts
-
 import { EntityManager } from 'typeorm';
 import {
   ActivityAction,

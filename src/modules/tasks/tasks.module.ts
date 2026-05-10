@@ -1,9 +1,14 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
+import { ActivityModule } from '../activity/activity.module';
 import { SprintsModule } from '../sprints/sprints.module';
+import { TaskAssigneeModule } from '../task_assignee/task_assignee.module';
+import { TaskCommnentModule } from '../task_commnent/task_commnent.module';
 import { TaskPriorityModule } from '../task_priority/task_priority.module';
 import { TaskStatusModule } from '../task_status/task_status.module';
 import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
+import { WORKSPACE_TYPES } from '../workspaces/interfaces/types';
 import { CreateTaskApplicationImpl } from './applications/create-task.application';
 import { DeleteTaskApplicationImpl } from './applications/delete-task.application';
 import { FindTaskApplicationImpl } from './applications/find-task.application';
@@ -36,8 +41,11 @@ import { UpdateTaskServiceImpl } from './services/update-task.service';
     TypeOrmModule.forFeature([Task]),
     TaskStatusModule,
     TaskPriorityModule,
-    SprintsModule,
     UserWorkspacesModule,
+    ActivityModule,
+    forwardRef(() => SprintsModule),
+    forwardRef(() => TaskAssigneeModule),
+    forwardRef(() => TaskCommnentModule),
   ],
   controllers: [TasksController],
   providers: [
@@ -136,6 +144,11 @@ import { UpdateTaskServiceImpl } from './services/update-task.service';
     {
       provide: TASK_TYPES.services.MoveTasksToBacklogBySprintService,
       useClass: MoveTasksToBacklogBySprintServiceImpl,
+    },
+
+    {
+      provide: WORKSPACE_TYPES.uow.UnitOfWork,
+      useClass: TypeOrmUnitOfWork,
     },
   ],
   exports: [

@@ -35,7 +35,7 @@ export class CreateTaskCommentServiceImpl implements CreateTaskCommentService {
     input: CreateTaskCommentInput,
     manager?: EntityManager,
   ): Promise<TaskCommentModel> {
-    const task = await this.findTaskService.findOneTask(input.taskId);
+    const task = await this.findTaskService.findOneTask(input.taskId, manager);
 
     if (!task) {
       throw new NotFoundException('Task not found');
@@ -51,13 +51,13 @@ export class CreateTaskCommentServiceImpl implements CreateTaskCommentService {
     const member = await this.findMemberService.findMemberInWorkspace(
       input.workspaceId,
       input.authorId,
+      manager,
     );
 
     if (!member) {
       throw new ForbiddenException('You are not a member of this workspace');
     }
-
-    return this.repo.create(
+    const newComment = await this.repo.create(
       {
         workspaceId: task.workspaceId,
         projectId: task.projectId,
@@ -68,5 +68,8 @@ export class CreateTaskCommentServiceImpl implements CreateTaskCommentService {
       },
       manager,
     );
+    console.log('🚀 ~ newComment~', newComment);
+
+    return newComment;
   }
 }

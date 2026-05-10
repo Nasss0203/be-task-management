@@ -16,4 +16,8 @@ export class CreateTaskDto {
   estimateMinutes?: number | null;
 
   createdBy: string;
+
+  assigneeIds?: string[];
+
+  initialComment?: string | null;
 }

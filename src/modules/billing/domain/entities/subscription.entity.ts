@@ -1,11 +1,15 @@
+import { User } from 'src/modules/users/domain/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Plan } from './plan.entity';
 
 export enum BillingProvider {
   MANUAL = 'MANUAL',
@@ -24,7 +28,7 @@ export enum SubscriptionStatus {
 }
 
 @Entity('subscriptions')
-@Index(['workspaceId'])
+@Index(['userId'])
 @Index(['planId'])
 @Index(['status'])
 @Index(['provider', 'providerSubscriptionId'])
@@ -32,11 +36,19 @@ export class Subscription {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'workspace_id', type: 'uuid' })
-  workspaceId: string;
+  @Column({ name: 'user_id', type: 'uuid' })
+  userId: string;
+
+  @ManyToOne(() => User, { nullable: false, onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
   @Column({ name: 'plan_id', type: 'uuid' })
   planId: string;
+
+  @ManyToOne(() => Plan, { nullable: false, onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'plan_id' })
+  plan: Plan;
 
   @Column({
     type: 'enum',

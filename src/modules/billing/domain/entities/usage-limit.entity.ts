@@ -1,11 +1,15 @@
+import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Plan } from './plan.entity';
 
 export enum UsageResourceType {
   MEMBERS = 'MEMBERS',
@@ -28,8 +32,16 @@ export class UsageLimit {
   @Column({ name: 'workspace_id', type: 'uuid' })
   workspaceId: string;
 
+  @ManyToOne(() => Workspace, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'workspace_id' })
+  workspace: Workspace;
+
   @Column({ name: 'plan_id', type: 'uuid', nullable: true })
   planId: string | null;
+
+  @ManyToOne(() => Plan, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'plan_id' })
+  plan: Plan | null;
 
   @Column({
     name: 'resource_type',

@@ -1,13 +1,15 @@
-// src/modules/billing/domain/entities/invoice.entity.ts
-
+import { User } from 'src/modules/users/domain/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Subscription } from './subscription.entity';
 
 export enum InvoiceStatus {
   DRAFT = 'DRAFT',
@@ -18,7 +20,7 @@ export enum InvoiceStatus {
 }
 
 @Entity('invoices')
-@Index(['workspaceId'])
+@Index(['userId'])
 @Index(['subscriptionId'])
 @Index(['invoiceNumber'], { unique: true })
 @Index(['status'])
@@ -26,11 +28,19 @@ export class Invoice {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'workspace_id', type: 'uuid' })
-  workspaceId: string;
+  @Column({ name: 'user_id', type: 'uuid' })
+  userId: string;
+
+  @ManyToOne(() => User, { nullable: false, onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
   @Column({ name: 'subscription_id', type: 'uuid', nullable: true })
   subscriptionId: string | null;
+
+  @ManyToOne(() => Subscription, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'subscription_id' })
+  subscription: Subscription | null;
 
   @Column({
     name: 'invoice_number',

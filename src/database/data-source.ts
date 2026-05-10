@@ -2,7 +2,6 @@ import 'dotenv/config';
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 
-import { Subscription } from 'rxjs';
 import { Activity } from 'src/modules/activity/domain/entities/activity.entity';
 import { Attachment } from 'src/modules/attachment/domain/entities/attachment.entity';
 import { AuditLog } from 'src/modules/audit_logs/domain/entities/audit_log.entity';
@@ -10,6 +9,7 @@ import { BillingWebhook } from 'src/modules/billing/domain/entities/billing-webh
 import { Invoice } from 'src/modules/billing/domain/entities/invoice.entity';
 import { Payment } from 'src/modules/billing/domain/entities/payment.entity';
 import { Plan } from 'src/modules/billing/domain/entities/plan.entity';
+import { Subscription } from 'src/modules/billing/domain/entities/subscription.entity';
 import { UsageLimit } from 'src/modules/billing/domain/entities/usage-limit.entity';
 import { Board } from 'src/modules/boards/domain/entities/board.entity';
 import { Mention } from 'src/modules/mentions/domain/entities/mention.entity';
