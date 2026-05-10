@@ -20,6 +20,7 @@ import { AccessWorkspaceApplicationImpl } from './applications/access-workspace.
 import { AdminFindAllWorkspaceApplicationImpl } from './applications/admin-findAll-workspace.application';
 import { CreateWorkspaceTemplateApplicationImpl } from './applications/create-workspace-template.application';
 import { CreateWorkspaceApplicationImpl } from './applications/create-workspace.application';
+import { FindWorkspaceOverviewApplicationImpl } from './applications/find-workspace-overview.application';
 import { FindWorkspaceApplicationImpl } from './applications/find.workspace.application';
 import { WorkspaceTrashApplicationImpl } from './applications/workspace-trash.application';
 import { WorkspacesController } from './controller/workspaces.controller';
@@ -29,12 +30,14 @@ import { AccessWorkspaceRepositoryImpl } from './repositories/access-workspace.r
 import { AdminFindAllWorkspaceRepositoryImpl } from './repositories/admin-findAll-workspace.repository';
 import { CreateWorkspaceTemplateRepositoryImpl } from './repositories/create-workspace-template.repository';
 import { WorkspaceRepositoryImpl } from './repositories/create-workspace.repository';
+import { FindWorkspaceOverviewRepositoryImpl } from './repositories/find-workspace-overview.repository';
 import { FindWorkspaceRepositoryImpl } from './repositories/find.workspace.repository';
 import { WorkspaceTrashRepositoryImpl } from './repositories/workspace-trash.repository';
 import { AccessWorkspaceServiceImpl } from './services/access-workspace.service';
 import { AdminFindAllWorkspaceServiceImpl } from './services/admin-findAll-workspace.service.interface';
 import { CreateWorkspaceTemplateServiceImpl } from './services/create-workspace-template.service';
 import { CreateWorkspaceServiceImpl } from './services/create-workspace.service';
+import { FindWorkspaceOverviewServiceImpl } from './services/find-workspace-overview.service';
 import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
 import { WorkspaceTrashServiceImpl } from './services/workspace-trash.service';
 
@@ -77,6 +80,10 @@ import { WorkspaceTrashServiceImpl } from './services/workspace-trash.service';
       provide: WORKSPACE_TYPES.applications.WorkspaceTrashApplication,
       useClass: WorkspaceTrashApplicationImpl,
     },
+    {
+      provide: WORKSPACE_TYPES.applications.FindWorkspaceOverviewApplication,
+      useClass: FindWorkspaceOverviewApplicationImpl,
+    },
     //Service
     {
       provide: WORKSPACE_TYPES.services.CreateWorkspaceService,
@@ -102,6 +109,10 @@ import { WorkspaceTrashServiceImpl } from './services/workspace-trash.service';
       provide: WORKSPACE_TYPES.services.WorkspaceTrashService,
       useClass: WorkspaceTrashServiceImpl,
     },
+    {
+      provide: WORKSPACE_TYPES.services.FindWorkspaceOverviewService,
+      useClass: FindWorkspaceOverviewServiceImpl,
+    },
     //Repository
     {
       provide: WORKSPACE_TYPES.repositories.WorkspaceRepository,
@@ -126,6 +137,10 @@ import { WorkspaceTrashServiceImpl } from './services/workspace-trash.service';
     {
       provide: WORKSPACE_TYPES.repositories.WorkspaceTrashRepository,
       useClass: WorkspaceTrashRepositoryImpl,
+    },
+    {
+      provide: WORKSPACE_TYPES.repositories.FindWorkspaceOverviewRepository,
+      useClass: FindWorkspaceOverviewRepositoryImpl,
     },
     // Manager
     {

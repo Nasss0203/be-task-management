@@ -1,12 +1,17 @@
+import { User } from 'src/modules/users/domain/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { BillingProvider } from './subscription.entity';
+import { Invoice } from './invoice.entity';
+import { Payment } from './payment.entity';
+import { BillingProvider, Subscription } from './subscription.entity';
 
 export enum BillingWebhookStatus {
   RECEIVED = 'RECEIVED',
@@ -17,12 +22,44 @@ export enum BillingWebhookStatus {
 
 @Entity('billing_webhooks')
 @Index(['provider', 'providerEventId'], { unique: true })
+@Index(['userId'])
+@Index(['subscriptionId'])
+@Index(['paymentId'])
+@Index(['invoiceId'])
 @Index(['eventType'])
 @Index(['status'])
 @Index(['createdAt'])
 export class BillingWebhook {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ name: 'user_id', type: 'uuid', nullable: true })
+  userId: string | null;
+
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'user_id' })
+  user: User | null;
+
+  @Column({ name: 'subscription_id', type: 'uuid', nullable: true })
+  subscriptionId: string | null;
+
+  @ManyToOne(() => Subscription, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'subscription_id' })
+  subscription: Subscription | null;
+
+  @Column({ name: 'payment_id', type: 'uuid', nullable: true })
+  paymentId: string | null;
+
+  @ManyToOne(() => Payment, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'payment_id' })
+  payment: Payment | null;
+
+  @Column({ name: 'invoice_id', type: 'uuid', nullable: true })
+  invoiceId: string | null;
+
+  @ManyToOne(() => Invoice, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'invoice_id' })
+  invoice: Invoice | null;
 
   @Column({
     type: 'enum',

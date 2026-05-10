@@ -1,19 +1,30 @@
-import { Body, Controller, Delete, Get, Inject, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
 import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
+import { WorkspaceOverviewResponseDto } from '../dto/response/workspace-overview.response.dto';
 import { type AccessWorkspaceApplication } from '../interfaces/applications/access-workspace.application.interface';
 import {
   type CreateWorkspaceTemplateApplication,
   type CreateWorkspaceTemplateDto,
 } from '../interfaces/applications/create-workspace-template.application.interface';
 import { type CreateWorkspaceApplication } from '../interfaces/applications/create-workspace.application.interface';
+import { type FindWorkspaceOverviewApplication } from '../interfaces/applications/find-workspace-overview.application.interface';
 import { type FindWorkspaceApplication } from '../interfaces/applications/find.workspace.application.interface';
-import { WORKSPACE_TYPES } from '../interfaces/types';
 import { type WorkspaceTrashApplication } from '../interfaces/applications/workspace-trash.application.interface';
-import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
-import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
+import { WORKSPACE_TYPES } from '../interfaces/types';
 
 @Controller('workspaces')
 export class WorkspacesController {
@@ -32,6 +43,9 @@ export class WorkspacesController {
 
     @Inject(WORKSPACE_TYPES.applications.WorkspaceTrashApplication)
     private readonly workspaceTrashApplication: WorkspaceTrashApplication,
+
+    @Inject(WORKSPACE_TYPES.applications.FindWorkspaceOverviewApplication)
+    private readonly findWorkspaceOverviewApplication: FindWorkspaceOverviewApplication,
   ) {}
 
   @Post('default')
@@ -79,6 +93,17 @@ export class WorkspacesController {
     @Param('workspaceId') workspaceId: string,
   ) {
     return this.findWorkspaceApplicationImpl.findOneWorkspaceById(
+      auth.id,
+      workspaceId,
+    );
+  }
+
+  @Get(':workspaceId/overview')
+  findOverview(
+    @Param('workspaceId') workspaceId: string,
+    @Auth() auth: IAuth,
+  ): Promise<WorkspaceOverviewResponseDto> {
+    return this.findWorkspaceOverviewApplication.findOverview(
       auth.id,
       workspaceId,
     );
