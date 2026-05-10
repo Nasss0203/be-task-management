@@ -1,4 +1,4 @@
-import { AdminWorkspaceItemResponseDto } from 'src/modules/admin/dto/response/workspace-overview.response.dto';
+import { AdminWorkspaceItemResponseDto } from 'src/modules/admin/dto/response/dashboard/workspace-overview.response.dto';
 import { Workspace } from '../domain/entities/workspace.entity';
 import { WorkspaceModel } from '../domain/models/workspaces.model';
 import { WorkspaceResponseDto } from '../dto/response/workspaces.response.dto';

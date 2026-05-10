@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { AdminWorkspaceItemResponseDto } from 'src/modules/admin/dto/response/workspace-overview.response.dto';
+import { AdminWorkspaceItemResponseDto } from 'src/modules/admin/dto/response/dashboard/workspace-overview.response.dto';
 import { EntityManager } from 'typeorm';
 import { type AdminFindAllWorkspaceRepository } from '../interfaces/repositories/admin-findAll-workspace.repository.interface';
 import { AdminFindAllWorkspaceService } from '../interfaces/services/admin-findAll-workspace.service.interface';

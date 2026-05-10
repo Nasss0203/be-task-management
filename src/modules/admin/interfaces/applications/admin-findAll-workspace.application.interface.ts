@@ -1,5 +1,5 @@
 import { AdminFindAllWorkspaceFilter } from 'src/modules/workspaces/interfaces/workspace-filter.type';
-import { AdminWorkspaceItemResponseDto } from '../../dto/response/workspace-overview.response.dto';
+import { AdminWorkspaceItemResponseDto } from '../../dto/response/dashboard/workspace-overview.response.dto';
 
 export interface AdminFindAllWorkspaceApplication {
   findAllWorkspace(

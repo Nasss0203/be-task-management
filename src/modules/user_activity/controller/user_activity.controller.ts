@@ -1,6 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { UserActivityType } from '../domain/entities/user_activity.entity';
-import { UserActivityService } from '../user_activity.service';
+import { UserActivityService } from '../services/user_activity.service';
 
 type RecordUserActivityDto = {
   userId: string;

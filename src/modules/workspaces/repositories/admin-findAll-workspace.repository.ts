@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AdminWorkspaceItemResponseDto } from 'src/modules/admin/dto/response/workspace-overview.response.dto';
+import { AdminWorkspaceItemResponseDto } from 'src/modules/admin/dto/response/dashboard/workspace-overview.response.dto';
 import { EntityManager, Repository } from 'typeorm';
 import { Workspace } from '../domain/entities/workspace.entity';
 import { AdminFindAllWorkspaceRepository } from '../interfaces/repositories/admin-findAll-workspace.repository.interface';
@@ -108,7 +108,37 @@ export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspac
       }
     }
 
-    const rows = await qb.getRawMany<AdminWorkspaceRaw>();
+    let rows: AdminWorkspaceRaw[];
+    try {
+      rows = await qb.getRawMany<AdminWorkspaceRaw>();
+    } catch (e: unknown) {
+      const err = e as { message?: string; driverError?: { message?: string } };
+      // #region agent log
+      fetch(
+        'http://127.0.0.1:7422/ingest/858f5ea4-3f7e-414d-bca0-e06f390439e6',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Debug-Session-Id': '408fe4',
+          },
+          body: JSON.stringify({
+            sessionId: '408fe4',
+            runId: 'pre-fix',
+            hypothesisId: 'H3',
+            location: 'admin-findAll-workspace.repository.ts:findAllWorkspace',
+            message: 'getRawMany_catch',
+            data: {
+              msg: String(err?.message),
+              driver: String(err?.driverError?.message),
+            },
+            timestamp: Date.now(),
+          }),
+        },
+      ).catch(() => {});
+      // #endregion
+      throw e;
+    }
 
     return rows.map((row) => ({
       id: row.id,
