@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
-import { Sprint } from '../domain/entities/sprint.entity';
+import { Sprint, SprintStatus } from '../domain/entities/sprint.entity';
 import { SprintsModel } from '../domain/models/sprints.model';
 import { SprintProgressResponseDto } from '../dto/sprint-progress.response.dto';
 import { FindSprintQuery } from '../interfaces/find-sprint-query.interface';
-import { FindSprintRepository, SprintRestoreLookup } from '../interfaces/repositories/find-sprint.repository.interface';
+import {
+  FindSprintRepository,
+  SprintRestoreLookup,
+} from '../interfaces/repositories/find-sprint.repository.interface';
 import { SprintsMapper } from '../mapper/sprints.mapper';
 
 @Injectable()
@@ -114,9 +117,13 @@ export class FindSprintRepositoryImpl implements FindSprintRepository {
 
     const qb = repo
       .createQueryBuilder('sprint')
+      .leftJoinAndSelect('sprint.tasks', 'task', 'task.deleted_at IS NULL')
       .where('sprint.workspace_id = :workspaceId', { workspaceId })
       .andWhere('sprint.project_id = :projectId', { projectId })
-      .andWhere('sprint.deleted_at IS NULL');
+      .andWhere('sprint.deleted_at IS NULL')
+      .andWhere('sprint.status IN (:...statuses)', {
+        statuses: [SprintStatus.PLANNED, SprintStatus.ACTIVE],
+      });
 
     const keyword = query?.keyword?.trim();
 

@@ -1,16 +1,17 @@
 // src/modules/sprints/dto/create-sprint.dto.ts
 
 import {
+  IsArray,
   IsDateString,
-  IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
 } from 'class-validator';
 
 export class CreateSprintDto {
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(255)
   name: string;
 
@@ -26,4 +27,9 @@ export class CreateSprintDto {
   @IsDateString()
   @IsOptional()
   endAt?: string | null;
+
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  taskIds?: string[];
 }

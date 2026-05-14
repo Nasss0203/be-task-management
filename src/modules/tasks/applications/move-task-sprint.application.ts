@@ -15,8 +15,8 @@ import {
   MoveTaskSprintApplication,
   MoveTaskSprintApplicationInput,
 } from '../interfaces/applications/move-task-sprint.application.interface';
-import { type MoveTaskSprintRepository } from '../interfaces/repositories/move-task-sprint.repository.interface';
 import { type FindTaskService } from '../interfaces/services/find-task.service.interface';
+import { type MoveTaskSprintService } from '../interfaces/services/move-task-sprint.service.interface';
 import { TASK_TYPES } from '../interfaces/types';
 import { TaskMapper } from '../mapper/tasks.mapper';
 
@@ -32,8 +32,8 @@ export class MoveTaskSprintApplicationImpl implements MoveTaskSprintApplication 
     @Inject(USER_WORKSPACE_TYPES.services.FindMemberService)
     private readonly findMemberService: FindMemberService,
 
-    @Inject(TASK_TYPES.repositories.MoveTaskSprintRepository)
-    private readonly moveTaskSprintRepository: MoveTaskSprintRepository,
+    @Inject(TASK_TYPES.services.MoveTaskSprintService)
+    private readonly moveTaskSprintService: MoveTaskSprintService,
   ) {}
 
   async move(input: MoveTaskSprintApplicationInput): Promise<TaskResponseDto> {
@@ -81,10 +81,10 @@ export class MoveTaskSprintApplicationImpl implements MoveTaskSprintApplication 
       }
     }
 
-    const movedTask = await this.moveTaskSprintRepository.moveTaskToSprint(
-      input.taskId,
-      input.sprintId,
-    );
+    const movedTask = await this.moveTaskSprintService.move({
+      sprintId: input.sprintId,
+      taskId: input.taskId,
+    });
 
     return TaskMapper.toResponse(movedTask);
   }

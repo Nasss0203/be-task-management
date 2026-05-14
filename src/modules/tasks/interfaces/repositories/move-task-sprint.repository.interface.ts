@@ -7,4 +7,10 @@ export interface MoveTaskSprintRepository {
     sprintId: string | null,
     manager?: EntityManager,
   ): Promise<TaskModel>;
+
+  moveManyTaskToSprint(
+    taskIds: string[],
+    sprintId: string,
+    manager?: EntityManager,
+  ): Promise<void>;
 }

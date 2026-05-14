@@ -50,7 +50,7 @@ export class CreateSprintServiceImpl implements CreateSprintService {
     const isSprintNameExists =
       await this.findSprintRepository.existsByProjectIdAndName(
         projectId,
-        input.name,
+        input.name as string,
       );
 
     if (isSprintNameExists) {

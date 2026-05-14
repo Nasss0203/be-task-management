@@ -42,4 +42,6 @@ export interface FindTaskRepository {
     workspaceId: string,
     manager?: EntityManager,
   ): Promise<TaskModel[]>;
+
+  findByIds(taskIds: string[], manager?: EntityManager): Promise<TaskModel[]>;
 }

@@ -1,7 +1,7 @@
 import { Task } from '../domain/entities/task.entity';
 import { TaskAssigneeModel, TaskModel } from '../domain/models/task.model';
 import {
-  TaskAssigneeResponseDto,
+  TaskAssigneeSummaryResponseDto,
   TaskResponseDto,
 } from '../dto/response/task-response.dto';
 import { SaveTaskInput } from '../interfaces/repositories/create-task.repository.interface';
@@ -24,6 +24,8 @@ export class TaskMapper {
       entity.createdBy,
 
       entity.sprintId ?? null,
+      entity.sprint?.name ?? null,
+
       entity.description ?? null,
 
       entity.status?.name ?? null,
@@ -111,7 +113,7 @@ export class TaskMapper {
   }
 
   static toResponse(model: TaskModel): TaskResponseDto {
-    const assignees: TaskAssigneeResponseDto[] = model.assignees.map(
+    const assignees: TaskAssigneeSummaryResponseDto[] = model.assignees.map(
       (item) => ({
         userId: item.userId,
         username: item.username,
@@ -123,6 +125,7 @@ export class TaskMapper {
       workspaceId: model.workspaceId,
       projectId: model.projectId,
       sprintId: model.sprintId,
+      sprintName: model.sprintName,
 
       projectSeq: model.projectSeq,
       title: model.title,
@@ -135,7 +138,6 @@ export class TaskMapper {
       priorityName: model.priorityName,
 
       createdBy: model.createdBy,
-
       assignees,
 
       startAt: model.startAt,

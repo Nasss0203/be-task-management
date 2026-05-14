@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 import { Task } from '../domain/entities/task.entity';
 import { TaskModel } from '../domain/models/task.model';
 import { MoveTaskSprintRepository } from '../interfaces/repositories/move-task-sprint.repository.interface';
@@ -43,5 +43,22 @@ export class MoveTaskSprintRepositoryImpl implements MoveTaskSprintRepository {
     }
 
     return TaskMapper.toModel(task);
+  }
+
+  async moveManyTaskToSprint(
+    taskIds: string[],
+    sprintId: string,
+    manager?: EntityManager,
+  ): Promise<void> {
+    const repo = this.getRepo(manager);
+
+    await repo.update(
+      {
+        id: In(taskIds),
+      },
+      {
+        sprintId,
+      },
+    );
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, IsNull, Repository } from 'typeorm';
+import { EntityManager, In, IsNull, Repository } from 'typeorm';
 import { Task } from '../domain/entities/task.entity';
 import { TaskModel } from '../domain/models/task.model';
 import {
@@ -54,9 +54,6 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
       where: {
         projectId,
         workspaceId,
-        // sprintId: IsNull(),
-        // completedAt: IsNull(),
-        // deletedAt: IsNull(),
       },
       relations: {
         status: true,
@@ -66,7 +63,7 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
           user: true,
           assignedByUser: true,
         },
-        // sprint: true,
+        sprint: true,
       },
     });
 
@@ -163,15 +160,29 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
       relations: {
         status: true,
         priority: true,
-        // hiện thị người được thêm task
+        sprint: true,
         assignees: {
           user: true,
           assignedByUser: true,
         },
-        // sprint: true,
       },
     });
 
     return entities.map((entity) => TaskMapper.toModel(entity));
+  }
+
+  async findByIds(
+    taskIds: string[],
+    manager?: EntityManager,
+  ): Promise<TaskModel[]> {
+    const repo = this.getRepo(manager);
+
+    const tasks = await repo.find({
+      where: {
+        id: In(taskIds),
+      },
+    });
+
+    return tasks.map(TaskMapper.toModel);
   }
 }
