@@ -1,9 +1,6 @@
 import { TaskResponseDto } from '../../dto/response/task-response.dto';
 
 export type RemoveTaskFromSprintApplicationInput = {
-  workspaceId: string;
-  projectId: string;
-  sprintId: string;
   taskId: string;
   userId: string;
 };

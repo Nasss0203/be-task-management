@@ -35,14 +35,7 @@ export interface FindSprintApplication {
     input: FindTasksBySprintApplicationInput,
   ): Promise<SprintResponseDto>;
 
-<<<<<<< HEAD
   getSprintProgress(
     input: GetSprintProgressApplicationInput,
   ): Promise<SprintProgressResponseDto>;
-=======
-  findDeletedSprints(
-    workspaceId: string,
-    projectId?: string,
-  ): Promise<SprintResponseDto[]>;
->>>>>>> b7802d9 (feat(workspace): add soft delete and restore sprint)
 }

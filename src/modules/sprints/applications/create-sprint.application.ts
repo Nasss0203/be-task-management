@@ -20,23 +20,47 @@ export class CreateSprintApplicationImpl implements CreateSprintApplication {
   ): Promise<SprintResponseDto> {
     const { workspaceId, projectId, userId, dto } = input;
 
-    const startAt = dto.startAt ? new Date(dto.startAt) : null;
-    const endAt = dto.endAt ? new Date(dto.endAt) : null;
+    const name = dto.name?.trim();
+
+    if (!name) {
+      throw new BadRequestException('Sprint name is required');
+    }
+
+    const goal = dto.goal !== undefined ? dto.goal.trim() || null : undefined;
+
+    const startAt =
+      dto.startAt !== undefined && dto.startAt !== null
+        ? new Date(dto.startAt)
+        : undefined;
+
+    const endAt =
+      dto.endAt !== undefined && dto.endAt !== null
+        ? new Date(dto.endAt)
+        : undefined;
+
+    if (startAt && Number.isNaN(startAt.getTime())) {
+      throw new BadRequestException('Invalid sprint startAt');
+    }
+
+    if (endAt && Number.isNaN(endAt.getTime())) {
+      throw new BadRequestException('Invalid sprint endAt');
+    }
 
     if (startAt && endAt && startAt >= endAt) {
       throw new BadRequestException('Sprint startAt must be before endAt');
     }
 
-    const sprint = await this.createSprintService.create({
+    const createdSprint = await this.createSprintService.create({
       workspaceId,
       projectId,
-      name: dto.name.trim(),
-      goal: dto.goal?.trim() || null,
-      startAt,
-      endAt,
+      name,
       createdBy: userId,
+
+      ...(goal !== undefined && { goal }),
+      ...(startAt !== undefined && { startAt }),
+      ...(endAt !== undefined && { endAt }),
     });
 
-    return SprintsMapper.toResponse(sprint);
+    return SprintsMapper.toResponse(createdSprint);
   }
 }

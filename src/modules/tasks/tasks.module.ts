@@ -12,6 +12,7 @@ import { WORKSPACE_TYPES } from '../workspaces/interfaces/types';
 import { CreateTaskApplicationImpl } from './applications/create-task.application';
 import { DeleteTaskApplicationImpl } from './applications/delete-task.application';
 import { FindTaskApplicationImpl } from './applications/find-task.application';
+import { MoveTaskSprintToSprintApplicationImpl } from './applications/move-task-sprint-to-sprint.application';
 import { MoveTaskSprintApplicationImpl } from './applications/move-task-sprint.application';
 import { RemoveTaskFromSprintApplicationImpl } from './applications/remove-task-sprint.application';
 import { UpdateTaskApplicationImpl } from './applications/update-task.application';
@@ -22,6 +23,7 @@ import { CreateTaskRepositoryImpl } from './repositories/create.tasks.repository
 import { DeleteTaskRepositoryImpl } from './repositories/delete-task.repository';
 import { FindTaskRepositoryImpl } from './repositories/find-task.repository';
 import { MarkDoneTasksCompletedAtInSprintRepositoryImpl } from './repositories/mark-done-tasks-completed-at-in-sprint.repository';
+import { MoveTaskSprintToSprintRepositoryImpl } from './repositories/move-task-sprint-to-sprint.repository';
 import { MoveTaskSprintRepositoryImpl } from './repositories/move-task-sprint.repository';
 import { MoveTasksToBacklogBySprintRepositoryImpl } from './repositories/move-tasks-to-backlog-by-sprint.repository';
 import { MoveUnfinishedTasksToBacklogRepositoryImpl } from './repositories/move-unfinished-tasks-to-backlog.repository';
@@ -30,6 +32,7 @@ import { CreateTaskServiceImpl } from './services/create-tasks.service';
 import { DeleteTaskServiceImpl } from './services/delete-task.service';
 import { FindTaskServiceImpl } from './services/find-task.service';
 import { MarkDoneTasksCompletedAtInSprintServiceImpl } from './services/mark-done-tasks-completed-at-in-sprint.service';
+import { MoveTaskSprintToSprintServiceImpl } from './services/move-task-sprint-to-sprint.service';
 import { MoveTaskSprintServiceImpl } from './services/move-task-sprint.service';
 import { MoveTasksToBacklogBySprintServiceImpl } from './services/move-tasks-to-backlog-by-sprint.service';
 import { MoveUnfinishedTasksToBacklogServiceImpl } from './services/move-unfinished-tasks-to-backlog.service';
@@ -74,6 +77,10 @@ import { UpdateTaskServiceImpl } from './services/update-task.service';
       provide: TASK_TYPES.applications.RemoveTaskFromSprintApplication,
       useClass: RemoveTaskFromSprintApplicationImpl,
     },
+    {
+      provide: TASK_TYPES.applications.MoveTaskSprintToSprintApplication,
+      useClass: MoveTaskSprintToSprintApplicationImpl,
+    },
     // Repository
     {
       provide: TASK_TYPES.repositories.CreateTaskRepository,
@@ -107,6 +114,10 @@ import { UpdateTaskServiceImpl } from './services/update-task.service';
     {
       provide: TASK_TYPES.repositories.MoveTasksToBacklogBySprintRepository,
       useClass: MoveTasksToBacklogBySprintRepositoryImpl,
+    },
+    {
+      provide: TASK_TYPES.repositories.MoveTaskSprintToSprintRepository,
+      useClass: MoveTaskSprintToSprintRepositoryImpl,
     },
     // Service
     {
@@ -145,7 +156,10 @@ import { UpdateTaskServiceImpl } from './services/update-task.service';
       provide: TASK_TYPES.services.MoveTasksToBacklogBySprintService,
       useClass: MoveTasksToBacklogBySprintServiceImpl,
     },
-
+    {
+      provide: TASK_TYPES.services.MoveTaskSprintToSprintService,
+      useClass: MoveTaskSprintToSprintServiceImpl,
+    },
     {
       provide: WORKSPACE_TYPES.uow.UnitOfWork,
       useClass: TypeOrmUnitOfWork,
@@ -158,6 +172,7 @@ import { UpdateTaskServiceImpl } from './services/update-task.service';
     TASK_TYPES.repositories.UpdateTaskRepository,
     TASK_TYPES.services.MarkDoneTasksCompletedAtInSprintService,
     TASK_TYPES.services.MoveTasksToBacklogBySprintService,
+    TASK_TYPES.services.MoveTaskSprintService,
   ],
 })
 export class TasksModule {}

@@ -10,6 +10,7 @@ export const TASK_TYPES = {
     MarkDoneTasksCompletedAtInSprintService:
       'MarkDoneTasksCompletedAtInSprintService',
     MoveTasksToBacklogBySprintService: 'MoveTasksToBacklogBySprintService',
+    MoveTaskSprintToSprintService: 'MoveTaskSprintToSprintService',
   },
   applications: {
     CreateTaskApplication: 'CreateTaskApplication',
@@ -18,6 +19,7 @@ export const TASK_TYPES = {
     MoveTaskSprintApplication: 'MoveTaskSprintApplication',
     DeleteTaskApplication: 'DeleteTaskApplication',
     RemoveTaskFromSprintApplication: 'RemoveTaskFromSprintApplication',
+    MoveTaskSprintToSprintApplication: 'MoveTaskSprintToSprintApplication',
   },
   repositories: {
     CreateTaskRepository: 'CreateTaskRepository',
@@ -31,5 +33,6 @@ export const TASK_TYPES = {
       'MarkDoneTasksCompletedAtInSprintRepository',
     MoveTasksToBacklogBySprintRepository:
       'MoveTasksToBacklogBySprintRepository',
+    MoveTaskSprintToSprintRepository: 'MoveTaskSprintToSprintRepository',
   },
 };

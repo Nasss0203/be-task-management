@@ -1,5 +1,3 @@
-// src/modules/tasks/interfaces/services/mark-done-tasks-completed-at-in-sprint.service.interface.ts
-
 import { EntityManager } from 'typeorm';
 
 export type MarkDoneTasksCompletedAtInSprintInput = {

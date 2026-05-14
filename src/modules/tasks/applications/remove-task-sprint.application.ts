@@ -19,9 +19,6 @@ export class RemoveTaskFromSprintApplicationImpl implements RemoveTaskFromSprint
     input: RemoveTaskFromSprintApplicationInput,
   ): Promise<TaskResponseDto> {
     const task = await this.removeTaskFromSprintService.remove({
-      workspaceId: input.workspaceId,
-      projectId: input.projectId,
-      sprintId: input.sprintId,
       taskId: input.taskId,
     });
 

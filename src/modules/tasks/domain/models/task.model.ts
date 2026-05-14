@@ -14,6 +14,8 @@ export class TaskModel {
     public readonly createdBy: string,
 
     public readonly sprintId: string | null = null,
+    public readonly sprintName: string | null = null,
+
     public readonly description: string | null = null,
 
     public readonly statusName: string | null = null,

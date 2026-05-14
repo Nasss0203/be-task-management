@@ -1,4 +1,4 @@
-export class TaskAssigneeResponseDto {
+export class TaskAssigneeSummaryResponseDto {
   userId: string;
   username: string | null;
   fullName?: string | null;
@@ -10,6 +10,7 @@ export class TaskResponseDto {
   workspaceId: string;
   projectId: string;
   sprintId: string | null;
+  sprintName: string | null;
 
   projectSeq: number | null;
   title: string;
@@ -23,7 +24,7 @@ export class TaskResponseDto {
 
   createdBy: string;
 
-  assignees: TaskAssigneeResponseDto[];
+  assignees: TaskAssigneeSummaryResponseDto[];
 
   startAt: Date | null;
   dueAt: Date | null;

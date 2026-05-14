@@ -33,23 +33,6 @@ export class RemoveTaskFromSprintServiceImpl implements RemoveTaskFromSprintServ
     input: RemoveTaskFromSprintServiceInput,
     manager?: EntityManager,
   ): Promise<TaskModel> {
-    const sprint = await this.findSprintRepository.findOneSprint(
-      input.sprintId,
-      manager,
-    );
-
-    if (!sprint) {
-      throw new NotFoundException('Sprint not found');
-    }
-
-    if (sprint.workspaceId !== input.workspaceId) {
-      throw new BadRequestException('Sprint does not belong to this workspace');
-    }
-
-    if (sprint.projectId !== input.projectId) {
-      throw new BadRequestException('Sprint does not belong to this project');
-    }
-
     const task = await this.findTaskRepository.findOneTask(
       input.taskId,
       manager,
@@ -59,16 +42,8 @@ export class RemoveTaskFromSprintServiceImpl implements RemoveTaskFromSprintServ
       throw new NotFoundException('Task not found');
     }
 
-    if (task.workspaceId !== input.workspaceId) {
-      throw new BadRequestException('Task does not belong to this workspace');
-    }
-
-    if (task.projectId !== input.projectId) {
-      throw new BadRequestException('Task does not belong to this project');
-    }
-
-    if (task.sprintId !== input.sprintId) {
-      throw new BadRequestException('Task does not belong to this sprint');
+    if (!task.sprintId) {
+      throw new BadRequestException('Task is already in backlog');
     }
 
     const movedTask = await this.moveTaskSprintRepository.moveTaskToSprint(

@@ -19,9 +19,11 @@ import { TASK_TYPES } from '../interfaces/types';
 
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { type IAuth } from 'src/types/auth';
+import { MoveTaskSprintToSprintDto } from '../dto/move-task-sprint-to-sprint.dto';
 import { MoveTaskSprintDto } from '../dto/move-task-sprint.dto';
 import { type CreateTaskApplication } from '../interfaces/applications/create-task.application.interface';
 import { type DeleteTaskApplication } from '../interfaces/applications/delete-task.application.interface';
+import { type MoveTaskSprintToSprintApplication } from '../interfaces/applications/move-task-sprint-to-sprint.application.interface';
 import { type MoveTaskSprintApplication } from '../interfaces/applications/move-task-sprint.application.interface';
 import { type RemoveTaskFromSprintApplication } from '../interfaces/applications/remove-task-sprint.application.interface';
 import { type UpdateTaskApplication } from '../interfaces/applications/update-task.application.interface';
@@ -49,11 +51,14 @@ export class TasksController {
 
     @Inject(TASK_TYPES.applications.RemoveTaskFromSprintApplication)
     private readonly removeTaskFromSprintApplication: RemoveTaskFromSprintApplication,
+
+    @Inject(TASK_TYPES.applications.MoveTaskSprintToSprintApplication)
+    private readonly moveTaskSprintToSprintApplication: MoveTaskSprintToSprintApplication,
   ) {}
 
   @Get('/workspace/:workspaceId/project/:projectId')
   @ResponseMessage('Find all task')
-  async findAllByTaskId(
+  async findAllByTask(
     @Param('projectId') projectId: string,
     @Param('workspaceId') workspaceId: string,
   ): Promise<TaskResponseDto[]> {
@@ -74,7 +79,6 @@ export class TasksController {
   create(@Body() createTaskDto: CreateTaskDto, @Auth() auth: IAuth) {
     return this.createTaskApplication.create({
       ...createTaskDto,
-
       createdBy: auth.id,
     });
   }
@@ -100,6 +104,7 @@ export class TasksController {
     @Body() dto: MoveTaskSprintDto,
     @Auth() auth: IAuth,
   ): Promise<TaskResponseDto> {
+    console.log(dto);
     return this.moveTaskSprintApplication.move({
       taskId: id,
       sprintId: dto.sprintId ?? null,
@@ -153,23 +158,35 @@ export class TasksController {
     return this.findTaskApplication.findDeletedTasks(workspaceId, projectId);
   }
 
-  @Patch(
-    'workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/tasks/:taskId/remove',
-  )
+  @Patch(':taskId/remove-sprint')
   @ResponseMessage('Remove task from sprint successfully')
   async removeTaskFromSprint(
-    @Param('workspaceId') workspaceId: string,
-    @Param('projectId') projectId: string,
-    @Param('sprintId') sprintId: string,
     @Param('taskId') taskId: string,
     @Auth() auth: IAuth,
   ): Promise<TaskResponseDto> {
-    return this.removeTaskFromSprintApplication.remove({
-      workspaceId,
-      projectId,
-      sprintId,
+    return await this.removeTaskFromSprintApplication.remove({
       taskId,
       userId: auth.id,
+    });
+  }
+
+  @Patch(
+    'workspaces/:workspaceId/projects/:projectId/sprints/:sourceSprintId/tasks/:taskId/move-to-sprint',
+  )
+  @ResponseMessage('Move task to sprint successfully')
+  async moveTaskSprintToSprint(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('sourceSprintId') sourceSprintId: string,
+    @Param('taskId') taskId: string,
+    @Body() dto: MoveTaskSprintToSprintDto,
+  ) {
+    return await this.moveTaskSprintToSprintApplication.move({
+      workspaceId,
+      projectId,
+      sourceSprintId,
+      taskId,
+      targetSprintId: dto.targetSprintId,
     });
   }
 }
