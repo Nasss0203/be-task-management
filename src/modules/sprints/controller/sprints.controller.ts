@@ -15,6 +15,7 @@ import { CreateSprintDto } from '../dto/create-sprint.dto';
 import { FindSprintQueryDto } from '../dto/find-sprint-query.dto';
 import { SprintResponseDto } from '../dto/response/sprint.response.dto';
 import { SprintProgressResponseDto } from '../dto/sprint-progress.response.dto';
+import { StartSprintDto } from '../dto/start-sprint.dto';
 import { UpdateSprintDto } from '../dto/update-sprint.dto';
 import { type CancelSprintApplication } from '../interfaces/applications/cancel-sprint.application.interface';
 import { type CompleteSprintApplication } from '../interfaces/applications/complete-sprint.application.interface';
@@ -120,6 +121,7 @@ export class SprintsController {
     @Param('workspaceId') workspaceId: string,
     @Param('projectId') projectId: string,
     @Param('sprintId') sprintId: string,
+    @Body() dto: StartSprintDto,
     @Auth() auth: IAuth,
   ): Promise<SprintResponseDto> {
     return this.startSprintApplication.start({
@@ -127,6 +129,7 @@ export class SprintsController {
       projectId,
       sprintId,
       userId: auth.id,
+      dto,
     });
   }
 

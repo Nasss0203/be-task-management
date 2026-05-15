@@ -24,6 +24,7 @@ export class StartSprintServiceImpl implements StartSprintService {
     @Inject(SPRINT_TYPES.repositories.FindSprintRepository)
     private readonly findSprintRepository: FindSprintRepository,
   ) {}
+
   async startSprint(
     input: StartSprintServiceInput,
     manager?: EntityManager,
@@ -37,24 +38,59 @@ export class StartSprintServiceImpl implements StartSprintService {
       throw new NotFoundException('Sprint not found');
     }
 
+    if (sprint.workspaceId !== input.workspaceId) {
+      throw new BadRequestException('Sprint does not belong to this workspace');
+    }
+
+    if (sprint.projectId !== input.projectId) {
+      throw new BadRequestException('Sprint does not belong to this project');
+    }
+
     if (sprint.status !== SprintStatus.PLANNED) {
       throw new BadRequestException('Only planned sprint can be started');
     }
 
-    // Todo: Chưa làm
-    // const activeSprint =
-    //   await this.findSprintRepository.findActiveSprintInProject(
-    //     input.workspaceId,
-    //     input.projectId,
-    //     manager,
-    //   );
+    const name = input.name !== undefined ? input.name.trim() : undefined;
 
-    // if (activeSprint) {
-    //   throw new BadRequestException('Project already has an active sprint');
-    // }
+    if (name !== undefined && name === '') {
+      throw new BadRequestException('Sprint name cannot be empty');
+    }
+
+    const goal =
+      input.goal === undefined ? undefined : input.goal?.trim() || null;
+
+    const startAt =
+      input.startAt !== undefined && input.startAt !== null
+        ? new Date(input.startAt)
+        : (sprint.startAt ?? new Date());
+
+    const endAt =
+      input.endAt === undefined
+        ? (sprint.endAt ?? null)
+        : input.endAt === null
+          ? null
+          : new Date(input.endAt);
+
+    if (Number.isNaN(startAt.getTime())) {
+      throw new BadRequestException('Invalid startAt');
+    }
+
+    if (endAt && Number.isNaN(endAt.getTime())) {
+      throw new BadRequestException('Invalid endAt');
+    }
+
+    if (endAt && startAt >= endAt) {
+      throw new BadRequestException('Sprint startAt must be before endAt');
+    }
 
     const startedSprint = await this.startSprintRepository.startSprint(
-      input.sprintId,
+      {
+        sprintId: input.sprintId,
+        startAt,
+        endAt,
+        name: input.name?.trim(),
+        goal: input.goal !== undefined ? input.goal.trim() || null : undefined,
+      },
       manager,
     );
 

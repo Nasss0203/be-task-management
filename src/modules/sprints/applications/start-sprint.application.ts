@@ -20,6 +20,11 @@ export class StartSprintApplicationImpl implements StartSprintApplication {
       workspaceId: input.workspaceId,
       projectId: input.projectId,
       sprintId: input.sprintId,
+
+      startAt: input.dto.startAt,
+      endAt: input.dto.endAt,
+      name: input.dto.name,
+      goal: input.dto.goal,
     });
 
     return SprintsMapper.toResponse(sprint);
