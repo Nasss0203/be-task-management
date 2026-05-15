@@ -1,6 +1,8 @@
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import { RequireSystemRoles } from 'src/common/decorator/require-system-roles.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { SystemRole } from 'src/modules/users/domain/entities/user.entity';
 import { WorkspaceResponseDto } from 'src/modules/workspaces/dto/response/workspaces.response.dto';
 import { AdminFindAllWorkspaceQueryDto } from 'src/modules/workspaces/dto/search-workspace.dto';
 import { type IAuth } from 'src/types/auth';
@@ -10,6 +12,7 @@ import { type AdminFindAllWorkspaceApplication } from '../interfaces/application
 import { type AdminWorkspaceOverviewApplication } from '../interfaces/applications/workspace-overview.application.interface';
 import { ADMIN_TYPES } from '../interfaces/types';
 
+@RequireSystemRoles(SystemRole.SYSTEM_ADMIN, SystemRole.SUPER_ADMIN)
 @Controller('admin')
 export class AdminController {
   constructor(

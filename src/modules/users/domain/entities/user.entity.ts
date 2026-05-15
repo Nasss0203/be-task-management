@@ -1,12 +1,20 @@
+import { UserProfile } from 'src/modules/user_profiles/domain/entities/user_profile.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
   Index,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+export enum SystemRole {
+  USER = 'USER',
+  SYSTEM_ADMIN = 'SYSTEM_ADMIN',
+  SUPER_ADMIN = 'SUPER_ADMIN',
+}
 
 @Entity('users')
 export class User {
@@ -39,6 +47,14 @@ export class User {
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
+  @Column({
+    name: 'system_role',
+    type: 'enum',
+    enum: SystemRole,
+    default: SystemRole.USER,
+  })
+  systemRole: SystemRole;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
@@ -47,4 +63,7 @@ export class User {
 
   @DeleteDateColumn({ name: 'deleted_at', nullable: true })
   deletedAt: Date | null;
+
+  @OneToOne(() => UserProfile, (profile) => profile.user)
+  profile: UserProfile;
 }

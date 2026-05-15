@@ -7,7 +7,7 @@ import { IAuth } from 'src/types/auth';
 import { hashPassword, hashToken } from 'src/utils';
 import { Repository } from 'typeorm';
 import { RefreshToken } from '../refresh_token/entities/refresh_token.entity';
-import { User } from '../users/domain/entities/user.entity';
+import { SystemRole, User } from '../users/domain/entities/user.entity';
 import { RegisterUserDto } from '../users/dto/create-user.dto';
 import { type CreateWorkspaceService } from '../workspaces/interfaces/services/create-workspace.service.interface';
 import { WORKSPACE_TYPES } from '../workspaces/interfaces/types';
@@ -44,6 +44,7 @@ export class AuthService {
       email: registerUserDto.email,
       username: registerUserDto.username,
       passwordHash: hashPassword(registerUserDto.password),
+      systemRole: SystemRole.USER,
       isActive: true,
       googleId: null,
       avatarUrl: null,
@@ -78,6 +79,7 @@ export class AuthService {
       id: user.id,
       email: user.email,
       username: user.username,
+      systemRole: user.systemRole,
     };
 
     const access_token = this.jwt.sign(payload, { expiresIn: '180m' });
@@ -141,6 +143,7 @@ export class AuthService {
         googleId: true,
         avatarUrl: true,
         isActive: true,
+        systemRole: true,
         createdAt: true,
         updatedAt: true,
       },

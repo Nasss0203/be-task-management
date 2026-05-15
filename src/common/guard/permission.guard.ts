@@ -8,6 +8,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { type FindPermissionService } from 'src/modules/permission/interfaces/services/find-all-permission.service.interface';
 import { PERMISSION_TYPES } from 'src/modules/permission/interfaces/types';
+import { SystemRole } from 'src/modules/users/domain/entities/user.entity';
 import { PERMISSIONS_KEY } from '../decorator/require-permissions.decorator';
 
 @Injectable()
@@ -29,7 +30,21 @@ export class PermissionGuard implements CanActivate {
     }
 
     const req = context.switchToHttp().getRequest();
-    const userId = req.user?.id;
+
+    const user = req.user;
+    const userId = user?.id;
+    const systemRole = user?.systemRole;
+
+    if (!userId) {
+      throw new ForbiddenException('User not found in request');
+    }
+
+    /**
+     * SUPER_ADMIN bypass all workspace permissions
+     */
+    if (systemRole === SystemRole.SUPER_ADMIN) {
+      return true;
+    }
 
     const workspaceId =
       req.params?.workspaceId ||
@@ -38,10 +53,6 @@ export class PermissionGuard implements CanActivate {
       req.body?.workspace_id ||
       req.query?.workspaceId ||
       req.query?.workspace_id;
-
-    if (!userId) {
-      throw new ForbiddenException('User not found in request');
-    }
 
     if (!workspaceId) {
       throw new ForbiddenException('Workspace id not found');
@@ -52,7 +63,6 @@ export class PermissionGuard implements CanActivate {
         userId,
         workspaceId,
       );
-    console.log('🚀 ~ userPermissions~', userPermissions);
 
     const hasAllPermissions = requiredPermissions.every((permission) =>
       userPermissions.includes(permission),
