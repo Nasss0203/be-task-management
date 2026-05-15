@@ -74,6 +74,7 @@ export class AuthGoogleService {
       id: user.id,
       email: user.email,
       username: user.username,
+      systemRole: user.systemRole,
     };
 
     const access_token = this.jwt.sign(payload, { expiresIn: '15m' });

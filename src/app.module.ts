@@ -23,25 +23,26 @@ import { UsersModule } from './modules/users/users.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './common/guard/jwt-auth.guard';
 import { PermissionGuard } from './common/guard/permission.guard';
+import { SystemRoleGuard } from './common/guard/system-role.guard';
+import { ActivityModule } from './modules/activity/activity.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AttachmentModule } from './modules/attachment/attachment.module';
+import { AuditLogsModule } from './modules/audit_logs/audit_logs.module';
+import { BillingModule } from './modules/billing/billing.module';
 import { MailModule } from './modules/mail/mail.module';
+import { MentionsModule } from './modules/mentions/mentions.module';
+import { NotificationModule } from './modules/notification/notification.module';
 import { PageModule } from './modules/page/page.module';
 import { PageBlockModule } from './modules/page_block/page_block.module';
+import { PageTemplateBlocksModule } from './modules/page_template_blocks/page_template_blocks.module';
+import { PageTemplatesModule } from './modules/page_templates/page_templates.module';
 import { SeedsModule } from './modules/seed/seed.module';
 import { UserActivityModule } from './modules/user_activity/user_activity.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { TaskAssigneeModule } from './modules/task_assignee/task_assignee.module';
+import { TaskCommnentModule } from './modules/task_commnent/task_commnent.module';
 import { WorkspaceInvitesModule } from './modules/workspace_invites/workspace_invites.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
-import { TaskCommnentModule } from './modules/task_commnent/task_commnent.module';
-import { ActivityModule } from './modules/activity/activity.module';
-import { PageTemplatesModule } from './modules/page_templates/page_templates.module';
-import { PageTemplateBlocksModule } from './modules/page_template_blocks/page_template_blocks.module';
-import { MentionsModule } from './modules/mentions/mentions.module';
-import { AuditLogsModule } from './modules/audit_logs/audit_logs.module';
-import { BillingModule } from './modules/billing/billing.module';
-import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -95,7 +96,6 @@ import { NotificationModule } from './modules/notification/notification.module';
   controllers: [AppController],
   providers: [
     AppService,
-    // RbacSeedService,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
@@ -103,6 +103,10 @@ import { NotificationModule } from './modules/notification/notification.module';
     {
       provide: APP_GUARD,
       useClass: PermissionGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: SystemRoleGuard,
     },
   ],
 })

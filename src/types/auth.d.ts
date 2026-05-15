@@ -3,4 +3,5 @@ export type IAuth = {
   username: string;
   email: string;
   sub?: string;
+  systemRole: SystemRole;
 };

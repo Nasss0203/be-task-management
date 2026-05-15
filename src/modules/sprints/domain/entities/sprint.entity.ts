@@ -30,10 +30,6 @@ export enum SprintStatus {
   unique: true,
   where: '"deleted_at" IS NULL',
 })
-@Index('UQ_SPRINTS_PROJECT_ACTIVE', ['projectId'], {
-  unique: true,
-  where: `"status" = 'ACTIVE' AND "deleted_at" IS NULL`,
-})
 export class Sprint {
   @PrimaryGeneratedColumn('uuid')
   id: string;

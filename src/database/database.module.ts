@@ -30,7 +30,7 @@ import { TaskPriority } from 'src/modules/task_priority/domain/entities/task_pri
 import { TaskStatus } from 'src/modules/task_status/domain/entities/task_status.entity';
 import { Task } from 'src/modules/tasks/domain/entities/task.entity';
 import { UserActivity } from 'src/modules/user_activity/domain/entities/user_activity.entity';
-import { UserProfile } from 'src/modules/user_profiles/entities/user_profile.entity';
+import { UserProfile } from 'src/modules/user_profiles/domain/entities/user_profile.entity';
 import { UserRole } from 'src/modules/user_roles/domain/entities/user_role.entity';
 import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
 import { User } from 'src/modules/users/domain/entities/user.entity';

@@ -7,7 +7,9 @@ import {
   Patch,
   Query,
 } from '@nestjs/common';
+import { RequireSystemRoles } from 'src/common/decorator/require-system-roles.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { SystemRole } from 'src/modules/users/domain/entities/user.entity';
 import { WorkspaceResponseDto } from 'src/modules/workspaces/dto/response/workspaces.response.dto';
 import { AdminFindAllWorkspaceQueryDto } from 'src/modules/workspaces/dto/search-workspace.dto';
 import { AdminService } from '../admin.service';
@@ -43,6 +45,7 @@ import { type AdminWorkspacePlanApplication } from '../interfaces/applications/d
 import { type AdminUserOverviewApplication } from '../interfaces/applications/user/admin-user-overview.application.interface';
 import { AdminUserOverviewResponseDto } from '../dto/response/user/admin-user-overview.response.dto';
 
+@RequireSystemRoles(SystemRole.SYSTEM_ADMIN, SystemRole.SUPER_ADMIN)
 @Controller('admin')
 export class AdminController {
   constructor(
