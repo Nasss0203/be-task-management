@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { UserActivity } from 'src/modules/user_activity/domain/entities/user_activity.entity';
 import { User } from 'src/modules/users/domain/entities/user.entity';
-import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
+import {
+  PlanTypeWorkspace,
+  Workspace,
+} from 'src/modules/workspaces/domain/entities/workspace.entity';
 import { Repository } from 'typeorm';
 import {
   RetentionMetricLevel,
@@ -18,6 +22,9 @@ export class AdminRetentionMetricsRepositoryImpl implements AdminRetentionMetric
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
+    @InjectRepository(UserActivity)
+    private readonly userActivityRepository: Repository<UserActivity>,
 
     @InjectRepository(Workspace)
     private readonly workspaceRepository: Repository<Workspace>,
@@ -40,6 +47,7 @@ export class AdminRetentionMetricsRepositoryImpl implements AdminRetentionMetric
       eligibleUsers === 0 ? 0 : (retainedUsers / eligibleUsers) * 100;
 
     const activeProWorkspaces = await this.countActiveProWorkspaces();
+
     const deletedProWorkspacesThisMonth =
       await this.countDeletedProWorkspacesThisMonth(startOfMonth, now);
 
@@ -54,15 +62,24 @@ export class AdminRetentionMetricsRepositoryImpl implements AdminRetentionMetric
         label: '30-day Retention',
         value: Number(retentionRate.toFixed(1)),
         suffix: '%',
-        description: 'Users created before 30 days and active again recently.',
-        level: this.getRetentionLevel(retentionRate),
+        description:
+          eligibleUsers === 0
+            ? 'Not enough users older than 30 days to calculate retention.'
+            : 'Users created before 30 days and active again recently.',
+        level:
+          eligibleUsers === 0
+            ? 'warning'
+            : this.getRetentionLevel(retentionRate),
       },
       {
         key: 'monthly-churn',
         label: 'Monthly Churn',
         value: Number(churnRate.toFixed(1)),
         suffix: '%',
-        description: 'Pro workspaces lost this month.',
+        description:
+          churnBase === 0
+            ? 'No Pro workspaces available to calculate churn.'
+            : 'Pro workspaces lost this month.',
         level: this.getChurnLevel(churnRate),
       },
     ];
@@ -80,11 +97,14 @@ export class AdminRetentionMetricsRepositoryImpl implements AdminRetentionMetric
   }
 
   private async countRetainedUsers(thirtyDaysAgo: Date): Promise<number> {
-    const raw = await this.userRepository
-      .createQueryBuilder('u')
-      .select('COUNT("u"."id")', 'count')
+    const raw = await this.userActivityRepository
+      .createQueryBuilder('activity')
+      .innerJoin(User, 'u', '"u"."id" = "activity"."user_id"')
+      .select('COUNT(DISTINCT "activity"."user_id")', 'count')
       .where('"u"."created_at" <= :thirtyDaysAgo', { thirtyDaysAgo })
-      .andWhere('"u"."updated_at" >= :thirtyDaysAgo', { thirtyDaysAgo })
+      .andWhere('"activity"."created_at" >= :thirtyDaysAgo', {
+        thirtyDaysAgo,
+      })
       .andWhere('"u"."deleted_at" IS NULL')
       .getRawOne<CountRaw>();
 
@@ -95,7 +115,9 @@ export class AdminRetentionMetricsRepositoryImpl implements AdminRetentionMetric
     const raw = await this.workspaceRepository
       .createQueryBuilder('w')
       .select('COUNT("w"."id")', 'count')
-      .where('"w"."plan_type" = :plan', { plan: 'pro' })
+      .where('"w"."plan_type" = :plan', {
+        plan: PlanTypeWorkspace.PRO,
+      })
       .andWhere('"w"."deleted_at" IS NULL')
       .getRawOne<CountRaw>();
 
@@ -110,7 +132,9 @@ export class AdminRetentionMetricsRepositoryImpl implements AdminRetentionMetric
       .createQueryBuilder('w')
       .withDeleted()
       .select('COUNT("w"."id")', 'count')
-      .where('"w"."plan_type" = :plan', { plan: 'pro' })
+      .where('"w"."plan_type" = :plan', {
+        plan: PlanTypeWorkspace.PRO,
+      })
       .andWhere('"w"."deleted_at" >= :startOfMonth', { startOfMonth })
       .andWhere('"w"."deleted_at" <= :now', { now })
       .getRawOne<CountRaw>();

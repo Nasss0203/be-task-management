@@ -61,6 +61,7 @@ export class AdminDashboardSummaryApplicationImpl implements AdminDashboardSumma
         totalProjects: summary.totalProjects,
         totalTasks: summary.totalTasks,
         paidWorkspaces: summary.paidWorkspaces,
+        activeUsersLast30Days: summary.activeUsersLast30Days,
       };
     } catch (e: unknown) {
       const err = e as { message?: string; name?: string };

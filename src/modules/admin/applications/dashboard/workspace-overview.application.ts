@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { WorkspaceOverviewResponseDto } from '../dto/response/dashboard/workspace-overview.response.dto';
-import { AdminWorkspaceOverviewApplication } from '../interfaces/applications/dashboard/workspace-overview.application.interface';
-import { type AdminWorkspaceOverviewService } from '../interfaces/services/dashboard/admin-workspace-overview.service.interface';
-import { ADMIN_TYPES } from '../interfaces/types';
+import { WorkspaceOverviewResponseDto } from '../../dto/response/dashboard/workspace-overview.response.dto';
+import { AdminWorkspaceOverviewApplication } from '../../interfaces/applications/dashboard/workspace-overview.application.interface';
+import { type AdminWorkspaceOverviewService } from '../../interfaces/services/dashboard/admin-workspace-overview.service.interface';
+import { ADMIN_TYPES } from '../../interfaces/types';
 
 @Injectable()
 export class AdminWorkspaceOverviewApplicationImpl implements AdminWorkspaceOverviewApplication {

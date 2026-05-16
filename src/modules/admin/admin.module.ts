@@ -15,9 +15,9 @@ import { WORKSPACE_TYPES } from '../workspaces/interfaces/types';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { AdminService } from './admin.service';
 import { AdminFindAllWorkspaceApplicationImpl } from './applications/admin-findAll-workspace.application';
-import { AdminUpdateWorkspacePlanApplicationImpl } from './applications/admin-update-workspace-plan.application';
 import { AdminDashboardSummaryApplicationImpl } from './applications/dashboard/admin-dashboard-summary.application';
-import { AdminWorkspaceOverviewApplicationImpl } from './applications/workspace-overview.application';
+import { AdminUpdateWorkspacePlanApplicationImpl } from './applications/dashboard/admin-update-workspace-plan.application';
+import { AdminWorkspaceOverviewApplicationImpl } from './applications/dashboard/workspace-overview.application';
 import { AdminController } from './controller/admin.controller';
 import { ADMIN_TYPES } from './interfaces/types';
 
@@ -29,27 +29,27 @@ import { AdminWorkspaceOverviewServiceImpl } from './services/dashboard/admin-wo
 
 import { ConfigModule } from '@nestjs/config';
 import { UserActivity } from '../user_activity/domain/entities/user_activity.entity';
-import { AdminUserGrowthApplicationImpl } from './applications/admin-user-growth.application';
 import { AdminRecentActivityApplicationImpl } from './applications/dashboard/admin-recent-activity.application';
 import { AdminRetentionMetricsApplicationImpl } from './applications/dashboard/admin-retention-metrics.application';
 import { AdminSystemHealthApplicationImpl } from './applications/dashboard/admin-system-health.application';
+import { AdminUserGrowthApplicationImpl } from './applications/dashboard/admin-user-growth.application';
 import { AdminWorkspaceGrowthApplicationImpl } from './applications/dashboard/admin-workspace-growth.application';
 import { AdminWorkspacePlanApplicationImpl } from './applications/dashboard/admin-workspace-plan.application';
+import { AdminUserOverviewApplicationImpl } from './applications/user/admin-user-overview.application';
 import { AdminRecentActivityRepositoryImpl } from './repositories/dashboard/admin-recent-activity.repository';
 import { AdminRetentionMetricsRepositoryImpl } from './repositories/dashboard/admin-retention-metrics.repository';
+import { AdminSystemHealthRepositoryImpl } from './repositories/dashboard/admin-system-health.repository';
+import { AdminUpdateWorkspacePlanRepositoryImpl } from './repositories/dashboard/admin-update-workspace-plan.repository';
+import { AdminUserGrowthRepositoryImpl } from './repositories/dashboard/admin-user-growth.repository';
+import { AdminWorkspaceGrowthRepositoryImpl } from './repositories/dashboard/admin-workspace-growth.repository';
 import { AdminWorkspacePlanRepositoryImpl } from './repositories/dashboard/admin-workspace-plan.repository';
+import { AdminUserOverviewRepositoryImpl } from './repositories/user/admin-user-overview.repository';
 import { AdminRecentActivityServiceImpl } from './services/dashboard/admin-recent-activity.service';
 import { AdminRetentionMetricsServiceImpl } from './services/dashboard/admin-retention-metrics.service';
 import { AdminSystemHealthServiceImpl } from './services/dashboard/admin-system-health.service';
 import { AdminUserGrowthServiceImpl } from './services/dashboard/admin-user-growth.service';
 import { AdminWorkspaceGrowthServiceImpl } from './services/dashboard/admin-workspace-growth.service';
 import { AdminWorkspacePlanServiceImpl } from './services/dashboard/admin-workspace-plan.service';
-import { AdminUpdateWorkspacePlanRepositoryImpl } from './repositories/dashboard/admin-update-workspace-plan.repository';
-import { AdminSystemHealthRepositoryImpl } from './repositories/dashboard/admin-system-health.repository';
-import { AdminUserGrowthRepositoryImpl } from './repositories/dashboard/admin-user-growth.repository';
-import { AdminWorkspaceGrowthRepositoryImpl } from './repositories/dashboard/admin-workspace-growth.repository';
-import { AdminUserOverviewApplicationImpl } from './applications/user/admin-user-overview.application';
-import { AdminUserOverviewRepositoryImpl } from './repositories/user/admin-user-overview.repository';
 import { AdminUserOverviewServiceImpl } from './services/user/admin-user-overview.service';
 
 @Module({

@@ -4,4 +4,5 @@ export class DashboardSummaryResponseDto {
   totalProjects: number;
   totalTasks: number;
   paidWorkspaces: number;
+  activeUsersLast30Days: number;
 }
