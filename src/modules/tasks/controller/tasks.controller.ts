@@ -21,6 +21,7 @@ import { Auth } from 'src/common/decorator/auth.decorator';
 import { type IAuth } from 'src/types/auth';
 import { MoveTaskSprintToSprintDto } from '../dto/move-task-sprint-to-sprint.dto';
 import { MoveTaskSprintDto } from '../dto/move-task-sprint.dto';
+import { UpdateManyTasksDto } from '../dto/update-many-tasks.dto';
 import { type CreateTaskApplication } from '../interfaces/applications/create-task.application.interface';
 import { type DeleteTaskApplication } from '../interfaces/applications/delete-task.application.interface';
 import { type MoveTaskSprintToSprintApplication } from '../interfaces/applications/move-task-sprint-to-sprint.application.interface';
@@ -187,6 +188,20 @@ export class TasksController {
       sourceSprintId,
       taskId,
       targetSprintId: dto.targetSprintId,
+    });
+  }
+
+  @Patch('workspaces/:workspaceId/projects/:projectId/bulk-update')
+  @ResponseMessage('Update many tasks successfully')
+  async updateManyTasks(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Body() dto: UpdateManyTasksDto,
+  ) {
+    return await this.updateTaskApplication.updateManyTasks({
+      workspaceId,
+      projectId,
+      dto,
     });
   }
 }

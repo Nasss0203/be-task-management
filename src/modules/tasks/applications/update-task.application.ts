@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { type UnitOfWork } from 'src/interface/index.interface';
 import {
   ActivityAction,
@@ -9,7 +9,10 @@ import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
 import { TaskResponseDto } from '../dto/response/task-response.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
-import { UpdateTaskApplication } from '../interfaces/applications/update-task.application.interface';
+import {
+  UpdateManyTasksApplicationInput,
+  UpdateTaskApplication,
+} from '../interfaces/applications/update-task.application.interface';
 import { type FindTaskService } from '../interfaces/services/find-task.service.interface';
 import { type UpdateTaskService } from '../interfaces/services/update-task.service.interface';
 import { TASK_TYPES } from '../interfaces/types';
@@ -116,5 +119,31 @@ export class UpdateTaskApplicationImpl implements UpdateTaskApplication {
 
       return TaskMapper.toResponse(updatedTask);
     });
+  }
+
+  async updateManyTasks(
+    input: UpdateManyTasksApplicationInput,
+  ): Promise<TaskResponseDto[]> {
+    const { workspaceId, projectId, dto } = input;
+
+    if (!workspaceId) {
+      throw new BadRequestException('workspaceId is required');
+    }
+
+    if (!projectId) {
+      throw new BadRequestException('projectId is required');
+    }
+
+    if (!dto.taskIds?.length) {
+      throw new BadRequestException('Task list cannot be empty');
+    }
+
+    const tasks = await this.updateTaskService.updateManyTasks({
+      workspaceId,
+      projectId,
+      dto,
+    });
+
+    return tasks.map(TaskMapper.toResponse);
   }
 }
