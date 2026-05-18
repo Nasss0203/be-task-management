@@ -1,21 +1,48 @@
-import { IsEmail, IsEnum, IsOptional, IsUUID } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsEmail,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
 import { RoleName } from 'src/modules/role/domain/entities/role.entity';
 
-export class CreateWorkspaceInviteDto {
+export enum InviteRecipientType {
+  USER = 'USER',
+  EMAIL = 'EMAIL',
+}
+
+export class InviteRecipientDto {
+  @IsEnum(InviteRecipientType)
+  type: InviteRecipientType;
+
   @IsOptional()
   @IsUUID()
   user_id?: string;
 
+  @IsOptional()
   @IsEmail()
-  email: string;
+  email?: string;
+}
 
+export class CreateWorkspaceInviteDto {
   @IsEnum(RoleName)
   role_name: RoleName;
 
-  workspaceId: string;
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => InviteRecipientDto)
+  recipients: InviteRecipientDto[];
 }
-
-import { IsInt, Max, Min } from 'class-validator';
 
 export class CreateWorkspaceInviteLinkDto {
   @IsEnum(RoleName)
@@ -33,8 +60,6 @@ export class CreateWorkspaceInviteLinkDto {
   @Max(100)
   max_uses?: number;
 }
-
-import { IsString, MinLength } from 'class-validator';
 
 export class AcceptWorkspaceInviteDto {
   @IsString()

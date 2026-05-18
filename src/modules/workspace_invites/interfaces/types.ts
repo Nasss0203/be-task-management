@@ -9,6 +9,7 @@ export const WORKSPACE_INVITE_TYPES = {
     AcceptWorkspaceInviteApplication: 'AcceptWorkspaceInviteApplication',
     CreateWorkspaceInviteLinkApplication:
       'CreateWorkspaceInviteLinkApplication',
+    SearchInviteUsersApplication: 'SearchInviteUsersApplication',
   },
   repositories: {
     CreateWorkspaceInviteRepository: 'CreateWorkspaceInviteRepository',

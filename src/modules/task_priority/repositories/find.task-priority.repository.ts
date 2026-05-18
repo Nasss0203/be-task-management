@@ -30,7 +30,6 @@ export class FindTaskPriorityRepositoryImpl implements FindTaskPriorityRepositor
         workspaceId,
       },
     });
-    console.log('🚀 ~ priorities~', priorities);
 
     return priorities.map((entity) => TaskPriorityMapper.toModel(entity));
   }

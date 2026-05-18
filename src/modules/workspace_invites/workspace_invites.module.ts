@@ -10,6 +10,7 @@ import { WORKSPACE_TYPES } from '../workspaces/interfaces/types';
 import { AcceptWorkspaceInviteApplicationImpl } from './applications/accept-workspace-invite.application';
 import { CreateWorkspaceInviteLinkApplicationImpl } from './applications/create-workspace-invite-link.application';
 import { InviteWorkspaceMemberApplicationImpl } from './applications/invite-workspace-member.application';
+import { SearchInviteUsersApplicationImpl } from './applications/search-invite-users.application';
 import { WorkspaceInvitesController } from './controller/workspace_invites.controller';
 import { WorkspaceInvite } from './domain/entities/workspace_invite.entity';
 import { WORKSPACE_INVITE_TYPES } from './interfaces/types';
@@ -49,6 +50,10 @@ import { WorkspaceInvitesService } from './workspace_invites.service';
         WORKSPACE_INVITE_TYPES.applications
           .CreateWorkspaceInviteLinkApplication,
       useClass: CreateWorkspaceInviteLinkApplicationImpl,
+    },
+    {
+      provide: WORKSPACE_INVITE_TYPES.applications.SearchInviteUsersApplication,
+      useClass: SearchInviteUsersApplicationImpl,
     },
     // Repository
     {

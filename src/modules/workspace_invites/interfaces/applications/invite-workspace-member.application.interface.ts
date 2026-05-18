@@ -6,5 +6,5 @@ export interface InviteWorkspaceMemberApplication {
     workspaceId: string,
     invitedBy: string,
     dto: CreateWorkspaceInviteDto,
-  ): Promise<WorkspaceInviteResponseDto>;
+  ): Promise<WorkspaceInviteResponseDto[]>;
 }

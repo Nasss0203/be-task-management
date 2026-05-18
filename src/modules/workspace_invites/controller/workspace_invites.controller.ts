@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Get,
   Inject,
   Param,
   Post,
+  Query,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
@@ -17,9 +19,11 @@ import {
 } from '../dto/create-workspace_invite.dto';
 import { WorkspaceInviteLinkResponseDto } from '../dto/response/workspace-invite-link-response.dto';
 import { WorkspaceInviteResponseDto } from '../dto/response/workspace_invites-response.dto';
+import { SearchInviteUserResponseDto } from '../dto/search-invite-user.response.dto';
 import { type AcceptWorkspaceInviteApplication } from '../interfaces/applications/accept-workspace-invite.application.interface';
 import { type CreateWorkspaceInviteLinkApplication } from '../interfaces/applications/create-workspace-invite-link.application.interface';
 import { type InviteWorkspaceMemberApplication } from '../interfaces/applications/invite-workspace-member.application.interface';
+import { type SearchInviteUsersApplication } from '../interfaces/applications/search-invite-users.application.interface';
 import { WORKSPACE_INVITE_TYPES } from '../interfaces/types';
 
 @Controller('workspace-invites')
@@ -39,15 +43,19 @@ export class WorkspaceInvitesController {
       WORKSPACE_INVITE_TYPES.applications.CreateWorkspaceInviteLinkApplication,
     )
     private readonly createWorkspaceInviteLinkApplication: CreateWorkspaceInviteLinkApplication,
+
+    @Inject(WORKSPACE_INVITE_TYPES.applications.SearchInviteUsersApplication)
+    private readonly searchInviteUsersApplication: SearchInviteUsersApplication,
   ) {}
 
-  @Post()
-  @ResponseMessage('Invite workspace member successfully')
+  @Post(':workspaceId/members')
+  @ResponseMessage('Invite workspace members successfully')
   @RequirePermissions(PERMISSIONS.WORKSPACE_MEMBER_ADD)
   async invite(
+    @Param('workspaceId') workspaceId: string,
     @Body() dto: CreateWorkspaceInviteDto,
     @Auth() auth: IAuth,
-  ): Promise<WorkspaceInviteResponseDto> {
+  ): Promise<WorkspaceInviteResponseDto[]> {
     const invitedBy = auth.id;
 
     if (!invitedBy) {
@@ -55,7 +63,7 @@ export class WorkspaceInvitesController {
     }
 
     return this.inviteWorkspaceMemberApplication.invite(
-      dto.workspaceId,
+      workspaceId,
       invitedBy,
       dto,
     );
@@ -101,5 +109,24 @@ export class WorkspaceInvitesController {
       invitedBy,
       dto,
     );
+  }
+
+  @Get(':workspaceId/users/search')
+  @ResponseMessage('Search invite users successfully')
+  @RequirePermissions(PERMISSIONS.WORKSPACE_MEMBER_ADD)
+  async searchInviteUsers(
+    @Param('workspaceId') workspaceId: string,
+    @Query('q') q: string,
+    @Auth() auth: IAuth,
+  ): Promise<SearchInviteUserResponseDto[]> {
+    if (!auth?.id) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
+    return this.searchInviteUsersApplication.search({
+      workspaceId,
+      keyword: q,
+      currentUserId: auth.id,
+    });
   }
 }

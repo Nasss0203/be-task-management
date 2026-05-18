@@ -1,7 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { UserModel } from '../domain/models/user.model';
 import { type FindUserRepository } from '../interfaces/repositories/find-user.repository.interface';
-import { FindUserService } from '../interfaces/services/find-user.service.interface';
+import {
+  FindUserService,
+  SearchInviteUsersServiceInput,
+  SearchInviteUsersServiceOutput,
+} from '../interfaces/services/find-user.service.interface';
 import { USER_TYPES } from '../interfaces/types';
 
 @Injectable()
@@ -23,7 +27,23 @@ export class FindUserServiceImpl implements FindUserService {
     return this.findUserRepository.findUserById(id);
   }
 
-  searchUsers(keyword: string): Promise<UserModel[]> {
+  async searchUsers(keyword: string): Promise<UserModel[]> {
     return this.findUserRepository.searchUsers(keyword);
+  }
+
+  async searchInviteUsers(
+    input: SearchInviteUsersServiceInput,
+  ): Promise<SearchInviteUsersServiceOutput[]> {
+    const keyword = input.keyword.trim();
+
+    if (keyword.length < 2) {
+      return [];
+    }
+
+    return this.findUserRepository.searchInviteUsers({
+      workspaceId: input.workspaceId,
+      keyword,
+      currentUserId: input.currentUserId,
+    });
   }
 }
