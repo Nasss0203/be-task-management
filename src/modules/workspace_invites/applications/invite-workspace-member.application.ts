@@ -5,6 +5,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { MailService } from 'src/modules/mail/mail.service';
+import {
+  NotificationSenderType,
+  NotificationSourceType,
+  NotificationType,
+} from 'src/modules/notifications/domain/entities/notification.entity';
+import { type CreateNotificationService } from 'src/modules/notifications/interfaces/services/create.notifications.service.interface';
+import { NOTIFICATION_TYPES } from 'src/modules/notifications/interfaces/types';
 import { type FindUserService } from 'src/modules/users/interfaces/services/find-user.service.interface';
 import { USER_TYPES } from 'src/modules/users/interfaces/types';
 import {
@@ -26,6 +33,9 @@ export class InviteWorkspaceMemberApplicationImpl implements InviteWorkspaceMemb
 
     @Inject(USER_TYPES.services.FindUserService)
     private readonly findUserService: FindUserService,
+
+    @Inject(NOTIFICATION_TYPES.services.CreateNotificationService)
+    private readonly createNotificationService: CreateNotificationService,
 
     private readonly mailService: MailService,
   ) {}
@@ -67,6 +77,44 @@ export class InviteWorkspaceMemberApplicationImpl implements InviteWorkspaceMemb
         role_name: dto.role_name,
         invited_by: invitedBy,
       });
+
+      /**
+       * In-app notification chỉ gửi được nếu recipient là user trong hệ thống.
+       * Nếu recipient.user_id = null thì chỉ gửi email.
+       */
+      if (recipient.user_id) {
+        await this.createNotificationService.createNotification({
+          receiverId: recipient.user_id,
+
+          senderType: NotificationSenderType.USER,
+          actorId: invitedBy,
+
+          sourceType: NotificationSourceType.WORKSPACE,
+
+          workspaceId,
+          projectId: null,
+          taskId: null,
+          sprintId: null,
+          commentId: null,
+
+          type: NotificationType.WORKSPACE_INVITE,
+
+          title: 'Workspace invitation',
+          message: `You have been invited to join Task Management.`,
+
+          actionUrl: `/invite/workspace?token=${invite.token}`,
+
+          metadata: {
+            inviteId: invite.id,
+            inviteToken: invite.token,
+            workspaceId,
+            workspaceName: 'Task Management',
+            roleName: dto.role_name,
+            invitedBy,
+            email: recipient.email,
+          },
+        });
+      }
 
       await this.mailService.sendEmailTemplates({
         to: recipient.email,

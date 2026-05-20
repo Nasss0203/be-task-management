@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { MailModule } from '../mail/mail.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { RoleModule } from '../role/role.module';
 import { UserRolesModule } from '../user_roles/user_roles.module';
 import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
@@ -30,6 +31,7 @@ import { WorkspaceInvitesService } from './workspace_invites.service';
     RoleModule,
     UserRolesModule,
     UserWorkspacesModule,
+    NotificationsModule,
   ],
   controllers: [WorkspaceInvitesController],
   providers: [

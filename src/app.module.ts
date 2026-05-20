@@ -31,7 +31,7 @@ import { AuditLogsModule } from './modules/audit_logs/audit_logs.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { MailModule } from './modules/mail/mail.module';
 import { MentionsModule } from './modules/mentions/mentions.module';
-import { NotificationModule } from './modules/notification/notification.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PageModule } from './modules/page/page.module';
 import { PageBlockModule } from './modules/page_block/page_block.module';
 import { PageTemplateBlocksModule } from './modules/page_template_blocks/page_template_blocks.module';
@@ -89,7 +89,7 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
     MentionsModule,
     AuditLogsModule,
     BillingModule,
-    NotificationModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [
