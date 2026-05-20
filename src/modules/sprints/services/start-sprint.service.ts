@@ -24,7 +24,6 @@ export class StartSprintServiceImpl implements StartSprintService {
     @Inject(SPRINT_TYPES.repositories.FindSprintRepository)
     private readonly findSprintRepository: FindSprintRepository,
   ) {}
-
   async startSprint(
     input: StartSprintServiceInput,
     manager?: EntityManager,

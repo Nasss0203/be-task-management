@@ -16,10 +16,8 @@ import { type IAuth } from 'src/types/auth';
 import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
 import { WorkspaceOverviewResponseDto } from '../dto/response/workspace-overview.response.dto';
 import { type AccessWorkspaceApplication } from '../interfaces/applications/access-workspace.application.interface';
-import {
-  type CreateWorkspaceTemplateApplication,
-  type CreateWorkspaceTemplateDto,
-} from '../interfaces/applications/create-workspace-template.application.interface';
+import type { CreateWorkspaceTemplateDto } from '../interfaces/applications/create-workspace-template.application.interface';
+import { type CreateWorkspaceTemplateApplication } from '../interfaces/applications/create-workspace-template.application.interface';
 import { type CreateWorkspaceApplication } from '../interfaces/applications/create-workspace.application.interface';
 import { type FindWorkspaceOverviewApplication } from '../interfaces/applications/find-workspace-overview.application.interface';
 import { type FindWorkspaceApplication } from '../interfaces/applications/find.workspace.application.interface';

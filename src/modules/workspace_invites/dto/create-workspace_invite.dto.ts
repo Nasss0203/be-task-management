@@ -28,7 +28,6 @@ export class InviteRecipientDto {
   @IsUUID()
   user_id?: string;
 
-  @IsOptional()
   @IsEmail()
   email?: string;
 }

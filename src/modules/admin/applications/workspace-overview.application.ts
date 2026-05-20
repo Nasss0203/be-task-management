@@ -7,8 +7,10 @@ import { type FindMemberService } from 'src/modules/user_workspace/interfaces/se
 import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/types';
 import { type FindWorkspaceService } from 'src/modules/workspaces/interfaces/services/find.workspace.service.interface';
 import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
-import { WorkspaceOverviewResponseDto } from '../dto/response/workspace-overview.response.dto';
-import { AdminWorkspaceOverviewApplication } from '../interfaces/applications/workspace-overview.application.interface';
+import { AdminWorkspaceOverviewResponseDto } from '../dto/response/dashboard/workspace-overview.response.dto';
+import { AdminWorkspaceOverviewApplication } from '../interfaces/applications/dashboard/workspace-overview.application.interface';
+import { type AdminWorkspaceOverviewService } from '../interfaces/services/dashboard/admin-workspace-overview.service.interface';
+import { ADMIN_TYPES } from '../interfaces/types';
 
 @Injectable()
 export class AdminWorkspaceOverviewApplicationImpl implements AdminWorkspaceOverviewApplication {
@@ -24,33 +26,28 @@ export class AdminWorkspaceOverviewApplicationImpl implements AdminWorkspaceOver
 
     @Inject(TASK_TYPES.services.FindTaskService)
     private readonly findTaskService: FindTaskService,
+
+    @Inject(ADMIN_TYPES.services.AdminWorkspaceOverviewService)
+    private readonly adminWorkspaceOverviewService: AdminWorkspaceOverviewService,
   ) {}
 
   async getOverview(
-    userId: string,
     workspaceId: string,
-  ): Promise<WorkspaceOverviewResponseDto> {
-    const workspace = await this.findWorkspaceService.findOneByWorkspaceId(
-      userId,
-      workspaceId,
-    );
-
-    const [members, projects, tasks] = await Promise.all([
-      this.findUserWorkspaceService.findAllMember(workspaceId),
-      this.findProjectService.findAllByWorkspaceId(workspaceId),
-      this.findTaskService.findAllTaskByWorkspace(workspaceId),
-    ]);
+  ): Promise<AdminWorkspaceOverviewResponseDto> {
+    const overview =
+      await this.adminWorkspaceOverviewService.getOverview(workspaceId);
 
     return {
-      id: workspace.id,
-      name: workspace.name,
-      slug: workspace.slug,
-      planType: workspace.planType,
-      createdAt: workspace.createdAt,
-      updatedAt: workspace.updatedAt,
-      memberCount: members.length,
-      projectCount: projects.length,
-      taskCount: tasks.length,
+      id: overview.id,
+      name: overview.name,
+      slug: overview.slug,
+      planType: overview.planType,
+      createdAt: overview.createdAt,
+      updatedAt: overview.updatedAt,
+      memberCount: overview.memberCount,
+      projectCount: overview.projectCount,
+      boardCount: overview.boardCount,
+      taskCount: overview.taskCount,
     };
   }
 }

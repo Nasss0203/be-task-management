@@ -5,10 +5,13 @@ export type StartSprintServiceInput = {
   workspaceId: string;
   projectId: string;
   sprintId: string;
+<<<<<<< HEAD
   startAt?: string;
   endAt?: string;
   name?: string;
   goal?: string;
+=======
+>>>>>>> admin
 };
 
 export interface StartSprintService {
