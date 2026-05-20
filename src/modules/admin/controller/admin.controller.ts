@@ -25,7 +25,11 @@ import { SystemHealthResponseDto } from '../dto/response/dashboard/system-health
 import { UpdateWorkspacePlanDto } from '../dto/response/dashboard/update-workspace-plan.dto';
 import { UserGrowthResponseDto } from '../dto/response/dashboard/user-growth.response.dto';
 import { WorkspaceGrowthResponseDto } from '../dto/response/dashboard/workspace-growth.response.dto';
-import { WorkspaceOverviewResponseDto } from '../dto/response/dashboard/workspace-overview.response.dto';
+import {
+  AdminWorkspaceItemResponseDto,
+  AdminWorkspaceOverviewResponseDto,
+  WorkspaceOverviewResponseDto,
+} from '../dto/response/dashboard/workspace-overview.response.dto';
 import { WorkspacePlanResponseDto } from '../dto/response/dashboard/workspace-plan.response.dto';
 import { AdminUserOverviewResponseDto } from '../dto/response/user/admin-user-overview.response.dto';
 import { type AdminFindAllWorkspaceApplication } from '../interfaces/applications/admin-findAll-workspace.application.interface';
@@ -36,8 +40,8 @@ import { type AdminSystemHealthApplication } from '../interfaces/applications/da
 import { type AdminUpdateWorkspacePlanApplication } from '../interfaces/applications/dashboard/admin-update-workspace-plan.application.interface';
 import { type AdminUserGrowthApplication } from '../interfaces/applications/dashboard/admin-user-growth.application.interface';
 import { type AdminWorkspaceGrowthApplication } from '../interfaces/applications/dashboard/admin-workspace-growth.application.interface';
-import { type AdminWorkspaceOverviewApplication } from '../interfaces/applications/dashboard/workspace-overview.application.interface';
 import { type AdminWorkspacePlanApplication } from '../interfaces/applications/dashboard/admin-workspace-plan.application.interface';
+import { type AdminWorkspaceOverviewApplication } from '../interfaces/applications/dashboard/workspace-overview.application.interface';
 import { type AdminUserOverviewApplication } from '../interfaces/applications/user/admin-user-overview.application.interface';
 import { ADMIN_TYPES } from '../interfaces/types';
 
@@ -76,15 +80,15 @@ export class AdminController {
   @ResponseMessage('get all workspaces by admin successfully')
   findAllWorkspace(
     @Query() query: AdminFindAllWorkspaceQueryDto,
-  ): Promise<WorkspaceResponseDto[]> {
+  ): Promise<AdminWorkspaceItemResponseDto[]> {
     return this.adminFindAllWorkspaceApplication.findAllWorkspace(query);
   }
 
   @Get('findAll-workspaces-overview/:workspaceId')
   @ResponseMessage('Get workspace overview successfully')
-  findAllWorkspaceOverview(
+  getWorkspaceOverview(
     @Param('workspaceId') workspaceId: string,
-  ): Promise<WorkspaceOverviewResponseDto> {
+  ): Promise<AdminWorkspaceOverviewResponseDto> {
     return this.adminWorkspaceOverviewApplication.getOverview(workspaceId);
   }
 
@@ -104,7 +108,10 @@ export class AdminController {
     @Param('workspaceId') workspaceId: string,
     @Body() dto: UpdateWorkspacePlanDto,
   ): Promise<WorkspaceResponseDto> {
-    return this.adminUpdateWorkspacePlanApplication.updatePlan(workspaceId, dto);
+    return this.adminUpdateWorkspacePlanApplication.updatePlan(
+      workspaceId,
+      dto,
+    );
   }
 
   @Get('dashboard/summary')

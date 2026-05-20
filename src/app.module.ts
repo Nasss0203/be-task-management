@@ -37,7 +37,6 @@ import { PageBlockModule } from './modules/page_block/page_block.module';
 import { PageTemplateBlocksModule } from './modules/page_template_blocks/page_template_blocks.module';
 import { PageTemplatesModule } from './modules/page_templates/page_templates.module';
 import { SeedsModule } from './modules/seed/seed.module';
-import { UserActivityModule } from './modules/user_activity/user_activity.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { TaskAssigneeModule } from './modules/task_assignee/task_assignee.module';
 import { TaskCommnentModule } from './modules/task_commnent/task_commnent.module';

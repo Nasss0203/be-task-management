@@ -8,13 +8,18 @@ type AdminWorkspaceRaw = {
   name: string;
   slug: string;
   plan: WorkspaceModel['planType'];
+  status?: 'ACTIVE' | 'DELETED';
   createdAt: Date;
   updatedAt: Date;
-  owner?: string | null;
+  deletedAt?: Date | null;
+
+  ownerName?: string | null;
+  ownerEmail?: string | null;
+
   membersCount?: string | number | null;
   projectsCount?: string | number | null;
+  boardsCount?: string | number | null;
   tasksCount?: string | number | null;
-  userCount?: string | number | null;
 };
 export class WorkspaceMapper {
   static toModel(entity: Workspace): WorkspaceModel {
@@ -65,6 +70,7 @@ export class WorkspaceMapper {
       deletedBy: model.deletedBy,
     };
   }
+
   static toAdminWorkspaceItemResponse(
     raw: AdminWorkspaceRaw,
   ): AdminWorkspaceItemResponseDto {
@@ -73,13 +79,18 @@ export class WorkspaceMapper {
       name: raw.name,
       slug: raw.slug,
       plan: raw.plan,
+      status: raw.status ?? (raw.deletedAt ? 'DELETED' : 'ACTIVE'),
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
-      owner: raw.owner ?? undefined,
+      deletedAt: raw.deletedAt ?? null,
+
+      ownerName: raw.ownerName ?? null,
+      ownerEmail: raw.ownerEmail ?? null,
+
       membersCount: Number(raw.membersCount ?? 0),
       projectsCount: Number(raw.projectsCount ?? 0),
+      boardsCount: Number(raw.boardsCount ?? 0),
       tasksCount: Number(raw.tasksCount ?? 0),
-      userCount: Number(raw.userCount ?? 0),
     };
   }
 }

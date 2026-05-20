@@ -69,4 +69,19 @@ export class AdminWorkspaceItemResponseDto {
   projectsCount: number;
   boardsCount: number;
   tasksCount: number;
+}   
+
+export class AdminWorkspaceOverviewResponseDto {
+  id: string;
+  name: string;
+  slug: string;
+  planType: PlanTypeWorkspace;
+  createdAt: Date;
+  updatedAt: Date;
+  memberCount: number;
+  projectCount: number;
+  boardCount: number;
+  taskCount: number;
 }
+
+
