@@ -9,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Plan } from './plan.entity';
 import { Subscription } from './subscription.entity';
 
 export enum InvoiceStatus {
@@ -21,6 +22,7 @@ export enum InvoiceStatus {
 
 @Entity('invoices')
 @Index(['userId'])
+@Index(['planId'])
 @Index(['subscriptionId'])
 @Index(['invoiceNumber'], { unique: true })
 @Index(['status'])
@@ -35,6 +37,13 @@ export class Invoice {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
+  @Column({ name: 'plan_id', type: 'uuid' })
+  planId: string;
+
+  @ManyToOne(() => Plan, { nullable: false, onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'plan_id' })
+  plan: Plan;
+
   @Column({ name: 'subscription_id', type: 'uuid', nullable: true })
   subscriptionId: string | null;
 
@@ -46,7 +55,6 @@ export class Invoice {
     name: 'invoice_number',
     type: 'varchar',
     length: 100,
-    unique: true,
   })
   invoiceNumber: string;
 
@@ -65,6 +73,12 @@ export class Invoice {
     default: InvoiceStatus.OPEN,
   })
   status: InvoiceStatus;
+
+  @Column({ name: 'period_start', type: 'timestamp', nullable: true })
+  periodStart: Date | null;
+
+  @Column({ name: 'period_end', type: 'timestamp', nullable: true })
+  periodEnd: Date | null;
 
   @Column({ name: 'hosted_invoice_url', type: 'text', nullable: true })
   hostedInvoiceUrl: string | null;

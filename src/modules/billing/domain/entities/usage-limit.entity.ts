@@ -29,6 +29,9 @@ export class UsageLimit {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  /**
+   * Giới hạn luôn check theo từng workspace.
+   */
   @Column({ name: 'workspace_id', type: 'uuid' })
   workspaceId: string;
 
@@ -50,6 +53,9 @@ export class UsageLimit {
   })
   resourceType: UsageResourceType;
 
+  /**
+   * null = unlimited
+   */
   @Column({ name: 'limit_value', type: 'int', nullable: true })
   limitValue: number | null;
 

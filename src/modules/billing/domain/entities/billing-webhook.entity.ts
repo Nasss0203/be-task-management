@@ -1,4 +1,5 @@
 import { User } from 'src/modules/users/domain/entities/user.entity';
+import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import {
   Column,
   CreateDateColumn,
@@ -23,6 +24,7 @@ export enum BillingWebhookStatus {
 @Entity('billing_webhooks')
 @Index(['provider', 'providerEventId'], { unique: true })
 @Index(['userId'])
+@Index(['targetWorkspaceId'])
 @Index(['subscriptionId'])
 @Index(['paymentId'])
 @Index(['invoiceId'])
@@ -39,6 +41,13 @@ export class BillingWebhook {
   @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'user_id' })
   user: User | null;
+
+  @Column({ name: 'target_workspace_id', type: 'uuid', nullable: true })
+  targetWorkspaceId: string | null;
+
+  @ManyToOne(() => Workspace, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'target_workspace_id' })
+  targetWorkspace: Workspace | null;
 
   @Column({ name: 'subscription_id', type: 'uuid', nullable: true })
   subscriptionId: string | null;
@@ -67,6 +76,13 @@ export class BillingWebhook {
   })
   provider: BillingProvider;
 
+  /**
+   * Dùng để chống xử lý webhook trùng.
+   *
+   * Ví dụ:
+   * MOMO:${orderId}:${requestId}:${transId}
+   * VNPAY:${vnp_TxnRef}:${vnp_TransactionNo}:${vnp_ResponseCode}
+   */
   @Column({
     name: 'provider_event_id',
     type: 'varchar',
@@ -76,6 +92,17 @@ export class BillingWebhook {
 
   @Column({ name: 'event_type', type: 'varchar', length: 255 })
   eventType: string;
+
+  @Column({ name: 'order_code', type: 'varchar', length: 100, nullable: true })
+  orderCode: string | null;
+
+  @Column({
+    name: 'provider_transaction_id',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  providerTransactionId: string | null;
 
   @Column({
     type: 'enum',

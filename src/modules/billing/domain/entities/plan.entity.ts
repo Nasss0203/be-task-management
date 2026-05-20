@@ -1,5 +1,3 @@
-// src/modules/billing/domain/entities/plan.entity.ts
-
 import {
   Column,
   CreateDateColumn,
@@ -26,12 +24,16 @@ export class Plan {
   @Column({ type: 'varchar', length: 100 })
   name: string;
 
-  @Column({ type: 'varchar', length: 100, unique: true })
+  @Column({ type: 'varchar', length: 100 })
   slug: string;
 
   @Column({ type: 'text', nullable: true })
   description: string | null;
 
+  /**
+   * Đơn vị VND.
+   * Ví dụ: 99000 = 99.000đ
+   */
   @Column({ name: 'price_amount', type: 'int', default: 0 })
   priceAmount: number;
 
@@ -46,9 +48,31 @@ export class Plan {
   })
   billingInterval: PlanBillingInterval;
 
+  /**
+   * Ví dụ:
+   * {
+   *   "kanban": true,
+   *   "sprint": true,
+   *   "storage": true
+   * }
+   */
   @Column({ type: 'jsonb', nullable: true })
   features: Record<string, unknown> | null;
 
+  /**
+   * Ví dụ:
+   * {
+   *   "upgradedWorkspaces": 3,
+   *   "members": 10,
+   *   "projects": 20,
+   *   "tasks": 1000,
+   *   "pages": 100,
+   *   "storageMb": 10240,
+   *   "sprints": 20
+   * }
+   *
+   * null = unlimited
+   */
   @Column({ type: 'jsonb', nullable: true })
   limits: Record<string, unknown> | null;
 

@@ -13,7 +13,6 @@ import { Plan } from './plan.entity';
 
 export enum BillingProvider {
   MANUAL = 'MANUAL',
-  VISA = 'VISA',
   MOMO = 'MOMO',
   VNPAY = 'VNPAY',
 }
@@ -31,11 +30,17 @@ export enum SubscriptionStatus {
 @Index(['userId'])
 @Index(['planId'])
 @Index(['status'])
+@Index(['userId', 'status'])
 @Index(['provider', 'providerSubscriptionId'])
 export class Subscription {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  /**
+   * Người mua gói.
+   * Subscription này áp dụng cho user,
+   * còn workspace nào được nâng cấp nằm ở bảng subscription_workspaces.
+   */
   @Column({ name: 'user_id', type: 'uuid' })
   userId: string;
 
@@ -57,6 +62,11 @@ export class Subscription {
   })
   provider: BillingProvider;
 
+  /**
+   * Với MoMo/VNPAY thường có thể null,
+   * vì mình tự quản lý subscription.
+   * Sau này nếu dùng Stripe thì field này hữu ích.
+   */
   @Column({
     name: 'provider_subscription_id',
     type: 'varchar',
