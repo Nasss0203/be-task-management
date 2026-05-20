@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserActivity } from 'src/modules/user_activity/domain/entities/user_activity.entity';
-import { User } from 'src/modules/users/domain/entities/user.entity';
+import {
+  SystemRole,
+  User,
+} from 'src/modules/users/domain/entities/user.entity';
 import { Repository } from 'typeorm';
-import { AdminUserOverviewRepository } from '../../interfaces/repositories/user/admin-user-overview.repository.interface';
 import { AdminUserOverviewResponseDto } from '../../dto/response/user/admin-user-overview.response.dto';
-
+import { AdminUserOverviewRepository } from '../../interfaces/repositories/user/admin-user-overview.repository.interface';
 
 type CountRaw = {
   count: string;
@@ -35,12 +37,14 @@ export class AdminUserOverviewRepositoryImpl implements AdminUserOverviewReposit
       totalUsers,
       activeUsers,
       lockedUsers,
+      systemAdmins,
       newUsersLast7Days,
       activeToday,
     ] = await Promise.all([
       this.countTotalUsers(),
       this.countActiveUsers(),
       this.countLockedUsers(),
+      this.countSystemAdmins(),
       this.countNewUsersLast7Days(sevenDaysAgo),
       this.countActiveToday(startOfToday),
     ]);
@@ -49,11 +53,7 @@ export class AdminUserOverviewRepositoryImpl implements AdminUserOverviewReposit
       totalUsers,
       activeUsers,
       lockedUsers,
-
-      // Nếu hiện tại DB chưa có cột system_role hoặc bảng role system,
-      // tạm để 0. Sau này có role thì thay bằng query thật.
-      systemAdmins: 0,
-
+      systemAdmins,
       newUsersLast7Days,
       activeToday,
     };
@@ -85,6 +85,19 @@ export class AdminUserOverviewRepositoryImpl implements AdminUserOverviewReposit
       .createQueryBuilder('u')
       .select('COUNT("u"."id")', 'count')
       .where('"u"."is_active" = false')
+      .andWhere('"u"."deleted_at" IS NULL')
+      .getRawOne<CountRaw>();
+
+    return Number(raw?.count ?? 0);
+  }
+
+  private async countSystemAdmins(): Promise<number> {
+    const raw = await this.userRepository
+      .createQueryBuilder('u')
+      .select('COUNT("u"."id")', 'count')
+      .where('"u"."system_role" IN (:...roles)', {
+        roles: [SystemRole.SYSTEM_ADMIN, SystemRole.SUPER_ADMIN],
+      })
       .andWhere('"u"."deleted_at" IS NULL')
       .getRawOne<CountRaw>();
 

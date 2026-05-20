@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AdminWorkspaceItemResponseDto } from 'src/modules/admin/dto/response/dashboard/workspace-overview.response.dto';
+import {
+  AdminWorkspaceItemResponseDto,
+  AdminWorkspaceStatus,
+} from 'src/modules/admin/dto/response/dashboard/workspace-overview.response.dto';
 import { EntityManager, Repository } from 'typeorm';
+import { AdminWorkspaceStatus as AdminWorkspaceStatusFilter } from '../dto/search-workspace.dto';
 import { Workspace } from '../domain/entities/workspace.entity';
 import { AdminFindAllWorkspaceRepository } from '../interfaces/repositories/admin-findAll-workspace.repository.interface';
 import { AdminFindAllWorkspaceFilter } from '../interfaces/workspace-filter.type';
@@ -11,13 +15,16 @@ type AdminWorkspaceRaw = {
   name: string;
   slug: string;
   plan: Workspace['planType'];
+  status: AdminWorkspaceStatus;
   createdAt: Date;
   updatedAt: Date;
-  owner: string | null;
+  deletedAt: Date | null;
+  ownerName: string | null;
+  ownerEmail: string | null;
   membersCount: string;
   projectsCount: string;
+  boardsCount: string;
   tasksCount: string;
-  userCount: string;
 };
 
 @Injectable()
@@ -37,9 +44,15 @@ export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspac
   ): Promise<AdminWorkspaceItemResponseDto[]> {
     const qb = this.getRepo(manager)
       .createQueryBuilder('workspace')
+      .withDeleted()
       .leftJoin('user_workspaces', 'uw', 'uw.workspace_id = workspace.id')
       .leftJoin('projects', 'project', 'project.workspace_id = workspace.id')
-      .leftJoin('tasks', 'task', 'task.workspace_id = workspace.id')
+      .leftJoin('boards', 'board', 'board.workspace_id = workspace.id')
+      .leftJoin(
+        'tasks',
+        'task',
+        'task.workspace_id = workspace.id AND task.deleted_at IS NULL',
+      )
       .leftJoin('user_roles', 'ur', 'ur.workspace_id = workspace.id')
       .leftJoin('roles', 'role', 'role.id = ur.role_id')
       .leftJoin(
@@ -48,23 +61,52 @@ export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspac
         'ownerUser.id = ur.user_id AND role.name = :ownerRole',
         { ownerRole: 'OWNER' },
       )
+      .leftJoin(
+        'user_profiles',
+        'ownerProfile',
+        'ownerProfile.user_id = ownerUser.id',
+      )
       .select('workspace.id', 'id')
       .addSelect('workspace.name', 'name')
       .addSelect('workspace.slug', 'slug')
       .addSelect('workspace.planType', 'plan')
       .addSelect('workspace.createdAt', 'createdAt')
       .addSelect('workspace.updatedAt', 'updatedAt')
-      .addSelect('MAX(ownerUser.email)', 'owner')
+      .addSelect('workspace.deletedAt', 'deletedAt')
+      .addSelect(
+        `CASE 
+          WHEN "workspace"."deleted_at" IS NULL THEN 'ACTIVE'
+          ELSE 'DELETED'
+        END`,
+        'status',
+      )
+      .addSelect(
+        `COALESCE(
+          MAX("ownerProfile"."full_name"),
+          MAX("ownerProfile"."display_name"),
+          MAX("ownerUser"."username"),
+          MAX("ownerUser"."email")
+        )`,
+        'ownerName',
+      )
+      .addSelect('MAX("ownerUser"."email")', 'ownerEmail')
       .addSelect('COUNT(DISTINCT uw.user_id)', 'membersCount')
       .addSelect('COUNT(DISTINCT project.id)', 'projectsCount')
+      .addSelect('COUNT(DISTINCT board.id)', 'boardsCount')
       .addSelect('COUNT(DISTINCT task.id)', 'tasksCount')
-      .addSelect('COUNT(DISTINCT uw.user_id)', 'userCount')
       .groupBy('workspace.id')
       .orderBy('workspace.createdAt', 'DESC');
 
     if (filter.search?.trim()) {
       qb.andWhere(
-        '(workspace.name ILIKE :search OR workspace.slug ILIKE :search)',
+        `(
+          "workspace"."name" ILIKE :search
+          OR "workspace"."slug" ILIKE :search
+          OR "ownerUser"."email" ILIKE :search
+          OR "ownerUser"."username" ILIKE :search
+          OR "ownerProfile"."full_name" ILIKE :search
+          OR "ownerProfile"."display_name" ILIKE :search
+        )`,
         {
           search: `%${filter.search.trim()}%`,
         },
@@ -72,9 +114,17 @@ export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspac
     }
 
     if (filter.plan) {
-      qb.andWhere('workspace.planType = :plan', {
+      qb.andWhere('"workspace"."plan_type" = :plan', {
         plan: filter.plan,
       });
+    }
+
+    if (filter.status === AdminWorkspaceStatusFilter.ACTIVE) {
+      qb.andWhere('"workspace"."deleted_at" IS NULL');
+    }
+
+    if (filter.status === AdminWorkspaceStatusFilter.DELETED) {
+      qb.andWhere('"workspace"."deleted_at" IS NOT NULL');
     }
 
     if (filter.createdAt) {
@@ -84,16 +134,19 @@ export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspac
       const endOfDay = new Date(filter.createdAt);
       endOfDay.setHours(23, 59, 59, 999);
 
-      qb.andWhere('workspace.createdAt BETWEEN :startOfDay AND :endOfDay', {
-        startOfDay,
-        endOfDay,
-      });
+      qb.andWhere(
+        '"workspace"."created_at" BETWEEN :startOfDay AND :endOfDay',
+        {
+          startOfDay,
+          endOfDay,
+        },
+      );
     } else {
       if (filter.createdFrom) {
         const createdFrom = new Date(filter.createdFrom);
         createdFrom.setHours(0, 0, 0, 0);
 
-        qb.andWhere('workspace.createdAt >= :createdFrom', {
+        qb.andWhere('"workspace"."created_at" >= :createdFrom', {
           createdFrom,
         });
       }
@@ -102,56 +155,29 @@ export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspac
         const createdTo = new Date(filter.createdTo);
         createdTo.setHours(23, 59, 59, 999);
 
-        qb.andWhere('workspace.createdAt <= :createdTo', {
+        qb.andWhere('"workspace"."created_at" <= :createdTo', {
           createdTo,
         });
       }
     }
 
-    let rows: AdminWorkspaceRaw[];
-    try {
-      rows = await qb.getRawMany<AdminWorkspaceRaw>();
-    } catch (e: unknown) {
-      const err = e as { message?: string; driverError?: { message?: string } };
-      // #region agent log
-      fetch(
-        'http://127.0.0.1:7422/ingest/858f5ea4-3f7e-414d-bca0-e06f390439e6',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Debug-Session-Id': '408fe4',
-          },
-          body: JSON.stringify({
-            sessionId: '408fe4',
-            runId: 'pre-fix',
-            hypothesisId: 'H3',
-            location: 'admin-findAll-workspace.repository.ts:findAllWorkspace',
-            message: 'getRawMany_catch',
-            data: {
-              msg: String(err?.message),
-              driver: String(err?.driverError?.message),
-            },
-            timestamp: Date.now(),
-          }),
-        },
-      ).catch(() => {});
-      // #endregion
-      throw e;
-    }
+    const rows = await qb.getRawMany<AdminWorkspaceRaw>();
 
     return rows.map((row) => ({
       id: row.id,
       name: row.name,
       slug: row.slug,
       plan: row.plan,
+      status: row.status,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
-      owner: row.owner ?? undefined,
+      deletedAt: row.deletedAt,
+      ownerName: row.ownerName,
+      ownerEmail: row.ownerEmail,
       membersCount: Number(row.membersCount ?? 0),
       projectsCount: Number(row.projectsCount ?? 0),
+      boardsCount: Number(row.boardsCount ?? 0),
       tasksCount: Number(row.tasksCount ?? 0),
-      userCount: Number(row.userCount ?? 0),
     }));
   }
 }

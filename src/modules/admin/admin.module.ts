@@ -49,6 +49,9 @@ import { AdminWorkspaceGrowthServiceImpl } from './services/dashboard/admin-work
 import { AdminWorkspaceOverviewServiceImpl } from './services/dashboard/admin-workspace-overview.service';
 import { AdminWorkspacePlanServiceImpl } from './services/dashboard/admin-workspace-plan.service';
 import { AdminUserOverviewServiceImpl } from './services/user/admin-user-overview.service';
+import { AdminUserApplicationImpl } from './applications/user/admin-user.application';
+import { AdminUserRepositoryImpl } from './repositories/user/admin-user.repository';
+import { AdminUserServiceImpl } from './services/user/admin-user.service';
 
 @Module({
   imports: [
@@ -100,6 +103,10 @@ import { AdminUserOverviewServiceImpl } from './services/user/admin-user-overvie
       useClass: AdminRetentionMetricsApplicationImpl,
     },
     {
+      provide: ADMIN_TYPES.applications.AdminUserApplication,
+      useClass: AdminUserApplicationImpl,
+    },
+    {
       provide: ADMIN_TYPES.repositories.AdminWorkspaceOverviewRepository,
       useClass: AdminWorkspaceOverviewRepositoryImpl,
     },
@@ -134,6 +141,10 @@ import { AdminUserOverviewServiceImpl } from './services/user/admin-user-overvie
     {
       provide: ADMIN_TYPES.repositories.AdminRetentionMetricsRepository,
       useClass: AdminRetentionMetricsRepositoryImpl,
+    },
+    {
+      provide: ADMIN_TYPES.repositories.AdminUserRepository,
+      useClass: AdminUserRepositoryImpl,
     },
     {
       provide: ADMIN_TYPES.repositories.AdminSystemHealthRepository,
@@ -198,6 +209,10 @@ import { AdminUserOverviewServiceImpl } from './services/user/admin-user-overvie
     {
       provide: ADMIN_TYPES.services.AdminSystemHealthService,
       useClass: AdminSystemHealthServiceImpl,
+    },
+    {
+      provide: ADMIN_TYPES.services.AdminUserService,
+      useClass: AdminUserServiceImpl,
     },
   ],
 })

@@ -10,6 +10,7 @@ export const ADMIN_TYPES = {
     AdminSystemHealthService: 'AdminSystemHealthService',
     AdminRecentActivityService: 'AdminRecentActivityService',
     AdminUserOverviewService: 'AdminUserOverviewService',
+    AdminUserService: 'AdminUserService',
   },
   applications: {
     AdminFindAllWorkspaceApplication: 'AdminFindAllWorkspaceApplication',
@@ -23,6 +24,7 @@ export const ADMIN_TYPES = {
     AdminSystemHealthApplication: 'AdminSystemHealthApplication',
     AdminRecentActivityApplication: 'AdminRecentActivityApplication',
     AdminUserOverviewApplication: 'AdminUserOverviewApplication',
+    AdminUserApplication: 'AdminUserApplication',
   },
   repositories: {
     AdminWorkspaceOverviewRepository: 'AdminWorkspaceOverviewRepository',
@@ -35,6 +37,7 @@ export const ADMIN_TYPES = {
     AdminSystemHealthRepository: 'AdminSystemHealthRepository',
     AdminRecentActivityRepository: 'AdminRecentActivityRepository',
     AdminUserOverviewRepository: 'AdminUserOverviewRepository',
+    AdminUserRepository: 'AdminUserRepository',
   },
   uow: {
     UnitOfWork: 'UnitOfWork',
