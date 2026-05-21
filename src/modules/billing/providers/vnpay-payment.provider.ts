@@ -1,13 +1,19 @@
 import { Injectable } from '@nestjs/common';
+import { BillingProvider } from '../domain/entities/subscription.entity';
 import { ConfigService } from '@nestjs/config';
 import { VnpayService } from 'nestjs-vnpay';
-import { ProductCode, VnpLocale, dateFormat } from 'vnpay';
+import {
+  ProductCode,
+  VnpLocale,
+  dateFormat,
+  type ReturnQueryFromVNPay,
+} from 'vnpay';
 
-import { BillingProvider } from '../domain/entities/subscription.entity';
 import {
   CreateGatewayPaymentInput,
   CreateGatewayPaymentResult,
   VnpayPaymentProvider,
+  VnpayVerifyResult,
 } from '../types/payment-input.interface';
 
 @Injectable()
@@ -17,9 +23,7 @@ export class VnpayPaymentProviderImpl implements VnpayPaymentProvider {
     private readonly configService: ConfigService,
   ) {}
 
-  async createPayment(
-    input: CreateGatewayPaymentInput,
-  ): Promise<CreateGatewayPaymentResult> {
+  createPayment(input: CreateGatewayPaymentInput): CreateGatewayPaymentResult {
     const returnUrl = this.configService.getOrThrow<string>('VNPAY_RETURN_URL');
 
     const expiredAt = new Date();
@@ -51,12 +55,14 @@ export class VnpayPaymentProviderImpl implements VnpayPaymentProvider {
     };
   }
 
-  async verifyIpn(query: Record<string, any>) {
-    return this.vnpayService.verifyIpnCall(query as any);
+  verifyReturnUrl(query: ReturnQueryFromVNPay): Promise<VnpayVerifyResult> {
+    return this.vnpayService.verifyReturnUrl(
+      query,
+    ) as Promise<VnpayVerifyResult>;
   }
 
-  async verifyReturnUrl(query: Record<string, any>) {
-    return this.vnpayService.verifyReturnUrl(query as any);
+  verifyIpn(query: ReturnQueryFromVNPay): Promise<VnpayVerifyResult> {
+    return this.vnpayService.verifyIpnCall(query) as Promise<VnpayVerifyResult>;
   }
 
   private normalizeOrderInfo(value: string): string {

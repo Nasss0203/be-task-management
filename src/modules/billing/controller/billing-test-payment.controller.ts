@@ -1,6 +1,21 @@
-import { Body, Controller, Inject, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Post,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { type Request } from 'express';
+import { Public } from 'src/common/decorator/public.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import {
+  IpnFailChecksum,
+  IpnSuccess,
+  IpnUnknownError,
+  type ReturnQueryFromVNPay,
+} from 'vnpay';
 import { TestCreateVnpayPaymentDto } from '../dto/create-billing.dto';
 import { BILLING_TYPES } from '../interfaces/types';
 import { type VnpayPaymentProvider } from '../types/payment-input.interface';
@@ -12,6 +27,7 @@ export class BillingTestVnpayController {
     private readonly vnpayPaymentProvider: VnpayPaymentProvider,
   ) {}
 
+  @Public()
   @Post()
   @ResponseMessage('Thanh toan vnpay')
   createPayment(@Body() dto: TestCreateVnpayPaymentDto, @Req() req: Request) {
@@ -28,8 +44,64 @@ export class BillingTestVnpayController {
       message: 'Create VNPAY payment successfully',
       orderCode,
       amount: dto.amount,
-
       ...result,
+    };
+  }
+
+  @Public()
+  @Get('return')
+  @ResponseMessage('VNPAY return')
+  async handleReturn(@Query() query: ReturnQueryFromVNPay) {
+    const verify = await this.vnpayPaymentProvider.verifyReturnUrl(query);
+
+    return {
+      message: 'Return from VNPAY',
+      isVerified: verify.isVerified,
+      isSuccess: verify.isSuccess,
+      orderCode: verify.vnp_TxnRef,
+      amount: verify.vnp_Amount,
+      responseCode: verify.vnp_ResponseCode,
+      transactionStatus: verify.vnp_TransactionStatus,
+      transactionNo: verify.vnp_TransactionNo,
+      bankCode: verify.vnp_BankCode,
+      payDate: verify.vnp_PayDate,
+      verify,
+    };
+  }
+
+  @Public()
+  @Get('ipn')
+  @ResponseMessage('VNPAY IPN')
+  async handleIpn(@Query() query: ReturnQueryFromVNPay) {
+    const verify = await this.vnpayPaymentProvider.verifyIpn(query);
+
+    if (!verify.isVerified) {
+      return IpnFailChecksum;
+    }
+
+    if (!verify.isSuccess) {
+      return {
+        ...IpnUnknownError,
+        debug: {
+          orderCode: verify.vnp_TxnRef,
+          amount: verify.vnp_Amount,
+          responseCode: verify.vnp_ResponseCode,
+          transactionStatus: verify.vnp_TransactionStatus,
+          message: verify.message,
+        },
+      };
+    }
+
+    return {
+      ...IpnSuccess,
+      debug: {
+        orderCode: verify.vnp_TxnRef,
+        amount: verify.vnp_Amount,
+        transactionNo: verify.vnp_TransactionNo,
+        responseCode: verify.vnp_ResponseCode,
+        transactionStatus: verify.vnp_TransactionStatus,
+        message: verify.message,
+      },
     };
   }
 
