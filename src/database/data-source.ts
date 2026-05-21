@@ -13,11 +13,7 @@ import { Subscription } from 'src/modules/billing/domain/entities/subscription.e
 import { UsageLimit } from 'src/modules/billing/domain/entities/usage-limit.entity';
 import { Board } from 'src/modules/boards/domain/entities/board.entity';
 import { Mention } from 'src/modules/mentions/domain/entities/mention.entity';
-<<<<<<< HEAD
 import { Notification } from 'src/modules/notifications/domain/entities/notification.entity';
-=======
-import { Notification } from 'src/modules/notification/domain/entities/notification.entity';
->>>>>>> admin
 import { Page } from 'src/modules/page/domain/entities/page.entity';
 import { PageBlock } from 'src/modules/page_block/domain/entities/page_block.entity';
 import { PageTemplateBlock } from 'src/modules/page_template_blocks/domain/entities/page_template_block.entity';
@@ -33,13 +29,13 @@ import { TaskComment } from 'src/modules/task_commnent/domain/entities/task_comm
 import { TaskPriority } from 'src/modules/task_priority/domain/entities/task_priority.entity';
 import { TaskStatus } from 'src/modules/task_status/domain/entities/task_status.entity';
 import { Task } from 'src/modules/tasks/domain/entities/task.entity';
+import { UserActivity } from 'src/modules/user_activity/domain/entities/user_activity.entity';
 import { UserProfile } from 'src/modules/user_profiles/domain/entities/user_profile.entity';
 import { UserRole } from 'src/modules/user_roles/domain/entities/user_role.entity';
 import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
 import { User } from 'src/modules/users/domain/entities/user.entity';
 import { WorkspaceInvite } from 'src/modules/workspace_invites/domain/entities/workspace_invite.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
-import { UserActivity } from 'src/modules/user_activity/domain/entities/user_activity.entity';
 
 export default new DataSource({
   type: 'postgres',
