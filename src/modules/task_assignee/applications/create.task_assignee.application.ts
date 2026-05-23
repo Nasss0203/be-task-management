@@ -5,6 +5,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NotificationType } from 'src/modules/notifications/domain/entities/notification.entity';
+import { type CreateNotificationService } from 'src/modules/notifications/interfaces/services/create.notifications.service.interface';
+import { NOTIFICATION_TYPES } from 'src/modules/notifications/interfaces/types';
+import { REALTIME_EVENTS } from 'src/modules/realtime/realtime.events';
 import { RoleName } from 'src/modules/role/domain/entities/role.entity';
 import { type FindTaskService } from 'src/modules/tasks/interfaces/services/find-task.service.interface';
 import { TASK_TYPES } from 'src/modules/tasks/interfaces/types';
@@ -31,6 +36,11 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
 
     @Inject(TASK_TYPES.services.FindTaskService)
     private readonly findTaskService: FindTaskService,
+
+    @Inject(NOTIFICATION_TYPES.services.CreateNotificationService)
+    private readonly createNotificationService: CreateNotificationService,
+
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async assign(
@@ -83,6 +93,38 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
       },
       manager,
     );
+
+    if (!isSelfAssign) {
+      const notification =
+        await this.createNotificationService.createNotification(
+          {
+            receiverId: input.userId,
+            actorId: input.assignedBy,
+            type: NotificationType.TASK_ASSIGNED,
+            title: 'Bạn được giao một task mới',
+            message: task.title,
+            workspaceId: task.workspaceId,
+            projectId: task.projectId,
+            taskId: task.id,
+            actionUrl: `/workspaces/${task.workspaceId}/projects/${task.projectId}/tasks/${task.id}`,
+          },
+          manager,
+        );
+
+      this.eventEmitter.emit(REALTIME_EVENTS.NOTIFICATION_CREATED, {
+        recipientUserId: input.userId,
+        notification,
+      });
+    }
+
+    this.eventEmitter.emit(REALTIME_EVENTS.TASK_UPDATED, {
+      workspaceId: task.workspaceId,
+      projectId: task.projectId,
+      task: {
+        id: task.id,
+        assignee: result,
+      },
+    });
 
     return TaskAssigneeMapper.toResponse(result);
   }

@@ -85,12 +85,9 @@ export class InviteWorkspaceMemberApplicationImpl implements InviteWorkspaceMemb
       if (recipient.user_id) {
         await this.createNotificationService.createNotification({
           receiverId: recipient.user_id,
-
           senderType: NotificationSenderType.USER,
           actorId: invitedBy,
-
           sourceType: NotificationSourceType.WORKSPACE,
-
           workspaceId,
           projectId: null,
           taskId: null,

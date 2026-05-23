@@ -39,3 +39,10 @@ export type TaskUpdatedPayload = {
   projectId: string;
   task: any;
 };
+
+export type CommentCreatedPayload = {
+  workspaceId: string;
+  projectId: string;
+  taskId: string;
+  comment: any;
+};
