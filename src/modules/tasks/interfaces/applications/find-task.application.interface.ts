@@ -1,4 +1,8 @@
-import { TaskResponseDto } from '../../dto/response/task-response.dto';
+import {
+  PaginatedTaskResponseDto,
+  TaskResponseDto,
+} from '../../dto/response/task-response.dto';
+import { FindBacklogTasksFilters } from '../find-backlog-tasks-filters.interface';
 
 export interface FindTaskApplication {
   findAllTask(
@@ -16,5 +20,6 @@ export interface FindTaskApplication {
   findBacklogTasks(
     projectId: string,
     workspaceId: string,
-  ): Promise<TaskResponseDto[]>;
+    filters?: FindBacklogTasksFilters,
+  ): Promise<PaginatedTaskResponseDto>;
 }

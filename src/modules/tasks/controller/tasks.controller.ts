@@ -9,10 +9,15 @@ import {
   Patch,
   Post,
   Query,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { CreateTaskDto } from '../dto/create-task.dto';
-import { TaskResponseDto } from '../dto/response/task-response.dto';
+import { FindBacklogTasksQueryDto } from '../dto/find-backlog-tasks-query.dto';
+import {
+  PaginatedTaskResponseDto,
+  TaskResponseDto,
+} from '../dto/response/task-response.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
 import { type FindTaskApplication } from '../interfaces/applications/find-task.application.interface';
 import { TASK_TYPES } from '../interfaces/types';
@@ -71,8 +76,10 @@ export class TasksController {
   async findAllBacklogTask(
     @Param('projectId') projectId: string,
     @Param('workspaceId') workspaceId: string,
-  ): Promise<TaskResponseDto[]> {
-    return await this.app.findBacklogTasks(projectId, workspaceId);
+    @Query(new ValidationPipe({ transform: true }))
+    query: FindBacklogTasksQueryDto,
+  ): Promise<PaginatedTaskResponseDto> {
+    return await this.app.findBacklogTasks(projectId, workspaceId, query);
   }
 
   @Post()
