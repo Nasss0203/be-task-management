@@ -3,7 +3,13 @@ export const BILLING_TYPES = {
     MomoPaymentProvider: 'MomoPaymentProvider',
     VnpayPaymentProvider: 'VnpayPaymentProvider',
   },
+
   applications: {},
-  services: {},
-  repositories: {},
+  services: {
+    CreateBillingService: 'CreateBillingService',
+  },
+  repositories: {
+    PlanRepository: 'BillingPlanRepository',
+    PaymentRepository: 'BillingPaymentRepository',
+  },
 };

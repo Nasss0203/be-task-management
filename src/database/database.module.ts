@@ -9,11 +9,12 @@ import { BillingWebhook } from 'src/modules/billing/domain/entities/billing-webh
 import { Invoice } from 'src/modules/billing/domain/entities/invoice.entity';
 import { Payment } from 'src/modules/billing/domain/entities/payment.entity';
 import { Plan } from 'src/modules/billing/domain/entities/plan.entity';
+import { SubscriptionWorkspace } from 'src/modules/billing/domain/entities/subscription-workspace.entity';
 import { Subscription } from 'src/modules/billing/domain/entities/subscription.entity';
 import { UsageLimit } from 'src/modules/billing/domain/entities/usage-limit.entity';
 import { Board } from 'src/modules/boards/domain/entities/board.entity';
 import { Mention } from 'src/modules/mentions/domain/entities/mention.entity';
-import { Notification } from 'src/modules/notification/domain/entities/notification.entity';
+import { Notification } from 'src/modules/notifications/domain/entities/notification.entity';
 import { Page } from 'src/modules/page/domain/entities/page.entity';
 import { PageBlock } from 'src/modules/page_block/domain/entities/page_block.entity';
 import { PageTemplateBlock } from 'src/modules/page_template_blocks/domain/entities/page_template_block.entity';
@@ -87,6 +88,7 @@ import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.enti
           Notification,
           PageTemplateBlock,
           PageTemplate,
+          SubscriptionWorkspace,
         ],
       }),
     }),

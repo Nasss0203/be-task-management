@@ -10,14 +10,11 @@ import {
 import { type Request } from 'express';
 import { Public } from 'src/common/decorator/public.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
-import {
-  IpnFailChecksum,
-  IpnSuccess,
-  IpnUnknownError,
-  type ReturnQueryFromVNPay,
-} from 'vnpay';
+import { type ReturnQueryFromVNPay } from 'vnpay';
+
 import { TestCreateVnpayPaymentDto } from '../dto/create-billing.dto';
 import { BILLING_TYPES } from '../interfaces/types';
+import { VnpayIpnService } from '../services/ipn/vnpay-ipn.service';
 import { type VnpayPaymentProvider } from '../types/payment-input.interface';
 
 @Controller('billing/test-vnpay')
@@ -25,6 +22,8 @@ export class BillingTestVnpayController {
   constructor(
     @Inject(BILLING_TYPES.providers.VnpayPaymentProvider)
     private readonly vnpayPaymentProvider: VnpayPaymentProvider,
+
+    private readonly vnpayIpnService: VnpayIpnService,
   ) {}
 
   @Public()
@@ -73,36 +72,7 @@ export class BillingTestVnpayController {
   @Get('ipn')
   @ResponseMessage('VNPAY IPN')
   async handleIpn(@Query() query: ReturnQueryFromVNPay) {
-    const verify = await this.vnpayPaymentProvider.verifyIpn(query);
-
-    if (!verify.isVerified) {
-      return IpnFailChecksum;
-    }
-
-    if (!verify.isSuccess) {
-      return {
-        ...IpnUnknownError,
-        debug: {
-          orderCode: verify.vnp_TxnRef,
-          amount: verify.vnp_Amount,
-          responseCode: verify.vnp_ResponseCode,
-          transactionStatus: verify.vnp_TransactionStatus,
-          message: verify.message,
-        },
-      };
-    }
-
-    return {
-      ...IpnSuccess,
-      debug: {
-        orderCode: verify.vnp_TxnRef,
-        amount: verify.vnp_Amount,
-        transactionNo: verify.vnp_TransactionNo,
-        responseCode: verify.vnp_ResponseCode,
-        transactionStatus: verify.vnp_TransactionStatus,
-        message: verify.message,
-      },
-    };
+    return this.vnpayIpnService.handleIpn(query);
   }
 
   private getClientIp(req: Request): string {

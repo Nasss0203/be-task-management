@@ -45,7 +45,8 @@ import { CreateWorkspaceTemplateServiceImpl } from './services/create-workspace-
 import { CreateWorkspaceServiceImpl } from './services/create-workspace.service';
 import { FindWorkspaceOverviewServiceImpl } from './services/find-workspace-overview.service';
 import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
-import { WorkspaceTrashServiceImpl } from './services/workspace-trash.service';
+import { WorkspaceTrashServiceImpl } from './services/workspace-trash.service'; 
+import { BillingModule } from '../billing/billing.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { WorkspaceTrashServiceImpl } from './services/workspace-trash.service';
     TasksModule,
     PermissionModule,
     RolePermissionModule,
+    BillingModule,
   ],
   controllers: [WorkspacesController],
   providers: [

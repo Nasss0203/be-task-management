@@ -13,11 +13,7 @@ import { Subscription } from 'src/modules/billing/domain/entities/subscription.e
 import { UsageLimit } from 'src/modules/billing/domain/entities/usage-limit.entity';
 import { Board } from 'src/modules/boards/domain/entities/board.entity';
 import { Mention } from 'src/modules/mentions/domain/entities/mention.entity';
-<<<<<<< HEAD
 import { Notification } from 'src/modules/notifications/domain/entities/notification.entity';
-=======
-import { Notification } from 'src/modules/notification/domain/entities/notification.entity';
->>>>>>> admin
 import { Page } from 'src/modules/page/domain/entities/page.entity';
 import { PageBlock } from 'src/modules/page_block/domain/entities/page_block.entity';
 import { PageTemplateBlock } from 'src/modules/page_template_blocks/domain/entities/page_template_block.entity';
@@ -40,6 +36,7 @@ import { User } from 'src/modules/users/domain/entities/user.entity';
 import { WorkspaceInvite } from 'src/modules/workspace_invites/domain/entities/workspace_invite.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import { UserActivity } from 'src/modules/user_activity/domain/entities/user_activity.entity';
+import { SubscriptionWorkspace } from 'src/modules/billing/domain/entities/subscription-workspace.entity'; 
 
 export default new DataSource({
   type: 'postgres',
@@ -82,6 +79,7 @@ export default new DataSource({
     Payment,
     Plan,
     Subscription,
+    SubscriptionWorkspace,
     UsageLimit,
     Mention,
     Notification,
