@@ -1,10 +1,11 @@
-import { Body, Controller, Inject, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post, Req } from '@nestjs/common';
 import { type Request } from 'express';
 
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { CreatePaymentDto } from '../dto/create-payment.dto';
-import { BILLING_TYPES } from '../interfaces/types';
 import { type CreateBillingService } from '../interfaces/services/payment/create-payment.service.interface';
+import { BILLING_TYPES } from '../interfaces/types';
+import { BillingQueryService } from '../services/query/billing-query.service';
 
 type AuthRequest = Request & {
   user?: {
@@ -19,6 +20,8 @@ export class BillingController {
   constructor(
     @Inject(BILLING_TYPES.services.CreateBillingService)
     private readonly createBillingService: CreateBillingService,
+
+    private readonly billingQueryService: BillingQueryService,
   ) {}
 
   @Post('payments')
@@ -31,6 +34,14 @@ export class BillingController {
       dto,
       ipAddress: this.getClientIp(req),
     });
+  }
+
+  @Get('current-subscription')
+  @ResponseMessage('Get current subscription')
+  async getCurrentSubscription(@Req() req: AuthRequest) {
+    const userId = this.getUserId(req);
+
+    return this.billingQueryService.getCurrentSubscription(userId);
   }
 
   private getUserId(req: AuthRequest): string {

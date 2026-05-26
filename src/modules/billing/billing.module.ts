@@ -20,7 +20,9 @@ import { CheckWorkspaceLimitService } from './services/check-workspace-limit.ser
 import { CompletePaymentService } from './services/complete-payment/complete-payment.service';
 import { VnpayIpnService } from './services/ipn/vnpay-ipn.service';
 import { CreateBillingServiceImpl } from './services/payment/create-payment.service'; 
-import { Workspace } from '../workspaces/domain/entities/workspace.entity';
+import { Workspace } from '../workspaces/domain/entities/workspace.entity'; 
+import { BillingQueryService } from './services/query/billing-query.service'; 
+import { WorkspaceUsageLimitsController } from './controller/workspace-usage-limits.controller';
 
 @Module({
   imports: [
@@ -50,7 +52,11 @@ import { Workspace } from '../workspaces/domain/entities/workspace.entity';
     }),
   ],
 
-  controllers: [BillingController, BillingTestVnpayController],
+  controllers: [
+    BillingController,
+    BillingTestVnpayController,
+    WorkspaceUsageLimitsController,
+  ],
 
   providers: [
     {
@@ -72,6 +78,7 @@ import { Workspace } from '../workspaces/domain/entities/workspace.entity';
     VnpayIpnService,
     CompletePaymentService,
     CheckWorkspaceLimitService,
+    BillingQueryService,
   ],
 
   exports: [
@@ -80,6 +87,7 @@ import { Workspace } from '../workspaces/domain/entities/workspace.entity';
     BILLING_TYPES.repositories.PaymentRepository,
     BILLING_TYPES.services.CreateBillingService,
     CheckWorkspaceLimitService,
+    BillingQueryService,
   ],
 })
 export class BillingModule {}
