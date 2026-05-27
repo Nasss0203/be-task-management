@@ -4,6 +4,7 @@ import { BoardViewType } from 'src/modules/boards/domain/entities/board.entity';
 import { BoardModel } from 'src/modules/boards/domain/models/board.model';
 import { type CreateBoardService } from 'src/modules/boards/interfaces/services/create.board.service.interface';
 import { BOARD_TYPES } from 'src/modules/boards/interfaces/types';
+import { UsageLimitEnforcerService } from 'src/modules/billing/services/usage-limit/usage-limit-enforcer.service';
 import { type FindPageService } from 'src/modules/page/interfaces/services/find-page.service.interface';
 import { PAGE_TYPES } from 'src/modules/page/interfaces/types';
 import { PageBlockType } from 'src/modules/page_block/domain/entities/page_block.entity';
@@ -57,6 +58,8 @@ export class CreateProjectServiceImpl implements CreateProjectService {
 
     @Inject(TASK_TYPES.services.CreateTaskService)
     private readonly createTaskService: CreateTaskService,
+
+    private readonly usageLimitEnforcerService: UsageLimitEnforcerService,
   ) {}
 
   create(
@@ -76,6 +79,11 @@ export class CreateProjectServiceImpl implements CreateProjectService {
     const key = `${nameProject}-${userId.slice(3, 7)}-${Date.now()}`;
 
     return this.uow.runInTransaction(async (manager) => {
+      await this.usageLimitEnforcerService.checkProjectLimit(
+        workspaceId,
+        manager,
+      );
+
       const project = await this.repo.save(
         {
           ...createProjectDto,
@@ -274,6 +282,11 @@ export class CreateProjectServiceImpl implements CreateProjectService {
           manager,
         );
       }
+
+      await this.usageLimitEnforcerService.syncProjectUsedValue(
+        workspaceId,
+        manager,
+      );
 
       return project;
     });

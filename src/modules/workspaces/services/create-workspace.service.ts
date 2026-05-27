@@ -1,5 +1,7 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { type UnitOfWork } from 'src/interface/index.interface';
+import { CheckWorkspaceLimitService } from 'src/modules/billing/services/check-workspace-limit.service';
+import { UsageLimitEnforcerService } from 'src/modules/billing/services/usage-limit/usage-limit-enforcer.service';
 import { BoardViewType } from 'src/modules/boards/domain/entities/board.entity';
 import { type CreateBoardService } from 'src/modules/boards/interfaces/services/create.board.service.interface';
 import { BOARD_TYPES } from 'src/modules/boards/interfaces/types';
@@ -84,6 +86,10 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
 
     @Inject(ROLE_PERMISSION_TYPES.services.CreateRolePermissionService)
     private readonly createRolePermissionService: CreateRolePermissionService,
+
+    private readonly checkWorkspaceLimitService: CheckWorkspaceLimitService,
+
+    private readonly usageLimitEnforcerService: UsageLimitEnforcerService,
   ) {}
 
   private async createWorkspaceCoreDefault({
@@ -386,6 +392,12 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
         manager,
       });
 
+      await this.checkWorkspaceLimitService.applyBillingForNewWorkspace(
+        userId,
+        workspace.id,
+        manager,
+      );
+
       const project = await this.createProjectService.create(
         {
           workspace_id: workspace.id,
@@ -404,6 +416,11 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
           createdBy: userId,
           viewType: BoardViewType.BOARD,
         },
+        manager,
+      );
+
+      await this.usageLimitEnforcerService.syncProjectUsedValue(
+        workspace.id,
         manager,
       );
 

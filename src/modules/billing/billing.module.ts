@@ -5,6 +5,7 @@ import { VnpayModule } from 'nestjs-vnpay';
 import { ignoreLogger } from 'vnpay';
 
 import { UserWorkspace } from '../user_workspace/domain/entities/user_workspace.entity';
+import { Project } from '../projects/domain/entities/project.entity';
 import { BillingTestVnpayController } from './controller/billing-test-payment.controller';
 import { BillingController } from './controller/billing.controller';
 import { Payment } from './domain/entities/payment.entity';
@@ -23,6 +24,7 @@ import { CreateBillingServiceImpl } from './services/payment/create-payment.serv
 import { Workspace } from '../workspaces/domain/entities/workspace.entity'; 
 import { BillingQueryService } from './services/query/billing-query.service'; 
 import { WorkspaceUsageLimitsController } from './controller/workspace-usage-limits.controller';
+import { UsageLimitEnforcerService } from './services/usage-limit/usage-limit-enforcer.service';
 
 @Module({
   imports: [
@@ -36,6 +38,7 @@ import { WorkspaceUsageLimitsController } from './controller/workspace-usage-lim
       UsageLimit,
       UserWorkspace,
       Workspace,
+      Project,
     ]),
 
     VnpayModule.registerAsync({
@@ -79,6 +82,7 @@ import { WorkspaceUsageLimitsController } from './controller/workspace-usage-lim
     CompletePaymentService,
     CheckWorkspaceLimitService,
     BillingQueryService,
+    UsageLimitEnforcerService,
   ],
 
   exports: [
@@ -88,6 +92,7 @@ import { WorkspaceUsageLimitsController } from './controller/workspace-usage-lim
     BILLING_TYPES.services.CreateBillingService,
     CheckWorkspaceLimitService,
     BillingQueryService,
+    UsageLimitEnforcerService,
   ],
 })
 export class BillingModule {}
