@@ -1,102 +1,48 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
-import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
-import { EntityManager, Repository } from 'typeorm';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { EntityManager } from 'typeorm';
 
 import { Plan } from '../domain/entities/plan.entity';
-import { SubscriptionWorkspace } from '../domain/entities/subscription-workspace.entity';
 import {
-  Subscription,
-  SubscriptionStatus,
-} from '../domain/entities/subscription.entity';
+  DEFAULT_PLAN_LIMITS,
+  FREE_PLAN_SLUG,
+  PRO_PLAN_SLUG,
+  RESOURCE_LIMIT_KEY_MAP,
+} from '../constants/default-plan-limits.constant';
+import { UsageResourceType } from '../domain/entities/usage-limit.entity';
+import { type WorkspaceLimitRepository } from '../interfaces/repositories/workspace-limit/workspace-limit.repository.interface';
+import { type CheckWorkspaceLimitService } from '../interfaces/services/check-workspace-limit.service.interface';
+import { BILLING_TYPES } from '../interfaces/types';
 import {
-  UsageLimit,
-  UsageResourceType,
-} from '../domain/entities/usage-limit.entity';
-
-const FREE_PLAN_SLUG = 'free';
-const PRO_PLAN_SLUG = 'pro-monthly';
-
-const DEFAULT_PLAN_LIMITS: Record<string, Record<string, number | null>> = {
-  [FREE_PLAN_SLUG]: {
-    workspaces: 5,
-    upgradedWorkspaces: 0,
-
-    members: 3,
-    projects: 3,
-    tasks: 100,
-    pages: 20,
-    pageTemplates: 5,
-    storageMb: 100,
-    attachments: 20,
-    sprints: 3,
-  },
-
-  [PRO_PLAN_SLUG]: {
-    workspaces: 15,
-    upgradedWorkspaces: 15,
-
-    members: 10,
-    projects: 20,
-    tasks: 1000,
-    pages: 100,
-    pageTemplates: 20,
-    storageMb: 1024,
-    attachments: 200,
-    sprints: 20,
-  },
-};
-
-const RESOURCE_LIMIT_KEY_MAP: Record<UsageResourceType, string> = {
-  [UsageResourceType.MEMBERS]: 'members',
-  [UsageResourceType.PROJECTS]: 'projects',
-  [UsageResourceType.TASKS]: 'tasks',
-  [UsageResourceType.PAGES]: 'pages',
-  [UsageResourceType.PAGE_TEMPLATES]: 'pageTemplates',
-  [UsageResourceType.STORAGE_MB]: 'storageMb',
-  [UsageResourceType.ATTACHMENTS]: 'attachments',
-  [UsageResourceType.SPRINTS]: 'sprints',
-};
+  getNullableNumberLimit,
+  getNumberLimit,
+  mergePlanLimits,
+} from '../utils/plan-limit.util';
 
 @Injectable()
-export class CheckWorkspaceLimitService {
+export class CheckWorkspaceLimitServiceImpl implements CheckWorkspaceLimitService {
   constructor(
-    @InjectRepository(UserWorkspace)
-    private readonly userWorkspaceRepository: Repository<UserWorkspace>,
-
-    @InjectRepository(Workspace)
-    private readonly workspaceRepository: Repository<Workspace>,
-
-    @InjectRepository(Subscription)
-    private readonly subscriptionRepository: Repository<Subscription>,
-
-    @InjectRepository(Plan)
-    private readonly planRepository: Repository<Plan>,
-
-    @InjectRepository(SubscriptionWorkspace)
-    private readonly subscriptionWorkspaceRepository: Repository<SubscriptionWorkspace>,
-
-    @InjectRepository(UsageLimit)
-    private readonly usageLimitRepository: Repository<UsageLimit>,
+    @Inject(BILLING_TYPES.repositories.WorkspaceLimitRepository)
+    private readonly workspaceLimitRepository: WorkspaceLimitRepository,
   ) {}
 
   async checkCanCreateWorkspace(
     userId: string,
     manager?: EntityManager,
   ): Promise<void> {
-    const currentWorkspaceCount = await this.countActiveWorkspacesByUserId(
-      userId,
-      manager,
-    );
+    const currentWorkspaceCount =
+      await this.workspaceLimitRepository.countActiveWorkspacesByUserId(
+        userId,
+        manager,
+      );
 
-    const activeSubscription = await this.findActiveSubscription(
-      userId,
-      manager,
-    );
+    const activeSubscription =
+      await this.workspaceLimitRepository.findActiveSubscription(
+        userId,
+        manager,
+      );
 
     if (!activeSubscription) {
-      const freeLimit = this.getNumberLimit(
+      const freeLimit = getNumberLimit(
         DEFAULT_PLAN_LIMITS[FREE_PLAN_SLUG],
         'workspaces',
         5,
@@ -111,10 +57,13 @@ export class CheckWorkspaceLimitService {
       return;
     }
 
-    const plan = await this.findPlanById(activeSubscription.planId, manager);
+    const plan = await this.workspaceLimitRepository.findActivePlanById(
+      activeSubscription.planId,
+      manager,
+    );
 
-    const limits = this.mergePlanLimits(plan);
-    const workspaceLimit = this.getNumberLimit(limits, 'workspaces', 5);
+    const limits = mergePlanLimits(plan);
+    const workspaceLimit = getNumberLimit(limits, 'workspaces', 5);
 
     if (currentWorkspaceCount >= workspaceLimit) {
       throw new BadRequestException(
@@ -128,39 +77,40 @@ export class CheckWorkspaceLimitService {
     workspaceId: string,
     manager?: EntityManager,
   ): Promise<void> {
-    const activeSubscription = await this.findActiveSubscription(
-      userId,
-      manager,
-    );
+    const activeSubscription =
+      await this.workspaceLimitRepository.findActiveSubscription(
+        userId,
+        manager,
+      );
 
     if (!activeSubscription) {
       await this.applyFreeUsageLimit(workspaceId, manager);
       return;
     }
 
-    const plan = await this.findPlanById(activeSubscription.planId, manager);
+    const plan = await this.workspaceLimitRepository.findActivePlanById(
+      activeSubscription.planId,
+      manager,
+    );
 
     if (!plan || plan.slug !== PRO_PLAN_SLUG) {
       await this.applyFreeUsageLimit(workspaceId, manager);
       return;
     }
 
-    const limits = this.mergePlanLimits(plan);
+    const limits = mergePlanLimits(plan);
 
-    const upgradedWorkspaceLimit = this.getNumberLimit(
+    const upgradedWorkspaceLimit = getNumberLimit(
       limits,
       'upgradedWorkspaces',
       0,
     );
 
-    const subscriptionWorkspaceRepository =
-      this.getSubscriptionWorkspaceRepository(manager);
-
-    const activeUpgradeCount = await subscriptionWorkspaceRepository.count({
-      where: {
-        subscriptionId: activeSubscription.id,
-      },
-    });
+    const activeUpgradeCount =
+      await this.workspaceLimitRepository.countSubscriptionWorkspaces(
+        activeSubscription.id,
+        manager,
+      );
 
     if (activeUpgradeCount >= upgradedWorkspaceLimit) {
       await this.applyFreeUsageLimit(workspaceId, manager);
@@ -168,25 +118,30 @@ export class CheckWorkspaceLimitService {
     }
 
     const existedSubscriptionWorkspace =
-      await subscriptionWorkspaceRepository.findOne({
-        where: {
-          workspaceId,
-        },
-      });
+      await this.workspaceLimitRepository.findSubscriptionWorkspaceByWorkspaceId(
+        workspaceId,
+        manager,
+      );
 
     if (existedSubscriptionWorkspace) {
       existedSubscriptionWorkspace.subscriptionId = activeSubscription.id;
       existedSubscriptionWorkspace.activatedAt = new Date();
 
-      await subscriptionWorkspaceRepository.save(existedSubscriptionWorkspace);
+      await this.workspaceLimitRepository.saveSubscriptionWorkspace(
+        existedSubscriptionWorkspace,
+        manager,
+      );
     } else {
-      const subscriptionWorkspace = subscriptionWorkspaceRepository.create({
-        subscriptionId: activeSubscription.id,
-        workspaceId,
-        activatedAt: new Date(),
-      });
+      const subscriptionWorkspace =
+        this.workspaceLimitRepository.createSubscriptionWorkspace({
+          subscriptionId: activeSubscription.id,
+          workspaceId,
+        });
 
-      await subscriptionWorkspaceRepository.save(subscriptionWorkspace);
+      await this.workspaceLimitRepository.saveSubscriptionWorkspace(
+        subscriptionWorkspace,
+        manager,
+      );
     }
 
     await this.applyUsageLimit({
@@ -197,25 +152,14 @@ export class CheckWorkspaceLimitService {
     });
   }
 
-  private async countActiveWorkspacesByUserId(
-    userId: string,
-    manager?: EntityManager,
-  ): Promise<number> {
-    const userWorkspaceRepository = this.getUserWorkspaceRepository(manager);
-
-    return userWorkspaceRepository
-      .createQueryBuilder('uw')
-      .innerJoin(Workspace, 'w', 'w.id = uw.workspace_id')
-      .where('uw.user_id = :userId', { userId })
-      .andWhere('w.deleted_at IS NULL')
-      .getCount();
-  }
-
   private async applyFreeUsageLimit(
     workspaceId: string,
     manager?: EntityManager,
   ): Promise<void> {
-    const freePlan = await this.findActivePlanBySlug(FREE_PLAN_SLUG, manager);
+    const freePlan = await this.workspaceLimitRepository.findActivePlanBySlug(
+      FREE_PLAN_SLUG,
+      manager,
+    );
 
     if (freePlan) {
       await this.applyUsageLimit({
@@ -244,7 +188,7 @@ export class CheckWorkspaceLimitService {
     manager?: EntityManager;
     source: string;
   }): Promise<void> {
-    const limits = this.mergePlanLimits(input.plan);
+    const limits = mergePlanLimits(input.plan);
 
     await this.applyUsageLimitByLimits({
       workspaceId: input.workspaceId,
@@ -264,23 +208,20 @@ export class CheckWorkspaceLimitService {
     manager?: EntityManager;
     source: string;
   }): Promise<void> {
-    const usageLimitRepository = this.getUsageLimitRepository(input.manager);
-
     for (const resourceType of Object.values(UsageResourceType)) {
       const limitKey = RESOURCE_LIMIT_KEY_MAP[resourceType];
 
-      const limitValue = this.getNullableNumberLimit(input.limits, limitKey);
+      const limitValue = getNullableNumberLimit(input.limits, limitKey);
 
       if (limitValue === undefined) {
         continue;
       }
 
-      const existed = await usageLimitRepository.findOne({
-        where: {
-          workspaceId: input.workspaceId,
-          resourceType,
-        },
-      });
+      const existed = await this.workspaceLimitRepository.findUsageLimit(
+        input.workspaceId,
+        resourceType,
+        input.manager,
+      );
 
       if (existed) {
         existed.planId = input.planId;
@@ -290,11 +231,14 @@ export class CheckWorkspaceLimitService {
           planSlug: input.planSlug,
         };
 
-        await usageLimitRepository.save(existed);
+        await this.workspaceLimitRepository.saveUsageLimit(
+          existed,
+          input.manager,
+        );
         continue;
       }
 
-      const usageLimit = usageLimitRepository.create({
+      const usageLimit = this.workspaceLimitRepository.createUsageLimit({
         workspaceId: input.workspaceId,
         planId: input.planId,
         resourceType,
@@ -307,150 +251,10 @@ export class CheckWorkspaceLimitService {
         },
       });
 
-      await usageLimitRepository.save(usageLimit);
+      await this.workspaceLimitRepository.saveUsageLimit(
+        usageLimit,
+        input.manager,
+      );
     }
-  }
-
-  private async findActiveSubscription(
-    userId: string,
-    manager?: EntityManager,
-  ): Promise<Subscription | null> {
-    return this.getSubscriptionRepository(manager).findOne({
-      where: {
-        userId,
-        status: SubscriptionStatus.ACTIVE,
-      },
-      order: {
-        createdAt: 'DESC',
-      },
-    });
-  }
-
-  private async findPlanById(
-    planId: string,
-    manager?: EntityManager,
-  ): Promise<Plan | null> {
-    return this.getPlanRepository(manager).findOne({
-      where: {
-        id: planId,
-        isActive: true,
-      },
-    });
-  }
-
-  private async findActivePlanBySlug(
-    slug: string,
-    manager?: EntityManager,
-  ): Promise<Plan | null> {
-    return this.getPlanRepository(manager).findOne({
-      where: {
-        slug,
-        isActive: true,
-      },
-    });
-  }
-
-  private mergePlanLimits(plan: Plan | null): Record<string, unknown> {
-    if (!plan) {
-      return DEFAULT_PLAN_LIMITS[FREE_PLAN_SLUG];
-    }
-
-    const defaultLimits = DEFAULT_PLAN_LIMITS[plan.slug] ?? {};
-    const customLimits = plan.limits ?? {};
-
-    return {
-      ...defaultLimits,
-      ...customLimits,
-    };
-  }
-
-  private getNumberLimit(
-    limits: Record<string, unknown>,
-    key: string,
-    defaultValue: number,
-  ): number {
-    const value = limits[key];
-
-    if (typeof value === 'number') {
-      return value;
-    }
-
-    if (typeof value === 'string') {
-      const parsed = Number(value);
-
-      if (!Number.isNaN(parsed)) {
-        return parsed;
-      }
-    }
-
-    return defaultValue;
-  }
-
-  private getNullableNumberLimit(
-    limits: Record<string, unknown>,
-    key: string,
-  ): number | null | undefined {
-    const value = limits[key];
-
-    if (value === null) {
-      return null;
-    }
-
-    if (value === undefined) {
-      return undefined;
-    }
-
-    if (typeof value === 'number') {
-      return value;
-    }
-
-    if (typeof value === 'string') {
-      const parsed = Number(value);
-
-      if (!Number.isNaN(parsed)) {
-        return parsed;
-      }
-    }
-
-    return undefined;
-  }
-
-  private getUserWorkspaceRepository(
-    manager?: EntityManager,
-  ): Repository<UserWorkspace> {
-    return (
-      manager?.getRepository(UserWorkspace) ?? this.userWorkspaceRepository
-    );
-  }
-
-  private getWorkspaceRepository(
-    manager?: EntityManager,
-  ): Repository<Workspace> {
-    return manager?.getRepository(Workspace) ?? this.workspaceRepository;
-  }
-
-  private getSubscriptionRepository(
-    manager?: EntityManager,
-  ): Repository<Subscription> {
-    return manager?.getRepository(Subscription) ?? this.subscriptionRepository;
-  }
-
-  private getPlanRepository(manager?: EntityManager): Repository<Plan> {
-    return manager?.getRepository(Plan) ?? this.planRepository;
-  }
-
-  private getSubscriptionWorkspaceRepository(
-    manager?: EntityManager,
-  ): Repository<SubscriptionWorkspace> {
-    return (
-      manager?.getRepository(SubscriptionWorkspace) ??
-      this.subscriptionWorkspaceRepository
-    );
-  }
-
-  private getUsageLimitRepository(
-    manager?: EntityManager,
-  ): Repository<UsageLimit> {
-    return manager?.getRepository(UsageLimit) ?? this.usageLimitRepository;
   }
 }

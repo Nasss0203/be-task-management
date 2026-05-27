@@ -1,7 +1,8 @@
-import { Controller, Get, Param, Req } from '@nestjs/common';
+import { Controller, Get, Inject, Param, Req } from '@nestjs/common';
 import { type Request } from 'express';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
-import { BillingQueryService } from '../services/query/billing-query.service';
+import { type BillingQueryApplication } from '../interfaces/applications/billing-query.application.interface';
+import { BILLING_TYPES } from '../interfaces/types';
 
 type AuthRequest = Request & {
   user?: {
@@ -13,7 +14,10 @@ type AuthRequest = Request & {
 
 @Controller('workspaces/:workspaceId/usage-limits')
 export class WorkspaceUsageLimitsController {
-  constructor(private readonly billingQueryService: BillingQueryService) {}
+  constructor(
+    @Inject(BILLING_TYPES.applications.BillingQueryApplication)
+    private readonly billingQueryApplication: BillingQueryApplication,
+  ) {}
 
   @Get()
   @ResponseMessage('Get workspace usage limits')
@@ -23,7 +27,7 @@ export class WorkspaceUsageLimitsController {
   ) {
     const userId = this.getAuthUserId(req);
 
-    return this.billingQueryService.getWorkspaceUsageLimits(
+    return this.billingQueryApplication.getWorkspaceUsageLimits(
       userId,
       workspaceId,
     );

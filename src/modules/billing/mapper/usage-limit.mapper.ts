@@ -1,4 +1,7 @@
-import { UsageLimit, UsageResourceType } from '../domain/entities/usage-limit.entity';
+import {
+  UsageLimit,
+  UsageResourceType,
+} from '../domain/entities/usage-limit.entity';
 import { UsageLimitModel } from '../domain/models/usage-limit.model';
 import { UsageLimitResponseDto } from '../dto/response/usage-limit.response.dto';
 

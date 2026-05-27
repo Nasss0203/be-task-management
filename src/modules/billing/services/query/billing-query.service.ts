@@ -1,65 +1,31 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
-import { Repository } from 'typeorm';
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 
-import { Plan } from '../../domain/entities/plan.entity';
 import {
-  Subscription,
-  SubscriptionStatus,
-} from '../../domain/entities/subscription.entity';
-import { SubscriptionWorkspace } from '../../domain/entities/subscription-workspace.entity';
-import { UsageLimit } from '../../domain/entities/usage-limit.entity';
-
-const FREE_PLAN_LIMITS = {
-  workspaces: 5,
-  upgradedWorkspaces: 0,
-  members: 3,
-  projects: 3,
-  tasks: 100,
-  pages: 20,
-  pageTemplates: 5,
-  storageMb: 100,
-  attachments: 20,
-  sprints: 3,
-};
+  DEFAULT_PLAN_LIMITS,
+  FREE_PLAN_SLUG,
+} from '../../constants/default-plan-limits.constant';
+import { type BillingQueryRepository } from '../../interfaces/repositories/query/billing-query.repository.interface';
+import { type BillingQueryService } from '../../interfaces/services/query/billing-query.service.interface';
+import { BILLING_TYPES } from '../../interfaces/types';
+import { getNumberLimit } from '../../utils/plan-limit.util';
 
 @Injectable()
-export class BillingQueryService {
+export class BillingQueryServiceImpl implements BillingQueryService {
   constructor(
-    @InjectRepository(Subscription)
-    private readonly subscriptionRepository: Repository<Subscription>,
-
-    @InjectRepository(Plan)
-    private readonly planRepository: Repository<Plan>,
-
-    @InjectRepository(SubscriptionWorkspace)
-    private readonly subscriptionWorkspaceRepository: Repository<SubscriptionWorkspace>,
-
-    @InjectRepository(UsageLimit)
-    private readonly usageLimitRepository: Repository<UsageLimit>,
-
-    @InjectRepository(UserWorkspace)
-    private readonly userWorkspaceRepository: Repository<UserWorkspace>,
+    @Inject(BILLING_TYPES.repositories.BillingQueryRepository)
+    private readonly billingQueryRepository: BillingQueryRepository,
   ) {}
 
   async getCurrentSubscription(userId: string) {
-    const subscription = await this.subscriptionRepository.findOne({
-      where: {
-        userId,
-        status: SubscriptionStatus.ACTIVE,
-      },
-      order: {
-        createdAt: 'DESC',
-      },
-    });
+    const subscription =
+      await this.billingQueryRepository.findActiveSubscription(userId);
 
     if (!subscription) {
       return {
         plan: {
           name: 'FREE',
-          slug: 'free',
-          limits: FREE_PLAN_LIMITS,
+          slug: FREE_PLAN_SLUG,
+          limits: DEFAULT_PLAN_LIMITS[FREE_PLAN_SLUG],
         },
         subscription: null,
         upgradedWorkspace: {
@@ -69,21 +35,17 @@ export class BillingQueryService {
       };
     }
 
-    const plan = await this.planRepository.findOne({
-      where: {
-        id: subscription.planId,
-      },
-    });
+    const plan = await this.billingQueryRepository.findPlanById(
+      subscription.planId,
+    );
 
     const upgradedWorkspaceUsed =
-      await this.subscriptionWorkspaceRepository.count({
-        where: {
-          subscriptionId: subscription.id,
-        },
-      });
+      await this.billingQueryRepository.countSubscriptionWorkspaces(
+        subscription.id,
+      );
 
     const limits = plan?.limits ?? {};
-    const upgradedWorkspaceLimit = this.getNumberLimit(
+    const upgradedWorkspaceLimit = getNumberLimit(
       limits,
       'upgradedWorkspaces',
       plan?.slug === 'pro-monthly' ? 15 : 0,
@@ -120,25 +82,19 @@ export class BillingQueryService {
   }
 
   async getWorkspaceUsageLimits(userId: string, workspaceId: string) {
-    const member = await this.userWorkspaceRepository.findOne({
-      where: {
-        user_id: userId,
-        workspace_id: workspaceId,
-      },
-    });
+    const member = await this.billingQueryRepository.existsWorkspaceMember(
+      userId,
+      workspaceId,
+    );
 
     if (!member) {
       throw new ForbiddenException('You do not have access to this workspace');
     }
 
-    const usageLimits = await this.usageLimitRepository.find({
-      where: {
+    const usageLimits =
+      await this.billingQueryRepository.findUsageLimitsByWorkspaceId(
         workspaceId,
-      },
-      order: {
-        resourceType: 'ASC',
-      },
-    });
+      );
 
     return usageLimits.map((item) => ({
       id: item.id,
@@ -154,27 +110,5 @@ export class BillingQueryService {
       resetAt: item.resetAt,
       metadata: item.metadata,
     }));
-  }
-
-  private getNumberLimit(
-    limits: Record<string, unknown> | null,
-    key: string,
-    defaultValue: number,
-  ): number {
-    const value = limits?.[key];
-
-    if (typeof value === 'number') {
-      return value;
-    }
-
-    if (typeof value === 'string') {
-      const parsed = Number(value);
-
-      if (!Number.isNaN(parsed)) {
-        return parsed;
-      }
-    }
-
-    return defaultValue;
   }
 }

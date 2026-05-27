@@ -58,8 +58,9 @@ import {
   TemplateTaskStatusConfig,
   WorkspaceTemplateConfig,
   WorkspaceTemplateType,
-} from '../types/types'; 
-import { CheckWorkspaceLimitService } from 'src/modules/billing/services/check-workspace-limit.service';
+} from '../types/types';
+import { type CheckWorkspaceLimitService } from 'src/modules/billing/interfaces/services/check-workspace-limit.service.interface';
+import { BILLING_TYPES } from 'src/modules/billing/interfaces/types';
 
 @Injectable()
 export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTemplateService {
@@ -106,6 +107,7 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
     @Inject(PAGE_BLOCK_TYPES.services.CreatePageBlockService)
     private readonly createPageBlockService: CreatePageBlockService,
 
+    @Inject(BILLING_TYPES.services.CheckWorkspaceLimitService)
     private readonly checkWorkspaceLimitService: CheckWorkspaceLimitService,
   ) {}
 

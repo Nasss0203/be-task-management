@@ -47,7 +47,9 @@ export class SubscriptionMapper {
     );
   }
 
-  static toEntity(model: SubscriptionModel | SaveSubscriptionInput): Subscription {
+  static toEntity(
+    model: SubscriptionModel | SaveSubscriptionInput,
+  ): Subscription {
     const e = new Subscription();
 
     if ('id' in model && model.id != null) {
@@ -100,7 +102,9 @@ export class SubscriptionMapper {
     };
   }
 
-  static toResponseList(models: SubscriptionModel[]): SubscriptionResponseDto[] {
+  static toResponseList(
+    models: SubscriptionModel[],
+  ): SubscriptionResponseDto[] {
     return models.map((item) => this.toResponse(item));
   }
 }

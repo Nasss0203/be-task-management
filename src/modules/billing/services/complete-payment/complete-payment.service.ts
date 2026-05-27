@@ -14,54 +14,19 @@ import {
   UsageLimit,
   UsageResourceType,
 } from '../../domain/entities/usage-limit.entity';
-
-export interface CompletePaymentInput {
-  paymentId: string;
-}
-
-const RESOURCE_LIMIT_KEY_MAP: Record<UsageResourceType, string> = {
-  [UsageResourceType.MEMBERS]: 'members',
-  [UsageResourceType.PROJECTS]: 'projects',
-  [UsageResourceType.TASKS]: 'tasks',
-  [UsageResourceType.PAGES]: 'pages',
-  [UsageResourceType.PAGE_TEMPLATES]: 'pageTemplates',
-  [UsageResourceType.STORAGE_MB]: 'storageMb',
-  [UsageResourceType.ATTACHMENTS]: 'attachments',
-  [UsageResourceType.SPRINTS]: 'sprints',
-};
-
-const DEFAULT_PLAN_LIMITS: Record<string, Record<string, number | null>> = {
-  free: {
-    workspaces: 5,
-    upgradedWorkspaces: 0,
-
-    members: 3,
-    projects: 3,
-    tasks: 100,
-    pages: 20,
-    pageTemplates: 5,
-    storageMb: 100,
-    attachments: 20,
-    sprints: 3,
-  },
-
-  'pro-monthly': {
-    workspaces: 15,
-    upgradedWorkspaces: 15,
-
-    members: 10,
-    projects: 20,
-    tasks: 1000,
-    pages: 100,
-    pageTemplates: 20,
-    storageMb: 1024,
-    attachments: 200,
-    sprints: 20,
-  },
-};
+import { RESOURCE_LIMIT_KEY_MAP } from '../../constants/default-plan-limits.constant';
+import {
+  type CompletePaymentInput,
+  type CompletePaymentService,
+} from '../../interfaces/services/complete-payment/complete-payment.service.interface';
+import {
+  getNullableNumberLimit,
+  getNumberLimit,
+  mergePlanLimits,
+} from '../../utils/plan-limit.util';
 
 @Injectable()
-export class CompletePaymentService {
+export class CompletePaymentServiceImpl implements CompletePaymentService {
   constructor(
     @InjectRepository(Payment)
     private readonly paymentRepository: Repository<Payment>,
@@ -209,13 +174,9 @@ export class CompletePaymentService {
     plan: Plan;
     workspaceId: string;
   }): Promise<void> {
-    const limits = this.mergePlanLimits(input.plan);
+    const limits = mergePlanLimits(input.plan);
 
-    const upgradedWorkspaces = this.getNumberLimit(
-      limits,
-      'upgradedWorkspaces',
-      1,
-    );
+    const upgradedWorkspaces = getNumberLimit(limits, 'upgradedWorkspaces', 1);
 
     const activeCount = await this.subscriptionWorkspaceRepository.count({
       where: {
@@ -262,11 +223,11 @@ export class CompletePaymentService {
     workspaceId: string;
     plan: Plan;
   }): Promise<void> {
-    const limits = this.mergePlanLimits(input.plan);
+    const limits = mergePlanLimits(input.plan);
 
     for (const resourceType of Object.values(UsageResourceType)) {
       const limitKey = RESOURCE_LIMIT_KEY_MAP[resourceType];
-      const limitValue = this.getNullableNumberLimit(limits, limitKey);
+      const limitValue = getNullableNumberLimit(limits, limitKey);
 
       if (limitValue === undefined) {
         continue;
@@ -306,66 +267,5 @@ export class CompletePaymentService {
 
       await this.usageLimitRepository.save(usageLimit);
     }
-  }
-
-  private mergePlanLimits(plan: Plan): Record<string, unknown> {
-    const defaultLimits = DEFAULT_PLAN_LIMITS[plan.slug] ?? {};
-    const customLimits = plan.limits ?? {};
-
-    return {
-      ...defaultLimits,
-      ...customLimits,
-    };
-  }
-
-  private getNumberLimit(
-    limits: Record<string, unknown> | null,
-    key: string,
-    defaultValue: number,
-  ): number {
-    const value = limits?.[key];
-
-    if (typeof value === 'number') {
-      return value;
-    }
-
-    if (typeof value === 'string') {
-      const parsed = Number(value);
-
-      if (!Number.isNaN(parsed)) {
-        return parsed;
-      }
-    }
-
-    return defaultValue;
-  }
-
-  private getNullableNumberLimit(
-    limits: Record<string, unknown>,
-    key: string,
-  ): number | null | undefined {
-    const value = limits[key];
-
-    if (value === null) {
-      return null;
-    }
-
-    if (value === undefined) {
-      return undefined;
-    }
-
-    if (typeof value === 'number') {
-      return value;
-    }
-
-    if (typeof value === 'string') {
-      const parsed = Number(value);
-
-      if (!Number.isNaN(parsed)) {
-        return parsed;
-      }
-    }
-
-    return undefined;
   }
 }

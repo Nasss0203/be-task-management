@@ -1,36 +1,28 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Project } from 'src/modules/projects/domain/entities/project.entity';
-import { EntityManager, Repository } from 'typeorm';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { EntityManager } from 'typeorm';
 
-import {
-  UsageLimit,
-  UsageResourceType,
-} from '../../domain/entities/usage-limit.entity';
+import { UsageResourceType } from '../../domain/entities/usage-limit.entity';
+import { type UsageLimitRepository } from '../../interfaces/repositories/usage-limit/usage-limit.repository.interface';
+import { type UsageLimitEnforcerService } from '../../interfaces/services/usage-limit/usage-limit-enforcer.service.interface';
+import { BILLING_TYPES } from '../../interfaces/types';
 
 @Injectable()
-export class UsageLimitEnforcerService {
+export class UsageLimitEnforcerServiceImpl implements UsageLimitEnforcerService {
   constructor(
-    @InjectRepository(UsageLimit)
-    private readonly usageLimitRepository: Repository<UsageLimit>,
-
-    @InjectRepository(Project)
-    private readonly projectRepository: Repository<Project>,
+    @Inject(BILLING_TYPES.repositories.UsageLimitRepository)
+    private readonly usageLimitRepository: UsageLimitRepository,
   ) {}
 
   async checkProjectLimit(
     workspaceId: string,
     manager?: EntityManager,
   ): Promise<void> {
-    const usageLimitRepository = this.getUsageLimitRepository(manager);
-    const projectRepository = this.getProjectRepository(manager);
-
-    const usageLimit = await usageLimitRepository.findOne({
-      where: {
+    const usageLimit =
+      await this.usageLimitRepository.findByWorkspaceAndResource(
         workspaceId,
-        resourceType: UsageResourceType.PROJECTS,
-      },
-    });
+        UsageResourceType.PROJECTS,
+        manager,
+      );
 
     if (!usageLimit) {
       throw new BadRequestException('Project usage limit not found');
@@ -40,11 +32,11 @@ export class UsageLimitEnforcerService {
       return;
     }
 
-    const currentProjectCount = await projectRepository.count({
-      where: {
-        workspace_id: workspaceId,
-      },
-    });
+    const currentProjectCount =
+      await this.usageLimitRepository.countProjectsByWorkspaceId(
+        workspaceId,
+        manager,
+      );
 
     if (currentProjectCount >= usageLimit.limitValue) {
       throw new BadRequestException(
@@ -57,38 +49,25 @@ export class UsageLimitEnforcerService {
     workspaceId: string,
     manager?: EntityManager,
   ): Promise<void> {
-    const usageLimitRepository = this.getUsageLimitRepository(manager);
-    const projectRepository = this.getProjectRepository(manager);
-
-    const usageLimit = await usageLimitRepository.findOne({
-      where: {
+    const usageLimit =
+      await this.usageLimitRepository.findByWorkspaceAndResource(
         workspaceId,
-        resourceType: UsageResourceType.PROJECTS,
-      },
-    });
+        UsageResourceType.PROJECTS,
+        manager,
+      );
 
     if (!usageLimit) {
       return;
     }
 
-    const currentProjectCount = await projectRepository.count({
-      where: {
-        workspace_id: workspaceId,
-      },
-    });
+    const currentProjectCount =
+      await this.usageLimitRepository.countProjectsByWorkspaceId(
+        workspaceId,
+        manager,
+      );
 
     usageLimit.usedValue = currentProjectCount;
 
-    await usageLimitRepository.save(usageLimit);
-  }
-
-  private getUsageLimitRepository(
-    manager?: EntityManager,
-  ): Repository<UsageLimit> {
-    return manager?.getRepository(UsageLimit) ?? this.usageLimitRepository;
-  }
-
-  private getProjectRepository(manager?: EntityManager): Repository<Project> {
-    return manager?.getRepository(Project) ?? this.projectRepository;
+    await this.usageLimitRepository.save(usageLimit, manager);
   }
 }

@@ -1,7 +1,8 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { type UnitOfWork } from 'src/interface/index.interface';
-import { CheckWorkspaceLimitService } from 'src/modules/billing/services/check-workspace-limit.service';
-import { UsageLimitEnforcerService } from 'src/modules/billing/services/usage-limit/usage-limit-enforcer.service';
+import { type CheckWorkspaceLimitService } from 'src/modules/billing/interfaces/services/check-workspace-limit.service.interface';
+import { type UsageLimitEnforcerService } from 'src/modules/billing/interfaces/services/usage-limit/usage-limit-enforcer.service.interface';
+import { BILLING_TYPES } from 'src/modules/billing/interfaces/types';
 import { BoardViewType } from 'src/modules/boards/domain/entities/board.entity';
 import { type CreateBoardService } from 'src/modules/boards/interfaces/services/create.board.service.interface';
 import { BOARD_TYPES } from 'src/modules/boards/interfaces/types';
@@ -87,8 +88,10 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
     @Inject(ROLE_PERMISSION_TYPES.services.CreateRolePermissionService)
     private readonly createRolePermissionService: CreateRolePermissionService,
 
+    @Inject(BILLING_TYPES.services.CheckWorkspaceLimitService)
     private readonly checkWorkspaceLimitService: CheckWorkspaceLimitService,
 
+    @Inject(BILLING_TYPES.services.UsageLimitEnforcerService)
     private readonly usageLimitEnforcerService: UsageLimitEnforcerService,
   ) {}
 

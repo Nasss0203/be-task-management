@@ -6,8 +6,11 @@ import { ignoreLogger } from 'vnpay';
 
 import { UserWorkspace } from '../user_workspace/domain/entities/user_workspace.entity';
 import { Project } from '../projects/domain/entities/project.entity';
+import { BillingQueryApplicationImpl } from './applications/billing-query.application';
+import { CreateBillingApplicationImpl } from './applications/create-billing.application';
 import { BillingTestVnpayController } from './controller/billing-test-payment.controller';
 import { BillingController } from './controller/billing.controller';
+import { WorkspaceUsageLimitsController } from './controller/workspace-usage-limits.controller';
 import { Payment } from './domain/entities/payment.entity';
 import { Plan } from './domain/entities/plan.entity';
 import { SubscriptionWorkspace } from './domain/entities/subscription-workspace.entity';
@@ -17,14 +20,16 @@ import { BILLING_TYPES } from './interfaces/types';
 import { VnpayPaymentProviderImpl } from './providers/vnpay-payment.provider';
 import { PlanRepositoryImpl } from './repositories/plan/plan.repository';
 import { PaymentRepositoryImpl } from './repositories/payment/payment.repository';
-import { CheckWorkspaceLimitService } from './services/check-workspace-limit.service';
-import { CompletePaymentService } from './services/complete-payment/complete-payment.service';
+import { BillingQueryRepositoryImpl } from './repositories/query/billing-query.repository';
+import { UsageLimitRepositoryImpl } from './repositories/usage-limit/usage-limit.repository';
+import { WorkspaceLimitRepositoryImpl } from './repositories/workspace-limit/workspace-limit.repository';
+import { CheckWorkspaceLimitServiceImpl } from './services/check-workspace-limit.service';
+import { CompletePaymentServiceImpl } from './services/complete-payment/complete-payment.service';
 import { VnpayIpnService } from './services/ipn/vnpay-ipn.service';
-import { CreateBillingServiceImpl } from './services/payment/create-payment.service'; 
-import { Workspace } from '../workspaces/domain/entities/workspace.entity'; 
-import { BillingQueryService } from './services/query/billing-query.service'; 
-import { WorkspaceUsageLimitsController } from './controller/workspace-usage-limits.controller';
-import { UsageLimitEnforcerService } from './services/usage-limit/usage-limit-enforcer.service';
+import { CreateBillingServiceImpl } from './services/payment/create-payment.service';
+import { Workspace } from '../workspaces/domain/entities/workspace.entity';
+import { BillingQueryServiceImpl } from './services/query/billing-query.service';
+import { UsageLimitEnforcerServiceImpl } from './services/usage-limit/usage-limit-enforcer.service';
 
 @Module({
   imports: [
@@ -75,24 +80,62 @@ import { UsageLimitEnforcerService } from './services/usage-limit/usage-limit-en
       useClass: PaymentRepositoryImpl,
     },
     {
+      provide: BILLING_TYPES.repositories.BillingQueryRepository,
+      useClass: BillingQueryRepositoryImpl,
+    },
+    {
+      provide: BILLING_TYPES.repositories.WorkspaceLimitRepository,
+      useClass: WorkspaceLimitRepositoryImpl,
+    },
+    {
+      provide: BILLING_TYPES.repositories.UsageLimitRepository,
+      useClass: UsageLimitRepositoryImpl,
+    },
+    {
+      provide: BILLING_TYPES.applications.CreateBillingApplication,
+      useClass: CreateBillingApplicationImpl,
+    },
+    {
+      provide: BILLING_TYPES.applications.BillingQueryApplication,
+      useClass: BillingQueryApplicationImpl,
+    },
+    {
       provide: BILLING_TYPES.services.CreateBillingService,
       useClass: CreateBillingServiceImpl,
     },
+    {
+      provide: BILLING_TYPES.services.BillingQueryService,
+      useClass: BillingQueryServiceImpl,
+    },
+    {
+      provide: BILLING_TYPES.services.CheckWorkspaceLimitService,
+      useClass: CheckWorkspaceLimitServiceImpl,
+    },
+    {
+      provide: BILLING_TYPES.services.UsageLimitEnforcerService,
+      useClass: UsageLimitEnforcerServiceImpl,
+    },
+    {
+      provide: BILLING_TYPES.services.CompletePaymentService,
+      useClass: CompletePaymentServiceImpl,
+    },
     VnpayIpnService,
-    CompletePaymentService,
-    CheckWorkspaceLimitService,
-    BillingQueryService,
-    UsageLimitEnforcerService,
   ],
 
   exports: [
     BILLING_TYPES.providers.VnpayPaymentProvider,
     BILLING_TYPES.repositories.PlanRepository,
     BILLING_TYPES.repositories.PaymentRepository,
+    BILLING_TYPES.repositories.BillingQueryRepository,
+    BILLING_TYPES.repositories.WorkspaceLimitRepository,
+    BILLING_TYPES.repositories.UsageLimitRepository,
     BILLING_TYPES.services.CreateBillingService,
-    CheckWorkspaceLimitService,
-    BillingQueryService,
-    UsageLimitEnforcerService,
+    BILLING_TYPES.services.BillingQueryService,
+    BILLING_TYPES.services.CheckWorkspaceLimitService,
+    BILLING_TYPES.services.UsageLimitEnforcerService,
+    BILLING_TYPES.services.CompletePaymentService,
+    BILLING_TYPES.applications.CreateBillingApplication,
+    BILLING_TYPES.applications.BillingQueryApplication,
   ],
 })
 export class BillingModule {}

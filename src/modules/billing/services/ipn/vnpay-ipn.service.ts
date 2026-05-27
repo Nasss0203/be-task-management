@@ -9,12 +9,12 @@ import {
 
 import { PaymentStatus } from '../../domain/entities/payment.entity';
 import { type PaymentRepository } from '../../interfaces/repositories/payment/payment.repository.interface';
+import { type CompletePaymentService } from '../../interfaces/services/complete-payment/complete-payment.service.interface';
 import { BILLING_TYPES } from '../../interfaces/types';
 import {
   type VnpayPaymentProvider,
   type VnpayVerifyResult,
 } from '../../types/payment-input.interface';
-import { CompletePaymentService } from '../complete-payment/complete-payment.service';
 
 @Injectable()
 export class VnpayIpnService {
@@ -25,6 +25,7 @@ export class VnpayIpnService {
     @Inject(BILLING_TYPES.repositories.PaymentRepository)
     private readonly paymentRepository: PaymentRepository,
 
+    @Inject(BILLING_TYPES.services.CompletePaymentService)
     private readonly completePaymentService: CompletePaymentService,
   ) {}
 

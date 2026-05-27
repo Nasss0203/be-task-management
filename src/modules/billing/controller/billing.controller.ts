@@ -3,9 +3,9 @@ import { type Request } from 'express';
 
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { CreatePaymentDto } from '../dto/create-payment.dto';
-import { type CreateBillingService } from '../interfaces/services/payment/create-payment.service.interface';
+import { type BillingQueryApplication } from '../interfaces/applications/billing-query.application.interface';
+import { type CreateBillingApplication } from '../interfaces/applications/create-billing.application.interface';
 import { BILLING_TYPES } from '../interfaces/types';
-import { BillingQueryService } from '../services/query/billing-query.service';
 
 type AuthRequest = Request & {
   user?: {
@@ -18,10 +18,11 @@ type AuthRequest = Request & {
 @Controller('billing')
 export class BillingController {
   constructor(
-    @Inject(BILLING_TYPES.services.CreateBillingService)
-    private readonly createBillingService: CreateBillingService,
+    @Inject(BILLING_TYPES.applications.CreateBillingApplication)
+    private readonly createBillingApplication: CreateBillingApplication,
 
-    private readonly billingQueryService: BillingQueryService,
+    @Inject(BILLING_TYPES.applications.BillingQueryApplication)
+    private readonly billingQueryApplication: BillingQueryApplication,
   ) {}
 
   @Post('payments')
@@ -29,7 +30,7 @@ export class BillingController {
   createPayment(@Body() dto: CreatePaymentDto, @Req() req: AuthRequest) {
     const userId = this.getUserId(req);
 
-    return this.createBillingService.createPayment({
+    return this.createBillingApplication.createPayment({
       userId,
       dto,
       ipAddress: this.getClientIp(req),
@@ -41,7 +42,7 @@ export class BillingController {
   async getCurrentSubscription(@Req() req: AuthRequest) {
     const userId = this.getUserId(req);
 
-    return this.billingQueryService.getCurrentSubscription(userId);
+    return this.billingQueryApplication.getCurrentSubscription(userId);
   }
 
   private getUserId(req: AuthRequest): string {
