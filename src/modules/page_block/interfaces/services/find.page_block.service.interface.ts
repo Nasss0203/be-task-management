@@ -13,9 +13,9 @@ export interface FindPageBlockService {
     manager?: EntityManager,
   ): Promise<PageBlockModel | null>;
 
-  getNextOrderIndex(pageId: string, manager?: EntityManager): Promise<number>; 
+  getNextOrderIndex(pageId: string, manager?: EntityManager): Promise<number>;
 
-   findDeletedPageBlocks(
+  findDeletedPageBlocks(
     workspaceId: string,
     pageId?: string,
   ): Promise<PageBlockModel[]>;
@@ -25,4 +25,3 @@ export interface FindPageBlockService {
     blockId: string,
   ): Promise<PageBlockRestoreLookup | null>;
 }
-

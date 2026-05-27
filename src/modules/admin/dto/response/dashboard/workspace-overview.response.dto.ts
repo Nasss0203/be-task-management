@@ -69,7 +69,7 @@ export class AdminWorkspaceItemResponseDto {
   projectsCount: number;
   boardsCount: number;
   tasksCount: number;
-}   
+}
 
 export class AdminWorkspaceOverviewResponseDto {
   id: string;
@@ -83,5 +83,3 @@ export class AdminWorkspaceOverviewResponseDto {
   boardCount: number;
   taskCount: number;
 }
-
-

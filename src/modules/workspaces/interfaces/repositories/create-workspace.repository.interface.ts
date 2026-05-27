@@ -14,4 +14,3 @@ export interface CreateWorkspaceMultiRepository {
     manager?: EntityManager,
   ): Promise<WorkspaceModel>;
 }
-

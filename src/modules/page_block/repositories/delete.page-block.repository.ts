@@ -4,7 +4,6 @@ import { EntityManager, Repository } from 'typeorm';
 import { PageBlock } from '../domain/entities/page_block.entity';
 import { DeletePageBlockRepository } from '../interfaces/repositories/delete.page-block.repository.interface';
 
-
 @Injectable()
 export class DeletePageBlockRepositoryImpl implements DeletePageBlockRepository {
   constructor(

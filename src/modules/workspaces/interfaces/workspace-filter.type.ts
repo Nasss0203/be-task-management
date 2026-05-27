@@ -1,4 +1,4 @@
-import { PlanTypeWorkspace } from '../domain/entities/workspace.entity'; 
+import { PlanTypeWorkspace } from '../domain/entities/workspace.entity';
 import { AdminWorkspaceStatus } from '../dto/search-workspace.dto';
 
 export type AdminFindAllWorkspaceFilter = {

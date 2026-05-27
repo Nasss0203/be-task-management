@@ -3,9 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { PageBlock } from '../domain/entities/page_block.entity';
 import { PageBlockModel } from '../domain/models/page_block.model';
-import { FindPageBlockRepository, PageBlockRestoreLookup } from '../interfaces/repositories/find.page_block.repository.interface';
+import {
+  FindPageBlockRepository,
+  PageBlockRestoreLookup,
+} from '../interfaces/repositories/find.page_block.repository.interface';
 import { PageBlockMapper } from '../mapper/page_block.mapper';
-
 
 @Injectable()
 export class FindPageBlockRepositoryImpl implements FindPageBlockRepository {

@@ -5,4 +5,3 @@ export class UpdateUserSystemRoleDto {
   @IsEnum(SystemRole)
   systemRole: SystemRole;
 }
-    

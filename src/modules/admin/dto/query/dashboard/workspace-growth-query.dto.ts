@@ -10,5 +10,5 @@ export enum WorkspaceGrowthPeriod {
 export class WorkspaceGrowthQueryDto {
   @IsOptional()
   @IsEnum(WorkspaceGrowthPeriod)
-  period?: WorkspaceGrowthPeriod = WorkspaceGrowthPeriod.LAST_7_DAYS; 
+  period?: WorkspaceGrowthPeriod = WorkspaceGrowthPeriod.LAST_7_DAYS;
 }
