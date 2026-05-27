@@ -5,6 +5,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
+import { type CreateActivityService } from 'src/modules/activity/interfaces/services/create-activity.service.interface';
+import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { RoleName } from 'src/modules/role/domain/entities/role.entity';
 import { type FindTaskService } from 'src/modules/tasks/interfaces/services/find-task.service.interface';
 import { TASK_TYPES } from 'src/modules/tasks/interfaces/types';
@@ -33,6 +39,9 @@ export class DeleteTaskAssigneeApplicationImpl implements DeleteTaskAssigneeAppl
 
     @Inject(TASK_TYPES.services.FindTaskService)
     private readonly findTaskService: FindTaskService,
+
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async unassign(
@@ -96,6 +105,20 @@ export class DeleteTaskAssigneeApplicationImpl implements DeleteTaskAssigneeAppl
       taskId: input.taskId,
       userId: input.userId,
       deletedBy: input.deletedBy,
+    });
+
+    await this.createActivityService.create({
+      workspaceId: task.workspaceId,
+      projectId: task.projectId,
+      entityType: ActivityEntityType.TASK,
+      entityId: task.id,
+      actorId: input.deletedBy,
+      action: ActivityAction.TASK_UNASSIGNED,
+      field: 'assignee',
+      oldValue: input.userId,
+      metadata: {
+        assigneeId: input.userId,
+      },
     });
 
     return {

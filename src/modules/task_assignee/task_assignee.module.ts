@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ActivityModule } from '../activity/activity.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { TasksModule } from '../tasks/tasks.module';
 import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
@@ -20,6 +21,7 @@ import { FindTaskAssigneeServiceImpl } from './services/find.task_assignee.servi
     TypeOrmModule.forFeature([TaskAssignee]),
     UserWorkspacesModule,
     NotificationsModule,
+    ActivityModule,
     forwardRef(() => TasksModule),
   ],
   controllers: [TaskAssigneeController],

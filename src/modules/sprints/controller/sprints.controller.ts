@@ -156,11 +156,13 @@ export class SprintsController {
     @Param('workspaceId') workspaceId: string,
     @Param('projectId') projectId: string,
     @Param('sprintId') sprintId: string,
+    @Auth() auth: IAuth,
   ): Promise<SprintResponseDto> {
     return await this.cancelSprintApplication.cancelSprint({
       workspaceId,
       projectId,
       sprintId,
+      userId: auth.id,
     });
   }
 
@@ -170,11 +172,13 @@ export class SprintsController {
     @Param('projectId') projectId: string,
     @Param('sprintId') sprintId: string,
     @Body() body: UpdateSprintDto,
+    @Auth() auth: IAuth,
   ): Promise<SprintResponseDto> {
     return await this.updateSprintApplication.updateSprint({
       workspaceId,
       projectId,
       sprintId,
+      userId: auth.id,
       name: body.name,
       goal: body.goal,
       startAt:

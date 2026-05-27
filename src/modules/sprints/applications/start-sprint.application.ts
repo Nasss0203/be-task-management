@@ -1,4 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
+import { type CreateActivityService } from 'src/modules/activity/interfaces/services/create-activity.service.interface';
+import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { SprintResponseDto } from '../dto/response/sprint.response.dto';
 import {
   StartSprintApplication,
@@ -13,6 +19,9 @@ export class StartSprintApplicationImpl implements StartSprintApplication {
   constructor(
     @Inject(SPRINT_TYPES.services.StartSprintService)
     private readonly startSprintService: StartSprintService,
+
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async start(input: StartSprintApplicationInput): Promise<SprintResponseDto> {
@@ -25,6 +34,20 @@ export class StartSprintApplicationImpl implements StartSprintApplication {
       endAt: input.dto.endAt,
       name: input.dto.name,
       goal: input.dto.goal,
+    });
+
+    await this.createActivityService.create({
+      workspaceId: sprint.workspaceId,
+      projectId: sprint.projectId,
+      entityType: ActivityEntityType.SPRINT,
+      entityId: sprint.id,
+      actorId: input.userId,
+      action: ActivityAction.SPRINT_STARTED,
+      metadata: {
+        name: sprint.name,
+        startAt: sprint.startAt,
+        endAt: sprint.endAt,
+      },
     });
 
     return SprintsMapper.toResponse(sprint);

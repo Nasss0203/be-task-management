@@ -6,6 +6,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
+import { type CreateActivityService } from 'src/modules/activity/interfaces/services/create-activity.service.interface';
+import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { NotificationType } from 'src/modules/notifications/domain/entities/notification.entity';
 import { type CreateNotificationService } from 'src/modules/notifications/interfaces/services/create.notifications.service.interface';
 import { NOTIFICATION_TYPES } from 'src/modules/notifications/interfaces/types';
@@ -39,6 +45,9 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
 
     @Inject(NOTIFICATION_TYPES.services.CreateNotificationService)
     private readonly createNotificationService: CreateNotificationService,
+
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
 
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -90,6 +99,23 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
         taskId: input.taskId,
         userId: input.userId,
         assignedBy: input.assignedBy,
+      },
+      manager,
+    );
+
+    await this.createActivityService.create(
+      {
+        workspaceId: task.workspaceId,
+        projectId: task.projectId,
+        entityType: ActivityEntityType.TASK,
+        entityId: task.id,
+        actorId: input.assignedBy,
+        action: ActivityAction.TASK_ASSIGNED,
+        field: 'assignee',
+        newValue: input.userId,
+        metadata: {
+          assigneeId: input.userId,
+        },
       },
       manager,
     );

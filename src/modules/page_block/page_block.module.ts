@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ActivityModule } from '../activity/activity.module';
 import { PageBlockController } from './controller/page_block.controller';
 import { PageBlock } from './domain/entities/page_block.entity';
 import { PAGE_BLOCK_TYPES } from './interfaces/types';
@@ -20,7 +21,7 @@ import { DeletePageBlockRepositoryImpl } from './repositories/delete.page-block.
 import { DeletePageBlockServiceImpl } from './services/delete.page-block.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PageBlock])],
+  imports: [TypeOrmModule.forFeature([PageBlock]), ActivityModule],
   controllers: [PageBlockController],
   providers: [
     //application

@@ -188,6 +188,7 @@ export class TasksController {
     @Param('sourceSprintId') sourceSprintId: string,
     @Param('taskId') taskId: string,
     @Body() dto: MoveTaskSprintToSprintDto,
+    @Auth() auth: IAuth,
   ) {
     return await this.moveTaskSprintToSprintApplication.move({
       workspaceId,
@@ -195,6 +196,7 @@ export class TasksController {
       sourceSprintId,
       taskId,
       targetSprintId: dto.targetSprintId,
+      userId: auth.id,
     });
   }
 

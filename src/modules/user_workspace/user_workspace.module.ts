@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
+import { ActivityModule } from '../activity/activity.module';
 import { RoleModule } from '../role/role.module';
 import { UserRolesModule } from '../user_roles/user_roles.module';
 import { AddWorkspaceMemberApplicationImpl } from './applications/add-member-worlspace.application';
@@ -19,6 +20,7 @@ import { UserWorkspacesService } from './user_workspace.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([UserWorkspace]),
+    ActivityModule,
     RoleModule,
     UserRolesModule,
   ],
