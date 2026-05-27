@@ -37,7 +37,7 @@ export class CreateSprintServiceImpl implements CreateSprintService {
     const projectId = input.projectId;
 
     const findProject =
-      await this.findProjectRepository.findOneProjectById(projectId);
+      await this.findProjectRepository.findOneProjectById(projectId, manager);
 
     if (!findProject) {
       throw new HttpException('Project not found', HttpStatus.NOT_FOUND);
@@ -47,10 +47,18 @@ export class CreateSprintServiceImpl implements CreateSprintService {
       throw new BadRequestException('Project does not belong to workspace');
     }
 
+    const name =
+      input.name?.trim() ||
+      (await this.findSprintRepository.getNextDefaultSprintName(
+        projectId,
+        manager,
+      ));
+
     const isSprintNameExists =
       await this.findSprintRepository.existsByProjectIdAndName(
         projectId,
-        input.name as string,
+        name,
+        manager,
       );
 
     if (isSprintNameExists) {
@@ -61,6 +69,12 @@ export class CreateSprintServiceImpl implements CreateSprintService {
       throw new BadRequestException('Sprint startAt must be before endAt');
     }
 
-    return await this.createSprintRepository.save(input, manager);
+    return await this.createSprintRepository.save(
+      {
+        ...input,
+        name,
+      },
+      manager,
+    );
   }
 }

@@ -31,10 +31,6 @@ export class CreateSprintApplicationImpl implements CreateSprintApplication {
 
     const name = dto.name?.trim();
 
-    if (!name) {
-      throw new BadRequestException('Sprint name is required');
-    }
-
     const goal = dto.goal !== undefined ? dto.goal.trim() || null : undefined;
 
     const startAt =

@@ -5,7 +5,9 @@ import { EntityManager } from 'typeorm';
 import { SprintsModel } from '../../domain/models/sprints.model';
 import { SaveSprintInput } from '../repositories/create-sprint.repository.interface';
 
-export type CreateSprintServiceInput = SaveSprintInput;
+export type CreateSprintServiceInput = Omit<SaveSprintInput, 'name'> & {
+  name?: string | null;
+};
 
 export interface CreateSprintService {
   create(
