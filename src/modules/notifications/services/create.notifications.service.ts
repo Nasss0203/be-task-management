@@ -1,6 +1,8 @@
 // src/modules/notifications/services/create-notification.service.impl.ts
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { REALTIME_EVENTS } from 'src/modules/realtime/realtime.events';
 import { EntityManager } from 'typeorm';
 import {
   NotificationSenderType,
@@ -19,6 +21,8 @@ export class CreateNotificationServiceImpl implements CreateNotificationService 
   constructor(
     @Inject(NOTIFICATION_TYPES.repositories.CreateNotificationRepository)
     private readonly createNotificationRepository: CreateNotificationRepository,
+
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async createNotification(
@@ -33,36 +37,66 @@ export class CreateNotificationServiceImpl implements CreateNotificationService 
       throw new BadRequestException('Notification title is required');
     }
 
-    const create = await this.createNotificationRepository.saveNotification(
-      {
-        receiverId: input.receiverId,
+    const notification =
+      await this.createNotificationRepository.saveNotification(
+        {
+          receiverId: input.receiverId,
 
-        senderType: input.senderType ?? NotificationSenderType.SYSTEM,
-        actorId: input.actorId ?? null,
+          senderType: input.senderType ?? NotificationSenderType.SYSTEM,
+          actorId: input.actorId ?? null,
 
-        sourceType: input.sourceType ?? NotificationSourceType.SYSTEM,
+          sourceType: input.sourceType ?? NotificationSourceType.SYSTEM,
 
-        workspaceId: input.workspaceId ?? null,
-        projectId: input.projectId ?? null,
-        taskId: input.taskId ?? null,
-        sprintId: input.sprintId ?? null,
-        commentId: input.commentId ?? null,
+          workspaceId: input.workspaceId ?? null,
+          projectId: input.projectId ?? null,
+          taskId: input.taskId ?? null,
+          sprintId: input.sprintId ?? null,
+          commentId: input.commentId ?? null,
 
-        type: input.type,
+          type: input.type,
 
-        title: input.title.trim(),
-        message: input.message ?? null,
-        actionUrl: input.actionUrl ?? null,
+          title: input.title.trim(),
+          message: input.message ?? null,
+          actionUrl: input.actionUrl ?? null,
 
-        metadata: input.metadata ?? null,
+          metadata: input.metadata ?? null,
 
-        readAt: null,
-        archivedAt: null,
+          readAt: null,
+          archivedAt: null,
+        },
+        manager,
+      );
+
+    this.eventEmitter.emit(REALTIME_EVENTS.NOTIFICATION_CREATED, {
+      recipientUserId: notification.receiverId,
+      notification: {
+        id: notification.id,
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        actionUrl: notification.actionUrl,
+
+        senderType: notification.senderType,
+        actorId: notification.actorId,
+
+        sourceType: notification.sourceType,
+
+        workspaceId: notification.workspaceId,
+        projectId: notification.projectId,
+        taskId: notification.taskId,
+        sprintId: notification.sprintId,
+        commentId: notification.commentId,
+
+        metadata: notification.metadata,
+
+        isRead: Boolean(notification.readAt),
+        readAt: notification.readAt,
+        archivedAt: notification.archivedAt,
+
+        createdAt: notification.createdAt,
       },
-      manager,
-    );
-    console.log('🚀 ~ create~', create);
+    });
 
-    return create;
+    return notification;
   }
 }

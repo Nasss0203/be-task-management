@@ -4,6 +4,7 @@ export type CancelSprintApplicationInput = {
   workspaceId: string;
   projectId: string;
   sprintId: string;
+  userId: string;
 };
 
 export interface CancelSprintApplication {

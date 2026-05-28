@@ -9,6 +9,7 @@ import { BillingWebhook } from 'src/modules/billing/domain/entities/billing-webh
 import { Invoice } from 'src/modules/billing/domain/entities/invoice.entity';
 import { Payment } from 'src/modules/billing/domain/entities/payment.entity';
 import { Plan } from 'src/modules/billing/domain/entities/plan.entity';
+import { SubscriptionWorkspace } from 'src/modules/billing/domain/entities/subscription-workspace.entity';
 import { Subscription } from 'src/modules/billing/domain/entities/subscription.entity';
 import { UsageLimit } from 'src/modules/billing/domain/entities/usage-limit.entity';
 import { Board } from 'src/modules/boards/domain/entities/board.entity';
@@ -29,14 +30,13 @@ import { TaskComment } from 'src/modules/task_commnent/domain/entities/task_comm
 import { TaskPriority } from 'src/modules/task_priority/domain/entities/task_priority.entity';
 import { TaskStatus } from 'src/modules/task_status/domain/entities/task_status.entity';
 import { Task } from 'src/modules/tasks/domain/entities/task.entity';
+import { UserActivity } from 'src/modules/user_activity/domain/entities/user_activity.entity';
 import { UserProfile } from 'src/modules/user_profiles/domain/entities/user_profile.entity';
 import { UserRole } from 'src/modules/user_roles/domain/entities/user_role.entity';
 import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
 import { User } from 'src/modules/users/domain/entities/user.entity';
 import { WorkspaceInvite } from 'src/modules/workspace_invites/domain/entities/workspace_invite.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
-import { UserActivity } from 'src/modules/user_activity/domain/entities/user_activity.entity';
-import { SubscriptionWorkspace } from 'src/modules/billing/domain/entities/subscription-workspace.entity'; 
 
 export default new DataSource({
   type: 'postgres',

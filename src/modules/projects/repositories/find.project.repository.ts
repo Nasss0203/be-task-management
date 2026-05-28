@@ -51,8 +51,8 @@ export class FindProjectRepositoryImpl implements FindProjectRepository {
       .getRawOne<ProjectRestoreLookup>();
 
     return row ?? null;
-  } 
-  
+  }
+
   async existsActiveProjectKey(
     workspaceId: string,
     key: string,

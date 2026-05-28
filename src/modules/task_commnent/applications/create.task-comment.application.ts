@@ -1,4 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
+import { type CreateActivityService } from 'src/modules/activity/interfaces/services/create-activity.service.interface';
+import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { TaskCommentResponseDto } from '../dto/response/task-comment.response.dto';
 import {
   CreateTaskCommentApplication,
@@ -13,6 +19,9 @@ export class CreateTaskCommentApplicationImpl implements CreateTaskCommentApplic
   constructor(
     @Inject(TASK_COMMENT_TYPES.services.CreateTaskCommentService)
     private readonly createTaskCommentService: CreateTaskCommentService,
+
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async create(
@@ -24,6 +33,18 @@ export class CreateTaskCommentApplicationImpl implements CreateTaskCommentApplic
       taskId: input.taskId,
       authorId: input.userId,
       content: input.content,
+    });
+
+    await this.createActivityService.create({
+      workspaceId: comment.workspaceId,
+      projectId: comment.projectId,
+      entityType: ActivityEntityType.COMMENT,
+      entityId: comment.id,
+      actorId: input.userId,
+      action: ActivityAction.COMMENT_CREATED,
+      metadata: {
+        taskId: comment.taskId,
+      },
     });
 
     return TaskCommentMapper.toResponse(comment);

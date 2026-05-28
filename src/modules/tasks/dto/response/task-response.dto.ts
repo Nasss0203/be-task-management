@@ -37,3 +37,11 @@ export class TaskResponseDto {
   deletedAt?: Date | null;
   deletedBy?: string | null;
 }
+
+export class PaginatedTaskResponseDto {
+  data: TaskResponseDto[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}

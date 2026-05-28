@@ -4,6 +4,14 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { type UnitOfWork } from 'src/interface/index.interface';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
+import { type CreateActivityService } from 'src/modules/activity/interfaces/services/create-activity.service.interface';
+import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
+import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
 import { DeleteTaskApplication } from '../interfaces/applications/delete-task.application.interface';
 import { type DeleteTaskService } from '../interfaces/services/delete-task.service.interface';
 import { type FindTaskService } from '../interfaces/services/find-task.service.interface';
@@ -17,6 +25,12 @@ export class DeleteTaskApplicationImpl implements DeleteTaskApplication {
 
     @Inject(TASK_TYPES.services.DeleteTaskService)
     private readonly deleteTaskService: DeleteTaskService,
+
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
+
+    @Inject(WORKSPACE_TYPES.uow.UnitOfWork)
+    private readonly uow: UnitOfWork,
   ) {}
 
   async delete(input: {
@@ -30,9 +44,29 @@ export class DeleteTaskApplicationImpl implements DeleteTaskApplication {
       throw new NotFoundException('Task not found');
     }
 
-    await this.deleteTaskService.softDeleteTask({
-      taskId: input.taskId,
-      deletedBy: input.userId,
+    await this.uow.runInTransaction(async (manager) => {
+      await this.deleteTaskService.softDeleteTask(
+        {
+          taskId: input.taskId,
+          deletedBy: input.userId,
+        },
+        manager,
+      );
+
+      await this.createActivityService.create(
+        {
+          workspaceId: task.workspaceId,
+          projectId: task.projectId,
+          entityType: ActivityEntityType.TASK,
+          entityId: task.id,
+          actorId: input.userId,
+          action: ActivityAction.TASK_DELETED,
+          metadata: {
+            title: task.title,
+          },
+        },
+        manager,
+      );
     });
   }
 
@@ -66,8 +100,25 @@ export class DeleteTaskApplicationImpl implements DeleteTaskApplication {
       );
     }
 
-    await this.deleteTaskService.restoreTask({
-      taskId: input.taskId,
+    await this.uow.runInTransaction(async (manager) => {
+      await this.deleteTaskService.restoreTask(
+        {
+          taskId: input.taskId,
+        },
+        manager,
+      );
+
+      await this.createActivityService.create(
+        {
+          workspaceId: task.workspaceId,
+          projectId: task.projectId,
+          entityType: ActivityEntityType.TASK,
+          entityId: task.id,
+          actorId: input.userId,
+          action: ActivityAction.TASK_RESTORED,
+        },
+        manager,
+      );
     });
   }
 }

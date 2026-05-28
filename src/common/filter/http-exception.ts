@@ -6,6 +6,14 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
+import { ErrorCode } from '../constants/error-code.constant';
+
+type ExceptionResponse = {
+  code?: ErrorCode | string;
+  error?: string;
+  message?: string | string[];
+  statusCode?: number;
+};
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -26,29 +34,50 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    let message = 'Internal Server Error';
-    let error = 'Unknown Error';
+    let message: string | string[] = 'Internal Server Error';
+    let code: ErrorCode | string = this.getDefaultErrorCode(httpStatus);
 
     if (exception instanceof HttpException) {
-      const response = exception.getResponse();
+      const exceptionResponse = exception.getResponse();
+
       message =
-        typeof response === 'object'
-          ? (response as any).message || message
-          : response;
-      error = (response as any)?.error || HttpStatus[httpStatus];
+        typeof exceptionResponse === 'object'
+          ? (exceptionResponse as ExceptionResponse).message || message
+          : exceptionResponse;
+
+      if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
+        code = (exceptionResponse as ExceptionResponse).code || code;
+      }
     } else if (exception instanceof Error) {
-      message = exception.message;
-      error = exception.name;
+      message = 'Internal Server Error';
+      code = ErrorCode.INTERNAL_ERROR;
     }
 
     const responseBody = {
       statusCode: httpStatus,
+      code,
       message,
-      error,
       path: httpAdapter.getRequestUrl(ctx.getRequest()),
       timestamp: new Date().toISOString(),
     };
 
     httpAdapter.reply(ctx.getResponse(), responseBody, httpStatus);
+  }
+
+  private getDefaultErrorCode(statusCode: number): ErrorCode | string {
+    const statusCodeMap: Record<number, ErrorCode> = {
+      [HttpStatus.BAD_REQUEST]: ErrorCode.BAD_REQUEST,
+      [HttpStatus.UNAUTHORIZED]: ErrorCode.UNAUTHORIZED,
+      [HttpStatus.FORBIDDEN]: ErrorCode.FORBIDDEN,
+      [HttpStatus.NOT_FOUND]: ErrorCode.NOT_FOUND,
+      [HttpStatus.CONFLICT]: ErrorCode.CONFLICT,
+      [HttpStatus.INTERNAL_SERVER_ERROR]: ErrorCode.INTERNAL_ERROR,
+    };
+
+    return (
+      statusCodeMap[statusCode] ||
+      HttpStatus[statusCode] ||
+      ErrorCode.INTERNAL_ERROR
+    );
   }
 }

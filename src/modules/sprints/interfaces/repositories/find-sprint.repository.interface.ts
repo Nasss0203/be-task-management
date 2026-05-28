@@ -11,6 +11,11 @@ export interface FindSprintRepository {
     manager?: EntityManager,
   ): Promise<boolean>;
 
+  getNextDefaultSprintName(
+    projectId: string,
+    manager?: EntityManager,
+  ): Promise<string>;
+
   findOneSprint(
     sprintId: string,
     manager?: EntityManager,

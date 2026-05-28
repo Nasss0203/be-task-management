@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ActivityModule } from '../activity/activity.module';
 import { TasksModule } from '../tasks/tasks.module';
 import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
 import { CreateTaskCommentApplicationImpl } from './applications/create.task-comment.application';
@@ -15,6 +16,7 @@ import { FindTaskCommentServiceImpl } from './services/find.task_commnent.servic
 @Module({
   imports: [
     TypeOrmModule.forFeature([TaskComment]),
+    ActivityModule,
     forwardRef(() => TasksModule),
     UserWorkspacesModule,
   ],

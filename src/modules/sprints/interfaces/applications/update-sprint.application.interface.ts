@@ -4,6 +4,7 @@ export type UpdateSprintApplicationInput = {
   sprintId: string;
   workspaceId: string;
   projectId: string;
+  userId: string;
 
   name?: string;
   goal?: string | null;

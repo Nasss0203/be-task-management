@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { BillingModule } from '../billing/billing.module';
+import { ActivityModule } from '../activity/activity.module';
 import { BoardsModule } from '../boards/boards.module';
 import { PageModule } from '../page/page.module';
 import { PageBlockModule } from '../page_block/page_block.module';
@@ -32,6 +33,7 @@ import { FindProjectServiceImpl } from './services/find.project.service';
     TaskPriorityModule,
     TaskStatusModule,
     BillingModule,
+    ActivityModule,
   ],
   controllers: [ProjectsController],
   providers: [

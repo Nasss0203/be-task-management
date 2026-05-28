@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { PageBlockMapper } from '../mapper/page_block.mapper';
 import { PageBlockResponseDto } from '../dto/response/page_block.response.dto';
 import { FindPageBlockApplication } from '../interfaces/applications/find.page_block.application.interface';
-import {type  FindPageBlockService } from '../interfaces/services/find.page_block.service.interface';
+import { type FindPageBlockService } from '../interfaces/services/find.page_block.service.interface';
 import { PAGE_BLOCK_TYPES } from '../interfaces/types';
 
 @Injectable()

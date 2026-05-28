@@ -1,6 +1,12 @@
 // src/modules/sprints/applications/update-sprint.application.ts
 
 import { Inject, Injectable } from '@nestjs/common';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
+import { type CreateActivityService } from 'src/modules/activity/interfaces/services/create-activity.service.interface';
+import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { DataSource } from 'typeorm';
 import { SprintResponseDto } from '../dto/response/sprint.response.dto';
 import {
@@ -18,13 +24,16 @@ export class UpdateSprintApplicationImpl implements UpdateSprintApplication {
 
     @Inject(SPRINT_TYPES.services.UpdateSprintService)
     private readonly updateSprintService: UpdateSprintService,
+
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async updateSprint(
     input: UpdateSprintApplicationInput,
   ): Promise<SprintResponseDto> {
     const updatedSprint = await this.dataSource.transaction(async (manager) => {
-      return await this.updateSprintService.updateSprint(
+      const updatedSprint = await this.updateSprintService.updateSprint(
         {
           id: input.sprintId,
           workspaceId: input.workspaceId,
@@ -36,6 +45,26 @@ export class UpdateSprintApplicationImpl implements UpdateSprintApplication {
         },
         manager,
       );
+
+      await this.createActivityService.create(
+        {
+          workspaceId: updatedSprint.workspaceId,
+          projectId: updatedSprint.projectId,
+          entityType: ActivityEntityType.SPRINT,
+          entityId: updatedSprint.id,
+          actorId: input.userId,
+          action: ActivityAction.SPRINT_UPDATED,
+          metadata: {
+            name: updatedSprint.name,
+            goal: updatedSprint.goal,
+            startAt: updatedSprint.startAt,
+            endAt: updatedSprint.endAt,
+          },
+        },
+        manager,
+      );
+
+      return updatedSprint;
     });
 
     return SprintsMapper.toResponse(updatedSprint);

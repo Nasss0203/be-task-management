@@ -2,6 +2,7 @@
 
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -10,6 +11,12 @@ import { extname } from 'path';
 import { Repository } from 'typeorm';
 import { StorageService } from '../storage/storage.service';
 
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from '../activity/domain/entities/activity.entity';
+import { type CreateActivityService } from '../activity/interfaces/services/create-activity.service.interface';
+import { ACTIVITY_TYPES } from '../activity/interfaces/types';
 import {
   ALLOWED_EXTENSIONS,
   ALLOWED_MIME_TYPES,
@@ -25,6 +32,9 @@ export class AttachmentsService {
   constructor(
     @InjectRepository(Attachment)
     private readonly attachmentRepo: Repository<Attachment>,
+
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
 
     private readonly storageService: StorageService,
   ) {}
@@ -78,6 +88,21 @@ export class AttachmentsService {
     });
 
     const saved = await this.attachmentRepo.save(attachment);
+
+    await this.createActivityService.create({
+      workspaceId: saved.workspaceId,
+      entityType: ActivityEntityType.ATTACHMENT,
+      entityId: saved.id,
+      actorId: userId,
+      action: ActivityAction.ATTACHMENT_UPLOADED,
+      metadata: {
+        taskId: saved.taskId,
+        commentId: saved.commentId,
+        fileName: saved.fileName,
+        mimeType: saved.mimeType,
+        size: saved.size,
+      },
+    });
 
     return {
       id: saved.id,

@@ -1,5 +1,9 @@
 import { EntityManager } from 'typeorm';
 import { TaskModel } from '../../domain/models/task.model';
+import {
+  FindBacklogTasksFilters,
+  PaginatedTaskModels,
+} from '../find-backlog-tasks-filters.interface';
 import { TaskRestoreLookup } from '../repositories/find-task.repository.interface';
 
 export interface FindTaskService {
@@ -32,6 +36,7 @@ export interface FindTaskService {
   findBacklogTasks(
     projectId: string,
     workspaceId: string,
+    filters?: FindBacklogTasksFilters,
     manager?: EntityManager,
-  ): Promise<TaskModel[]>;
+  ): Promise<PaginatedTaskModels>;
 }

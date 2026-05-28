@@ -87,6 +87,28 @@ export class FindSprintRepositoryImpl implements FindSprintRepository {
     });
   }
 
+  async getNextDefaultSprintName(
+    projectId: string,
+    manager?: EntityManager,
+  ): Promise<string> {
+    const rows = await this.getRepo(manager)
+      .createQueryBuilder('sprint')
+      .withDeleted()
+      .select('sprint.name', 'name')
+      .where('sprint.project_id = :projectId', { projectId })
+      .andWhere('sprint.name ~ :pattern', { pattern: '^Sprint [0-9]+$' })
+      .getRawMany<{ name: string }>();
+
+    const maxNumber = rows.reduce((max, row) => {
+      const match = row.name.match(/^Sprint (\d+)$/);
+      const sprintNumber = match ? Number(match[1]) : 0;
+
+      return Number.isNaN(sprintNumber) ? max : Math.max(max, sprintNumber);
+    }, 0);
+
+    return `Sprint ${maxNumber + 1}`;
+  }
+
   async findOneSprint(
     sprintId: string,
     manager?: EntityManager,

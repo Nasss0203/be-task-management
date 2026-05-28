@@ -6,6 +6,7 @@ export interface MoveTaskSprintToSprintApplicationInput {
   taskId: string;
   sourceSprintId: string;
   targetSprintId: string;
+  userId: string;
 }
 
 export interface MoveTaskSprintToSprintApplication {

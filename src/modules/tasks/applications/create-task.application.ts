@@ -8,6 +8,12 @@ import { TASK_TYPES } from '../interfaces/types';
 import { TaskMapper } from '../mapper/tasks.mapper';
 
 import { type UnitOfWork } from 'src/interface/index.interface';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
+import { type CreateActivityService } from 'src/modules/activity/interfaces/services/create-activity.service.interface';
+import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { type CreateTaskAssigneeApplication } from 'src/modules/task_assignee/interfaces/applications/create.task_assignee.application.interface';
 import { TASK_ASSIGNEE_TYPES } from 'src/modules/task_assignee/interfaces/types';
 import { type CreateTaskCommentService } from 'src/modules/task_commnent/interfaces/services/create.task_commnent.service.interface';
@@ -26,6 +32,9 @@ export class CreateTaskApplicationImpl implements CreateTaskApplication {
     @Inject(TASK_COMMENT_TYPES.services.CreateTaskCommentService)
     private readonly createTaskCommentService: CreateTaskCommentService,
 
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
+
     @Inject(WORKSPACE_TYPES.uow.UnitOfWork)
     private readonly unitOfWork: UnitOfWork,
   ) {}
@@ -39,6 +48,24 @@ export class CreateTaskApplicationImpl implements CreateTaskApplication {
       } = createTaskDto;
 
       const createdTask = await this.service.create(taskCreateDto, manager);
+
+      await this.createActivityService.create(
+        {
+          workspaceId: createdTask.workspaceId,
+          projectId: createdTask.projectId,
+          entityType: ActivityEntityType.TASK,
+          entityId: createdTask.id,
+          actorId: createTaskDto.createdBy,
+          action: ActivityAction.TASK_CREATED,
+          metadata: {
+            title: createdTask.title,
+            statusId: createdTask.statusId,
+            priorityId: createdTask.priorityId,
+            sprintId: createdTask.sprintId,
+          },
+        },
+        manager,
+      );
 
       const uniqueAssigneeIds = [...new Set(assigneeIds)].filter(Boolean);
       for (const userId of uniqueAssigneeIds) {

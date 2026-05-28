@@ -5,6 +5,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
+import { type CreateActivityService } from 'src/modules/activity/interfaces/services/create-activity.service.interface';
+import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { SprintStatus } from 'src/modules/sprints/domain/entities/sprint.entity';
 import { type FindSprintService } from 'src/modules/sprints/interfaces/services/find-sprint.service.interface';
 import { SPRINT_TYPES } from 'src/modules/sprints/interfaces/types';
@@ -34,6 +40,9 @@ export class MoveTaskSprintApplicationImpl implements MoveTaskSprintApplication 
 
     @Inject(TASK_TYPES.services.MoveTaskSprintService)
     private readonly moveTaskSprintService: MoveTaskSprintService,
+
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async move(input: MoveTaskSprintApplicationInput): Promise<TaskResponseDto> {
@@ -84,6 +93,20 @@ export class MoveTaskSprintApplicationImpl implements MoveTaskSprintApplication 
     const movedTask = await this.moveTaskSprintService.move({
       sprintId: input.sprintId,
       taskId: input.taskId,
+    });
+
+    await this.createActivityService.create({
+      workspaceId: movedTask.workspaceId,
+      projectId: movedTask.projectId,
+      entityType: ActivityEntityType.TASK,
+      entityId: movedTask.id,
+      actorId: input.userId,
+      action: input.sprintId
+        ? ActivityAction.TASK_MOVED_TO_SPRINT
+        : ActivityAction.TASK_MOVED_TO_BACKLOG,
+      field: 'sprintId',
+      oldValue: task.sprintId,
+      newValue: movedTask.sprintId,
     });
 
     return TaskMapper.toResponse(movedTask);

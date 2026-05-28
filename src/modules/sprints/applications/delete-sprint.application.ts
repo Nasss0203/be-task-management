@@ -4,6 +4,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
+import { type CreateActivityService } from 'src/modules/activity/interfaces/services/create-activity.service.interface';
+import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { SprintStatus } from '../domain/entities/sprint.entity';
 import { DeleteSprintApplication } from '../interfaces/applications/delete-sprint.application.interface';
 import { type DeleteSprintService } from '../interfaces/services/delete-sprint.service.interface';
@@ -18,6 +24,9 @@ export class DeleteSprintApplicationImpl implements DeleteSprintApplication {
 
     @Inject(SPRINT_TYPES.services.DeleteSprintService)
     private readonly deleteSprintService: DeleteSprintService,
+
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async delete(input: {
@@ -68,6 +77,15 @@ export class DeleteSprintApplicationImpl implements DeleteSprintApplication {
       sprintId: input.sprintId,
       deletedBy: input.userId,
     });
+
+    await this.createActivityService.create({
+      workspaceId: input.workspaceId,
+      projectId: input.projectId,
+      entityType: ActivityEntityType.SPRINT,
+      entityId: input.sprintId,
+      actorId: input.userId,
+      action: ActivityAction.SPRINT_DELETED,
+    });
   }
 
   async restore(input: {
@@ -104,6 +122,15 @@ export class DeleteSprintApplicationImpl implements DeleteSprintApplication {
 
     await this.deleteSprintService.restoreSprint({
       sprintId: input.sprintId,
+    });
+
+    await this.createActivityService.create({
+      workspaceId: input.workspaceId,
+      projectId: input.projectId,
+      entityType: ActivityEntityType.SPRINT,
+      entityId: input.sprintId,
+      actorId: input.userId,
+      action: ActivityAction.SPRINT_RESTORED,
     });
   }
 }

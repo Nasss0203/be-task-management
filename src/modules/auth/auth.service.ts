@@ -6,6 +6,7 @@ import { randomBytes } from 'crypto';
 import { IAuth } from 'src/types/auth';
 import { hashPassword, hashToken } from 'src/utils';
 import { Repository } from 'typeorm';
+import { ErrorCode } from '../../common/constants/error-code.constant';
 import { RefreshToken } from '../refresh_token/entities/refresh_token.entity';
 import { SystemRole, User } from '../users/domain/entities/user.entity';
 import { RegisterUserDto } from '../users/dto/create-user.dto';
@@ -37,7 +38,13 @@ export class AuthService {
     });
 
     if (exists) {
-      throw new HttpException('User already exists', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        {
+          code: ErrorCode.USER_ALREADY_EXISTS,
+          message: 'User already exists',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const user = this.userRepo.create({
@@ -71,7 +78,13 @@ export class AuthService {
     });
 
     if (!user || !user.isActive) {
-      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        {
+          code: ErrorCode.AUTH_INVALID_CREDENTIALS,
+          message: 'Invalid credentials',
+        },
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     const payload: IUserJwtPayload = {
@@ -150,11 +163,23 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        {
+          code: ErrorCode.USER_NOT_FOUND,
+          message: 'User not found',
+        },
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     if (!user.isActive) {
-      throw new HttpException('User is inactive', HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        {
+          code: ErrorCode.USER_INACTIVE,
+          message: 'User is inactive',
+        },
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     return user;

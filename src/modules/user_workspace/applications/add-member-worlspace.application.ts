@@ -1,5 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { type UnitOfWork } from 'src/interface/index.interface';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
+import { type CreateActivityService } from 'src/modules/activity/interfaces/services/create-activity.service.interface';
+import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { AddWorkspaceMemberDto } from '../dto/create-user_workspace.dto';
 import { UserWorkspaceResponseDto } from '../dto/response/user_workspace.response.dto';
 import { AddWorkspaceMemberApplication } from '../interfaces/applications/add-member-workspace.application.interface';
@@ -14,6 +20,9 @@ export class AddWorkspaceMemberApplicationImpl implements AddWorkspaceMemberAppl
     private readonly addWorkspaceMemberService: AddMemberWorkspaceService,
     @Inject(USER_WORKSPACE_TYPES.uow.UnitOfWork)
     private readonly uow: UnitOfWork,
+
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async addMember(
@@ -28,6 +37,21 @@ export class AddWorkspaceMemberApplicationImpl implements AddWorkspaceMemberAppl
           user_id: dto.user_id,
           role_name: dto.role_name,
           added_by: addedBy,
+        },
+        manager,
+      );
+
+      await this.createActivityService.create(
+        {
+          workspaceId,
+          entityType: ActivityEntityType.WORKSPACE,
+          entityId: workspaceId,
+          actorId: addedBy,
+          action: ActivityAction.WORKSPACE_MEMBER_JOINED,
+          metadata: {
+            userId: dto.user_id,
+            roleName: dto.role_name,
+          },
         },
         manager,
       );

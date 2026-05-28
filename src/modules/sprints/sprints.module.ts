@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
+import { ActivityModule } from '../activity/activity.module';
 import { ProjectsModule } from '../projects/projects.module';
 import { TaskStatusModule } from '../task_status/task_status.module';
 import { TasksModule } from '../tasks/tasks.module';
@@ -37,6 +38,7 @@ import { UpdateSprintServiceImpl } from './services/udpdate-sprint.service';
     forwardRef(() => ProjectsModule), // Đang dùng service
     forwardRef(() => TasksModule), // Đang dùng service
     TaskStatusModule,
+    ActivityModule,
   ],
   controllers: [SprintsController],
   providers: [

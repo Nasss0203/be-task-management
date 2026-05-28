@@ -2,6 +2,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { TaskModel } from '../domain/models/task.model';
 import {
+  FindBacklogTasksFilters,
+  PaginatedTaskModels,
+} from '../interfaces/find-backlog-tasks-filters.interface';
+import {
   TaskRestoreLookup,
   type FindTaskRepository,
 } from '../interfaces/repositories/find-task.repository.interface';
@@ -52,11 +56,13 @@ export class FindTaskServiceImpl implements FindTaskService {
   findBacklogTasks(
     projectId: string,
     workspaceId: string,
+    filters?: FindBacklogTasksFilters,
     manager?: EntityManager,
-  ): Promise<TaskModel[]> {
+  ): Promise<PaginatedTaskModels> {
     return this.findTaskRepository.findAllBacklogTasks(
       projectId,
       workspaceId,
+      filters,
       manager,
     );
   }

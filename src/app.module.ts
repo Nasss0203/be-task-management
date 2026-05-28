@@ -21,6 +21,7 @@ import { UserWorkspacesModule } from './modules/user_workspace/user_workspace.mo
 import { UsersModule } from './modules/users/users.module';
 
 import { APP_GUARD } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { JwtAuthGuard } from './common/guard/jwt-auth.guard';
 import { PermissionGuard } from './common/guard/permission.guard';
 import { SystemRoleGuard } from './common/guard/system-role.guard';
@@ -36,15 +37,21 @@ import { PageModule } from './modules/page/page.module';
 import { PageBlockModule } from './modules/page_block/page_block.module';
 import { PageTemplateBlocksModule } from './modules/page_template_blocks/page_template_blocks.module';
 import { PageTemplatesModule } from './modules/page_templates/page_templates.module';
+import { RealtimeModule } from './modules/realtime/realtime.module';
 import { SeedsModule } from './modules/seed/seed.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { TaskAssigneeModule } from './modules/task_assignee/task_assignee.module';
 import { TaskCommnentModule } from './modules/task_commnent/task_commnent.module';
 import { WorkspaceInvitesModule } from './modules/workspace_invites/workspace_invites.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    EventEmitterModule.forRoot(),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -53,9 +60,7 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
         signOptions: { expiresIn: '15m' },
       }),
     }),
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
+
     DatabaseModule,
     SeedsModule,
     UsersModule,
@@ -90,6 +95,8 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
     AuditLogsModule,
     BillingModule,
     NotificationsModule,
+    RealtimeModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [

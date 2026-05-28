@@ -4,6 +4,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
+import { type CreateActivityService } from 'src/modules/activity/interfaces/services/create-activity.service.interface';
+import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { PAGE_BLOCK_TYPES } from '../interfaces/types';
 import { DeletePageBlockApplication } from '../interfaces/applications/delete.page-block.application.interface';
 import { type FindPageBlockService } from '../interfaces/services/find.page_block.service.interface';
@@ -17,6 +23,9 @@ export class DeletePageBlockApplicationImpl implements DeletePageBlockApplicatio
 
     @Inject(PAGE_BLOCK_TYPES.services.DeletePageBlockService)
     private readonly deletePageBlockService: DeletePageBlockService,
+
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async delete(input: {
@@ -52,6 +61,17 @@ export class DeletePageBlockApplicationImpl implements DeletePageBlockApplicatio
     await this.deletePageBlockService.softDeletePageBlock({
       blockId: input.blockId,
       deletedBy: input.userId,
+    });
+
+    await this.createActivityService.create({
+      workspaceId: input.workspaceId,
+      entityType: ActivityEntityType.PAGE_BLOCK,
+      entityId: input.blockId,
+      actorId: input.userId,
+      action: ActivityAction.PAGE_BLOCK_DELETED,
+      metadata: {
+        pageId: block.pageId,
+      },
     });
   }
 

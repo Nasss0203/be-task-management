@@ -5,6 +5,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
+import { type CreateActivityService } from 'src/modules/activity/interfaces/services/create-activity.service.interface';
+import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { DeleteProjectApplication } from '../interfaces/applications/delete-project.application.interface';
 import { type DeleteProjectService } from '../interfaces/services/delete-project.service.interface';
 import { type FindProjectService } from '../interfaces/services/find.project.service.interface';
@@ -18,6 +24,9 @@ export class DeleteProjectApplicationImpl implements DeleteProjectApplication {
 
     @Inject(PROJECT_TYPES.services.DeleteProjectService)
     private readonly deleteProjectService: DeleteProjectService,
+
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async delete(input: {
@@ -47,6 +56,19 @@ export class DeleteProjectApplicationImpl implements DeleteProjectApplication {
     await this.deleteProjectService.softDeleteProject({
       projectId: input.projectId,
       deletedBy: input.userId,
+    });
+
+    await this.createActivityService.create({
+      workspaceId: input.workspaceId,
+      projectId: input.projectId,
+      entityType: ActivityEntityType.PROJECT,
+      entityId: input.projectId,
+      actorId: input.userId,
+      action: ActivityAction.PROJECT_DELETED,
+      metadata: {
+        name: project.name,
+        key: project.key,
+      },
     });
   }
 
@@ -88,6 +110,19 @@ export class DeleteProjectApplicationImpl implements DeleteProjectApplication {
 
     await this.deleteProjectService.restoreProject({
       projectId: input.projectId,
+    });
+
+    await this.createActivityService.create({
+      workspaceId: input.workspaceId,
+      projectId: input.projectId,
+      entityType: ActivityEntityType.PROJECT,
+      entityId: input.projectId,
+      actorId: input.userId,
+      action: ActivityAction.PROJECT_RESTORED,
+      metadata: {
+        name: project.name,
+        key: project.key,
+      },
     });
   }
 }

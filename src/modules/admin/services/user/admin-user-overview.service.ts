@@ -4,7 +4,6 @@ import { ADMIN_TYPES } from '../../interfaces/types';
 import { type AdminUserOverviewRepository } from '../../interfaces/repositories/user/admin-user-overview.repository.interface';
 import { AdminUserOverviewResponseDto } from '../../dto/response/user/admin-user-overview.response.dto';
 
-
 @Injectable()
 export class AdminUserOverviewServiceImpl implements AdminUserOverviewService {
   constructor(
