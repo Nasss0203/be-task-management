@@ -1,8 +1,20 @@
-import { Body, Controller, Inject, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Post,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { type Request } from 'express';
+import { Public } from 'src/common/decorator/public.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { type ReturnQueryFromVNPay } from 'vnpay';
+
 import { TestCreateVnpayPaymentDto } from '../dto/create-billing.dto';
 import { BILLING_TYPES } from '../interfaces/types';
+import { VnpayIpnService } from '../services/ipn/vnpay-ipn.service';
 import { type VnpayPaymentProvider } from '../types/payment-input.interface';
 
 @Controller('billing/test-vnpay')
@@ -10,8 +22,11 @@ export class BillingTestVnpayController {
   constructor(
     @Inject(BILLING_TYPES.providers.VnpayPaymentProvider)
     private readonly vnpayPaymentProvider: VnpayPaymentProvider,
+
+    private readonly vnpayIpnService: VnpayIpnService,
   ) {}
 
+  @Public()
   @Post()
   @ResponseMessage('Thanh toan vnpay')
   createPayment(@Body() dto: TestCreateVnpayPaymentDto, @Req() req: Request) {
@@ -28,9 +43,36 @@ export class BillingTestVnpayController {
       message: 'Create VNPAY payment successfully',
       orderCode,
       amount: dto.amount,
-
       ...result,
     };
+  }
+
+  @Public()
+  @Get('return')
+  @ResponseMessage('VNPAY return')
+  async handleReturn(@Query() query: ReturnQueryFromVNPay) {
+    const verify = await this.vnpayPaymentProvider.verifyReturnUrl(query);
+
+    return {
+      message: 'Return from VNPAY',
+      isVerified: verify.isVerified,
+      isSuccess: verify.isSuccess,
+      orderCode: verify.vnp_TxnRef,
+      amount: verify.vnp_Amount,
+      responseCode: verify.vnp_ResponseCode,
+      transactionStatus: verify.vnp_TransactionStatus,
+      transactionNo: verify.vnp_TransactionNo,
+      bankCode: verify.vnp_BankCode,
+      payDate: verify.vnp_PayDate,
+      verify,
+    };
+  }
+
+  @Public()
+  @Get('ipn')
+  @ResponseMessage('VNPAY IPN')
+  async handleIpn(@Query() query: ReturnQueryFromVNPay) {
+    return this.vnpayIpnService.handleIpn(query);
   }
 
   private getClientIp(req: Request): string {

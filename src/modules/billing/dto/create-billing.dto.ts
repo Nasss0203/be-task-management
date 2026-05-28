@@ -1,6 +1,6 @@
-export class CreateBillingDto {}
-
 import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+
+export class CreateBillingDto {}
 
 export class TestCreateVnpayPaymentDto {
   @IsInt()

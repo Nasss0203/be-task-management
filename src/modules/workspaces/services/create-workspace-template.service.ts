@@ -58,7 +58,8 @@ import {
   TemplateTaskStatusConfig,
   WorkspaceTemplateConfig,
   WorkspaceTemplateType,
-} from '../types/types';
+} from '../types/types'; 
+import { CheckWorkspaceLimitService } from 'src/modules/billing/services/check-workspace-limit.service';
 
 @Injectable()
 export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTemplateService {
@@ -104,6 +105,8 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
 
     @Inject(PAGE_BLOCK_TYPES.services.CreatePageBlockService)
     private readonly createPageBlockService: CreatePageBlockService,
+
+    private readonly checkWorkspaceLimitService: CheckWorkspaceLimitService,
   ) {}
 
   private async seedWorkspaceRbac({
@@ -685,6 +688,11 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
     input: CreateWorkspaceWithTemplateInput,
   ): Promise<WorkspaceModel> {
     return this.uow.runInTransaction(async (manager) => {
+      await this.checkWorkspaceLimitService.checkCanCreateWorkspace(
+        userId,
+        manager,
+      );
+
       const templateConfig = this.getTemplateConfig({
         template: input.template,
         workspaceName: input.name,
@@ -696,6 +704,12 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
         userId,
         manager,
       });
+
+      await this.checkWorkspaceLimitService.applyBillingForNewWorkspace(
+        userId,
+        workspace.id,
+        manager,
+      );
 
       const createdPage = await this.createWorkspacePage({
         workspace,
