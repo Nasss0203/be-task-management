@@ -51,21 +51,7 @@ export class BillingTestVnpayController {
   @Get('return')
   @ResponseMessage('VNPAY return')
   async handleReturn(@Query() query: ReturnQueryFromVNPay) {
-    const verify = await this.vnpayPaymentProvider.verifyReturnUrl(query);
-
-    return {
-      message: 'Return from VNPAY',
-      isVerified: verify.isVerified,
-      isSuccess: verify.isSuccess,
-      orderCode: verify.vnp_TxnRef,
-      amount: verify.vnp_Amount,
-      responseCode: verify.vnp_ResponseCode,
-      transactionStatus: verify.vnp_TransactionStatus,
-      transactionNo: verify.vnp_TransactionNo,
-      bankCode: verify.vnp_BankCode,
-      payDate: verify.vnp_PayDate,
-      verify,
-    };
+    return this.vnpayIpnService.handleReturn(query);
   }
 
   @Public()

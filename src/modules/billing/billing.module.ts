@@ -10,6 +10,7 @@ import { BillingQueryApplicationImpl } from './applications/billing-query.applic
 import { CreateBillingApplicationImpl } from './applications/create-billing.application';
 import { BillingTestVnpayController } from './controller/billing-test-payment.controller';
 import { BillingController } from './controller/billing.controller';
+import { PlanController } from './controller/plan.controller';
 import { WorkspaceUsageLimitsController } from './controller/workspace-usage-limits.controller';
 import { Payment } from './domain/entities/payment.entity';
 import { Plan } from './domain/entities/plan.entity';
@@ -62,6 +63,7 @@ import { UsageLimitEnforcerServiceImpl } from './services/usage-limit/usage-limi
 
   controllers: [
     BillingController,
+    PlanController,
     BillingTestVnpayController,
     WorkspaceUsageLimitsController,
   ],

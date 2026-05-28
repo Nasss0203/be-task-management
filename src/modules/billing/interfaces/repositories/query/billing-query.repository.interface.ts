@@ -10,6 +10,10 @@ export interface BillingQueryRepository {
 
   findPlanById(planId: string): Promise<Plan | null>;
 
+  findActivePlans(): Promise<Plan[]>;
+
+  findActivePlanById(planId: string): Promise<Plan | null>;
+
   countSubscriptionWorkspaces(subscriptionId: string): Promise<number>;
 
   findUsageLimitsByWorkspaceId(workspaceId: string): Promise<UsageLimit[]>;

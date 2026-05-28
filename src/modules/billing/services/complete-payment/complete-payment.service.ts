@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
+import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import { Repository } from 'typeorm';
 
 import { Payment, PaymentStatus } from '../../domain/entities/payment.entity';
@@ -42,6 +44,9 @@ export class CompletePaymentServiceImpl implements CompletePaymentService {
 
     @InjectRepository(UsageLimit)
     private readonly usageLimitRepository: Repository<UsageLimit>,
+
+    @InjectRepository(UserWorkspace)
+    private readonly userWorkspaceRepository: Repository<UserWorkspace>,
   ) {}
 
   async complete(input: CompletePaymentInput): Promise<void> {
@@ -76,17 +81,123 @@ export class CompletePaymentServiceImpl implements CompletePaymentService {
 
     const subscription = await this.createOrRenewSubscription(payment, plan);
 
-    if (payment.targetWorkspaceId) {
-      await this.activateWorkspaceIfHasSlot({
-        subscription,
-        plan,
-        workspaceId: payment.targetWorkspaceId,
-      });
-    }
+    await this.activateUserWorkspacesIfHasSlot({
+      subscription,
+      plan,
+      userId: payment.userId,
+      targetWorkspaceId: payment.targetWorkspaceId,
+    });
 
     payment.subscriptionId = subscription.id;
 
     await this.paymentRepository.save(payment);
+  }
+
+  private async activateUserWorkspacesIfHasSlot(input: {
+    subscription: Subscription;
+    plan: Plan;
+    userId: string;
+    targetWorkspaceId: string | null;
+  }): Promise<void> {
+    const workspaceIds = await this.findActiveWorkspaceIdsByUserId(
+      input.userId,
+    );
+
+    const orderedWorkspaceIds = this.prioritizeTargetWorkspace(
+      workspaceIds,
+      input.targetWorkspaceId,
+    );
+
+    for (const workspaceId of orderedWorkspaceIds) {
+      const activated = await this.activateWorkspaceIfHasSlot({
+        subscription: input.subscription,
+        plan: input.plan,
+        workspaceId,
+      });
+
+      if (!activated) {
+        return;
+      }
+    }
+  }
+
+  private findActiveWorkspaceIdsByUserId(userId: string): Promise<string[]> {
+    return this.userWorkspaceRepository
+      .createQueryBuilder('uw')
+      .select('uw.workspace_id', 'workspaceId')
+      .innerJoin(Workspace, 'workspace', 'workspace.id = uw.workspace_id')
+      .where('uw.user_id = :userId', { userId })
+      .andWhere('workspace.deleted_at IS NULL')
+      .orderBy('uw.last_opened_at', 'DESC', 'NULLS LAST')
+      .addOrderBy('uw.joined_at', 'ASC')
+      .getRawMany<{ workspaceId: string }>()
+      .then((rows) => rows.map((row) => row.workspaceId));
+  }
+
+  private prioritizeTargetWorkspace(
+    workspaceIds: string[],
+    targetWorkspaceId: string | null,
+  ): string[] {
+    if (!targetWorkspaceId || !workspaceIds.includes(targetWorkspaceId)) {
+      return workspaceIds;
+    }
+
+    return [
+      targetWorkspaceId,
+      ...workspaceIds.filter((workspaceId) => workspaceId !== targetWorkspaceId),
+    ];
+  }
+
+  private async activateWorkspaceIfHasSlot(input: {
+    subscription: Subscription;
+    plan: Plan;
+    workspaceId: string;
+  }): Promise<boolean> {
+    const limits = mergePlanLimits(input.plan);
+
+    const upgradedWorkspaces = getNumberLimit(limits, 'upgradedWorkspaces', 1);
+
+    const activeCount = await this.subscriptionWorkspaceRepository.count({
+      where: {
+        subscriptionId: input.subscription.id,
+      },
+    });
+
+    const existedWorkspace = await this.subscriptionWorkspaceRepository.findOne(
+      {
+        where: {
+          workspaceId: input.workspaceId,
+        },
+      },
+    );
+
+    if (!existedWorkspace && activeCount >= upgradedWorkspaces) {
+      return false;
+    }
+
+    if (existedWorkspace) {
+      existedWorkspace.subscriptionId = input.subscription.id;
+      existedWorkspace.activatedAt = new Date();
+
+      await this.subscriptionWorkspaceRepository.save(existedWorkspace);
+    } else {
+      const subscriptionWorkspace = this.subscriptionWorkspaceRepository.create(
+        {
+          subscriptionId: input.subscription.id,
+          workspaceId: input.workspaceId,
+          activatedAt: new Date(),
+        },
+      );
+
+      await this.subscriptionWorkspaceRepository.save(subscriptionWorkspace);
+    }
+
+    await this.applyUsageLimit({
+      workspaceId: input.workspaceId,
+      plan: input.plan,
+    });
+
+    return true;
   }
 
   private async createOrRenewSubscription(
@@ -167,56 +278,6 @@ export class CompletePaymentServiceImpl implements CompletePaymentService {
 
     end.setMonth(end.getMonth() + 1);
     return end;
-  }
-
-  private async activateWorkspaceIfHasSlot(input: {
-    subscription: Subscription;
-    plan: Plan;
-    workspaceId: string;
-  }): Promise<void> {
-    const limits = mergePlanLimits(input.plan);
-
-    const upgradedWorkspaces = getNumberLimit(limits, 'upgradedWorkspaces', 1);
-
-    const activeCount = await this.subscriptionWorkspaceRepository.count({
-      where: {
-        subscriptionId: input.subscription.id,
-      },
-    });
-
-    const existedWorkspace = await this.subscriptionWorkspaceRepository.findOne(
-      {
-        where: {
-          workspaceId: input.workspaceId,
-        },
-      },
-    );
-
-    if (!existedWorkspace && activeCount >= upgradedWorkspaces) {
-      return;
-    }
-
-    if (existedWorkspace) {
-      existedWorkspace.subscriptionId = input.subscription.id;
-      existedWorkspace.activatedAt = new Date();
-
-      await this.subscriptionWorkspaceRepository.save(existedWorkspace);
-    } else {
-      const subscriptionWorkspace = this.subscriptionWorkspaceRepository.create(
-        {
-          subscriptionId: input.subscription.id,
-          workspaceId: input.workspaceId,
-          activatedAt: new Date(),
-        },
-      );
-
-      await this.subscriptionWorkspaceRepository.save(subscriptionWorkspace);
-    }
-
-    await this.applyUsageLimit({
-      workspaceId: input.workspaceId,
-      plan: input.plan,
-    });
   }
 
   private async applyUsageLimit(input: {

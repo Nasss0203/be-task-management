@@ -1,4 +1,9 @@
-import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import {
   DEFAULT_PLAN_LIMITS,
@@ -7,6 +12,7 @@ import {
 import { type BillingQueryRepository } from '../../interfaces/repositories/query/billing-query.repository.interface';
 import { type BillingQueryService } from '../../interfaces/services/query/billing-query.service.interface';
 import { BILLING_TYPES } from '../../interfaces/types';
+import { PlanMapper } from '../../mapper/plan.mapper';
 import { getNumberLimit } from '../../utils/plan-limit.util';
 
 @Injectable()
@@ -15,6 +21,24 @@ export class BillingQueryServiceImpl implements BillingQueryService {
     @Inject(BILLING_TYPES.repositories.BillingQueryRepository)
     private readonly billingQueryRepository: BillingQueryRepository,
   ) {}
+
+  async getPlans() {
+    const plans = await this.billingQueryRepository.findActivePlans();
+
+    return PlanMapper.toResponseList(
+      plans.map((plan) => PlanMapper.toModel(plan)),
+    );
+  }
+
+  async getPlanById(planId: string) {
+    const plan = await this.billingQueryRepository.findActivePlanById(planId);
+
+    if (!plan) {
+      throw new NotFoundException('Plan not found');
+    }
+
+    return PlanMapper.toResponse(PlanMapper.toModel(plan));
+  }
 
   async getCurrentSubscription(userId: string) {
     const subscription =

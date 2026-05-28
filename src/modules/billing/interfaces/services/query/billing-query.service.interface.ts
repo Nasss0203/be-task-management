@@ -1,4 +1,8 @@
 export interface BillingQueryService {
+  getPlans(): Promise<unknown[]>;
+
+  getPlanById(planId: string): Promise<unknown>;
+
   getCurrentSubscription(userId: string): Promise<unknown>;
 
   getWorkspaceUsageLimits(

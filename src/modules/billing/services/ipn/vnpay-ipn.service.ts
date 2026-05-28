@@ -29,28 +29,94 @@ export class VnpayIpnService {
     private readonly completePaymentService: CompletePaymentService,
   ) {}
 
+  async handleReturn(query: ReturnQueryFromVNPay) {
+    const verify = await this.vnpayPaymentProvider.verifyReturnUrl(query);
+    const result = await this.processVerifiedPayment(verify);
+
+    return {
+      message: 'Return from VNPAY',
+      isVerified: verify.isVerified,
+      isSuccess: verify.isSuccess,
+      orderCode: verify.vnp_TxnRef,
+      amount: verify.vnp_Amount,
+      responseCode: verify.vnp_ResponseCode,
+      transactionStatus: verify.vnp_TransactionStatus,
+      transactionNo: verify.vnp_TransactionNo,
+      bankCode: verify.vnp_BankCode,
+      payDate: verify.vnp_PayDate,
+      paymentStatus: result.paymentStatus ?? null,
+      completed: result.completed,
+      processingCode: result.code,
+      failureReason: result.failureReason ?? null,
+      verify,
+    };
+  }
+
   async handleIpn(query: ReturnQueryFromVNPay) {
     const verify = await this.vnpayPaymentProvider.verifyIpn(query);
+    const result = await this.processVerifiedPayment(verify);
 
-    if (!verify.isVerified) {
+    if (result.code === 'FAIL_CHECKSUM') {
       return IpnFailChecksum;
+    }
+
+    if (result.code === 'ORDER_NOT_FOUND') {
+      return IpnOrderNotFound;
+    }
+
+    if (result.completed) {
+      return IpnSuccess;
+    }
+
+    return IpnUnknownError;
+  }
+
+  private async processVerifiedPayment(
+    verify: VnpayVerifyResult,
+  ): Promise<{
+    code:
+      | 'FAIL_CHECKSUM'
+      | 'ORDER_NOT_FOUND'
+      | 'ALREADY_SUCCEEDED'
+      | 'INVALID_AMOUNT'
+      | 'PAYMENT_FAILED'
+      | 'SUCCEEDED';
+    completed: boolean;
+    paymentStatus?: PaymentStatus;
+    failureReason?: string;
+  }> {
+    if (!verify.isVerified) {
+      return {
+        code: 'FAIL_CHECKSUM',
+        completed: false,
+      };
     }
 
     const orderCode = verify.vnp_TxnRef;
 
     if (!orderCode) {
-      return IpnOrderNotFound;
+      return {
+        code: 'ORDER_NOT_FOUND',
+        completed: false,
+      };
     }
 
     const payment =
       await this.paymentRepository.findPaymentByOrderCode(orderCode);
 
     if (!payment) {
-      return IpnOrderNotFound;
+      return {
+        code: 'ORDER_NOT_FOUND',
+        completed: false,
+      };
     }
 
     if (payment.status === PaymentStatus.SUCCEEDED) {
-      return IpnSuccess;
+      return {
+        code: 'ALREADY_SUCCEEDED',
+        completed: true,
+        paymentStatus: payment.status,
+      };
     }
 
     const metadata = this.toMetadata(verify);
@@ -62,17 +128,29 @@ export class VnpayIpnService {
         metadata,
       });
 
-      return IpnUnknownError;
+      return {
+        code: 'INVALID_AMOUNT',
+        completed: false,
+        paymentStatus: PaymentStatus.FAILED,
+        failureReason: 'Invalid payment amount',
+      };
     }
 
     if (!verify.isSuccess) {
+      const failedReason = verify.message ?? 'VNPAY payment failed';
+
       await this.paymentRepository.markPaymentStatusFailed({
         paymentId: payment.id,
-        failedReason: verify.message ?? 'VNPAY payment failed',
+        failedReason,
         metadata,
       });
 
-      return IpnUnknownError;
+      return {
+        code: 'PAYMENT_FAILED',
+        completed: false,
+        paymentStatus: PaymentStatus.FAILED,
+        failureReason: failedReason,
+      };
     }
 
     const succeededPayment = await this.paymentRepository.markPaymentSucceeded({
@@ -85,7 +163,11 @@ export class VnpayIpnService {
       paymentId: succeededPayment.id,
     });
 
-    return IpnSuccess;
+    return {
+      code: 'SUCCEEDED',
+      completed: true,
+      paymentStatus: succeededPayment.status,
+    };
   }
 
   private toMetadata(verify: VnpayVerifyResult): Record<string, unknown> {

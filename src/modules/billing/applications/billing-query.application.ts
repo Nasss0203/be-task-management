@@ -11,6 +11,14 @@ export class BillingQueryApplicationImpl implements BillingQueryApplication {
     private readonly billingQueryService: BillingQueryService,
   ) {}
 
+  getPlans(): Promise<unknown[]> {
+    return this.billingQueryService.getPlans();
+  }
+
+  getPlanById(planId: string): Promise<unknown> {
+    return this.billingQueryService.getPlanById(planId);
+  }
+
   getCurrentSubscription(userId: string): Promise<unknown> {
     return this.billingQueryService.getCurrentSubscription(userId);
   }

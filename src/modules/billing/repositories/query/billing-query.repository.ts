@@ -65,6 +65,28 @@ export class BillingQueryRepositoryImpl implements BillingQueryRepository {
     });
   }
 
+  findActivePlans(): Promise<Plan[]> {
+    return this.planRepository.find({
+      where: {
+        isActive: true,
+      },
+      order: {
+        sortOrder: 'ASC',
+        priceAmount: 'ASC',
+        createdAt: 'ASC',
+      },
+    });
+  }
+
+  findActivePlanById(planId: string): Promise<Plan | null> {
+    return this.planRepository.findOne({
+      where: {
+        id: planId,
+        isActive: true,
+      },
+    });
+  }
+
   countSubscriptionWorkspaces(subscriptionId: string): Promise<number> {
     return this.subscriptionWorkspaceRepository.count({
       where: {
