@@ -35,6 +35,7 @@ export class ProjectsController {
   ) {}
 
   @Get('/workspace/:workspaceId')
+  @RequirePermissions(PERMISSIONS.PROJECT_READ)
   @ResponseMessage('Find all project')
   async findAllByWorkspaceId(@Param('workspaceId') workspaceId: string) {
     return this.findProjectApplication.findAllByWorkspaceId(workspaceId);
@@ -54,6 +55,7 @@ export class ProjectsController {
   }
 
   @Get('trash')
+  @RequirePermissions(PERMISSIONS.PROJECT_READ)
   async findDeletedProjects(@Query('workspaceId') workspaceId: string) {
     if (!workspaceId) {
       throw new BadRequestException('workspaceId is required');
@@ -63,6 +65,7 @@ export class ProjectsController {
   }
 
   @Delete('workspaces/:workspaceId/projects/:projectId')
+  @RequirePermissions(PERMISSIONS.PROJECT_DELETE)
   async deleteProject(
     @Param('workspaceId') workspaceId: string,
     @Param('projectId') projectId: string,
@@ -80,6 +83,7 @@ export class ProjectsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/restore')
+  @RequirePermissions(PERMISSIONS.PROJECT_DELETE)
   async restoreProject(
     @Param('workspaceId') workspaceId: string,
     @Param('projectId') projectId: string,

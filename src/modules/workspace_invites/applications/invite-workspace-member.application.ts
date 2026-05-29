@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -12,6 +13,9 @@ import {
 } from 'src/modules/notifications/domain/entities/notification.entity';
 import { type CreateNotificationService } from 'src/modules/notifications/interfaces/services/create.notifications.service.interface';
 import { NOTIFICATION_TYPES } from 'src/modules/notifications/interfaces/types';
+import { RoleName } from 'src/modules/role/domain/entities/role.entity';
+import { type FindMemberService } from 'src/modules/user_workspace/interfaces/services/find-user-workspace.service.interface';
+import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/types';
 import { type FindUserService } from 'src/modules/users/interfaces/services/find-user.service.interface';
 import { USER_TYPES } from 'src/modules/users/interfaces/types';
 import {
@@ -37,6 +41,9 @@ export class InviteWorkspaceMemberApplicationImpl implements InviteWorkspaceMemb
     @Inject(NOTIFICATION_TYPES.services.CreateNotificationService)
     private readonly createNotificationService: CreateNotificationService,
 
+    @Inject(USER_WORKSPACE_TYPES.services.FindMemberService)
+    private readonly findMemberService: FindMemberService,
+
     private readonly mailService: MailService,
   ) {}
 
@@ -56,6 +63,8 @@ export class InviteWorkspaceMemberApplicationImpl implements InviteWorkspaceMemb
     if (!dto.role_name) {
       throw new BadRequestException('role_name is required');
     }
+
+    await this.ensureCanInviteRole(workspaceId, invitedBy, dto.role_name);
 
     if (!dto.recipients || dto.recipients.length === 0) {
       throw new BadRequestException('recipients is required');
@@ -104,6 +113,7 @@ export class InviteWorkspaceMemberApplicationImpl implements InviteWorkspaceMemb
           metadata: {
             inviteId: invite.id,
             inviteToken: invite.token,
+            inviteStatus: invite.status,
             workspaceId,
             workspaceName: 'Task Management',
             roleName: dto.role_name,
@@ -191,5 +201,24 @@ export class InviteWorkspaceMemberApplicationImpl implements InviteWorkspaceMemb
     }
 
     throw new BadRequestException('Invalid recipient type');
+  }
+
+  private async ensureCanInviteRole(
+    workspaceId: string,
+    invitedBy: string,
+    roleName: RoleName,
+  ): Promise<void> {
+    if (![RoleName.OWNER, RoleName.ADMIN].includes(roleName)) return;
+
+    const inviterMember = await this.findMemberService.findMemberInWorkspace(
+      workspaceId,
+      invitedBy,
+    );
+
+    if (!inviterMember || inviterMember.role_name !== RoleName.OWNER) {
+      throw new ForbiddenException(
+        'Only workspace owner can invite owner or admin members',
+      );
+    }
   }
 }

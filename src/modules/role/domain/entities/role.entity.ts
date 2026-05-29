@@ -12,8 +12,9 @@ import {
 
 export enum RoleName {
   OWNER = 'OWNER',
-  MEMBER = 'MEMBER',
   ADMIN = 'ADMIN',
+  MEMBER = 'MEMBER',
+  VIEWER = 'VIEWER',
 }
 
 @Index('UQ_role_workspace_name', ['workspace_id', 'name'], { unique: true })

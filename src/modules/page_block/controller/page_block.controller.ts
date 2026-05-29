@@ -11,6 +11,8 @@ import {
   Query,
 } from '@nestjs/common';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { AddDatabaseViewToBlockDto } from '../dto/create-page_block.dto';
 import { PageBlockResponseDto } from '../dto/response/page_block.response.dto';
 import { UpdatePageBlockDto } from '../dto/update-page_block.dto';
@@ -39,6 +41,7 @@ export class PageBlockController {
   ) {}
 
   @Patch(':id')
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   update(@Body() updatePageBlockDto: UpdatePageBlockDto) {
     return this.updatePageBlockApplication.update({
       ...updatePageBlockDto,
@@ -46,6 +49,7 @@ export class PageBlockController {
   }
 
   @Post(':blockId/database-views')
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   @ResponseMessage('Add database view')
   async addDatabaseViewToBlock(
     @Param('blockId') blockId: string,
@@ -58,6 +62,7 @@ export class PageBlockController {
   }
 
   @Get('trash')
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
   async findDeletedPageBlocks(
     @Query('workspaceId') workspaceId: string,
     @Query('pageId') pageId?: string,
@@ -73,6 +78,7 @@ export class PageBlockController {
   }
 
   @Delete(':blockId')
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async deletePageBlock(
     @Param('blockId') blockId: string,
     @Query('workspaceId') workspaceId: string,
@@ -94,6 +100,7 @@ export class PageBlockController {
   }
 
   @Patch(':blockId/restore')
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async restorePageBlock(
     @Param('blockId') blockId: string,
     @Query('workspaceId') workspaceId: string,

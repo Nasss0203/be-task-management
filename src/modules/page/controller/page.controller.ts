@@ -11,7 +11,9 @@ import {
   Query,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
 import { CreatePageDto } from '../dto/create-page.dto';
 import { type DeletePageApplication } from '../interfaces/applications/delete-page.application.interface';
@@ -32,12 +34,14 @@ export class PageController {
   ) {}
 
   @Post()
+  @RequirePermissions(PERMISSIONS.PAGE_CREATE)
   create(@Body() createPageDto: CreatePageDto) {
     return this.pageService.create(createPageDto);
   }
 
   @ResponseMessage('Find page by workspace')
   @Get('workspace/:workspaceId')
+  @RequirePermissions(PERMISSIONS.PAGE_READ)
   async findAll(
     @Param('workspaceId') workspaceId: string,
     @Auth() auth: IAuth,
@@ -48,6 +52,7 @@ export class PageController {
     );
   }
   @Get('trash')
+  @RequirePermissions(PERMISSIONS.PAGE_READ)
   async findDeletedPages(@Query('workspaceId') workspaceId: string) {
     if (!workspaceId) {
       throw new BadRequestException('workspaceId is required');
@@ -57,6 +62,7 @@ export class PageController {
   }
 
   @Delete(':pageId')
+  @RequirePermissions(PERMISSIONS.PAGE_DELETE)
   async deletePage(
     @Param('pageId') pageId: string,
     @Query('workspaceId') workspaceId: string,
@@ -78,6 +84,7 @@ export class PageController {
   }
 
   @Patch(':pageId/restore')
+  @RequirePermissions(PERMISSIONS.PAGE_DELETE)
   async restorePage(
     @Param('pageId') pageId: string,
     @Query('workspaceId') workspaceId: string,

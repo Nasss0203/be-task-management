@@ -1,6 +1,8 @@
 import { Controller, Get, Inject, Param, Req } from '@nestjs/common';
 import { type Request } from 'express';
+import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type BillingQueryApplication } from '../interfaces/applications/billing-query.application.interface';
 import { BILLING_TYPES } from '../interfaces/types';
 
@@ -20,6 +22,7 @@ export class WorkspaceUsageLimitsController {
   ) {}
 
   @Get()
+  @RequirePermissions(PERMISSIONS.WORKSPACE_USAGE_READ)
   @ResponseMessage('Get workspace usage limits')
   async getWorkspaceUsageLimits(
     @Param('workspaceId') workspaceId: string,

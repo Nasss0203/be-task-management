@@ -1,6 +1,8 @@
 import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
 import { CreateTaskCommnentDto } from '../dto/create-task_commnent.dto';
 import { type CreateTaskCommentApplication } from '../interfaces/applications/create.task-comment.application.interface';
@@ -18,6 +20,7 @@ export class TaskCommnentController {
   ) {}
 
   @Post('workspaces/:workspaceId/projects/:projectId/tasks/:taskId')
+  @RequirePermissions(PERMISSIONS.TASK_COMMENT_CREATE)
   @ResponseMessage('Create task comment successfully')
   async create(
     @Param('workspaceId') workspaceId: string,
@@ -36,6 +39,7 @@ export class TaskCommnentController {
   }
 
   @Get('workspaces/:workspaceId/projects/:projectId/tasks/:taskId')
+  @RequirePermissions(PERMISSIONS.TASK_COMMENT_READ)
   @ResponseMessage('Find all task comment successfully')
   async findByTaskId(
     @Param('workspaceId') workspaceId: string,

@@ -15,6 +15,8 @@ import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/type
 import { type FindUserService } from 'src/modules/users/interfaces/services/find-user.service.interface';
 import { USER_TYPES } from 'src/modules/users/interfaces/types';
 import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
+import { type UpdateNotificationService } from 'src/modules/notifications/interfaces/services/update-notification.service.interface';
+import { NOTIFICATION_TYPES } from 'src/modules/notifications/interfaces/types';
 import {
   WorkspaceInviteStatus,
   WorkspaceInviteType,
@@ -49,6 +51,9 @@ export class AcceptWorkspaceInviteApplicationImpl implements AcceptWorkspaceInvi
 
     @Inject(ROLE_TYPES.services.FindRoleService)
     private readonly findRoleService: FindRoleService,
+
+    @Inject(NOTIFICATION_TYPES.services.UpdateNotificationService)
+    private readonly updateNotificationService: UpdateNotificationService,
 
     @Inject(WORKSPACE_TYPES.uow.UnitOfWork)
     private readonly uow: UnitOfWork,
@@ -145,14 +150,25 @@ export class AcceptWorkspaceInviteApplicationImpl implements AcceptWorkspaceInvi
         manager,
       );
 
-      return this.acceptWorkspaceInviteService.acceptWorkspaceInvite(
+      const acceptedInvite =
+        await this.acceptWorkspaceInviteService.acceptWorkspaceInvite(
+          {
+            token,
+            userId: user.id,
+            email: input.email,
+          },
+          manager,
+        );
+
+      await this.updateNotificationService.updateInviteNotificationStatus(
         {
-          token,
-          userId: user.id,
-          email: input.email,
+          inviteId: acceptedInvite.id,
+          inviteStatus: acceptedInvite.status,
         },
         manager,
       );
+
+      return acceptedInvite;
     });
 
     return WorkspaceInviteMapper.toResponse(acceptedInvite);

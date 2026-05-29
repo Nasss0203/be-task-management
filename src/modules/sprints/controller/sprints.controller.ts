@@ -9,7 +9,9 @@ import {
   Query,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
 import { CreateSprintDto } from '../dto/create-sprint.dto';
 import { FindSprintQueryDto } from '../dto/find-sprint-query.dto';
@@ -51,6 +53,7 @@ export class SprintsController {
   ) {}
 
   @Post('workspaces/:workspaceId/projects/:projectId')
+  @RequirePermissions(PERMISSIONS.SPRINT_CREATE)
   @ResponseMessage('Create sprint successfully')
   async create(
     @Param('workspaceId') workspaceId: string,
@@ -67,6 +70,7 @@ export class SprintsController {
   }
 
   @Get('workspaces/:workspaceId/projects/:projectId')
+  @RequirePermissions(PERMISSIONS.SPRINT_READ)
   @ResponseMessage('Find all sprint successfully')
   async findAllSprintByProject(
     @Param('workspaceId') workspaceId: string,
@@ -86,6 +90,7 @@ export class SprintsController {
   }
 
   @Get('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/tasks')
+  @RequirePermissions(PERMISSIONS.SPRINT_READ, PERMISSIONS.TASK_READ)
   @ResponseMessage('Find tasks by sprint successfully')
   async findTasksBySprint(
     @Param('workspaceId') workspaceId: string,
@@ -102,6 +107,7 @@ export class SprintsController {
   }
 
   @Get('workspaces/:workspaceId/projects/:projectId/sprint/:sprintId/detail')
+  @RequirePermissions(PERMISSIONS.SPRINT_READ)
   @ResponseMessage('Find sprint detail successfully')
   async getSprintDetail(
     @Param('workspaceId') workspaceId: string,
@@ -116,6 +122,7 @@ export class SprintsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/start')
+  @RequirePermissions(PERMISSIONS.SPRINT_START)
   @ResponseMessage('Start sprint successfully')
   async startSprint(
     @Param('workspaceId') workspaceId: string,
@@ -136,6 +143,7 @@ export class SprintsController {
   @Patch(
     'workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/complete',
   )
+  @RequirePermissions(PERMISSIONS.SPRINT_COMPLETE)
   @ResponseMessage('Complete sprint successfully')
   async completeSprint(
     @Param('workspaceId') workspaceId: string,
@@ -152,6 +160,7 @@ export class SprintsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/cancel')
+  @RequirePermissions(PERMISSIONS.SPRINT_CANCEL)
   async cancelSprint(
     @Param('workspaceId') workspaceId: string,
     @Param('projectId') projectId: string,
@@ -167,6 +176,7 @@ export class SprintsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/sprint/:sprintId')
+  @RequirePermissions(PERMISSIONS.SPRINT_UPDATE)
   async updateSprint(
     @Param('workspaceId') workspaceId: string,
     @Param('projectId') projectId: string,
@@ -197,6 +207,7 @@ export class SprintsController {
   }
 
   @Get('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/progress')
+  @RequirePermissions(PERMISSIONS.SPRINT_READ)
   @ResponseMessage('Get sprint progress successfully')
   async getSprintProgress(
     @Param('workspaceId') workspaceId: string,

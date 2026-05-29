@@ -51,8 +51,12 @@ export class PermissionGuard implements CanActivate {
       req.params?.workspace_id ||
       req.body?.workspaceId ||
       req.body?.workspace_id ||
+      req.body?.targetWorkspaceId ||
+      req.body?.target_workspace_id ||
       req.query?.workspaceId ||
-      req.query?.workspace_id;
+      req.query?.workspace_id ||
+      req.query?.targetWorkspaceId ||
+      req.query?.target_workspace_id;
 
     if (!workspaceId) {
       throw new ForbiddenException('Workspace id not found');

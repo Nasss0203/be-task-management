@@ -7,10 +7,12 @@ export const NOTIFICATION_TYPES = {
   services: {
     CreateNotificationService: Symbol('CreateNotificationService'),
     FindNotificationService: Symbol('FindNotificationService'),
+    UpdateNotificationService: Symbol('UpdateNotificationService'),
   },
 
   repositories: {
     CreateNotificationRepository: Symbol('CreateNotificationRepository'),
     FindNotificationRepository: Symbol('FindNotificationRepository'),
+    UpdateNotificationRepository: Symbol('UpdateNotificationRepository'),
   },
 };

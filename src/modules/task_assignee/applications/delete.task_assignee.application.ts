@@ -93,7 +93,9 @@ export class DeleteTaskAssigneeApplicationImpl implements DeleteTaskAssigneeAppl
 
     const isSelfUnassign = input.userId === input.deletedBy;
 
-    const canUnassignOther = actorMember.role_name === RoleName.OWNER;
+    const canUnassignOther = [RoleName.OWNER, RoleName.ADMIN].includes(
+      actorMember.role_name,
+    );
 
     if (!isSelfUnassign && !canUnassignOther) {
       throw new ForbiddenException(

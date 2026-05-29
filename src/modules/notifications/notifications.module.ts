@@ -7,8 +7,10 @@ import { Notification } from './domain/entities/notification.entity';
 import { NOTIFICATION_TYPES } from './interfaces/types';
 import { CreateNotificationRepositoryImpl } from './repositories/create.notifications.repository';
 import { FindNotificationRepositoryImpl } from './repositories/find-notification.repository';
+import { UpdateNotificationRepositoryImpl } from './repositories/update-notification.repository';
 import { CreateNotificationServiceImpl } from './services/create.notifications.service';
 import { FindNotificationServiceImpl } from './services/find-notification.service';
+import { UpdateNotificationServiceImpl } from './services/update-notification.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Notification])],
@@ -23,6 +25,10 @@ import { FindNotificationServiceImpl } from './services/find-notification.servic
       provide: NOTIFICATION_TYPES.repositories.FindNotificationRepository,
       useClass: FindNotificationRepositoryImpl,
     },
+    {
+      provide: NOTIFICATION_TYPES.repositories.UpdateNotificationRepository,
+      useClass: UpdateNotificationRepositoryImpl,
+    },
     // Service
     {
       provide: NOTIFICATION_TYPES.services.CreateNotificationService,
@@ -31,6 +37,10 @@ import { FindNotificationServiceImpl } from './services/find-notification.servic
     {
       provide: NOTIFICATION_TYPES.services.FindNotificationService,
       useClass: FindNotificationServiceImpl,
+    },
+    {
+      provide: NOTIFICATION_TYPES.services.UpdateNotificationService,
+      useClass: UpdateNotificationServiceImpl,
     },
     // Application
     {
@@ -42,6 +52,9 @@ import { FindNotificationServiceImpl } from './services/find-notification.servic
       useClass: FindNotificationApplicationImpl,
     },
   ],
-  exports: [NOTIFICATION_TYPES.services.CreateNotificationService],
+  exports: [
+    NOTIFICATION_TYPES.services.CreateNotificationService,
+    NOTIFICATION_TYPES.services.UpdateNotificationService,
+  ],
 })
 export class NotificationsModule {}

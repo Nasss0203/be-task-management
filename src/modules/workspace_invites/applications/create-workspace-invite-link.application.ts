@@ -1,5 +1,13 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { RoleName } from 'src/modules/role/domain/entities/role.entity';
+import { type FindMemberService } from 'src/modules/user_workspace/interfaces/services/find-user-workspace.service.interface';
+import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/types';
 import {
   WorkspaceInviteStatus,
   WorkspaceInviteType,
@@ -16,6 +24,9 @@ export class CreateWorkspaceInviteLinkApplicationImpl implements CreateWorkspace
   constructor(
     @Inject(WORKSPACE_INVITE_TYPES.repositories.CreateWorkspaceInviteRepository)
     private readonly createWorkspaceInviteRepository: CreateWorkspaceInviteRepository,
+
+    @Inject(USER_WORKSPACE_TYPES.services.FindMemberService)
+    private readonly findMemberService: FindMemberService,
   ) {}
 
   async createLink(
@@ -34,6 +45,8 @@ export class CreateWorkspaceInviteLinkApplicationImpl implements CreateWorkspace
     if (!dto.role_name) {
       throw new BadRequestException('role_name is required');
     }
+
+    await this.ensureCanInviteRole(workspaceId, invitedBy, dto.role_name);
 
     const now = new Date();
 
@@ -65,5 +78,24 @@ export class CreateWorkspaceInviteLinkApplicationImpl implements CreateWorkspace
       max_uses: invite.max_uses,
       used_count: invite.used_count,
     };
+  }
+
+  private async ensureCanInviteRole(
+    workspaceId: string,
+    invitedBy: string,
+    roleName: RoleName,
+  ): Promise<void> {
+    if (![RoleName.OWNER, RoleName.ADMIN].includes(roleName)) return;
+
+    const inviterMember = await this.findMemberService.findMemberInWorkspace(
+      workspaceId,
+      invitedBy,
+    );
+
+    if (!inviterMember || inviterMember.role_name !== RoleName.OWNER) {
+      throw new ForbiddenException(
+        'Only workspace owner can create owner or admin invite links',
+      );
+    }
   }
 }

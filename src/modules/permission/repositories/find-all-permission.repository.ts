@@ -47,7 +47,6 @@ export class FindPermissionRepositoryImpl implements FindPermissionRepository {
       .where('ur.user_id = :userId', { userId })
       .andWhere('ur.workspace_id = :workspaceId', { workspaceId })
       .getRawMany();
-    console.log('🚀 ~ rows~', rows);
 
     return rows.map((row) => row.code);
   }

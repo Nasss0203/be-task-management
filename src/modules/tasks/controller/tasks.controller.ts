@@ -23,6 +23,8 @@ import { type FindTaskApplication } from '../interfaces/applications/find-task.a
 import { TASK_TYPES } from '../interfaces/types';
 
 import { Auth } from 'src/common/decorator/auth.decorator';
+import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
 import { MoveTaskSprintToSprintDto } from '../dto/move-task-sprint-to-sprint.dto';
 import { MoveTaskSprintDto } from '../dto/move-task-sprint.dto';
@@ -63,6 +65,7 @@ export class TasksController {
   ) {}
 
   @Get('/workspace/:workspaceId/project/:projectId')
+  @RequirePermissions(PERMISSIONS.TASK_READ)
   @ResponseMessage('Find all task')
   async findAllByTask(
     @Param('projectId') projectId: string,
@@ -72,6 +75,7 @@ export class TasksController {
   }
 
   @Get('/workspace/:workspaceId/project/:projectId/backlog')
+  @RequirePermissions(PERMISSIONS.TASK_READ)
   @ResponseMessage('Find all backlog task')
   async findAllBacklogTask(
     @Param('projectId') projectId: string,
@@ -83,6 +87,7 @@ export class TasksController {
   }
 
   @Post()
+  @RequirePermissions(PERMISSIONS.TASK_CREATE)
   @ResponseMessage('Create Task')
   create(@Body() createTaskDto: CreateTaskDto, @Auth() auth: IAuth) {
     return this.createTaskApplication.create({
@@ -92,6 +97,7 @@ export class TasksController {
   }
 
   @Patch(':id')
+  @RequirePermissions(PERMISSIONS.TASK_UPDATE)
   @ResponseMessage('Update task successfully')
   async updateTask(
     @Param('id') id: string,
@@ -121,6 +127,7 @@ export class TasksController {
   }
 
   @Delete(':taskId')
+  @RequirePermissions(PERMISSIONS.TASK_DELETE)
   async deleteTask(
     @Param('taskId') taskId: string,
     @Query('workspaceId') workspaceId: string,
@@ -138,6 +145,7 @@ export class TasksController {
   }
 
   @Patch(':taskId/restore')
+  @RequirePermissions(PERMISSIONS.TASK_DELETE)
   async restoreTask(
     @Param('taskId') taskId: string,
     @Query('workspaceId') workspaceId: string,
@@ -155,6 +163,7 @@ export class TasksController {
   }
 
   @Get('trash')
+  @RequirePermissions(PERMISSIONS.TASK_READ)
   async findDeletedTasks(
     @Query('workspaceId') workspaceId: string,
     @Query('projectId') projectId?: string,
@@ -181,6 +190,7 @@ export class TasksController {
   @Patch(
     'workspaces/:workspaceId/projects/:projectId/sprints/:sourceSprintId/tasks/:taskId/move-to-sprint',
   )
+  @RequirePermissions(PERMISSIONS.TASK_UPDATE)
   @ResponseMessage('Move task to sprint successfully')
   async moveTaskSprintToSprint(
     @Param('workspaceId') workspaceId: string,
@@ -201,6 +211,7 @@ export class TasksController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/bulk-update')
+  @RequirePermissions(PERMISSIONS.TASK_UPDATE)
   @ResponseMessage('Update many tasks successfully')
   async updateManyTasks(
     @Param('workspaceId') workspaceId: string,

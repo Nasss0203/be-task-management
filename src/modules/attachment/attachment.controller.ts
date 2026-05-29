@@ -12,7 +12,9 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
 import { AttachmentsService } from './attachment.service';
 import {
@@ -26,6 +28,7 @@ export class AttachmentController {
   constructor(private readonly attachmentService: AttachmentsService) {}
 
   @Post('upload')
+  @RequirePermissions(PERMISSIONS.ATTACHMENT_UPLOAD)
   @ResponseMessage('Upload file with R2')
   @UseInterceptors(
     FileInterceptor('file', {

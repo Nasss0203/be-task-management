@@ -86,7 +86,9 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
 
     const isSelfAssign = input.userId === input.assignedBy;
 
-    const canAssignOther = actorMember.role_name === RoleName.OWNER;
+    const canAssignOther = [RoleName.OWNER, RoleName.ADMIN].includes(
+      actorMember.role_name,
+    );
 
     if (!isSelfAssign && !canAssignOther) {
       throw new ForbiddenException(

@@ -127,17 +127,25 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
           workspace_id: workspaceId,
         },
         {
+          name: RoleName.ADMIN,
+          workspace_id: workspaceId,
+        },
+        {
           name: RoleName.MEMBER,
+          workspace_id: workspaceId,
+        },
+        {
+          name: RoleName.VIEWER,
           workspace_id: workspaceId,
         },
       ],
       manager,
     );
 
-    const ownerRole = roles.find((role) => role.name === RoleName.OWNER);
-    const memberRole = roles.find((role) => role.name === RoleName.MEMBER);
+    const roleMap = new Map(roles.map((role) => [role.name, role.id]));
+    const ownerRoleId = roleMap.get(RoleName.OWNER);
 
-    if (!ownerRole || !memberRole) {
+    if (!ownerRoleId || roleMap.size !== Object.values(RoleName).length) {
       throw new HttpException(
         'Default roles were not created correctly',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -156,11 +164,6 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
     const permissionMap = new Map(
       permissions.map((permission) => [permission.code, permission]),
     );
-
-    const roleMap = new Map<RoleName, string>([
-      [RoleName.OWNER, ownerRole.id],
-      [RoleName.MEMBER, memberRole.id],
-    ]);
 
     const rolePermissions = Object.entries(ROLE_PERMISSION_MAP).flatMap(
       ([roleName, permissionNames]) => {
@@ -195,7 +198,7 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
     await this.createUserRoleService.create(
       {
         user_id: userId,
-        role_id: ownerRole.id,
+        role_id: ownerRoleId,
         workspace_id: workspaceId,
         assigned_by: userId,
       },

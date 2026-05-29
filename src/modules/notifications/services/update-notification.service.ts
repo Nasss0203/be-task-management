@@ -1,0 +1,34 @@
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { EntityManager } from 'typeorm';
+import { type UpdateNotificationRepository } from '../interfaces/repositories/update-notification.repository.interface';
+import {
+  UpdateInviteNotificationStatusServiceInput,
+  UpdateNotificationService,
+} from '../interfaces/services/update-notification.service.interface';
+import { NOTIFICATION_TYPES } from '../interfaces/types';
+
+@Injectable()
+export class UpdateNotificationServiceImpl implements UpdateNotificationService {
+  constructor(
+    @Inject(NOTIFICATION_TYPES.repositories.UpdateNotificationRepository)
+    private readonly updateNotificationRepository: UpdateNotificationRepository,
+  ) {}
+
+  async updateInviteNotificationStatus(
+    input: UpdateInviteNotificationStatusServiceInput,
+    manager?: EntityManager,
+  ): Promise<number> {
+    if (!input.inviteId) {
+      throw new BadRequestException('inviteId is required');
+    }
+
+    if (!input.inviteStatus) {
+      throw new BadRequestException('inviteStatus is required');
+    }
+
+    return this.updateNotificationRepository.updateInviteNotificationStatus(
+      input,
+      manager,
+    );
+  }
+}

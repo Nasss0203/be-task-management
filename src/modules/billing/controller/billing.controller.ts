@@ -1,7 +1,9 @@
 import { Body, Controller, Get, Inject, Post, Req } from '@nestjs/common';
 import { type Request } from 'express';
 
+import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { CreatePaymentDto } from '../dto/create-payment.dto';
 import { type BillingQueryApplication } from '../interfaces/applications/billing-query.application.interface';
 import { type CreateBillingApplication } from '../interfaces/applications/create-billing.application.interface';
@@ -26,6 +28,7 @@ export class BillingController {
   ) {}
 
   @Post('payments')
+  @RequirePermissions(PERMISSIONS.WORKSPACE_BILLING_MANAGE)
   @ResponseMessage('Create billing payment')
   createPayment(@Body() dto: CreatePaymentDto, @Req() req: AuthRequest) {
     const userId = this.getUserId(req);

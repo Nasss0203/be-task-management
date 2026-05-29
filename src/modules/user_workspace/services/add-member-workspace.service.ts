@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -36,6 +37,22 @@ export class AddMemberWorkspaceServiceImpl implements AddMemberWorkspaceService 
 
   async addMember(input: AddMemberWorkspaceInput, manager?: EntityManager) {
     const roleName = input.role_name ?? RoleName.MEMBER;
+
+    if ([RoleName.OWNER, RoleName.ADMIN].includes(roleName)) {
+      const actorMember =
+        input.added_by &&
+        (await this.findUserWorkspaceRepository.findMemberInWorkspace(
+          input.workspace_id,
+          input.added_by,
+          manager,
+        ));
+
+      if (!actorMember || actorMember.role_name !== RoleName.OWNER) {
+        throw new ForbiddenException(
+          'Only workspace owner can add owner or admin members',
+        );
+      }
+    }
 
     const existed =
       await this.findUserWorkspaceRepository.findMemberInWorkspace(

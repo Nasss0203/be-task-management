@@ -85,6 +85,7 @@ export class WorkspacesController {
   }
 
   @Get(':workspaceId')
+  @RequirePermissions(PERMISSIONS.WORKSPACE_READ)
   @ResponseMessage('Find one workspace')
   findOneWorkspaceById(
     @Auth() auth: IAuth,
@@ -97,6 +98,7 @@ export class WorkspacesController {
   }
 
   @Get(':workspaceId/overview')
+  @RequirePermissions(PERMISSIONS.WORKSPACE_READ)
   findOverview(
     @Param('workspaceId') workspaceId: string,
     @Auth() auth: IAuth,
@@ -108,6 +110,7 @@ export class WorkspacesController {
   }
 
   @Get(':workspaceId/access')
+  @RequirePermissions(PERMISSIONS.WORKSPACE_READ)
   @ResponseMessage('Get access workspace')
   async getWorkspaceAccess(
     @Param('workspaceId') workspaceId: string,

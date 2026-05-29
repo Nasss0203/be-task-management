@@ -11,7 +11,9 @@ import {
   Query,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
 import { BoardsService } from '../boards.service';
 import { CreateBoardAndAttachDto } from '../dto/create-board-and-attach.dto';
@@ -43,6 +45,7 @@ export class BoardsController {
   ) {}
 
   @Get('trash')
+  @RequirePermissions(PERMISSIONS.BOARD_READ)
   async findDeletedBoards(
     @Query('workspaceId') workspaceId: string,
     @Query('projectId') projectId?: string,
@@ -61,6 +64,7 @@ export class BoardsController {
   }
 
   @Get('/workspace/:workspaceId/project/:projectId')
+  @RequirePermissions(PERMISSIONS.BOARD_READ)
   @ResponseMessage('Find all board')
   async findAllByProjectId(
     @Param('projectId') projectId: string,
@@ -70,6 +74,7 @@ export class BoardsController {
   }
 
   @Post()
+  @RequirePermissions(PERMISSIONS.BOARD_CREATE)
   @ResponseMessage('Create board')
   create(@Body() createBoardDto: CreateBoardDto, @Auth() auth: IAuth) {
     return this.createBoardApplication.create({
@@ -79,6 +84,7 @@ export class BoardsController {
   }
 
   @Post('create-and-attach')
+  @RequirePermissions(PERMISSIONS.BOARD_CREATE, PERMISSIONS.PAGE_BLOCK_UPDATE)
   @ResponseMessage('Create board and attach')
   createAndAttachToPage(
     @Body() dto: CreateBoardAndAttachDto,
@@ -91,6 +97,7 @@ export class BoardsController {
   }
 
   @Delete('workspaces/:workspaceId/projects/:projectId/boards/:boardId')
+  @RequirePermissions(PERMISSIONS.BOARD_DELETE)
   async deleteBoard(
     @Param('workspaceId') workspaceId: string,
     @Param('projectId') projectId: string,
@@ -110,6 +117,7 @@ export class BoardsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/boards/:boardId/restore')
+  @RequirePermissions(PERMISSIONS.BOARD_DELETE)
   async restoreBoard(
     @Param('workspaceId') workspaceId: string,
     @Param('projectId') projectId: string,

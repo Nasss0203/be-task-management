@@ -1,5 +1,7 @@
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common';
+import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { ActivityEntityType } from '../domain/entities/activity.entity';
 import { FindActivityQueryDto } from '../dto/find-activity-query.dto';
 import { type FindActivityApplication } from '../interfaces/applications/find-activity.application.interface';
@@ -13,6 +15,7 @@ export class ActivityController {
   ) {}
 
   @Get('workspaces/:workspaceId')
+  @RequirePermissions(PERMISSIONS.ACTIVITY_READ)
   @ResponseMessage('Find workspace activities successfully')
   findByWorkspace(
     @Param('workspaceId') workspaceId: string,
@@ -22,6 +25,7 @@ export class ActivityController {
   }
 
   @Get('workspaces/:workspaceId/projects/:projectId')
+  @RequirePermissions(PERMISSIONS.ACTIVITY_READ)
   @ResponseMessage('Find project activities successfully')
   findByProject(
     @Param('workspaceId') workspaceId: string,
@@ -36,6 +40,7 @@ export class ActivityController {
   }
 
   @Get('workspaces/:workspaceId/entities/:entityType/:entityId')
+  @RequirePermissions(PERMISSIONS.ACTIVITY_READ)
   @ResponseMessage('Find entity activities successfully')
   findByEntity(
     @Param('workspaceId') workspaceId: string,
