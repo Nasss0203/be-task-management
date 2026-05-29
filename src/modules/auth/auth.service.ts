@@ -87,30 +87,14 @@ export class AuthService {
       );
     }
 
-    const payload: IUserJwtPayload = {
-      sub: user.id,
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      systemRole: user.systemRole,
-    };
-
-    const access_token = this.jwt.sign(payload, { expiresIn: '180m' });
-    const refresh_token = randomBytes(64).toString('hex');
-
-    await this.refreshRepo.save({
-      user_id: user.id,
-      token: hashToken(refresh_token),
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    });
-
-    return {
-      access_token,
-      refresh_token,
-    };
+    return this.issueTokens(user);
   }
 
-  async logout(refreshToken: string) {
+  async logout(refreshToken?: string) {
+    if (!refreshToken) {
+      return { success: true };
+    }
+
     const tokenHash = hashToken(refreshToken);
 
     const stored = await this.refreshRepo.findOne({
@@ -123,6 +107,52 @@ export class AuthService {
     }
 
     return { success: true };
+  }
+
+  async refresh(refreshToken?: string) {
+    if (!refreshToken) {
+      throw new HttpException(
+        {
+          code: ErrorCode.AUTH_INVALID_TOKEN,
+          message: 'Refresh token is required',
+        },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    const stored = await this.refreshRepo.findOne({
+      where: { token: hashToken(refreshToken) },
+      relations: ['user'],
+    });
+
+    if (
+      !stored ||
+      stored.revoked_at ||
+      stored.expires_at.getTime() <= Date.now()
+    ) {
+      throw new HttpException(
+        {
+          code: ErrorCode.AUTH_INVALID_TOKEN,
+          message: 'Invalid refresh token',
+        },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    if (!stored.user || !stored.user.isActive) {
+      throw new HttpException(
+        {
+          code: ErrorCode.USER_INACTIVE,
+          message: 'User is inactive',
+        },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    stored.revoked_at = new Date();
+    await this.refreshRepo.save(stored);
+
+    return this.issueTokens(stored.user);
   }
 
   async validateUser(email: string, password: string): Promise<User | null> {
@@ -183,5 +213,29 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  private async issueTokens(user: User) {
+    const payload: IUserJwtPayload = {
+      sub: user.id,
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      systemRole: user.systemRole,
+    };
+
+    const access_token = this.jwt.sign(payload, { expiresIn: '15m' });
+    const refresh_token = randomBytes(64).toString('hex');
+
+    await this.refreshRepo.save({
+      user_id: user.id,
+      token: hashToken(refresh_token),
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    return {
+      access_token,
+      refresh_token,
+    };
   }
 }

@@ -1,4 +1,5 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { ErrorCode } from 'src/common/constants/error-code.constant';
 import { EntityManager } from 'typeorm';
 
 import { Plan } from '../domain/entities/plan.entity';
@@ -49,9 +50,10 @@ export class CheckWorkspaceLimitServiceImpl implements CheckWorkspaceLimitServic
       );
 
       if (currentWorkspaceCount >= freeLimit) {
-        throw new BadRequestException(
-          `Free plan can create up to ${freeLimit} workspaces`,
-        );
+        throw new BadRequestException({
+          code: ErrorCode.WORKSPACE_LIMIT_EXCEEDED,
+          message: `Free plan can create up to ${freeLimit} workspaces`,
+        });
       }
 
       return;
@@ -66,9 +68,10 @@ export class CheckWorkspaceLimitServiceImpl implements CheckWorkspaceLimitServic
     const workspaceLimit = getNumberLimit(limits, 'workspaces', 5);
 
     if (currentWorkspaceCount >= workspaceLimit) {
-      throw new BadRequestException(
-        `Your plan can create up to ${workspaceLimit} workspaces`,
-      );
+      throw new BadRequestException({
+        code: ErrorCode.WORKSPACE_LIMIT_EXCEEDED,
+        message: `Your plan can create up to ${workspaceLimit} workspaces`,
+      });
     }
   }
 
