@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RolePermission } from 'src/modules/role_permission/domain/entities/role_permission.entity';
+import { Role, RoleName } from 'src/modules/role/domain/entities/role.entity';
 import { UserRole } from 'src/modules/user_roles/domain/entities/user_role.entity';
 import { EntityManager, Repository } from 'typeorm';
+import { PERMISSIONS } from '../constants/permission.constant';
 import { Permission } from '../domain/entities/permission.entity';
 import { PermissionModel } from '../domain/models/permission.model';
 import { FindPermissionRepository } from '../interfaces/repositories/find-all-permission.repository.interface';
@@ -38,6 +40,19 @@ export class FindPermissionRepositoryImpl implements FindPermissionRepository {
     manager?: EntityManager,
   ): Promise<string[]> {
     const repo = manager ? manager.getRepository(UserRole) : this.userRoleRepo;
+
+    const ownerRole = await repo
+      .createQueryBuilder('ur')
+      .innerJoin(Role, 'r', 'r.id = ur.role_id')
+      .select('1', 'exists')
+      .where('ur.user_id = :userId', { userId })
+      .andWhere('ur.workspace_id = :workspaceId', { workspaceId })
+      .andWhere('r.name = :roleName', { roleName: RoleName.OWNER })
+      .getRawOne();
+
+    if (ownerRole) {
+      return Object.values(PERMISSIONS);
+    }
 
     const rows = await repo
       .createQueryBuilder('ur')
