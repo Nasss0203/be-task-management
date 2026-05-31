@@ -39,18 +39,18 @@ export class FindPageBlockRepositoryImpl implements FindPageBlockRepository {
   async findAllByPageId(
     pageId: string,
     manager?: EntityManager,
-  ): Promise<PageBlockModel | null> {
-    const row = await this.getRepo(manager).findOne({
+  ): Promise<PageBlockModel[]> {
+    const rows = await this.getRepo(manager).find({
       where: {
         page_id: pageId,
       },
+      order: {
+        order_index: 'ASC',
+        created_at: 'ASC',
+      },
     });
 
-    if (!row) {
-      return null;
-    }
-
-    return PageBlockMapper.toModel(row);
+    return rows.map((row) => PageBlockMapper.toModel(row));
   }
 
   async getNextOrderIndex(

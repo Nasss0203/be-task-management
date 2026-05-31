@@ -270,14 +270,12 @@ export class CreateProjectServiceImpl implements CreateProjectService {
             height: 1,
             order_index: nextOrderIndex,
             style_config: null,
-            data_config: [
-              {
-                project_id: project.id,
-                workspace_id: workspaceId,
-                board_id: board?.id ?? null,
-                view_type: board?.viewType ?? initialView,
-              },
-            ],
+            data_config: {
+              project_id: project.id,
+              workspace_id: workspaceId,
+              default_board_id: board?.id ?? null,
+              default_view_type: board?.viewType ?? initialView,
+            },
             created_by: userId,
             content: null,
           },

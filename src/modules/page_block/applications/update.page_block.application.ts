@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { type UnitOfWork } from 'src/interface/index.interface';
 import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
 import { PageBlockResponseDto } from '../dto/response/page_block.response.dto';
+import { ReorderPageBlockDto } from '../dto/reorder-page_block.dto';
 import { UpdatePageBlockDto } from '../dto/update-page_block.dto';
 import { UpdatePageBlockApplication } from '../interfaces/applications/update.page_block.application.interface';
 import { type UpdatePageBlockService } from '../interfaces/services/update.page_block.service.interface';
@@ -34,6 +35,21 @@ export class UpdatePageBlockApplicationImpl implements UpdatePageBlockApplicatio
       );
 
       return PageBlockMapper.toResponse(updated);
+    });
+  }
+
+  async reorder(dto: ReorderPageBlockDto): Promise<PageBlockResponseDto[]> {
+    return this.uow.runInTransaction(async (manager) => {
+      if (!dto.page_id) {
+        throw new HttpException(
+          'Page id is required',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const blocks = await this.updatePageBlockService.reorder(dto, manager);
+
+      return blocks.map((block) => PageBlockMapper.toResponse(block));
     });
   }
 }

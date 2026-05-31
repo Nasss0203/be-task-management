@@ -31,13 +31,60 @@ export class CreatePageBlockServiceImpl implements CreatePageBlockService {
     private readonly updatePageBlockRepository: UpdatePageBlockRepository,
   ) {}
 
-  create(
+  async create(
     createPageBlockDto: CreatePageBlockDto,
     manager: EntityManager,
   ): Promise<PageBlockModel> {
-    // Check validator type
+    let orderIndex: number;
 
-    const create = this.repo.save(createPageBlockDto, manager);
+    if (createPageBlockDto.insert_after_block_id) {
+      const insertAfterBlock =
+        await this.findPageBlockRepository.findAllById(
+          createPageBlockDto.insert_after_block_id,
+          manager,
+        );
+
+      if (!insertAfterBlock) {
+        throw new NotFoundException('Insert after page block not found');
+      }
+
+      if (insertAfterBlock.page_id !== createPageBlockDto.page_id) {
+        throw new BadRequestException(
+          'Insert after page block must belong to the same page',
+        );
+      }
+
+      orderIndex = insertAfterBlock.order_index + 1;
+
+      await this.repo.shiftOrderIndexesForInsert(
+        createPageBlockDto.page_id,
+        orderIndex,
+        manager,
+      );
+    } else {
+      orderIndex =
+        createPageBlockDto.order_index ??
+        (await this.findPageBlockRepository.getNextOrderIndex(
+          createPageBlockDto.page_id,
+          manager,
+        ));
+
+      if (createPageBlockDto.order_index !== undefined) {
+        await this.repo.shiftOrderIndexesForInsert(
+          createPageBlockDto.page_id,
+          orderIndex,
+          manager,
+        );
+      }
+    }
+
+    const create = this.repo.save(
+      {
+        ...createPageBlockDto,
+        order_index: orderIndex,
+      },
+      manager,
+    );
     return create;
   }
 
@@ -60,24 +107,42 @@ export class CreatePageBlockServiceImpl implements CreatePageBlockService {
       throw new BadRequestException('Block is not DATABASE_VIEW');
     }
 
-    const current = Array.isArray(findPageBlock.data_config)
-      ? findPageBlock.data_config
-      : [];
+    const currentConfig = Array.isArray(findPageBlock.data_config)
+      ? findPageBlock.data_config[0]
+      : findPageBlock.data_config;
 
-    const exists = current.some(
-      (item: any) => item.board_id === newView.board_id,
-    );
+    if (
+      currentConfig &&
+      !Array.isArray(currentConfig) &&
+      typeof currentConfig === 'object'
+    ) {
+      const projectId =
+        'project_id' in currentConfig ? currentConfig.project_id : null;
+      const workspaceId =
+        'workspace_id' in currentConfig ? currentConfig.workspace_id : null;
 
-    if (exists) {
-      throw new BadRequestException('Board already exists in this block');
+      if (projectId && projectId !== newView.project_id) {
+        throw new BadRequestException(
+          'Block is already attached to another project',
+        );
+      }
+
+      if (workspaceId && workspaceId !== newView.workspace_id) {
+        throw new BadRequestException(
+          'Block is already attached to another workspace',
+        );
+      }
     }
-
-    const next = [...current, newView];
 
     const block = await this.updatePageBlockRepository.save(
       {
         id: blockId,
-        data_config: next,
+        data_config: {
+          project_id: newView.project_id,
+          workspace_id: newView.workspace_id,
+          default_board_id: newView.board_id,
+          default_view_type: newView.view_type,
+        },
       },
       manager,
     );

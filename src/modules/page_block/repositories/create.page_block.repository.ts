@@ -29,4 +29,32 @@ export class CreatePageBlockRepositoryImpl implements CreatePageBlockRepository 
 
     return PageBlockMapper.toModel(saved);
   }
+
+  async shiftOrderIndexesForInsert(
+    pageId: string,
+    fromOrderIndex: number,
+    manager: EntityManager,
+  ): Promise<void> {
+    const repo = this.resolveRepo(manager);
+
+    const rows = await repo.find({
+      where: {
+        page_id: pageId,
+      },
+      order: {
+        order_index: 'DESC',
+      },
+    });
+
+    const affectedRows = rows.filter(
+      (row) => row.order_index >= fromOrderIndex,
+    );
+
+    for (const row of affectedRows) {
+      await repo.update(
+        { id: row.id },
+        { order_index: row.order_index + 1 },
+      );
+    }
+  }
 }

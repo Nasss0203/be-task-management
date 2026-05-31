@@ -6,23 +6,28 @@ import {
   Get,
   Inject,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
 } from '@nestjs/common';
-import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { Auth } from 'src/common/decorator/auth.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
+import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
-import { AddDatabaseViewToBlockDto } from '../dto/create-page_block.dto';
+import { type IAuth } from 'src/types/auth';
+import {
+  AddDatabaseViewToBlockDto,
+  CreatePageBlockDto,
+} from '../dto/create-page_block.dto';
+import { ReorderPageBlockDto } from '../dto/reorder-page_block.dto';
 import { PageBlockResponseDto } from '../dto/response/page_block.response.dto';
 import { UpdatePageBlockDto } from '../dto/update-page_block.dto';
 import { type CreatePageBlockApplication } from '../interfaces/applications/create-page_block.application.interface';
+import { type DeletePageBlockApplication } from '../interfaces/applications/delete.page-block.application.interface';
+import { type FindPageBlockApplication } from '../interfaces/applications/find.page_block.application.interface';
 import { type UpdatePageBlockApplication } from '../interfaces/applications/update.page_block.application.interface';
 import { PAGE_BLOCK_TYPES } from '../interfaces/types';
-import { type FindPageBlockApplication } from '../interfaces/applications/find.page_block.application.interface';
-import { type DeletePageBlockApplication } from '../interfaces/applications/delete.page-block.application.interface';
-import { Auth } from 'src/common/decorator/auth.decorator';
-import { type IAuth } from 'src/types/auth';
 
 @Controller('pageBlock')
 export class PageBlockController {
@@ -40,11 +45,46 @@ export class PageBlockController {
     private readonly deletePageBlockApplication: DeletePageBlockApplication,
   ) {}
 
+  @Post()
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
+  @ResponseMessage('Create page block')
+  create(
+    @Body() createPageBlockDto: CreatePageBlockDto,
+    @Auth() auth: IAuth,
+  ): Promise<PageBlockResponseDto> {
+    return this.createPageBlockApplication.create({
+      ...createPageBlockDto,
+      created_by: auth.id,
+    });
+  }
+
+  @Get('page/:pageId')
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
+  @ResponseMessage('Find page blocks by page')
+  findAllByPageId(
+    @Param('pageId', ParseUUIDPipe) pageId: string,
+  ): Promise<PageBlockResponseDto[]> {
+    return this.findPageBlockApplication.findAllByPageId(pageId);
+  }
+
+  @Patch('reorder')
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+  @ResponseMessage('Reorder page blocks')
+  reorder(
+    @Body() reorderPageBlockDto: ReorderPageBlockDto,
+  ): Promise<PageBlockResponseDto[]> {
+    return this.updatePageBlockApplication.reorder(reorderPageBlockDto);
+  }
+
   @Patch(':id')
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
-  update(@Body() updatePageBlockDto: UpdatePageBlockDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updatePageBlockDto: UpdatePageBlockDto,
+  ) {
     return this.updatePageBlockApplication.update({
       ...updatePageBlockDto,
+      id,
     });
   }
 
@@ -52,7 +92,7 @@ export class PageBlockController {
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   @ResponseMessage('Add database view')
   async addDatabaseViewToBlock(
-    @Param('blockId') blockId: string,
+    @Param('blockId', ParseUUIDPipe) blockId: string,
     @Body() dto: AddDatabaseViewToBlockDto,
   ): Promise<PageBlockResponseDto> {
     return await this.createPageBlockApplication.addDatabaseViewToBlock(
@@ -80,7 +120,7 @@ export class PageBlockController {
   @Delete(':blockId')
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async deletePageBlock(
-    @Param('blockId') blockId: string,
+    @Param('blockId', ParseUUIDPipe) blockId: string,
     @Query('workspaceId') workspaceId: string,
     @Auth() auth: IAuth,
   ) {
@@ -102,7 +142,7 @@ export class PageBlockController {
   @Patch(':blockId/restore')
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async restorePageBlock(
-    @Param('blockId') blockId: string,
+    @Param('blockId', ParseUUIDPipe) blockId: string,
     @Query('workspaceId') workspaceId: string,
     @Auth() auth: IAuth,
   ) {

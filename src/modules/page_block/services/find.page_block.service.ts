@@ -25,7 +25,7 @@ export class FindPageBlockServiceImpl implements FindPageBlockService {
   async findAllByPageId(
     pageId: string,
     manager?: EntityManager,
-  ): Promise<PageBlockModel | null> {
+  ): Promise<PageBlockModel[]> {
     return this.findPageBlockRepository.findAllByPageId(pageId, manager);
   }
 

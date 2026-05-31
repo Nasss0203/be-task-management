@@ -1,4 +1,5 @@
 import { Page } from 'src/modules/page/domain/entities/page.entity';
+import { BoardViewType } from 'src/modules/boards/domain/entities/board.entity';
 import { User } from 'src/modules/users/domain/entities/user.entity';
 import {
   Column,
@@ -37,27 +38,17 @@ export enum PageBlockType {
   BUTTON = 'BUTTON',
 }
 
-export enum DatabaseViewMode {
-  BOARD = 'BOARD',
-  TABLE = 'TABLE',
-  LIST = 'LIST',
-  CALENDAR = 'CALENDAR',
-  TIMELINE = 'TIMELINE',
-  GALLERY = 'GALLERY',
-  CHART = 'CHART',
-}
-
-export type PageBlockdDatabaseViewDataConfig = {
-  view: DatabaseViewMode;
-  board_id: string | null;
+export type PageBlockDatabaseViewDataConfig = {
   workspace_id: string;
   project_id: string;
+  default_board_id: string | null;
+  default_view_type: BoardViewType;
 };
 
 export type PageBlockJson =
   | Record<string, unknown>
   | unknown[]
-  | PageBlockdDatabaseViewDataConfig
+  | PageBlockDatabaseViewDataConfig
   | null;
 export type PageBlockStyleConfig = Record<string, unknown> | null;
 

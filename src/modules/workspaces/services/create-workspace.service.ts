@@ -376,14 +376,12 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
         id: createdPage.pageBlock.id,
         type: PageBlockType.DATABASE_VIEW,
         title: projectName,
-        data_config: [
-          {
-            project_id: projectId,
-            workspace_id: workspaceId,
-            board_id: boardId,
-            view_type: BoardViewType.BOARD,
-          },
-        ],
+        data_config: {
+          project_id: projectId,
+          workspace_id: workspaceId,
+          default_board_id: boardId,
+          default_view_type: BoardViewType.BOARD,
+        },
       },
       manager,
     );

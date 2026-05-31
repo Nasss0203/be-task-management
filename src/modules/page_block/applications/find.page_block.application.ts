@@ -12,6 +12,12 @@ export class FindPageBlockApplicationImpl implements FindPageBlockApplication {
     private readonly findPageBlockService: FindPageBlockService,
   ) {}
 
+  async findAllByPageId(pageId: string): Promise<PageBlockResponseDto[]> {
+    const blocks = await this.findPageBlockService.findAllByPageId(pageId);
+
+    return blocks.map((block) => PageBlockMapper.toResponse(block));
+  }
+
   async findDeletedPageBlocks(
     workspaceId: string,
     pageId?: string,

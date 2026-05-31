@@ -500,7 +500,7 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
   }): Promise<void> {
     if (!pageBlocks.length) return;
 
-    const dataConfig = pageBlocks.map((item) => {
+    const databaseBlocks = pageBlocks.map((item) => {
       const board = boardMap.get(item.boardTemplateKey);
 
       if (!board) {
@@ -510,27 +510,43 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
       }
 
       return {
-        workspace_id: board.workspaceId,
-        project_id: board.projectId,
-        board_id: board.id,
-        view_type: board.viewType,
+        title: item.title,
+        data_config: {
+          workspace_id: board.workspaceId,
+          project_id: board.projectId,
+          default_board_id: board.id,
+          default_view_type: board.viewType,
+        },
       };
     });
 
-    await this.createPageBlockService.create(
-      {
-        page_id: pageId,
-        type: PageBlockType.DATABASE_VIEW,
-        title: pageBlocks[0].title,
-        // Reserve order_index=0 for default block created with page (if any).
-        order_index: 1,
-        style_config: null,
-        data_config: dataConfig,
-        created_by: createdBy,
-        content: null,
-      },
-      manager,
-    );
+    const createdProjectIds = new Set<string>();
+    let orderIndex = 1;
+
+    for (const databaseBlock of databaseBlocks) {
+      if (createdProjectIds.has(databaseBlock.data_config.project_id)) {
+        continue;
+      }
+
+      createdProjectIds.add(databaseBlock.data_config.project_id);
+
+      await this.createPageBlockService.create(
+        {
+          page_id: pageId,
+          type: PageBlockType.DATABASE_VIEW,
+          title: databaseBlock.title,
+          // Reserve order_index=0 for default block created with page (if any).
+          order_index: orderIndex,
+          style_config: null,
+          data_config: databaseBlock.data_config,
+          created_by: createdBy,
+          content: null,
+        },
+        manager,
+      );
+
+      orderIndex += 1;
+    }
   }
 
   private buildTemplateStatusKey(

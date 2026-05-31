@@ -28,4 +28,10 @@ export interface CreatePageBlockRepository {
     page: PageBlockModel | SavePageBlockInput,
     manager: EntityManager,
   ): Promise<PageBlockModel>;
+
+  shiftOrderIndexesForInsert(
+    pageId: string,
+    fromOrderIndex: number,
+    manager: EntityManager,
+  ): Promise<void>;
 }

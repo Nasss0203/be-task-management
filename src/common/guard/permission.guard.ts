@@ -138,6 +138,26 @@ export class PermissionGuard implements CanActivate {
       return workspaceId;
     }
 
+    const pageId =
+      req.params?.pageId ||
+      req.params?.page_id ||
+      req.body?.pageId ||
+      req.body?.page_id ||
+      req.query?.pageId ||
+      req.query?.page_id;
+
+    if (typeof pageId === 'string' && UUID_PATTERN.test(pageId)) {
+      const rows = await this.dataSource.query(
+        'SELECT workspace_id AS "workspaceId" FROM pages WHERE id = $1',
+        [pageId],
+      );
+      const resolvedWorkspaceId = rows?.[0]?.workspaceId;
+
+      if (resolvedWorkspaceId) {
+        return resolvedWorkspaceId;
+      }
+    }
+
     for (const permission of requiredPermissions) {
       const resource = permission.split('.')[0];
       const lookup = WORKSPACE_LOOKUPS[resource];
