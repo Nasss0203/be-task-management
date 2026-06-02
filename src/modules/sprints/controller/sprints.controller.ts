@@ -9,8 +9,10 @@ import {
   Query,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import { RequireFeature } from 'src/common/decorator/require-features.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { FeatureKey } from 'src/modules/features/constants/feature-key.constant';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
 import { CreateSprintDto } from '../dto/create-sprint.dto';
@@ -53,6 +55,7 @@ export class SprintsController {
   ) {}
 
   @Post('workspaces/:workspaceId/projects/:projectId')
+  @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_CREATE)
   @ResponseMessage('Create sprint successfully')
   async create(
@@ -122,6 +125,7 @@ export class SprintsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/start')
+  @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_START)
   @ResponseMessage('Start sprint successfully')
   async startSprint(
@@ -143,6 +147,7 @@ export class SprintsController {
   @Patch(
     'workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/complete',
   )
+  @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_COMPLETE)
   @ResponseMessage('Complete sprint successfully')
   async completeSprint(
@@ -160,6 +165,7 @@ export class SprintsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/cancel')
+  @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_CANCEL)
   async cancelSprint(
     @Param('workspaceId') workspaceId: string,
@@ -176,6 +182,7 @@ export class SprintsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/sprint/:sprintId')
+  @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_UPDATE)
   async updateSprint(
     @Param('workspaceId') workspaceId: string,

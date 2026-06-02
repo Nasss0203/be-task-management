@@ -11,6 +11,7 @@ import {
   Plan,
   PlanBillingInterval,
 } from '../billing/domain/entities/plan.entity';
+import { FeatureKey } from '../features/constants/feature-key.constant';
 
 type BillingPlanSeedItem = {
   name: string;
@@ -40,7 +41,7 @@ const BILLING_PLAN_SEED_DATA: BillingPlanSeedItem[] = [
     billingInterval: PlanBillingInterval.MONTH,
     features: {
       kanban: true,
-      sprint: true,
+      [FeatureKey.SPRINT_ENABLED]: true,
       storage: true,
       pageTemplates: true,
     },
@@ -57,7 +58,7 @@ const BILLING_PLAN_SEED_DATA: BillingPlanSeedItem[] = [
     billingInterval: PlanBillingInterval.MONTH,
     features: {
       kanban: true,
-      sprint: true,
+      [FeatureKey.SPRINT_ENABLED]: true,
       storage: true,
       pageTemplates: true,
       upgradedWorkspaces: true,

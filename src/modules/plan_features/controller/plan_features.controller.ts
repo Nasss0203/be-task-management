@@ -9,6 +9,8 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { RequireSystemRoles } from 'src/common/decorator/require-system-roles.decorator';
+import { SystemRole } from 'src/modules/users/domain/entities/user.entity';
 import { CreatePlanFeatureDto } from '../dto/create-plan_feature.dto';
 import { PlanFeatureResponseDto } from '../dto/response/plan_feature.response.dto';
 import { UpdatePlanFeatureDto } from '../dto/update-plan_feature.dto';
@@ -19,6 +21,7 @@ import { type UpdatePlanFeatureApplication } from '../interfaces/applications/up
 import { PLAN_FEATURE_TYPES } from '../interfaces/types';
 
 @Controller('plan-features')
+@RequireSystemRoles(SystemRole.SYSTEM_ADMIN, SystemRole.SUPER_ADMIN)
 export class PlanFeaturesController {
   constructor(
     @Inject(PLAN_FEATURE_TYPES.applications.CreatePlanFeatureApplication)

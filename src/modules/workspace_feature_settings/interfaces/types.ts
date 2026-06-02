@@ -8,12 +8,14 @@ export const WORKSPACE_FEATURE_SETTING_TYPES = {
       'UpdateWorkspaceFeatureSettingApplication',
     DeleteWorkspaceFeatureSettingApplication:
       'DeleteWorkspaceFeatureSettingApplication',
+    WorkspaceFeatureAccessApplication: 'WorkspaceFeatureAccessApplication',
   },
   services: {
     CreateWorkspaceFeatureSettingService: 'CreateWorkspaceFeatureSettingService',
     FindWorkspaceFeatureSettingService: 'FindWorkspaceFeatureSettingService',
     UpdateWorkspaceFeatureSettingService: 'UpdateWorkspaceFeatureSettingService',
     DeleteWorkspaceFeatureSettingService: 'DeleteWorkspaceFeatureSettingService',
+    WorkspaceFeatureAccessService: 'WorkspaceFeatureAccessService',
   },
   repositories: {
     CreateWorkspaceFeatureSettingRepository:
@@ -23,5 +25,6 @@ export const WORKSPACE_FEATURE_SETTING_TYPES = {
       'UpdateWorkspaceFeatureSettingRepository',
     DeleteWorkspaceFeatureSettingRepository:
       'DeleteWorkspaceFeatureSettingRepository',
+    WorkspaceFeatureAccessRepository: 'WorkspaceFeatureAccessRepository',
   },
 };

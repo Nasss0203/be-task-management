@@ -9,6 +9,8 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { RequireSystemRoles } from 'src/common/decorator/require-system-roles.decorator';
+import { SystemRole } from 'src/modules/users/domain/entities/user.entity';
 import { CreateFeatureDto } from '../dto/create-feature.dto';
 import { FeatureResponseDto } from '../dto/response/feature.response.dto';
 import { UpdateFeatureDto } from '../dto/update-feature.dto';
@@ -19,6 +21,7 @@ import { type UpdateFeatureApplication } from '../interfaces/applications/update
 import { FEATURE_TYPES } from '../interfaces/types';
 
 @Controller('features')
+@RequireSystemRoles(SystemRole.SYSTEM_ADMIN, SystemRole.SUPER_ADMIN)
 export class FeaturesController {
   constructor(
     @Inject(FEATURE_TYPES.applications.CreateFeatureApplication)

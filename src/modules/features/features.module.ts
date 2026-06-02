@@ -9,10 +9,12 @@ import { Feature } from './domain/entities/feature.entity';
 import { FEATURE_TYPES } from './interfaces/types';
 import { CreateFeatureRepositoryImpl } from './repositories/create.feature.repository';
 import { DeleteFeatureRepositoryImpl } from './repositories/delete.feature.repository';
+import { FeatureAccessRepositoryImpl } from './repositories/feature-access.repository';
 import { FindFeatureRepositoryImpl } from './repositories/find.feature.repository';
 import { UpdateFeatureRepositoryImpl } from './repositories/update.feature.repository';
 import { CreateFeatureServiceImpl } from './services/create.feature.service';
 import { DeleteFeatureServiceImpl } from './services/delete.feature.service';
+import { FeatureAccessServiceImpl } from './services/feature-access.service';
 import { FindFeatureServiceImpl } from './services/find.feature.service';
 import { UpdateFeatureServiceImpl } from './services/update.feature.service';
 
@@ -37,6 +39,10 @@ import { UpdateFeatureServiceImpl } from './services/update.feature.service';
       useClass: DeleteFeatureRepositoryImpl,
     },
     {
+      provide: FEATURE_TYPES.repositories.FeatureAccessRepository,
+      useClass: FeatureAccessRepositoryImpl,
+    },
+    {
       provide: FEATURE_TYPES.services.CreateFeatureService,
       useClass: CreateFeatureServiceImpl,
     },
@@ -51,6 +57,10 @@ import { UpdateFeatureServiceImpl } from './services/update.feature.service';
     {
       provide: FEATURE_TYPES.services.DeleteFeatureService,
       useClass: DeleteFeatureServiceImpl,
+    },
+    {
+      provide: FEATURE_TYPES.services.FeatureAccessService,
+      useClass: FeatureAccessServiceImpl,
     },
     {
       provide: FEATURE_TYPES.applications.CreateFeatureApplication,
@@ -74,6 +84,7 @@ import { UpdateFeatureServiceImpl } from './services/update.feature.service';
     FEATURE_TYPES.services.FindFeatureService,
     FEATURE_TYPES.services.UpdateFeatureService,
     FEATURE_TYPES.services.DeleteFeatureService,
+    FEATURE_TYPES.services.FeatureAccessService,
   ],
 })
 export class FeaturesModule {}

@@ -4,6 +4,8 @@ import { CreateWorkspaceFeatureSettingApplicationImpl } from './applications/cre
 import { DeleteWorkspaceFeatureSettingApplicationImpl } from './applications/delete.workspace_feature_setting.application';
 import { FindWorkspaceFeatureSettingApplicationImpl } from './applications/find.workspace_feature_setting.application';
 import { UpdateWorkspaceFeatureSettingApplicationImpl } from './applications/update.workspace_feature_setting.application';
+import { WorkspaceFeatureAccessApplicationImpl } from './applications/workspace_feature_access.application';
+import { WorkspaceFeaturesController } from './controller/workspace_features.controller';
 import { WorkspaceFeatureSettingsController } from './controller/workspace_feature_settings.controller';
 import { WorkspaceFeatureSetting } from './domain/entities/workspace_feature_setting.entity';
 import { WORKSPACE_FEATURE_SETTING_TYPES } from './interfaces/types';
@@ -11,14 +13,16 @@ import { CreateWorkspaceFeatureSettingRepositoryImpl } from './repositories/crea
 import { DeleteWorkspaceFeatureSettingRepositoryImpl } from './repositories/delete.workspace_feature_setting.repository';
 import { FindWorkspaceFeatureSettingRepositoryImpl } from './repositories/find.workspace_feature_setting.repository';
 import { UpdateWorkspaceFeatureSettingRepositoryImpl } from './repositories/update.workspace_feature_setting.repository';
+import { WorkspaceFeatureAccessRepositoryImpl } from './repositories/workspace_feature_access.repository';
 import { CreateWorkspaceFeatureSettingServiceImpl } from './services/create.workspace_feature_setting.service';
 import { DeleteWorkspaceFeatureSettingServiceImpl } from './services/delete.workspace_feature_setting.service';
 import { FindWorkspaceFeatureSettingServiceImpl } from './services/find.workspace_feature_setting.service';
 import { UpdateWorkspaceFeatureSettingServiceImpl } from './services/update.workspace_feature_setting.service';
+import { WorkspaceFeatureAccessServiceImpl } from './services/workspace_feature_access.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([WorkspaceFeatureSetting])],
-  controllers: [WorkspaceFeatureSettingsController],
+  controllers: [WorkspaceFeatureSettingsController, WorkspaceFeaturesController],
   providers: [
     {
       provide:
@@ -46,6 +50,12 @@ import { UpdateWorkspaceFeatureSettingServiceImpl } from './services/update.work
     },
     {
       provide:
+        WORKSPACE_FEATURE_SETTING_TYPES.repositories
+          .WorkspaceFeatureAccessRepository,
+      useClass: WorkspaceFeatureAccessRepositoryImpl,
+    },
+    {
+      provide:
         WORKSPACE_FEATURE_SETTING_TYPES.services
           .CreateWorkspaceFeatureSettingService,
       useClass: CreateWorkspaceFeatureSettingServiceImpl,
@@ -67,6 +77,11 @@ import { UpdateWorkspaceFeatureSettingServiceImpl } from './services/update.work
         WORKSPACE_FEATURE_SETTING_TYPES.services
           .DeleteWorkspaceFeatureSettingService,
       useClass: DeleteWorkspaceFeatureSettingServiceImpl,
+    },
+    {
+      provide:
+        WORKSPACE_FEATURE_SETTING_TYPES.services.WorkspaceFeatureAccessService,
+      useClass: WorkspaceFeatureAccessServiceImpl,
     },
     {
       provide:
@@ -92,12 +107,19 @@ import { UpdateWorkspaceFeatureSettingServiceImpl } from './services/update.work
           .DeleteWorkspaceFeatureSettingApplication,
       useClass: DeleteWorkspaceFeatureSettingApplicationImpl,
     },
+    {
+      provide:
+        WORKSPACE_FEATURE_SETTING_TYPES.applications
+          .WorkspaceFeatureAccessApplication,
+      useClass: WorkspaceFeatureAccessApplicationImpl,
+    },
   ],
   exports: [
     WORKSPACE_FEATURE_SETTING_TYPES.services.CreateWorkspaceFeatureSettingService,
     WORKSPACE_FEATURE_SETTING_TYPES.services.FindWorkspaceFeatureSettingService,
     WORKSPACE_FEATURE_SETTING_TYPES.services.UpdateWorkspaceFeatureSettingService,
     WORKSPACE_FEATURE_SETTING_TYPES.services.DeleteWorkspaceFeatureSettingService,
+    WORKSPACE_FEATURE_SETTING_TYPES.services.WorkspaceFeatureAccessService,
   ],
 })
 export class WorkspaceFeatureSettingsModule {}

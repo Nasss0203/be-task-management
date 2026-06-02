@@ -23,6 +23,7 @@ import { UsersModule } from './modules/users/users.module';
 import { APP_GUARD } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { JwtAuthGuard } from './common/guard/jwt-auth.guard';
+import { FeatureGuard } from './common/guard/feature.guard';
 import { PermissionGuard } from './common/guard/permission.guard';
 import { SystemRoleGuard } from './common/guard/system-role.guard';
 import { ActivityModule } from './modules/activity/activity.module';
@@ -110,6 +111,10 @@ import { WorkspaceFeatureSettingsModule } from './modules/workspace_feature_sett
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: FeatureGuard,
     },
     {
       provide: APP_GUARD,

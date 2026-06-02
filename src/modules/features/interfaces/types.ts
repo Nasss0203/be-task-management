@@ -10,11 +10,13 @@ export const FEATURE_TYPES = {
     FindFeatureService: 'FindFeatureService',
     UpdateFeatureService: 'UpdateFeatureService',
     DeleteFeatureService: 'DeleteFeatureService',
+    FeatureAccessService: 'FeatureAccessService',
   },
   repositories: {
     CreateFeatureRepository: 'CreateFeatureRepository',
     FindFeatureRepository: 'FindFeatureRepository',
     UpdateFeatureRepository: 'UpdateFeatureRepository',
     DeleteFeatureRepository: 'DeleteFeatureRepository',
+    FeatureAccessRepository: 'FeatureAccessRepository',
   },
 };

@@ -20,7 +20,7 @@ export class CreateFeatureServiceImpl implements CreateFeatureService {
     return this.repo.save(
       {
         ...dto,
-        code: dto.code.trim().toUpperCase(),
+        code: dto.code.trim().toLowerCase(),
         isActive: dto.isActive ?? true,
         description: dto.description ?? null,
         category: dto.category ?? null,

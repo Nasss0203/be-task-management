@@ -22,7 +22,7 @@ export class UpdateFeatureServiceImpl implements UpdateFeatureService {
       {
         id,
         ...dto,
-        ...(dto.code !== undefined && { code: dto.code.trim().toUpperCase() }),
+        ...(dto.code !== undefined && { code: dto.code.trim().toLowerCase() }),
       },
       manager,
     );
