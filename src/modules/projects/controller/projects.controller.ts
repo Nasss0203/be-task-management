@@ -17,9 +17,9 @@ import { PERMISSIONS } from 'src/modules/permission/constants/permission.constan
 import { type IAuth } from 'src/types/auth';
 import { CreateProjectDto } from '../dto/create-project.dto';
 import { type CreateProjectApplication } from '../interfaces/applications/create-project.application.interface';
+import { type DeleteProjectApplication } from '../interfaces/applications/delete-project.application.interface';
 import { type FindProjectApplication } from '../interfaces/applications/find.project.application.interface';
 import { PROJECT_TYPES } from '../interfaces/types';
-import { type DeleteProjectApplication } from '../interfaces/applications/delete-project.application.interface';
 
 @Controller('projects')
 export class ProjectsController {

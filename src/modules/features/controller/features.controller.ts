@@ -1,0 +1,72 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { CreateFeatureDto } from '../dto/create-feature.dto';
+import { FeatureResponseDto } from '../dto/response/feature.response.dto';
+import { UpdateFeatureDto } from '../dto/update-feature.dto';
+import { type CreateFeatureApplication } from '../interfaces/applications/create.feature.application.interface';
+import { type DeleteFeatureApplication } from '../interfaces/applications/delete.feature.application.interface';
+import { type FindFeatureApplication } from '../interfaces/applications/find.feature.application.interface';
+import { type UpdateFeatureApplication } from '../interfaces/applications/update.feature.application.interface';
+import { FEATURE_TYPES } from '../interfaces/types';
+
+@Controller('features')
+export class FeaturesController {
+  constructor(
+    @Inject(FEATURE_TYPES.applications.CreateFeatureApplication)
+    private readonly createFeatureApplication: CreateFeatureApplication,
+
+    @Inject(FEATURE_TYPES.applications.FindFeatureApplication)
+    private readonly findFeatureApplication: FindFeatureApplication,
+
+    @Inject(FEATURE_TYPES.applications.UpdateFeatureApplication)
+    private readonly updateFeatureApplication: UpdateFeatureApplication,
+
+    @Inject(FEATURE_TYPES.applications.DeleteFeatureApplication)
+    private readonly deleteFeatureApplication: DeleteFeatureApplication,
+  ) {}
+
+  @Post()
+  create(
+    @Body() createFeatureDto: CreateFeatureDto,
+  ): Promise<FeatureResponseDto> {
+    return this.createFeatureApplication.create(createFeatureDto);
+  }
+
+  @Get()
+  findAll(): Promise<FeatureResponseDto[]> {
+    return this.findFeatureApplication.findAll();
+  }
+
+  @Get(':id')
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<FeatureResponseDto> {
+    return this.findFeatureApplication.findById(id);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateFeatureDto: UpdateFeatureDto,
+  ): Promise<FeatureResponseDto> {
+    return this.updateFeatureApplication.update(id, updateFeatureDto);
+  }
+
+  @Delete(':id')
+  async remove(@Param('id', ParseUUIDPipe) id: string) {
+    await this.deleteFeatureApplication.delete(id);
+
+    return {
+      success: true,
+    };
+  }
+}

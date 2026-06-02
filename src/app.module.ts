@@ -45,6 +45,9 @@ import { TaskCommnentModule } from './modules/task_commnent/task_commnent.module
 import { WorkspaceInvitesModule } from './modules/workspace_invites/workspace_invites.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { FeaturesModule } from './modules/features/features.module';
+import { PlanFeaturesModule } from './modules/plan_features/plan_features.module';
+import { WorkspaceFeatureSettingsModule } from './modules/workspace_feature_settings/workspace_feature_settings.module';
 
 @Module({
   imports: [
@@ -97,6 +100,9 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     NotificationsModule,
     RealtimeModule,
     DashboardModule,
+    FeaturesModule,
+    PlanFeaturesModule,
+    WorkspaceFeatureSettingsModule,
   ],
   controllers: [AppController],
   providers: [

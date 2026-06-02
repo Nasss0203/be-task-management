@@ -13,6 +13,7 @@ import { SubscriptionWorkspace } from 'src/modules/billing/domain/entities/subsc
 import { Subscription } from 'src/modules/billing/domain/entities/subscription.entity';
 import { UsageLimit } from 'src/modules/billing/domain/entities/usage-limit.entity';
 import { Board } from 'src/modules/boards/domain/entities/board.entity';
+import { Feature } from 'src/modules/features/domain/entities/feature.entity';
 import { Mention } from 'src/modules/mentions/domain/entities/mention.entity';
 import { Notification } from 'src/modules/notifications/domain/entities/notification.entity';
 import { Page } from 'src/modules/page/domain/entities/page.entity';
@@ -20,6 +21,7 @@ import { PageBlock } from 'src/modules/page_block/domain/entities/page_block.ent
 import { PageTemplateBlock } from 'src/modules/page_template_blocks/domain/entities/page_template_block.entity';
 import { PageTemplate } from 'src/modules/page_templates/domain/entities/page_template.entity';
 import { Permission } from 'src/modules/permission/domain/entities/permission.entity';
+import { PlanFeature } from 'src/modules/plan_features/domain/entities/plan_feature.entity';
 import { Project } from 'src/modules/projects/domain/entities/project.entity';
 import { RefreshToken } from 'src/modules/refresh_token/entities/refresh_token.entity';
 import { Role } from 'src/modules/role/domain/entities/role.entity';
@@ -35,6 +37,7 @@ import { UserProfile } from 'src/modules/user_profiles/domain/entities/user_prof
 import { UserRole } from 'src/modules/user_roles/domain/entities/user_role.entity';
 import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
 import { User } from 'src/modules/users/domain/entities/user.entity';
+import { WorkspaceFeatureSetting } from 'src/modules/workspace_feature_settings/domain/entities/workspace_feature_setting.entity';
 import { WorkspaceInvite } from 'src/modules/workspace_invites/domain/entities/workspace_invite.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 @Module({
@@ -89,6 +92,9 @@ import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.enti
           PageTemplateBlock,
           PageTemplate,
           SubscriptionWorkspace,
+          Feature,
+          PlanFeature,
+          WorkspaceFeatureSetting,
         ],
       }),
     }),
