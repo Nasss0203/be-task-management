@@ -28,6 +28,7 @@ export class WorkspaceMapper {
       entity.name,
       entity.slug,
       entity.planType,
+      entity.layoutMode,
       entity.createdAt,
       entity.updatedAt,
       entity.deletedAt ?? null,
@@ -43,6 +44,7 @@ export class WorkspaceMapper {
     e.name = model.name;
     e.slug = model.slug;
     e.planType = model.planType;
+    e.layoutMode = model.layoutMode;
 
     if (model.createdAt != null) e.createdAt = model.createdAt;
     if (model.updatedAt != null) e.updatedAt = model.updatedAt;
@@ -64,6 +66,7 @@ export class WorkspaceMapper {
       name: model.name,
       slug: model.slug,
       planType: model.planType,
+      layoutMode: model.layoutMode,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
       deletedAt: model.deletedAt,

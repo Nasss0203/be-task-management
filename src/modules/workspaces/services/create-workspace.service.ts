@@ -37,7 +37,10 @@ import { type CreateUserWorkspaceService } from 'src/modules/user_workspace/inte
 import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/types';
 import { generateSlug } from 'src/utils';
 import { EntityManager } from 'typeorm';
-import { PlanTypeWorkspace } from '../domain/entities/workspace.entity';
+import {
+  PlanTypeWorkspace,
+  WorkspaceLayoutMode,
+} from '../domain/entities/workspace.entity';
 import { WorkspaceModel } from '../domain/models/workspaces.model';
 import { type CreateWorkspaceMultiRepository } from '../interfaces/repositories/create-workspace.repository.interface';
 import { CreateWorkspaceService } from '../interfaces/services/create-workspace.service.interface';
@@ -125,6 +128,7 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
         name,
         slug,
         planType: planType ?? PlanTypeWorkspace.FREE,
+        layoutMode: WorkspaceLayoutMode.TABS,
       },
       manager,
     );

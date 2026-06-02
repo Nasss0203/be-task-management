@@ -60,7 +60,7 @@ export class FindWorkspaceRepositoryImpl implements FindWorkspaceRepository {
 
     return rows
       .filter((row) => row.workspace && !row.workspace.deletedAt)
-      .map((row) => row.workspace);
+      .map((row) => WorkspaceMapper.toModel(row.workspace));
   }
 
   async findOneWorkspaceById(

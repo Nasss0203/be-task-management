@@ -1,4 +1,7 @@
-import { PlanTypeWorkspace } from '../entities/workspace.entity';
+import {
+  PlanTypeWorkspace,
+  WorkspaceLayoutMode,
+} from '../entities/workspace.entity';
 
 export class WorkspaceModel {
   constructor(
@@ -6,6 +9,7 @@ export class WorkspaceModel {
     public readonly name: string,
     public readonly slug: string,
     public readonly planType: PlanTypeWorkspace,
+    public readonly layoutMode: WorkspaceLayoutMode,
 
     public readonly createdAt: Date,
     public readonly updatedAt: Date,

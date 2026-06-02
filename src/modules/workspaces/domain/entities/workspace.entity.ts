@@ -16,6 +16,11 @@ export enum PlanTypeWorkspace {
   PRO = 'pro',
 }
 
+export enum WorkspaceLayoutMode {
+  TABS = 'tabs',
+  BLOCKS = 'blocks',
+}
+
 @Entity('workspaces')
 @Index('IDX_WORKSPACES_DELETED_AT', ['deletedAt'])
 export class Workspace {
@@ -35,6 +40,14 @@ export class Workspace {
     name: 'plan_type',
   })
   planType: PlanTypeWorkspace;
+
+  @Column({
+    type: 'enum',
+    enum: WorkspaceLayoutMode,
+    default: WorkspaceLayoutMode.TABS,
+    name: 'layout_mode',
+  })
+  layoutMode: WorkspaceLayoutMode;
 
   @OneToMany(() => Project, (project) => project.workspace)
   projects: Project[];

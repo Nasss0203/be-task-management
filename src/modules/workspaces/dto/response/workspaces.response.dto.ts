@@ -1,4 +1,7 @@
-import { PlanTypeWorkspace } from '../../domain/entities/workspace.entity';
+import {
+  PlanTypeWorkspace,
+  WorkspaceLayoutMode,
+} from '../../domain/entities/workspace.entity';
 
 export class WorkspaceResponseDto {
   id: string;
@@ -8,6 +11,8 @@ export class WorkspaceResponseDto {
   slug: string;
 
   planType: PlanTypeWorkspace;
+
+  layoutMode: WorkspaceLayoutMode;
 
   createdAt: Date;
 

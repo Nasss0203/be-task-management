@@ -26,6 +26,7 @@ import { CreateWorkspaceTemplateApplicationImpl } from './applications/create-wo
 import { CreateWorkspaceApplicationImpl } from './applications/create-workspace.application';
 import { FindWorkspaceOverviewApplicationImpl } from './applications/find-workspace-overview.application';
 import { FindWorkspaceApplicationImpl } from './applications/find.workspace.application';
+import { UpdateWorkspaceLayoutModeApplicationImpl } from './applications/update-workspace-layout-mode.application';
 import { WorkspaceTrashApplicationImpl } from './applications/workspace-trash.application';
 import { WorkspacesController } from './controller/workspaces.controller';
 import { Workspace } from './domain/entities/workspace.entity';
@@ -46,6 +47,7 @@ import { CreateWorkspaceServiceImpl } from './services/create-workspace.service'
 import { FindWorkspaceOverviewServiceImpl } from './services/find-workspace-overview.service';
 import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
 import { WorkspaceTrashServiceImpl } from './services/workspace-trash.service'; 
+import { UpdateWorkspaceLayoutModeServiceImpl } from './services/update-workspace-layout-mode.service';
 import { BillingModule } from '../billing/billing.module';
 
 @Module({
@@ -96,6 +98,10 @@ import { BillingModule } from '../billing/billing.module';
       provide: WORKSPACE_TYPES.applications.FindWorkspaceOverviewApplication,
       useClass: FindWorkspaceOverviewApplicationImpl,
     },
+    {
+      provide: WORKSPACE_TYPES.applications.UpdateWorkspaceLayoutModeApplication,
+      useClass: UpdateWorkspaceLayoutModeApplicationImpl,
+    },
     //Service
     {
       provide: WORKSPACE_TYPES.services.CreateWorkspaceService,
@@ -124,6 +130,10 @@ import { BillingModule } from '../billing/billing.module';
     {
       provide: WORKSPACE_TYPES.services.FindWorkspaceOverviewService,
       useClass: FindWorkspaceOverviewServiceImpl,
+    },
+    {
+      provide: WORKSPACE_TYPES.services.UpdateWorkspaceLayoutModeService,
+      useClass: UpdateWorkspaceLayoutModeServiceImpl,
     },
     //Repository
     {

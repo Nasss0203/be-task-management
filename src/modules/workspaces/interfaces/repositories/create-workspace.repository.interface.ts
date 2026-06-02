@@ -3,9 +3,14 @@ import { WorkspaceModel } from '../../domain/models/workspaces.model';
 
 export type SaveWorkspaceInput = Pick<
   WorkspaceModel,
-  'name' | 'slug' | 'planType'
+  'name' | 'slug' | 'planType' | 'layoutMode'
 > &
-  Partial<Pick<WorkspaceModel, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>>;
+  Partial<
+    Pick<
+      WorkspaceModel,
+      'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'deletedBy'
+    >
+  >;
 
 export interface CreateWorkspaceMultiRepository {
   existsBySlug(slug: string, manager?: EntityManager): Promise<boolean>;
