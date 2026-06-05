@@ -6,12 +6,23 @@ export type SavePageInput = Pick<
   'slug' | 'title' | 'created_by' | 'workspace_id'
 > &
   Partial<
-    Pick<PageModel, 'id' | 'createdAt' | 'updatedAt' | 'is_template' | 'blocks'>
+    Pick<
+      PageModel,
+      | 'id'
+      | 'createdAt'
+      | 'updatedAt'
+      | 'is_template'
+      | 'blocks'
+      | 'icon'
+      | 'cover_url'
+      | 'deletedAt'
+      | 'deletedBy'
+    >
   >;
 
 export interface PageRepository {
   save(
     page: PageModel | SavePageInput,
-    manager: EntityManager,
+    manager?: EntityManager,
   ): Promise<PageModel>;
 }

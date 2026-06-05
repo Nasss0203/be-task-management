@@ -1,16 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { Page } from '../domain/entities/page.entity';
 import { PageModel } from '../domain/models/page.model';
 import {
-  PageRepository,
-  SavePageInput,
-} from '../interfaces/repositories/page.repository.interface';
+  type UpdatePageInput,
+  type UpdatePageRepository,
+} from '../interfaces/repositories/update-page.repository.interface';
 import { PageMapper } from '../mapper/page.mapper';
 
 @Injectable()
-export class PageRepositoryImpl implements PageRepository {
+export class UpdatePageRepositoryImpl implements UpdatePageRepository {
   constructor(
     @InjectRepository(Page)
     private readonly repo: Repository<Page>,
@@ -19,13 +19,23 @@ export class PageRepositoryImpl implements PageRepository {
   private resolveRepo(manager?: EntityManager): Repository<Page> {
     return manager ? manager.getRepository(Page) : this.repo;
   }
+
   async save(
-    page: PageModel | SavePageInput,
+    page: UpdatePageInput,
     manager?: EntityManager,
   ): Promise<PageModel> {
     const repo = this.resolveRepo(manager);
-    const entity = PageMapper.toEntity(page);
-    const saved = await repo.save(entity);
+    const existing = await repo.findOne({
+      where: { id: page.id },
+      relations: { blocks: true },
+    });
+
+    if (!existing || existing.deletedAt) {
+      throw new NotFoundException('Page not found');
+    }
+
+    const merged = repo.merge(existing, page);
+    const saved = await repo.save(merged);
 
     return PageMapper.toModel(saved);
   }

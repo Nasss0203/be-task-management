@@ -16,27 +16,37 @@ import { ResponseMessage } from 'src/common/decorator/response-message.decorator
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
 import { CreatePageDto } from '../dto/create-page.dto';
+import { UpdatePageDto } from '../dto/update-page.dto';
+import { type CreatePageApplication } from '../interfaces/applications/create-page.application.interface';
 import { type DeletePageApplication } from '../interfaces/applications/delete-page.application.interface';
 import { type FindPageApplication } from '../interfaces/applications/find-page.application.interface';
+import { type UpdatePageApplication } from '../interfaces/applications/update-page.application.interface';
 import { PAGE_TYPES } from '../interfaces/types';
-import { PageService } from '../page.service';
 
 @Controller('page')
 export class PageController {
   constructor(
-    private readonly pageService: PageService,
+    @Inject(PAGE_TYPES.applications.CreatePageApplication)
+    private readonly createPageApplication: CreatePageApplication,
 
     @Inject(PAGE_TYPES.applications.FindPageApplication)
     private readonly findPageApplication: FindPageApplication,
 
     @Inject(PAGE_TYPES.applications.DeletePageApplication)
     private readonly deletePageApplication: DeletePageApplication,
+
+    @Inject(PAGE_TYPES.applications.UpdatePageApplication)
+    private readonly updatePageApplication: UpdatePageApplication,
   ) {}
 
   @Post()
   @RequirePermissions(PERMISSIONS.PAGE_CREATE)
-  create(@Body() createPageDto: CreatePageDto) {
-    return this.pageService.create(createPageDto);
+  @ResponseMessage('Create page')
+  create(@Body() createPageDto: CreatePageDto, @Auth() auth: IAuth) {
+    return this.createPageApplication.create({
+      ...createPageDto,
+      created_by: auth.id,
+    });
   }
 
   @ResponseMessage('Find page by workspace')
@@ -59,6 +69,16 @@ export class PageController {
     }
 
     return this.findPageApplication.findDeletedPages(workspaceId);
+  }
+
+  @Patch(':pageId')
+  @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
+  @ResponseMessage('Update page')
+  updatePage(
+    @Param('pageId') pageId: string,
+    @Body() dto: UpdatePageDto,
+  ) {
+    return this.updatePageApplication.update(pageId, dto);
   }
 
   @Delete(':pageId')

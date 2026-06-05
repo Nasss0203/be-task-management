@@ -11,6 +11,8 @@ export class PageMapper {
       entity.workspace_id,
       entity.slug ?? null,
       entity.title,
+      entity.icon ?? null,
+      entity.cover_url ?? null,
       entity.is_template,
       entity.created_by,
       entity.blocks ?? ([] as PageBlock[]),
@@ -30,6 +32,8 @@ export class PageMapper {
     e.workspace_id = model.workspace_id;
     e.slug = model.slug ?? null;
     e.title = model.title;
+    if ('icon' in model) e.icon = model.icon ?? null;
+    if ('cover_url' in model) e.cover_url = model.cover_url ?? null;
 
     if (model.blocks != null) e.blocks = model.blocks;
     if (model.is_template != null) e.is_template = model.is_template;
@@ -54,6 +58,8 @@ export class PageMapper {
       blocks: model.blocks,
       title: model.title,
       slug: model.slug,
+      icon: model.icon,
+      cover_url: model.cover_url,
       is_template: model.is_template,
       workspace_id: model.workspace_id,
       created_by: model.created_by,

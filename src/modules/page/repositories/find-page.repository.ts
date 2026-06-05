@@ -20,6 +20,26 @@ export class FindPageRepositoryImpl implements FindPageRepository {
     return manager ? manager.getRepository(Page) : this.repoPage;
   }
 
+  async findPageById(
+    pageId: string,
+    manager?: EntityManager,
+  ): Promise<PageModel> {
+    const page = await this.getRepo(manager).findOne({
+      where: {
+        id: pageId,
+      },
+      relations: {
+        blocks: true,
+      },
+    });
+
+    if (!page || page.deletedAt) {
+      throw new HttpException('Page not found', HttpStatus.NOT_FOUND);
+    }
+
+    return PageMapper.toModel(page);
+  }
+
   async findDeletedPages(
     workspaceId: string,
     manager?: EntityManager,

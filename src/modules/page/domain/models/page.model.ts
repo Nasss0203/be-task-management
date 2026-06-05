@@ -6,6 +6,8 @@ export class PageModel {
     public readonly workspace_id: string,
     public readonly slug: string | null,
     public readonly title: string,
+    public readonly icon: string | null,
+    public readonly cover_url: string | null,
     public readonly is_template: boolean,
     public readonly created_by: string,
     public readonly blocks: PageBlock[],

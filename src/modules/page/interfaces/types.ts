@@ -17,4 +17,7 @@ export const PAGE_TYPES = {
     UpdatePageRepository: 'UpdatePageRepository',
     DeletePageRepository: 'DeletePageRepository',
   },
+  uow: {
+    UnitOfWork: 'PageUnitOfWork',
+  },
 };

@@ -20,7 +20,7 @@ export class CreatePageServiceImpl implements CreatePageService {
   ) {}
   async create(
     CreateWorkspaceMultiServiceDto: CreatePageDto,
-    manager: EntityManager,
+    manager?: EntityManager,
   ): Promise<any> {
     const page = await this.repo.save(CreateWorkspaceMultiServiceDto, manager);
 

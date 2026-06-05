@@ -9,6 +9,10 @@ export class PageResponseDto {
 
   slug: string | null;
 
+  icon: string | null;
+
+  cover_url: string | null;
+
   is_template: boolean;
 
   created_by: string;

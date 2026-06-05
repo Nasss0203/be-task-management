@@ -3,6 +3,8 @@ import { PageModel } from '../../domain/models/page.model';
 import { PageRestoreLookup } from '../repositories/find-page.repository.interface';
 
 export interface FindPageService {
+  findPageById(pageId: string, manager?: EntityManager): Promise<PageModel>;
+
   findPageByWorkspaceId(
     userId: string,
     workspaceId: string,

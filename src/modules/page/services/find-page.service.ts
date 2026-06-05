@@ -14,6 +14,11 @@ export class FindPageServiceImpl implements FindPageService {
     @Inject(PAGE_TYPES.repositories.FindPageRepository)
     private readonly findPageRepository: FindPageRepository,
   ) {}
+
+  findPageById(pageId: string, manager?: EntityManager): Promise<PageModel> {
+    return this.findPageRepository.findPageById(pageId, manager);
+  }
+
   findDeletedPages(
     workspaceId: string,
     manager?: EntityManager,

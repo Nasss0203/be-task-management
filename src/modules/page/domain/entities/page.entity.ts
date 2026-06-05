@@ -38,6 +38,12 @@ export class Page {
   @Column({ length: 255, nullable: true, type: 'varchar' })
   slug: string | null;
 
+  @Column({ length: 255, nullable: true, type: 'varchar' })
+  icon: string | null;
+
+  @Column({ name: 'cover_url', nullable: true, type: 'text' })
+  cover_url: string | null;
+
   @Column({ default: false })
   is_template: boolean;
 
