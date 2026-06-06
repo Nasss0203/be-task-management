@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { AdminWorkspaceItemResponseDto } from 'src/modules/admin/dto/response/dashboard/workspace-overview.response.dto';
+import { PaginatedAdminWorkspaceResponseDto } from 'src/modules/admin/dto/response/dashboard/workspace-overview.response.dto';
 import { EntityManager } from 'typeorm';
 import { type AdminFindAllWorkspaceRepository } from '../interfaces/repositories/admin-findAll-workspace.repository.interface';
 import { AdminFindAllWorkspaceService } from '../interfaces/services/admin-findAll-workspace.service.interface';
@@ -16,7 +16,7 @@ export class AdminFindAllWorkspaceServiceImpl implements AdminFindAllWorkspaceSe
   findAllWorkspace(
     filter: AdminFindAllWorkspaceFilter,
     manager?: EntityManager,
-  ): Promise<AdminWorkspaceItemResponseDto[]> {
+  ): Promise<PaginatedAdminWorkspaceResponseDto> {
     return this.adminFindAllWorkspaceRepository.findAllWorkspace(
       filter,
       manager,

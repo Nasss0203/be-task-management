@@ -25,8 +25,8 @@ export interface VnpayVerifyResult {
 
   vnp_Amount?: number | string;
   vnp_TxnRef?: string;
-  vnp_ResponseCode?: string;
-  vnp_TransactionStatus?: string;
+  vnp_ResponseCode?: string | number;
+  vnp_TransactionStatus?: string | number;
   vnp_TransactionNo?: string;
   vnp_BankCode?: string;
   vnp_PayDate?: string;

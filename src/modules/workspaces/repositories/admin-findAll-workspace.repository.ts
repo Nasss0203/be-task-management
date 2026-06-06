@@ -3,10 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import {
   AdminWorkspaceItemResponseDto,
   AdminWorkspaceStatus,
+  PaginatedAdminWorkspaceResponseDto,
 } from 'src/modules/admin/dto/response/dashboard/workspace-overview.response.dto';
 import { EntityManager, Repository } from 'typeorm';
 import { AdminWorkspaceStatus as AdminWorkspaceStatusFilter } from '../dto/search-workspace.dto';
-import { Workspace } from '../domain/entities/workspace.entity';
+import {
+  PlanTypeWorkspace,
+  Workspace,
+} from '../domain/entities/workspace.entity';
 import { AdminFindAllWorkspaceRepository } from '../interfaces/repositories/admin-findAll-workspace.repository.interface';
 import { AdminFindAllWorkspaceFilter } from '../interfaces/workspace-filter.type';
 
@@ -14,7 +18,9 @@ type AdminWorkspaceRaw = {
   id: string;
   name: string;
   slug: string;
-  plan: Workspace['planType'];
+  plan: PlanTypeWorkspace;
+  planName: string | null;
+  planSlug: string | null;
   status: AdminWorkspaceStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -38,10 +44,37 @@ export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspac
     return manager ? manager.getRepository(Workspace) : this.repo;
   }
 
+  private normalizePaginationValue(
+    value: number | string | undefined,
+    defaultValue: number,
+    maxValue?: number,
+  ): number {
+    if (value === undefined || value === null || value === '') {
+      return defaultValue;
+    }
+
+    const numericValue = Number(value);
+
+    if (!Number.isFinite(numericValue) || numericValue < 1) {
+      return defaultValue;
+    }
+
+    const normalizedValue = Math.floor(numericValue);
+
+    if (maxValue !== undefined) {
+      return Math.min(normalizedValue, maxValue);
+    }
+
+    return normalizedValue;
+  }
+
   async findAllWorkspace(
     filter: AdminFindAllWorkspaceFilter,
     manager?: EntityManager,
-  ): Promise<AdminWorkspaceItemResponseDto[]> {
+  ): Promise<PaginatedAdminWorkspaceResponseDto> {
+    const page = this.normalizePaginationValue(filter.page, 1);
+    const pageSize = this.normalizePaginationValue(filter.pageSize, 10, 100);
+
     const qb = this.getRepo(manager)
       .createQueryBuilder('workspace')
       .withDeleted()
@@ -66,10 +99,52 @@ export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspac
         'ownerProfile',
         'ownerProfile.user_id = ownerUser.id',
       )
+      .leftJoin(
+        'subscription_workspaces',
+        'subscription_workspace',
+        'subscription_workspace.workspace_id = workspace.id',
+      )
+      .leftJoin(
+        'subscriptions',
+        'subscription',
+        `subscription.id = subscription_workspace.subscription_id
+          AND subscription.status IN (:...activeSubscriptionStatuses)
+          AND (
+            subscription.current_period_end IS NULL
+            OR subscription.current_period_end >= :now
+          )`,
+        {
+          activeSubscriptionStatuses: ['ACTIVE', 'TRIALING'],
+          now: new Date(),
+        },
+      )
+      .leftJoin(
+        'plans',
+        'activePlan',
+        'activePlan.id = subscription.plan_id AND activePlan.is_active = true',
+      )
       .select('workspace.id', 'id')
       .addSelect('workspace.name', 'name')
       .addSelect('workspace.slug', 'slug')
-      .addSelect('workspace.planType', 'plan')
+      .addSelect(
+        `CASE
+          WHEN MAX("activePlan"."slug") IS NULL THEN "workspace"."plan_type"
+          WHEN MAX("activePlan"."slug") = 'free' THEN 'free'
+          ELSE 'pro'
+        END`,
+        'plan',
+      )
+      .addSelect(
+        `COALESCE(
+          MAX("activePlan"."name"),
+          INITCAP("workspace"."plan_type"::text)
+        )`,
+        'planName',
+      )
+      .addSelect(
+        `COALESCE(MAX("activePlan"."slug"), "workspace"."plan_type"::text)`,
+        'planSlug',
+      )
       .addSelect('workspace.createdAt', 'createdAt')
       .addSelect('workspace.updatedAt', 'updatedAt')
       .addSelect('workspace.deletedAt', 'deletedAt')
@@ -113,10 +188,35 @@ export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspac
       );
     }
 
-    if (filter.plan) {
-      qb.andWhere('"workspace"."plan_type" = :plan', {
-        plan: filter.plan,
-      });
+    if (filter.plan === PlanTypeWorkspace.FREE) {
+      qb.andWhere(
+        `(
+          "workspace"."plan_type" = :freePlan
+          AND (
+            "activePlan"."slug" IS NULL
+            OR "activePlan"."slug" = :freePlan
+          )
+        )`,
+        {
+          freePlan: PlanTypeWorkspace.FREE,
+        },
+      );
+    }
+
+    if (filter.plan === PlanTypeWorkspace.PRO) {
+      qb.andWhere(
+        `(
+          "workspace"."plan_type" = :proPlan
+          OR (
+            "activePlan"."slug" IS NOT NULL
+            AND "activePlan"."slug" <> :freePlan
+          )
+        )`,
+        {
+          proPlan: PlanTypeWorkspace.PRO,
+          freePlan: PlanTypeWorkspace.FREE,
+        },
+      );
     }
 
     if (filter.status === AdminWorkspaceStatusFilter.ACTIVE) {
@@ -161,23 +261,41 @@ export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspac
       }
     }
 
-    const rows = await qb.getRawMany<AdminWorkspaceRaw>();
+    const totalRows = await qb
+      .clone()
+      .select('workspace.id', 'id')
+      .getRawMany<{ id: string }>();
 
-    return rows.map((row) => ({
-      id: row.id,
-      name: row.name,
-      slug: row.slug,
-      plan: row.plan,
-      status: row.status,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-      deletedAt: row.deletedAt,
-      ownerName: row.ownerName,
-      ownerEmail: row.ownerEmail,
-      membersCount: Number(row.membersCount ?? 0),
-      projectsCount: Number(row.projectsCount ?? 0),
-      boardsCount: Number(row.boardsCount ?? 0),
-      tasksCount: Number(row.tasksCount ?? 0),
-    }));
+    const total = totalRows.length;
+
+    const rows = await qb
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getRawMany<AdminWorkspaceRaw>();
+
+    return {
+      data: rows.map((row) => ({
+        id: row.id,
+        name: row.name,
+        slug: row.slug,
+        plan: row.plan,
+        planName: row.planName ?? row.plan,
+        planSlug: row.planSlug ?? row.plan,
+        status: row.status,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        deletedAt: row.deletedAt,
+        ownerName: row.ownerName,
+        ownerEmail: row.ownerEmail,
+        membersCount: Number(row.membersCount ?? 0),
+        projectsCount: Number(row.projectsCount ?? 0),
+        boardsCount: Number(row.boardsCount ?? 0),
+        tasksCount: Number(row.tasksCount ?? 0),
+      })),
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+    };
   }
 }

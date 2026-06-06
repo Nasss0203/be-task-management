@@ -137,6 +137,9 @@ export class AdminUserRepositoryImpl implements AdminUserRepository {
           .where('"activity"."user_id" = "u"."id"');
       }, 'lastActive')
       .where('"u"."deleted_at" IS NULL')
+      .andWhere('"u"."system_role" <> :superAdminRole', {
+        superAdminRole: SystemRole.SUPER_ADMIN,
+      })
       .orderBy('"u"."created_at"', 'DESC');
 
     if (query.search?.trim()) {

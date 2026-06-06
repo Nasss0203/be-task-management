@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
   IpnFailChecksum,
+  IpnInvalidAmount,
   IpnOrderNotFound,
   IpnSuccess,
-  IpnUnknownError,
   type ReturnQueryFromVNPay,
 } from 'vnpay';
 
@@ -15,6 +15,8 @@ import {
   type VnpayPaymentProvider,
   type VnpayVerifyResult,
 } from '../../types/payment-input.interface';
+
+const VNPAY_SUCCESS_CODE = '00';
 
 @Injectable()
 export class VnpayIpnService {
@@ -53,6 +55,10 @@ export class VnpayIpnService {
       return IpnSuccess;
     }
 
+    if (payment.status !== PaymentStatus.PENDING) {
+      return IpnSuccess;
+    }
+
     const metadata = this.toMetadata(verify);
 
     if (payment.amount !== Number(verify.vnp_Amount)) {
@@ -62,17 +68,17 @@ export class VnpayIpnService {
         metadata,
       });
 
-      return IpnUnknownError;
+      return IpnInvalidAmount;
     }
 
-    if (!verify.isSuccess) {
+    if (!this.isSuccessfulVnpayPayment(verify)) {
       await this.paymentRepository.markPaymentStatusFailed({
         paymentId: payment.id,
         failedReason: verify.message ?? 'VNPAY payment failed',
         metadata,
       });
 
-      return IpnUnknownError;
+      return IpnSuccess;
     }
 
     const succeededPayment = await this.paymentRepository.markPaymentSucceeded({
@@ -101,5 +107,21 @@ export class VnpayIpnService {
       isSuccess: verify.isSuccess,
       message: verify.message,
     };
+  }
+
+  private isSuccessfulVnpayPayment(verify: VnpayVerifyResult): boolean {
+    return (
+      this.normalizeVnpayCode(verify.vnp_ResponseCode) === VNPAY_SUCCESS_CODE &&
+      this.normalizeVnpayCode(verify.vnp_TransactionStatus) ===
+        VNPAY_SUCCESS_CODE
+    );
+  }
+
+  private normalizeVnpayCode(value?: string | number): string | null {
+    if (value === undefined || value === null) {
+      return null;
+    }
+
+    return value.toString().padStart(2, '0');
   }
 }

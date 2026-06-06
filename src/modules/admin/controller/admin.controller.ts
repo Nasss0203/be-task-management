@@ -7,8 +7,10 @@ import {
   Patch,
   Query,
 } from '@nestjs/common';
+import { Auth } from 'src/common/decorator/auth.decorator';
 import { RequireSystemRoles } from 'src/common/decorator/require-system-roles.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { type IAuth } from 'src/types/auth';
 import { SystemRole } from 'src/modules/users/domain/entities/user.entity';
 import { WorkspaceMemberSummaryResponseDto } from 'src/modules/workspaces/dto/response/workspace-member-summary.response.dto';
 import { WorkspaceResponseDto } from 'src/modules/workspaces/dto/response/workspaces.response.dto';
@@ -18,6 +20,8 @@ import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
 import { AdminService } from '../admin.service';
 import { UserGrowthQueryDto } from '../dto/query/dashboard/user-growth-query.dto';
 import { WorkspaceGrowthQueryDto } from '../dto/query/dashboard/workspace-growth-query.dto';
+import { AdminFindAllUserQueryDto } from '../dto/query/user/admin-user-query.dto';
+import { UpdateUserSystemRoleDto } from '../dto/request/user/update-user-system-role.dto';
 import { DashboardSummaryResponseDto } from '../dto/response/dashboard/dashboard-summary.response.dto';
 import { RecentActivityResponseDto } from '../dto/response/dashboard/recent-activity.response.dto';
 import { RetentionMetricResponseDto } from '../dto/response/dashboard/retention-metrics.response.dto';
@@ -26,13 +30,12 @@ import { UpdateWorkspacePlanDto } from '../dto/response/dashboard/update-workspa
 import { UserGrowthResponseDto } from '../dto/response/dashboard/user-growth.response.dto';
 import { WorkspaceGrowthResponseDto } from '../dto/response/dashboard/workspace-growth.response.dto';
 import {
-  AdminWorkspaceItemResponseDto,
   AdminWorkspaceOverviewResponseDto,
-  WorkspaceOverviewResponseDto,
+  PaginatedAdminWorkspaceResponseDto,
 } from '../dto/response/dashboard/workspace-overview.response.dto';
 import { WorkspacePlanResponseDto } from '../dto/response/dashboard/workspace-plan.response.dto';
 import { AdminUserOverviewResponseDto } from '../dto/response/user/admin-user-overview.response.dto';
-import { type AdminFindAllWorkspaceApplication } from '../interfaces/applications/admin-findAll-workspace.application.interface';
+import { AdminUserResponseDto } from '../dto/response/user/admin-user.response.dto';
 import { type AdminDashboardSummaryApplication } from '../interfaces/applications/dashboard/admin-dashboard-summary.application.interface';
 import { type AdminRecentActivityApplication } from '../interfaces/applications/dashboard/admin-recent-activity.application.interface';
 import { type AdminRetentionMetricsApplication } from '../interfaces/applications/dashboard/admin-retention-metrics.application.interface';
@@ -42,7 +45,9 @@ import { type AdminUserGrowthApplication } from '../interfaces/applications/dash
 import { type AdminWorkspaceGrowthApplication } from '../interfaces/applications/dashboard/admin-workspace-growth.application.interface';
 import { type AdminWorkspacePlanApplication } from '../interfaces/applications/dashboard/admin-workspace-plan.application.interface';
 import { type AdminWorkspaceOverviewApplication } from '../interfaces/applications/dashboard/workspace-overview.application.interface';
+import { type AdminUserApplication } from '../interfaces/applications/user/admin-user.application.interface';
 import { type AdminUserOverviewApplication } from '../interfaces/applications/user/admin-user-overview.application.interface';
+import { type AdminFindAllWorkspaceApplication } from '../interfaces/applications/workspace/admin-findAll-workspace.application.interface';
 import { ADMIN_TYPES } from '../interfaces/types';
 
 @RequireSystemRoles(SystemRole.SYSTEM_ADMIN, SystemRole.SUPER_ADMIN)
@@ -74,13 +79,15 @@ export class AdminController {
     private readonly adminRecentActivityApplication: AdminRecentActivityApplication,
     @Inject(ADMIN_TYPES.applications.AdminUserOverviewApplication)
     private readonly adminUserOverviewApplication: AdminUserOverviewApplication,
+    @Inject(ADMIN_TYPES.applications.AdminUserApplication)
+    private readonly adminUserApplication: AdminUserApplication,
   ) {}
 
   @Get('findAll-workspaces')
   @ResponseMessage('get all workspaces by admin successfully')
   findAllWorkspace(
     @Query() query: AdminFindAllWorkspaceQueryDto,
-  ): Promise<AdminWorkspaceItemResponseDto[]> {
+  ): Promise<PaginatedAdminWorkspaceResponseDto> {
     return this.adminFindAllWorkspaceApplication.findAllWorkspace(query);
   }
 
@@ -164,5 +171,50 @@ export class AdminController {
   @ResponseMessage('Get admin user overview successfully')
   getUserOverview(): Promise<AdminUserOverviewResponseDto> {
     return this.adminUserOverviewApplication.getOverview();
+  }
+
+  @Get('users')
+  @ResponseMessage('Get admin users successfully')
+  findAllUsers(
+    @Query() query: AdminFindAllUserQueryDto,
+  ): Promise<AdminUserResponseDto[]> {
+    return this.adminUserApplication.findAll(query);
+  }
+
+  @Patch('users/:userId/lock')
+  @ResponseMessage('Lock user successfully')
+  lockUser(
+    @Param('userId') userId: string,
+    @Auth() auth: IAuth,
+  ): Promise<void> {
+    return this.adminUserApplication.lockUser(userId, auth.id, auth.systemRole);
+  }
+
+  @Patch('users/:userId/unlock')
+  @ResponseMessage('Unlock user successfully')
+  unlockUser(
+    @Param('userId') userId: string,
+    @Auth() auth: IAuth,
+  ): Promise<void> {
+    return this.adminUserApplication.unlockUser(
+      userId,
+      auth.id,
+      auth.systemRole,
+    );
+  }
+
+  @Patch('users/:userId/system-role')
+  @ResponseMessage('Update user system role successfully')
+  updateUserSystemRole(
+    @Param('userId') userId: string,
+    @Body() dto: UpdateUserSystemRoleDto,
+    @Auth() auth: IAuth,
+  ): Promise<void> {
+    return this.adminUserApplication.updateSystemRole(
+      userId,
+      dto,
+      auth.id,
+      auth.systemRole,
+    );
   }
 }
