@@ -52,7 +52,7 @@ import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.enti
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_NAME'),
         autoLoadEntities: false,
-        synchronize: false,
+        synchronize: config.get<string>('DB_SYNCHRONIZE') === 'true',
         migrationsRun: false,
         schema: 'public',
         logging: true,

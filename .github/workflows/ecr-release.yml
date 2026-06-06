@@ -1,0 +1,110 @@
+name: Release Docker Image to ECR
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Docker image tag. Leave empty to use short commit SHA."
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ap-southeast-1
+  ECR_REPOSITORY: back-task
+
+jobs:
+  build-and-push:
+    name: Build and push image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image tag
+        id: image
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            IMAGE_TAG="${GITHUB_REF_NAME}"
+          elif [[ -n "${{ github.event.inputs.image_tag }}" ]]; then
+            IMAGE_TAG="${{ github.event.inputs.image_tag }}"
+          else
+            IMAGE_TAG="sha-${GITHUB_SHA::7}"
+          fi
+
+          IMAGE="${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+          echo "tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ steps.image.outputs.image }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Summary
+        run: |
+          echo "Pushed image: ${{ steps.image.outputs.image }}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Prepare SSH key
+        if: ${{ secrets.EC2_HOST != '' && secrets.EC2_SSH_KEY != '' }}
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key
+          chmod 600 ~/.ssh/ec2_key
+
+      - name: Copy production compose file to EC2
+        if: ${{ secrets.EC2_HOST != '' && secrets.EC2_SSH_KEY != '' }}
+        shell: bash
+        env:
+          EC2_USER: ubuntu
+        run: |
+          ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no "$EC2_USER@${{ secrets.EC2_HOST }}" "mkdir -p ~/back-task"
+          scp -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no docker-compose.prod.yml "$EC2_USER@${{ secrets.EC2_HOST }}:~/back-task/docker-compose.prod.yml"
+
+      - name: Deploy to EC2
+        if: ${{ secrets.EC2_HOST != '' && secrets.EC2_SSH_KEY != '' }}
+        shell: bash
+        env:
+          EC2_USER: ubuntu
+          IMAGE_URI: ${{ steps.image.outputs.image }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          aws ecr get-login-password --region "$AWS_REGION" \
+            | ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no "$EC2_USER@${{ secrets.EC2_HOST }}" \
+              "docker login --username AWS --password-stdin $ECR_REGISTRY"
+
+          ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no "$EC2_USER@${{ secrets.EC2_HOST }}" \
+            "cd ~/back-task \
+            && IMAGE_URI=$IMAGE_URI docker compose -f docker-compose.prod.yml pull \
+            && IMAGE_URI=$IMAGE_URI docker compose -f docker-compose.prod.yml up -d \
+            && docker compose -f docker-compose.prod.yml ps"
