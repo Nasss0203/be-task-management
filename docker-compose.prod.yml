@@ -27,6 +27,16 @@ services:
       timeout: 5s
       retries: 5
 
+  seed:
+    image: ${SEED_IMAGE_URI}
+    profiles:
+      - tools
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   app_logs:
   postgres_data:

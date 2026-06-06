@@ -54,8 +54,10 @@ jobs:
           fi
 
           IMAGE="${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+          TOOLS_IMAGE="${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:${IMAGE_TAG}-tools"
           echo "tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
           echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
+          echo "tools_image=${TOOLS_IMAGE}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -72,9 +74,23 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Build and push tools image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          target: build
+          push: true
+          tags: |
+            ${{ steps.image.outputs.tools_image }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:tools-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       - name: Summary
         run: |
           echo "Pushed image: ${{ steps.image.outputs.image }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Pushed tools image: ${{ steps.image.outputs.tools_image }}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Prepare SSH key
         if: ${{ env.EC2_HOST != '' && env.EC2_SSH_KEY != '' }}
@@ -99,6 +115,7 @@ jobs:
         env:
           EC2_USER: ubuntu
           IMAGE_URI: ${{ steps.image.outputs.image }}
+          SEED_IMAGE_URI: ${{ steps.image.outputs.tools_image }}
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           aws ecr get-login-password --region "$AWS_REGION" \
@@ -108,6 +125,7 @@ jobs:
           ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no "$EC2_USER@$EC2_HOST" \
             "cd ~/back-task \
             && export IMAGE_URI=$IMAGE_URI \
+            && export SEED_IMAGE_URI=$SEED_IMAGE_URI \
             && docker compose -f docker-compose.prod.yml pull \
             && docker compose -f docker-compose.prod.yml up -d \
             && docker compose -f docker-compose.prod.yml ps"
