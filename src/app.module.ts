@@ -26,6 +26,7 @@ import { JwtAuthGuard } from './common/guard/jwt-auth.guard';
 import { FeatureGuard } from './common/guard/feature.guard';
 import { PermissionGuard } from './common/guard/permission.guard';
 import { SystemRoleGuard } from './common/guard/system-role.guard';
+import { WorkspaceResolverService } from './common/services/workspace-resolver.service';
 import { ActivityModule } from './modules/activity/activity.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AttachmentModule } from './modules/attachment/attachment.module';
@@ -108,6 +109,7 @@ import { WorkspaceFeatureSettingsModule } from './modules/workspace_feature_sett
   controllers: [AppController],
   providers: [
     AppService,
+    WorkspaceResolverService,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

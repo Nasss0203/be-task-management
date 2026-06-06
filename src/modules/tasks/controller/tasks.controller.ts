@@ -25,6 +25,7 @@ import { TASK_TYPES } from '../interfaces/types';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { RequireFeature } from 'src/common/decorator/require-features.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 import { FeatureKey } from 'src/modules/features/constants/feature-key.constant';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
@@ -77,6 +78,7 @@ export class TasksController {
   }
 
   @Get('/workspace/:workspaceId/project/:projectId/backlog')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.TASK_READ)
   @ResponseMessage('Find all backlog task')
@@ -115,6 +117,7 @@ export class TasksController {
   }
 
   @Patch(':id/move-sprint')
+  @WorkspaceContext({ source: 'resource', type: 'task', key: 'id' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.TASK_UPDATE)
   @ResponseMessage('Move task to sprint successfully')
@@ -181,6 +184,7 @@ export class TasksController {
   }
 
   @Patch(':taskId/remove-sprint')
+  @WorkspaceContext({ source: 'resource', type: 'task', key: 'taskId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.TASK_UPDATE)
   @ResponseMessage('Remove task from sprint successfully')
@@ -197,6 +201,7 @@ export class TasksController {
   @Patch(
     'workspaces/:workspaceId/projects/:projectId/sprints/:sourceSprintId/tasks/:taskId/move-to-sprint',
   )
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.TASK_UPDATE)
   @ResponseMessage('Move task to sprint successfully')

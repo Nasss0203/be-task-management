@@ -12,6 +12,7 @@ import { Auth } from 'src/common/decorator/auth.decorator';
 import { RequireFeature } from 'src/common/decorator/require-features.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 import { FeatureKey } from 'src/modules/features/constants/feature-key.constant';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
@@ -55,6 +56,7 @@ export class SprintsController {
   ) {}
 
   @Post('workspaces/:workspaceId/projects/:projectId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_CREATE)
   @ResponseMessage('Create sprint successfully')
@@ -125,6 +127,7 @@ export class SprintsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/start')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_START)
   @ResponseMessage('Start sprint successfully')
@@ -147,6 +150,7 @@ export class SprintsController {
   @Patch(
     'workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/complete',
   )
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_COMPLETE)
   @ResponseMessage('Complete sprint successfully')
@@ -165,6 +169,7 @@ export class SprintsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/cancel')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_CANCEL)
   async cancelSprint(
@@ -182,6 +187,7 @@ export class SprintsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/sprint/:sprintId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_UPDATE)
   async updateSprint(
