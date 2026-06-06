@@ -56,6 +56,8 @@ export class AdminWorkspaceItemResponseDto {
   slug: string;
 
   plan: PlanTypeWorkspace;
+  planName: string;
+  planSlug: string;
   status: AdminWorkspaceStatus;
 
   createdAt: Date;
@@ -69,6 +71,14 @@ export class AdminWorkspaceItemResponseDto {
   projectsCount: number;
   boardsCount: number;
   tasksCount: number;
+}
+
+export class PaginatedAdminWorkspaceResponseDto {
+  data: AdminWorkspaceItemResponseDto[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 export class AdminWorkspaceOverviewResponseDto {

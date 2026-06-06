@@ -8,4 +8,6 @@ export type AdminFindAllWorkspaceFilter = {
   createdFrom?: string;
   createdTo?: string;
   createdAt?: string;
+  page?: number;
+  pageSize?: number;
 };

@@ -16,6 +16,8 @@ import {
   VnpayVerifyResult,
 } from '../types/payment-input.interface';
 
+const VNPAY_SUCCESS_CODE = '00';
+
 @Injectable()
 export class VnpayPaymentProviderImpl implements VnpayPaymentProvider {
   constructor(
@@ -55,14 +57,22 @@ export class VnpayPaymentProviderImpl implements VnpayPaymentProvider {
     };
   }
 
-  verifyReturnUrl(query: ReturnQueryFromVNPay): Promise<VnpayVerifyResult> {
-    return this.vnpayService.verifyReturnUrl(
+  async verifyReturnUrl(
+    query: ReturnQueryFromVNPay,
+  ): Promise<VnpayVerifyResult> {
+    const result = (await this.vnpayService.verifyReturnUrl(
       query,
-    ) as Promise<VnpayVerifyResult>;
+    )) as VnpayVerifyResult;
+
+    return this.normalizeVerifyResult(result);
   }
 
-  verifyIpn(query: ReturnQueryFromVNPay): Promise<VnpayVerifyResult> {
-    return this.vnpayService.verifyIpnCall(query) as Promise<VnpayVerifyResult>;
+  async verifyIpn(query: ReturnQueryFromVNPay): Promise<VnpayVerifyResult> {
+    const result = (await this.vnpayService.verifyIpnCall(
+      query,
+    )) as VnpayVerifyResult;
+
+    return this.normalizeVerifyResult(result);
   }
 
   private normalizeOrderInfo(value: string): string {
@@ -73,5 +83,24 @@ export class VnpayPaymentProviderImpl implements VnpayPaymentProvider {
       .replace(/Đ/g, 'D')
       .replace(/[^\w\s.-]/g, '')
       .trim();
+  }
+
+  private normalizeVerifyResult(result: VnpayVerifyResult): VnpayVerifyResult {
+    return {
+      ...result,
+      isSuccess:
+        this.normalizeVnpayCode(result.vnp_ResponseCode) ===
+          VNPAY_SUCCESS_CODE &&
+        this.normalizeVnpayCode(result.vnp_TransactionStatus) ===
+          VNPAY_SUCCESS_CODE,
+    };
+  }
+
+  private normalizeVnpayCode(value?: string | number): string | null {
+    if (value === undefined || value === null) {
+      return null;
+    }
+
+    return value.toString().padStart(2, '0');
   }
 }

@@ -8,6 +8,8 @@ type AdminWorkspaceRaw = {
   name: string;
   slug: string;
   plan: WorkspaceModel['planType'];
+  planName?: string | null;
+  planSlug?: string | null;
   status?: 'ACTIVE' | 'DELETED';
   createdAt: Date;
   updatedAt: Date;
@@ -82,6 +84,8 @@ export class WorkspaceMapper {
       name: raw.name,
       slug: raw.slug,
       plan: raw.plan,
+      planName: raw.planName ?? raw.plan,
+      planSlug: raw.planSlug ?? raw.plan,
       status: raw.status ?? (raw.deletedAt ? 'DELETED' : 'ACTIVE'),
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,

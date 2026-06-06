@@ -64,6 +64,9 @@ export class AdminUserOverviewRepositoryImpl implements AdminUserOverviewReposit
       .createQueryBuilder('u')
       .select('COUNT("u"."id")', 'count')
       .where('"u"."deleted_at" IS NULL')
+      .andWhere('"u"."system_role" <> :superAdminRole', {
+        superAdminRole: SystemRole.SUPER_ADMIN,
+      })
       .getRawOne<CountRaw>();
 
     return Number(raw?.count ?? 0);
@@ -75,6 +78,9 @@ export class AdminUserOverviewRepositoryImpl implements AdminUserOverviewReposit
       .select('COUNT("u"."id")', 'count')
       .where('"u"."is_active" = true')
       .andWhere('"u"."deleted_at" IS NULL')
+      .andWhere('"u"."system_role" <> :superAdminRole', {
+        superAdminRole: SystemRole.SUPER_ADMIN,
+      })
       .getRawOne<CountRaw>();
 
     return Number(raw?.count ?? 0);
@@ -86,6 +92,9 @@ export class AdminUserOverviewRepositoryImpl implements AdminUserOverviewReposit
       .select('COUNT("u"."id")', 'count')
       .where('"u"."is_active" = false')
       .andWhere('"u"."deleted_at" IS NULL')
+      .andWhere('"u"."system_role" <> :superAdminRole', {
+        superAdminRole: SystemRole.SUPER_ADMIN,
+      })
       .getRawOne<CountRaw>();
 
     return Number(raw?.count ?? 0);
@@ -95,8 +104,8 @@ export class AdminUserOverviewRepositoryImpl implements AdminUserOverviewReposit
     const raw = await this.userRepository
       .createQueryBuilder('u')
       .select('COUNT("u"."id")', 'count')
-      .where('"u"."system_role" IN (:...roles)', {
-        roles: [SystemRole.SYSTEM_ADMIN, SystemRole.SUPER_ADMIN],
+      .where('"u"."system_role" = :systemAdminRole', {
+        systemAdminRole: SystemRole.SYSTEM_ADMIN,
       })
       .andWhere('"u"."deleted_at" IS NULL')
       .getRawOne<CountRaw>();
@@ -110,6 +119,9 @@ export class AdminUserOverviewRepositoryImpl implements AdminUserOverviewReposit
       .select('COUNT("u"."id")', 'count')
       .where('"u"."created_at" >= :sevenDaysAgo', { sevenDaysAgo })
       .andWhere('"u"."deleted_at" IS NULL')
+      .andWhere('"u"."system_role" <> :superAdminRole', {
+        superAdminRole: SystemRole.SUPER_ADMIN,
+      })
       .getRawOne<CountRaw>();
 
     return Number(raw?.count ?? 0);
@@ -118,8 +130,13 @@ export class AdminUserOverviewRepositoryImpl implements AdminUserOverviewReposit
   private async countActiveToday(startOfToday: Date): Promise<number> {
     const raw = await this.userActivityRepository
       .createQueryBuilder('activity')
+      .innerJoin(User, 'u', '"u"."id" = "activity"."user_id"')
       .select('COUNT(DISTINCT "activity"."user_id")', 'count')
       .where('"activity"."created_at" >= :startOfToday', { startOfToday })
+      .andWhere('"u"."deleted_at" IS NULL')
+      .andWhere('"u"."system_role" <> :superAdminRole', {
+        superAdminRole: SystemRole.SUPER_ADMIN,
+      })
       .getRawOne<CountRaw>();
 
     return Number(raw?.count ?? 0);

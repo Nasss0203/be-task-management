@@ -19,6 +19,7 @@ import { Subscription } from './domain/entities/subscription.entity';
 import { UsageLimit } from './domain/entities/usage-limit.entity';
 import { BILLING_TYPES } from './interfaces/types';
 import { VnpayPaymentProviderImpl } from './providers/vnpay-payment.provider';
+import { AdminBillingController } from './controller/admin-billing.controller';
 import { PlanRepositoryImpl } from './repositories/plan/plan.repository';
 import { PaymentRepositoryImpl } from './repositories/payment/payment.repository';
 import { BillingQueryRepositoryImpl } from './repositories/query/billing-query.repository';
@@ -62,6 +63,7 @@ import { UsageLimitEnforcerServiceImpl } from './services/usage-limit/usage-limi
   ],
 
   controllers: [
+    AdminBillingController,
     BillingController,
     PlanController,
     BillingTestVnpayController,
