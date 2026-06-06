@@ -15,6 +15,7 @@ import { PERMISSIONS } from 'src/modules/permission/constants/permission.constan
 import { type IAuth } from 'src/types/auth';
 import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
 import { WorkspaceOverviewResponseDto } from '../dto/response/workspace-overview.response.dto';
+import { UpdateWorkspaceDto } from '../dto/update-workspace.dto';
 import { UpdateWorkspaceLayoutModeDto } from '../dto/update-workspace-layout-mode.dto';
 import { type AccessWorkspaceApplication } from '../interfaces/applications/access-workspace.application.interface';
 import type { CreateWorkspaceTemplateDto } from '../interfaces/applications/create-workspace-template.application.interface';
@@ -22,6 +23,7 @@ import { type CreateWorkspaceTemplateApplication } from '../interfaces/applicati
 import { type CreateWorkspaceApplication } from '../interfaces/applications/create-workspace.application.interface';
 import { type FindWorkspaceOverviewApplication } from '../interfaces/applications/find-workspace-overview.application.interface';
 import { type FindWorkspaceApplication } from '../interfaces/applications/find.workspace.application.interface';
+import { type UpdateWorkspaceApplication } from '../interfaces/applications/update-workspace.application.interface';
 import { type UpdateWorkspaceLayoutModeApplication } from '../interfaces/applications/update-workspace-layout-mode.application.interface';
 import { type WorkspaceTrashApplication } from '../interfaces/applications/workspace-trash.application.interface';
 import { WORKSPACE_TYPES } from '../interfaces/types';
@@ -46,6 +48,9 @@ export class WorkspacesController {
 
     @Inject(WORKSPACE_TYPES.applications.FindWorkspaceOverviewApplication)
     private readonly findWorkspaceOverviewApplication: FindWorkspaceOverviewApplication,
+
+    @Inject(WORKSPACE_TYPES.applications.UpdateWorkspaceApplication)
+    private readonly updateWorkspaceApplication: UpdateWorkspaceApplication,
 
     @Inject(WORKSPACE_TYPES.applications.UpdateWorkspaceLayoutModeApplication)
     private readonly updateWorkspaceLayoutModeApplication: UpdateWorkspaceLayoutModeApplication,
@@ -136,6 +141,21 @@ export class WorkspacesController {
     @Auth() auth: IAuth,
   ) {
     return this.updateWorkspaceLayoutModeApplication.updateLayoutMode({
+      userId: auth.id,
+      workspaceId,
+      dto,
+    });
+  }
+
+  @Patch(':workspaceId')
+  @RequirePermissions(PERMISSIONS.WORKSPACE_UPDATE)
+  @ResponseMessage('Workspace updated')
+  updateWorkspace(
+    @Param('workspaceId') workspaceId: string,
+    @Body() dto: UpdateWorkspaceDto,
+    @Auth() auth: IAuth,
+  ) {
+    return this.updateWorkspaceApplication.update({
       userId: auth.id,
       workspaceId,
       dto,
