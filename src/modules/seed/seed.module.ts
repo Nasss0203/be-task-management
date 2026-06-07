@@ -6,10 +6,12 @@ import { PlanFeature } from '../plan_features/domain/entities/plan_feature.entit
 import { RolePermission } from '../role_permission/domain/entities/role_permission.entity';
 import { Permission } from '../permission/domain/entities/permission.entity';
 import { Role } from '../role/domain/entities/role.entity';
+import { User } from '../users/domain/entities/user.entity';
 import { Workspace } from '../workspaces/domain/entities/workspace.entity';
 import { BillingPlanSeedService } from './billing-plan.seed.service';
 import { FeatureSeedService } from './feature.seed.service';
 import { RbacSeedService } from './rbac.seed.service';
+import { SuperAdminSeedService } from './super-admin.seed.service';
 
 @Module({
   imports: [
@@ -20,10 +22,21 @@ import { RbacSeedService } from './rbac.seed.service';
       PlanFeature,
       Role,
       RolePermission,
+      User,
       Workspace,
     ]),
   ],
-  providers: [RbacSeedService, BillingPlanSeedService, FeatureSeedService],
-  exports: [RbacSeedService, BillingPlanSeedService, FeatureSeedService],
+  providers: [
+    RbacSeedService,
+    BillingPlanSeedService,
+    FeatureSeedService,
+    SuperAdminSeedService,
+  ],
+  exports: [
+    RbacSeedService,
+    BillingPlanSeedService,
+    FeatureSeedService,
+    SuperAdminSeedService,
+  ],
 })
 export class SeedsModule {}
