@@ -37,12 +37,10 @@ export class FindPageServiceImpl implements FindPageService {
     );
   }
   async findPageByWorkspaceId(
-    userId: string,
     workspaceId: string,
     manager?: EntityManager,
   ): Promise<PageModel> {
     const pages = await this.findPageRepository.findPageByWorkspaceId(
-      userId,
       workspaceId,
       manager,
     );

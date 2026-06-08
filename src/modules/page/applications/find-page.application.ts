@@ -18,13 +18,9 @@ export class FindPageApplicationImpl implements FindPageApplication {
   }
 
   async findPageByWorkspaceId(
-    userId: string,
     workspaceId: string,
   ): Promise<PageResponseDto | null> {
-    const pages = await this.findPageService.findPageByWorkspaceId(
-      userId,
-      workspaceId,
-    );
+    const pages = await this.findPageService.findPageByWorkspaceId(workspaceId);
 
     return PageMapper.toResponse(pages);
   }

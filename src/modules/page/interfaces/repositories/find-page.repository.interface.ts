@@ -12,7 +12,6 @@ export interface FindPageRepository {
   findPageById(pageId: string, manager?: EntityManager): Promise<PageModel>;
 
   findPageByWorkspaceId(
-    userId: string,
     workspaceId: string,
     manager?: EntityManager,
   ): Promise<PageModel>;

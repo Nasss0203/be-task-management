@@ -250,7 +250,6 @@ export class CreateProjectServiceImpl implements CreateProjectService {
       }
 
       const page = await this.findPageService.findPageByWorkspaceId(
-        userId,
         workspaceId,
         manager,
       );
