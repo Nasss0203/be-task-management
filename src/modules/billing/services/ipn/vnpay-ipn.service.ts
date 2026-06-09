@@ -4,6 +4,7 @@ import {
   IpnInvalidAmount,
   IpnOrderNotFound,
   IpnSuccess,
+  IpnUnknownError,
   type ReturnQueryFromVNPay,
 } from 'vnpay';
 
@@ -66,6 +67,10 @@ export class VnpayIpnService {
       return IpnOrderNotFound;
     }
 
+    if (result.code === 'INVALID_AMOUNT') {
+      return IpnInvalidAmount;
+    }
+
     if (result.completed) {
       return IpnSuccess;
     }
@@ -73,9 +78,7 @@ export class VnpayIpnService {
     return IpnUnknownError;
   }
 
-  private async processVerifiedPayment(
-    verify: VnpayVerifyResult,
-  ): Promise<{
+  private async processVerifiedPayment(verify: VnpayVerifyResult): Promise<{
     code:
       | 'FAIL_CHECKSUM'
       | 'ORDER_NOT_FOUND'
@@ -122,7 +125,11 @@ export class VnpayIpnService {
     }
 
     if (payment.status !== PaymentStatus.PENDING) {
-      return IpnSuccess;
+      return {
+        code: 'ALREADY_SUCCEEDED',
+        completed: true,
+        paymentStatus: payment.status,
+      };
     }
 
     const metadata = this.toMetadata(verify);
@@ -142,13 +149,9 @@ export class VnpayIpnService {
       };
     }
 
-    if (!verify.isSuccess) {
+    if (!this.isSuccessfulVnpayPayment(verify)) {
       const failedReason = verify.message ?? 'VNPAY payment failed';
 
-      return IpnInvalidAmount;
-    }
-
-    if (!this.isSuccessfulVnpayPayment(verify)) {
       await this.paymentRepository.markPaymentStatusFailed({
         paymentId: payment.id,
         failedReason,
@@ -161,7 +164,6 @@ export class VnpayIpnService {
         paymentStatus: PaymentStatus.FAILED,
         failureReason: failedReason,
       };
-      return IpnSuccess;
     }
 
     const succeededPayment = await this.paymentRepository.markPaymentSucceeded({

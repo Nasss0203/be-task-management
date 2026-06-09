@@ -235,6 +235,14 @@ This catalog is generated from the NestJS controller source in `src/app.controll
 | GET | `/api/v1/billing/plans` | `PlanController.getPlans` | none | JWT | none | Wrapped billing plan list | `Plan`, `PlanFeature`, `Feature` |
 | GET | `/api/v1/billing/plans/:planId` | `PlanController.getPlanById` | Params: `planId` | JWT | none | Wrapped billing plan | `Plan`, `PlanFeature`, `Feature` |
 | GET | `/api/v1/workspaces/:workspaceId/usage-limits` | `WorkspaceUsageLimitsController.getWorkspaceUsageLimits` | Params: `workspaceId` | JWT, `PermissionGuard` | `WORKSPACE_USAGE_READ` | Wrapped workspace usage limits | `UsageLimit`, `Workspace`, `Subscription` |
+| GET | `/api/v1/admin/billing/plans` | `AdminBillingController.getPlans` | none | JWT, `SystemRoleGuard` | System roles: `SYSTEM_ADMIN`, `SUPER_ADMIN` | Wrapped admin billing plan list | `Plan`, `Subscription` |
+| POST | `/api/v1/admin/billing/plans` | `AdminBillingController.createPlan` | Body: `AdminCreatePlanDto` | JWT, `SystemRoleGuard` | System roles: `SYSTEM_ADMIN`, `SUPER_ADMIN` | Wrapped admin billing plan | `Plan` |
+| PATCH | `/api/v1/admin/billing/plans/:planId` | `AdminBillingController.updatePlan` | Body: `AdminUpdatePlanDto`; Params: `planId` | JWT, `SystemRoleGuard` | System roles: `SYSTEM_ADMIN`, `SUPER_ADMIN` | Wrapped admin billing plan | `Plan` |
+| PATCH | `/api/v1/admin/billing/plans/:planId/status` | `AdminBillingController.updatePlanStatus` | Body: `AdminUpdatePlanStatusDto`; Params: `planId` | JWT, `SystemRoleGuard` | System roles: `SYSTEM_ADMIN`, `SUPER_ADMIN` | Wrapped admin billing plan | `Plan` |
+| GET | `/api/v1/admin/billing/subscriptions` | `AdminBillingController.getSubscriptions` | none | JWT, `SystemRoleGuard` | System roles: `SYSTEM_ADMIN`, `SUPER_ADMIN` | Wrapped admin subscription list | `Subscription`, `SubscriptionWorkspace`, `Workspace`, `Plan`, `User` |
+| POST | `/api/v1/admin/billing/subscriptions/grant` | `AdminBillingController.grantSubscription` | Body: `GrantAdminSubscriptionDto` | JWT, `SystemRoleGuard` | System roles: `SYSTEM_ADMIN`, `SUPER_ADMIN` | Wrapped `{ workspaceId, subscriptionId, planId, ownerId, currentPeriodStart, currentPeriodEnd }` | `Workspace`, `Role`, `UserRole`, `Plan`, `Subscription`, `SubscriptionWorkspace`, `UsageLimit` |
+| POST | `/api/v1/admin/billing/subscriptions/revoke` | `AdminBillingController.revokeSubscription` | Body: `RevokeAdminSubscriptionDto` | JWT, `SystemRoleGuard` | System roles: `SYSTEM_ADMIN`, `SUPER_ADMIN` | Wrapped `{ workspaceId, revoked, subscriptionId }` | `Workspace`, `SubscriptionWorkspace`, `UsageLimit`, `Plan` |
+| GET | `/api/v1/admin/billing/payments` | `AdminBillingController.getPayments` | none | JWT, `SystemRoleGuard` | System roles: `SYSTEM_ADMIN`, `SUPER_ADMIN` | Wrapped admin payment list | `Payment`, `Plan`, `Subscription`, `Workspace`, `User` |
 
 ### VNPay Test
 

@@ -6,6 +6,8 @@ import { ignoreLogger } from 'vnpay';
 
 import { UserWorkspace } from '../user_workspace/domain/entities/user_workspace.entity';
 import { Project } from '../projects/domain/entities/project.entity';
+import { Role } from '../role/domain/entities/role.entity';
+import { UserRole } from '../user_roles/domain/entities/user_role.entity';
 import { BillingQueryApplicationImpl } from './applications/billing-query.application';
 import { CreateBillingApplicationImpl } from './applications/create-billing.application';
 import { BillingTestVnpayController } from './controller/billing-test-payment.controller';
@@ -32,6 +34,8 @@ import { CreateBillingServiceImpl } from './services/payment/create-payment.serv
 import { Workspace } from '../workspaces/domain/entities/workspace.entity';
 import { BillingQueryServiceImpl } from './services/query/billing-query.service';
 import { UsageLimitEnforcerServiceImpl } from './services/usage-limit/usage-limit-enforcer.service';
+import { AdminBillingPlanService } from './services/admin/admin-billing-plan.service';
+import { AdminSubscriptionGrantService } from './services/admin/admin-subscription-grant.service';
 
 @Module({
   imports: [
@@ -44,6 +48,8 @@ import { UsageLimitEnforcerServiceImpl } from './services/usage-limit/usage-limi
       SubscriptionWorkspace,
       UsageLimit,
       UserWorkspace,
+      UserRole,
+      Role,
       Workspace,
       Project,
     ]),
@@ -123,6 +129,8 @@ import { UsageLimitEnforcerServiceImpl } from './services/usage-limit/usage-limi
       provide: BILLING_TYPES.services.CompletePaymentService,
       useClass: CompletePaymentServiceImpl,
     },
+    AdminBillingPlanService,
+    AdminSubscriptionGrantService,
     VnpayIpnService,
   ],
 

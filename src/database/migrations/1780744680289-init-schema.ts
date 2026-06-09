@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitSchema1780310928123 implements MigrationInterface {
-    name = 'InitSchema1780310928123'
+export class InitSchema1780744680289 implements MigrationInterface {
+    name = 'InitSchema1780744680289'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TABLE "features" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "code" character varying(100) NOT NULL, "name" character varying(150) NOT NULL, "description" text, "category" character varying(80), "is_active" boolean NOT NULL DEFAULT true, "metadata" jsonb, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "PK_5c1e336df2f4a7051e5bf08a941" PRIMARY KEY ("id"))`);
@@ -17,6 +17,22 @@ export class InitSchema1780310928123 implements MigrationInterface {
         await queryRunner.query(`CREATE INDEX "IDX_d05d2a5f46cd5768f2e63fd482" ON "workspace_feature_settings" ("feature_id") `);
         await queryRunner.query(`CREATE INDEX "IDX_e7d3027d64c7c874528d5080e2" ON "workspace_feature_settings" ("workspace_id") `);
         await queryRunner.query(`CREATE UNIQUE INDEX "IDX_fe583d649a496665715c2a0c24" ON "workspace_feature_settings" ("workspace_id", "feature_id") `);
+        await queryRunner.query(`CREATE TYPE "public"."workspaces_layout_mode_enum" AS ENUM('tabs', 'blocks')`);
+        await queryRunner.query(`ALTER TABLE "workspaces" ADD "layout_mode" "public"."workspaces_layout_mode_enum" NOT NULL DEFAULT 'tabs'`);
+        await queryRunner.query(`ALTER TABLE "pages" ADD "icon" character varying(255)`);
+        await queryRunner.query(`ALTER TABLE "pages" ADD "cover_url" text`);
+        await queryRunner.query(`DROP INDEX "public"."UQ_role_workspace_name"`);
+        await queryRunner.query(`ALTER TYPE "public"."roles_name_enum" RENAME TO "roles_name_enum_old"`);
+        await queryRunner.query(`CREATE TYPE "public"."roles_name_enum" AS ENUM('OWNER', 'ADMIN', 'MEMBER', 'VIEWER')`);
+        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "name" TYPE "public"."roles_name_enum" USING "name"::"text"::"public"."roles_name_enum"`);
+        await queryRunner.query(`DROP TYPE "public"."roles_name_enum_old"`);
+        await queryRunner.query(`ALTER TYPE "public"."workspace_invites_role_name_enum" RENAME TO "workspace_invites_role_name_enum_old"`);
+        await queryRunner.query(`CREATE TYPE "public"."workspace_invites_role_name_enum" AS ENUM('OWNER', 'ADMIN', 'MEMBER', 'VIEWER')`);
+        await queryRunner.query(`ALTER TABLE "workspace_invites" ALTER COLUMN "role_name" DROP DEFAULT`);
+        await queryRunner.query(`ALTER TABLE "workspace_invites" ALTER COLUMN "role_name" TYPE "public"."workspace_invites_role_name_enum" USING "role_name"::"text"::"public"."workspace_invites_role_name_enum"`);
+        await queryRunner.query(`ALTER TABLE "workspace_invites" ALTER COLUMN "role_name" SET DEFAULT 'MEMBER'`);
+        await queryRunner.query(`DROP TYPE "public"."workspace_invites_role_name_enum_old"`);
+        await queryRunner.query(`CREATE UNIQUE INDEX "UQ_role_workspace_name" ON "roles" ("workspace_id", "name") `);
         await queryRunner.query(`ALTER TABLE "plan_features" ADD CONSTRAINT "FK_b51952483b18fa15334d714a838" FOREIGN KEY ("plan_id") REFERENCES "plans"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "plan_features" ADD CONSTRAINT "FK_27e866bdf4c6f2cf5854b7d0e57" FOREIGN KEY ("feature_id") REFERENCES "features"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "workspace_feature_settings" ADD CONSTRAINT "FK_e7d3027d64c7c874528d5080e28" FOREIGN KEY ("workspace_id") REFERENCES "workspaces"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
@@ -32,6 +48,22 @@ export class InitSchema1780310928123 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "workspace_feature_settings" DROP CONSTRAINT "FK_e7d3027d64c7c874528d5080e28"`);
         await queryRunner.query(`ALTER TABLE "plan_features" DROP CONSTRAINT "FK_27e866bdf4c6f2cf5854b7d0e57"`);
         await queryRunner.query(`ALTER TABLE "plan_features" DROP CONSTRAINT "FK_b51952483b18fa15334d714a838"`);
+        await queryRunner.query(`DROP INDEX "public"."UQ_role_workspace_name"`);
+        await queryRunner.query(`CREATE TYPE "public"."workspace_invites_role_name_enum_old" AS ENUM('OWNER', 'MEMBER', 'ADMIN')`);
+        await queryRunner.query(`ALTER TABLE "workspace_invites" ALTER COLUMN "role_name" DROP DEFAULT`);
+        await queryRunner.query(`ALTER TABLE "workspace_invites" ALTER COLUMN "role_name" TYPE "public"."workspace_invites_role_name_enum_old" USING "role_name"::"text"::"public"."workspace_invites_role_name_enum_old"`);
+        await queryRunner.query(`ALTER TABLE "workspace_invites" ALTER COLUMN "role_name" SET DEFAULT 'MEMBER'`);
+        await queryRunner.query(`DROP TYPE "public"."workspace_invites_role_name_enum"`);
+        await queryRunner.query(`ALTER TYPE "public"."workspace_invites_role_name_enum_old" RENAME TO "workspace_invites_role_name_enum"`);
+        await queryRunner.query(`CREATE TYPE "public"."roles_name_enum_old" AS ENUM('OWNER', 'MEMBER', 'ADMIN')`);
+        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "name" TYPE "public"."roles_name_enum_old" USING "name"::"text"::"public"."roles_name_enum_old"`);
+        await queryRunner.query(`DROP TYPE "public"."roles_name_enum"`);
+        await queryRunner.query(`ALTER TYPE "public"."roles_name_enum_old" RENAME TO "roles_name_enum"`);
+        await queryRunner.query(`CREATE UNIQUE INDEX "UQ_role_workspace_name" ON "roles" ("name", "workspace_id") `);
+        await queryRunner.query(`ALTER TABLE "pages" DROP COLUMN "cover_url"`);
+        await queryRunner.query(`ALTER TABLE "pages" DROP COLUMN "icon"`);
+        await queryRunner.query(`ALTER TABLE "workspaces" DROP COLUMN "layout_mode"`);
+        await queryRunner.query(`DROP TYPE "public"."workspaces_layout_mode_enum"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_fe583d649a496665715c2a0c24"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_e7d3027d64c7c874528d5080e2"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_d05d2a5f46cd5768f2e63fd482"`);
