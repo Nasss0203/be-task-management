@@ -13,6 +13,7 @@ import {
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
 import { BoardsService } from '../boards.service';
@@ -58,6 +59,8 @@ export class BoardsController {
   }
 
   @Get(':id')
+  @WorkspaceContext({ source: 'resource', type: 'board', key: 'id' })
+  @RequirePermissions(PERMISSIONS.BOARD_READ)
   @ResponseMessage('Find board by id')
   async findById(@Param('id') id: string): Promise<BoardResponseDto> {
     return this.app.findById(id);

@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { ActivityModule } from '../activity/activity.module';
+import { PermissionModule } from '../permission/permission.module';
 import { SprintsModule } from '../sprints/sprints.module';
 import { TaskAssigneeModule } from '../task_assignee/task_assignee.module';
 import { TaskCommnentModule } from '../task_commnent/task_commnent.module';
@@ -44,6 +45,7 @@ import { UpdateTaskServiceImpl } from './services/update-task.service';
     TypeOrmModule.forFeature([Task]),
     TaskStatusModule,
     TaskPriorityModule,
+    PermissionModule,
     UserWorkspacesModule,
     ActivityModule,
     forwardRef(() => SprintsModule),

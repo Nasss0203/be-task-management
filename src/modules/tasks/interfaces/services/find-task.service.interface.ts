@@ -23,6 +23,8 @@ export interface FindTaskService {
     manager?: EntityManager,
   ): Promise<TaskModel | null>;
 
+  findByIds(taskIds: string[], manager?: EntityManager): Promise<TaskModel[]>;
+
   findDeletedTasks(
     workspaceId: string,
     projectId?: string,

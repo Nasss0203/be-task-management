@@ -4,7 +4,7 @@ import { Activity } from '../activity/domain/entities/activity.entity';
 import { Task } from '../tasks/domain/entities/task.entity';
 import { UserWorkspace } from '../user_workspace/domain/entities/user_workspace.entity';
 import { GetMyDashboardApplicationImpl } from './applications/get-my-dashboard.application';
-import { DashboardController } from './dashboard.controller';
+import { DashboardController } from './controller/dashboard.controller';
 import { DASHBOARD_TYPES } from './interfaces/types';
 import { DashboardRepositoryImpl } from './repositories/dashboard.repository';
 import { DashboardActivityServiceImpl } from './services/dashboard-activity.service';

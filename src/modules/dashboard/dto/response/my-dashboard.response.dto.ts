@@ -10,7 +10,7 @@ export class DashboardFocusResponseDto {
   message: string;
   deepWorkMinutes: number;
   reviewTaskCount: number;
-  momentumPercent: number;
+  momentumPercent: number | null;
   dayProgressPercent: number;
   completedThisWeek: number;
   targetThisWeek: number;
@@ -48,7 +48,7 @@ export class DashboardTaskResponseDto {
   dueAt: Date | null;
   startAt: Date | null;
   estimateMinutes: number | null;
-  progressPercent: number;
+  progressPercent: number | null;
 }
 
 export class DashboardDeadlineResponseDto extends DashboardTaskResponseDto {

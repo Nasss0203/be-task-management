@@ -89,6 +89,34 @@ export class RbacSeedService {
         const role = roleMap.get(roleName);
         if (!role) continue;
 
+        const desiredPermissionIds = new Set<string>();
+
+        for (const permissionCode of permissionCodes) {
+          const permission = permissionMap.get(permissionCode);
+          if (!permission) {
+            this.logger.warn(`Permission missing: ${permissionCode}`);
+            continue;
+          }
+
+          desiredPermissionIds.add(permission.id);
+        }
+
+        const existingRolePermissions =
+          await this.rolePermissionRepository.find({
+            where: { role_id: role.id },
+          });
+
+        for (const rolePermission of existingRolePermissions) {
+          if (desiredPermissionIds.has(rolePermission.permission_id)) {
+            continue;
+          }
+
+          await this.rolePermissionRepository.delete({
+            role_id: role.id,
+            permission_id: rolePermission.permission_id,
+          });
+        }
+
         for (const permissionCode of permissionCodes) {
           const permission = permissionMap.get(permissionCode);
           if (!permission) {

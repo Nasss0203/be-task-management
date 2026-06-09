@@ -279,6 +279,12 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
       where: {
         id: In(taskIds),
       },
+      relations: {
+        assignees: {
+          user: true,
+          assignedByUser: true,
+        },
+      },
     });
 
     return tasks.map(TaskMapper.toModel);

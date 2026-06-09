@@ -77,46 +77,36 @@ export class DashboardTasksServiceImpl implements DashboardTasksService {
       dueAt: row.dueAt,
       startAt: row.startAt,
       estimateMinutes: row.estimateMinutes,
-      progressPercent: this.getProgressPercent(row),
+      progressPercent: this.getProgressPercent(),
     };
   }
 
-  private getProgressPercent(row: DashboardTaskRow): number {
-    if (row.statusIsDone) return 100;
-
-    const statusName = row.statusName?.toLowerCase() ?? '';
-
-    if (statusName.includes('review')) return 80;
-    if (statusName.includes('đang') || statusName.includes('doing')) return 65;
-    if (statusName.includes('progress')) return 65;
-    if (statusName.includes('chưa') || statusName.includes('todo')) return 20;
-    if (statusName.includes('backlog')) return 12;
-
-    return 50;
+  private getProgressPercent(): number | null {
+    return null;
   }
 
   private getRemainingLabel(dueAt: Date | null, now: Date): string {
-    if (!dueAt) return 'Chưa có hạn';
+    if (!dueAt) return 'ChÆ°a cÃ³ háº¡n';
 
     const diffMs = dueAt.getTime() - now.getTime();
-    if (diffMs < 0) return 'Quá hạn';
+    if (diffMs < 0) return 'QuÃ¡ háº¡n';
 
     const hours = Math.ceil(diffMs / (1000 * 60 * 60));
-    if (hours <= 24) return `Còn ${hours} giờ`;
+    if (hours <= 24) return `CÃ²n ${hours} giá»`;
 
     const days = Math.ceil(hours / 24);
-    if (days === 1) return 'Ngày mai';
+    if (days === 1) return 'NgÃ y mai';
 
-    return `Còn ${days} ngày`;
+    return `CÃ²n ${days} ngÃ y`;
   }
 
   private buildTaskSubtitle(task: DashboardTaskResponseDto): string {
     if (task.dueAt) {
-      return `${task.projectName} / hạn ${this.formatTime(task.dueAt)}`;
+      return `${task.projectName} / háº¡n ${this.formatTime(task.dueAt)}`;
     }
 
     if (task.priorityName) {
-      return `${task.projectName} / ưu tiên ${task.priorityName}`;
+      return `${task.projectName} / Æ°u tiÃªn ${task.priorityName}`;
     }
 
     return `${task.workspaceName} / ${task.projectName}`;

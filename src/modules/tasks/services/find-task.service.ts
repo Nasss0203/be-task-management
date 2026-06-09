@@ -39,6 +39,11 @@ export class FindTaskServiceImpl implements FindTaskService {
   ): Promise<TaskModel | null> {
     return await this.findTaskRepository.findOneTask(taskId, manager);
   }
+
+  findByIds(taskIds: string[], manager?: EntityManager): Promise<TaskModel[]> {
+    return this.findTaskRepository.findByIds(taskIds, manager);
+  }
+
   findDeletedTasks(
     workspaceId: string,
     projectId: string,

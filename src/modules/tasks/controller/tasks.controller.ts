@@ -230,10 +230,12 @@ export class TasksController {
     @Param('workspaceId') workspaceId: string,
     @Param('projectId') projectId: string,
     @Body() dto: UpdateManyTasksDto,
+    @Auth() auth: IAuth,
   ) {
     return await this.updateTaskApplication.updateManyTasks({
       workspaceId,
       projectId,
+      actorId: auth.id,
       dto,
     });
   }

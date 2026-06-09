@@ -1,8 +1,5 @@
-import {
-  PERMISSIONS,
-  PermissionCode,
-} from 'src/modules/permission/constants/permission.constant';
-import { RoleName } from 'src/modules/role/domain/entities/role.entity';
+import { PERMISSIONS, PermissionCode } from './permission.constant';
+import { RoleName } from '../../role/domain/entities/role.entity';
 
 export const ROLE_PERMISSION_MAP: Record<RoleName, PermissionCode[]> = {
   [RoleName.OWNER]: Object.values(PERMISSIONS),
@@ -10,6 +7,7 @@ export const ROLE_PERMISSION_MAP: Record<RoleName, PermissionCode[]> = {
   [RoleName.ADMIN]: [
     PERMISSIONS.WORKSPACE_READ,
     PERMISSIONS.WORKSPACE_UPDATE,
+    PERMISSIONS.WORKSPACE_BILLING_READ, // Admin cần xem subscription plan đang dùng
     PERMISSIONS.WORKSPACE_USAGE_READ,
     PERMISSIONS.WORKSPACE_FEATURE_READ,
     PERMISSIONS.WORKSPACE_FEATURE_UPDATE,
@@ -69,6 +67,7 @@ export const ROLE_PERMISSION_MAP: Record<RoleName, PermissionCode[]> = {
     PERMISSIONS.ATTACHMENT_DELETE,
 
     PERMISSIONS.ACTIVITY_READ,
+    PERMISSIONS.AUDIT_LOG_READ, // Admin cần xem audit log để quản lý workspace
   ],
 
   [RoleName.MEMBER]: [
@@ -88,13 +87,15 @@ export const ROLE_PERMISSION_MAP: Record<RoleName, PermissionCode[]> = {
     PERMISSIONS.TASK_COMMENT_CREATE,
     PERMISSIONS.TASK_COMMENT_READ,
     PERMISSIONS.TASK_COMMENT_UPDATE,
+    PERMISSIONS.TASK_COMMENT_DELETE, // Member có thể xóa comment của chính mình (kiểm tra ownership tại service layer)
 
     PERMISSIONS.SPRINT_READ,
 
     PERMISSIONS.PAGE_READ,
     PERMISSIONS.PAGE_BLOCK_CREATE,
     PERMISSIONS.PAGE_BLOCK_READ,
-    PERMISSIONS.PAGE_BLOCK_UPDATE,
+    PERMISSIONS.PAGE_BLOCK_UPDATE, // Member có thể sửa block mình tạo
+    PERMISSIONS.PAGE_BLOCK_DELETE, // Member có thể xóa block mình tạo
 
     PERMISSIONS.TASK_STATUS_READ,
     PERMISSIONS.TASK_PRIORITY_READ,

@@ -1,6 +1,9 @@
 import { Body, Controller, Delete, Inject, Param, Post } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
 import { CreateTaskAssigneeDto } from '../dto/create-task_assignee.dto';
 import { type CreateTaskAssigneeApplication } from '../interfaces/applications/create.task_assignee.application.interface';
@@ -18,6 +21,8 @@ export class TaskAssigneeController {
   ) {}
 
   @Post()
+  @WorkspaceContext({ source: 'resource', type: 'task', key: 'taskId' })
+  @RequirePermissions(PERMISSIONS.TASK_ASSIGNEE_ADD)
   @ResponseMessage('Assign Task')
   async assignTask(@Body() dto: CreateTaskAssigneeDto, @Auth() auth: IAuth) {
     return await this.createTaskAssigneeApplication.assign({
@@ -28,6 +33,8 @@ export class TaskAssigneeController {
   }
 
   @Delete('task/:taskId/user/:userId')
+  @WorkspaceContext({ source: 'resource', type: 'task', key: 'taskId' })
+  @RequirePermissions(PERMISSIONS.TASK_ASSIGNEE_REMOVE)
   @ResponseMessage('Unassign Task')
   async unassignTask(
     @Param('taskId') taskId: string,
