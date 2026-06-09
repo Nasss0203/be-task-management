@@ -12,10 +12,14 @@ import { DashboardStatsServiceImpl } from './services/dashboard-stats.service';
 import { DashboardSuggestionsServiceImpl } from './services/dashboard-suggestions.service';
 import { DashboardTasksServiceImpl } from './services/dashboard-tasks.service';
 import { DashboardWorkspacesServiceImpl } from './services/dashboard-workspaces.service';
+import { WorkspaceOverviewController } from './controller/workspace-overview.controller';
+import { GetWorkspaceOverviewApplicationImpl } from './applications/get-workspace-overview.application';
+import { WorkspaceOverviewServiceImpl } from './services/workspace-overview.service';
+import { WorkspaceOverviewRepositoryImpl } from './repositories/workspace-overview.repository';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Task, UserWorkspace, Activity])],
-  controllers: [DashboardController],
+  controllers: [DashboardController, WorkspaceOverviewController],
   providers: [
     {
       provide: DASHBOARD_TYPES.applications.GetMyDashboardApplication,
@@ -44,6 +48,18 @@ import { DashboardWorkspacesServiceImpl } from './services/dashboard-workspaces.
     {
       provide: DASHBOARD_TYPES.services.DashboardSuggestionsService,
       useClass: DashboardSuggestionsServiceImpl,
+    },
+    {
+      provide: DASHBOARD_TYPES.applications.GetWorkspaceOverviewApplication,
+      useClass: GetWorkspaceOverviewApplicationImpl,
+    },
+    {
+      provide: DASHBOARD_TYPES.services.WorkspaceOverviewService,
+      useClass: WorkspaceOverviewServiceImpl,
+    },
+    {
+      provide: DASHBOARD_TYPES.repositories.WorkspaceOverviewRepository,
+      useClass: WorkspaceOverviewRepositoryImpl,
     },
   ],
 })
