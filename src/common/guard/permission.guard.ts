@@ -23,7 +23,7 @@ export class PermissionGuard implements CanActivate {
     private readonly workspaceResolver: WorkspaceResolverService,
     @Inject(PERMISSION_TYPES.services.FindPermissionService)
     private readonly findPermissionService: FindPermissionService,
-  ) {}
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredPermissions = this.reflector.getAllAndOverride<string[]>(

@@ -4,8 +4,8 @@ export class CreateAttachmentDto {}
 
 export class UploadAttachmentDto {
   @IsString()
-  @IsNotEmpty()
-  workspaceId: string;
+  @IsOptional()
+  workspaceId?: string;
 
   @IsString()
   @IsOptional()
