@@ -52,14 +52,8 @@ export class PageController {
   @ResponseMessage('Find page by workspace')
   @Get('workspace/:workspaceId')
   @RequirePermissions(PERMISSIONS.PAGE_READ)
-  async findAll(
-    @Param('workspaceId') workspaceId: string,
-    @Auth() auth: IAuth,
-  ) {
-    return await this.findPageApplication.findPageByWorkspaceId(
-      auth.id,
-      workspaceId,
-    );
+  async findAll(@Param('workspaceId') workspaceId: string) {
+    return await this.findPageApplication.findPageByWorkspaceId(workspaceId);
   }
   @Get('trash')
   @RequirePermissions(PERMISSIONS.PAGE_READ)

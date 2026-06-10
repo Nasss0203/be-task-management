@@ -9,6 +9,7 @@ export const WORKSPACE_TYPES = {
     AdminWorkspaceMemberSummaryService: 'AdminWorkspaceMemberSummaryService',
     WorkspaceTrashService: 'WorkspaceTrashService',
     FindWorkspaceOverviewService: 'FindWorkspaceOverviewService',
+    UpdateWorkspaceService: 'UpdateWorkspaceService',
     UpdateWorkspaceLayoutModeService: 'UpdateWorkspaceLayoutModeService',
   },
   applications: {
@@ -21,6 +22,7 @@ export const WORKSPACE_TYPES = {
       'AdminWorkspaceMemberSummaryApplication',
     WorkspaceTrashApplication: 'WorkspaceTrashApplication',
     FindWorkspaceOverviewApplication: 'FindWorkspaceOverviewApplication',
+    UpdateWorkspaceApplication: 'UpdateWorkspaceApplication',
     UpdateWorkspaceLayoutModeApplication: 'UpdateWorkspaceLayoutModeApplication',
   },
   repositories: {

@@ -26,6 +26,7 @@ import { CreateWorkspaceTemplateApplicationImpl } from './applications/create-wo
 import { CreateWorkspaceApplicationImpl } from './applications/create-workspace.application';
 import { FindWorkspaceOverviewApplicationImpl } from './applications/find-workspace-overview.application';
 import { FindWorkspaceApplicationImpl } from './applications/find.workspace.application';
+import { UpdateWorkspaceApplicationImpl } from './applications/update-workspace.application';
 import { UpdateWorkspaceLayoutModeApplicationImpl } from './applications/update-workspace-layout-mode.application';
 import { WorkspaceTrashApplicationImpl } from './applications/workspace-trash.application';
 import { WorkspacesController } from './controller/workspaces.controller';
@@ -46,6 +47,7 @@ import { CreateWorkspaceTemplateServiceImpl } from './services/create-workspace-
 import { CreateWorkspaceServiceImpl } from './services/create-workspace.service';
 import { FindWorkspaceOverviewServiceImpl } from './services/find-workspace-overview.service';
 import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
+import { UpdateWorkspaceServiceImpl } from './services/update-workspace.service';
 import { WorkspaceTrashServiceImpl } from './services/workspace-trash.service'; 
 import { UpdateWorkspaceLayoutModeServiceImpl } from './services/update-workspace-layout-mode.service';
 import { BillingModule } from '../billing/billing.module';
@@ -99,6 +101,10 @@ import { BillingModule } from '../billing/billing.module';
       useClass: FindWorkspaceOverviewApplicationImpl,
     },
     {
+      provide: WORKSPACE_TYPES.applications.UpdateWorkspaceApplication,
+      useClass: UpdateWorkspaceApplicationImpl,
+    },
+    {
       provide: WORKSPACE_TYPES.applications.UpdateWorkspaceLayoutModeApplication,
       useClass: UpdateWorkspaceLayoutModeApplicationImpl,
     },
@@ -130,6 +136,10 @@ import { BillingModule } from '../billing/billing.module';
     {
       provide: WORKSPACE_TYPES.services.FindWorkspaceOverviewService,
       useClass: FindWorkspaceOverviewServiceImpl,
+    },
+    {
+      provide: WORKSPACE_TYPES.services.UpdateWorkspaceService,
+      useClass: UpdateWorkspaceServiceImpl,
     },
     {
       provide: WORKSPACE_TYPES.services.UpdateWorkspaceLayoutModeService,

@@ -85,13 +85,11 @@ export class FindPageRepositoryImpl implements FindPageRepository {
   }
 
   async findPageByWorkspaceId(
-    userId: string,
     workspaceId: string,
     manager?: EntityManager,
   ): Promise<PageModel> {
     const pages = await this.getRepo(manager).findOne({
       where: {
-        created_by: userId,
         workspace_id: workspaceId,
       },
       relations: {

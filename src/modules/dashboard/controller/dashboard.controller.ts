@@ -2,10 +2,10 @@ import { Controller, Get, Inject, Query, ValidationPipe } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { type IAuth } from 'src/types/auth';
-import { MyDashboardQueryDto } from './dto/my-dashboard-query.dto';
-import { MyDashboardResponseDto } from './dto/response/my-dashboard.response.dto';
-import { type GetMyDashboardApplication } from './interfaces/applications/get-my-dashboard.application.interface';
-import { DASHBOARD_TYPES } from './interfaces/types';
+import { MyDashboardQueryDto } from '../dto/my-dashboard-query.dto';
+import { MyDashboardResponseDto } from '../dto/response/my-dashboard.response.dto';
+import { type GetMyDashboardApplication } from '../interfaces/applications/get-my-dashboard.application.interface';
+import { DASHBOARD_TYPES } from '../interfaces/types';
 
 @Controller('dashboard')
 export class DashboardController {

@@ -82,6 +82,7 @@ export class GetMyDashboardApplicationImpl implements GetMyDashboardApplication 
       },
       focus: this.buildFocus({
         stats,
+        range,
         targetThisWeek,
         dayProgressPercent,
         weeklyGoalPercent,
@@ -98,19 +99,31 @@ export class GetMyDashboardApplicationImpl implements GetMyDashboardApplication 
 
   private buildFocus(input: {
     stats: Awaited<ReturnType<DashboardStatsService['getStats']>>;
+    range: DashboardDateRange;
     targetThisWeek: number;
     dayProgressPercent: number;
     weeklyGoalPercent: number;
   }): DashboardFocusResponseDto {
-    const { stats, targetThisWeek, dayProgressPercent, weeklyGoalPercent } =
-      input;
+    const {
+      stats,
+      range,
+      targetThisWeek,
+      dayProgressPercent,
+      weeklyGoalPercent,
+    } = input;
 
     return {
       title: 'Trọng tâm hôm nay',
       message: this.buildFocusMessage(stats.overdue, stats.reviewTaskCount),
       deepWorkMinutes: stats.deepWorkMinutes,
       reviewTaskCount: stats.reviewTaskCount,
-      momentumPercent: weeklyGoalPercent - 60,
+      momentumPercent: this.getMomentumPercent({
+        completedThisWeek: stats.completedThisWeek,
+        remainingThisWeek: stats.remainingThisWeek,
+        targetThisWeek,
+        weeklyGoalPercent,
+        range,
+      }),
       dayProgressPercent,
       completedThisWeek: stats.completedThisWeek,
       targetThisWeek,
@@ -199,8 +212,46 @@ export class GetMyDashboardApplicationImpl implements GetMyDashboardApplication 
   }
 
   private getPercent(value: number, total: number): number {
-    if (total <= 0) return 0;
+    if (!Number.isFinite(value) || !Number.isFinite(total) || total <= 0) {
+      return 0;
+    }
 
     return Math.round((value / total) * 100);
+  }
+
+  private getMomentumPercent(input: {
+    completedThisWeek: number;
+    remainingThisWeek: number;
+    targetThisWeek: number;
+    weeklyGoalPercent: number;
+    range: DashboardDateRange;
+  }): number | null {
+    const {
+      completedThisWeek,
+      remainingThisWeek,
+      targetThisWeek,
+      weeklyGoalPercent,
+      range,
+    } = input;
+
+    if (targetThisWeek <= 0) return null;
+    if (completedThisWeek + remainingThisWeek <= 0) return null;
+
+    const elapsedWeekRatio = this.getElapsedRatio(
+      range.now,
+      range.weekStart,
+      range.weekEnd,
+    );
+    const expectedWeekProgressPercent = Math.round(elapsedWeekRatio * 100);
+
+    return weeklyGoalPercent - expectedWeekProgressPercent;
+  }
+
+  private getElapsedRatio(now: Date, start: Date, end: Date): number {
+    const totalMs = end.getTime() - start.getTime();
+    if (totalMs <= 0) return 0;
+
+    const elapsedMs = now.getTime() - start.getTime();
+    return Math.min(Math.max(elapsedMs / totalMs, 0), 1);
   }
 }

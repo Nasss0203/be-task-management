@@ -14,6 +14,7 @@ import {
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
 import {
@@ -46,6 +47,7 @@ export class PageBlockController {
   ) {}
 
   @Post()
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'page_id' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
   @ResponseMessage('Create page block')
   create(
@@ -59,6 +61,7 @@ export class PageBlockController {
   }
 
   @Get('page/:pageId')
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
   @ResponseMessage('Find page blocks by page')
   findAllByPageId(
@@ -68,6 +71,7 @@ export class PageBlockController {
   }
 
   @Patch('reorder')
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'page_id' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   @ResponseMessage('Reorder page blocks')
   reorder(
@@ -77,6 +81,7 @@ export class PageBlockController {
   }
 
   @Patch(':id')
+  @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'id' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -89,6 +94,7 @@ export class PageBlockController {
   }
 
   @Post(':blockId/database-views')
+  @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'blockId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   @ResponseMessage('Add database view')
   async addDatabaseViewToBlock(
@@ -102,6 +108,7 @@ export class PageBlockController {
   }
 
   @Get('trash')
+  @WorkspaceContext({ source: 'query', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
   async findDeletedPageBlocks(
     @Query('workspaceId') workspaceId: string,
@@ -118,6 +125,7 @@ export class PageBlockController {
   }
 
   @Delete(':blockId')
+  @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'blockId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async deletePageBlock(
     @Param('blockId', ParseUUIDPipe) blockId: string,
@@ -140,6 +148,7 @@ export class PageBlockController {
   }
 
   @Patch(':blockId/restore')
+  @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'blockId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async restorePageBlock(
     @Param('blockId', ParseUUIDPipe) blockId: string,

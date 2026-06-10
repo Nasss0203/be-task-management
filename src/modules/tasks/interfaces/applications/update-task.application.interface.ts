@@ -5,6 +5,7 @@ import { UpdateTaskDto } from '../../dto/update-task.dto';
 export interface UpdateManyTasksApplicationInput {
   workspaceId: string;
   projectId: string;
+  actorId: string;
   dto: UpdateManyTasksDto;
 }
 

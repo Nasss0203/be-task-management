@@ -21,6 +21,11 @@ export class FeatureAccessRepositoryImpl implements FeatureAccessRepository {
         FROM user_workspaces
         WHERE user_id = $1
           AND workspace_id = $2
+        UNION
+        SELECT 1
+        FROM user_roles
+        WHERE user_id = $1
+          AND workspace_id = $2
         LIMIT 1
       `,
       [userId, workspaceId],

@@ -3,6 +3,7 @@ import {
   ArrayMinSize,
   IsArray,
   IsDateString,
+  IsBoolean,
   IsInt,
   IsOptional,
   IsUUID,
@@ -30,6 +31,10 @@ export class UpdateManyTasksDto {
   @IsOptional()
   @IsDateString()
   dueAt?: string | null;
+
+  @IsOptional()
+  @IsBoolean()
+  sendNotification?: boolean;
 
   @IsOptional()
   @Type(() => Number)
