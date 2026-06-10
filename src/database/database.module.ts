@@ -100,4 +100,4 @@ import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.enti
     }),
   ],
 })
-export class DatabaseModule {}
+export class DatabaseModule { }

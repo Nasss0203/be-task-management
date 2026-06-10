@@ -8,7 +8,8 @@ export type WorkspaceResourceType =
   | 'board'
   | 'sprint'
   | 'page'
-  | 'page_block';
+  | 'page_block'
+  | 'attachment';
 
 export type WorkspaceContextMeta =
   | { source: 'param' | 'body' | 'query'; key: string }

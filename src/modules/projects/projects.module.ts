@@ -13,15 +13,18 @@ import { WORKSPACE_TYPES } from '../workspaces/interfaces/types';
 import { CreateProjectApplicationImpl } from './applications/create-project.application';
 import { DeleteProjectApplicationImpl } from './applications/delete.project.application';
 import { FindProjectApplicationImpl } from './applications/find.project.application';
+import { UpdateProjectApplicationImpl } from './applications/update.project.application';
 import { ProjectsController } from './controller/projects.controller';
 import { Project } from './domain/entities/project.entity';
 import { PROJECT_TYPES } from './interfaces/types';
 import { CreateProjectRepositoryImpl } from './repositories/create.projects.repository';
 import { DeleteProjectRepositoryImpl } from './repositories/delete.project.repository';
 import { FindProjectRepositoryImpl } from './repositories/find.project.repository';
+import { UpdateProjectRepositoryImpl } from './repositories/update.project.repository';
 import { CreateProjectServiceImpl } from './services/create.projects.service';
 import { DeleteProjectServiceImpl } from './services/delete.project.service';
 import { FindProjectServiceImpl } from './services/find.project.service';
+import { UpdateProjectServiceImpl } from './services/update.project.service';
 
 @Module({
   imports: [
@@ -81,9 +84,22 @@ import { FindProjectServiceImpl } from './services/find.project.service';
       provide: PROJECT_TYPES.services.DeleteProjectService,
       useClass: DeleteProjectServiceImpl,
     },
+    {
+      provide: PROJECT_TYPES.repositories.UpdateProjectRepository,
+      useClass: UpdateProjectRepositoryImpl,
+    },
+    {
+      provide: PROJECT_TYPES.services.UpdateProjectService,
+      useClass: UpdateProjectServiceImpl,
+    },
+    {
+      provide: PROJECT_TYPES.applications.UpdateProjectApplication,
+      useClass: UpdateProjectApplicationImpl,
+    },
   ],
   exports: [
     PROJECT_TYPES.services.CreateProjectService,
+    PROJECT_TYPES.repositories.CreateProjectRepository,
     PROJECT_TYPES.services.FindProjectService,
     PROJECT_TYPES.repositories.FindProjectRepository,
   ],

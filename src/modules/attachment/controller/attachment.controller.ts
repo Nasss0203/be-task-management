@@ -101,6 +101,7 @@ export class AttachmentController {
   }
 
   @Patch(':id')
+  @WorkspaceContext({ source: 'resource', type: 'attachment', key: 'id' })
   async update(
     @Param('id') id: string,
     @Body() body: UpdateAttachmentDto,
@@ -111,6 +112,7 @@ export class AttachmentController {
   }
 
   @Delete(':id')
+  @WorkspaceContext({ source: 'resource', type: 'attachment', key: 'id' })
   @RequirePermissions(PERMISSIONS.ATTACHMENT_DELETE)
   async delete(@Param('id') id: string, @Auth() auth: IAuth) {
     const userId = auth.id;

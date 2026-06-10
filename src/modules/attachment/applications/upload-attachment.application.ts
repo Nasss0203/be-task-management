@@ -41,7 +41,7 @@ export class UploadAttachmentApplicationImpl
 
     const saved = await this.uploadService.execute(
       file,
-      body.workspaceId,
+      body.workspaceId!,
       body.taskId ?? null,
       body.commentId ?? null,
       userId,

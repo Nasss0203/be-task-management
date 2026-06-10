@@ -16,9 +16,11 @@ import { ResponseMessage } from 'src/common/decorator/response-message.decorator
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
 import { CreateProjectDto } from '../dto/create-project.dto';
+import { UpdateProjectDto } from '../dto/update-project.dto';
 import { type CreateProjectApplication } from '../interfaces/applications/create-project.application.interface';
 import { type DeleteProjectApplication } from '../interfaces/applications/delete-project.application.interface';
 import { type FindProjectApplication } from '../interfaces/applications/find.project.application.interface';
+import type { UpdateProjectApplication } from '../interfaces/applications/update.project.application.interface';
 import { PROJECT_TYPES } from '../interfaces/types';
 
 @Controller('projects')
@@ -29,6 +31,9 @@ export class ProjectsController {
 
     @Inject(PROJECT_TYPES.applications.CreateProjectApplication)
     private readonly createProjectApplication: CreateProjectApplication,
+
+    @Inject(PROJECT_TYPES.applications.UpdateProjectApplication)
+    private readonly updateProjectApplication: UpdateProjectApplication,
 
     @Inject(PROJECT_TYPES.applications.DeleteProjectApplication)
     private readonly deleteProjectApplication: DeleteProjectApplication,
@@ -62,6 +67,20 @@ export class ProjectsController {
     }
 
     return this.findProjectApplication.findDeletedProjects(workspaceId);
+  }
+
+  @Patch('workspaces/:workspaceId/projects/:projectId')
+  @RequirePermissions(PERMISSIONS.PROJECT_UPDATE)
+  async updateProject(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Body() updateProjectDto: UpdateProjectDto,
+  ) {
+    return this.updateProjectApplication.execute(
+      projectId,
+      workspaceId,
+      updateProjectDto,
+    );
   }
 
   @Delete('workspaces/:workspaceId/projects/:projectId')
