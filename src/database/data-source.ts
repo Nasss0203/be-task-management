@@ -40,6 +40,7 @@ import { User } from 'src/modules/users/domain/entities/user.entity';
 import { WorkspaceFeatureSetting } from 'src/modules/workspace_feature_settings/domain/entities/workspace_feature_setting.entity';
 import { WorkspaceInvite } from 'src/modules/workspace_invites/domain/entities/workspace_invite.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
+import { WorkspaceTemplate } from 'src/modules/workspace_templates/domain/entities/workspace_template.entity';
 
 export default new DataSource({
   type: 'postgres',
@@ -91,6 +92,7 @@ export default new DataSource({
     Feature,
     PlanFeature,
     WorkspaceFeatureSetting,
+    WorkspaceTemplate,
   ],
   migrations: ['src/database/migrations/*{.ts,.js}'],
 });

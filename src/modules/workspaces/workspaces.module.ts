@@ -51,6 +51,8 @@ import { UpdateWorkspaceServiceImpl } from './services/update-workspace.service'
 import { WorkspaceTrashServiceImpl } from './services/workspace-trash.service'; 
 import { UpdateWorkspaceLayoutModeServiceImpl } from './services/update-workspace-layout-mode.service';
 import { BillingModule } from '../billing/billing.module';
+import { PageTemplateBlocksModule } from '../page_template_blocks/page_template_blocks.module';
+import { WorkspaceTemplatesModule } from '../workspace_templates/workspace_templates.module';
 
 @Module({
   imports: [
@@ -76,6 +78,8 @@ import { BillingModule } from '../billing/billing.module';
     PermissionModule,
     RolePermissionModule,
     BillingModule,
+    WorkspaceTemplatesModule,
+    PageTemplateBlocksModule,
   ],
   controllers: [WorkspacesController],
   providers: [

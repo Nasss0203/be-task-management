@@ -64,6 +64,11 @@ import {
 } from '../types/types';
 import { type CheckWorkspaceLimitService } from 'src/modules/billing/interfaces/services/check-workspace-limit.service.interface';
 import { BILLING_TYPES } from 'src/modules/billing/interfaces/types';
+import type { WorkspaceTemplatesService } from 'src/modules/workspace_templates/interfaces/services/workspace_templates.service.interface';
+import { WORKSPACE_TEMPLATE_TYPES } from 'src/modules/workspace_templates/interfaces/types';
+import type { PageTemplateBlocksService } from 'src/modules/page_template_blocks/interfaces/services/page_template_blocks.service.interface';
+import { PAGE_TEMPLATE_BLOCK_TYPES } from 'src/modules/page_template_blocks/interfaces/types';
+import { PageBlock } from 'src/modules/page_block/domain/entities/page_block.entity';
 
 @Injectable()
 export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTemplateService {
@@ -112,6 +117,12 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
 
     @Inject(BILLING_TYPES.services.CheckWorkspaceLimitService)
     private readonly checkWorkspaceLimitService: CheckWorkspaceLimitService,
+
+    @Inject(WORKSPACE_TEMPLATE_TYPES.services.WorkspaceTemplatesService)
+    private readonly workspaceTemplatesService: WorkspaceTemplatesService,
+
+    @Inject(PAGE_TEMPLATE_BLOCK_TYPES.services.PageTemplateBlocksService)
+    private readonly pageTemplateBlocksService: PageTemplateBlocksService,
   ) {}
 
   private async seedWorkspaceRbac({
@@ -492,64 +503,112 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
   private async createManyPageBlocks({
     pageId,
     createdBy,
+    templateId,
     pageBlocks,
     boardMap,
     manager,
   }: {
     pageId: string;
     createdBy: string;
+    templateId?: string | null;
     pageBlocks: TemplatePageBlockConfig[];
     boardMap: Map<string, BoardModel>;
     manager: EntityManager;
   }): Promise<void> {
-    if (!pageBlocks.length) return;
-
-    const databaseBlocks = pageBlocks.map((item) => {
-      const board = boardMap.get(item.boardTemplateKey);
-
-      if (!board) {
-        throw new BadRequestException(
-          `Board template key ${item.boardTemplateKey} not found`,
-        );
-      }
-
-      return {
-        title: item.title,
-        data_config: {
-          workspace_id: board.workspaceId,
-          project_id: board.projectId,
-          default_board_id: board.id,
-          default_view_type: board.viewType,
-        },
-      };
-    });
-
-    const createdProjectIds = new Set<string>();
+    const blocksToInsert: Partial<PageBlock>[] = [];
     let orderIndex = 1;
 
-    for (const databaseBlock of databaseBlocks) {
-      if (createdProjectIds.has(databaseBlock.data_config.project_id)) {
-        continue;
+    // Use page template blocks from DB if a templateId exists
+    if (templateId) {
+      const dbBlocks = await this.pageTemplateBlocksService.findByTemplateId(templateId);
+      
+      for (const dbBlock of dbBlocks) {
+        let dataConfig: any = dbBlock.content;
+        let blockType = dbBlock.type as string;
+        let styleConfig: any = null;
+
+        if (blockType === 'HEADING_1') {
+          blockType = PageBlockType.HEADER;
+          styleConfig = { level: 1 };
+        } else if (blockType === 'HEADING_2') {
+          blockType = PageBlockType.HEADER;
+          styleConfig = { level: 2 };
+        } else if (blockType === 'HEADING_3') {
+          blockType = PageBlockType.HEADER;
+          styleConfig = { level: 3 };
+        }
+
+        // If it's a database view, map the board ID
+        if (blockType === PageBlockType.DATABASE_VIEW && dataConfig?.boardTemplateKey) {
+          const board = boardMap.get(dataConfig.boardTemplateKey);
+          if (!board) {
+            throw new BadRequestException(`Board template key ${dataConfig.boardTemplateKey} not found`);
+          }
+          dataConfig = {
+            ...dataConfig,
+            workspace_id: board.workspaceId,
+            project_id: board.projectId,
+            default_board_id: board.id,
+            default_view_type: board.viewType,
+          };
+        }
+
+        blocksToInsert.push({
+          page_id: pageId,
+          type: blockType as PageBlockType,
+          title: dataConfig?.title ?? null,
+          order_index: dbBlock.orderIndex,
+          style_config: styleConfig,
+          data_config: blockType === PageBlockType.DATABASE_VIEW ? dataConfig : null,
+          created_by: createdBy,
+          content: blockType !== PageBlockType.DATABASE_VIEW ? dbBlock.content : null,
+        });
+        
+        // Track the max order index used by DB blocks
+        if (dbBlock.orderIndex >= orderIndex) {
+          orderIndex = dbBlock.orderIndex + 1;
+        }
       }
+    }
 
-      createdProjectIds.add(databaseBlock.data_config.project_id);
+    // Fallback to legacy config if needed (or combine them)
+    if (!templateId && pageBlocks && pageBlocks.length > 0) {
+      const createdProjectIds = new Set<string>();
 
-      await this.createPageBlockService.create(
-        {
+      for (const item of pageBlocks) {
+        const board = boardMap.get(item.boardTemplateKey);
+        if (!board) {
+          throw new BadRequestException(`Board template key ${item.boardTemplateKey} not found`);
+        }
+
+        if (createdProjectIds.has(board.projectId)) {
+          continue;
+        }
+        createdProjectIds.add(board.projectId);
+
+        blocksToInsert.push({
           page_id: pageId,
           type: PageBlockType.DATABASE_VIEW,
-          title: databaseBlock.title,
-          // Reserve order_index=0 for default block created with page (if any).
+          title: item.title,
           order_index: orderIndex,
           style_config: null,
-          data_config: databaseBlock.data_config,
+          data_config: {
+            workspace_id: board.workspaceId,
+            project_id: board.projectId,
+            default_board_id: board.id,
+            default_view_type: board.viewType,
+          },
           created_by: createdBy,
           content: null,
-        },
-        manager,
-      );
+        });
 
-      orderIndex += 1;
+        orderIndex += 1;
+      }
+    }
+
+    if (blocksToInsert.length > 0) {
+      const entities = manager.getRepository(PageBlock).create(blocksToInsert);
+      await manager.save(PageBlock, entities);
     }
   }
 
@@ -718,10 +777,21 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
         manager,
       );
 
-      const templateConfig = this.getTemplateConfig({
-        template: input.template,
-        workspaceName: input.name,
-      });
+      let templateConfig: WorkspaceTemplateConfig;
+
+      let pageTemplateId: string | null = null;
+
+      if (input.templateId) {
+        const template = await this.workspaceTemplatesService.findOne(input.templateId);
+        templateConfig = template.config;
+        pageTemplateId = template.pageTemplateId ?? null;
+      } else {
+        // Fallback or handle cases without template ID if needed
+        templateConfig = this.getTemplateConfig({
+          template: WorkspaceTemplateType.TASK_TRACKER,
+          workspaceName: input.name,
+        });
+      }
 
       const { workspace } = await this.createWorkspaceCore({
         name: input.name,
@@ -760,6 +830,7 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
       await this.createManyPageBlocks({
         pageId: createdPage.id,
         createdBy: userId,
+        templateId: pageTemplateId,
         pageBlocks: templateConfig.pageBlocks,
         boardMap,
         manager,

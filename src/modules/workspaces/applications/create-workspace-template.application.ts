@@ -26,8 +26,7 @@ export class CreateWorkspaceTemplateApplicationImpl implements CreateWorkspaceTe
     const model = await this.service.create(userId, {
       name: createWorkspaceDto.name,
       planType: createWorkspaceDto.planType,
-      template:
-        createWorkspaceDto.template ?? WorkspaceTemplateType.TASK_TRACKER,
+      templateId: createWorkspaceDto.templateId,
     });
 
     return WorkspaceMapper.toResponse(model);

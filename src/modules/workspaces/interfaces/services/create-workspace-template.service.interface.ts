@@ -6,7 +6,7 @@ import { WorkspaceTemplateType } from '../../types/types';
 export type CreateWorkspaceWithTemplateInput = {
   name: string;
   planType?: PlanTypeWorkspace;
-  template: WorkspaceTemplateType;
+  templateId?: string;
 };
 
 export interface CreateWorkspaceTemplateService {

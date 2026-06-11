@@ -3,7 +3,7 @@ import { WorkspaceResponseDto } from '../../dto/response/workspaces.response.dto
 import { WorkspaceTemplateType } from '../../types/types';
 
 export type CreateWorkspaceTemplateDto = CreateWorkspaceDto & {
-  template?: WorkspaceTemplateType;
+  templateId?: string;
 };
 
 export interface CreateWorkspaceTemplateApplication {

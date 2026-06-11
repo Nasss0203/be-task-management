@@ -50,6 +50,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { FeaturesModule } from './modules/features/features.module';
 import { PlanFeaturesModule } from './modules/plan_features/plan_features.module';
 import { WorkspaceFeatureSettingsModule } from './modules/workspace_feature_settings/workspace_feature_settings.module';
+import { WorkspaceTemplatesModule } from './modules/workspace_templates/workspace_templates.module';
 
 @Module({
   imports: [
@@ -105,6 +106,7 @@ import { WorkspaceFeatureSettingsModule } from './modules/workspace_feature_sett
     FeaturesModule,
     PlanFeaturesModule,
     WorkspaceFeatureSettingsModule,
+    WorkspaceTemplatesModule,
   ],
   controllers: [AppController],
   providers: [
