@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Inject,
   Post,
   Req,
   Res,
@@ -17,9 +18,14 @@ import { LocalAuthGuard } from 'src/common/guard/local-auth.guard';
 import { type IAuth } from 'src/types/auth';
 import { type GoogleUserPayload } from 'src/types/google-user-payload.interface';
 import { RegisterUserDto } from '../users/dto/create-user.dto';
-import { AuthService } from './auth.service';
+import { type GetProfileAuthApplication } from './interfaces/applications/get-profile-auth.application.interface';
+import { type GoogleAuthApplication } from './interfaces/applications/google-auth.application.interface';
+import { type LoginAuthApplication } from './interfaces/applications/login-auth.application.interface';
+import { type LogoutAuthApplication } from './interfaces/applications/logout-auth.application.interface';
+import { type RefreshAuthApplication } from './interfaces/applications/refresh-auth.application.interface';
+import { type RegisterAuthApplication } from './interfaces/applications/register-auth.application.interface';
 import { IUserJwtPayload } from './interfaces/type';
-import { AuthGoogleService } from './services/auth-google.service';
+import { AUTH_TYPES } from './interfaces/types';
 
 type RefreshTokenRequest = Request & {
   cookies?: {
@@ -49,15 +55,25 @@ const REFRESH_TOKEN_COOKIE_CLEAR_OPTIONS: CookieOptions = {
 @Controller('auth')
 export class AuthController {
   constructor(
-    private readonly authService: AuthService,
-    private readonly authGoogleService: AuthGoogleService,
+    @Inject(AUTH_TYPES.applications.RegisterAuthApplication)
+    private readonly registerAuthApplication: RegisterAuthApplication,
+    @Inject(AUTH_TYPES.applications.LoginAuthApplication)
+    private readonly loginAuthApplication: LoginAuthApplication,
+    @Inject(AUTH_TYPES.applications.RefreshAuthApplication)
+    private readonly refreshAuthApplication: RefreshAuthApplication,
+    @Inject(AUTH_TYPES.applications.LogoutAuthApplication)
+    private readonly logoutAuthApplication: LogoutAuthApplication,
+    @Inject(AUTH_TYPES.applications.GetProfileAuthApplication)
+    private readonly getProfileAuthApplication: GetProfileAuthApplication,
+    @Inject(AUTH_TYPES.applications.GoogleAuthApplication)
+    private readonly googleAuthApplication: GoogleAuthApplication,
   ) {}
 
   @Post('register')
   @Public()
   @ResponseMessage('Register user successfully!!')
   register(@Body() registerUserDto: RegisterUserDto) {
-    return this.authService.register(registerUserDto);
+    return this.registerAuthApplication.register(registerUserDto);
   }
 
   @Public()
@@ -65,7 +81,8 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @ResponseMessage('Login user successfully!!')
   async login(@Auth() auth: IAuth, @Res({ passthrough: true }) res: Response) {
-    const { access_token, refresh_token } = await this.authService.login(auth);
+    const { access_token, refresh_token } =
+      await this.loginAuthApplication.login(auth);
 
     res.cookie('refresh_token', refresh_token, REFRESH_TOKEN_COOKIE_OPTIONS);
 
@@ -83,7 +100,7 @@ export class AuthController {
     const currentRefreshToken =
       body?.refresh_token || req.cookies?.refresh_token;
     const { access_token, refresh_token } =
-      await this.authService.refresh(currentRefreshToken);
+      await this.refreshAuthApplication.refresh(currentRefreshToken);
 
     res.cookie('refresh_token', refresh_token, REFRESH_TOKEN_COOKIE_OPTIONS);
 
@@ -101,7 +118,7 @@ export class AuthController {
     const currentRefreshToken =
       body?.refresh_token || req.cookies?.refresh_token;
 
-    const result = await this.authService.logout(currentRefreshToken);
+    const result = await this.logoutAuthApplication.logout(currentRefreshToken);
 
     res.clearCookie('refresh_token', REFRESH_TOKEN_COOKIE_CLEAR_OPTIONS);
 
@@ -124,7 +141,7 @@ export class AuthController {
     @Res() res: Response,
   ): Promise<void> {
     const { access_token, refresh_token } =
-      await this.authGoogleService.loginWithGoogle(googleUser);
+      await this.googleAuthApplication.loginWithGoogle(googleUser);
 
     res.cookie('refresh_token', refresh_token, {
       ...REFRESH_TOKEN_COOKIE_OPTIONS,
@@ -137,6 +154,6 @@ export class AuthController {
   @Get('me')
   @ResponseMessage('Get me')
   async getProfile(@Req() req: Request & { user: IUserJwtPayload }) {
-    return this.authService.getProfile(req.user);
+    return this.getProfileAuthApplication.getProfile(req.user);
   }
 }
