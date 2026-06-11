@@ -5,6 +5,7 @@ import { PERMISSIONS } from 'src/modules/permission/constants/permission.constan
 import { type FindTaskStatusService } from '../interfaces/services/find.task-status.service.interface';
 import { TASK_STATUS_TYPES } from '../interfaces/types';
 import { TaskStatusService } from '../task_status.service';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 @Controller('task-status')
 export class TaskStatusController {
@@ -16,6 +17,7 @@ export class TaskStatusController {
   ) {}
 
   @Get('workspace/:workspaceId/project/:projectId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.TASK_STATUS_READ)
   @ResponseMessage('Find all task status')
   findAll(

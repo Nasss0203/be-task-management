@@ -10,6 +10,7 @@ import { type AddWorkspaceMemberApplication } from '../interfaces/applications/a
 import { type FindAllMemberApplication } from '../interfaces/applications/find-user-workspace.application.interface';
 import { USER_WORKSPACE_TYPES } from '../interfaces/types';
 import { UserWorkspacesService } from '../user_workspace.service';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 @Controller('workspace-members')
 export class UserWorkspacesController {
@@ -25,6 +26,7 @@ export class UserWorkspacesController {
 
   @Post(':workspaceId/members')
   @ResponseMessage('Add member')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_MEMBER_ADD)
   addMember(
     @Param('workspaceId') workspaceId: string,
@@ -40,6 +42,7 @@ export class UserWorkspacesController {
 
   @Get(':workspaceId/members')
   @ResponseMessage('Find member')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_MEMBER_READ)
   async findAllMember(
     @Param('workspaceId') workspaceId: string,

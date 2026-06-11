@@ -27,6 +27,7 @@ import { type UpdateWorkspaceApplication } from '../interfaces/applications/upda
 import { type UpdateWorkspaceLayoutModeApplication } from '../interfaces/applications/update-workspace-layout-mode.application.interface';
 import { type WorkspaceTrashApplication } from '../interfaces/applications/workspace-trash.application.interface';
 import { WORKSPACE_TYPES } from '../interfaces/types';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 @Controller('workspaces')
 export class WorkspacesController {
@@ -95,6 +96,7 @@ export class WorkspacesController {
   }
 
   @Get(':workspaceId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_READ)
   @ResponseMessage('Find one workspace')
   findOneWorkspaceById(
@@ -108,6 +110,7 @@ export class WorkspacesController {
   }
 
   @Get(':workspaceId/overview')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_READ)
   findOverview(
     @Param('workspaceId') workspaceId: string,
@@ -120,6 +123,7 @@ export class WorkspacesController {
   }
 
   @Get(':workspaceId/access')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_READ)
   @ResponseMessage('Get access workspace')
   async getWorkspaceAccess(
@@ -133,6 +137,7 @@ export class WorkspacesController {
   }
 
   @Patch(':workspaceId/layout-mode')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_UPDATE)
   @ResponseMessage('Workspace layout mode updated')
   updateLayoutMode(
@@ -148,6 +153,7 @@ export class WorkspacesController {
   }
 
   @Patch(':workspaceId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_UPDATE)
   @ResponseMessage('Workspace updated')
   updateWorkspace(
@@ -163,6 +169,7 @@ export class WorkspacesController {
   }
 
   @Delete(':workspaceId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_DELETE)
   @ResponseMessage('Workspace moved to trash')
   async softDeleteWorkspace(
@@ -176,6 +183,7 @@ export class WorkspacesController {
   }
 
   @Patch(':workspaceId/restore')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_DELETE)
   @ResponseMessage('Workspace restored')
   async restoreWorkspace(

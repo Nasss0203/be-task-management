@@ -8,6 +8,7 @@ import { WorkspaceFeatureStatusResponseDto } from '../dto/response/workspace_fea
 import { UpdateWorkspaceFeatureDto } from '../dto/update-workspace-feature.dto';
 import { type WorkspaceFeatureAccessApplication } from '../interfaces/applications/workspace_feature_access.application.interface';
 import { WORKSPACE_FEATURE_SETTING_TYPES } from '../interfaces/types';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 @Controller('workspaces/:workspaceId/features')
 export class WorkspaceFeaturesController {
@@ -20,6 +21,7 @@ export class WorkspaceFeaturesController {
   ) {}
 
   @Get()
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_FEATURE_READ)
   @ResponseMessage('Find feature workspace')
   findWorkspaceFeatures(
@@ -29,6 +31,7 @@ export class WorkspaceFeaturesController {
   }
 
   @Patch(':featureCode')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_FEATURE_UPDATE)
   updateWorkspaceFeature(
     @Param('workspaceId') workspaceId: string,

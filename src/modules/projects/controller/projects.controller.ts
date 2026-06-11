@@ -22,6 +22,7 @@ import { type DeleteProjectApplication } from '../interfaces/applications/delete
 import { type FindProjectApplication } from '../interfaces/applications/find.project.application.interface';
 import type { UpdateProjectApplication } from '../interfaces/applications/update.project.application.interface';
 import { PROJECT_TYPES } from '../interfaces/types';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 @Controller('projects')
 export class ProjectsController {
@@ -40,6 +41,7 @@ export class ProjectsController {
   ) {}
 
   @Get('/workspace/:workspaceId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.PROJECT_READ)
   @ResponseMessage('Find all project')
   async findAllByWorkspaceId(@Param('workspaceId') workspaceId: string) {
@@ -70,6 +72,7 @@ export class ProjectsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.PROJECT_UPDATE)
   async updateProject(
     @Param('workspaceId') workspaceId: string,
@@ -84,6 +87,7 @@ export class ProjectsController {
   }
 
   @Delete('workspaces/:workspaceId/projects/:projectId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.PROJECT_DELETE)
   async deleteProject(
     @Param('workspaceId') workspaceId: string,
@@ -102,6 +106,7 @@ export class ProjectsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/restore')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.PROJECT_DELETE)
   async restoreProject(
     @Param('workspaceId') workspaceId: string,

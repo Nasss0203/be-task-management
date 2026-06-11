@@ -5,6 +5,7 @@ import { PERMISSIONS } from 'src/modules/permission/constants/permission.constan
 import { TaskPriorityResponseDto } from '../dto/response/task_priority.response.dto';
 import { type FindTaskPriorityApplication } from '../interfaces/applications/find.task-priority.application.interface';
 import { TASK_PRIORITY_TYPES } from '../interfaces/types';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 @Controller('task-priority')
 export class TaskPriorityController {
@@ -14,6 +15,7 @@ export class TaskPriorityController {
   ) {}
 
   @Get('workspaces/:workspaceId/projects/:projectId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.TASK_PRIORITY_READ)
   @ResponseMessage('Find all task priorities successfully')
   async findAllTaskPriority(
@@ -27,6 +29,7 @@ export class TaskPriorityController {
   }
 
   @Get('workspaces/:workspaceId/projects/:projectId/done')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.TASK_PRIORITY_READ)
   @ResponseMessage('Find done priority successfully')
   async findDonePriority(

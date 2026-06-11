@@ -6,6 +6,7 @@ import { ActivityEntityType } from '../domain/entities/activity.entity';
 import { FindActivityQueryDto } from '../dto/find-activity-query.dto';
 import { type FindActivityApplication } from '../interfaces/applications/find-activity.application.interface';
 import { ACTIVITY_TYPES } from '../interfaces/types';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 @Controller('activity')
 export class ActivityController {
@@ -15,6 +16,7 @@ export class ActivityController {
   ) {}
 
   @Get('workspaces/:workspaceId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.ACTIVITY_READ)
   @ResponseMessage('Find workspace activities successfully')
   findByWorkspace(
@@ -25,6 +27,7 @@ export class ActivityController {
   }
 
   @Get('workspaces/:workspaceId/projects/:projectId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.ACTIVITY_READ)
   @ResponseMessage('Find project activities successfully')
   findByProject(
@@ -40,6 +43,7 @@ export class ActivityController {
   }
 
   @Get('workspaces/:workspaceId/entities/:entityType/:entityId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.ACTIVITY_READ)
   @ResponseMessage('Find entity activities successfully')
   findByEntity(

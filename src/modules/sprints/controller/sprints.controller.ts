@@ -75,6 +75,7 @@ export class SprintsController {
   }
 
   @Get('workspaces/:workspaceId/projects/:projectId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.SPRINT_READ)
   @ResponseMessage('Find all sprint successfully')
   async findAllSprintByProject(
@@ -95,6 +96,7 @@ export class SprintsController {
   }
 
   @Get('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/tasks')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.SPRINT_READ, PERMISSIONS.TASK_READ)
   @ResponseMessage('Find tasks by sprint successfully')
   async findTasksBySprint(
@@ -112,6 +114,7 @@ export class SprintsController {
   }
 
   @Get('workspaces/:workspaceId/projects/:projectId/sprint/:sprintId/detail')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.SPRINT_READ)
   @ResponseMessage('Find sprint detail successfully')
   async getSprintDetail(
@@ -220,6 +223,7 @@ export class SprintsController {
   }
 
   @Get('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/progress')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.SPRINT_READ)
   @ResponseMessage('Get sprint progress successfully')
   async getSprintProgress(

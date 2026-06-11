@@ -22,6 +22,7 @@ import { type DeletePageApplication } from '../interfaces/applications/delete-pa
 import { type FindPageApplication } from '../interfaces/applications/find-page.application.interface';
 import { type UpdatePageApplication } from '../interfaces/applications/update-page.application.interface';
 import { PAGE_TYPES } from '../interfaces/types';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 @Controller('page')
 export class PageController {
@@ -51,6 +52,7 @@ export class PageController {
 
   @ResponseMessage('Find page by workspace')
   @Get('workspace/:workspaceId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.PAGE_READ)
   async findAll(@Param('workspaceId') workspaceId: string) {
     return await this.findPageApplication.findPageByWorkspaceId(workspaceId);

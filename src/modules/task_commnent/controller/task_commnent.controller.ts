@@ -8,6 +8,7 @@ import { CreateTaskCommnentDto } from '../dto/create-task_commnent.dto';
 import { type CreateTaskCommentApplication } from '../interfaces/applications/create.task-comment.application.interface';
 import { type FindTaskCommentApplication } from '../interfaces/applications/find.task-comment.application.interface';
 import { TASK_COMMENT_TYPES } from '../interfaces/types';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 @Controller('task-commnent')
 export class TaskCommnentController {
@@ -20,6 +21,7 @@ export class TaskCommnentController {
   ) {}
 
   @Post('workspaces/:workspaceId/projects/:projectId/tasks/:taskId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.TASK_COMMENT_CREATE)
   @ResponseMessage('Create task comment successfully')
   async create(
@@ -39,6 +41,7 @@ export class TaskCommnentController {
   }
 
   @Get('workspaces/:workspaceId/projects/:projectId/tasks/:taskId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.TASK_COMMENT_READ)
   @ResponseMessage('Find all task comment successfully')
   async findByTaskId(

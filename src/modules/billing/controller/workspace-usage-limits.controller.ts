@@ -5,6 +5,7 @@ import { ResponseMessage } from 'src/common/decorator/response-message.decorator
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type BillingQueryApplication } from '../interfaces/applications/billing-query.application.interface';
 import { BILLING_TYPES } from '../interfaces/types';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 type AuthRequest = Request & {
   user?: {
@@ -22,6 +23,7 @@ export class WorkspaceUsageLimitsController {
   ) {}
 
   @Get()
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_USAGE_READ)
   @ResponseMessage('Get workspace usage limits')
   async getWorkspaceUsageLimits(

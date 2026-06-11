@@ -25,6 +25,7 @@ import { type CreateWorkspaceInviteLinkApplication } from '../interfaces/applica
 import { type InviteWorkspaceMemberApplication } from '../interfaces/applications/invite-workspace-member.application.interface';
 import { type SearchInviteUsersApplication } from '../interfaces/applications/search-invite-users.application.interface';
 import { WORKSPACE_INVITE_TYPES } from '../interfaces/types';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 @Controller('workspace-invites')
 export class WorkspaceInvitesController {
@@ -50,6 +51,7 @@ export class WorkspaceInvitesController {
 
   @Post(':workspaceId/members')
   @ResponseMessage('Invite workspace members successfully')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_MEMBER_ADD)
   async invite(
     @Param('workspaceId') workspaceId: string,
@@ -92,6 +94,7 @@ export class WorkspaceInvitesController {
 
   @Post(':workspaceId/link')
   @ResponseMessage('Create workspace invite link successfully')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_MEMBER_ADD)
   async createInviteLink(
     @Param('workspaceId') workspaceId: string,
@@ -113,6 +116,7 @@ export class WorkspaceInvitesController {
 
   @Get(':workspaceId/users/search')
   @ResponseMessage('Search invite users successfully')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_MEMBER_ADD)
   async searchInviteUsers(
     @Param('workspaceId') workspaceId: string,

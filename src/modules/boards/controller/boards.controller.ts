@@ -67,6 +67,7 @@ export class BoardsController {
   }
 
   @Get('/workspace/:workspaceId/project/:projectId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.BOARD_READ)
   @ResponseMessage('Find all board')
   async findAllByProjectId(
@@ -100,6 +101,7 @@ export class BoardsController {
   }
 
   @Delete('workspaces/:workspaceId/projects/:projectId/boards/:boardId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.BOARD_DELETE)
   async deleteBoard(
     @Param('workspaceId') workspaceId: string,
@@ -120,6 +122,7 @@ export class BoardsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/boards/:boardId/restore')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.BOARD_DELETE)
   async restoreBoard(
     @Param('workspaceId') workspaceId: string,

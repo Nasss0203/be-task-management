@@ -24,7 +24,7 @@ import { MailService } from './mail.service';
         defaults: {
           from: '"No Reply" <noreply@example.com>',
         },
-        preview: true,
+        // preview: true,
         template: {
           dir: join(process.cwd(), 'src', 'modules', 'mail', 'templates'),
           adapter: new HandlebarsAdapter(),
@@ -39,4 +39,4 @@ import { MailService } from './mail.service';
   providers: [MailService],
   exports: [MailService],
 })
-export class MailModule {}
+export class MailModule { }

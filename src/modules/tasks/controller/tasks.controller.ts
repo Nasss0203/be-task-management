@@ -65,9 +65,10 @@ export class TasksController {
 
     @Inject(TASK_TYPES.applications.MoveTaskSprintToSprintApplication)
     private readonly moveTaskSprintToSprintApplication: MoveTaskSprintToSprintApplication,
-  ) {}
+  ) { }
 
   @Get('/workspace/:workspaceId/project/:projectId')
+  // @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.TASK_READ)
   @ResponseMessage('Find all task')
   async findAllByTask(
@@ -224,6 +225,7 @@ export class TasksController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/bulk-update')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.TASK_UPDATE)
   @ResponseMessage('Update many tasks successfully')
   async updateManyTasks(

@@ -6,6 +6,7 @@ import { CreatePaymentDto } from '../dto/create-payment.dto';
 import { type BillingQueryApplication } from '../interfaces/applications/billing-query.application.interface';
 import { type CreateBillingApplication } from '../interfaces/applications/create-billing.application.interface';
 import { BILLING_TYPES } from '../interfaces/types';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 type AuthRequest = Request & {
   user?: {
