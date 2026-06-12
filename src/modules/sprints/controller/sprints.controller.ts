@@ -9,6 +9,11 @@ import {
   Query,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import {
+  ReadRateLimit,
+  StrictWriteRateLimit,
+  WriteRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { RequireFeature } from 'src/common/decorator/require-features.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
@@ -32,6 +37,7 @@ import { type UpdateSprintApplication } from '../interfaces/applications/update-
 import { SPRINT_TYPES } from '../interfaces/types';
 
 @Controller('sprints')
+@ReadRateLimit()
 export class SprintsController {
   constructor(
     @Inject(SPRINT_TYPES.applications.CreateSprintApplication)
@@ -56,6 +62,7 @@ export class SprintsController {
   ) {}
 
   @Post('workspaces/:workspaceId/projects/:projectId')
+  @WriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_CREATE)
@@ -130,6 +137,7 @@ export class SprintsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/start')
+  @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_START)
@@ -153,6 +161,7 @@ export class SprintsController {
   @Patch(
     'workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/complete',
   )
+  @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_COMPLETE)
@@ -172,6 +181,7 @@ export class SprintsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/cancel')
+  @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_CANCEL)
@@ -190,6 +200,7 @@ export class SprintsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/sprint/:sprintId')
+  @WriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_UPDATE)

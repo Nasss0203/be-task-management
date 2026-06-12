@@ -9,6 +9,11 @@ import {
   Post,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import {
+  ReadRateLimit,
+  StrictWriteRateLimit,
+  WriteRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
@@ -30,6 +35,7 @@ import { WORKSPACE_TYPES } from '../interfaces/types';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 @Controller('workspaces')
+@ReadRateLimit()
 export class WorkspacesController {
   constructor(
     @Inject(WORKSPACE_TYPES.applications.CreateWorkspaceApplication)
@@ -58,6 +64,7 @@ export class WorkspacesController {
   ) {}
 
   @Post('default')
+  @StrictWriteRateLimit()
   @ResponseMessage('Workspaces created')
   async create(
     @Body() createWorkspaceDto: CreateWorkspaceDto,
@@ -70,6 +77,7 @@ export class WorkspacesController {
   }
 
   @Post()
+  @StrictWriteRateLimit()
   @ResponseMessage('Create workspace template')
   async createByTemplate(
     @Body() createWorkspaceDto: CreateWorkspaceTemplateDto,
@@ -137,6 +145,7 @@ export class WorkspacesController {
   }
 
   @Patch(':workspaceId/layout-mode')
+  @WriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_UPDATE)
   @ResponseMessage('Workspace layout mode updated')
@@ -153,6 +162,7 @@ export class WorkspacesController {
   }
 
   @Patch(':workspaceId')
+  @WriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_UPDATE)
   @ResponseMessage('Workspace updated')
@@ -169,6 +179,7 @@ export class WorkspacesController {
   }
 
   @Delete(':workspaceId')
+  @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_DELETE)
   @ResponseMessage('Workspace moved to trash')
@@ -183,6 +194,7 @@ export class WorkspacesController {
   }
 
   @Patch(':workspaceId/restore')
+  @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_DELETE)
   @ResponseMessage('Workspace restored')

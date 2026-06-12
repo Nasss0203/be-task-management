@@ -11,6 +11,12 @@ import {
 import { type CookieOptions, type Request, type Response } from 'express';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { Public } from 'src/common/decorator/public.decorator';
+import {
+  AuthRateLimit,
+  PublicReadRateLimit,
+  ReadRateLimit,
+  TokenRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { SkipTransform } from 'src/common/decorator/skip.transform';
 import { GoogleAuthGuard } from 'src/common/guard/google-auth.guard';
@@ -71,6 +77,7 @@ export class AuthController {
 
   @Post('register')
   @Public()
+  @AuthRateLimit()
   @ResponseMessage('Register user successfully!!')
   register(@Body() registerUserDto: RegisterUserDto) {
     return this.registerAuthApplication.register(registerUserDto);
@@ -78,6 +85,7 @@ export class AuthController {
 
   @Public()
   @Post('login')
+  @AuthRateLimit()
   @UseGuards(LocalAuthGuard)
   @ResponseMessage('Login user successfully!!')
   async login(@Auth() auth: IAuth, @Res({ passthrough: true }) res: Response) {
@@ -91,6 +99,7 @@ export class AuthController {
 
   @Public()
   @Post('refresh')
+  @TokenRateLimit()
   @ResponseMessage('Refresh token successfully!!')
   async refresh(
     @Req() req: RefreshTokenRequest,
@@ -109,6 +118,7 @@ export class AuthController {
 
   @Public()
   @Post('logout')
+  @TokenRateLimit()
   @ResponseMessage('Logout successfully!!')
   async logout(
     @Req() req: RefreshTokenRequest,
@@ -127,6 +137,7 @@ export class AuthController {
 
   @Public()
   @Get('google')
+  @PublicReadRateLimit()
   @UseGuards(GoogleAuthGuard)
   async googleAuth() {
     return;
@@ -135,6 +146,7 @@ export class AuthController {
   @Public()
   @SkipTransform()
   @Get('google/callback')
+  @AuthRateLimit()
   @UseGuards(GoogleAuthGuard)
   async googleAuthCallback(
     @Auth() googleUser: GoogleUserPayload,
@@ -152,6 +164,7 @@ export class AuthController {
   }
 
   @Get('me')
+  @ReadRateLimit()
   @ResponseMessage('Get me')
   async getProfile(@Req() req: Request & { user: IUserJwtPayload }) {
     return this.getProfileAuthApplication.getProfile(req.user);

@@ -9,6 +9,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import {
+  InviteRateLimit,
+  SearchRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
@@ -50,6 +54,7 @@ export class WorkspaceInvitesController {
   ) {}
 
   @Post(':workspaceId/members')
+  @InviteRateLimit()
   @ResponseMessage('Invite workspace members successfully')
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_MEMBER_ADD)
@@ -72,6 +77,7 @@ export class WorkspaceInvitesController {
   }
 
   @Post(':token/accept')
+  @InviteRateLimit()
   @ResponseMessage('Accept workspace invite successfully')
   async acceptInvite(
     @Param('token') token: string,
@@ -93,6 +99,7 @@ export class WorkspaceInvitesController {
   }
 
   @Post(':workspaceId/link')
+  @InviteRateLimit()
   @ResponseMessage('Create workspace invite link successfully')
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_MEMBER_ADD)
@@ -115,6 +122,7 @@ export class WorkspaceInvitesController {
   }
 
   @Get(':workspaceId/users/search')
+  @SearchRateLimit()
   @ResponseMessage('Search invite users successfully')
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_MEMBER_ADD)

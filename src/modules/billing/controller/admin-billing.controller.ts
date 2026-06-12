@@ -8,6 +8,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AdminRateLimit } from 'src/common/decorator/rate-limit.decorator';
 import { RequireSystemRoles } from 'src/common/decorator/require-system-roles.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { SystemRole } from 'src/modules/users/domain/entities/user.entity';
@@ -106,6 +107,7 @@ type PaymentRawRow = {
 
 @RequireSystemRoles(SystemRole.SYSTEM_ADMIN, SystemRole.SUPER_ADMIN)
 @Controller('admin/billing')
+@AdminRateLimit()
 export class AdminBillingController {
   constructor(
     private readonly adminBillingPlanService: AdminBillingPlanService,

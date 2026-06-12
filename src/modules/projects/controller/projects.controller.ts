@@ -11,6 +11,11 @@ import {
   Query,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import {
+  ReadRateLimit,
+  StrictWriteRateLimit,
+  WriteRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
@@ -25,6 +30,7 @@ import { PROJECT_TYPES } from '../interfaces/types';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 @Controller('projects')
+@ReadRateLimit()
 export class ProjectsController {
   constructor(
     @Inject(PROJECT_TYPES.applications.FindProjectApplication)
@@ -49,6 +55,7 @@ export class ProjectsController {
   }
 
   @Post()
+  @WriteRateLimit()
   @RequirePermissions(PERMISSIONS.PROJECT_CREATE)
   @ResponseMessage('Create Project')
   async createProjectWithPageBlock(
@@ -72,6 +79,7 @@ export class ProjectsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId')
+  @WriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.PROJECT_UPDATE)
   async updateProject(
@@ -87,6 +95,7 @@ export class ProjectsController {
   }
 
   @Delete('workspaces/:workspaceId/projects/:projectId')
+  @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.PROJECT_DELETE)
   async deleteProject(
@@ -106,6 +115,7 @@ export class ProjectsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/restore')
+  @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.PROJECT_DELETE)
   async restoreProject(

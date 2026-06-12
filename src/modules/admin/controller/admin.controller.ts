@@ -8,6 +8,10 @@ import {
   Query,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import {
+  AdminRateLimit,
+  WriteRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { RequireSystemRoles } from 'src/common/decorator/require-system-roles.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { type IAuth } from 'src/types/auth';
@@ -52,6 +56,7 @@ import { ADMIN_TYPES } from '../interfaces/types';
 
 @RequireSystemRoles(SystemRole.SYSTEM_ADMIN, SystemRole.SUPER_ADMIN)
 @Controller('admin')
+@AdminRateLimit()
 export class AdminController {
   constructor(
     private readonly adminService: AdminService,
@@ -110,6 +115,7 @@ export class AdminController {
   }
 
   @Patch('workspaces/:workspaceId/plan')
+  @WriteRateLimit()
   @ResponseMessage('Update workspace plan successfully')
   updateWorkspacePlan(
     @Param('workspaceId') workspaceId: string,
@@ -182,6 +188,7 @@ export class AdminController {
   }
 
   @Patch('users/:userId/lock')
+  @WriteRateLimit()
   @ResponseMessage('Lock user successfully')
   lockUser(
     @Param('userId') userId: string,
@@ -191,6 +198,7 @@ export class AdminController {
   }
 
   @Patch('users/:userId/unlock')
+  @WriteRateLimit()
   @ResponseMessage('Unlock user successfully')
   unlockUser(
     @Param('userId') userId: string,
@@ -204,6 +212,7 @@ export class AdminController {
   }
 
   @Patch('users/:userId/system-role')
+  @WriteRateLimit()
   @ResponseMessage('Update user system role successfully')
   updateUserSystemRole(
     @Param('userId') userId: string,

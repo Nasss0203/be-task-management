@@ -1,5 +1,6 @@
 import { Controller, Get, Inject, Param } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import { ReadRateLimit } from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
@@ -10,6 +11,7 @@ import { type GetWorkspaceOverviewApplication } from '../interfaces/applications
 import { DASHBOARD_TYPES } from '../interfaces/types';
 
 @Controller('dashboard')
+@ReadRateLimit()
 export class WorkspaceOverviewController {
   constructor(
     @Inject(DASHBOARD_TYPES.applications.GetWorkspaceOverviewApplication)

@@ -1,9 +1,11 @@
 import { Controller, Get, Param, Inject } from '@nestjs/common';
+import { PublicReadRateLimit } from 'src/common/decorator/rate-limit.decorator';
 import type { WorkspaceTemplatesService } from '../interfaces/services/workspace_templates.service.interface';
 import { WORKSPACE_TEMPLATE_TYPES } from '../interfaces/types';
 import { TemplateStatus, TemplateVisibility } from 'src/common/enum/template.enum';
 
 @Controller('workspace-templates')
+@PublicReadRateLimit()
 export class WorkspaceTemplatesController {
   constructor(
     @Inject(WORKSPACE_TEMPLATE_TYPES.services.WorkspaceTemplatesService)

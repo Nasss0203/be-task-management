@@ -1,5 +1,9 @@
 import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import {
+  InviteRateLimit,
+  ReadRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
@@ -13,6 +17,7 @@ import { UserWorkspacesService } from '../user_workspace.service';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 @Controller('workspace-members')
+@ReadRateLimit()
 export class UserWorkspacesController {
   constructor(
     private readonly UserWorkspacesService: UserWorkspacesService,
@@ -25,6 +30,7 @@ export class UserWorkspacesController {
   ) {}
 
   @Post(':workspaceId/members')
+  @InviteRateLimit()
   @ResponseMessage('Add member')
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_MEMBER_ADD)

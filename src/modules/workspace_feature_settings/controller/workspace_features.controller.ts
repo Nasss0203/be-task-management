@@ -1,5 +1,9 @@
 import { Body, Controller, Get, Inject, Param, Patch } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import {
+  ReadRateLimit,
+  WriteRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
@@ -11,6 +15,7 @@ import { WORKSPACE_FEATURE_SETTING_TYPES } from '../interfaces/types';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 @Controller('workspaces/:workspaceId/features')
+@ReadRateLimit()
 export class WorkspaceFeaturesController {
   constructor(
     @Inject(
@@ -31,6 +36,7 @@ export class WorkspaceFeaturesController {
   }
 
   @Patch(':featureCode')
+  @WriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.WORKSPACE_FEATURE_UPDATE)
   updateWorkspaceFeature(

@@ -1,5 +1,9 @@
 import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import {
+  ReadRateLimit,
+  WriteRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
@@ -11,6 +15,7 @@ import { TASK_COMMENT_TYPES } from '../interfaces/types';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 @Controller('task-commnent')
+@ReadRateLimit()
 export class TaskCommnentController {
   constructor(
     @Inject(TASK_COMMENT_TYPES.applications.CreateTaskCommentApplication)
@@ -21,6 +26,7 @@ export class TaskCommnentController {
   ) {}
 
   @Post('workspaces/:workspaceId/projects/:projectId/tasks/:taskId')
+  @WriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.TASK_COMMENT_CREATE)
   @ResponseMessage('Create task comment successfully')

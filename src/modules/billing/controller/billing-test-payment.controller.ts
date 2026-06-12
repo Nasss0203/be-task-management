@@ -9,6 +9,11 @@ import {
 } from '@nestjs/common';
 import { type Request } from 'express';
 import { Public } from 'src/common/decorator/public.decorator';
+import {
+  BillingRateLimit,
+  PublicReadRateLimit,
+  WebhookRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { type ReturnQueryFromVNPay } from 'vnpay';
 
@@ -28,6 +33,7 @@ export class BillingTestVnpayController {
 
   @Public()
   @Post()
+  @BillingRateLimit()
   @ResponseMessage('Thanh toan vnpay')
   createPayment(@Body() dto: TestCreateVnpayPaymentDto, @Req() req: Request) {
     const orderCode = `PAY_${Date.now()}`;
@@ -49,6 +55,7 @@ export class BillingTestVnpayController {
 
   @Public()
   @Get('return')
+  @PublicReadRateLimit()
   @ResponseMessage('VNPAY return')
   async handleReturn(@Query() query: ReturnQueryFromVNPay) {
     return this.vnpayIpnService.handleReturn(query);
@@ -56,6 +63,7 @@ export class BillingTestVnpayController {
 
   @Public()
   @Get('ipn')
+  @WebhookRateLimit()
   @ResponseMessage('VNPAY IPN')
   async handleIpn(@Query() query: ReturnQueryFromVNPay) {
     return this.vnpayIpnService.handleIpn(query);
