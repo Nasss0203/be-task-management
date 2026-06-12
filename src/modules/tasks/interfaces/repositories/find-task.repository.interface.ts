@@ -20,7 +20,7 @@ export type TaskRestoreLookup = {
 };
 
 export interface FindTaskRepository {
-  findAllTask(params: ParamTask, manager?: EntityManager): Promise<TaskModel[]>;
+  findAllTask(params: ParamTask, filters?: FindBacklogTasksFilters, manager?: EntityManager): Promise<TaskModel[]>;
   findAllTaskByWorkspace(
     workspaceId: string,
     manager?: EntityManager,

@@ -8,6 +8,7 @@ export interface FindTaskApplication {
   findAllTask(
     projectId: string,
     workspaceId: string,
+    filters?: FindBacklogTasksFilters,
   ): Promise<TaskResponseDto[]>;
 
   findOneTask(taskId: string): Promise<TaskResponseDto | null>;

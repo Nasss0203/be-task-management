@@ -63,6 +63,7 @@ export class TasksController {
     @Inject(TASK_TYPES.applications.DeleteTaskApplication)
     private readonly deleteTaskApplication: DeleteTaskApplication,
 
+
     @Inject(TASK_TYPES.applications.FindTaskApplication)
     private readonly findTaskApplication: FindTaskApplication,
 
@@ -80,8 +81,10 @@ export class TasksController {
   async findAllByTask(
     @Param('projectId') projectId: string,
     @Param('workspaceId') workspaceId: string,
+    @Query(new ValidationPipe({ transform: true }))
+    query: FindBacklogTasksQueryDto,
   ): Promise<TaskResponseDto[]> {
-    return await this.app.findAllTask(projectId, workspaceId);
+    return await this.app.findAllTask(projectId, workspaceId, query);
   }
 
   @Get('/workspace/:workspaceId/project/:projectId/backlog')
@@ -101,7 +104,6 @@ export class TasksController {
   @Post()
   @WriteRateLimit()
   @RequirePermissions(PERMISSIONS.TASK_CREATE)
-  @ResponseMessage('Create Task')
   create(@Body() createTaskDto: CreateTaskDto, @Auth() auth: IAuth) {
     return this.createTaskApplication.create({
       ...createTaskDto,

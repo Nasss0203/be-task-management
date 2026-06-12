@@ -19,8 +19,9 @@ export class FindTaskApplicationImpl implements FindTaskApplication {
   async findAllTask(
     projectId: string,
     workspaceId: string,
+    filters?: FindBacklogTasksFilters,
   ): Promise<TaskResponseDto[]> {
-    const tasks = await this.service.findAllTask(projectId, workspaceId);
+    const tasks = await this.service.findAllTask(projectId, workspaceId, filters);
     return tasks.map((task) => TaskMapper.toResponse(task));
   }
 

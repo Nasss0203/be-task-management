@@ -8,7 +8,7 @@ const ONE_MINUTE = 60_000;
 export const RateLimitPreset = {
   auth: { default: { limit: 5, ttl: ONE_MINUTE, blockDuration: ONE_MINUTE } },
   token: { default: { limit: 20, ttl: ONE_MINUTE } },
-  read: { default: { limit: 1000, ttl: ONE_MINUTE } },
+  read: { default: { limit: 10000, ttl: ONE_MINUTE } },
   publicRead: { default: { limit: 120, ttl: ONE_MINUTE } },
   search: { default: { limit: 60, ttl: ONE_MINUTE } },
   write: { default: { limit: 80, ttl: ONE_MINUTE } },

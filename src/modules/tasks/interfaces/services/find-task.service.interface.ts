@@ -10,6 +10,7 @@ export interface FindTaskService {
   findAllTask(
     projectId: string,
     workspaceId: string,
+    filters?: FindBacklogTasksFilters,
     manager?: EntityManager,
   ): Promise<TaskModel[]>;
 
