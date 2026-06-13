@@ -1,6 +1,8 @@
 // src/modules/sprints/applications/update-sprint.application.ts
 
 import { Inject, Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { REALTIME_EVENTS } from 'src/modules/realtime/realtime.events';
 import {
   ActivityAction,
   ActivityEntityType,
@@ -27,6 +29,8 @@ export class UpdateSprintApplicationImpl implements UpdateSprintApplication {
 
     @Inject(ACTIVITY_TYPES.services.CreateActivityService)
     private readonly createActivityService: CreateActivityService,
+
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async updateSprint(
@@ -63,6 +67,12 @@ export class UpdateSprintApplicationImpl implements UpdateSprintApplication {
         },
         manager,
       );
+
+      this.eventEmitter.emit(REALTIME_EVENTS.SPRINT_UPDATED, {
+        workspaceId: updatedSprint.workspaceId,
+        projectId: updatedSprint.projectId,
+        sprint: updatedSprint,
+      });
 
       return updatedSprint;
     });

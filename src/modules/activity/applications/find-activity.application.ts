@@ -8,12 +8,16 @@ import {
 import { type FindActivityService } from '../interfaces/services/find-activity.service.interface';
 import { ACTIVITY_TYPES } from '../interfaces/types';
 import { ActivityMapper } from '../mapper/activity.mapper';
+import { USER_TYPES } from '../../users/interfaces/types';
+import { type FindUserService } from '../../users/interfaces/services/find-user.service.interface';
 
 @Injectable()
 export class FindActivityApplicationImpl implements FindActivityApplication {
   constructor(
     @Inject(ACTIVITY_TYPES.services.FindActivityService)
     private readonly findActivityService: FindActivityService,
+    @Inject(USER_TYPES.services.FindUserService)
+    private readonly findUserService: FindUserService,
   ) {}
 
   async findByWorkspace(
@@ -66,8 +70,25 @@ export class FindActivityApplicationImpl implements FindActivityApplication {
       limit: filters.limit ? Number(filters.limit) : undefined,
     });
 
+    const items = ActivityMapper.toResponseList(result.items);
+
+    const actorIds = [...new Set(items.map(item => item.actorId).filter(id => !!id))] as string[];
+    const users = await Promise.all(actorIds.map(id => this.findUserService.findUserById(id)));
+    const userMap = new Map(users.filter(u => !!u).map(u => [u!.id, u]));
+
+    items.forEach(item => {
+      if (item.actorId && userMap.has(item.actorId)) {
+        const user = userMap.get(item.actorId)!;
+        item.actor = {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+        };
+      }
+    });
+
     return {
-      items: ActivityMapper.toResponseList(result.items),
+      items,
       nextCursor: result.nextCursor,
     };
   }

@@ -4,6 +4,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { REALTIME_EVENTS } from 'src/modules/realtime/realtime.events';
 import {
   ActivityAction,
   ActivityEntityType,
@@ -27,6 +29,8 @@ export class DeleteSprintApplicationImpl implements DeleteSprintApplication {
 
     @Inject(ACTIVITY_TYPES.services.CreateActivityService)
     private readonly createActivityService: CreateActivityService,
+
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async delete(input: {
@@ -86,6 +90,12 @@ export class DeleteSprintApplicationImpl implements DeleteSprintApplication {
       actorId: input.userId,
       action: ActivityAction.SPRINT_DELETED,
     });
+
+    this.eventEmitter.emit(REALTIME_EVENTS.SPRINT_DELETED, {
+      workspaceId: input.workspaceId,
+      projectId: input.projectId,
+      sprintId: input.sprintId,
+    });
   }
 
   async restore(input: {
@@ -131,6 +141,12 @@ export class DeleteSprintApplicationImpl implements DeleteSprintApplication {
       entityId: input.sprintId,
       actorId: input.userId,
       action: ActivityAction.SPRINT_RESTORED,
+    });
+
+    this.eventEmitter.emit(REALTIME_EVENTS.SPRINT_UPDATED, {
+      workspaceId: sprint.workspaceId,
+      projectId: sprint.projectId,
+      sprint: sprint,
     });
   }
 }
