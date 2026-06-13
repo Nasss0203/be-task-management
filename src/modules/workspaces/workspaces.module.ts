@@ -28,6 +28,7 @@ import { FindWorkspaceOverviewApplicationImpl } from './applications/find-worksp
 import { FindWorkspaceApplicationImpl } from './applications/find.workspace.application';
 import { UpdateWorkspaceApplicationImpl } from './applications/update-workspace.application';
 import { UpdateWorkspaceLayoutModeApplicationImpl } from './applications/update-workspace-layout-mode.application';
+import { SaveWorkspaceAsTemplateApplicationImpl } from './applications/save-workspace-as-template.application';
 import { WorkspaceTrashApplicationImpl } from './applications/workspace-trash.application';
 import { WorkspacesController } from './controller/workspaces.controller';
 import { Workspace } from './domain/entities/workspace.entity';
@@ -111,6 +112,10 @@ import { WorkspaceTemplatesModule } from '../workspace_templates/workspace_templ
     {
       provide: WORKSPACE_TYPES.applications.UpdateWorkspaceLayoutModeApplication,
       useClass: UpdateWorkspaceLayoutModeApplicationImpl,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.SaveWorkspaceAsTemplateApplication,
+      useClass: SaveWorkspaceAsTemplateApplicationImpl,
     },
     //Service
     {

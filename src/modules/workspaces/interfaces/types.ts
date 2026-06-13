@@ -24,6 +24,7 @@ export const WORKSPACE_TYPES = {
     FindWorkspaceOverviewApplication: 'FindWorkspaceOverviewApplication',
     UpdateWorkspaceApplication: 'UpdateWorkspaceApplication',
     UpdateWorkspaceLayoutModeApplication: 'UpdateWorkspaceLayoutModeApplication',
+    SaveWorkspaceAsTemplateApplication: 'SaveWorkspaceAsTemplateApplication',
   },
   repositories: {
     WorkspaceRepository: 'IWorkspaceRepository',

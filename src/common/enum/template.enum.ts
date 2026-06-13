@@ -8,4 +8,5 @@ export enum TemplateVisibility {
   PRIVATE = 'PRIVATE',
   WORKSPACE = 'WORKSPACE',
   PUBLIC = 'PUBLIC',
+  PUBLIC_PENDING = 'PUBLIC_PENDING',
 }
