@@ -229,4 +229,17 @@ export class WorkspacesController {
       workspaceId,
     );
   }
+
+  @Delete('trash/:workspaceId')
+  @StrictWriteRateLimit()
+  @ResponseMessage('Workspace removed from trash')
+  async removeWorkspaceFromUserTrash(
+    @Auth() auth: IAuth,
+    @Param('workspaceId') workspaceId: string,
+  ) {
+    return this.workspaceTrashApplication.removeWorkspaceFromUserTrash(
+      auth.id,
+      workspaceId,
+    );
+  }
 }

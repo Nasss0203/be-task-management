@@ -12,4 +12,10 @@ export interface UserWorkspaceRepository {
     input: SaveUserWorkspaceInput,
     manager?: EntityManager,
   ): Promise<UserWorkspaceModel>;
+
+  deleteByUserId(
+    workspaceId: string,
+    userId: string,
+    manager?: EntityManager,
+  ): Promise<void>;
 }

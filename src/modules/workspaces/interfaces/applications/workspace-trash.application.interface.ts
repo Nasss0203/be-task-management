@@ -12,4 +12,8 @@ export interface WorkspaceTrashApplication {
     userId: string,
     workspaceId: string,
   ): Promise<WorkspaceResponseDto>;
+  removeWorkspaceFromUserTrash(
+    userId: string,
+    workspaceId: string,
+  ): Promise<void>;
 }

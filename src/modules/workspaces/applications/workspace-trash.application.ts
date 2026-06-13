@@ -40,4 +40,11 @@ export class WorkspaceTrashApplicationImpl implements WorkspaceTrashApplication 
 
     return WorkspaceMapper.toResponse(workspace);
   }
+
+  async removeWorkspaceFromUserTrash(
+    userId: string,
+    workspaceId: string,
+  ): Promise<void> {
+    await this.service.removeWorkspaceFromUserTrash(userId, workspaceId);
+  }
 }
