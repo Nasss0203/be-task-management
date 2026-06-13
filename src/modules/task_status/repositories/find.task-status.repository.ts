@@ -43,7 +43,6 @@ export class FindTaskStatusRepositoryImpl implements FindTaskStatusRepository {
       where: {
         projectId,
         workspaceId,
-        name: 'Done',
         isDone: true,
       },
     });

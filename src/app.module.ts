@@ -52,6 +52,7 @@ import { WorkspaceFeatureSettingsModule } from './modules/workspace_feature_sett
 import { WorkspaceInvitesModule } from './modules/workspace_invites/workspace_invites.module';
 import { WorkspaceTemplatesModule } from './modules/workspace_templates/workspace_templates.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
+import { SprintReportsModule } from './modules/sprint_reports/sprint_reports.module';
 
 @Module({
   imports: [
@@ -116,6 +117,7 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
     PlanFeaturesModule,
     WorkspaceFeatureSettingsModule,
     WorkspaceTemplatesModule,
+    SprintReportsModule,
   ],
   controllers: [AppController],
   providers: [
