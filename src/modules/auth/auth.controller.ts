@@ -32,6 +32,11 @@ import { type RefreshAuthApplication } from './interfaces/applications/refresh-a
 import { type RegisterAuthApplication } from './interfaces/applications/register-auth.application.interface';
 import { IUserJwtPayload } from './interfaces/type';
 import { AUTH_TYPES } from './interfaces/types';
+import { AuthService } from './auth.service';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 type RefreshTokenRequest = Request & {
   cookies?: {
@@ -73,6 +78,7 @@ export class AuthController {
     private readonly getProfileAuthApplication: GetProfileAuthApplication,
     @Inject(AUTH_TYPES.applications.GoogleAuthApplication)
     private readonly googleAuthApplication: GoogleAuthApplication,
+    private readonly authService: AuthService,
   ) {}
 
   @Post('register')
@@ -160,7 +166,9 @@ export class AuthController {
       sameSite: 'lax',
     });
 
-    res.redirect(`http://localhost:3000/callback?access_token=${access_token}`);
+    res.redirect(
+      `${process.env.FRONTEND_URL || 'http://localhost:3000'}/callback?access_token=${access_token}&refresh_token=${refresh_token}`
+    );
   }
 
   @Get('me')
@@ -168,5 +176,39 @@ export class AuthController {
   @ResponseMessage('Get me')
   async getProfile(@Req() req: Request & { user: IUserJwtPayload }) {
     return this.getProfileAuthApplication.getProfile(req.user);
+  }
+
+  @Public()
+  @Post('resend-verification')
+  @AuthRateLimit()
+  @ResponseMessage('Verification email resent')
+  async resendVerification(@Body() dto: ResendVerificationDto) {
+    await this.authService.resendVerificationEmail(dto.email);
+    return { message: 'If the email exists and is not verified, a new link has been sent.' };
+  }
+
+  @Public()
+  @Post('verify-email')
+  @AuthRateLimit()
+  @ResponseMessage('Email verified successfully')
+  async verifyEmail(@Body() dto: VerifyEmailDto) {
+    return this.authService.verifyEmail(dto.token);
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @AuthRateLimit()
+  @ResponseMessage('Password reset email sent')
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    await this.authService.forgotPassword(dto.email);
+    return { message: 'If the email exists, a password reset link has been sent.' };
+  }
+
+  @Public()
+  @Post('reset-password')
+  @AuthRateLimit()
+  @ResponseMessage('Password reset successfully')
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.newPassword);
   }
 }

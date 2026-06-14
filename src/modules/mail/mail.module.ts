@@ -13,9 +13,9 @@ import { MailService } from './mail.service';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         transport: {
-          host: 'smtp.gmail.com',
-          // port: 465,
-          secure: false,
+          host: configService.get<string>('HOST_EMAIL') || 'smtp.gmail.com',
+          port: Number(configService.get('PORT_EMAIL')) || 465,
+          secure: Number(configService.get('PORT_EMAIL')) === 465,
           auth: {
             user: configService.get<string>('USER_EMAIL'),
             pass: configService.get<string>('PASSWORD_EMAIL'),

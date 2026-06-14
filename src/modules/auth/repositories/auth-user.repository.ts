@@ -41,6 +41,14 @@ export class AuthUserRepositoryImpl implements AuthUserRepository {
     });
   }
 
+  findByEmailVerificationToken(token: string): Promise<User | null> {
+    return this.userRepo.findOne({ where: { emailVerificationToken: token } });
+  }
+
+  findByResetPasswordToken(token: string): Promise<User | null> {
+    return this.userRepo.findOne({ where: { resetPasswordToken: token } });
+  }
+
   findProfileById(id: string): Promise<User | null> {
     return this.userRepo.findOne({
       where: { id },
@@ -65,6 +73,9 @@ export class AuthUserRepositoryImpl implements AuthUserRepository {
       passwordHash: input.passwordHash,
       systemRole: SystemRole.USER,
       isActive: true,
+      isEmailVerified: false,
+      emailVerificationToken: input.emailVerificationToken,
+      emailVerificationExpires: input.emailVerificationExpires,
       googleId: null,
       avatarUrl: null,
     });
@@ -80,6 +91,7 @@ export class AuthUserRepositoryImpl implements AuthUserRepository {
       avatarUrl: input.avatarUrl,
       passwordHash: null,
       isActive: true,
+      isEmailVerified: true,
     });
 
     return this.userRepo.save(user);

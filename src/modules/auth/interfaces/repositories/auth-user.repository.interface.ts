@@ -4,6 +4,8 @@ export interface CreateLocalAuthUserInput {
   email: string;
   username: string;
   passwordHash: string;
+  emailVerificationToken: string;
+  emailVerificationExpires: Date;
 }
 
 export interface CreateGoogleAuthUserInput {
@@ -21,6 +23,8 @@ export interface AuthUserRepository {
     email: string,
     username: string,
   ): Promise<User | null>;
+  findByEmailVerificationToken(token: string): Promise<User | null>;
+  findByResetPasswordToken(token: string): Promise<User | null>;
   findProfileById(id: string): Promise<User | null>;
   createLocalUser(input: CreateLocalAuthUserInput): Promise<User>;
   createGoogleUser(input: CreateGoogleAuthUserInput): Promise<User>;

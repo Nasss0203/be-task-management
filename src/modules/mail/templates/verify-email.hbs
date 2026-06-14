@@ -1,0 +1,184 @@
+<html lang='vi'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>Xác nhận địa chỉ email của bạn</title>
+  </head>
+  <body
+    style='
+      margin: 0;
+      padding: 0;
+      background-color: #f4f7fb;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #1f2937;
+    '
+  >
+    <table
+      role='presentation'
+      cellpadding='0'
+      cellspacing='0'
+      width='100%'
+      style='background-color: #f4f7fb; margin: 0; padding: 24px 0'
+    >
+      <tr>
+        <td align='center'>
+          <table
+            role='presentation'
+            cellpadding='0'
+            cellspacing='0'
+            width='100%'
+            style='
+              max-width: 600px;
+              background-color: #ffffff;
+              border-radius: 12px;
+              overflow: hidden;
+              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            '
+          >
+            <tr>
+              <td
+                style='
+                  background-color: #2563eb;
+                  padding: 32px 24px;
+                  text-align: center;
+                '
+              >
+                <h1
+                  style='
+                    margin: 0;
+                    font-size: 24px;
+                    line-height: 32px;
+                    color: #ffffff;
+                    font-weight: 700;
+                  '
+                >
+                  Xác nhận địa chỉ email
+                </h1>
+              </td>
+            </tr>
+
+            <tr>
+              <td style='padding: 32px 24px'>
+                <p
+                  style='
+                    margin: 0 0 16px;
+                    font-size: 16px;
+                    line-height: 24px;
+                    color: #374151;
+                  '
+                >
+                  Xin chào
+                  <strong>{{recipientName}}</strong>,
+                </p>
+
+                <p
+                  style='
+                    margin: 0 0 16px;
+                    font-size: 16px;
+                    line-height: 24px;
+                    color: #374151;
+                  '
+                >
+                  Cảm ơn bạn đã đăng ký tài khoản tại <strong>{{appName}}</strong>. Để hoàn tất đăng ký và kích hoạt tài khoản, vui lòng xác nhận địa chỉ email của bạn bằng cách nhấn vào nút bên dưới.
+                </p>
+
+                <table
+                  role='presentation'
+                  cellpadding='0'
+                  cellspacing='0'
+                  width='100%'
+                  style='margin: 0 0 24px'
+                >
+                  <tr>
+                    <td align='center'>
+                      <a
+                        href='{{verifyUrl}}'
+                        target='_blank'
+                        style='
+                          display: inline-block;
+                          background-color: #2563eb;
+                          color: #ffffff;
+                          text-decoration: none;
+                          font-size: 16px;
+                          font-weight: 700;
+                          padding: 14px 28px;
+                          border-radius: 8px;
+                        '
+                      >
+                        Xác nhận Email
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <p
+                  style='
+                    margin: 0 0 12px;
+                    font-size: 14px;
+                    line-height: 22px;
+                    color: #6b7280;
+                  '
+                >
+                  Nếu nút không hoạt động, bạn có thể copy link này và dán vào
+                  trình duyệt:
+                </p>
+
+                <p
+                  style='
+                    margin: 0 0 24px;
+                    font-size: 13px;
+                    line-height: 22px;
+                    word-break: break-all;
+                  '
+                >
+                  <a
+                    href='{{verifyUrl}}'
+                    target='_blank'
+                    style='color: #2563eb; text-decoration: none'
+                  >
+                    {{verifyUrl}}
+                  </a>
+                </p>
+
+                <p
+                  style='
+                    margin: 0;
+                    font-size: 13px;
+                    line-height: 22px;
+                    color: #9ca3af;
+                  '
+                >
+                  Nếu bạn không tạo tài khoản này, vui lòng bỏ qua email.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style='
+                  padding: 20px 24px;
+                  text-align: center;
+                  background-color: #f9fafb;
+                  border-top: 1px solid #e5e7eb;
+                '
+              >
+                <p
+                  style='
+                    margin: 0;
+                    font-size: 12px;
+                    line-height: 20px;
+                    color: #9ca3af;
+                  '
+                >
+                  ©
+                  {{year}}
+                  {{appName}}. All rights reserved.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

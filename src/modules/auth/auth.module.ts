@@ -10,6 +10,7 @@ import { RefreshToken } from '../refresh_token/entities/refresh_token.entity';
 import { User } from '../users/domain/entities/user.entity';
 import { Workspace } from '../workspaces/domain/entities/workspace.entity';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
+import { MailModule } from '../mail/mail.module';
 import { GetProfileAuthApplicationImpl } from './applications/get-profile-auth.application';
 import { GoogleAuthApplicationImpl } from './applications/google-auth.application';
 import { LoginAuthApplicationImpl } from './applications/login-auth.application';
@@ -47,6 +48,7 @@ import { ValidateUserAuthServiceImpl } from './services/validate-user-auth.servi
     }),
     PassportModule,
     WorkspacesModule,
+    MailModule,
   ],
   providers: [
     AuthService,
