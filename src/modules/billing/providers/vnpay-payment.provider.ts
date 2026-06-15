@@ -26,7 +26,11 @@ export class VnpayPaymentProviderImpl implements VnpayPaymentProvider {
   ) {}
 
   createPayment(input: CreateGatewayPaymentInput): CreateGatewayPaymentResult {
-    const returnUrl = this.configService.getOrThrow<string>('VNPAY_RETURN_URL');
+    const clientUrl =
+      this.configService.get<string>('CLIENT_URL') ?? 'http://localhost:3000';
+    const returnUrl =
+      this.configService.get<string>('VNPAY_RETURN_URL') ??
+      `${clientUrl}/billing/payment-return`;
 
     const expiredAt = new Date();
     expiredAt.setMinutes(expiredAt.getMinutes() + 15);

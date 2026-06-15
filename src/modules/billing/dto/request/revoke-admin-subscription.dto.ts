@@ -2,7 +2,7 @@ import { IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class RevokeAdminSubscriptionDto {
   @IsUUID()
-  workspaceId: string;
+  userId: string;
 
   @IsOptional()
   @IsString()

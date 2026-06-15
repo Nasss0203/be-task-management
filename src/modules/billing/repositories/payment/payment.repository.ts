@@ -14,6 +14,7 @@ import {
   MarkPaymentStatusFailedInput,
   MarkPaymentSucceededInput,
   PaymentRepository,
+  UpdatePaymentMetadataInput,
   UpdatePaymentGatewayInput,
 } from '../../interfaces/repositories/payment/payment.repository.interface';
 
@@ -40,7 +41,7 @@ export class PaymentRepositoryImpl implements PaymentRepository {
       targetWorkspaceId: input.targetWorkspaceId ?? null,
 
       orderCode: input.orderCode,
-      provider: BillingProvider.VNPAY,
+      provider: input.provider ?? BillingProvider.VNPAY,
 
       amount: input.plan.priceAmount,
       currency: input.plan.currency,
@@ -86,6 +87,7 @@ export class PaymentRepositoryImpl implements PaymentRepository {
     payment.providerOrderId = input.providerOrderId;
     payment.providerRequestId = input.providerRequestId ?? null;
     payment.providerTransactionId = input.providerTransactionId ?? null;
+    payment.providerPaymentId = input.providerPaymentId ?? null;
     payment.expiredAt = input.expiredAt ?? null;
     payment.metadata = input.rawResponse;
 
@@ -122,6 +124,19 @@ export class PaymentRepositoryImpl implements PaymentRepository {
     return this.getRepository(manager).findOne({
       where: {
         orderCode,
+      },
+    });
+  }
+
+  findPaymentByProviderOrderId(
+    provider: BillingProvider,
+    providerOrderId: string,
+    manager?: EntityManager,
+  ): Promise<Payment | null> {
+    return this.getRepository(manager).findOne({
+      where: {
+        provider,
+        providerOrderId,
       },
     });
   }
@@ -169,6 +184,26 @@ export class PaymentRepositoryImpl implements PaymentRepository {
 
     payment.status = PaymentStatus.FAILED;
     payment.failedReason = input.failedReason;
+    payment.metadata = input.metadata;
+
+    return repo.save(payment);
+  }
+
+  async updatePaymentMetadata(
+    input: UpdatePaymentMetadataInput,
+    manager?: EntityManager,
+  ): Promise<Payment> {
+    const repo = this.getRepository(manager);
+    const payment = await repo.findOne({
+      where: {
+        id: input.paymentId,
+      },
+    });
+
+    if (!payment) {
+      throw new NotFoundException('Payment not found');
+    }
+
     payment.metadata = input.metadata;
 
     return repo.save(payment);

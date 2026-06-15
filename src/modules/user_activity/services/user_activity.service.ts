@@ -34,4 +34,8 @@ export class UserActivityService {
   async recordOpenWorkspace(userId: string): Promise<void> {
     await this.record(userId, UserActivityType.OPEN_WORKSPACE);
   }
+
+  async recordRefreshToken(userId: string): Promise<void> {
+    await this.record(userId, UserActivityType.REFRESH_TOKEN);
+  }
 }

@@ -13,6 +13,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthGoogleService } from './services/auth-google.service';
 import { GoogleStrategy } from 'src/common/strategy/google.strategy';
+import { UserActivityModule } from '../user_activity/user_activity.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { GoogleStrategy } from 'src/common/strategy/google.strategy';
     }),
     PassportModule,
     WorkspacesModule,
+    UserActivityModule,
   ],
   providers: [
     AuthService,

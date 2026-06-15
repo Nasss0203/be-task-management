@@ -391,19 +391,25 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
     );
   }
 
-  async createDefault({ userId }: { userId: string }): Promise<WorkspaceModel> {
-    return this.uow.runInTransaction(async (manager) => {
+  async createDefault({
+    userId,
+    manager,
+  }: {
+    userId: string;
+    manager?: EntityManager;
+  }): Promise<WorkspaceModel> {
+    const create = async (transactionManager: EntityManager) => {
       const { workspace, createdPage } = await this.createWorkspaceCoreDefault({
         name: 'Task management',
         planType: PlanTypeWorkspace.FREE,
         userId,
-        manager,
+        manager: transactionManager,
       });
 
       await this.checkWorkspaceLimitService.applyBillingForNewWorkspace(
         userId,
         workspace.id,
-        manager,
+        transactionManager,
       );
 
       const project = await this.createProjectService.create(
@@ -413,7 +419,7 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
           key: 'TASK',
           created_by: userId,
         },
-        manager,
+        transactionManager,
       );
 
       const board = await this.createBoardService.create(
@@ -424,19 +430,19 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
           createdBy: userId,
           viewType: BoardViewType.BOARD,
         },
-        manager,
+        transactionManager,
       );
 
       await this.usageLimitEnforcerService.syncProjectUsedValue(
         workspace.id,
-        manager,
+        transactionManager,
       );
 
       await this.seedDefaultTaskSetup({
         workspaceId: workspace.id,
         projectId: project.id,
         userId,
-        manager,
+        manager: transactionManager,
       });
 
       await this.updateDefaultPageBlock({
@@ -445,10 +451,16 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
         projectId: project.id,
         projectName: project.name,
         boardId: board.id,
-        manager,
+        manager: transactionManager,
       });
 
       return workspace;
-    });
+    };
+
+    if (manager) {
+      return create(manager);
+    }
+
+    return this.uow.runInTransaction(create);
   }
 }

@@ -41,7 +41,7 @@ import { WorkspaceFeatureSetting } from 'src/modules/workspace_feature_settings/
 import { WorkspaceInvite } from 'src/modules/workspace_invites/domain/entities/workspace_invite.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 @Module({
-  imports: [
+  imports: [ 
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({

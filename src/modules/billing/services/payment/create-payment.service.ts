@@ -5,8 +5,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
+import { randomUUID } from 'node:crypto';
 
 import { BILLING_TYPES } from '../../interfaces/types';
+import { CheckoutProvider } from '../../dto/create-payment.dto';
+import { BillingProvider } from '../../domain/entities/subscription.entity';
 import { type PlanRepository } from '../../interfaces/repositories/plan/plan.repository.interface';
 import { type PaymentRepository } from '../../interfaces/repositories/payment/payment.repository.interface';
 import {
@@ -14,7 +17,10 @@ import {
   CreatePaymentServiceInput,
   CreatePaymentServiceResponse,
 } from '../../interfaces/services/payment/create-payment.service.interface';
-import { type VnpayPaymentProvider } from '../../types/payment-input.interface';
+import {
+  type StripePaymentProvider,
+  type VnpayPaymentProvider,
+} from '../../types/payment-input.interface';
 
 @Injectable()
 export class CreateBillingServiceImpl implements CreateBillingService {
@@ -27,6 +33,9 @@ export class CreateBillingServiceImpl implements CreateBillingService {
 
     @Inject(BILLING_TYPES.providers.VnpayPaymentProvider)
     private readonly vnpayPaymentProvider: VnpayPaymentProvider,
+
+    @Inject(BILLING_TYPES.providers.StripePaymentProvider)
+    private readonly stripePaymentProvider: StripePaymentProvider,
   ) {}
 
   async createPayment(
@@ -46,7 +55,11 @@ export class CreateBillingServiceImpl implements CreateBillingService {
       throw new BadRequestException('Free plan does not require payment');
     }
 
-    const orderCode = `PAY_${Date.now()}`;
+    const provider =
+      input.dto.provider === CheckoutProvider.STRIPE
+        ? BillingProvider.STRIPE
+        : BillingProvider.VNPAY;
+    const orderCode = `PAY_${Date.now()}_${randomUUID().slice(0, 8)}`;
 
     const payment = await this.paymentRepository.createPendingPayment(
       {
@@ -54,17 +67,31 @@ export class CreateBillingServiceImpl implements CreateBillingService {
         plan,
         orderCode,
         targetWorkspaceId: input.dto.targetWorkspaceId ?? null,
+        provider,
       },
       manager,
     );
 
     try {
-      const gatewayPayment = this.vnpayPaymentProvider.createPayment({
-        orderCode,
-        amount: plan.priceAmount,
-        orderInfo: `Thanh toan goi ${plan.name}`,
-        ipAddress: input.ipAddress,
-      });
+      const gatewayPayment =
+        provider === BillingProvider.STRIPE
+          ? await this.stripePaymentProvider.createCheckout({
+              paymentId: payment.id,
+              orderCode,
+              userId: input.userId,
+              planId: plan.id,
+              planName: plan.name,
+              amount: plan.priceAmount,
+              currency: plan.currency,
+              billingInterval: plan.billingInterval,
+              targetWorkspaceId: input.dto.targetWorkspaceId ?? null,
+            })
+          : this.vnpayPaymentProvider.createPayment({
+              orderCode,
+              amount: plan.priceAmount,
+              orderInfo: `Thanh toan goi ${plan.name}`,
+              ipAddress: input.ipAddress,
+            });
 
       const updatedPayment = await this.paymentRepository.updatePaymentGateway(
         {
@@ -95,7 +122,7 @@ export class CreateBillingServiceImpl implements CreateBillingService {
           failedReason:
             error instanceof Error
               ? error.message
-              : 'Create VNPAY payment failed',
+              : `Create ${provider} payment failed`,
           metadata: {
             error:
               error instanceof Error

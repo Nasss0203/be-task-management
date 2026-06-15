@@ -13,6 +13,7 @@ import {
 } from '../../dto/query/user/admin-user-query.dto';
 import {
   AdminUserActivityResponseDto,
+  AdminUserPlan,
   AdminUserResponseDto,
   AdminUserWorkspaceResponseDto,
 } from '../../dto/response/user/admin-user.response.dto';
@@ -24,6 +25,7 @@ type UserRaw = {
   email: string;
   avatarUrl: string | null;
   isActive: boolean;
+  plan: AdminUserPlan;
   systemRole: SystemRole;
   createdAt: Date;
   lastActive: Date | null;
@@ -75,6 +77,7 @@ export class AdminUserRepositoryImpl implements AdminUserRepository {
       email: user.email,
       avatarUrl: user.avatarUrl,
       status: user.isActive ? 'ACTIVE' : 'LOCKED',
+      plan: user.plan,
       systemRole: user.systemRole,
       createdAt: user.createdAt.toISOString(),
       lastActive: user.lastActive ? user.lastActive.toISOString() : null,
@@ -128,6 +131,21 @@ export class AdminUserRepositoryImpl implements AdminUserRepository {
       .addSelect('"u"."email"', 'email')
       .addSelect('"u"."avatar_url"', 'avatarUrl')
       .addSelect('"u"."is_active"', 'isActive')
+      .addSelect(
+        `CASE
+          WHEN EXISTS (
+            SELECT 1
+            FROM "subscriptions" subscription
+            INNER JOIN "plans" plan ON plan."id" = subscription."plan_id"
+            WHERE subscription."user_id" = "u"."id"
+              AND subscription."status" = 'ACTIVE'
+              AND plan."slug" <> 'free'
+          )
+          THEN 'pro'
+          ELSE 'free'
+        END`,
+        'plan',
+      )
       .addSelect('"u"."system_role"', 'systemRole')
       .addSelect('"u"."created_at"', 'createdAt')
       .addSelect((subQuery) => {

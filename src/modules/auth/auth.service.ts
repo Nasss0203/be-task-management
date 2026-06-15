@@ -10,6 +10,7 @@ import { ErrorCode } from '../../common/constants/error-code.constant';
 import { RefreshToken } from '../refresh_token/entities/refresh_token.entity';
 import { SystemRole, User } from '../users/domain/entities/user.entity';
 import { RegisterUserDto } from '../users/dto/create-user.dto';
+import { UserActivityService } from '../user_activity/services/user_activity.service';
 import { type CreateWorkspaceService } from '../workspaces/interfaces/services/create-workspace.service.interface';
 import { WORKSPACE_TYPES } from '../workspaces/interfaces/types';
 import { IUserJwtPayload } from './interfaces/type';
@@ -27,6 +28,8 @@ export class AuthService {
 
     @Inject(WORKSPACE_TYPES.services.CreateWorkspaceService)
     private readonly createWorkspaceService: CreateWorkspaceService,
+
+    private readonly userActivityService: UserActivityService,
   ) {}
 
   async register(registerUserDto: RegisterUserDto) {
@@ -47,20 +50,25 @@ export class AuthService {
       );
     }
 
-    const user = this.userRepo.create({
-      email: registerUserDto.email,
-      username: registerUserDto.username,
-      passwordHash: hashPassword(registerUserDto.password),
-      systemRole: SystemRole.USER,
-      isActive: true,
-      googleId: null,
-      avatarUrl: null,
-    });
+    const saved = await this.userRepo.manager.transaction(async (manager) => {
+      const user = manager.getRepository(User).create({
+        email: registerUserDto.email,
+        username: registerUserDto.username,
+        passwordHash: hashPassword(registerUserDto.password),
+        systemRole: SystemRole.USER,
+        isActive: true,
+        googleId: null,
+        avatarUrl: null,
+      });
 
-    const saved = await this.userRepo.save(user);
+      const createdUser = await manager.getRepository(User).save(user);
 
-    await this.createWorkspaceService.createDefault({
-      userId: saved.id,
+      await this.createWorkspaceService.createDefault({
+        userId: createdUser.id,
+        manager,
+      });
+
+      return createdUser;
     });
 
     return {
@@ -87,7 +95,10 @@ export class AuthService {
       );
     }
 
-    return this.issueTokens(user);
+    const tokens = await this.issueTokens(user);
+    await this.userActivityService.recordLogin(user.id);
+
+    return tokens;
   }
 
   async logout(refreshToken?: string) {
@@ -152,12 +163,21 @@ export class AuthService {
     stored.revoked_at = new Date();
     await this.refreshRepo.save(stored);
 
-    return this.issueTokens(stored.user);
+    const tokens = await this.issueTokens(stored.user);
+    await this.userActivityService.recordRefreshToken(stored.user.id);
+
+    return tokens;
   }
 
-  async validateUser(email: string, password: string): Promise<User | null> {
+  async validateUser(
+    emailOrUsername: string,
+    password: string,
+  ): Promise<User | null> {
     const user = await this.userRepo.findOne({
-      where: { email },
+      where: [
+        { email: emailOrUsername },
+        { username: emailOrUsername },
+      ],
     });
 
     if (!user || !user.isActive) {

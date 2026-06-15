@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes } from 'crypto';
 import { RefreshToken } from 'src/modules/refresh_token/entities/refresh_token.entity';
 import { User } from 'src/modules/users/domain/entities/user.entity';
+import { UserActivityService } from 'src/modules/user_activity/services/user_activity.service';
 import { type CreateWorkspaceService } from 'src/modules/workspaces/interfaces/services/create-workspace.service.interface';
 import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
 import { GoogleUserPayload } from 'src/types/google-user-payload.interface';
@@ -24,6 +25,8 @@ export class AuthGoogleService {
 
     @Inject(WORKSPACE_TYPES.services.CreateWorkspaceService)
     private readonly createWorkspaceService: CreateWorkspaceService,
+
+    private readonly userActivityService: UserActivityService,
   ) {}
 
   async loginWithGoogle(googleUser: GoogleUserPayload) {
@@ -86,6 +89,8 @@ export class AuthGoogleService {
       token: hashToken(refresh_token),
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
+
+    await this.userActivityService.recordLogin(user.id);
 
     return {
       access_token,
