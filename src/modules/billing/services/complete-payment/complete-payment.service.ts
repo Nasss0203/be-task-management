@@ -228,11 +228,13 @@ export class CompletePaymentServiceImpl implements CompletePaymentService {
     const periodEnd = this.calculatePeriodEnd(periodStart, plan);
 
     if (!currentSubscription) {
+      const providerSubscriptionId =
+        this.getProviderSubscriptionId(payment);
       const subscription = this.subscriptionRepository.create({
         userId: payment.userId,
         planId: plan.id,
-        provider: BillingProvider.VNPAY,
-        providerSubscriptionId: null,
+        provider: payment.provider,
+        providerSubscriptionId,
         status: SubscriptionStatus.ACTIVE,
         currentPeriodStart: periodStart,
         currentPeriodEnd: periodEnd,
@@ -249,7 +251,10 @@ export class CompletePaymentServiceImpl implements CompletePaymentService {
     }
 
     currentSubscription.planId = plan.id;
-    currentSubscription.provider = BillingProvider.VNPAY;
+    currentSubscription.provider = payment.provider;
+    currentSubscription.providerSubscriptionId =
+      this.getProviderSubscriptionId(payment) ??
+      currentSubscription.providerSubscriptionId;
     currentSubscription.status = SubscriptionStatus.ACTIVE;
     currentSubscription.currentPeriodStart = periodStart;
     currentSubscription.currentPeriodEnd = periodEnd;
@@ -262,6 +267,12 @@ export class CompletePaymentServiceImpl implements CompletePaymentService {
     };
 
     return this.subscriptionRepository.save(currentSubscription);
+  }
+
+  private getProviderSubscriptionId(payment: Payment): string | null {
+    const value = payment.metadata?.stripeSubscriptionId;
+
+    return typeof value === 'string' ? value : null;
   }
 
   private calculatePeriodEnd(start: Date, plan: Plan): Date | null {

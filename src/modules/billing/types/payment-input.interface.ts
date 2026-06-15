@@ -1,4 +1,5 @@
 import { type ReturnQueryFromVNPay } from 'vnpay';
+import { PlanBillingInterval } from '../domain/entities/plan.entity';
 import { BillingProvider } from '../domain/entities/subscription.entity';
 
 export interface CreateGatewayPaymentInput {
@@ -38,4 +39,22 @@ export interface VnpayPaymentProvider {
   verifyReturnUrl(query: ReturnQueryFromVNPay): Promise<VnpayVerifyResult>;
 
   verifyIpn(query: ReturnQueryFromVNPay): Promise<VnpayVerifyResult>;
+}
+
+export interface CreateStripeCheckoutInput {
+  paymentId: string;
+  orderCode: string;
+  userId: string;
+  planId: string;
+  planName: string;
+  amount: number;
+  currency: string;
+  billingInterval: PlanBillingInterval;
+  targetWorkspaceId: string | null;
+}
+
+export interface StripePaymentProvider {
+  createCheckout(
+    input: CreateStripeCheckoutInput,
+  ): Promise<CreateGatewayPaymentResult>;
 }

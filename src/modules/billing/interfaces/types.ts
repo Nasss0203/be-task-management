@@ -2,6 +2,7 @@ export const BILLING_TYPES = {
   providers: {
     MomoPaymentProvider: 'MomoPaymentProvider',
     VnpayPaymentProvider: 'VnpayPaymentProvider',
+    StripePaymentProvider: 'StripePaymentProvider',
   },
 
   applications: {
@@ -14,6 +15,7 @@ export const BILLING_TYPES = {
     CheckWorkspaceLimitService: 'CheckWorkspaceLimitService',
     UsageLimitEnforcerService: 'UsageLimitEnforcerService',
     CompletePaymentService: 'CompletePaymentService',
+    StripeWebhookService: 'StripeWebhookService',
   },
   repositories: {
     PlanRepository: 'BillingPlanRepository',

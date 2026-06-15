@@ -43,7 +43,7 @@ import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.enti
 import { WorkspaceTemplate } from 'src/modules/workspace_templates/domain/entities/workspace_template.entity';
 
 @Module({
-  imports: [
+  imports: [ 
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
