@@ -1,5 +1,6 @@
 import { Controller, Get, Inject, Query } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import { ReadRateLimit } from 'src/common/decorator/rate-limit.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { type IAuth } from 'src/types/auth';
 import { QueryNotificationDto } from '../dto/query-notification.dto';
@@ -7,6 +8,7 @@ import { type FindNotificationApplication } from '../interfaces/applications/fin
 import { NOTIFICATION_TYPES } from '../interfaces/types';
 
 @Controller('notifications')
+@ReadRateLimit()
 export class NotificationsController {
   constructor(
     @Inject(NOTIFICATION_TYPES.applications.FindNotificationApplication)

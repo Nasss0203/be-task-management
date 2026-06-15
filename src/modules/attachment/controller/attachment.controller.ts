@@ -16,6 +16,11 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import {
+  ReadRateLimit,
+  UploadRateLimit,
+  WriteRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
@@ -50,6 +55,7 @@ export class AttachmentController {
   ) { }
 
   @Post('upload/:workspaceId')
+  @UploadRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.ATTACHMENT_UPLOAD)
   @ResponseMessage('Upload file')
@@ -88,11 +94,13 @@ export class AttachmentController {
   }
 
   @Get('tasks/:taskId')
+  @ReadRateLimit()
   async findByTask(@Param('taskId') taskId: string) {
     return this.findApp.findByTask(taskId);
   }
 
   @Post(':id/download-url')
+  @WriteRateLimit()
   @ResponseMessage('Get URL file')
   async createDownloadUrl(@Param('id') id: string, @Auth() auth: IAuth) {
     const userId = auth.id;
@@ -101,6 +109,7 @@ export class AttachmentController {
   }
 
   @Patch(':id')
+  @WriteRateLimit()
   @WorkspaceContext({ source: 'resource', type: 'attachment', key: 'id' })
   async update(
     @Param('id') id: string,
@@ -112,6 +121,7 @@ export class AttachmentController {
   }
 
   @Delete(':id')
+  @WriteRateLimit()
   @WorkspaceContext({ source: 'resource', type: 'attachment', key: 'id' })
   @RequirePermissions(PERMISSIONS.ATTACHMENT_DELETE)
   async delete(@Param('id') id: string, @Auth() auth: IAuth) {

@@ -73,6 +73,9 @@ import { DeleteBoardRepositoryImpl } from './repositories/delete-board.repositor
       useClass: DeleteBoardServiceImpl,
     },
   ],
-  exports: [BOARD_TYPES.services.CreateBoardService],
+  exports: [
+    BOARD_TYPES.services.CreateBoardService,
+    BOARD_TYPES.services.FindBoardService,
+  ],
 })
 export class BoardsModule {}

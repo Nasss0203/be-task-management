@@ -1,175 +1,125 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { IAuth } from 'src/types/auth';
-import { UserActivityService } from '../user_activity/services/user_activity.service';
-import { RegisterUserDto } from '../users/dto/create-user.dto';
-import { type CreateWorkspaceService } from '../workspaces/interfaces/services/create-workspace.service.interface';
-import { WORKSPACE_TYPES } from '../workspaces/interfaces/types';
-import { IUserJwtPayload } from './interfaces/type';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import * as crypto from 'crypto';
+import { ErrorCode } from 'src/common/constants/error-code.constant';
+import { hashPassword } from 'src/utils';
+import { MailService } from '../mail/mail.service';
+import { type AuthUserRepository } from './interfaces/repositories/auth-user.repository.interface';
+import { AUTH_TYPES } from './interfaces/types';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly jwt: JwtService,
-
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
-
-    @InjectRepository(RefreshToken)
-    private readonly refreshRepo: Repository<RefreshToken>,
-
-    @Inject(WORKSPACE_TYPES.services.CreateWorkspaceService)
-    private readonly createWorkspaceService: CreateWorkspaceService,
-
-    private readonly userActivityService: UserActivityService,
+    @Inject(AUTH_TYPES.repositories.AuthUserRepository)
+    private readonly userRepository: AuthUserRepository,
+    private readonly mailService: MailService,
   ) {}
 
-  async register(registerUserDto: RegisterUserDto) {
-    const exists = await this.userRepo.findOne({
-      where: [
-        { email: registerUserDto.email },
-        { username: registerUserDto.username },
-      ],
-    });
+  async resendVerificationEmail(email: string) {
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) return; // Silent fail
+    if (user.isEmailVerified) return;
 
-    if (exists) {
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(rawToken)
+      .digest('hex');
+    const expires = new Date();
+    expires.setHours(expires.getHours() + 24);
+
+    user.emailVerificationToken = hashedToken;
+    user.emailVerificationExpires = expires;
+    await this.userRepository.save(user);
+
+    await this.mailService.sendVerificationEmail({
+      to: user.email,
+      recipientName: user.username,
+      verifyUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${rawToken}`,
+    });
+  }
+
+  async verifyEmail(token: string) {
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const user =
+      await this.userRepository.findByEmailVerificationToken(hashedToken);
+
+    if (!user) {
       throw new HttpException(
         {
-          code: ErrorCode.USER_ALREADY_EXISTS,
-          message: 'User already exists',
+          code: ErrorCode.INVALID_VERIFICATION_TOKEN,
+          message: 'Invalid verification token',
         },
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    const saved = await this.userRepo.manager.transaction(async (manager) => {
-      const user = manager.getRepository(User).create({
-        email: registerUserDto.email,
-        username: registerUserDto.username,
-        passwordHash: hashPassword(registerUserDto.password),
-        systemRole: SystemRole.USER,
-        isActive: true,
-        googleId: null,
-        avatarUrl: null,
-      });
-
-      const createdUser = await manager.getRepository(User).save(user);
-
-      await this.createWorkspaceService.createDefault({
-        userId: createdUser.id,
-        manager,
-      });
-
-      return createdUser;
-    });
-
-    return {
-      id: saved.id,
-      email: saved.email,
-      username: saved.username,
-    };
-  }
-
-  async login(auth: IAuth) {
-    const { email, username } = auth;
-
-    const user = await this.userRepo.findOne({
-      where: { email, username },
-    });
-
-    if (!user || !user.isActive) {
-      throw new HttpException(
-        {
-          code: ErrorCode.AUTH_INVALID_CREDENTIALS,
-          message: 'Invalid credentials',
-        },
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-
-    const tokens = await this.issueTokens(user);
-    await this.userActivityService.recordLogin(user.id);
-
-    return tokens;
-  }
-
-  refresh(refreshToken?: string) {
-    return this.refreshAuthApplication.refresh(refreshToken);
-  }
-
-  async refresh(refreshToken?: string) {
-    if (!refreshToken) {
-      throw new HttpException(
-        {
-          code: ErrorCode.AUTH_INVALID_TOKEN,
-          message: 'Refresh token is required',
-        },
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-
-    const stored = await this.refreshRepo.findOne({
-      where: { token: hashToken(refreshToken) },
-      relations: ['user'],
-    });
-
     if (
-      !stored ||
-      stored.revoked_at ||
-      stored.expires_at.getTime() <= Date.now()
+      user.emailVerificationExpires &&
+      user.emailVerificationExpires < new Date()
     ) {
       throw new HttpException(
         {
-          code: ErrorCode.AUTH_INVALID_TOKEN,
-          message: 'Invalid refresh token',
+          code: ErrorCode.EMAIL_VERIFICATION_EXPIRED,
+          message: 'Verification token expired',
         },
-        HttpStatus.UNAUTHORIZED,
+        HttpStatus.BAD_REQUEST,
       );
     }
 
-    if (!stored.user || !stored.user.isActive) {
+    user.isEmailVerified = true;
+    user.emailVerificationToken = null;
+    user.emailVerificationExpires = null;
+    await this.userRepository.save(user);
+    return { success: true };
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) return;
+
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(rawToken)
+      .digest('hex');
+    const expires = new Date();
+    expires.setHours(expires.getHours() + 1);
+
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = expires;
+    const res = await this.userRepository.save(user);
+    this.mailService
+      .sendResetPasswordEmail({
+        to: user.email,
+        recipientName: user.username,
+        resetUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${rawToken}`,
+      })
+      .catch(console.error);
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const user =
+      await this.userRepository.findByResetPasswordToken(hashedToken);
+
+    if (!user) {
       throw new HttpException(
-        {
-          code: ErrorCode.USER_INACTIVE,
-          message: 'User is inactive',
-        },
-        HttpStatus.UNAUTHORIZED,
+        { code: ErrorCode.INVALID_RESET_TOKEN, message: 'Invalid reset token' },
+        HttpStatus.BAD_REQUEST,
       );
     }
 
-    stored.revoked_at = new Date();
-    await this.refreshRepo.save(stored);
-
-    const tokens = await this.issueTokens(stored.user);
-    await this.userActivityService.recordRefreshToken(stored.user.id);
-
-    return tokens;
-  }
-
-  async validateUser(
-    emailOrUsername: string,
-    password: string,
-  ): Promise<User | null> {
-    const user = await this.userRepo.findOne({
-      where: [{ email: emailOrUsername }, { username: emailOrUsername }],
-    });
-
-    if (!user || !user.isActive) {
-      return null;
+    if (user.resetPasswordExpires && user.resetPasswordExpires < new Date()) {
+      throw new HttpException(
+        { code: ErrorCode.RESET_TOKEN_EXPIRED, message: 'Reset token expired' },
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
-    if (!user.passwordHash) {
-      return null;
-    }
-
-    const isValid = this.comparePassword(password, user.passwordHash);
-    return isValid ? user : null;
-  }
-
-  comparePassword(password: string, hash: string) {
-    return this.validateUserAuthService.comparePassword(password, hash);
-  }
-
-  getProfile(payload: IUserJwtPayload) {
-    return this.getProfileAuthApplication.getProfile(payload);
+    user.passwordHash = hashPassword(newPassword);
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    await this.userRepository.save(user);
+    return { success: true };
   }
 }

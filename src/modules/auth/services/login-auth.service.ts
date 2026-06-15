@@ -33,6 +33,16 @@ export class LoginAuthServiceImpl implements LoginAuthService {
       );
     }
 
+    if (!user.isEmailVerified) {
+      throw new HttpException(
+        {
+          code: ErrorCode.EMAIL_NOT_VERIFIED,
+          message: 'Please verify your email address before logging in',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
     return this.issueAuthTokenService.issueTokens(user);
   }
 }

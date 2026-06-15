@@ -12,6 +12,11 @@ import {
   Query,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import {
+  ReadRateLimit,
+  StrictWriteRateLimit,
+  WriteRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
@@ -31,6 +36,7 @@ import { type UpdatePageBlockApplication } from '../interfaces/applications/upda
 import { PAGE_BLOCK_TYPES } from '../interfaces/types';
 
 @Controller('pageBlock')
+@ReadRateLimit()
 export class PageBlockController {
   constructor(
     @Inject(PAGE_BLOCK_TYPES.applications.UpdatePageBlockApplication)
@@ -47,6 +53,7 @@ export class PageBlockController {
   ) {}
 
   @Post()
+  @WriteRateLimit()
   @WorkspaceContext({ source: 'resource', type: 'page', key: 'page_id' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
   @ResponseMessage('Create page block')
@@ -71,6 +78,7 @@ export class PageBlockController {
   }
 
   @Patch('reorder')
+  @WriteRateLimit()
   @WorkspaceContext({ source: 'resource', type: 'page', key: 'page_id' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   @ResponseMessage('Reorder page blocks')
@@ -81,6 +89,7 @@ export class PageBlockController {
   }
 
   @Patch(':id')
+  @WriteRateLimit()
   @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'id' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   update(
@@ -94,6 +103,7 @@ export class PageBlockController {
   }
 
   @Post(':blockId/database-views')
+  @WriteRateLimit()
   @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'blockId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   @ResponseMessage('Add database view')
@@ -125,6 +135,7 @@ export class PageBlockController {
   }
 
   @Delete(':blockId')
+  @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'blockId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async deletePageBlock(
@@ -148,6 +159,7 @@ export class PageBlockController {
   }
 
   @Patch(':blockId/restore')
+  @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'blockId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async restorePageBlock(

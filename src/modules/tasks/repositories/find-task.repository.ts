@@ -96,25 +96,62 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
 
   async findAllTask(
     params: ParamTask,
+    filters?: FindBacklogTasksFilters,
     manager?: EntityManager,
   ): Promise<TaskModel[]> {
     const { projectId, workspaceId } = params;
-    const entities = await this.getRepo(manager).find({
-      where: {
-        projectId,
-        workspaceId,
-      },
-      relations: {
-        status: true,
-        priority: true,
-        // hiện thị người được thêm task
-        assignees: {
-          user: true,
-          assignedByUser: true,
+
+    const search = filters?.search?.trim();
+    const assigneeIds = this.normalizeFilterValues(filters?.assigneeId);
+    const statusIds = this.normalizeFilterValues(filters?.statusId);
+    const priorityIds = this.normalizeFilterValues(filters?.priorityId);
+
+    const qb = this.getRepo(manager)
+      .createQueryBuilder('task')
+      .leftJoinAndSelect('task.status', 'status')
+      .leftJoinAndSelect('task.priority', 'priority')
+      .leftJoinAndSelect('task.sprint', 'sprint')
+      .leftJoinAndSelect('task.assignees', 'assignees')
+      .leftJoinAndSelect('assignees.user', 'assigneeUser')
+      .leftJoinAndSelect('assignees.assignedByUser', 'assignedByUser')
+      .where('task.project_id = :projectId', { projectId })
+      .andWhere('task.workspace_id = :workspaceId', { workspaceId });
+
+    if (search) {
+      const projectSeq = this.parseProjectSeqSearch(search);
+
+      qb.andWhere(
+        projectSeq === null
+          ? 'task.title ILIKE :keyword'
+          : '(task.title ILIKE :keyword OR task.project_seq = :projectSeq)',
+        {
+          keyword: `%${search}%`,
+          ...(projectSeq === null ? {} : { projectSeq }),
         },
-        sprint: true,
-      },
-    });
+      );
+    }
+
+    if (assigneeIds.length > 0) {
+      qb.andWhere(
+        `EXISTS (
+          SELECT 1
+          FROM task_assignees filter_assignees
+          WHERE filter_assignees.task_id = task.id
+          AND filter_assignees.user_id IN (:...assigneeIds)
+        )`,
+        { assigneeIds },
+      );
+    }
+
+    if (statusIds.length > 0) {
+      qb.andWhere('task.status_id IN (:...statusIds)', { statusIds });
+    }
+
+    if (priorityIds.length > 0) {
+      qb.andWhere('task.priority_id IN (:...priorityIds)', { priorityIds });
+    }
+
+    const entities = await qb.orderBy('task.createdAt', 'DESC').getMany();
 
     return entities.map((entity) => TaskMapper.toModel(entity));
   }

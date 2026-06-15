@@ -5,6 +5,7 @@ import { WorkspaceTemplatesController } from './controller/workspace_templates.c
 import { WORKSPACE_TEMPLATE_TYPES } from './interfaces/types';
 import { WorkspaceTemplatesRepositoryImpl } from './repositories/workspace_templates.repository';
 import { WorkspaceTemplatesServiceImpl } from './services/workspace_templates.service';
+import { WorkspaceTemplatesApplicationImpl } from './applications/workspace_templates.application';
 
 @Module({
   imports: [TypeOrmModule.forFeature([WorkspaceTemplate])],
@@ -18,8 +19,15 @@ import { WorkspaceTemplatesServiceImpl } from './services/workspace_templates.se
       provide: WORKSPACE_TEMPLATE_TYPES.services.WorkspaceTemplatesService,
       useClass: WorkspaceTemplatesServiceImpl,
     },
+    {
+      provide: WORKSPACE_TEMPLATE_TYPES.applications.WorkspaceTemplatesApplication,
+      useClass: WorkspaceTemplatesApplicationImpl,
+    },
   ],
-  exports: [WORKSPACE_TEMPLATE_TYPES.services.WorkspaceTemplatesService],
+  exports: [
+    WORKSPACE_TEMPLATE_TYPES.applications.WorkspaceTemplatesApplication,
+    WORKSPACE_TEMPLATE_TYPES.services.WorkspaceTemplatesService,
+  ],
 })
 export class WorkspaceTemplatesModule {}
 

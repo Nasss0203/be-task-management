@@ -41,6 +41,7 @@ import { WorkspaceFeatureSetting } from 'src/modules/workspace_feature_settings/
 import { WorkspaceInvite } from 'src/modules/workspace_invites/domain/entities/workspace_invite.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import { WorkspaceTemplate } from 'src/modules/workspace_templates/domain/entities/workspace_template.entity';
+import { SprintReport } from 'src/modules/sprint_reports/domain/entities/sprint-report.entity';
 
 @Module({
   imports: [ 
@@ -98,6 +99,7 @@ import { WorkspaceTemplate } from 'src/modules/workspace_templates/domain/entiti
           PlanFeature,
           WorkspaceFeatureSetting,
           WorkspaceTemplate,
+          SprintReport
         ],
       }),
     }),

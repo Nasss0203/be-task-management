@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { randomBytes } from 'crypto';
 import { RefreshToken } from 'src/modules/refresh_token/entities/refresh_token.entity';
 import { UserActivityService } from 'src/modules/user_activity/services/user_activity.service';
@@ -8,6 +9,8 @@ import { User } from 'src/modules/users/domain/entities/user.entity';
 import { type CreateWorkspaceService } from 'src/modules/workspaces/interfaces/services/create-workspace.service.interface';
 import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
 import { GoogleUserPayload } from 'src/types/google-user-payload.interface';
+import { IUserJwtPayload } from '../interfaces/type';
+import { hashToken } from 'src/utils';
 
 @Injectable()
 export class AuthGoogleService {

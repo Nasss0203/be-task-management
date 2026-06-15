@@ -22,7 +22,7 @@ export class MailService {
   }: SendEmailTemplateInput): Promise<void> {
     await this.mailerService.sendMail({
       to,
-      from: from ?? `"Nass" <${process.env.MAIL_USER}>`,
+      from: from ?? `"Nass" <${process.env.USER_EMAIL}>`,
       subject,
       template,
       context,
@@ -47,6 +47,42 @@ export class MailService {
         roleName: input.roleName,
         acceptUrl: input.acceptUrl,
         expiredAt: '7 ngày kể từ lúc nhận email',
+        year: new Date().getFullYear(),
+        appName: 'Task Management',
+      },
+    });
+  }
+
+  async sendVerificationEmail(input: {
+    to: string;
+    recipientName: string;
+    verifyUrl: string;
+  }): Promise<void> {
+    await this.sendEmailTemplates({
+      to: input.to,
+      subject: 'Xác nhận địa chỉ email của bạn',
+      template: 'verify-email',
+      context: {
+        recipientName: input.recipientName,
+        verifyUrl: input.verifyUrl,
+        year: new Date().getFullYear(),
+        appName: 'Task Management',
+      },
+    });
+  }
+
+  async sendResetPasswordEmail(input: {
+    to: string;
+    recipientName: string;
+    resetUrl: string;
+  }): Promise<void> {
+    await this.sendEmailTemplates({
+      to: input.to,
+      subject: 'Khôi phục mật khẩu',
+      template: 'reset-password',
+      context: {
+        recipientName: input.recipientName,
+        resetUrl: input.resetUrl,
         year: new Date().getFullYear(),
         appName: 'Task Management',
       },

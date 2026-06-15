@@ -27,6 +27,7 @@ import { RefreshToken } from 'src/modules/refresh_token/entities/refresh_token.e
 import { Role } from 'src/modules/role/domain/entities/role.entity';
 import { RolePermission } from 'src/modules/role_permission/domain/entities/role_permission.entity';
 import { Sprint } from 'src/modules/sprints/domain/entities/sprint.entity';
+import { SprintReport } from 'src/modules/sprint_reports/domain/entities/sprint-report.entity';
 import { TaskAssignee } from 'src/modules/task_assignee/domain/entities/task_assignee.entity';
 import { TaskComment } from 'src/modules/task_commnent/domain/entities/task_commnent.entity';
 import { TaskPriority } from 'src/modules/task_priority/domain/entities/task_priority.entity';
@@ -68,6 +69,7 @@ export default new DataSource({
     PageBlock,
     Project,
     Sprint,
+    SprintReport,
     Task,
     Board,
     TaskStatus,

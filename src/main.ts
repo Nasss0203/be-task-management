@@ -29,6 +29,8 @@ async function bootstrap() {
   const reflector = app.get(Reflector);
   const httpAdapterHost = app.get(HttpAdapterHost);
 
+  app.set('trust proxy', 1);
+
   app.useGlobalPipes(
     new ValidationPipe({
       exceptionFactory: (errors) =>

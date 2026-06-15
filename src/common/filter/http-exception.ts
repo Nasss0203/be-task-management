@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { ErrorCode } from '../constants/error-code.constant';
+import * as fs from 'fs';
 
 type ExceptionResponse = {
   code?: ErrorCode | string;
@@ -49,6 +50,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         code = (exceptionResponse as ExceptionResponse).code || code;
       }
     } else if (exception instanceof Error) {
+      fs.appendFileSync('C:\\\\Users\\\\admin\\\\Desktop\\\\task-management\\\\back-task\\\\error.log', String(exception.stack || exception) + '\\n');
       message = 'Internal Server Error';
       code = ErrorCode.INTERNAL_ERROR;
     }
@@ -71,6 +73,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       [HttpStatus.FORBIDDEN]: ErrorCode.FORBIDDEN,
       [HttpStatus.NOT_FOUND]: ErrorCode.NOT_FOUND,
       [HttpStatus.CONFLICT]: ErrorCode.CONFLICT,
+      [HttpStatus.TOO_MANY_REQUESTS]: ErrorCode.RATE_LIMIT_EXCEEDED,
       [HttpStatus.INTERNAL_SERVER_ERROR]: ErrorCode.INTERNAL_ERROR,
     };
 

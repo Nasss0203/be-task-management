@@ -10,8 +10,14 @@ import { TaskComment } from './domain/entities/task_commnent.entity';
 import { TASK_COMMENT_TYPES } from './interfaces/types';
 import { CreateTaskCommentRepositoryImpl } from './repositories/create.task_commnent.repository';
 import { FindTaskCommentReposirotyImpl } from './repositories/find.task_comment.reposiroty';
+import { UpdateTaskCommentRepositoryImpl } from './repositories/update.task-comment.repository';
+import { DeleteTaskCommentRepositoryImpl } from './repositories/delete.task-comment.repository';
 import { CreateTaskCommentServiceImpl } from './services/create.task_commnent.service';
 import { FindTaskCommentServiceImpl } from './services/find.task_commnent.service';
+import { UpdateTaskCommentServiceImpl } from './services/update.task-comment.service';
+import { DeleteTaskCommentServiceImpl } from './services/delete.task-comment.service';
+import { UpdateTaskCommentApplicationImpl } from './applications/update.task-comment.application';
+import { DeleteTaskCommentApplicationImpl } from './applications/delete.task-comment.application';
 
 @Module({
   imports: [
@@ -31,6 +37,14 @@ import { FindTaskCommentServiceImpl } from './services/find.task_commnent.servic
       provide: TASK_COMMENT_TYPES.applications.FindTaskCommentApplication,
       useClass: FindTaskCommentApplicationImpl,
     },
+    {
+      provide: TASK_COMMENT_TYPES.applications.UpdateTaskCommentApplication,
+      useClass: UpdateTaskCommentApplicationImpl,
+    },
+    {
+      provide: TASK_COMMENT_TYPES.applications.DeleteTaskCommentApplication,
+      useClass: DeleteTaskCommentApplicationImpl,
+    },
     // Repository
     {
       provide: TASK_COMMENT_TYPES.repositories.CreateTaskCommentRepository,
@@ -40,6 +54,14 @@ import { FindTaskCommentServiceImpl } from './services/find.task_commnent.servic
       provide: TASK_COMMENT_TYPES.repositories.FindTaskCommentReposiroty,
       useClass: FindTaskCommentReposirotyImpl,
     },
+    {
+      provide: TASK_COMMENT_TYPES.repositories.UpdateTaskCommentRepository,
+      useClass: UpdateTaskCommentRepositoryImpl,
+    },
+    {
+      provide: TASK_COMMENT_TYPES.repositories.DeleteTaskCommentRepository,
+      useClass: DeleteTaskCommentRepositoryImpl,
+    },
     // Service
     {
       provide: TASK_COMMENT_TYPES.services.CreateTaskCommentService,
@@ -48,6 +70,14 @@ import { FindTaskCommentServiceImpl } from './services/find.task_commnent.servic
     {
       provide: TASK_COMMENT_TYPES.services.FindTaskCommentService,
       useClass: FindTaskCommentServiceImpl,
+    },
+    {
+      provide: TASK_COMMENT_TYPES.services.UpdateTaskCommentService,
+      useClass: UpdateTaskCommentServiceImpl,
+    },
+    {
+      provide: TASK_COMMENT_TYPES.services.DeleteTaskCommentService,
+      useClass: DeleteTaskCommentServiceImpl,
     },
   ],
   exports: [TASK_COMMENT_TYPES.services.CreateTaskCommentService],

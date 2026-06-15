@@ -148,4 +148,33 @@ export class WorkspaceTrashRepositoryImpl implements WorkspaceTrashRepository {
       ? WorkspaceMapper.toModel(restoredWorkspace)
       : null;
   }
+
+  async removeWorkspaceFromUserTrash(
+    userId: string,
+    workspaceId: string,
+    manager?: EntityManager,
+  ): Promise<void> {
+    const repo = this.getUserWorkspaceRepo(manager);
+
+    const membership = await repo.findOne({
+      where: {
+        user_id: userId,
+        workspace_id: workspaceId,
+        workspace: {
+          deletedAt: Not(IsNull()),
+        },
+      },
+      relations: {
+        workspace: true,
+      },
+      withDeleted: true,
+    });
+
+    if (membership?.workspace?.deletedAt) {
+      await repo.delete({
+        user_id: userId,
+        workspace_id: workspaceId,
+      });
+    }
+  }
 }

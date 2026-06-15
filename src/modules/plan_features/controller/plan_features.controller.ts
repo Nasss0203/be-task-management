@@ -9,6 +9,10 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import {
+  AdminRateLimit,
+  WriteRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { RequireSystemRoles } from 'src/common/decorator/require-system-roles.decorator';
 import { SystemRole } from 'src/modules/users/domain/entities/user.entity';
 import { CreatePlanFeatureDto } from '../dto/create-plan_feature.dto';
@@ -22,6 +26,7 @@ import { PLAN_FEATURE_TYPES } from '../interfaces/types';
 
 @Controller('plan-features')
 @RequireSystemRoles(SystemRole.SYSTEM_ADMIN, SystemRole.SUPER_ADMIN)
+@AdminRateLimit()
 export class PlanFeaturesController {
   constructor(
     @Inject(PLAN_FEATURE_TYPES.applications.CreatePlanFeatureApplication)
@@ -38,6 +43,7 @@ export class PlanFeaturesController {
   ) {}
 
   @Post()
+  @WriteRateLimit()
   create(
     @Body() createPlanFeatureDto: CreatePlanFeatureDto,
   ): Promise<PlanFeatureResponseDto> {
@@ -57,6 +63,7 @@ export class PlanFeaturesController {
   }
 
   @Patch(':id')
+  @WriteRateLimit()
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updatePlanFeatureDto: UpdatePlanFeatureDto,
@@ -65,6 +72,7 @@ export class PlanFeaturesController {
   }
 
   @Delete(':id')
+  @WriteRateLimit()
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     await this.deletePlanFeatureApplication.delete(id);
 

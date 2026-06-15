@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SystemRole, User } from 'src/modules/users/domain/entities/user.entity';
-import { Repository } from 'typeorm';
+import { Repository, EntityManager } from 'typeorm';
 import {
   AuthUserRepository,
   CreateGoogleAuthUserInput,
@@ -41,6 +41,14 @@ export class AuthUserRepositoryImpl implements AuthUserRepository {
     });
   }
 
+  findByEmailVerificationToken(token: string): Promise<User | null> {
+    return this.userRepo.findOne({ where: { emailVerificationToken: token } });
+  }
+
+  findByResetPasswordToken(token: string): Promise<User | null> {
+    return this.userRepo.findOne({ where: { resetPasswordToken: token } });
+  }
+
   findProfileById(id: string): Promise<User | null> {
     return this.userRepo.findOne({
       where: { id },
@@ -58,18 +66,22 @@ export class AuthUserRepositoryImpl implements AuthUserRepository {
     });
   }
 
-  async createLocalUser(input: CreateLocalAuthUserInput): Promise<User> {
-    const user = this.userRepo.create({
+  async createLocalUser(input: CreateLocalAuthUserInput, manager?: EntityManager): Promise<User> {
+    const repo = manager ? manager.getRepository(User) : this.userRepo;
+    const user = repo.create({
       email: input.email,
       username: input.username,
       passwordHash: input.passwordHash,
       systemRole: SystemRole.USER,
       isActive: true,
+      isEmailVerified: false,
+      emailVerificationToken: input.emailVerificationToken,
+      emailVerificationExpires: input.emailVerificationExpires,
       googleId: null,
       avatarUrl: null,
     });
 
-    return this.userRepo.save(user);
+    return repo.save(user);
   }
 
   async createGoogleUser(input: CreateGoogleAuthUserInput): Promise<User> {
@@ -80,6 +92,7 @@ export class AuthUserRepositoryImpl implements AuthUserRepository {
       avatarUrl: input.avatarUrl,
       passwordHash: null,
       isActive: true,
+      isEmailVerified: true,
     });
 
     return this.userRepo.save(user);

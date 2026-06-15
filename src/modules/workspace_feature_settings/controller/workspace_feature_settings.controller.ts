@@ -9,6 +9,10 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import {
+  AdminRateLimit,
+  WriteRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { RequireSystemRoles } from 'src/common/decorator/require-system-roles.decorator';
 import { SystemRole } from 'src/modules/users/domain/entities/user.entity';
 import { CreateWorkspaceFeatureSettingDto } from '../dto/create-workspace_feature_setting.dto';
@@ -22,6 +26,7 @@ import { WORKSPACE_FEATURE_SETTING_TYPES } from '../interfaces/types';
 
 @Controller('workspace-feature-settings')
 @RequireSystemRoles(SystemRole.SYSTEM_ADMIN, SystemRole.SUPER_ADMIN)
+@AdminRateLimit()
 export class WorkspaceFeatureSettingsController {
   constructor(
     @Inject(
@@ -50,6 +55,7 @@ export class WorkspaceFeatureSettingsController {
   ) {}
 
   @Post()
+  @WriteRateLimit()
   create(
     @Body() createDto: CreateWorkspaceFeatureSettingDto,
   ): Promise<WorkspaceFeatureSettingResponseDto> {
@@ -69,6 +75,7 @@ export class WorkspaceFeatureSettingsController {
   }
 
   @Patch(':id')
+  @WriteRateLimit()
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateDto: UpdateWorkspaceFeatureSettingDto,
@@ -77,6 +84,7 @@ export class WorkspaceFeatureSettingsController {
   }
 
   @Delete(':id')
+  @WriteRateLimit()
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     await this.deleteApplication.delete(id);
 

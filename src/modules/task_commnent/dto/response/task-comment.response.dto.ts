@@ -8,8 +8,8 @@ export class TaskCommentResponseDto {
   isEdited: boolean;
   createdAt: Date;
   updatedAt: Date;
-  deletedAt: Date | null;
 
   authorName: string | null;
   authorEmail: string | null;
+  authorAvatarUrl: string | null;
 }

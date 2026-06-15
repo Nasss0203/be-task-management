@@ -23,6 +23,11 @@ import { type FindTaskApplication } from '../interfaces/applications/find-task.a
 import { TASK_TYPES } from '../interfaces/types';
 
 import { Auth } from 'src/common/decorator/auth.decorator';
+import {
+  ReadRateLimit,
+  StrictWriteRateLimit,
+  WriteRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { RequireFeature } from 'src/common/decorator/require-features.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
@@ -40,6 +45,7 @@ import { type RemoveTaskFromSprintApplication } from '../interfaces/applications
 import { type UpdateTaskApplication } from '../interfaces/applications/update-task.application.interface';
 
 @Controller('tasks')
+@ReadRateLimit()
 export class TasksController {
   constructor(
     @Inject(TASK_TYPES.applications.FindTaskApplication)
@@ -56,6 +62,7 @@ export class TasksController {
 
     @Inject(TASK_TYPES.applications.DeleteTaskApplication)
     private readonly deleteTaskApplication: DeleteTaskApplication,
+
 
     @Inject(TASK_TYPES.applications.FindTaskApplication)
     private readonly findTaskApplication: FindTaskApplication,
@@ -74,8 +81,10 @@ export class TasksController {
   async findAllByTask(
     @Param('projectId') projectId: string,
     @Param('workspaceId') workspaceId: string,
+    @Query(new ValidationPipe({ transform: true }))
+    query: FindBacklogTasksQueryDto,
   ): Promise<TaskResponseDto[]> {
-    return await this.app.findAllTask(projectId, workspaceId);
+    return await this.app.findAllTask(projectId, workspaceId, query);
   }
 
   @Get('/workspace/:workspaceId/project/:projectId/backlog')
@@ -93,8 +102,8 @@ export class TasksController {
   }
 
   @Post()
+  @WriteRateLimit()
   @RequirePermissions(PERMISSIONS.TASK_CREATE)
-  @ResponseMessage('Create Task')
   create(@Body() createTaskDto: CreateTaskDto, @Auth() auth: IAuth) {
     return this.createTaskApplication.create({
       ...createTaskDto,
@@ -103,6 +112,7 @@ export class TasksController {
   }
 
   @Patch(':id')
+  @WriteRateLimit()
   @RequirePermissions(PERMISSIONS.TASK_UPDATE)
   @ResponseMessage('Update task successfully')
   async updateTask(
@@ -118,6 +128,7 @@ export class TasksController {
   }
 
   @Patch(':id/move-sprint')
+  @WriteRateLimit()
   @WorkspaceContext({ source: 'resource', type: 'task', key: 'id' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.TASK_UPDATE)
@@ -136,6 +147,7 @@ export class TasksController {
   }
 
   @Delete(':taskId')
+  @StrictWriteRateLimit()
   @RequirePermissions(PERMISSIONS.TASK_DELETE)
   async deleteTask(
     @Param('taskId') taskId: string,
@@ -154,6 +166,7 @@ export class TasksController {
   }
 
   @Patch(':taskId/restore')
+  @StrictWriteRateLimit()
   @RequirePermissions(PERMISSIONS.TASK_DELETE)
   async restoreTask(
     @Param('taskId') taskId: string,
@@ -185,6 +198,7 @@ export class TasksController {
   }
 
   @Patch(':taskId/remove-sprint')
+  @WriteRateLimit()
   @WorkspaceContext({ source: 'resource', type: 'task', key: 'taskId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.TASK_UPDATE)
@@ -202,6 +216,7 @@ export class TasksController {
   @Patch(
     'workspaces/:workspaceId/projects/:projectId/sprints/:sourceSprintId/tasks/:taskId/move-to-sprint',
   )
+  @WriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.TASK_UPDATE)
@@ -225,6 +240,7 @@ export class TasksController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/bulk-update')
+  @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.TASK_UPDATE)
   @ResponseMessage('Update many tasks successfully')

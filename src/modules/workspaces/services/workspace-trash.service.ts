@@ -51,4 +51,14 @@ export class WorkspaceTrashServiceImpl implements WorkspaceTrashService {
 
     return workspace;
   }
+
+  async removeWorkspaceFromUserTrash(
+    userId: string,
+    workspaceId: string,
+  ): Promise<void> {
+    await this.workspaceTrashRepository.removeWorkspaceFromUserTrash(
+      userId,
+      workspaceId,
+    );
+  }
 }

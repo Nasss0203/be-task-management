@@ -5,6 +5,7 @@ import { ActivityModule } from '../activity/activity.module';
 import { ProjectsModule } from '../projects/projects.module';
 import { TaskStatusModule } from '../task_status/task_status.module';
 import { TasksModule } from '../tasks/tasks.module';
+import { SprintReportsModule } from '../sprint_reports/sprint_reports.module';
 import { CancelSprintApplicationImpl } from './applications/cancel-sprint.application';
 import { CompleteSprintApplicationImpl } from './applications/complete-sprint.application';
 import { CreateSprintApplicationImpl } from './applications/create-sprint.application';
@@ -39,6 +40,7 @@ import { UpdateSprintServiceImpl } from './services/udpdate-sprint.service';
     forwardRef(() => TasksModule), // Đang dùng service
     TaskStatusModule,
     ActivityModule,
+    SprintReportsModule,
   ],
   controllers: [SprintsController],
   providers: [

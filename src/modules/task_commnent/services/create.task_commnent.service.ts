@@ -12,6 +12,7 @@ import { TaskCommentModel } from '../domain/models/task_comment.model';
 
 import { EntityManager } from 'typeorm';
 import { type CreateTaskCommentRepository } from '../interfaces/repositories/create.task_commnent.repository.interface';
+import { type FindTaskCommentReposiroty } from '../interfaces/repositories/find.task_comment.reposiroty.interface';
 import {
   CreateTaskCommentInput,
   CreateTaskCommentService,
@@ -23,6 +24,9 @@ export class CreateTaskCommentServiceImpl implements CreateTaskCommentService {
   constructor(
     @Inject(TASK_COMMENT_TYPES.repositories.CreateTaskCommentRepository)
     private readonly repo: CreateTaskCommentRepository,
+
+    @Inject(TASK_COMMENT_TYPES.repositories.FindTaskCommentReposiroty)
+    private readonly findRepo: FindTaskCommentReposiroty,
 
     @Inject(TASK_TYPES.services.FindTaskService)
     private readonly findTaskService: FindTaskService,
@@ -68,8 +72,15 @@ export class CreateTaskCommentServiceImpl implements CreateTaskCommentService {
       },
       manager,
     );
-    console.log('🚀 ~ newComment~', newComment);
 
-    return newComment;
+    const fullComment = await this.findRepo.findById(
+      task.workspaceId,
+      task.projectId,
+      task.id,
+      newComment.id,
+      manager,
+    );
+
+    return fullComment!;
   }
 }

@@ -782,7 +782,7 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
       let pageTemplateId: string | null = null;
 
       if (input.templateId) {
-        const template = await this.workspaceTemplatesService.findOne(input.templateId);
+        const template = await this.workspaceTemplatesService.findOneAvailableForUser(input.templateId, userId);
         templateConfig = template.config;
         pageTemplateId = template.pageTemplateId ?? null;
       } else {

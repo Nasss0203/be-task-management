@@ -12,4 +12,10 @@ export interface UserRoleRepository {
     userRole: UserRoleModel | SaveUserRoleInput,
     manager?: EntityManager,
   ): Promise<UserRoleModel>;
+
+  deleteByUserId(
+    workspaceId: string,
+    userId: string,
+    manager?: EntityManager,
+  ): Promise<void>;
 }

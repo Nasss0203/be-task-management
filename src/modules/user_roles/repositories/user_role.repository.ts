@@ -29,4 +29,13 @@ export class UserRoleRepositoryImpl implements UserRoleRepository {
     const saved = await repo.save(entity);
     return UserRoleMapper.toModel(saved);
   }
+
+  async deleteByUserId(
+    workspaceId: string,
+    userId: string,
+    manager?: EntityManager,
+  ): Promise<void> {
+    const repo = this.getRepo(manager);
+    await repo.delete({ workspace_id: workspaceId, user_id: userId });
+  }
 }
