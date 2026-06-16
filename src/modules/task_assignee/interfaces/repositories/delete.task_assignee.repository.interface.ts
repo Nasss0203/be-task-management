@@ -6,4 +6,10 @@ export interface DeleteTaskAssigneeRepository {
     userId: string,
     manager?: EntityManager,
   ): Promise<void>;
+
+  deleteByUserAndWorkspace(
+    userId: string,
+    workspaceId: string,
+    manager?: EntityManager,
+  ): Promise<void>;
 }

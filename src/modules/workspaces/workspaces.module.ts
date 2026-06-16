@@ -217,6 +217,7 @@ import { WorkspaceTemplatesModule } from '../workspace_templates/workspace_templ
     WORKSPACE_TYPES.services.AdminFindAllWorkspaceService,
     WORKSPACE_TYPES.services.FindWorkspaceService,
     WORKSPACE_TYPES.applications.AdminWorkspaceMemberSummaryApplication,
+    WORKSPACE_TYPES.uow.UnitOfWork,
   ],
 })
 export class WorkspacesModule {}

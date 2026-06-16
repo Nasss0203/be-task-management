@@ -53,6 +53,14 @@ export class FindUserWorkspaceRepositoryImpl implements FindUserWorkspaceReposit
         'uw.last_opened_at as "lastOpenedAt"',
         'uw.joined_at as "joinedAt"',
       ])
+      .addSelect((qb) => {
+        return qb
+          .select('COUNT(ta.task_id)')
+          .from('task_assignees', 'ta')
+          .innerJoin('tasks', 't', 't.id = ta.task_id')
+          .where('ta.user_id = uw.user_id')
+          .andWhere('t.workspace_id = :workspaceId', { workspaceId });
+      }, 'taskCount')
       .where('uw.workspace_id = :workspaceId', { workspaceId })
       .andWhere('uw.user_id = :userId', { userId })
       .getRawOne<MemberWorkspaceRaw>();
@@ -90,6 +98,14 @@ export class FindUserWorkspaceRepositoryImpl implements FindUserWorkspaceReposit
         'uw.last_opened_at as "lastOpenedAt"',
         'uw.joined_at as "joinedAt"',
       ])
+      .addSelect((qb) => {
+        return qb
+          .select('COUNT(ta.task_id)')
+          .from('task_assignees', 'ta')
+          .innerJoin('tasks', 't', 't.id = ta.task_id')
+          .where('ta.user_id = uw.user_id')
+          .andWhere('t.workspace_id = :workspaceId', { workspaceId });
+      }, 'taskCount')
       .where('uw.workspace_id = :workspaceId', { workspaceId })
       .getRawMany();
 

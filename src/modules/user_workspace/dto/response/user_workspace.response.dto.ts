@@ -18,4 +18,5 @@ export class MemberWorkspaceResponseDto {
   role_name: RoleName;
   lastOpenedAt: Date | null;
   joinedAt: Date | null;
+  taskCount?: number;
 }

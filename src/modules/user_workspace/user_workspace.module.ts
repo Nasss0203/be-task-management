@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { ActivityModule } from '../activity/activity.module';
 import { RoleModule } from '../role/role.module';
+import { TaskAssigneeModule } from '../task_assignee/task_assignee.module';
 import { UserRolesModule } from '../user_roles/user_roles.module';
 import { AddWorkspaceMemberApplicationImpl } from './applications/add-member-worlspace.application';
 import { CreateUserWorkspaceApplicationImpl } from './applications/create.user_workspace.application';
@@ -27,6 +28,7 @@ import { UserWorkspacesService } from './user_workspace.service';
     ActivityModule,
     RoleModule,
     UserRolesModule,
+    forwardRef(() => TaskAssigneeModule),
   ],
   controllers: [UserWorkspacesController],
   providers: [

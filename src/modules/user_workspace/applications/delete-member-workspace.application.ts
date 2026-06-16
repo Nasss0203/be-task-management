@@ -8,6 +8,8 @@ import { type CreateActivityService } from 'src/modules/activity/interfaces/serv
 import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { DeleteMemberWorkspaceApplication } from '../interfaces/applications/delete-member-workspace.application.interface';
 import { type DeleteMemberWorkspaceService } from '../interfaces/services/delete-member-workspace.service.interface';
+import { type DeleteTaskAssigneeService } from 'src/modules/task_assignee/interfaces/services/delete.task_assignee.service.interface';
+import { TASK_ASSIGNEE_TYPES } from 'src/modules/task_assignee/interfaces/types';
 import { USER_WORKSPACE_TYPES } from '../interfaces/types';
 
 @Injectable()
@@ -23,6 +25,9 @@ export class DeleteMemberWorkspaceApplicationImpl
 
     @Inject(ACTIVITY_TYPES.services.CreateActivityService)
     private readonly createActivityService: CreateActivityService,
+
+    @Inject(TASK_ASSIGNEE_TYPES.services.DeleteTaskAssigneeService)
+    private readonly deleteTaskAssigneeService: DeleteTaskAssigneeService,
   ) {}
 
   async deleteMember(
@@ -51,6 +56,12 @@ export class DeleteMemberWorkspaceApplicationImpl
             userId: userId,
           },
         },
+        manager,
+      );
+
+      await this.deleteTaskAssigneeService.unassignFromWorkspace(
+        userId,
+        workspaceId,
         manager,
       );
     });

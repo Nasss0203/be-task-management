@@ -63,6 +63,9 @@ import { FindTaskAssigneeServiceImpl } from './services/find.task_assignee.servi
       useClass: FindTaskAssigneeRepositoryImpl,
     },
   ],
-  exports: [TASK_ASSIGNEE_TYPES.applications.CreateTaskAssigneeApplication],
+  exports: [
+    TASK_ASSIGNEE_TYPES.applications.CreateTaskAssigneeApplication,
+    TASK_ASSIGNEE_TYPES.services.DeleteTaskAssigneeService,
+  ],
 })
 export class TaskAssigneeModule {}
