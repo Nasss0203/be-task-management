@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitSchema1781444336710 implements MigrationInterface {
-    name = 'InitSchema1781444336710'
+export class InitSchema1782034112824 implements MigrationInterface {
+    name = 'InitSchema1782034112824'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TYPE "public"."activities_entity_type_enum" AS ENUM('TASK', 'SPRINT', 'COMMENT', 'ATTACHMENT', 'PAGE', 'PAGE_BLOCK', 'WORKSPACE', 'PROJECT')`);
@@ -75,13 +75,13 @@ export class InitSchema1781444336710 implements MigrationInterface {
         await queryRunner.query(`CREATE UNIQUE INDEX "UQ_user_workspaces_workspace_user" ON "user_workspaces" ("workspace_id", "user_id") `);
         await queryRunner.query(`CREATE TYPE "public"."workspaces_plan_type_enum" AS ENUM('free', 'pro')`);
         await queryRunner.query(`CREATE TYPE "public"."workspaces_layout_mode_enum" AS ENUM('tabs', 'blocks')`);
-        await queryRunner.query(`CREATE TABLE "workspaces" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(255) NOT NULL, "slug" character varying(255) NOT NULL, "plan_type" "public"."workspaces_plan_type_enum" NOT NULL DEFAULT 'free', "layout_mode" "public"."workspaces_layout_mode_enum" NOT NULL DEFAULT 'tabs', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "deleted_by" uuid, CONSTRAINT "UQ_b8e9fe62e93d60089dfc4f175f3" UNIQUE ("slug"), CONSTRAINT "PK_098656ae401f3e1a4586f47fd8e" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "workspaces" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(255) NOT NULL, "slug" character varying(255) NOT NULL, "plan_type" "public"."workspaces_plan_type_enum" NOT NULL DEFAULT 'free', "layout_mode" "public"."workspaces_layout_mode_enum" NOT NULL DEFAULT 'tabs', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "deleted_by" uuid, "created_by" uuid, CONSTRAINT "UQ_b8e9fe62e93d60089dfc4f175f3" UNIQUE ("slug"), CONSTRAINT "PK_098656ae401f3e1a4586f47fd8e" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE INDEX "IDX_WORKSPACES_DELETED_AT" ON "workspaces" ("deleted_at") `);
         await queryRunner.query(`CREATE TYPE "public"."plans_billing_interval_enum" AS ENUM('MONTH', 'YEAR', 'LIFETIME')`);
         await queryRunner.query(`CREATE TABLE "plans" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(100) NOT NULL, "slug" character varying(100) NOT NULL, "description" text, "price_amount" integer NOT NULL DEFAULT '0', "currency" character varying(10) NOT NULL DEFAULT 'VND', "billing_interval" "public"."plans_billing_interval_enum" NOT NULL DEFAULT 'MONTH', "features" jsonb, "limits" jsonb, "is_active" boolean NOT NULL DEFAULT true, "sort_order" integer NOT NULL DEFAULT '0', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "PK_3720521a81c7c24fe9b7202ba61" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE INDEX "IDX_8ac30ab7d4ef974259069a8750" ON "plans" ("is_active") `);
         await queryRunner.query(`CREATE UNIQUE INDEX "IDX_e7b71bb444e74ee067df057397" ON "plans" ("slug") `);
-        await queryRunner.query(`CREATE TYPE "public"."subscriptions_provider_enum" AS ENUM('MANUAL', 'MOMO', 'VNPAY')`);
+        await queryRunner.query(`CREATE TYPE "public"."subscriptions_provider_enum" AS ENUM('MANUAL', 'MOMO', 'VNPAY', 'STRIPE')`);
         await queryRunner.query(`CREATE TYPE "public"."subscriptions_status_enum" AS ENUM('TRIALING', 'ACTIVE', 'PAST_DUE', 'CANCELLED', 'EXPIRED', 'INCOMPLETE')`);
         await queryRunner.query(`CREATE TABLE "subscriptions" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "plan_id" uuid NOT NULL, "provider" "public"."subscriptions_provider_enum" NOT NULL DEFAULT 'MANUAL', "provider_subscription_id" character varying(255), "status" "public"."subscriptions_status_enum" NOT NULL DEFAULT 'ACTIVE', "current_period_start" TIMESTAMP, "current_period_end" TIMESTAMP, "trial_end" TIMESTAMP, "cancel_at_period_end" boolean NOT NULL DEFAULT false, "cancelled_at" TIMESTAMP, "metadata" jsonb, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_a87248d73155605cf782be9ee5e" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE INDEX "IDX_4e80d5a85da612468d8158f506" ON "subscriptions" ("provider", "provider_subscription_id") `);
@@ -96,7 +96,7 @@ export class InitSchema1781444336710 implements MigrationInterface {
         await queryRunner.query(`CREATE INDEX "IDX_5152c0aa0f851d9b95972b442e" ON "invoices" ("subscription_id") `);
         await queryRunner.query(`CREATE INDEX "IDX_08521b1e94fa456ac57f335485" ON "invoices" ("plan_id") `);
         await queryRunner.query(`CREATE INDEX "IDX_26daf5e433d6fb88ee32ce9363" ON "invoices" ("user_id") `);
-        await queryRunner.query(`CREATE TYPE "public"."payments_provider_enum" AS ENUM('MANUAL', 'MOMO', 'VNPAY')`);
+        await queryRunner.query(`CREATE TYPE "public"."payments_provider_enum" AS ENUM('MANUAL', 'MOMO', 'VNPAY', 'STRIPE')`);
         await queryRunner.query(`CREATE TYPE "public"."payments_payment_method_enum" AS ENUM('QR', 'ATM', 'VISA', 'BANK_TRANSFER', 'WALLET', 'UNKNOWN')`);
         await queryRunner.query(`CREATE TYPE "public"."payments_status_enum" AS ENUM('PENDING', 'PROCESSING', 'SUCCEEDED', 'FAILED', 'CANCELLED', 'REFUNDED')`);
         await queryRunner.query(`CREATE TABLE "payments" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "plan_id" uuid NOT NULL, "target_workspace_id" uuid, "subscription_id" uuid, "invoice_id" uuid, "order_code" character varying(100) NOT NULL, "provider" "public"."payments_provider_enum" NOT NULL DEFAULT 'MANUAL', "provider_payment_id" character varying(255), "provider_order_id" character varying(255), "provider_request_id" character varying(255), "provider_transaction_id" character varying(255), "payment_method" "public"."payments_payment_method_enum" NOT NULL DEFAULT 'UNKNOWN', "amount" integer NOT NULL, "currency" character varying(10) NOT NULL DEFAULT 'VND', "status" "public"."payments_status_enum" NOT NULL DEFAULT 'PENDING', "payment_url" text, "expired_at" TIMESTAMP, "paid_at" TIMESTAMP, "failed_reason" text, "metadata" jsonb, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_197ab7af18c93fbb0c9b28b4a59" PRIMARY KEY ("id"))`);
@@ -110,7 +110,7 @@ export class InitSchema1781444336710 implements MigrationInterface {
         await queryRunner.query(`CREATE INDEX "IDX_75848dfef07fd19027e08ca81d" ON "payments" ("subscription_id") `);
         await queryRunner.query(`CREATE INDEX "IDX_f9b6a4c3196864cdd91b1a440e" ON "payments" ("plan_id") `);
         await queryRunner.query(`CREATE INDEX "IDX_427785468fb7d2733f59e7d7d3" ON "payments" ("user_id") `);
-        await queryRunner.query(`CREATE TYPE "public"."billing_webhooks_provider_enum" AS ENUM('MANUAL', 'MOMO', 'VNPAY')`);
+        await queryRunner.query(`CREATE TYPE "public"."billing_webhooks_provider_enum" AS ENUM('MANUAL', 'MOMO', 'VNPAY', 'STRIPE')`);
         await queryRunner.query(`CREATE TYPE "public"."billing_webhooks_status_enum" AS ENUM('RECEIVED', 'PROCESSED', 'FAILED', 'IGNORED')`);
         await queryRunner.query(`CREATE TABLE "billing_webhooks" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid, "target_workspace_id" uuid, "subscription_id" uuid, "payment_id" uuid, "invoice_id" uuid, "provider" "public"."billing_webhooks_provider_enum" NOT NULL, "provider_event_id" character varying(255) NOT NULL, "event_type" character varying(255) NOT NULL, "order_code" character varying(100), "provider_transaction_id" character varying(255), "status" "public"."billing_webhooks_status_enum" NOT NULL DEFAULT 'RECEIVED', "payload" jsonb NOT NULL, "processed_at" TIMESTAMP, "error_message" text, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_ed6e913d220f1564d85f68584b3" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE INDEX "IDX_a809bf2073f818f5598870ca47" ON "billing_webhooks" ("created_at") `);
@@ -190,7 +190,7 @@ export class InitSchema1781444336710 implements MigrationInterface {
         await queryRunner.query(`CREATE INDEX "IDX_f2f46a5de0e574de2142dd321f" ON "sprint_reports" ("sprint_id") `);
         await queryRunner.query(`CREATE INDEX "IDX_90b28d1da4a183ac50b0bd3c67" ON "sprint_reports" ("project_id") `);
         await queryRunner.query(`CREATE INDEX "IDX_cef552ef14cbb2a3ed1d7ba584" ON "sprint_reports" ("workspace_id") `);
-        await queryRunner.query(`CREATE TABLE "task_comments" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "workspace_id" uuid NOT NULL, "project_id" uuid NOT NULL, "task_id" uuid NOT NULL, "author_id" uuid NOT NULL, "content" text NOT NULL, "is_edited" boolean NOT NULL DEFAULT false, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "PK_83b99b0b03db29d4cafcb579b77" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "task_comments" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "workspace_id" uuid NOT NULL, "project_id" uuid NOT NULL, "task_id" uuid NOT NULL, "author_id" uuid NOT NULL, "content" text NOT NULL, "is_edited" boolean NOT NULL DEFAULT false, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_83b99b0b03db29d4cafcb579b77" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE INDEX "IDX_TASK_COMMENTS_TASK_CREATED_AT" ON "task_comments" ("task_id", "created_at") `);
         await queryRunner.query(`CREATE INDEX "IDX_TASK_COMMENTS_AUTHOR_ID" ON "task_comments" ("author_id") `);
         await queryRunner.query(`CREATE INDEX "IDX_TASK_COMMENTS_TASK_ID" ON "task_comments" ("task_id") `);
