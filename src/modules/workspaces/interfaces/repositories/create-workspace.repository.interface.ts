@@ -8,7 +8,7 @@ export type SaveWorkspaceInput = Pick<
   Partial<
     Pick<
       WorkspaceModel,
-      'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'deletedBy'
+      'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'deletedBy' | 'createdBy'
     >
   >;
 

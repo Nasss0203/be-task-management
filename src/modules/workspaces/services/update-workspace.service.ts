@@ -39,6 +39,7 @@ export class UpdateWorkspaceServiceImpl implements UpdateWorkspaceService {
         workspace.updatedAt,
         workspace.deletedAt,
         workspace.deletedBy,
+        workspace.createdBy,
       ),
     );
   }

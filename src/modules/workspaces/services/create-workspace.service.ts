@@ -129,6 +129,7 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
         slug,
         planType: planType ?? PlanTypeWorkspace.FREE,
         layoutMode: WorkspaceLayoutMode.TABS,
+        createdBy: userId,
       },
       manager,
     );

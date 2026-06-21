@@ -15,5 +15,6 @@ export class WorkspaceModel {
     public readonly updatedAt: Date,
     public readonly deletedAt: Date | null,
     public readonly deletedBy: string | null,
+    public readonly createdBy: string | null,
   ) {}
 }

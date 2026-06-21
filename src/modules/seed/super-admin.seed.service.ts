@@ -42,6 +42,11 @@ export class SuperAdminSeedService {
         shouldSave = true;
       }
 
+      if (!existed.isEmailVerified) {
+        existed.isEmailVerified = true;
+        shouldSave = true;
+      }
+
       if (!existed.passwordHash && password) {
         existed.passwordHash = hashPassword(password);
         shouldSave = true;
@@ -79,6 +84,7 @@ export class SuperAdminSeedService {
       passwordHash: hashPassword(password),
       systemRole: SystemRole.SUPER_ADMIN,
       isActive: true,
+      isEmailVerified: true,
       googleId: null,
       avatarUrl: null,
     });

@@ -66,4 +66,7 @@ export class Workspace {
 
   @Column({ name: 'deleted_by', type: 'uuid', nullable: true })
   deletedBy: string | null;
+
+  @Column({ name: 'created_by', type: 'uuid', nullable: true })
+  createdBy: string | null;
 }

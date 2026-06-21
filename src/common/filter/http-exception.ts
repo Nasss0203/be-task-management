@@ -18,7 +18,7 @@ type ExceptionResponse = {
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
-  constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
+  constructor(private readonly httpAdapterHost: HttpAdapterHost) { }
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const { httpAdapter } = this.httpAdapterHost;
@@ -50,8 +50,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
         code = (exceptionResponse as ExceptionResponse).code || code;
       }
     } else if (exception instanceof Error) {
-      fs.appendFileSync('C:\\\\Users\\\\admin\\\\Desktop\\\\task-management\\\\back-task\\\\error.log', String(exception.stack || exception) + '\\n');
-      message = 'Internal Server Error';
       code = ErrorCode.INTERNAL_ERROR;
     }
 

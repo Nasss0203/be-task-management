@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "skills": {
+    "create-page": {
+      "source": "makenotion/cursor-notion-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/create-page/SKILL.md",
+      "computedHash": "b22242292dde2c5b34ca15c9595e1f3f46f99e86ce4c1adf201047ea90b345cb"
+    },
+    "diagnose": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/diagnose/SKILL.md",
+      "computedHash": "1c3c85517ac42116fe5f2bfb5150f7b3e38ad23808e40b33fbb01f1afb611983"
+    },
+    "git-guardrails-claude-code": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/misc/git-guardrails-claude-code/SKILL.md",
+      "computedHash": "a04bf71be9abc44ca3b00e2f1740b37d2e471abadd20d43a31bccff7135baedf"
+    },
+    "handoff": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/productivity/handoff/SKILL.md",
+      "computedHash": "3fdffd9dce6fc3e9f9f756ba79d694c5f162e11c7e7fbc72a0958f204312e0b1"
+    },
+    "improve-codebase-architecture": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/improve-codebase-architecture/SKILL.md",
+      "computedHash": "5d9444ffe5c240f2d20081c42c547112e1b8c372375a14e4c98df4d94bde11e1"
+    },
+    "notion-research-documentation": {
+      "source": "makenotion/claude-code-notion-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/notion/research-documentation/SKILL.md",
+      "computedHash": "538e4764ef18f580add149d245e249cb9d5b8a90fa9cb4562a9b9f18b54ac61e"
+    },
+    "request-refactor-plan": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/deprecated/request-refactor-plan/SKILL.md",
+      "computedHash": "6811250488d1dafcb111e7ef0dc1124211369c5f6f47ce820b7527c255489178"
+    },
+    "review": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/in-progress/review/SKILL.md",
+      "computedHash": "fc4ca8a9495e93692282bebeb3bc99a6d46e27e2fccf4730001df98451b72f80"
+    },
+    "setup-pre-commit": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/misc/setup-pre-commit/SKILL.md",
+      "computedHash": "f2ce8663857d919cf7e4146cd716b0aee1757b85123b758e6e7d98fcbaf14054"
+    },
+    "tasks-build": {
+      "source": "makenotion/cursor-notion-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/tasks-build/SKILL.md",
+      "computedHash": "e766d29b6e874df6e8b5fce54a5c6628409b812b1c887ef28409b8168568c3be"
+    },
+    "tasks-plan": {
+      "source": "makenotion/cursor-notion-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/tasks-plan/SKILL.md",
+      "computedHash": "2a1159a8ff0f6ca3452a05462855c416e76c508a3f624f1e4f34c6660ed2a05e"
+    },
+    "tasks-setup": {
+      "source": "makenotion/cursor-notion-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/tasks-setup/SKILL.md",
+      "computedHash": "3f7d38e7fd2ce9e16541861ff93915a8054f2a914bebe3616a974082bf62ca56"
+    },
+    "tdd": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/tdd/SKILL.md",
+      "computedHash": "78b31b2120c5fe7aced1cebfd4c7c94acb0037fd4f89c83c67584414aa4173bd"
+    },
+    "to-issues": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/to-issues/SKILL.md",
+      "computedHash": "41915d1686991b0d3796eb0b52f3aa8e9021abc5f268d14e6dc62e95dbf8e044"
+    },
+    "to-prd": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/to-prd/SKILL.md",
+      "computedHash": "1f5f7a475757eb4030155130f4fd7f161a20e5731c4b39edd4abe2df9cc72901"
+    },
+    "triage": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/triage/SKILL.md",
+      "computedHash": "56ff15b41bbebfa4cb329d96150d9b297c1d919ce30784d883b8755b4bfd8e7e"
+    }
+  }
+}
