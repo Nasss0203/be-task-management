@@ -21,10 +21,7 @@ import { CancelAdminSubscriptionDto } from '../../dto/request/cancel-admin-subsc
 import { GrantAdminSubscriptionDto } from '../../dto/request/grant-admin-subscription.dto';
 import { RevokeAdminSubscriptionDto } from '../../dto/request/revoke-admin-subscription.dto';
 import { ResumeAdminSubscriptionDto } from '../../dto/request/resume-admin-subscription.dto';
-import {
-  Plan,
-  PlanBillingInterval,
-} from '../../domain/entities/plan.entity';
+import { Plan, PlanBillingInterval } from '../../domain/entities/plan.entity';
 import { SubscriptionWorkspace } from '../../domain/entities/subscription-workspace.entity';
 import {
   BillingProvider,
@@ -77,9 +74,64 @@ export type AdminResumeSubscriptionResult = {
   affectedWorkspaceIds: string[];
 };
 
+export type ExpireSubscriptionsResult = {
+  expiredSubscriptionIds: string[];
+  affectedWorkspaceIds: string[];
+};
+
 @Injectable()
 export class AdminSubscriptionGrantService {
   constructor(private readonly dataSource: DataSource) {}
+
+  expireDueSubscriptions(now = new Date()): Promise<ExpireSubscriptionsResult> {
+    return this.dataSource.transaction(async (manager) => {
+      const subscriptions = await manager
+        .createQueryBuilder(Subscription, 'subscription')
+        .setLock('pessimistic_write')
+        .where('subscription.status IN (:...statuses)', {
+          statuses: [
+            SubscriptionStatus.ACTIVE,
+            SubscriptionStatus.TRIALING,
+            SubscriptionStatus.PAST_DUE,
+            SubscriptionStatus.CANCELLED,
+          ],
+        })
+        .andWhere('subscription.current_period_end IS NOT NULL')
+        .andWhere('subscription.current_period_end <= :now', { now })
+        .getMany();
+
+      const affectedWorkspaceIds = new Set<string>();
+
+      for (const subscription of subscriptions) {
+        const workspaceIds = await this.downgradeSubscriptionWorkspaces({
+          manager,
+          subscriptionId: subscription.id,
+          source: 'subscription_expired',
+        });
+
+        workspaceIds.forEach((workspaceId) =>
+          affectedWorkspaceIds.add(workspaceId),
+        );
+
+        subscription.status = SubscriptionStatus.EXPIRED;
+        subscription.cancelAtPeriodEnd = false;
+        subscription.metadata = {
+          ...(subscription.metadata ?? {}),
+          expiration: {
+            source: 'subscription_expired',
+            expiredAt: now.toISOString(),
+            affectedWorkspaceIds: workspaceIds,
+          },
+        };
+        await manager.save(subscription);
+      }
+
+      return {
+        expiredSubscriptionIds: subscriptions.map(({ id }) => id),
+        affectedWorkspaceIds: [...affectedWorkspaceIds],
+      };
+    });
+  }
 
   grant(dto: GrantAdminSubscriptionDto): Promise<AdminGrantSubscriptionResult> {
     return this.dataSource.transaction(async (manager) => {
@@ -326,6 +378,7 @@ export class AdminSubscriptionGrantService {
     manager: EntityManager;
     subscriptionId: string;
     note?: string;
+    source?: string;
   }): Promise<string[]> {
     const subscriptionWorkspaces = await input.manager.find(
       SubscriptionWorkspace,
@@ -336,9 +389,7 @@ export class AdminSubscriptionGrantService {
       },
     );
 
-    const workspaceIds = subscriptionWorkspaces.map(
-      (item) => item.workspaceId,
-    );
+    const workspaceIds = subscriptionWorkspaces.map((item) => item.workspaceId);
 
     if (subscriptionWorkspaces.length > 0) {
       await input.manager.remove(subscriptionWorkspaces);
@@ -357,6 +408,7 @@ export class AdminSubscriptionGrantService {
         manager: input.manager,
         workspaceId,
         note: input.note,
+        source: input.source,
       });
     }
 
@@ -623,6 +675,7 @@ export class AdminSubscriptionGrantService {
     manager: EntityManager;
     workspaceId: string;
     note?: string;
+    source?: string;
   }): Promise<void> {
     const freePlan = await input.manager.findOne(Plan, {
       where: {
@@ -635,7 +688,7 @@ export class AdminSubscriptionGrantService {
         manager: input.manager,
         workspaceId: input.workspaceId,
         plan: freePlan,
-        source: 'admin_revoke',
+        source: input.source ?? 'admin_revoke',
         note: input.note,
       });
       return;
@@ -647,7 +700,7 @@ export class AdminSubscriptionGrantService {
       planId: null,
       planSlug: FREE_PLAN_SLUG,
       limits: DEFAULT_PLAN_LIMITS[FREE_PLAN_SLUG],
-      source: 'admin_revoke',
+      source: input.source ?? 'admin_revoke',
       note: input.note,
     });
   }

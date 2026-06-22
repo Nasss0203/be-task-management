@@ -3,6 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserActivity } from 'src/modules/user_activity/domain/entities/user_activity.entity';
 import { User } from 'src/modules/users/domain/entities/user.entity';
 import {
+  Subscription,
+  SubscriptionStatus,
+} from 'src/modules/billing/domain/entities/subscription.entity';
+import {
   PlanTypeWorkspace,
   Workspace,
 } from 'src/modules/workspaces/domain/entities/workspace.entity';
@@ -28,6 +32,9 @@ export class AdminRetentionMetricsRepositoryImpl implements AdminRetentionMetric
 
     @InjectRepository(Workspace)
     private readonly workspaceRepository: Repository<Workspace>,
+
+    @InjectRepository(Subscription)
+    private readonly subscriptionRepository: Repository<Subscription>,
   ) {}
 
   async getRetentionMetrics(): Promise<RetentionMetricResponseDto[]> {
@@ -48,24 +55,24 @@ export class AdminRetentionMetricsRepositoryImpl implements AdminRetentionMetric
 
     const activeProWorkspaces = await this.countActiveProWorkspaces();
 
-    const deletedProWorkspacesThisMonth =
-      await this.countDeletedProWorkspacesThisMonth(startOfMonth, now);
+    const lostProWorkspacesThisMonth =
+      await this.countLostProWorkspacesThisMonth(startOfMonth, now);
 
-    const churnBase = activeProWorkspaces + deletedProWorkspacesThisMonth;
+    const churnBase = activeProWorkspaces + lostProWorkspacesThisMonth;
 
     const churnRate =
-      churnBase === 0 ? 0 : (deletedProWorkspacesThisMonth / churnBase) * 100;
+      churnBase === 0 ? 0 : (lostProWorkspacesThisMonth / churnBase) * 100;
 
     return [
       {
         key: 'retention-30d',
-        label: '30-day Retention',
+        label: 'Giữ chân 30 ngày',
         value: Number(retentionRate.toFixed(1)),
         suffix: '%',
         description:
           eligibleUsers === 0
-            ? 'Not enough users older than 30 days to calculate retention.'
-            : 'Users created before 30 days and active again recently.',
+            ? 'Chưa đủ người dùng đã đăng ký trên 30 ngày để tính tỷ lệ giữ chân.'
+            : 'Tỷ lệ người dùng đã đăng ký trên 30 ngày và có hoạt động trở lại trong 30 ngày gần đây.',
         level:
           eligibleUsers === 0
             ? 'warning'
@@ -73,13 +80,13 @@ export class AdminRetentionMetricsRepositoryImpl implements AdminRetentionMetric
       },
       {
         key: 'monthly-churn',
-        label: 'Monthly Churn',
+        label: 'Rời bỏ hàng tháng',
         value: Number(churnRate.toFixed(1)),
         suffix: '%',
         description:
           churnBase === 0
-            ? 'No Pro workspaces available to calculate churn.'
-            : 'Pro workspaces lost this month.',
+            ? 'Chưa có workspace Pro để tính tỷ lệ rời bỏ.'
+            : 'Tỷ lệ workspace đã mất gói Pro trong tháng này.',
         level: this.getChurnLevel(churnRate),
       },
     ];
@@ -124,22 +131,54 @@ export class AdminRetentionMetricsRepositoryImpl implements AdminRetentionMetric
     return Number(raw?.count ?? 0);
   }
 
-  private async countDeletedProWorkspacesThisMonth(
+  private async countLostProWorkspacesThisMonth(
     startOfMonth: Date,
     now: Date,
   ): Promise<number> {
-    const raw = await this.workspaceRepository
-      .createQueryBuilder('w')
-      .withDeleted()
-      .select('COUNT("w"."id")', 'count')
-      .where('"w"."plan_type" = :plan', {
-        plan: PlanTypeWorkspace.PRO,
-      })
-      .andWhere('"w"."deleted_at" >= :startOfMonth', { startOfMonth })
-      .andWhere('"w"."deleted_at" <= :now', { now })
-      .getRawOne<CountRaw>();
+    const rows = await this.subscriptionRepository.query<CountRaw[]>(
+      `
+        SELECT COUNT(DISTINCT lost_workspace.value)::text AS count
+        FROM subscriptions subscription
+        CROSS JOIN LATERAL jsonb_array_elements_text(
+          CASE
+            WHEN subscription.status = $1
+              AND jsonb_typeof(
+                subscription.metadata->'expiration'->'affectedWorkspaceIds'
+              ) = 'array'
+              THEN subscription.metadata->'expiration'->'affectedWorkspaceIds'
+            WHEN subscription.status = $2
+              AND jsonb_typeof(
+                COALESCE(
+                  subscription.metadata->'adminRevoke'->'affectedWorkspaceIds',
+                  subscription.metadata->'adminCancellation'->'affectedWorkspaceIds'
+                )
+              ) = 'array'
+              THEN COALESCE(
+                subscription.metadata->'adminRevoke'->'affectedWorkspaceIds',
+                subscription.metadata->'adminCancellation'->'affectedWorkspaceIds'
+              )
+            ELSE '[]'::jsonb
+          END
+        ) AS lost_workspace(value)
+        WHERE (
+            subscription.status = $1
+            AND subscription.current_period_end >= $3
+            AND subscription.current_period_end <= $4
+          ) OR (
+            subscription.status = $2
+            AND subscription.cancelled_at >= $3
+            AND subscription.cancelled_at <= $4
+          )
+      `,
+      [
+        SubscriptionStatus.EXPIRED,
+        SubscriptionStatus.CANCELLED,
+        startOfMonth,
+        now,
+      ],
+    );
 
-    return Number(raw?.count ?? 0);
+    return Number(rows[0]?.count ?? 0);
   }
 
   private getRetentionLevel(rate: number): RetentionMetricLevel {

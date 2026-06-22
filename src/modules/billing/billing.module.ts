@@ -40,6 +40,7 @@ import { UsageLimitEnforcerServiceImpl } from './services/usage-limit/usage-limi
 import { AdminBillingPlanService } from './services/admin/admin-billing-plan.service';
 import { AdminSubscriptionGrantService } from './services/admin/admin-subscription-grant.service';
 import { StripeWebhookService } from './services/webhook/stripe-webhook.service';
+import { SubscriptionExpirationService } from './services/subscription-expiration.service';
 
 @Module({
   imports: [
@@ -143,6 +144,7 @@ import { StripeWebhookService } from './services/webhook/stripe-webhook.service'
     AdminSubscriptionGrantService,
     VnpayIpnService,
     StripeWebhookService,
+    SubscriptionExpirationService,
   ],
 
   exports: [
