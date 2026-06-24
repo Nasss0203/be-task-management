@@ -27,7 +27,8 @@
     "seed:plans": "ts-node -r tsconfig-paths/register src/modules/seed/run-billing-plan-seed.ts",
     "seed:features": "ts-node -r tsconfig-paths/register src/modules/seed/run-feature-seed.ts",
     "seed:super-admin": "ts-node -r tsconfig-paths/register src/modules/seed/run-super-admin-seed.ts",
-    "seed:workspace-templates": "ts-node -r tsconfig-paths/register src/modules/seed/run-workspace-template-seed.ts"
+    "seed:workspace-templates": "ts-node -r tsconfig-paths/register src/modules/seed/run-workspace-template-seed.ts",
+    "seed:all": "npm run seed:rbac && npm run seed:plans && npm run seed:features && npm run seed:super-admin && npm run seed:workspace-templates"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1037.0",
