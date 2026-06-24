@@ -123,7 +123,9 @@ jobs:
               "docker login --username AWS --password-stdin $ECR_REGISTRY"
 
           ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no "$EC2_USER@$EC2_HOST" \
-            "cd ~/back-task \
+            "grep -q 'STRIPE_SECRET_KEY' ~/back-task/.env || echo 'STRIPE_SECRET_KEY=sk_test_12345' >> ~/back-task/.env \
+            && grep -q 'STRIPE_WEBHOOK_SECRET' ~/back-task/.env || echo 'STRIPE_WEBHOOK_SECRET=whsec_12345' >> ~/back-task/.env \
+            && cd ~/back-task \
             && export IMAGE_URI=$IMAGE_URI \
             && export SEED_IMAGE_URI=$SEED_IMAGE_URI \
             && docker compose -f docker-compose.prod.yml pull \
