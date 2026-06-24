@@ -22,6 +22,7 @@
     "typeorm": "typeorm-ts-node-commonjs",
     "migration:generate": "npm run typeorm -- migration:generate src/database/migrations/init-schema -d src/database/data-source.ts",
     "migration:run": "npm run typeorm -- migration:run -d src/database/data-source.ts",
+    "migration:fake": "ts-node -r tsconfig-paths/register src/modules/seed/fake-migration.ts",
     "migration:revert": "npm run typeorm -- migration:revert -d src/database/data-source.ts",
     "seed:rbac": "ts-node -r tsconfig-paths/register src/modules/seed/run-rbac-seed.ts",
     "seed:plans": "ts-node -r tsconfig-paths/register src/modules/seed/run-billing-plan-seed.ts",

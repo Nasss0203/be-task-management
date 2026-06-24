@@ -128,7 +128,7 @@ jobs:
             && export SEED_IMAGE_URI=$SEED_IMAGE_URI \
             && docker compose -f docker-compose.prod.yml pull \
             && docker compose -f docker-compose.prod.yml up -d \
-            && docker compose -f docker-compose.prod.yml exec -T postgres psql -U postgres -d back_task -c \"DROP SCHEMA public CASCADE; CREATE SCHEMA public;\" \
+            && docker compose -f docker-compose.prod.yml run --rm seed npm run migration:fake \
             && docker compose -f docker-compose.prod.yml run --rm seed npm run migration:run \
             && docker compose -f docker-compose.prod.yml run --rm seed npm run seed:all \
             && docker compose -f docker-compose.prod.yml ps"
