@@ -4,7 +4,7 @@ import { EntityManager, In, Repository } from 'typeorm';
 import { Task } from '../domain/entities/task.entity';
 import { TaskModel } from '../domain/models/task.model';
 import { UpdateManyTasksDto } from '../dto/update-many-tasks.dto';
-import { UpdateTaskDto } from '../dto/update-task.dto';
+import { UpdateTaskInput } from '../interfaces/applications/update-task.application.interface';
 import { UpdateTaskRepository } from '../interfaces/repositories/update-task.repository.interface';
 import { TaskMapper } from '../mapper/tasks.mapper';
 
@@ -13,20 +13,21 @@ export class UpdateTaskRepositoryImpl implements UpdateTaskRepository {
   constructor(
     @InjectRepository(Task)
     private readonly repoTask: Repository<Task>,
-  ) {}
+  ) { }
 
   private getRepo(manager?: EntityManager): Repository<Task> {
     return manager ? manager.getRepository(Task) : this.repoTask;
   }
 
   async updateTask(
-    updateTaskDto: UpdateTaskDto,
+    updateTaskDto: UpdateTaskInput,
     manager?: EntityManager,
   ): Promise<TaskModel> {
     const repo = this.getRepo(manager);
 
+    const { actorId: _actorId, ...entityFields } = updateTaskDto;
     const payload = Object.fromEntries(
-      Object.entries(updateTaskDto).filter(([, value]) => value !== undefined),
+      Object.entries(entityFields).filter(([, value]) => value !== undefined),
     );
 
     const task = await repo.preload({

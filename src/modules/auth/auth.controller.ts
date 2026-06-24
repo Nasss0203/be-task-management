@@ -23,7 +23,7 @@ import { GoogleAuthGuard } from 'src/common/guard/google-auth.guard';
 import { LocalAuthGuard } from 'src/common/guard/local-auth.guard';
 import { type IAuth } from 'src/types/auth';
 import { type GoogleUserPayload } from 'src/types/google-user-payload.interface';
-import { RegisterUserDto } from '../users/dto/create-user.dto';
+import { LoginUserDto, RegisterUserDto } from '../users/dto/create-user.dto';
 import { type GetProfileAuthApplication } from './interfaces/applications/get-profile-auth.application.interface';
 import { type GoogleAuthApplication } from './interfaces/applications/google-auth.application.interface';
 import { type LoginAuthApplication } from './interfaces/applications/login-auth.application.interface';
@@ -94,7 +94,11 @@ export class AuthController {
   @AuthRateLimit()
   @UseGuards(LocalAuthGuard)
   @ResponseMessage('Login user successfully!!')
-  async login(@Auth() auth: IAuth, @Res({ passthrough: true }) res: Response) {
+  async login(
+    @Body() loginUserDto: LoginUserDto,
+    @Auth() auth: IAuth,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const { access_token, refresh_token } =
       await this.loginAuthApplication.login(auth);
 

@@ -38,6 +38,9 @@ async function bootstrap() {
           code: ErrorCode.VALIDATION_ERROR,
           message: formatValidationErrors(errors),
         }),
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
     }),
   );
 

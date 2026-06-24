@@ -103,6 +103,7 @@ export class TasksController {
 
   @Post()
   @WriteRateLimit()
+  @ResponseMessage('Create task successfully')
   @RequirePermissions(PERMISSIONS.TASK_CREATE)
   create(@Body() createTaskDto: CreateTaskDto, @Auth() auth: IAuth) {
     return this.createTaskApplication.create({
@@ -113,6 +114,7 @@ export class TasksController {
 
   @Patch(':id')
   @WriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'task', key: 'id' })
   @RequirePermissions(PERMISSIONS.TASK_UPDATE)
   @ResponseMessage('Update task successfully')
   async updateTask(
