@@ -1,11 +1,11 @@
 import { EntityManager } from 'typeorm';
 import { TaskModel } from '../../domain/models/task.model';
 import { UpdateManyTasksDto } from '../../dto/update-many-tasks.dto';
-import { UpdateTaskDto } from '../../dto/update-task.dto';
+import { UpdateTaskInput } from '../applications/update-task.application.interface';
 
 export interface UpdateTaskRepository {
   updateTask(
-    updateTaskDto: UpdateTaskDto,
+    updateTaskDto: UpdateTaskInput,
     manager?: EntityManager,
   ): Promise<TaskModel>;
 
