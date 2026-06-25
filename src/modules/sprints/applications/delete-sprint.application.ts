@@ -5,7 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { type UnitOfWork } from 'src/interface/index.interface';
 import { REALTIME_EVENTS } from 'src/modules/realtime/realtime.events';
+import { type MoveTasksToBacklogBySprintService } from 'src/modules/tasks/interfaces/services/move-tasks-to-backlog-by-sprint.service.interface';
+import { TASK_TYPES } from 'src/modules/tasks/interfaces/types';
 import {
   ActivityAction,
   ActivityEntityType,
@@ -27,8 +30,14 @@ export class DeleteSprintApplicationImpl implements DeleteSprintApplication {
     @Inject(SPRINT_TYPES.services.DeleteSprintService)
     private readonly deleteSprintService: DeleteSprintService,
 
+    @Inject(TASK_TYPES.services.MoveTasksToBacklogBySprintService)
+    private readonly moveTasksToBacklogBySprintService: MoveTasksToBacklogBySprintService,
+
     @Inject(ACTIVITY_TYPES.services.CreateActivityService)
     private readonly createActivityService: CreateActivityService,
+
+    @Inject(SPRINT_TYPES.uow.UnitOfWork)
+    private readonly unitOfWork: UnitOfWork,
 
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -77,9 +86,23 @@ export class DeleteSprintApplicationImpl implements DeleteSprintApplication {
       );
     }
 
-    await this.deleteSprintService.softDeleteSprint({
-      sprintId: input.sprintId,
-      deletedBy: input.userId,
+    await this.unitOfWork.runInTransaction(async (manager) => {
+      await this.moveTasksToBacklogBySprintService.move(
+        {
+          workspaceId: input.workspaceId,
+          projectId: input.projectId,
+          sprintId: input.sprintId,
+        },
+        manager,
+      );
+
+      await this.deleteSprintService.softDeleteSprint(
+        {
+          sprintId: input.sprintId,
+          deletedBy: input.userId,
+        },
+        manager,
+      );
     });
 
     await this.createActivityService.create({

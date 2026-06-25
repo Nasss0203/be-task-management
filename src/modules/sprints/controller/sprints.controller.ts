@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Inject,
   Param,
@@ -34,6 +35,7 @@ import { type FindSprintApplication } from '../interfaces/applications/find-spri
 import { type GetSprintDetailApplication } from '../interfaces/applications/get-sprint-detail.application.interface';
 import { type StartSprintApplication } from '../interfaces/applications/start-sprint.application.interface';
 import { type UpdateSprintApplication } from '../interfaces/applications/update-sprint.application.interface';
+import { type DeleteSprintApplication } from '../interfaces/applications/delete-sprint.application.interface';
 import { SPRINT_TYPES } from '../interfaces/types';
 
 @Controller('sprints')
@@ -59,6 +61,9 @@ export class SprintsController {
 
     @Inject(SPRINT_TYPES.applications.GetSprintDetailApplication)
     private readonly getSprintDetailApplication: GetSprintDetailApplication,
+
+    @Inject(SPRINT_TYPES.applications.DeleteSprintApplication)
+    private readonly deleteSprintApplication: DeleteSprintApplication,
   ) {}
 
   @Post('workspaces/:workspaceId/projects/:projectId')
@@ -192,6 +197,26 @@ export class SprintsController {
     @Auth() auth: IAuth,
   ): Promise<SprintResponseDto> {
     return await this.cancelSprintApplication.cancelSprint({
+      workspaceId,
+      projectId,
+      sprintId,
+      userId: auth.id,
+    });
+  }
+
+  @Delete('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId')
+  @StrictWriteRateLimit()
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
+  @RequireFeature(FeatureKey.SPRINT_ENABLED)
+  @RequirePermissions(PERMISSIONS.SPRINT_DELETE)
+  @ResponseMessage('Delete sprint successfully')
+  async deleteSprint(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('sprintId') sprintId: string,
+    @Auth() auth: IAuth,
+  ): Promise<void> {
+    return await this.deleteSprintApplication.delete({
       workspaceId,
       projectId,
       sprintId,
