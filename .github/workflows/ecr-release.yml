@@ -108,6 +108,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no "$EC2_USER@$EC2_HOST" "mkdir -p ~/back-task"
           scp -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no docker-compose.prod.yml "$EC2_USER@$EC2_HOST:~/back-task/docker-compose.prod.yml"
+          scp -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no Caddyfile "$EC2_USER@$EC2_HOST:~/back-task/Caddyfile"
 
       - name: Deploy to EC2
         if: ${{ env.EC2_HOST != '' && env.EC2_SSH_KEY != '' }}
@@ -123,9 +124,14 @@ jobs:
               "docker login --username AWS --password-stdin $ECR_REGISTRY"
 
           ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no "$EC2_USER@$EC2_HOST" \
-            "cd ~/back-task \
+            "grep -q 'STRIPE_SECRET_KEY' ~/back-task/.env || echo 'STRIPE_SECRET_KEY=sk_test_12345' >> ~/back-task/.env \
+            && grep -q 'STRIPE_WEBHOOK_SECRET' ~/back-task/.env || echo 'STRIPE_WEBHOOK_SECRET=whsec_12345' >> ~/back-task/.env \
+            && cd ~/back-task \
             && export IMAGE_URI=$IMAGE_URI \
             && export SEED_IMAGE_URI=$SEED_IMAGE_URI \
             && docker compose -f docker-compose.prod.yml pull \
             && docker compose -f docker-compose.prod.yml up -d \
+            && docker compose -f docker-compose.prod.yml run --rm seed npm run migration:fake \
+            && docker compose -f docker-compose.prod.yml run --rm seed npm run migration:run \
+            && docker compose -f docker-compose.prod.yml run --rm seed npm run seed:all \
             && docker compose -f docker-compose.prod.yml ps"

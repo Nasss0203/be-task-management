@@ -26,11 +26,12 @@ export class FindTaskServiceImpl implements FindTaskService {
   async findAllTask(
     projectId: string,
     workspaceId: string,
+    filters?: FindBacklogTasksFilters,
   ): Promise<TaskModel[]> {
     return this.findTaskRepository.findAllTask({
       projectId,
       workspaceId,
-    });
+    }, filters);
   }
 
   async findOneTask(

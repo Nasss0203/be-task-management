@@ -47,6 +47,35 @@ export class User {
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
+  @Column({ name: 'is_email_verified', type: 'boolean', default: false })
+  isEmailVerified: boolean;
+
+  @Column({
+    name: 'email_verification_token',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  emailVerificationToken: string | null;
+
+  @Column({
+    name: 'email_verification_expires',
+    type: 'timestamp',
+    nullable: true,
+  })
+  emailVerificationExpires: Date | null;
+
+  @Column({
+    name: 'reset_password_token',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  resetPasswordToken: string | null;
+
+  @Column({ name: 'reset_password_expires', type: 'timestamp', nullable: true })
+  resetPasswordExpires: Date | null;
+
   @Column({
     name: 'system_role',
     type: 'enum',

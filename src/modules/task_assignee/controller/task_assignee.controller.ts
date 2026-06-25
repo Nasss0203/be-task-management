@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Inject, Param, Post } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import { WriteRateLimit } from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
@@ -11,6 +12,7 @@ import { type DeleteTaskAssigneeApplication } from '../interfaces/applications/d
 import { TASK_ASSIGNEE_TYPES } from '../interfaces/types';
 
 @Controller('task-assignee')
+@WriteRateLimit()
 export class TaskAssigneeController {
   constructor(
     @Inject(TASK_ASSIGNEE_TYPES.applications.CreateTaskAssigneeApplication)

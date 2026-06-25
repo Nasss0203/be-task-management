@@ -22,10 +22,14 @@ function formatValidationErrors(errors: ValidationError[]): string[] {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+  });
   const configService = app.get(ConfigService);
   const reflector = app.get(Reflector);
   const httpAdapterHost = app.get(HttpAdapterHost);
+
+  app.set('trust proxy', 1);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -34,13 +38,18 @@ async function bootstrap() {
           code: ErrorCode.VALIDATION_ERROR,
           message: formatValidationErrors(errors),
         }),
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
     }),
   );
+
   app.useGlobalInterceptors(new TransformInterceptor(reflector));
   app.useGlobalFilters(new HttpExceptionFilter(httpAdapterHost));
   // app.useGlobalGuards(new JwtAuthGuard(reflector));
 
   app.use(cookieParser());
+
   const clientUrl =
     configService.get<string>('CLIENT_URL') || 'http://localhost:3000';
   app.enableCors({
@@ -58,6 +67,7 @@ async function bootstrap() {
       logDir: 'logs/app',
     }),
   );
+
   app.setGlobalPrefix('api');
   app.enableVersioning({
     type: VersioningType.URI,

@@ -5,6 +5,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { REALTIME_EVENTS } from 'src/modules/realtime/realtime.events';
 import {
   ActivityAction,
   ActivityEntityType,
@@ -43,6 +45,8 @@ export class MoveTaskSprintApplicationImpl implements MoveTaskSprintApplication 
 
     @Inject(ACTIVITY_TYPES.services.CreateActivityService)
     private readonly createActivityService: CreateActivityService,
+    
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async move(input: MoveTaskSprintApplicationInput): Promise<TaskResponseDto> {
@@ -107,6 +111,12 @@ export class MoveTaskSprintApplicationImpl implements MoveTaskSprintApplication 
       field: 'sprintId',
       oldValue: task.sprintId,
       newValue: movedTask.sprintId,
+    });
+
+    this.eventEmitter.emit(REALTIME_EVENTS.TASK_UPDATED, {
+      workspaceId: movedTask.workspaceId,
+      projectId: movedTask.projectId,
+      task: movedTask,
     });
 
     return TaskMapper.toResponse(movedTask);

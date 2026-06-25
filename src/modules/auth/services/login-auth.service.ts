@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { ErrorCode } from 'src/common/constants/error-code.constant';
+import { SystemRole } from 'src/modules/users/domain/entities/user.entity';
 import { IAuth } from 'src/types/auth';
 import { type AuthUserRepository } from '../interfaces/repositories/auth-user.repository.interface';
 import { type IssueAuthTokenService } from '../interfaces/services/issue-auth-token.service.interface';
@@ -30,6 +31,17 @@ export class LoginAuthServiceImpl implements LoginAuthService {
           message: 'Invalid credentials',
         },
         HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    const isSuperAdmin = user.systemRole === SystemRole.SUPER_ADMIN;
+    if (!user.isEmailVerified && !isSuperAdmin) {
+      throw new HttpException(
+        {
+          code: ErrorCode.EMAIL_NOT_VERIFIED,
+          message: 'Please verify your email address before logging in',
+        },
+        HttpStatus.FORBIDDEN,
       );
     }
 

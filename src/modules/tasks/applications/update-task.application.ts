@@ -5,6 +5,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { REALTIME_EVENTS } from 'src/modules/realtime/realtime.events';
 import { type UnitOfWork } from 'src/interface/index.interface';
 import {
   ActivityAction,
@@ -22,6 +24,7 @@ import { UpdateTaskDto } from '../dto/update-task.dto';
 import {
   UpdateManyTasksApplicationInput,
   UpdateTaskApplication,
+  UpdateTaskInput,
 } from '../interfaces/applications/update-task.application.interface';
 import { type FindTaskService } from '../interfaces/services/find-task.service.interface';
 import { type UpdateTaskService } from '../interfaces/services/update-task.service.interface';
@@ -45,9 +48,11 @@ export class UpdateTaskApplicationImpl implements UpdateTaskApplication {
 
     @Inject(WORKSPACE_TYPES.uow.UnitOfWork)
     private readonly uow: UnitOfWork,
-  ) {}
 
-  async updateTask(updateTaskDto: UpdateTaskDto): Promise<TaskResponseDto> {
+    private readonly eventEmitter: EventEmitter2,
+  ) { }
+
+  async updateTask(updateTaskDto: UpdateTaskInput): Promise<TaskResponseDto> {
     return this.uow.runInTransaction(async (manager) => {
       const oldTask = await this.findTaskService.findOneTask(
         updateTaskDto.id,
@@ -138,6 +143,12 @@ export class UpdateTaskApplicationImpl implements UpdateTaskApplication {
         );
       }
 
+      this.eventEmitter.emit(REALTIME_EVENTS.TASK_UPDATED, {
+        workspaceId: updatedTask.workspaceId,
+        projectId: updatedTask.projectId,
+        task: updatedTask,
+      });
+
       return TaskMapper.toResponse(updatedTask);
     });
   }
@@ -194,6 +205,14 @@ export class UpdateTaskApplicationImpl implements UpdateTaskApplication {
       projectId,
       dto,
     });
+
+    for (const task of tasks) {
+      this.eventEmitter.emit(REALTIME_EVENTS.TASK_UPDATED, {
+        workspaceId: task.workspaceId,
+        projectId: task.projectId,
+        task: task,
+      });
+    }
 
     return tasks.map(TaskMapper.toResponse);
   }

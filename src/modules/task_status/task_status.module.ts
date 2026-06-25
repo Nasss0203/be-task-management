@@ -43,6 +43,7 @@ import { TaskStatusService } from './task_status.service';
   exports: [
     TASK_STATUS_TYPES.services.CreateTaskStatusService,
     TASK_STATUS_TYPES.repositories.FindTaskStatusRepository,
+    TASK_STATUS_TYPES.services.FindTaskStatusService,
   ],
 })
 export class TaskStatusModule {}

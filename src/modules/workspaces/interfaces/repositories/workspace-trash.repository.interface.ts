@@ -18,4 +18,10 @@ export interface WorkspaceTrashRepository {
     workspaceId: string,
     manager?: EntityManager,
   ): Promise<WorkspaceModel | null>;
+
+  removeWorkspaceFromUserTrash(
+    userId: string,
+    workspaceId: string,
+    manager?: EntityManager,
+  ): Promise<void>;
 }

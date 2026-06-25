@@ -8,9 +8,10 @@ import { CreateActivityRepositoryImpl } from './repositories/create.activity.rep
 import { FindActivityRepositoryImpl } from './repositories/find.activity.repository';
 import { CreateActivityServiceImpl } from './services/create.activity.service';
 import { FindActivityServiceImpl } from './services/find.activity.service';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Activity])],
+  imports: [TypeOrmModule.forFeature([Activity]), UsersModule],
   controllers: [ActivityController],
   providers: [
     {

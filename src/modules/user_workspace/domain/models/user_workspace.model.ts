@@ -21,5 +21,6 @@ export class MemberWorkspaceModel {
     public readonly avatar_url?: string | null,
     public readonly lastOpenedAt: Date | null = null,
     public readonly joinedAt?: Date,
+    public readonly taskCount?: number,
   ) {}
 }

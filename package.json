@@ -22,12 +22,14 @@
     "typeorm": "typeorm-ts-node-commonjs",
     "migration:generate": "npm run typeorm -- migration:generate src/database/migrations/init-schema -d src/database/data-source.ts",
     "migration:run": "npm run typeorm -- migration:run -d src/database/data-source.ts",
+    "migration:fake": "ts-node -r tsconfig-paths/register src/modules/seed/fake-migration.ts",
     "migration:revert": "npm run typeorm -- migration:revert -d src/database/data-source.ts",
     "seed:rbac": "ts-node -r tsconfig-paths/register src/modules/seed/run-rbac-seed.ts",
     "seed:plans": "ts-node -r tsconfig-paths/register src/modules/seed/run-billing-plan-seed.ts",
     "seed:features": "ts-node -r tsconfig-paths/register src/modules/seed/run-feature-seed.ts",
     "seed:super-admin": "ts-node -r tsconfig-paths/register src/modules/seed/run-super-admin-seed.ts",
-    "seed:workspace-templates": "ts-node -r tsconfig-paths/register src/modules/seed/run-workspace-template-seed.ts"
+    "seed:workspace-templates": "ts-node -r tsconfig-paths/register src/modules/seed/run-workspace-template-seed.ts",
+    "seed:all": "npm run seed:rbac && npm run seed:plans && npm run seed:features && npm run seed:super-admin && npm run seed:workspace-templates"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1037.0",
@@ -44,6 +46,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/platform-socket.io": "^11.1.21",
     "@nestjs/swagger": "^11.2.5",
+    "@nestjs/throttler": "^6.5.0",
     "@nestjs/typeorm": "^11.0.0",
     "@nestjs/websockets": "^11.1.21",
     "bcrypt": "^6.0.0",
@@ -68,6 +71,7 @@
     "slugify": "^1.6.6",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
+    "stripe": "^22.2.1",
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.28",
     "uuid": "^13.0.0",

@@ -30,7 +30,6 @@ export class FindTaskCommentReposirotyImpl implements FindTaskCommentReposiroty 
         workspaceId,
         projectId,
         taskId,
-        deletedAt: IsNull(),
       },
       relations: {
         author: true,
@@ -41,5 +40,29 @@ export class FindTaskCommentReposirotyImpl implements FindTaskCommentReposiroty 
     });
 
     return comments.map((comment) => TaskCommentMapper.toModel(comment));
+  }
+
+  async findById(
+    workspaceId: string,
+    projectId: string,
+    taskId: string,
+    commentId: string,
+    manager?: EntityManager,
+  ): Promise<TaskCommentModel | null> {
+    const repo = this.getRepo(manager);
+
+    const comment = await repo.findOne({
+      where: {
+        id: commentId,
+        workspaceId,
+        projectId,
+        taskId,
+      },
+      relations: {
+        author: true,
+      },
+    });
+
+    return comment ? TaskCommentMapper.toModel(comment) : null;
   }
 }

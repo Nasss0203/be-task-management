@@ -10,4 +10,9 @@ export interface WorkspaceTrashService {
     userId: string,
     workspaceId: string,
   ): Promise<WorkspaceModel>;
+
+  removeWorkspaceFromUserTrash(
+    userId: string,
+    workspaceId: string,
+  ): Promise<void>;
 }

@@ -8,9 +8,9 @@
     style='
       margin: 0;
       padding: 0;
-      background-color: #f4f7fb;
-      font-family: Arial, Helvetica, sans-serif;
-      color: #1f2937;
+      background-color: #f1f5fc;
+      font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+      color: #070b14;
     '
   >
     <table
@@ -18,91 +18,114 @@
       cellpadding='0'
       cellspacing='0'
       width='100%'
-      style='background-color: #f4f7fb; margin: 0; padding: 24px 0'
+      style='background-color: #f1f5fc; margin: 0; padding: 40px 0;'
     >
       <tr>
-        <td align='center'>
+        <td align='center' style='padding: 0 16px;'>
           <table
             role='presentation'
             cellpadding='0'
             cellspacing='0'
             width='100%'
             style='
-              max-width: 600px;
+              max-width: 620px;
               background-color: #ffffff;
-              border-radius: 12px;
+              border: 1px solid #d4d8de;
+              border-radius: 20px;
               overflow: hidden;
-              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+              box-shadow: 0 12px 40px rgba(7, 11, 20, 0.08);
             '
           >
+            <!-- Header -->
             <tr>
               <td
                 style='
-                  background-color: #2563eb;
-                  padding: 32px 24px;
-                  text-align: center;
+                  padding: 36px 40px 32px;
+                  background: linear-gradient(135deg, #05070d 0%, #0a1018 60%, #0f1c33 100%);
+                  border-bottom: 1px solid #1a2540;
                 '
               >
-                <h1
+                <div
                   style='
-                    margin: 0;
-                    font-size: 24px;
-                    line-height: 32px;
-                    color: #ffffff;
+                    display: inline-block;
+                    margin-bottom: 20px;
+                    padding: 5px 14px;
+                    border-radius: 999px;
+                    background-color: rgba(57, 123, 233, 0.15);
+                    border: 1px solid rgba(57, 123, 233, 0.3);
+                    color: #397be9;
+                    font-size: 11px;
+                    line-height: 16px;
                     font-weight: 700;
+                    letter-spacing: 0.1em;
+                    text-transform: uppercase;
                   '
                 >
-                  Bạn được mời tham gia workspace
+                  {{appName}}
+                </div>
+
+                <h1
+                  style='
+                    margin: 0 0 10px;
+                    font-size: 28px;
+                    line-height: 36px;
+                    color: #f1f5fc;
+                    font-weight: 700;
+                    letter-spacing: -0.02em;
+                  '
+                >
+                  🎉 Bạn được mời tham gia!
                 </h1>
+
+                <p
+                  style='
+                    margin: 0;
+                    font-size: 15px;
+                    line-height: 24px;
+                    color: #8899bb;
+                  '
+                >
+                  Bạn có một lời mời đang chờ xác nhận.
+                </p>
               </td>
             </tr>
 
+            <!-- Body -->
             <tr>
-              <td style='padding: 32px 24px'>
+              <td style='padding: 40px;'>
                 <p
                   style='
                     margin: 0 0 16px;
                     font-size: 16px;
-                    line-height: 24px;
-                    color: #374151;
+                    line-height: 26px;
+                    color: #3a4460;
                   '
                 >
                   Xin chào
-                  <strong>{{recipientName}}</strong>,
+                  <strong style='color: #070b14;'>{{recipientName}}</strong>,
                 </p>
 
                 <p
                   style='
-                    margin: 0 0 16px;
+                    margin: 0 0 32px;
                     font-size: 16px;
-                    line-height: 24px;
-                    color: #374151;
+                    line-height: 28px;
+                    color: #4a5578;
                   '
                 >
-                  <strong>{{inviterName}}</strong>
-                  đã mời bạn tham gia workspace
-                  <strong>{{workspaceName}}</strong>
-                  với vai trò
-                  <strong>{{roleName}}</strong>.
-                </p>
-
-                <p
-                  style='
-                    margin: 0 0 24px;
-                    font-size: 15px;
-                    line-height: 24px;
-                    color: #6b7280;
-                  '
-                >
+                  <strong style='color: #070b14;'>{{inviterName}}</strong> đã mời bạn tham gia workspace
+                  <strong style='color: #070b14;'>{{workspaceName}}</strong> với vai trò
+                  <strong style='color: #1c50a7;'>{{roleName}}</strong>.
                   Nhấn vào nút bên dưới để chấp nhận lời mời.
                 </p>
 
+                <!-- CTA Button -->
                 <table
                   role='presentation'
                   cellpadding='0'
                   cellspacing='0'
                   width='100%'
-                  style='margin: 0 0 24px'
+                  style='margin: 0 0 36px;'
                 >
                   <tr>
                     <td align='center'>
@@ -111,112 +134,96 @@
                         target='_blank'
                         style='
                           display: inline-block;
-                          background-color: #2563eb;
+                          min-width: 220px;
+                          padding: 16px 36px;
+                          border-radius: 12px;
+                          background: linear-gradient(135deg, #1c50a7 0%, #397be9 100%);
                           color: #ffffff;
                           text-decoration: none;
                           font-size: 16px;
+                          line-height: 20px;
                           font-weight: 700;
-                          padding: 14px 28px;
-                          border-radius: 8px;
+                          letter-spacing: 0.01em;
+                          box-shadow: 0 8px 20px rgba(28, 80, 167, 0.35);
                         '
                       >
-                        Chấp nhận lời mời
+                        Chấp nhận lời mời →
                       </a>
                     </td>
                   </tr>
                 </table>
 
+                <!-- Info card -->
                 <table
                   role='presentation'
                   cellpadding='0'
                   cellspacing='0'
                   width='100%'
                   style='
-                    background-color: #f9fafb;
-                    border: 1px solid #e5e7eb;
-                    border-radius: 8px;
-                    margin-bottom: 24px;
+                    margin: 0 0 28px;
+                    background-color: #f8fafd;
+                    border: 1px solid #d4d8de;
+                    border-radius: 14px;
                   '
                 >
                   <tr>
-                    <td style='padding: 16px 18px'>
+                    <td style='padding: 22px 24px;'>
                       <p
                         style='
-                          margin: 0 0 8px;
-                          font-size: 14px;
-                          color: #374151;
+                          margin: 0 0 14px;
+                          font-size: 11px;
+                          line-height: 18px;
+                          font-weight: 700;
+                          letter-spacing: 0.08em;
+                          text-transform: uppercase;
+                          color: #8899bb;
                         '
                       >
-                        <strong>Workspace:</strong>
-                        {{workspaceName}}
+                        Chi tiết lời mời
                       </p>
-                      <p
-                        style='
-                          margin: 0 0 8px;
-                          font-size: 14px;
-                          color: #374151;
-                        '
-                      >
-                        <strong>Người mời:</strong>
-                        {{inviterName}}
-                      </p>
-                      <p style='margin: 0; font-size: 14px; color: #374151'>
-                        <strong>Hết hạn:</strong>
-                        {{expiredAt}}
-                      </p>
+                      <table role='presentation' cellpadding='0' cellspacing='0' width='100%'>
+                        <tr>
+                          <td style='padding: 6px 0; font-size: 14px; color: #8899bb; width: 90px;'>Workspace</td>
+                          <td style='padding: 6px 0; font-size: 14px; color: #070b14; font-weight: 600;'>{{workspaceName}}</td>
+                        </tr>
+                        <tr>
+                          <td style='padding: 6px 0; border-top: 1px solid #e4e8ef; font-size: 14px; color: #8899bb;'>Người mời</td>
+                          <td style='padding: 6px 0; border-top: 1px solid #e4e8ef; font-size: 14px; color: #070b14; font-weight: 600;'>{{inviterName}}</td>
+                        </tr>
+                        <tr>
+                          <td style='padding: 6px 0; border-top: 1px solid #e4e8ef; font-size: 14px; color: #8899bb;'>Vai trò</td>
+                          <td style='padding: 6px 0; border-top: 1px solid #e4e8ef; font-size: 14px; color: #1c50a7; font-weight: 600;'>{{roleName}}</td>
+                        </tr>
+                        <tr>
+                          <td style='padding: 6px 0; border-top: 1px solid #e4e8ef; font-size: 14px; color: #8899bb;'>Hết hạn</td>
+                          <td style='padding: 6px 0; border-top: 1px solid #e4e8ef; font-size: 14px; color: #c0392b; font-weight: 600;'>{{expiredAt}}</td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
                 </table>
 
                 <p
                   style='
-                    margin: 0 0 12px;
-                    font-size: 14px;
-                    line-height: 22px;
-                    color: #6b7280;
-                  '
-                >
-                  Nếu nút không hoạt động, bạn có thể copy link này và dán vào
-                  trình duyệt:
-                </p>
-
-                <p
-                  style='
-                    margin: 0 0 24px;
-                    font-size: 13px;
-                    line-height: 22px;
-                    word-break: break-all;
-                  '
-                >
-                  <a
-                    href='{{acceptUrl}}'
-                    target='_blank'
-                    style='color: #2563eb; text-decoration: none'
-                  >
-                    {{acceptUrl}}
-                  </a>
-                </p>
-
-                <p
-                  style='
                     margin: 0;
-                    font-size: 13px;
-                    line-height: 22px;
-                    color: #9ca3af;
+                    font-size: 14px;
+                    line-height: 24px;
+                    color: #8899bb;
                   '
                 >
-                  Nếu bạn không mong đợi email này, bạn có thể bỏ qua nó.
+                  Nếu bạn không mong đợi email này, hãy bỏ qua nó. Không có thay đổi nào được thực hiện.
                 </p>
               </td>
             </tr>
 
+            <!-- Footer -->
             <tr>
               <td
                 style='
-                  padding: 20px 24px;
+                  padding: 24px 40px;
+                  border-top: 1px solid #e4e8ef;
+                  background-color: #f8fafd;
                   text-align: center;
-                  background-color: #f9fafb;
-                  border-top: 1px solid #e5e7eb;
                 '
               >
                 <p
@@ -224,12 +231,10 @@
                     margin: 0;
                     font-size: 12px;
                     line-height: 20px;
-                    color: #9ca3af;
+                    color: #8899bb;
                   '
                 >
-                  ©
-                  {{year}}
-                  {{appName}}. All rights reserved.
+                  © {{year}} {{appName}}. All rights reserved.
                 </p>
               </td>
             </tr>

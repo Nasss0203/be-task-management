@@ -1,4 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { REALTIME_EVENTS } from 'src/modules/realtime/realtime.events';
 import {
   ActivityAction,
   ActivityEntityType,
@@ -22,6 +24,8 @@ export class RemoveTaskFromSprintApplicationImpl implements RemoveTaskFromSprint
 
     @Inject(ACTIVITY_TYPES.services.CreateActivityService)
     private readonly createActivityService: CreateActivityService,
+    
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async remove(
@@ -40,6 +44,12 @@ export class RemoveTaskFromSprintApplicationImpl implements RemoveTaskFromSprint
       action: ActivityAction.TASK_REMOVED_FROM_SPRINT,
       field: 'sprintId',
       newValue: null,
+    });
+
+    this.eventEmitter.emit(REALTIME_EVENTS.TASK_UPDATED, {
+      workspaceId: task.workspaceId,
+      projectId: task.projectId,
+      task: task,
     });
 
     return TaskMapper.toResponse(task);

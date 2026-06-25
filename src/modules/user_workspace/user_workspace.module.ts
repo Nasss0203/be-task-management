@@ -1,12 +1,15 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { ActivityModule } from '../activity/activity.module';
 import { RoleModule } from '../role/role.module';
+import { TaskAssigneeModule } from '../task_assignee/task_assignee.module';
 import { UserRolesModule } from '../user_roles/user_roles.module';
 import { AddWorkspaceMemberApplicationImpl } from './applications/add-member-worlspace.application';
 import { CreateUserWorkspaceApplicationImpl } from './applications/create.user_workspace.application';
 import { FindAllMemberApplicationImpl } from './applications/find-user-workspace.application';
+import { UpdateMemberWorkspaceApplicationImpl } from './applications/update-member-workspace.application';
+import { DeleteMemberWorkspaceApplicationImpl } from './applications/delete-member-workspace.application';
 import { UserWorkspacesController } from './controller/user_workspace.controller';
 import { UserWorkspace } from './domain/entities/user_workspace.entity';
 import { USER_WORKSPACE_TYPES } from './interfaces/types';
@@ -15,6 +18,8 @@ import { UserWorkspaceRepositoryImpl } from './repositories/user_workspace.repos
 import { AddMemberWorkspaceServiceImpl } from './services/add-member-workspace.service';
 import { CreateUserWorkspaceServiceImpl } from './services/create.user_workspace.service';
 import { FindMemberServiceImpl } from './services/find-user-workspace.service';
+import { UpdateMemberWorkspaceServiceImpl } from './services/update-member-workspace.service';
+import { DeleteMemberWorkspaceServiceImpl } from './services/delete-member-workspace.service';
 import { UserWorkspacesService } from './user_workspace.service';
 
 @Module({
@@ -23,6 +28,7 @@ import { UserWorkspacesService } from './user_workspace.service';
     ActivityModule,
     RoleModule,
     UserRolesModule,
+    forwardRef(() => TaskAssigneeModule),
   ],
   controllers: [UserWorkspacesController],
   providers: [
@@ -39,6 +45,14 @@ import { UserWorkspacesService } from './user_workspace.service';
     {
       provide: USER_WORKSPACE_TYPES.applications.FindAllMemberApplication,
       useClass: FindAllMemberApplicationImpl,
+    },
+    {
+      provide: USER_WORKSPACE_TYPES.applications.UpdateMemberWorkspaceApplication,
+      useClass: UpdateMemberWorkspaceApplicationImpl,
+    },
+    {
+      provide: USER_WORKSPACE_TYPES.applications.DeleteMemberWorkspaceApplication,
+      useClass: DeleteMemberWorkspaceApplicationImpl,
     },
     //Repository
     {
@@ -61,6 +75,14 @@ import { UserWorkspacesService } from './user_workspace.service';
     {
       provide: USER_WORKSPACE_TYPES.services.FindMemberService,
       useClass: FindMemberServiceImpl,
+    },
+    {
+      provide: USER_WORKSPACE_TYPES.services.UpdateMemberWorkspaceService,
+      useClass: UpdateMemberWorkspaceServiceImpl,
+    },
+    {
+      provide: USER_WORKSPACE_TYPES.services.DeleteMemberWorkspaceService,
+      useClass: DeleteMemberWorkspaceServiceImpl,
     },
     {
       provide: USER_WORKSPACE_TYPES.uow.UnitOfWork,

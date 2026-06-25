@@ -1,4 +1,5 @@
 import { Controller, Get, Inject, Param } from '@nestjs/common';
+import { ReadRateLimit } from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
@@ -8,6 +9,7 @@ import { TaskStatusService } from '../task_status.service';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 @Controller('task-status')
+@ReadRateLimit()
 export class TaskStatusController {
   constructor(
     private readonly taskStatusService: TaskStatusService,

@@ -8,10 +8,10 @@ import {
   Post,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AdminRateLimit } from 'src/common/decorator/rate-limit.decorator';
 import { RequireSystemRoles } from 'src/common/decorator/require-system-roles.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { SystemRole } from 'src/modules/users/domain/entities/user.entity';
-import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import { Repository } from 'typeorm';
 
 import { AdminCreatePlanDto } from '../dto/request/admin-create-plan.dto';
@@ -22,7 +22,6 @@ import { GrantAdminSubscriptionDto } from '../dto/request/grant-admin-subscripti
 import { RevokeAdminSubscriptionDto } from '../dto/request/revoke-admin-subscription.dto';
 import { ResumeAdminSubscriptionDto } from '../dto/request/resume-admin-subscription.dto';
 import { Payment } from '../domain/entities/payment.entity';
-import { SubscriptionWorkspace } from '../domain/entities/subscription-workspace.entity';
 import { Subscription } from '../domain/entities/subscription.entity';
 import {
   AdminBillingPlanRow,
@@ -39,10 +38,9 @@ import {
 type AdminBillingSubscriptionRow = {
   rowId: string;
   id: string;
-  workspaceId: string | null;
-  workspaceName: string | null;
-  ownerName: string | null;
-  ownerEmail: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
   planCode: string;
   planName: string;
   status: string;
@@ -72,12 +70,11 @@ type AdminBillingPaymentRow = {
 
 type SubscriptionRawRow = {
   id: string;
-  workspaceId: string | null;
-  workspaceName: string | null;
-  ownerDisplayName: string | null;
-  ownerFullName: string | null;
-  ownerUsername: string;
-  ownerEmail: string;
+  userId: string;
+  userDisplayName: string | null;
+  userFullName: string | null;
+  username: string;
+  userEmail: string;
   planCode: string;
   planName: string;
   status: string;
@@ -87,6 +84,7 @@ type SubscriptionRawRow = {
   trialEndsAt: Date | null;
   amount: number;
   paymentMethod: string;
+  subscriptionProvider: string;
   createdAt: Date;
 };
 
@@ -106,6 +104,7 @@ type PaymentRawRow = {
 
 @RequireSystemRoles(SystemRole.SYSTEM_ADMIN, SystemRole.SUPER_ADMIN)
 @Controller('admin/billing')
+@AdminRateLimit()
 export class AdminBillingController {
   constructor(
     private readonly adminBillingPlanService: AdminBillingPlanService,
@@ -126,9 +125,7 @@ export class AdminBillingController {
 
   @Post('plans')
   @ResponseMessage('Create admin billing plan successfully')
-  createPlan(
-    @Body() dto: AdminCreatePlanDto,
-  ): Promise<AdminBillingPlanRow> {
+  createPlan(@Body() dto: AdminCreatePlanDto): Promise<AdminBillingPlanRow> {
     return this.adminBillingPlanService.createPlan(dto);
   }
 
@@ -189,30 +186,15 @@ export class AdminBillingController {
   async getSubscriptions(): Promise<AdminBillingSubscriptionRow[]> {
     const rows = await this.subscriptionRepository
       .createQueryBuilder('subscription')
-      .innerJoin('subscription.user', 'owner')
-      .leftJoin('owner.profile', 'ownerProfile')
+      .innerJoin('subscription.user', 'user')
+      .leftJoin('user.profile', 'userProfile')
       .innerJoin('subscription.plan', 'plan')
-      .leftJoin(
-        SubscriptionWorkspace,
-        'subscriptionWorkspace',
-        'subscriptionWorkspace.subscription_id = subscription.id',
-      )
-      .leftJoin('subscriptionWorkspace.workspace', 'workspace')
-      .leftJoin(
-        Workspace,
-        'metadataWorkspace',
-        "metadataWorkspace.id = NULLIF(subscription.metadata ->> 'workspaceId', '')::uuid",
-      )
       .select('subscription.id', 'id')
-      .addSelect('COALESCE(workspace.id, metadataWorkspace.id)', 'workspaceId')
-      .addSelect(
-        'COALESCE(workspace.name, metadataWorkspace.name)',
-        'workspaceName',
-      )
-      .addSelect('ownerProfile.displayName', 'ownerDisplayName')
-      .addSelect('ownerProfile.fullName', 'ownerFullName')
-      .addSelect('owner.username', 'ownerUsername')
-      .addSelect('owner.email', 'ownerEmail')
+      .addSelect('user.id', 'userId')
+      .addSelect('userProfile.displayName', 'userDisplayName')
+      .addSelect('userProfile.fullName', 'userFullName')
+      .addSelect('user.username', 'username')
+      .addSelect('user.email', 'userEmail')
       .addSelect('plan.slug', 'planCode')
       .addSelect('plan.name', 'planName')
       .addSelect('subscription.status', 'status')
@@ -221,23 +203,36 @@ export class AdminBillingController {
       .addSelect('subscription.currentPeriodEnd', 'renewAt')
       .addSelect('subscription.trialEnd', 'trialEndsAt')
       .addSelect('plan.priceAmount', 'amount')
-      .addSelect('subscription.provider', 'paymentMethod')
+      .addSelect('subscription.provider', 'subscriptionProvider')
+      .addSelect(
+        (qb) =>
+          qb
+            .select(
+              `COALESCE(payment.metadata ->> 'cardBrand', payment.provider::text)`,
+            )
+            .from(Payment, 'payment')
+            .where('payment.subscription_id = subscription.id')
+            .andWhere('payment.status = :succeededStatus')
+            .orderBy('payment.paid_at', 'DESC')
+            .addOrderBy('payment.created_at', 'DESC')
+            .limit(1),
+        'paymentMethod',
+      )
       .addSelect('subscription.createdAt', 'createdAt')
+      .setParameter('succeededStatus', 'SUCCEEDED')
       .orderBy('subscription.createdAt', 'DESC')
-      .addOrderBy('COALESCE(workspace.name, metadataWorkspace.name)', 'ASC')
       .getRawMany<SubscriptionRawRow>();
 
     return rows.map((row) => ({
-      rowId: `${row.id}:${row.workspaceId ?? 'no-workspace'}`,
+      rowId: row.id,
       id: row.id,
-      workspaceId: row.workspaceId,
-      workspaceName: row.workspaceName,
-      ownerName:
-        row.ownerDisplayName ??
-        row.ownerFullName ??
-        row.ownerUsername ??
-        row.ownerEmail,
-      ownerEmail: row.ownerEmail,
+      userId: row.userId,
+      userName:
+        row.userDisplayName ??
+        row.userFullName ??
+        row.username ??
+        row.userEmail,
+      userEmail: row.userEmail,
       planCode: row.planCode,
       planName: row.planName,
       status: row.status,
@@ -246,7 +241,7 @@ export class AdminBillingController {
       renewAt: row.renewAt,
       trialEndsAt: row.trialEndsAt,
       amount: row.amount,
-      paymentMethod: row.paymentMethod,
+      paymentMethod: row.paymentMethod ?? row.subscriptionProvider ?? 'MANUAL',
       couponCode: null,
     }));
   }
@@ -289,5 +284,4 @@ export class AdminBillingController {
       createdAt: row.createdAt,
     }));
   }
-
 }

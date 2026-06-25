@@ -35,6 +35,7 @@ export class WorkspaceMapper {
       entity.updatedAt,
       entity.deletedAt ?? null,
       entity.deletedBy ?? null,
+      entity.createdBy ?? null,
     );
   }
 
@@ -59,6 +60,10 @@ export class WorkspaceMapper {
       e.deletedBy = model.deletedBy ?? null;
     }
 
+    if ('createdBy' in model && model.createdBy !== undefined) {
+      e.createdBy = model.createdBy ?? null;
+    }
+
     return e;
   }
 
@@ -73,6 +78,7 @@ export class WorkspaceMapper {
       updatedAt: model.updatedAt,
       deletedAt: model.deletedAt,
       deletedBy: model.deletedBy,
+      createdBy: model.createdBy,
     };
   }
 

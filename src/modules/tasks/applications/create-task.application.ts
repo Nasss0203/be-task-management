@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { REALTIME_EVENTS } from 'src/modules/realtime/realtime.events';
 
-import { CreateTaskDto } from '../dto/create-task.dto';
+import { CreateTaskInput } from '../interfaces/applications/create-task.application.interface';
 import { TaskResponseDto } from '../dto/response/task-response.dto';
 import { CreateTaskApplication } from '../interfaces/applications/create-task.application.interface';
 import { type CreateTaskService } from '../interfaces/services/create-task.service.interface';
@@ -37,9 +39,11 @@ export class CreateTaskApplicationImpl implements CreateTaskApplication {
 
     @Inject(WORKSPACE_TYPES.uow.UnitOfWork)
     private readonly unitOfWork: UnitOfWork,
+    
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async create(createTaskDto: CreateTaskDto): Promise<TaskResponseDto> {
+  async create(createTaskDto: CreateTaskInput): Promise<TaskResponseDto> {
     const task = await this.unitOfWork.runInTransaction(async (manager) => {
       const {
         assigneeIds = [],
@@ -92,7 +96,11 @@ export class CreateTaskApplicationImpl implements CreateTaskApplication {
         );
       }
 
-      console.log('6. done');
+      this.eventEmitter.emit(REALTIME_EVENTS.TASK_CREATED, {
+        workspaceId: createdTask.workspaceId,
+        projectId: createdTask.projectId,
+        task: createdTask,
+      });
 
       return createdTask;
     });

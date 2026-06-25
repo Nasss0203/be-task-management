@@ -24,10 +24,10 @@ export class TaskCommentMapper {
       entity.isEdited,
       entity.createdAt,
       entity.updatedAt,
-      entity.deletedAt ?? null,
 
       entity.author?.username ?? null,
       entity.author?.email ?? null,
+      entity.author?.avatarUrl ?? null,
     );
   }
 
@@ -57,9 +57,9 @@ export class TaskCommentMapper {
       isEdited: model.isEdited,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
-      deletedAt: model.deletedAt,
       authorName: model.authorName,
       authorEmail: model.authorEmail,
+      authorAvatarUrl: model.authorAvatarUrl,
     };
   }
 

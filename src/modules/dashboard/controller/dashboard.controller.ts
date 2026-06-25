@@ -1,5 +1,6 @@
 import { Controller, Get, Inject, Query, ValidationPipe } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import { ReadRateLimit } from 'src/common/decorator/rate-limit.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { type IAuth } from 'src/types/auth';
 import { MyDashboardQueryDto } from '../dto/my-dashboard-query.dto';
@@ -8,6 +9,7 @@ import { type GetMyDashboardApplication } from '../interfaces/applications/get-m
 import { DASHBOARD_TYPES } from '../interfaces/types';
 
 @Controller('dashboard')
+@ReadRateLimit()
 export class DashboardController {
   constructor(
     @Inject(DASHBOARD_TYPES.applications.GetMyDashboardApplication)

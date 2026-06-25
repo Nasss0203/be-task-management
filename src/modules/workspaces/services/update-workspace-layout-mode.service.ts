@@ -41,6 +41,7 @@ export class UpdateWorkspaceLayoutModeServiceImpl
         workspace.updatedAt,
         workspace.deletedAt,
         workspace.deletedBy,
+        workspace.createdBy,
       ),
     );
   }

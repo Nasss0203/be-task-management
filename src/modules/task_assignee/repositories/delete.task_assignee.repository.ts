@@ -31,4 +31,22 @@ export class DeleteTaskAssigneeRepositoryImpl implements DeleteTaskAssigneeRepos
       throw new NotFoundException('Task assignee not found');
     }
   }
+
+  async deleteByUserAndWorkspace(
+    userId: string,
+    workspaceId: string,
+    manager?: EntityManager,
+  ): Promise<void> {
+    const repo = this.getRepo(manager);
+
+    await repo
+      .createQueryBuilder('task_assignees')
+      .delete()
+      .where('userId = :userId', { userId })
+      .andWhere(
+        'taskId IN (SELECT id FROM tasks WHERE workspace_id = :workspaceId)',
+        { workspaceId },
+      )
+      .execute();
+  }
 }

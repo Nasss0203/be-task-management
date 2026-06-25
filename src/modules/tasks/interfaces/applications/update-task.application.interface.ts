@@ -2,6 +2,11 @@ import { TaskResponseDto } from '../../dto/response/task-response.dto';
 import { UpdateManyTasksDto } from '../../dto/update-many-tasks.dto';
 import { UpdateTaskDto } from '../../dto/update-task.dto';
 
+export type UpdateTaskInput = UpdateTaskDto & {
+  id: string;
+  actorId: string;
+};
+
 export interface UpdateManyTasksApplicationInput {
   workspaceId: string;
   projectId: string;
@@ -10,7 +15,7 @@ export interface UpdateManyTasksApplicationInput {
 }
 
 export interface UpdateTaskApplication {
-  updateTask(updateTaskDto: UpdateTaskDto): Promise<TaskResponseDto>;
+  updateTask(updateTaskDto: UpdateTaskInput): Promise<TaskResponseDto>;
 
   updateManyTasks(
     input: UpdateManyTasksApplicationInput,

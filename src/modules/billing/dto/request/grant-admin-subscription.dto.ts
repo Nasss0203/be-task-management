@@ -2,7 +2,7 @@ import { IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 export class GrantAdminSubscriptionDto {
   @IsUUID()
-  workspaceId: string;
+  userId: string;
 
   @IsUUID()
   planId: string;

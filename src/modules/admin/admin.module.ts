@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { Board } from '../boards/domain/entities/board.entity';
+import { Subscription } from '../billing/domain/entities/subscription.entity';
 import { Project } from '../projects/domain/entities/project.entity';
 import { ProjectsModule } from '../projects/projects.module';
 import { Task } from '../tasks/domain/entities/task.entity';
@@ -64,6 +65,7 @@ import { AdminUserServiceImpl } from './services/user/admin-user.service';
       Task,
       User,
       UserActivity,
+      Subscription,
     ]),
     WorkspacesModule,
     TasksModule,

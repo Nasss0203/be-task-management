@@ -2,6 +2,10 @@ import { Body, Controller, Get, Inject, Post, Req } from '@nestjs/common';
 import { type Request } from 'express';
 
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import {
+  BillingRateLimit,
+  ReadRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { CreatePaymentDto } from '../dto/create-payment.dto';
 import { type BillingQueryApplication } from '../interfaces/applications/billing-query.application.interface';
 import { type CreateBillingApplication } from '../interfaces/applications/create-billing.application.interface';
@@ -27,6 +31,7 @@ export class BillingController {
   ) {}
 
   @Post('payments')
+  @BillingRateLimit()
   // @RequirePermissions(PERMISSIONS.WORKSPACE_BILLING_MANAGE)
   @ResponseMessage('Create billing payment')
   createPayment(@Body() dto: CreatePaymentDto, @Req() req: AuthRequest) {
@@ -40,6 +45,7 @@ export class BillingController {
   }
 
   @Get('current-subscription')
+  @ReadRateLimit()
   @ResponseMessage('Get current subscription')
   async getCurrentSubscription(@Req() req: AuthRequest) {
     const userId = this.getUserId(req);

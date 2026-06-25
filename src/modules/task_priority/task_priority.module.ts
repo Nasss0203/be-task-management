@@ -37,6 +37,9 @@ import { FindTaskPriorityServiceImpl } from './services/find.task-priority.servi
       useClass: FindTaskPriorityServiceImpl,
     },
   ],
-  exports: [TASK_PRIORITY_TYPES.services.CreateTaskPriorityService],
+  exports: [
+    TASK_PRIORITY_TYPES.services.CreateTaskPriorityService,
+    TASK_PRIORITY_TYPES.services.FindTaskPriorityService,
+  ],
 })
 export class TaskPriorityModule {}

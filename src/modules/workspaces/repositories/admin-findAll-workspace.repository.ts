@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
-  AdminWorkspaceItemResponseDto,
   AdminWorkspaceStatus,
   PaginatedAdminWorkspaceResponseDto,
 } from 'src/modules/admin/dto/response/dashboard/workspace-overview.response.dto';
+import { SystemRole } from 'src/modules/users/domain/entities/user.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { AdminWorkspaceStatus as AdminWorkspaceStatusFilter } from '../dto/search-workspace.dto';
 import {
@@ -171,6 +171,24 @@ export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspac
       .addSelect('COUNT(DISTINCT task.id)', 'tasksCount')
       .groupBy('workspace.id')
       .orderBy('workspace.createdAt', 'DESC');
+
+    qb.andWhere(
+      `NOT EXISTS (
+        SELECT 1
+        FROM "user_roles" "superAdminUserRole"
+        INNER JOIN "roles" "superAdminOwnerRole"
+          ON "superAdminOwnerRole"."id" = "superAdminUserRole"."role_id"
+        INNER JOIN "users" "superAdminOwner"
+          ON "superAdminOwner"."id" = "superAdminUserRole"."user_id"
+        WHERE "superAdminUserRole"."workspace_id" = "workspace"."id"
+          AND "superAdminOwnerRole"."name" = :ownerRole
+          AND "superAdminOwner"."system_role" = :superAdminRole
+      )`,
+      {
+        ownerRole: 'OWNER',
+        superAdminRole: SystemRole.SUPER_ADMIN,
+      },
+    );
 
     if (filter.search?.trim()) {
       qb.andWhere(

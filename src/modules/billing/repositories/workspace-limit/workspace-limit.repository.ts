@@ -51,15 +51,18 @@ export class WorkspaceLimitRepositoryImpl implements WorkspaceLimitRepository {
     userId: string,
     manager?: EntityManager,
   ): Promise<Subscription | null> {
-    return this.getSubscriptionRepository(manager).findOne({
-      where: {
-        userId,
+    return this.getSubscriptionRepository(manager)
+      .createQueryBuilder('subscription')
+      .where('subscription.user_id = :userId', { userId })
+      .andWhere('subscription.status = :status', {
         status: SubscriptionStatus.ACTIVE,
-      },
-      order: {
-        createdAt: 'DESC',
-      },
-    });
+      })
+      .andWhere(
+        '(subscription.current_period_end IS NULL OR subscription.current_period_end > :now)',
+        { now: new Date() },
+      )
+      .orderBy('subscription.created_at', 'DESC')
+      .getOne();
   }
 
   findActivePlanById(

@@ -11,6 +11,11 @@ import {
   Query,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import {
+  ReadRateLimit,
+  StrictWriteRateLimit,
+  WriteRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
@@ -25,6 +30,7 @@ import { PAGE_TYPES } from '../interfaces/types';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 @Controller('page')
+@ReadRateLimit()
 export class PageController {
   constructor(
     @Inject(PAGE_TYPES.applications.CreatePageApplication)
@@ -41,6 +47,7 @@ export class PageController {
   ) {}
 
   @Post()
+  @WriteRateLimit()
   @RequirePermissions(PERMISSIONS.PAGE_CREATE)
   @ResponseMessage('Create page')
   create(@Body() createPageDto: CreatePageDto, @Auth() auth: IAuth) {
@@ -68,6 +75,7 @@ export class PageController {
   }
 
   @Patch(':pageId')
+  @WriteRateLimit()
   @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
   @ResponseMessage('Update page')
   updatePage(
@@ -78,6 +86,7 @@ export class PageController {
   }
 
   @Delete(':pageId')
+  @StrictWriteRateLimit()
   @RequirePermissions(PERMISSIONS.PAGE_DELETE)
   async deletePage(
     @Param('pageId') pageId: string,
@@ -100,6 +109,7 @@ export class PageController {
   }
 
   @Patch(':pageId/restore')
+  @StrictWriteRateLimit()
   @RequirePermissions(PERMISSIONS.PAGE_DELETE)
   async restorePage(
     @Param('pageId') pageId: string,

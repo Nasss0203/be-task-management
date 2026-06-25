@@ -1,10 +1,12 @@
 import { Controller, Get, Inject, Param } from '@nestjs/common';
+import { PublicReadRateLimit } from 'src/common/decorator/rate-limit.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 
 import { type BillingQueryApplication } from '../interfaces/applications/billing-query.application.interface';
 import { BILLING_TYPES } from '../interfaces/types';
 
 @Controller('billing/plans')
+@PublicReadRateLimit()
 export class PlanController {
   constructor(
     @Inject(BILLING_TYPES.applications.BillingQueryApplication)

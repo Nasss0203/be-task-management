@@ -15,6 +15,7 @@ export enum BillingProvider {
   MANUAL = 'MANUAL',
   MOMO = 'MOMO',
   VNPAY = 'VNPAY',
+  STRIPE = 'STRIPE',
 }
 
 export enum SubscriptionStatus {

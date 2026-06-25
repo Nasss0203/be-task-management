@@ -1,12 +1,14 @@
 import { EntityManager } from 'typeorm';
 import { Payment } from '../../../domain/entities/payment.entity';
 import { Plan } from '../../../domain/entities/plan.entity';
+import { BillingProvider } from '../../../domain/entities/subscription.entity';
 
 export interface CreatePendingPaymentInput {
   userId: string;
   plan: Plan;
   orderCode: string;
   targetWorkspaceId?: string | null;
+  provider?: BillingProvider;
 }
 
 export interface UpdatePaymentGatewayInput {
@@ -15,6 +17,7 @@ export interface UpdatePaymentGatewayInput {
   providerOrderId: string;
   providerRequestId?: string | null;
   providerTransactionId?: string | null;
+  providerPaymentId?: string | null;
   rawResponse: Record<string, unknown>;
   expiredAt?: Date | null;
 }
@@ -34,6 +37,11 @@ export interface MarkPaymentSucceededInput {
 export interface MarkPaymentStatusFailedInput {
   paymentId: string;
   failedReason: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface UpdatePaymentMetadataInput {
+  paymentId: string;
   metadata: Record<string, unknown>;
 }
 
@@ -58,6 +66,12 @@ export interface PaymentRepository {
     manager?: EntityManager,
   ): Promise<Payment | null>;
 
+  findPaymentByProviderOrderId(
+    provider: BillingProvider,
+    providerOrderId: string,
+    manager?: EntityManager,
+  ): Promise<Payment | null>;
+
   markPaymentSucceeded(
     input: MarkPaymentSucceededInput,
     manager?: EntityManager,
@@ -65,6 +79,11 @@ export interface PaymentRepository {
 
   markPaymentStatusFailed(
     input: MarkPaymentStatusFailedInput,
+    manager?: EntityManager,
+  ): Promise<Payment>;
+
+  updatePaymentMetadata(
+    input: UpdatePaymentMetadataInput,
     manager?: EntityManager,
   ): Promise<Payment>;
 }

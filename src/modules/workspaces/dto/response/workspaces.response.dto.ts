@@ -21,6 +21,8 @@ export class WorkspaceResponseDto {
   deletedAt: Date | null;
 
   deletedBy: string | null;
+
+  createdBy: string | null;
 }
 
 export type WorkspaceAccessResponseDto = {

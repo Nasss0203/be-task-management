@@ -9,9 +9,9 @@ export class TaskCommentModel {
     public readonly isEdited: boolean,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
-    public readonly deletedAt: Date | null,
 
     public readonly authorName: string | null = null,
     public readonly authorEmail: string | null = null,
+    public readonly authorAvatarUrl: string | null = null,
   ) {}
 }

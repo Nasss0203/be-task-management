@@ -12,6 +12,7 @@ export type MemberWorkspaceRaw = {
   role_name: RoleName;
   lastOpenedAt: Date | null;
   joinedAt?: Date;
+  taskCount?: number;
 };
 
 export class MemberWorkspaceMapper {
@@ -26,6 +27,7 @@ export class MemberWorkspaceMapper {
       raw.avatar_url ?? null,
       raw.lastOpenedAt ?? null,
       raw.joinedAt,
+      raw.taskCount ? Number(raw.taskCount) : 0,
     );
   }
 
@@ -40,6 +42,7 @@ export class MemberWorkspaceMapper {
       role_name: model.role_name,
       joinedAt: model.joinedAt ?? null,
       lastOpenedAt: model.lastOpenedAt ?? null,
+      taskCount: model.taskCount ?? 0,
     };
   }
 

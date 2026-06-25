@@ -11,6 +11,11 @@ import {
   Query,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import {
+  ReadRateLimit,
+  StrictWriteRateLimit,
+  WriteRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
@@ -27,6 +32,7 @@ import { type FindBoardApplication } from '../interfaces/applications/find-board
 import { BOARD_TYPES } from '../interfaces/types';
 
 @Controller('boards')
+@ReadRateLimit()
 export class BoardsController {
   constructor(
     private readonly boardsService: BoardsService,
@@ -78,6 +84,7 @@ export class BoardsController {
   }
 
   @Post()
+  @WriteRateLimit()
   @RequirePermissions(PERMISSIONS.BOARD_CREATE)
   @ResponseMessage('Create board')
   create(@Body() createBoardDto: CreateBoardDto, @Auth() auth: IAuth) {
@@ -88,6 +95,7 @@ export class BoardsController {
   }
 
   @Post('create-and-attach')
+  @WriteRateLimit()
   @RequirePermissions(PERMISSIONS.BOARD_CREATE, PERMISSIONS.PAGE_BLOCK_UPDATE)
   @ResponseMessage('Create board and attach')
   createAndAttachToPage(
@@ -101,6 +109,7 @@ export class BoardsController {
   }
 
   @Delete('workspaces/:workspaceId/projects/:projectId/boards/:boardId')
+  @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.BOARD_DELETE)
   async deleteBoard(
@@ -122,6 +131,7 @@ export class BoardsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/boards/:boardId/restore')
+  @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.BOARD_DELETE)
   async restoreBoard(

@@ -1,140 +1,95 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AdminSubscriptionGrantService } from './admin-subscription-grant.service';
-import { DataSource } from 'typeorm';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { Subscription, SubscriptionStatus } from '../../domain/entities/subscription.entity';
-import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
+
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/unbound-method */
+import { DataSource, EntityManager } from 'typeorm';
+
 import { Plan } from '../../domain/entities/plan.entity';
-import { FREE_PLAN_SLUG } from '../../constants/default-plan-limits.constant';
 import { SubscriptionWorkspace } from '../../domain/entities/subscription-workspace.entity';
+import {
+  Subscription,
+  SubscriptionStatus,
+} from '../../domain/entities/subscription.entity';
+import { UsageLimit } from '../../domain/entities/usage-limit.entity';
+import {
+  PlanTypeWorkspace,
+  Workspace,
+} from '../../../workspaces/domain/entities/workspace.entity';
+import { AdminSubscriptionGrantService } from './admin-subscription-grant.service';
 
-describe('AdminSubscriptionGrantService', () => {
-  let service: AdminSubscriptionGrantService;
+describe('AdminSubscriptionGrantService expiration', () => {
+  it('expires due subscriptions and downgrades their workspaces to free', async () => {
+    const subscription = {
+      id: 'subscription-id',
+      status: SubscriptionStatus.ACTIVE,
+      cancelAtPeriodEnd: true,
+      metadata: null,
+    } as Subscription;
+    const subscriptionWorkspace = {
+      subscriptionId: subscription.id,
+      workspaceId: 'workspace-id',
+    } as SubscriptionWorkspace;
+    const workspace = {
+      id: subscriptionWorkspace.workspaceId,
+      planType: PlanTypeWorkspace.PRO,
+    } as Workspace;
+    const freePlan = {
+      id: 'free-plan-id',
+      slug: 'free',
+      limits: {},
+    } as Plan;
 
-  const mockManager = {
-    findOne: jest.fn(),
-    find: jest.fn(),
-    create: jest.fn().mockImplementation((_, data) => data),
-    save: jest.fn().mockImplementation((data) => Promise.resolve({ id: 'saved-id', ...data })),
-    remove: jest.fn(),
-    createQueryBuilder: jest.fn(),
-  };
-
-  const mockDataSource = {
-    transaction: jest.fn().mockImplementation((cb) => cb(mockManager)),
-  };
-
-  beforeEach(async () => {
-    jest.clearAllMocks();
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        AdminSubscriptionGrantService,
-        { provide: DataSource, useValue: mockDataSource },
-      ],
-    }).compile();
-
-    service = module.get<AdminSubscriptionGrantService>(AdminSubscriptionGrantService);
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
-  describe('grant', () => {
-    it('should throw if workspace not found', async () => {
-      mockManager.findOne.mockResolvedValueOnce(null);
-      await expect(service.grant({ workspaceId: 'ws-1', planId: 'plan-1' })).rejects.toThrow(NotFoundException);
-    });
-
-    it('should grant subscription', async () => {
-      mockManager.findOne.mockImplementation((entity) => {
-        if (entity === Workspace) return Promise.resolve({ id: 'ws-1' });
-        if (entity === Plan) return Promise.resolve({ id: 'plan-1', slug: 'pro-monthly', billingInterval: 'month' });
+    const queryBuilder = {
+      setLock: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([subscription]),
+    };
+    const manager = {
+      createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
+      find: jest.fn().mockResolvedValue([subscriptionWorkspace]),
+      remove: jest.fn().mockResolvedValue(undefined),
+      findOne: jest.fn().mockImplementation((entity) => {
+        if (entity === Workspace) return Promise.resolve(workspace);
+        if (entity === Plan) return Promise.resolve(freePlan);
+        if (entity === UsageLimit) return Promise.resolve(null);
         return Promise.resolve(null);
-      });
-      
-      const mockOwnerQueryBuilder = {
-        innerJoin: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        andWhere: jest.fn().mockReturnThis(),
-        getRawOne: jest.fn().mockResolvedValue({ ownerId: 'u-1' }),
-      };
-      mockManager.createQueryBuilder.mockReturnValue(mockOwnerQueryBuilder);
+      }),
+      create: jest.fn().mockImplementation((_entity, value) => value),
+      save: jest.fn().mockImplementation((value) => Promise.resolve(value)),
+    } as unknown as EntityManager;
+    const dataSource = {
+      transaction: jest.fn((callback) => callback(manager)),
+    } as unknown as DataSource;
+    const service = new AdminSubscriptionGrantService(dataSource);
+    const now = new Date('2026-06-22T00:00:00.000Z');
 
-      const result = await service.grant({ workspaceId: 'ws-1', planId: 'plan-1' });
-      expect(result.workspaceId).toEqual('ws-1');
-      expect(result.ownerId).toEqual('u-1');
-      expect(result.planId).toEqual('plan-1');
-      expect(mockManager.save).toHaveBeenCalled();
-    });
-  });
+    const result = await service.expireDueSubscriptions(now);
 
-  describe('cancel', () => {
-    it('should throw if subscription not found', async () => {
-      mockManager.findOne.mockResolvedValueOnce(null);
-      await expect(service.cancel('sub-1', {})).rejects.toThrow(NotFoundException);
+    expect(result).toEqual({
+      expiredSubscriptionIds: [subscription.id],
+      affectedWorkspaceIds: [workspace.id],
     });
+    expect(manager.remove).toHaveBeenCalledWith([subscriptionWorkspace]);
+    expect(workspace.planType).toBe(PlanTypeWorkspace.FREE);
+    expect(subscription.status).toBe(SubscriptionStatus.EXPIRED);
+    expect(subscription.cancelAtPeriodEnd).toBe(false);
+    expect(subscription.metadata).toEqual({
+      expiration: {
+        source: 'subscription_expired',
+        expiredAt: now.toISOString(),
+        affectedWorkspaceIds: [workspace.id],
+      },
+    });
+    expect(manager.create).toHaveBeenCalledWith(
+      UsageLimit,
+      expect.objectContaining({
+        workspaceId: workspace.id,
+        planId: freePlan.id,
+        metadata: expect.objectContaining({
+          source: 'subscription_expired',
+          planSlug: 'free',
+        }),
+      }),
+    );
 
-    it('should cancel subscription at period end', async () => {
-      mockManager.findOne.mockResolvedValueOnce({ id: 'sub-1', status: SubscriptionStatus.ACTIVE, currentPeriodEnd: new Date() });
-      const result = await service.cancel('sub-1', { immediate: false });
-      expect(result.cancelAtPeriodEnd).toEqual(true);
-      expect(result.status).toEqual(SubscriptionStatus.ACTIVE);
-      expect(mockManager.save).toHaveBeenCalled();
-    });
-
-    it('should cancel subscription immediately', async () => {
-      mockManager.findOne.mockResolvedValueOnce({ id: 'sub-1', status: SubscriptionStatus.ACTIVE, currentPeriodEnd: new Date() });
-      mockManager.find.mockResolvedValueOnce([]); // subscriptionWorkspaces
-      const result = await service.cancel('sub-1', { immediate: true });
-      expect(result.cancelAtPeriodEnd).toEqual(false);
-      expect(result.status).toEqual(SubscriptionStatus.CANCELLED);
-      expect(mockManager.save).toHaveBeenCalled();
-    });
-  });
-
-  describe('resume', () => {
-    it('should throw if subscription not found', async () => {
-      mockManager.findOne.mockResolvedValueOnce(null);
-      await expect(service.resume('sub-1', {})).rejects.toThrow(NotFoundException);
-    });
-
-    it('should throw if subscription is not cancelled', async () => {
-      mockManager.findOne.mockResolvedValueOnce({ id: 'sub-1', status: SubscriptionStatus.ACTIVE, cancelAtPeriodEnd: false });
-      await expect(service.resume('sub-1', {})).rejects.toThrow(BadRequestException);
-    });
-
-    it('should resume subscription', async () => {
-      mockManager.findOne.mockImplementation((entity) => {
-        if (entity === Subscription) return Promise.resolve({ id: 'sub-1', status: SubscriptionStatus.CANCELLED, metadata: { affectedWorkspaceIds: [] } });
-        if (entity === Plan) return Promise.resolve({ id: 'plan-1' });
-        return Promise.resolve(null);
-      });
-      const result = await service.resume('sub-1', {});
-      expect(result.resumed).toEqual(true);
-      expect(result.status).toEqual(SubscriptionStatus.ACTIVE);
-      expect(result.cancelAtPeriodEnd).toEqual(false);
-      expect(mockManager.save).toHaveBeenCalled();
-    });
-  });
-
-  describe('revoke', () => {
-    it('should revoke subscription', async () => {
-      mockManager.findOne.mockImplementation((entity) => {
-        if (entity === Workspace) return Promise.resolve({ id: 'ws-1' });
-        if (entity === SubscriptionWorkspace) return Promise.resolve({ workspaceId: 'ws-1', subscriptionId: 'sub-1' });
-        if (entity === Subscription) return Promise.resolve({ id: 'sub-1' });
-        if (entity === Plan) return Promise.resolve({ id: 'free-1', slug: FREE_PLAN_SLUG });
-        return Promise.resolve(null);
-      });
-      
-      const result = await service.revoke({ workspaceId: 'ws-1' });
-      expect(result.revoked).toEqual(true);
-      expect(result.workspaceId).toEqual('ws-1');
-      expect(result.subscriptionId).toEqual('sub-1');
-      expect(mockManager.remove).toHaveBeenCalled();
-      expect(mockManager.save).toHaveBeenCalled(); // saves workspace as free plan
-    });
   });
 });

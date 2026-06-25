@@ -30,4 +30,13 @@ export class UserWorkspaceRepositoryImpl implements UserWorkspaceRepository {
 
     return UserWorkspaceMapper.toModel(saved);
   }
+
+  async deleteByUserId(
+    workspaceId: string,
+    userId: string,
+    manager?: EntityManager,
+  ): Promise<void> {
+    const repo = this.resolveRepo(manager);
+    await repo.delete({ workspace_id: workspaceId, user_id: userId });
+  }
 }

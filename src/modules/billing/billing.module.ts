@@ -19,8 +19,11 @@ import { Plan } from './domain/entities/plan.entity';
 import { SubscriptionWorkspace } from './domain/entities/subscription-workspace.entity';
 import { Subscription } from './domain/entities/subscription.entity';
 import { UsageLimit } from './domain/entities/usage-limit.entity';
+import { BillingWebhook } from './domain/entities/billing-webhook.entity';
 import { BILLING_TYPES } from './interfaces/types';
 import { VnpayPaymentProviderImpl } from './providers/vnpay-payment.provider';
+import { StripePaymentProviderImpl } from './providers/stripe-payment.provider';
+import { StripeWebhookController } from './controller/stripe-webhook.controller';
 import { AdminBillingController } from './controller/admin-billing.controller';
 import { PlanRepositoryImpl } from './repositories/plan/plan.repository';
 import { PaymentRepositoryImpl } from './repositories/payment/payment.repository';
@@ -36,6 +39,8 @@ import { BillingQueryServiceImpl } from './services/query/billing-query.service'
 import { UsageLimitEnforcerServiceImpl } from './services/usage-limit/usage-limit-enforcer.service';
 import { AdminBillingPlanService } from './services/admin/admin-billing-plan.service';
 import { AdminSubscriptionGrantService } from './services/admin/admin-subscription-grant.service';
+import { StripeWebhookService } from './services/webhook/stripe-webhook.service';
+import { SubscriptionExpirationService } from './services/subscription-expiration.service';
 
 @Module({
   imports: [
@@ -47,6 +52,7 @@ import { AdminSubscriptionGrantService } from './services/admin/admin-subscripti
       Subscription,
       SubscriptionWorkspace,
       UsageLimit,
+      BillingWebhook,
       UserWorkspace,
       UserRole,
       Role,
@@ -74,12 +80,17 @@ import { AdminSubscriptionGrantService } from './services/admin/admin-subscripti
     PlanController,
     BillingTestVnpayController,
     WorkspaceUsageLimitsController,
+    StripeWebhookController,
   ],
 
   providers: [
     {
       provide: BILLING_TYPES.providers.VnpayPaymentProvider,
       useClass: VnpayPaymentProviderImpl,
+    },
+    {
+      provide: BILLING_TYPES.providers.StripePaymentProvider,
+      useClass: StripePaymentProviderImpl,
     },
     {
       provide: BILLING_TYPES.repositories.PlanRepository,
@@ -132,6 +143,8 @@ import { AdminSubscriptionGrantService } from './services/admin/admin-subscripti
     AdminBillingPlanService,
     AdminSubscriptionGrantService,
     VnpayIpnService,
+    StripeWebhookService,
+    SubscriptionExpirationService,
   ],
 
   exports: [

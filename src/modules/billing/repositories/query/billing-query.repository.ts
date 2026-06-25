@@ -46,15 +46,18 @@ export class BillingQueryRepositoryImpl implements BillingQueryRepository {
   }
 
   findActiveSubscription(userId: string): Promise<Subscription | null> {
-    return this.subscriptionRepository.findOne({
-      where: {
-        userId,
+    return this.subscriptionRepository
+      .createQueryBuilder('subscription')
+      .where('subscription.user_id = :userId', { userId })
+      .andWhere('subscription.status = :status', {
         status: SubscriptionStatus.ACTIVE,
-      },
-      order: {
-        createdAt: 'DESC',
-      },
-    });
+      })
+      .andWhere(
+        '(subscription.current_period_end IS NULL OR subscription.current_period_end > :now)',
+        { now: new Date() },
+      )
+      .orderBy('subscription.created_at', 'DESC')
+      .getOne();
   }
 
   findPlanById(planId: string): Promise<Plan | null> {

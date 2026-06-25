@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Inject,
   Param,
@@ -9,6 +10,11 @@ import {
   Query,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import {
+  ReadRateLimit,
+  StrictWriteRateLimit,
+  WriteRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { RequireFeature } from 'src/common/decorator/require-features.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
@@ -29,9 +35,11 @@ import { type FindSprintApplication } from '../interfaces/applications/find-spri
 import { type GetSprintDetailApplication } from '../interfaces/applications/get-sprint-detail.application.interface';
 import { type StartSprintApplication } from '../interfaces/applications/start-sprint.application.interface';
 import { type UpdateSprintApplication } from '../interfaces/applications/update-sprint.application.interface';
+import { type DeleteSprintApplication } from '../interfaces/applications/delete-sprint.application.interface';
 import { SPRINT_TYPES } from '../interfaces/types';
 
 @Controller('sprints')
+@ReadRateLimit()
 export class SprintsController {
   constructor(
     @Inject(SPRINT_TYPES.applications.CreateSprintApplication)
@@ -53,9 +61,13 @@ export class SprintsController {
 
     @Inject(SPRINT_TYPES.applications.GetSprintDetailApplication)
     private readonly getSprintDetailApplication: GetSprintDetailApplication,
+
+    @Inject(SPRINT_TYPES.applications.DeleteSprintApplication)
+    private readonly deleteSprintApplication: DeleteSprintApplication,
   ) {}
 
   @Post('workspaces/:workspaceId/projects/:projectId')
+  @WriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_CREATE)
@@ -130,6 +142,7 @@ export class SprintsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/start')
+  @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_START)
@@ -153,6 +166,7 @@ export class SprintsController {
   @Patch(
     'workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/complete',
   )
+  @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_COMPLETE)
@@ -172,6 +186,7 @@ export class SprintsController {
   }
 
   @Patch('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId/cancel')
+  @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_CANCEL)
@@ -189,7 +204,28 @@ export class SprintsController {
     });
   }
 
+  @Delete('workspaces/:workspaceId/projects/:projectId/sprints/:sprintId')
+  @StrictWriteRateLimit()
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
+  @RequireFeature(FeatureKey.SPRINT_ENABLED)
+  @RequirePermissions(PERMISSIONS.SPRINT_DELETE)
+  @ResponseMessage('Delete sprint successfully')
+  async deleteSprint(
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('sprintId') sprintId: string,
+    @Auth() auth: IAuth,
+  ): Promise<void> {
+    return await this.deleteSprintApplication.delete({
+      workspaceId,
+      projectId,
+      sprintId,
+      userId: auth.id,
+    });
+  }
+
   @Patch('workspaces/:workspaceId/projects/:projectId/sprint/:sprintId')
+  @WriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequireFeature(FeatureKey.SPRINT_ENABLED)
   @RequirePermissions(PERMISSIONS.SPRINT_UPDATE)

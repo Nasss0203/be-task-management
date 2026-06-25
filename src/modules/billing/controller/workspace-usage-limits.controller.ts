@@ -1,5 +1,6 @@
 import { Controller, Get, Inject, Param, Req } from '@nestjs/common';
 import { type Request } from 'express';
+import { ReadRateLimit } from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
@@ -16,6 +17,7 @@ type AuthRequest = Request & {
 };
 
 @Controller('workspaces/:workspaceId/usage-limits')
+@ReadRateLimit()
 export class WorkspaceUsageLimitsController {
   constructor(
     @Inject(BILLING_TYPES.applications.BillingQueryApplication)

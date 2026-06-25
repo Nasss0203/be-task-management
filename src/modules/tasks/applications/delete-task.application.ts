@@ -4,6 +4,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { REALTIME_EVENTS } from 'src/modules/realtime/realtime.events';
 import { type UnitOfWork } from 'src/interface/index.interface';
 import {
   ActivityAction,
@@ -31,6 +33,8 @@ export class DeleteTaskApplicationImpl implements DeleteTaskApplication {
 
     @Inject(WORKSPACE_TYPES.uow.UnitOfWork)
     private readonly uow: UnitOfWork,
+    
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async delete(input: {
@@ -67,6 +71,12 @@ export class DeleteTaskApplicationImpl implements DeleteTaskApplication {
         },
         manager,
       );
+
+      this.eventEmitter.emit(REALTIME_EVENTS.TASK_DELETED, {
+        workspaceId: task.workspaceId,
+        projectId: task.projectId,
+        taskId: input.taskId,
+      });
     });
   }
 
@@ -119,6 +129,12 @@ export class DeleteTaskApplicationImpl implements DeleteTaskApplication {
         },
         manager,
       );
+
+      this.eventEmitter.emit(REALTIME_EVENTS.TASK_UPDATED, {
+        workspaceId: task.workspaceId,
+        projectId: task.projectId,
+        task: task,
+      });
     });
   }
 }
