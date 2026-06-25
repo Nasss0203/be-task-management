@@ -31,7 +31,7 @@ describe('MailService', () => {
 
   describe('sendEmailTemplates', () => {
     it('should send email with given input', async () => {
-      process.env.MAIL_USER = 'test@example.com';
+      process.env.USER_EMAIL = 'test@example.com';
       
       await service.sendEmailTemplates({
         to: 'recipient@example.com',

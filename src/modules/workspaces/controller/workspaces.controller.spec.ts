@@ -553,13 +553,6 @@ describe('WorkspacesController', () => {
         {
           provide: WORKSPACE_TYPES.applications.UpdateWorkspaceLayoutModeApplication,
           useValue: {
-            create: jest.fn().mockResolvedValue({}),
-            find: jest.fn().mockResolvedValue([]),
-            findOne: jest.fn().mockResolvedValue({}),
-            update: jest.fn().mockResolvedValue({}),
-            delete: jest.fn().mockResolvedValue({}),
-            save: jest.fn().mockResolvedValue({}),
-            findAll: jest.fn().mockResolvedValue([]),
             findById: jest.fn().mockResolvedValue({}),
             insert: jest.fn().mockResolvedValue({}),
             count: jest.fn().mockResolvedValue(0),
@@ -622,6 +615,10 @@ describe('WorkspacesController', () => {
                 getCount: jest.fn().mockResolvedValue(0)
             }))
           },
+        },
+        {
+          provide: WORKSPACE_TYPES.applications.SaveWorkspaceAsTemplateApplication,
+          useValue: { save: jest.fn() },
         }
       ],
     }).compile();

@@ -1178,6 +1178,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
         {
           provide: WORKSPACE_TEMPLATE_TYPES.services.WorkspaceTemplatesService,
           useValue: {
+            findOneAvailableForUser: jest.fn().mockResolvedValue({ config: { projects: [], boards: [], pages: [], taskStatuses: [], taskPriorities: [], statuses: [], priorities: [], tasks: [] } }),
             create: jest.fn().mockResolvedValue({}),
             find: jest.fn().mockResolvedValue([]),
             findOne: jest.fn().mockResolvedValue({}),

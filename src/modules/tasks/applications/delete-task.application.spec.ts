@@ -5,6 +5,8 @@ import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { ActivityAction, ActivityEntityType } from 'src/modules/activity/domain/entities/activity.entity';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { REALTIME_EVENTS } from 'src/modules/realtime/realtime.events';
 
 describe('DeleteTaskApplicationImpl', () => {
   let app: DeleteTaskApplicationImpl;
@@ -12,7 +14,8 @@ describe('DeleteTaskApplicationImpl', () => {
   const mockFindTaskService = { findOneTask: jest.fn(), findOneTaskForRestore: jest.fn() };
   const mockDeleteTaskService = { softDeleteTask: jest.fn(), restoreTask: jest.fn() };
   const mockCreateActivityService = { create: jest.fn() };
-  const mockUnitOfWork = { runInTransaction: jest.fn((cb) => cb({})) };
+  const mockUnitOfWork = { runInTransaction: jest.fn(async (cb) => { return await cb('mockTransactionManager'); }) };
+  const mockEventEmitter = { emit: jest.fn() };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -24,6 +27,7 @@ describe('DeleteTaskApplicationImpl', () => {
         { provide: TASK_TYPES.services.DeleteTaskService, useValue: mockDeleteTaskService },
         { provide: ACTIVITY_TYPES.services.CreateActivityService, useValue: mockCreateActivityService },
         { provide: WORKSPACE_TYPES.uow.UnitOfWork, useValue: mockUnitOfWork },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
 
@@ -40,19 +44,26 @@ describe('DeleteTaskApplicationImpl', () => {
       await expect(app.delete({ workspaceId: 'ws-1', taskId: '1', userId: 'user-1' })).rejects.toThrow(NotFoundException);
     });
 
-    it('should delete task and create activity', async () => {
-      mockFindTaskService.findOneTask.mockResolvedValue({ id: '1', workspaceId: 'ws-1', projectId: 'proj-1', title: 'Task 1' });
+    it('should delete task, create activity, and emit event inside transaction', async () => {
+      const mockTask = { id: '1', workspaceId: 'ws-1', projectId: 'proj-1', title: 'Task 1' };
+      mockFindTaskService.findOneTask.mockResolvedValue(mockTask);
       await app.delete({ workspaceId: 'ws-1', taskId: '1', userId: 'user-1' });
 
-      expect(mockDeleteTaskService.softDeleteTask).toHaveBeenCalledWith({ taskId: '1', deletedBy: 'user-1' }, expect.anything());
+      expect(mockUnitOfWork.runInTransaction).toHaveBeenCalled();
+      expect(mockDeleteTaskService.softDeleteTask).toHaveBeenCalledWith({ taskId: '1', deletedBy: 'user-1' }, 'mockTransactionManager');
       expect(mockCreateActivityService.create).toHaveBeenCalledWith(
         expect.objectContaining({
           entityType: ActivityEntityType.TASK,
           entityId: '1',
           action: ActivityAction.TASK_DELETED,
         }),
-        expect.anything(),
+        'mockTransactionManager',
       );
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(REALTIME_EVENTS.TASK_DELETED, {
+        workspaceId: mockTask.workspaceId,
+        projectId: mockTask.projectId,
+        taskId: '1',
+      });
     });
   });
 
@@ -77,19 +88,26 @@ describe('DeleteTaskApplicationImpl', () => {
       await expect(app.restore({ workspaceId: 'ws-1', taskId: '1', userId: 'user-1' })).rejects.toThrow(BadRequestException);
     });
 
-    it('should restore task and create activity', async () => {
-      mockFindTaskService.findOneTaskForRestore.mockResolvedValue({ id: '1', workspaceId: 'ws-1', projectId: 'proj-1', deletedAt: new Date(), workspaceDeletedAt: null, projectDeletedAt: null });
+    it('should restore task, create activity, and emit event inside transaction', async () => {
+      const mockTask = { id: '1', workspaceId: 'ws-1', projectId: 'proj-1', deletedAt: new Date(), workspaceDeletedAt: null, projectDeletedAt: null, title: 'Task 1' };
+      mockFindTaskService.findOneTaskForRestore.mockResolvedValue(mockTask);
       await app.restore({ workspaceId: 'ws-1', taskId: '1', userId: 'user-1' });
 
-      expect(mockDeleteTaskService.restoreTask).toHaveBeenCalledWith({ taskId: '1' }, expect.anything());
+      expect(mockUnitOfWork.runInTransaction).toHaveBeenCalled();
+      expect(mockDeleteTaskService.restoreTask).toHaveBeenCalledWith({ taskId: '1' }, 'mockTransactionManager');
       expect(mockCreateActivityService.create).toHaveBeenCalledWith(
         expect.objectContaining({
           entityType: ActivityEntityType.TASK,
           entityId: '1',
           action: ActivityAction.TASK_RESTORED,
         }),
-        expect.anything(),
+        'mockTransactionManager',
       );
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(REALTIME_EVENTS.TASK_UPDATED, {
+        workspaceId: mockTask.workspaceId,
+        projectId: mockTask.projectId,
+        task: mockTask,
+      });
     });
   });
 });

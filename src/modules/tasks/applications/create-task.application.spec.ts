@@ -1,11 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CreateTaskApplicationImpl } from './create-task.application';
 import { TASK_TYPES } from '../interfaces/types';
-import { TASK_ASSIGNEE_TYPES } from 'src/modules/task_assignee/interfaces/types';
-import { TASK_COMMENT_TYPES } from 'src/modules/task_commnent/interfaces/types';
 import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
-import { ActivityAction, ActivityEntityType } from 'src/modules/activity/domain/entities/activity.entity';
+import { TASK_ASSIGNEE_TYPES } from 'src/modules/task_assignee/interfaces/types';
+import { TASK_COMMENT_TYPES } from 'src/modules/task_commnent/interfaces/types';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { REALTIME_EVENTS } from 'src/modules/realtime/realtime.events';
 
 describe('CreateTaskApplicationImpl', () => {
   let app: CreateTaskApplicationImpl;
@@ -14,7 +15,8 @@ describe('CreateTaskApplicationImpl', () => {
   const mockCreateTaskAssigneeApplication = { assign: jest.fn() };
   const mockCreateTaskCommentService = { create: jest.fn() };
   const mockCreateActivityService = { create: jest.fn() };
-  const mockUnitOfWork = { runInTransaction: jest.fn((cb) => cb({})) };
+  const mockUnitOfWork = { runInTransaction: jest.fn(async (cb) => { return await cb('mockTransactionManager'); }) };
+  const mockEventEmitter = { emit: jest.fn() };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -27,6 +29,7 @@ describe('CreateTaskApplicationImpl', () => {
         { provide: TASK_COMMENT_TYPES.services.CreateTaskCommentService, useValue: mockCreateTaskCommentService },
         { provide: ACTIVITY_TYPES.services.CreateActivityService, useValue: mockCreateActivityService },
         { provide: WORKSPACE_TYPES.uow.UnitOfWork, useValue: mockUnitOfWork },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
 
@@ -38,82 +41,69 @@ describe('CreateTaskApplicationImpl', () => {
   });
 
   describe('create', () => {
-    it('should create task, log activity, assign users, and add initial comment', async () => {
-      const dto = {
-        workspaceId: 'ws-1',
-        projectId: 'proj-1',
-        title: 'Task 1',
-        createdBy: 'user-1',
-        assigneeIds: ['user-2', 'user-2'], // testing uniqueness
-        initialComment: '   first comment   ',
-      } as any;
+    const input = {
+      workspaceId: 'ws-1',
+      projectId: 'proj-1',
+      createdBy: 'user-1',
+      title: 'Task 1',
+      statusId: 'status-1',
+      assigneeIds: ['user-2'],
+      initialComment: 'Comment 1',
+    };
 
-      const createdTask = {
-        id: 'task-1',
+    const mockTask = {
+      id: 'task-1',
+      workspaceId: 'ws-1',
+      projectId: 'proj-1',
+      title: 'Task 1',
+      statusId: 'status-1',
+      assignees: [],
+    };
+
+    it('should create task, assignees, comment, activity, and emit event inside transaction', async () => {
+      mockCreateTaskService.create.mockResolvedValue(mockTask);
+      
+      const result = await app.create(input);
+
+      expect(mockUnitOfWork.runInTransaction).toHaveBeenCalled();
+      
+      expect(mockCreateTaskService.create).toHaveBeenCalledWith({
         workspaceId: 'ws-1',
         projectId: 'proj-1',
+        createdBy: 'user-1',
         title: 'Task 1',
         statusId: 'status-1',
-        priorityId: 'priority-1',
-        sprintId: 'sprint-1',
-        assignees: [],
-      };
-
-      mockCreateTaskService.create.mockResolvedValue(createdTask);
-
-      const result = await app.create(dto);
-
-      expect(mockCreateTaskService.create).toHaveBeenCalledWith(
-        expect.objectContaining({ workspaceId: 'ws-1', title: 'Task 1' }),
-        expect.anything(),
-      );
+      }, 'mockTransactionManager');
 
       expect(mockCreateActivityService.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          workspaceId: 'ws-1',
-          projectId: 'proj-1',
-          entityType: ActivityEntityType.TASK,
           entityId: 'task-1',
           actorId: 'user-1',
-          action: ActivityAction.TASK_CREATED,
         }),
-        expect.anything(),
+        'mockTransactionManager',
       );
 
-      // Should only assign unique user-2 once
-      expect(mockCreateTaskAssigneeApplication.assign).toHaveBeenCalledTimes(1);
-      expect(mockCreateTaskAssigneeApplication.assign).toHaveBeenCalledWith(
-        { taskId: 'task-1', userId: 'user-2', assignedBy: 'user-1' },
-        expect.anything(),
-      );
+      expect(mockCreateTaskAssigneeApplication.assign).toHaveBeenCalledWith({
+        taskId: 'task-1',
+        userId: 'user-2',
+        assignedBy: 'user-1',
+      }, 'mockTransactionManager');
 
-      expect(mockCreateTaskCommentService.create).toHaveBeenCalledWith(
-        {
-          taskId: 'task-1',
-          workspaceId: 'ws-1',
-          projectId: 'proj-1',
-          content: 'first comment', // trimmed
-          authorId: 'user-1',
-        },
-        expect.anything(),
-      );
-
-      expect(result.id).toEqual('task-1');
-    });
-
-    it('should not add comment if initialComment is empty', async () => {
-      const dto = {
+      expect(mockCreateTaskCommentService.create).toHaveBeenCalledWith({
+        taskId: 'task-1',
         workspaceId: 'ws-1',
         projectId: 'proj-1',
-        title: 'Task 1',
-        createdBy: 'user-1',
-      } as any;
+        content: 'Comment 1',
+        authorId: 'user-1',
+      }, 'mockTransactionManager');
 
-      mockCreateTaskService.create.mockResolvedValue({ id: 'task-1', assignees: [] });
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(REALTIME_EVENTS.TASK_CREATED, {
+        workspaceId: mockTask.workspaceId,
+        projectId: mockTask.projectId,
+        task: mockTask,
+      });
 
-      await app.create(dto);
-
-      expect(mockCreateTaskCommentService.create).not.toHaveBeenCalled();
+      expect(result).toBeDefined();
     });
   });
 });

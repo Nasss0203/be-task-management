@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
 import { AUTH_TYPES } from './interfaces/types';
 
 import { JwtModule } from '@nestjs/jwt';
@@ -45,6 +46,10 @@ describe('AuthController', () => {
           provide: AUTH_TYPES.applications.GoogleAuthApplication,
           useValue: mockGoogleApp,
         },
+        {
+          provide: AuthService,
+          useValue: { resendVerificationEmail: jest.fn(), verifyEmail: jest.fn(), forgotPassword: jest.fn(), resetPassword: jest.fn() }
+        }
       ],
     }).compile();
 

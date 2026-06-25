@@ -12,6 +12,7 @@ describe('SprintsController', () => {
   const mockCancelSprintApplication = { cancelSprint: jest.fn() };
   const mockUpdateSprintApplication = { updateSprint: jest.fn() };
   const mockGetSprintDetailApplication = { getSprintDetail: jest.fn() };
+  const mockDeleteSprintApplication = { delete: jest.fn(), restore: jest.fn() };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -26,6 +27,7 @@ describe('SprintsController', () => {
         { provide: SPRINT_TYPES.applications.CancelSprintApplication, useValue: mockCancelSprintApplication },
         { provide: SPRINT_TYPES.applications.UpdateSprintApplication, useValue: mockUpdateSprintApplication },
         { provide: SPRINT_TYPES.applications.GetSprintDetailApplication, useValue: mockGetSprintDetailApplication },
+        { provide: SPRINT_TYPES.applications.DeleteSprintApplication, useValue: mockDeleteSprintApplication },
       ],
     }).compile();
 
@@ -107,7 +109,7 @@ describe('SprintsController', () => {
   describe('updateSprint', () => {
     it('should call updateSprint application', async () => {
       mockUpdateSprintApplication.updateSprint.mockResolvedValue({ id: 'sprint-1' });
-      const result = await controller.updateSprint('ws-1', 'proj-1', 'sprint-1', { name: 'New Name' } as any, { id: 'user-1' } as any);
+      const result = await controller.updateSprint('ws-1', 'proj-1', 'sprint-1', {} as any, { id: 'user-1' } as any);
       expect(result).toEqual({ id: 'sprint-1' });
       expect(mockUpdateSprintApplication.updateSprint).toHaveBeenCalled();
     });
@@ -115,10 +117,24 @@ describe('SprintsController', () => {
 
   describe('getSprintProgress', () => {
     it('should call getSprintProgress application', async () => {
-      mockFindSprintApplication.getSprintProgress.mockResolvedValue({ totalTasks: 5 });
+      mockFindSprintApplication.getSprintProgress.mockResolvedValue({ progress: 50 });
       const result = await controller.getSprintProgress('ws-1', 'proj-1', 'sprint-1', { id: 'user-1' } as any);
-      expect(result).toEqual({ totalTasks: 5 });
+      expect(result).toEqual({ progress: 50 });
       expect(mockFindSprintApplication.getSprintProgress).toHaveBeenCalled();
+    });
+  });
+
+  describe('delete', () => {
+    it('should call delete application', async () => {
+      mockDeleteSprintApplication.delete.mockResolvedValue(undefined);
+      const result = await controller.deleteSprint('ws-1', 'proj-1', 'sprint-1', { id: 'user-1' } as any);
+      expect(result).toBeUndefined();
+      expect(mockDeleteSprintApplication.delete).toHaveBeenCalledWith({
+        workspaceId: 'ws-1',
+        projectId: 'proj-1',
+        sprintId: 'sprint-1',
+        userId: 'user-1',
+      });
     });
   });
 });

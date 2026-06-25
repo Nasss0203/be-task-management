@@ -28,6 +28,7 @@ describe('CreateBillingServiceImpl', () => {
         { provide: BILLING_TYPES.repositories.PlanRepository, useValue: mockPlanRepo },
         { provide: BILLING_TYPES.repositories.PaymentRepository, useValue: mockPaymentRepo },
         { provide: BILLING_TYPES.providers.VnpayPaymentProvider, useValue: mockProvider },
+        { provide: BILLING_TYPES.providers.StripePaymentProvider, useValue: mockProvider },
       ],
     }).compile();
 

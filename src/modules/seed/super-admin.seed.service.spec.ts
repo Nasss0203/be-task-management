@@ -66,7 +66,7 @@ describe('SuperAdminSeedService', () => {
       return null;
     });
 
-    mockUserRepo.findOne.mockResolvedValue({ id: '1', systemRole: SystemRole.SUPER_ADMIN, isActive: true, passwordHash: 'hash' });
+    mockUserRepo.findOne.mockResolvedValue({ id: '1', systemRole: SystemRole.SUPER_ADMIN, isActive: true, passwordHash: 'hash', isEmailVerified: true });
 
     await service.seed();
 

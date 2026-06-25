@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FindActivityApplicationImpl } from './find-activity.application';
 import { ACTIVITY_TYPES } from '../interfaces/types';
+import { USER_TYPES } from '../../users/interfaces/types';
 
 describe('FindActivityApplicationImpl', () => {
   let application: FindActivityApplicationImpl;
@@ -15,6 +16,7 @@ describe('FindActivityApplicationImpl', () => {
       providers: [
         FindActivityApplicationImpl,
         { provide: ACTIVITY_TYPES.services.FindActivityService, useValue: mockService },
+        { provide: USER_TYPES.services.FindUserService, useValue: {} },
       ],
     }).compile();
 

@@ -7,6 +7,8 @@ describe('TaskCommnentController', () => {
 
   const mockCreateTaskCommentApplication = { create: jest.fn() };
   const mockFindTaskCommentApplication = { findByTaskId: jest.fn() };
+  const mockUpdateTaskCommentApplication = { update: jest.fn() };
+  const mockDeleteTaskCommentApplication = { delete: jest.fn() };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -16,6 +18,8 @@ describe('TaskCommnentController', () => {
       providers: [
         { provide: TASK_COMMENT_TYPES.applications.CreateTaskCommentApplication, useValue: mockCreateTaskCommentApplication },
         { provide: TASK_COMMENT_TYPES.applications.FindTaskCommentApplication, useValue: mockFindTaskCommentApplication },
+        { provide: TASK_COMMENT_TYPES.applications.UpdateTaskCommentApplication, useValue: mockUpdateTaskCommentApplication },
+        { provide: TASK_COMMENT_TYPES.applications.DeleteTaskCommentApplication, useValue: mockDeleteTaskCommentApplication },
       ],
     }).compile();
 

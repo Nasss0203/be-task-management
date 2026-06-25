@@ -30,6 +30,7 @@ describe('AdminBillingController', () => {
     addSelect: jest.fn().mockReturnThis(),
     orderBy: jest.fn().mockReturnThis(),
     addOrderBy: jest.fn().mockReturnThis(),
+    setParameter: jest.fn().mockReturnThis(),
     getRawMany: jest.fn(),
   };
 
@@ -43,6 +44,7 @@ describe('AdminBillingController', () => {
     select: jest.fn().mockReturnThis(),
     addSelect: jest.fn().mockReturnThis(),
     orderBy: jest.fn().mockReturnThis(),
+    setParameter: jest.fn().mockReturnThis(),
     getRawMany: jest.fn(),
   };
 
@@ -127,13 +129,13 @@ describe('AdminBillingController', () => {
 
   it('should get subscriptions', async () => {
     mockSubscriptionQueryBuilder.getRawMany.mockResolvedValue([
-      { id: 'sub-1', workspaceId: 'ws-1', ownerEmail: 'test@example.com', createdAt: new Date() },
+      { id: 'sub-1', workspaceId: 'ws-1', userEmail: 'test@example.com', createdAt: new Date() },
     ]);
     const result = await controller.getSubscriptions();
     expect(mockSubscriptionQueryBuilder.getRawMany).toHaveBeenCalled();
     expect(result[0].id).toEqual('sub-1');
-    expect(result[0].rowId).toEqual('sub-1:ws-1');
-    expect(result[0].ownerEmail).toEqual('test@example.com');
+    expect(result[0].rowId).toEqual('sub-1');
+    expect(result[0].userEmail).toEqual('test@example.com');
   });
 
   it('should get payments', async () => {

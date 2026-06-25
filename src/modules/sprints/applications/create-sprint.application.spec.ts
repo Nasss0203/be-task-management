@@ -3,12 +3,15 @@ import { CreateSprintApplicationImpl } from './create-sprint.application';
 import { SPRINT_TYPES } from '../interfaces/types';
 import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { BadRequestException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { REALTIME_EVENTS } from 'src/modules/realtime/realtime.events';
 
 describe('CreateSprintApplicationImpl', () => {
   let app: CreateSprintApplicationImpl;
 
   const mockCreateSprintService = { create: jest.fn() };
   const mockCreateActivityService = { create: jest.fn() };
+  const mockEventEmitter = { emit: jest.fn() };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -18,6 +21,7 @@ describe('CreateSprintApplicationImpl', () => {
         CreateSprintApplicationImpl,
         { provide: SPRINT_TYPES.services.CreateSprintService, useValue: mockCreateSprintService },
         { provide: ACTIVITY_TYPES.services.CreateActivityService, useValue: mockCreateActivityService },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
 
@@ -52,7 +56,7 @@ describe('CreateSprintApplicationImpl', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should create sprint and log activity', async () => {
+    it('should create sprint, log activity, and emit event', async () => {
       const mockCreatedSprint = {
         id: 'sprint-1',
         workspaceId: 'ws-1',
@@ -76,7 +80,12 @@ describe('CreateSprintApplicationImpl', () => {
         goal: 'Goal 1',
       });
       expect(mockCreateActivityService.create).toHaveBeenCalled();
-      expect(result).toEqual(mockCreatedSprint);
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(REALTIME_EVENTS.SPRINT_CREATED, {
+        workspaceId: mockCreatedSprint.workspaceId,
+        projectId: mockCreatedSprint.projectId,
+        sprint: mockCreatedSprint,
+      });
+      expect(result.id).toEqual(mockCreatedSprint.id);
     });
   });
 });

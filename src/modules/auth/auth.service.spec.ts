@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { AUTH_TYPES } from './interfaces/types';
+import { MailService } from '../mail/mail.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -15,6 +16,8 @@ describe('AuthService', () => {
         { provide: AUTH_TYPES.applications.LogoutAuthApplication, useValue: {} },
         { provide: AUTH_TYPES.applications.GetProfileAuthApplication, useValue: {} },
         { provide: AUTH_TYPES.services.ValidateUserAuthService, useValue: {} },
+        { provide: AUTH_TYPES.repositories.AuthUserRepository, useValue: {} },
+        { provide: MailService, useValue: {} },
       ],
     }).compile();
 

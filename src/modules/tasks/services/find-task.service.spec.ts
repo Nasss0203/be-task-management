@@ -48,7 +48,7 @@ describe('FindTaskServiceImpl', () => {
     it('should call findAllTask on repo', async () => {
       mockFindTaskRepository.findAllTask.mockResolvedValue([]);
       const result = await service.findAllTask('proj-1', 'ws-1');
-      expect(mockFindTaskRepository.findAllTask).toHaveBeenCalledWith({ projectId: 'proj-1', workspaceId: 'ws-1' });
+      expect(mockFindTaskRepository.findAllTask).toHaveBeenCalledWith({ projectId: 'proj-1', workspaceId: 'ws-1' }, undefined);
       expect(result).toEqual([]);
     });
   });

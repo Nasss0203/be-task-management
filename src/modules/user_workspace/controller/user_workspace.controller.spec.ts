@@ -15,6 +15,14 @@ describe('UserWorkspacesController', () => {
     findAllMember: jest.fn(),
   };
 
+  const mockUpdateMemberWorkspaceApplication = {
+    updateMember: jest.fn(),
+  };
+
+  const mockDeleteMemberWorkspaceApplication = {
+    deleteMember: jest.fn(),
+  };
+
   const mockUserWorkspacesService = {};
 
   beforeEach(async () => {
@@ -34,6 +42,14 @@ describe('UserWorkspacesController', () => {
         {
           provide: USER_WORKSPACE_TYPES.applications.FindAllMemberApplication,
           useValue: mockFindAllMemberApplication,
+        },
+        {
+          provide: USER_WORKSPACE_TYPES.applications.UpdateMemberWorkspaceApplication,
+          useValue: mockUpdateMemberWorkspaceApplication,
+        },
+        {
+          provide: USER_WORKSPACE_TYPES.applications.DeleteMemberWorkspaceApplication,
+          useValue: mockDeleteMemberWorkspaceApplication,
         },
       ],
     }).compile();

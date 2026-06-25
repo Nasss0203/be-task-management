@@ -92,9 +92,9 @@ describe('TasksController', () => {
   describe('findAllByTask', () => {
     it('should return tasks', async () => {
       mockFindTaskApplication.findAllTask.mockResolvedValue([]);
-      const result = await controller.findAllByTask('proj-1', 'ws-1');
+      const result = await controller.findAllByTask('proj-1', 'ws-1', {} as any);
       expect(result).toEqual([]);
-      expect(mockFindTaskApplication.findAllTask).toHaveBeenCalledWith('proj-1', 'ws-1');
+      expect(mockFindTaskApplication.findAllTask).toHaveBeenCalledWith('proj-1', 'ws-1', {});
     });
   });
 

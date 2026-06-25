@@ -80,6 +80,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
 
   const workspaceTemplatesService = {
     findOne: jest.fn(),
+    findOneAvailableForUser: jest.fn().mockResolvedValue({ config: { projects: [], boards: [], pages: [], taskStatuses: [], taskPriorities: [], statuses: [], priorities: [], tasks: [] } }),
   };
 
   const pageTemplateBlocksService = {
@@ -88,6 +89,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
+    workspaceTemplatesService.findOneAvailableForUser.mockResolvedValue({ config: { projects: [], boards: [], pages: [], taskStatuses: [], taskPriorities: [], statuses: [], priorities: [], tasks: [] } });
 
     manager.getRepository.mockReturnValue({
       create: jest.fn((data) => data),
@@ -175,7 +177,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
       viewType: BoardViewType.BOARD,
     };
 
-    workspaceTemplatesService.findOne.mockResolvedValue({
+    workspaceTemplatesService.findOneAvailableForUser.mockResolvedValue({
       id: 'template-1',
       pageTemplateId: null,
       config: {
@@ -220,8 +222,9 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
     expect(
       checkWorkspaceLimitService.checkCanCreateWorkspace,
     ).toHaveBeenCalledWith(userId, manager);
-    expect(workspaceTemplatesService.findOne).toHaveBeenCalledWith(
+    expect(workspaceTemplatesService.findOneAvailableForUser).toHaveBeenCalledWith(
       'template-1',
+      userId,
     );
     expect(workspaceRepo.save).toHaveBeenCalled();
     expect(createUserWorkspaceService.create).toHaveBeenCalled();
@@ -247,7 +250,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
   it('throws conflict when workspace slug already exists', async () => {
     const userId = 'user-123456';
 
-    workspaceTemplatesService.findOne.mockResolvedValue({
+    workspaceTemplatesService.findOneAvailableForUser.mockResolvedValue({
       id: 'template-1',
       pageTemplateId: null,
       config: {
@@ -338,7 +341,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
   it('throws internal error when permissions are missing during RBAC seed', async () => {
     const userId = 'user-123456';
 
-    workspaceTemplatesService.findOne.mockResolvedValue({
+    workspaceTemplatesService.findOneAvailableForUser.mockResolvedValue({
       id: 'template-1',
       pageTemplateId: null,
       config: {
@@ -381,7 +384,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
   it('throws internal error when owner role is not created', async () => {
     const userId = 'user-123456';
 
-    workspaceTemplatesService.findOne.mockResolvedValue({
+    workspaceTemplatesService.findOneAvailableForUser.mockResolvedValue({
       id: 'template-1',
       pageTemplateId: null,
       config: {
@@ -422,7 +425,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
   it('throws bad request when board references missing project template key', async () => {
     const userId = 'user-123456';
 
-    workspaceTemplatesService.findOne.mockResolvedValue({
+    workspaceTemplatesService.findOneAvailableForUser.mockResolvedValue({
       id: 'template-1',
       pageTemplateId: null,
       config: {
@@ -459,7 +462,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
   it('throws bad request when task references missing status', async () => {
     const userId = 'user-123456';
 
-    workspaceTemplatesService.findOne.mockResolvedValue({
+    workspaceTemplatesService.findOneAvailableForUser.mockResolvedValue({
       id: 'template-1',
       pageTemplateId: null,
       config: {
@@ -511,7 +514,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
       viewType: BoardViewType.BOARD,
     });
 
-    workspaceTemplatesService.findOne.mockResolvedValue({
+    workspaceTemplatesService.findOneAvailableForUser.mockResolvedValue({
       id: 'template-1',
       pageTemplateId: 'page-template-1',
       config: {
@@ -562,7 +565,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
     createPageService.create.mockResolvedValue({ id: 'page-1' });
     createProjectService.create.mockResolvedValue({ id: 'project-1' });
     
-    workspaceTemplatesService.findOne.mockResolvedValue({
+    workspaceTemplatesService.findOneAvailableForUser.mockResolvedValue({
       id: 'template-1',
       pageTemplateId: 'page-template-1',
       config: {
@@ -593,7 +596,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
     createPageService.create.mockResolvedValue({ id: 'page-1' });
     createProjectService.create.mockResolvedValue({ id: 'project-1' });
 
-    workspaceTemplatesService.findOne.mockResolvedValue({
+    workspaceTemplatesService.findOneAvailableForUser.mockResolvedValue({
       id: 'template-1',
       pageTemplateId: null,
       config: {
@@ -626,7 +629,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
     createPageService.create.mockResolvedValue({ id: 'page-1' });
     createProjectService.create.mockResolvedValue({ id: 'project-1' });
 
-    workspaceTemplatesService.findOne.mockResolvedValue({
+    workspaceTemplatesService.findOneAvailableForUser.mockResolvedValue({
       id: 'template-1',
       pageTemplateId: null,
       config: {
@@ -658,7 +661,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
     createPageService.create.mockResolvedValue({ id: 'page-1' });
     createProjectService.create.mockResolvedValue({ id: 'project-1' });
 
-    workspaceTemplatesService.findOne.mockResolvedValue({
+    workspaceTemplatesService.findOneAvailableForUser.mockResolvedValue({
       id: 'template-1',
       pageTemplateId: null,
       config: {
@@ -691,7 +694,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
     createProjectService.create.mockResolvedValue({ id: 'project-1' });
     createTaskStatusService.create.mockResolvedValue({ id: 'status-todo' });
 
-    workspaceTemplatesService.findOne.mockResolvedValue({
+    workspaceTemplatesService.findOneAvailableForUser.mockResolvedValue({
       id: 'template-1',
       pageTemplateId: null,
       config: {
@@ -725,7 +728,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
     createProjectService.create.mockResolvedValue({ id: 'project-1' });
     createTaskStatusService.create.mockResolvedValue({ id: 'status-todo' });
 
-    workspaceTemplatesService.findOne.mockResolvedValue({
+    workspaceTemplatesService.findOneAvailableForUser.mockResolvedValue({
       id: 'template-1',
       pageTemplateId: null,
       config: {
@@ -754,7 +757,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
   it('throws internal error when a specific permission is not found in database', async () => {
     const userId = 'user-123456';
 
-    workspaceTemplatesService.findOne.mockResolvedValue({
+    workspaceTemplatesService.findOneAvailableForUser.mockResolvedValue({
       id: 'template-1',
       pageTemplateId: null,
       config: {

@@ -6,6 +6,8 @@ import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/type
 import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { SprintStatus } from 'src/modules/sprints/domain/entities/sprint.entity';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { REALTIME_EVENTS } from 'src/modules/realtime/realtime.events';
 
 describe('MoveTaskSprintApplicationImpl', () => {
   let app: MoveTaskSprintApplicationImpl;
@@ -15,6 +17,7 @@ describe('MoveTaskSprintApplicationImpl', () => {
   const mockFindMemberService = { findMemberInWorkspace: jest.fn() };
   const mockMoveTaskSprintService = { move: jest.fn() };
   const mockCreateActivityService = { create: jest.fn() };
+  const mockEventEmitter = { emit: jest.fn() };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -27,6 +30,7 @@ describe('MoveTaskSprintApplicationImpl', () => {
         { provide: USER_WORKSPACE_TYPES.services.FindMemberService, useValue: mockFindMemberService },
         { provide: TASK_TYPES.services.MoveTaskSprintService, useValue: mockMoveTaskSprintService },
         { provide: ACTIVITY_TYPES.services.CreateActivityService, useValue: mockCreateActivityService },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
 
@@ -58,15 +62,21 @@ describe('MoveTaskSprintApplicationImpl', () => {
     await expect(app.move({ taskId: '1', sprintId: 'sprint-1', userId: 'user-1' })).rejects.toThrow(BadRequestException);
   });
 
-  it('should move task and create activity', async () => {
+  it('should move task, create activity, and emit event', async () => {
     mockFindTaskService.findOneTask.mockResolvedValue({ workspaceId: 'ws-1', projectId: 'proj-1', sprintId: null });
     mockFindMemberService.findMemberInWorkspace.mockResolvedValue({});
     mockFindSprintService.findOneSprint.mockResolvedValue({ workspaceId: 'ws-1', projectId: 'proj-1', status: SprintStatus.ACTIVE });
-    mockMoveTaskSprintService.move.mockResolvedValue({ id: '1', workspaceId: 'ws-1', projectId: 'proj-1', sprintId: 'sprint-1', assignees: [] });
+    const mockTask = { id: '1', workspaceId: 'ws-1', projectId: 'proj-1', sprintId: 'sprint-1', assignees: [] };
+    mockMoveTaskSprintService.move.mockResolvedValue(mockTask);
 
     await app.move({ taskId: '1', sprintId: 'sprint-1', userId: 'user-1' });
 
     expect(mockMoveTaskSprintService.move).toHaveBeenCalledWith({ sprintId: 'sprint-1', taskId: '1' });
     expect(mockCreateActivityService.create).toHaveBeenCalled();
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith(REALTIME_EVENTS.TASK_UPDATED, {
+      workspaceId: mockTask.workspaceId,
+      projectId: mockTask.projectId,
+      task: mockTask,
+    });
   });
 });

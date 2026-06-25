@@ -11,6 +11,7 @@ describe('CreateTaskCommentServiceImpl', () => {
   const mockCreateTaskCommentRepository = { create: jest.fn() };
   const mockFindTaskService = { findOneTask: jest.fn() };
   const mockFindMemberService = { findMemberInWorkspace: jest.fn() };
+  const mockFindTaskCommentReposiroty = { findById: jest.fn() };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -19,6 +20,7 @@ describe('CreateTaskCommentServiceImpl', () => {
       providers: [
         CreateTaskCommentServiceImpl,
         { provide: TASK_COMMENT_TYPES.repositories.CreateTaskCommentRepository, useValue: mockCreateTaskCommentRepository },
+        { provide: TASK_COMMENT_TYPES.repositories.FindTaskCommentReposiroty, useValue: mockFindTaskCommentReposiroty },
         { provide: TASK_TYPES.services.FindTaskService, useValue: mockFindTaskService },
         { provide: USER_WORKSPACE_TYPES.services.FindMemberService, useValue: mockFindMemberService },
       ],
@@ -55,6 +57,7 @@ describe('CreateTaskCommentServiceImpl', () => {
       mockFindTaskService.findOneTask.mockResolvedValue({ id: 'task-1', workspaceId: 'ws-1', projectId: 'proj-1' });
       mockFindMemberService.findMemberInWorkspace.mockResolvedValue({ id: 'member-1' });
       mockCreateTaskCommentRepository.create.mockResolvedValue({ id: 'comment-1' });
+      mockFindTaskCommentReposiroty.findById.mockResolvedValue({ id: 'comment-1' });
 
       const result = await service.create(input, manager);
 

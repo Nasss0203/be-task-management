@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ActivityAction, ActivityEntityType } from 'src/modules/activity/domain/entities/activity.entity';
 import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { TASK_COMMENT_TYPES } from '../interfaces/types';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { TaskCommentMapper } from '../mapper/task_commnent.mapper';
 import { CreateTaskCommentApplicationImpl } from './create.task-comment.application';
 
@@ -19,6 +20,7 @@ describe('CreateTaskCommentApplicationImpl', () => {
         CreateTaskCommentApplicationImpl,
         { provide: TASK_COMMENT_TYPES.services.CreateTaskCommentService, useValue: mockCreateTaskCommentService },
         { provide: ACTIVITY_TYPES.services.CreateActivityService, useValue: mockCreateActivityService },
+        { provide: EventEmitter2, useValue: { emitAsync: jest.fn(), emit: jest.fn() } },
       ],
     }).compile();
 
