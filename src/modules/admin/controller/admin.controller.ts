@@ -5,6 +5,7 @@ import {
   Inject,
   Param,
   Patch,
+  Post,
   Query,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
@@ -25,7 +26,8 @@ import { AdminService } from '../admin.service';
 import { UserGrowthQueryDto } from '../dto/query/dashboard/user-growth-query.dto';
 import { WorkspaceGrowthQueryDto } from '../dto/query/dashboard/workspace-growth-query.dto';
 import { AdminFindAllUserQueryDto } from '../dto/query/user/admin-user-query.dto';
-import { UpdateUserSystemRoleDto } from '../dto/request/user/update-user-system-role.dto';
+import { CreateSystemAdminDto } from '../dto/request/user/create-system-admin.dto';
+import { CreateSystemAdminResponseDto } from '../dto/response/user/create-system-admin.response.dto';
 import { DashboardSummaryResponseDto } from '../dto/response/dashboard/dashboard-summary.response.dto';
 import { RecentActivityResponseDto } from '../dto/response/dashboard/recent-activity.response.dto';
 import { RetentionMetricResponseDto } from '../dto/response/dashboard/retention-metrics.response.dto';
@@ -87,6 +89,17 @@ export class AdminController {
     @Inject(ADMIN_TYPES.applications.AdminUserApplication)
     private readonly adminUserApplication: AdminUserApplication,
   ) {}
+
+  @Post('system-admins')
+  @RequireSystemRoles(SystemRole.SUPER_ADMIN)
+  @WriteRateLimit()
+  @ResponseMessage('Create system admin and send credentials successfully')
+  createSystemAdmin(
+    @Body() dto: CreateSystemAdminDto,
+    @Auth() auth: IAuth,
+  ): Promise<CreateSystemAdminResponseDto> {
+    return this.adminUserApplication.createSystemAdmin(dto, auth.systemRole);
+  }
 
   @Get('findAll-workspaces')
   @ResponseMessage('get all workspaces by admin successfully')
@@ -211,19 +224,4 @@ export class AdminController {
     );
   }
 
-  @Patch('users/:userId/system-role')
-  @WriteRateLimit()
-  @ResponseMessage('Update user system role successfully')
-  updateUserSystemRole(
-    @Param('userId') userId: string,
-    @Body() dto: UpdateUserSystemRoleDto,
-    @Auth() auth: IAuth,
-  ): Promise<void> {
-    return this.adminUserApplication.updateSystemRole(
-      userId,
-      dto,
-      auth.id,
-      auth.systemRole,
-    );
-  }
 }

@@ -1,10 +1,10 @@
+import { MailerService } from '@nestjs-modules/mailer';
 import { Test, TestingModule } from '@nestjs/testing';
 import { MailService } from './mail.service';
-import { MailerService } from '@nestjs-modules/mailer';
 
 describe('MailService', () => {
   let service: MailService;
-  
+
   const mockMailerService = {
     sendMail: jest.fn(),
   };
@@ -32,7 +32,7 @@ describe('MailService', () => {
   describe('sendEmailTemplates', () => {
     it('should send email with given input', async () => {
       process.env.USER_EMAIL = 'test@example.com';
-      
+
       await service.sendEmailTemplates({
         to: 'recipient@example.com',
         subject: 'Test Subject',
@@ -57,15 +57,19 @@ describe('MailService', () => {
         template: 'test-template',
       });
 
-      expect(mockMailerService.sendMail).toHaveBeenCalledWith(expect.objectContaining({
-        from: 'custom@example.com',
-      }));
+      expect(mockMailerService.sendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: 'custom@example.com',
+        }),
+      );
     });
   });
 
   describe('sendInviteMember', () => {
     it('should call sendEmailTemplates with correct arguments', async () => {
-      const sendSpy = jest.spyOn(service, 'sendEmailTemplates').mockResolvedValue();
+      const sendSpy = jest
+        .spyOn(service, 'sendEmailTemplates')
+        .mockResolvedValue();
       const currentYear = new Date().getFullYear();
 
       await service.sendInviteMember({
@@ -96,7 +100,9 @@ describe('MailService', () => {
 
   describe('templateInviteMember', () => {
     it('should call sendEmailTemplates with default test data', async () => {
-      const sendSpy = jest.spyOn(service, 'sendEmailTemplates').mockResolvedValue();
+      const sendSpy = jest
+        .spyOn(service, 'sendEmailTemplates')
+        .mockResolvedValue();
       const currentYear = new Date().getFullYear();
 
       await service.templateInviteMember();

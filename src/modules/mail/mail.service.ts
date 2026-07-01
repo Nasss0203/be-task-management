@@ -1,5 +1,9 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import { Injectable } from '@nestjs/common';
+import {
+  BadGatewayException,
+  Injectable,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 
 export type SendEmailTemplateInput = {
   to: string;
@@ -9,9 +13,26 @@ export type SendEmailTemplateInput = {
   context?: Record<string, unknown>;
 };
 
+type MailTransportError = {
+  code?: string;
+};
+
 @Injectable()
 export class MailService {
   constructor(private readonly mailerService: MailerService) {}
+
+  assertConfigured(): void {
+    const user = process.env.USER_EMAIL?.trim();
+    const password = process.env.PASSWORD_EMAIL?.trim();
+
+    if (!user || !password) {
+      throw new ServiceUnavailableException({
+        code: 'MAIL_SERVICE_NOT_CONFIGURED',
+        message:
+          'Email service is not configured. Set USER_EMAIL and PASSWORD_EMAIL.',
+      });
+    }
+  }
 
   async sendEmailTemplates({
     to,
@@ -20,13 +41,37 @@ export class MailService {
     template,
     context,
   }: SendEmailTemplateInput): Promise<void> {
-    await this.mailerService.sendMail({
-      to,
-      from: from ?? `"Nass" <${process.env.USER_EMAIL}>`,
-      subject,
-      template,
-      context,
-    });
+    try {
+      await this.mailerService.sendMail({
+        to,
+        from: from ?? `"Nass" <${process.env.USER_EMAIL}>`,
+        subject,
+        template,
+        context,
+      });
+    } catch (error) {
+      const code = (error as MailTransportError)?.code;
+
+      if (code === 'EAUTH') {
+        throw new BadGatewayException({
+          code: 'MAIL_AUTH_FAILED',
+          message:
+            'SMTP authentication failed. Check USER_EMAIL and the Gmail App Password in PASSWORD_EMAIL.',
+        });
+      }
+
+      if (['ECONNECTION', 'ESOCKET', 'ETIMEDOUT'].includes(code ?? '')) {
+        throw new BadGatewayException({
+          code: 'MAIL_CONNECTION_FAILED',
+          message: 'Could not connect to the configured SMTP server.',
+        });
+      }
+
+      throw new BadGatewayException({
+        code: 'MAIL_SEND_FAILED',
+        message: 'Could not send the credentials email.',
+      });
+    }
   }
 
   async sendInviteMember(input: {
@@ -83,6 +128,25 @@ export class MailService {
       context: {
         recipientName: input.recipientName,
         resetUrl: input.resetUrl,
+        year: new Date().getFullYear(),
+        appName: 'Task Management',
+      },
+    });
+  }
+
+  async sendSystemAdminCredentials(input: {
+    to: string;
+    accountEmail: string;
+    temporaryPassword: string;
+  }): Promise<void> {
+    await this.sendEmailTemplates({
+      to: input.to,
+      subject: 'Tài khoản quản trị hệ thống của bạn',
+      template: 'system-admin-credentials',
+      context: {
+        accountEmail: input.accountEmail,
+        temporaryPassword: input.temporaryPassword,
+        loginUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`,
         year: new Date().getFullYear(),
         appName: 'Task Management',
       },
