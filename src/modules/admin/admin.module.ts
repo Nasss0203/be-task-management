@@ -53,6 +53,7 @@ import { AdminUserOverviewServiceImpl } from './services/user/admin-user-overvie
 import { AdminUserApplicationImpl } from './applications/user/admin-user.application';
 import { AdminUserRepositoryImpl } from './repositories/user/admin-user.repository';
 import { AdminUserServiceImpl } from './services/user/admin-user.service';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { AdminUserServiceImpl } from './services/user/admin-user.service';
     ProjectsModule,
     UserWorkspacesModule,
     UsersModule,
+    MailModule,
   ],
   controllers: [AdminController],
   providers: [

@@ -16,9 +16,14 @@ import { MailService } from './mail.service';
           host: configService.get<string>('HOST_EMAIL') || 'smtp.gmail.com',
           port: Number(configService.get('PORT_EMAIL')) || 465,
           secure: Number(configService.get('PORT_EMAIL')) === 465,
+          connectionTimeout: 5_000,
+          greetingTimeout: 5_000,
+          socketTimeout: 10_000,
           auth: {
             user: configService.get<string>('USER_EMAIL'),
-            pass: configService.get<string>('PASSWORD_EMAIL'),
+            pass: configService
+              .get<string>('PASSWORD_EMAIL')
+              ?.replace(/\s/g, ''),
           },
         },
         defaults: {

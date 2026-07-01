@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RoleName } from 'src/modules/role/domain/entities/role.entity';
 import { UserActivity } from 'src/modules/user_activity/domain/entities/user_activity.entity';
+import { RefreshToken } from 'src/modules/refresh_token/entities/refresh_token.entity';
 import {
   SystemRole,
   User,
@@ -94,6 +95,52 @@ export class AdminUserRepositoryImpl implements AdminUserRepository {
     });
   }
 
+  async findByEmailOrUsername(
+    email: string,
+    username: string,
+  ): Promise<User | null> {
+    return this.userRepository.findOne({
+      where: [{ email }, { username }],
+    });
+  }
+
+  async createSystemAdmin(input: {
+    email: string;
+    username: string;
+    passwordHash: string;
+  }): Promise<User> {
+    const user = this.userRepository.create({
+      email: input.email,
+      username: input.username,
+      passwordHash: input.passwordHash,
+      systemRole: SystemRole.SYSTEM_ADMIN,
+      isActive: true,
+      isEmailVerified: true,
+      googleId: null,
+      avatarUrl: null,
+    });
+
+    return this.userRepository.save(user);
+  }
+
+  async deleteById(userId: string): Promise<void> {
+    await this.userRepository.delete({ id: userId });
+  }
+
+  async lockAndRevokeSessions(userId: string): Promise<void> {
+    await this.userRepository.manager.transaction(async (manager) => {
+      await manager.update(User, { id: userId }, { isActive: false });
+
+      await manager
+        .createQueryBuilder()
+        .update(RefreshToken)
+        .set({ revoked_at: new Date() })
+        .where('user_id = :userId', { userId })
+        .andWhere('revoked_at IS NULL')
+        .execute();
+    });
+  }
+
   async setActive(userId: string, isActive: boolean): Promise<void> {
     await this.userRepository.update(
       {
@@ -101,20 +148,6 @@ export class AdminUserRepositoryImpl implements AdminUserRepository {
       },
       {
         isActive,
-      },
-    );
-  }
-
-  async updateSystemRole(
-    userId: string,
-    systemRole: SystemRole,
-  ): Promise<void> {
-    await this.userRepository.update(
-      {
-        id: userId,
-      },
-      {
-        systemRole,
       },
     );
   }

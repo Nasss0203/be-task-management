@@ -10,7 +10,18 @@ export interface AdminUserRepository {
 
   findById(userId: string): Promise<User | null>;
 
+  findByEmailOrUsername(email: string, username: string): Promise<User | null>;
+
+  createSystemAdmin(input: {
+    email: string;
+    username: string;
+    passwordHash: string;
+  }): Promise<User>;
+
+  deleteById(userId: string): Promise<void>;
+
+  lockAndRevokeSessions(userId: string): Promise<void>;
+
   setActive(userId: string, isActive: boolean): Promise<void>;
 
-  updateSystemRole(userId: string, systemRole: SystemRole): Promise<void>;
 }

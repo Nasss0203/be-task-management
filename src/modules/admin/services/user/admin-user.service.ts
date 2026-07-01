@@ -1,29 +1,89 @@
 import {
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { randomBytes } from 'crypto';
+import { MailService } from 'src/modules/mail/mail.service';
 import {
   SystemRole,
   User,
 } from 'src/modules/users/domain/entities/user.entity';
 import { AdminFindAllUserQueryDto } from '../../dto/query/user/admin-user-query.dto';
-import { UpdateUserSystemRoleDto } from '../../dto/request/user/update-user-system-role.dto';
 import { AdminUserResponseDto } from '../../dto/response/user/admin-user.response.dto';
 import { type AdminUserRepository } from '../../interfaces/repositories/user/admin-user.repository.interface';
 import { type AdminUserService } from '../../interfaces/services/user/admin-user.service.interface';
 import { ADMIN_TYPES } from '../../interfaces/types';
+import { hashPassword } from 'src/utils';
+import { CreateSystemAdminDto } from '../../dto/request/user/create-system-admin.dto';
+import { CreateSystemAdminResponseDto } from '../../dto/response/user/create-system-admin.response.dto';
+
+const SYSTEM_ADMIN_DOMAIN = 'systemadmin.com';
 
 @Injectable()
 export class AdminUserServiceImpl implements AdminUserService {
   constructor(
     @Inject(ADMIN_TYPES.repositories.AdminUserRepository)
     private readonly repository: AdminUserRepository,
+    private readonly mailService: MailService,
   ) {}
+
+  async createSystemAdmin(
+    dto: CreateSystemAdminDto,
+    actorRole: SystemRole,
+  ): Promise<CreateSystemAdminResponseDto> {
+    if (actorRole !== SystemRole.SUPER_ADMIN) {
+      throw new ForbiddenException('Only SUPER_ADMIN can create system admins');
+    }
+
+    this.mailService.assertConfigured();
+
+    const username = dto.name.trim().toLowerCase();
+    const email = `${username}@${SYSTEM_ADMIN_DOMAIN}`;
+    const recipientEmail = dto.recipientEmail.trim().toLowerCase();
+    const existing = await this.repository.findByEmailOrUsername(
+      email,
+      username,
+    );
+
+    if (existing) {
+      throw new ConflictException('System admin name is already in use');
+    }
+
+    const temporaryPassword = this.generateTemporaryPassword();
+    const user = await this.repository.createSystemAdmin({
+      email,
+      username,
+      passwordHash: hashPassword(temporaryPassword),
+    });
+
+    try {
+      await this.mailService.sendSystemAdminCredentials({
+        to: recipientEmail,
+        accountEmail: email,
+        temporaryPassword,
+      });
+    } catch (error) {
+      await this.repository.deleteById(user.id);
+      throw error;
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      recipientEmail,
+    };
+  }
 
   findAll(query: AdminFindAllUserQueryDto): Promise<AdminUserResponseDto[]> {
     return this.repository.findAll(query);
+  }
+
+  private generateTemporaryPassword(): string {
+    return `${randomBytes(9).toString('base64url')}Aa1!`;
   }
 
   async lockUser(
@@ -35,7 +95,7 @@ export class AdminUserServiceImpl implements AdminUserService {
 
     this.ensureCanChangeActiveStatus(target, actorId, actorRole);
 
-    await this.repository.setActive(userId, false);
+    await this.repository.lockAndRevokeSessions(userId);
   }
 
   async unlockUser(
@@ -48,35 +108,6 @@ export class AdminUserServiceImpl implements AdminUserService {
     this.ensureCanChangeActiveStatus(target, actorId, actorRole);
 
     await this.repository.setActive(userId, true);
-  }
-
-  async updateSystemRole(
-    userId: string,
-    dto: UpdateUserSystemRoleDto,
-    actorId: string,
-    actorRole: SystemRole,
-  ): Promise<void> {
-    const target = await this.getTargetUser(userId);
-
-    if (actorRole !== SystemRole.SUPER_ADMIN) {
-      throw new ForbiddenException('Only SUPER_ADMIN can update system role');
-    }
-
-    if (target.id === actorId) {
-      throw new ForbiddenException('You cannot change your own system role');
-    }
-
-    if (target.systemRole === SystemRole.SUPER_ADMIN) {
-      throw new ForbiddenException('Cannot update another SUPER_ADMIN');
-    }
-
-    if (dto.systemRole === SystemRole.SUPER_ADMIN) {
-      throw new ForbiddenException(
-        'Promoting to SUPER_ADMIN is not allowed from this API',
-      );
-    }
-
-    await this.repository.updateSystemRole(userId, dto.systemRole);
   }
 
   private async getTargetUser(userId: string): Promise<User> {
