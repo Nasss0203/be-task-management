@@ -79,7 +79,7 @@ export class CreateTaskServiceImpl implements CreateTaskService {
         projectId: input.projectId,
         projectSeq: nextProjectSeq,
 
-        title: input.title,
+        title: input.title ?? null,
         description: input.description ?? null,
 
         statusId: input.statusId,
@@ -112,7 +112,7 @@ export class CreateTaskServiceImpl implements CreateTaskService {
         projectId: item.projectId,
         projectSeq: item.projectSeq ?? 1,
 
-        title: item.title,
+        title: item.title ?? null,
         description: item.description ?? null,
 
         statusId: item.statusId,

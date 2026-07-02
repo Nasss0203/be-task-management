@@ -75,7 +75,7 @@ export class TasksController {
   ) { }
 
   @Get('/workspace/:workspaceId/project/:projectId')
-  // @WorkspaceContext({ source: 'param', key: 'workspaceId' })
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.TASK_READ)
   @ResponseMessage('Find all task')
   async findAllByTask(
@@ -168,7 +168,8 @@ export class TasksController {
 
   @Patch(':taskId/restore')
   @StrictWriteRateLimit()
-  @RequirePermissions(PERMISSIONS.TASK_DELETE)
+  @WorkspaceContext({ source: 'query', key: 'workspaceId' })
+  @RequirePermissions(PERMISSIONS.TASK_UPDATE)
   async restoreTask(
     @Param('taskId') taskId: string,
     @Query('workspaceId') workspaceId: string,
@@ -186,6 +187,7 @@ export class TasksController {
   }
 
   @Get('trash')
+  @WorkspaceContext({ source: 'query', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.TASK_READ)
   async findDeletedTasks(
     @Query('workspaceId') workspaceId: string,

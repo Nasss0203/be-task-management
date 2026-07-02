@@ -65,20 +65,26 @@ export class CreateProjectServiceImpl implements CreateProjectService {
   ) {}
 
   create(
-    createProjectDto: CreateProjectDto,
+    createProjectDto: CreateProjectDto & { created_by?: string },
     manager: EntityManager,
   ): Promise<ProjectModel> {
-    const create = this.repo.save(createProjectDto, manager);
+    const userId = createProjectDto.created_by || 'sys';
+    const key = `${createProjectDto.name.trim()}-${userId.slice(0, 4)}-${Date.now()}`;
+    const create = this.repo.save({
+      ...createProjectDto,
+      created_by: userId,
+      key,
+    }, manager);
     return create;
   }
 
   async createProjectWithPageBlock(
-    createProjectDto: CreateProjectDto,
+    createProjectDto: CreateProjectDto & { created_by?: string },
   ): Promise<ProjectModel> {
     const workspaceId = createProjectDto.workspace_id;
-    const userId = createProjectDto.created_by;
+    const userId = createProjectDto.created_by || 'sys';
     const nameProject = createProjectDto.name.trim();
-    const key = `${nameProject}-${userId.slice(3, 7)}-${Date.now()}`;
+    const key = `${nameProject}-${userId.slice(0, 4)}-${Date.now()}`;
 
     return this.uow.runInTransaction(async (manager) => {
       await this.usageLimitEnforcerService.checkProjectLimit(

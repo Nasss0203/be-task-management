@@ -9,7 +9,7 @@ export class TaskModel {
     public readonly workspaceId: string,
     public readonly projectId: string,
     public readonly projectSeq: number | null,
-    public readonly title: string,
+    public readonly title: string | null,
     public readonly statusId: string,
     public readonly createdBy: string,
 

@@ -35,9 +35,10 @@ export class CreateTaskDto {
   @IsUUID()
   sprintId?: string | null;
 
+  @IsOptional()
   @IsString()
   @MaxLength(255)
-  title: string;
+  title?: string | null;
 
   @IsOptional()
   @IsString()

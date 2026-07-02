@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -14,11 +13,7 @@ import {
 } from 'src/modules/activity/domain/entities/activity.entity';
 import { type CreateActivityService } from 'src/modules/activity/interfaces/services/create-activity.service.interface';
 import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
-import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
-import { type FindPermissionService } from 'src/modules/permission/interfaces/services/find-all-permission.service.interface';
-import { PERMISSION_TYPES } from 'src/modules/permission/interfaces/types';
 import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
-import { TaskModel } from '../domain/models/task.model';
 import { TaskResponseDto } from '../dto/response/task-response.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
 import {
@@ -43,9 +38,6 @@ export class UpdateTaskApplicationImpl implements UpdateTaskApplication {
     @Inject(ACTIVITY_TYPES.services.CreateActivityService)
     private readonly createActivityService: CreateActivityService,
 
-    @Inject(PERMISSION_TYPES.services.FindPermissionService)
-    private readonly findPermissionService: FindPermissionService,
-
     @Inject(WORKSPACE_TYPES.uow.UnitOfWork)
     private readonly uow: UnitOfWork,
 
@@ -62,14 +54,6 @@ export class UpdateTaskApplicationImpl implements UpdateTaskApplication {
       if (!oldTask) {
         throw new NotFoundException('Task not found');
       }
-
-      await this.assertCanUpdateStatusOrPriority({
-        actorId: updateTaskDto.actorId,
-        task: oldTask,
-        statusId: updateTaskDto.statusId,
-        priorityId: updateTaskDto.priorityId,
-        manager,
-      });
 
       const updatedTask = await this.updateTaskService.updateTask(
         updateTaskDto,
@@ -156,7 +140,7 @@ export class UpdateTaskApplicationImpl implements UpdateTaskApplication {
   async updateManyTasks(
     input: UpdateManyTasksApplicationInput,
   ): Promise<TaskResponseDto[]> {
-    const { workspaceId, projectId, actorId, dto } = input;
+    const { workspaceId, projectId, dto } = input;
 
     if (!workspaceId) {
       throw new BadRequestException('workspaceId is required');
@@ -170,34 +154,22 @@ export class UpdateTaskApplicationImpl implements UpdateTaskApplication {
       throw new BadRequestException('Task list cannot be empty');
     }
 
-    if (this.hasStatusOrPriorityUpdate(dto)) {
-      const taskIds = [...new Set(dto.taskIds)];
-      const tasks = await this.findTaskService.findByIds(taskIds);
+    const taskIds = [...new Set(dto.taskIds)];
+    const validationTasks = await this.findTaskService.findByIds(taskIds);
 
-      if (tasks.length !== taskIds.length) {
-        throw new NotFoundException('Some tasks were not found');
-      }
+    if (validationTasks.length !== taskIds.length) {
+      throw new NotFoundException('Some tasks were not found');
+    }
 
-      const invalidTask = tasks.find(
-        (task) =>
-          task.workspaceId !== workspaceId || task.projectId !== projectId,
+    const invalidTask = validationTasks.find(
+      (task) =>
+        task.workspaceId !== workspaceId || task.projectId !== projectId,
+    );
+
+    if (invalidTask) {
+      throw new NotFoundException(
+        'Some tasks were not found or do not belong to this workspace/project',
       );
-
-      if (invalidTask) {
-        throw new NotFoundException(
-          'Some tasks were not found or do not belong to this workspace/project',
-        );
-      }
-
-      const tasksWithStatusOrPriorityChange = tasks.filter((task) =>
-        this.hasStatusOrPriorityChange(task, dto),
-      );
-
-      await this.assertCanUpdateStatusOrPriority({
-        actorId,
-        workspaceId,
-        tasks: tasksWithStatusOrPriorityChange,
-      });
     }
 
     const tasks = await this.updateTaskService.updateManyTasks({
@@ -217,88 +189,4 @@ export class UpdateTaskApplicationImpl implements UpdateTaskApplication {
     return tasks.map(TaskMapper.toResponse);
   }
 
-  private async assertCanUpdateStatusOrPriority(input: {
-    actorId: string;
-    task?: TaskModel;
-    tasks?: TaskModel[];
-    workspaceId?: string;
-    statusId?: string | null;
-    priorityId?: string | null;
-    manager?: Parameters<
-      FindPermissionService['findPermissionsByUserAndWorkspace']
-    >[2];
-  }): Promise<void> {
-    const tasks = input.tasks ?? (input.task ? [input.task] : []);
-    if (!tasks.length) return;
-
-    if (
-      input.task &&
-      !this.hasStatusOrPriorityChange(input.task, {
-        statusId: input.statusId,
-        priorityId: input.priorityId,
-      })
-    ) {
-      return;
-    }
-
-    const workspaceId = input.workspaceId ?? tasks[0].workspaceId;
-    const canManageWorkspaceTasks = await this.canManageWorkspaceTasks(
-      input.actorId,
-      workspaceId,
-      input.manager,
-    );
-
-    if (canManageWorkspaceTasks) return;
-
-    const hasUnassignedTask = tasks.some(
-      (task) =>
-        !task.assignees.some((assignee) => assignee.userId === input.actorId),
-    );
-
-    if (hasUnassignedTask) {
-      throw new ForbiddenException(
-        'Only task assignees can update task status or priority',
-      );
-    }
-  }
-
-  private hasStatusOrPriorityUpdate(dto: {
-    statusId?: string | null;
-    priorityId?: string | null;
-  }): boolean {
-    return dto.statusId !== undefined || dto.priorityId !== undefined;
-  }
-
-  private hasStatusOrPriorityChange(
-    task: TaskModel,
-    dto: {
-      statusId?: string | null;
-      priorityId?: string | null;
-    },
-  ): boolean {
-    return (
-      (dto.statusId !== undefined && dto.statusId !== task.statusId) ||
-      (dto.priorityId !== undefined && dto.priorityId !== task.priorityId)
-    );
-  }
-
-  private async canManageWorkspaceTasks(
-    actorId: string,
-    workspaceId: string,
-    manager?: Parameters<
-      FindPermissionService['findPermissionsByUserAndWorkspace']
-    >[2],
-  ): Promise<boolean> {
-    const permissions =
-      await this.findPermissionService.findPermissionsByUserAndWorkspace(
-        actorId,
-        workspaceId,
-        manager,
-      );
-
-    return (
-      permissions.includes(PERMISSIONS.WORKSPACE_UPDATE) ||
-      permissions.includes(PERMISSIONS.WORKSPACE_MEMBER_UPDATE_ROLE)
-    );
-  }
 }

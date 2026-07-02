@@ -175,7 +175,7 @@ export class SaveWorkspaceAsTemplateApplicationImpl implements SaveWorkspaceAsTe
       tasks.forEach((t) => {
         configTasks.push({
           projectTemplateKey: projectMap.get(t.projectId) || '',
-          title: t.title,
+          title: t.title || 'Untitled',
           description: t.description,
           statusName: statusMap.get(t.statusId) || 'Todo',
           priorityName: t.priorityId ? priorityMap.get(t.priorityId) || 'Medium' : 'Medium',

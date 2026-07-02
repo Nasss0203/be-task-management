@@ -1,4 +1,11 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateWorkspaceDto } from './create-workspace.dto';
+import { Transform } from 'class-transformer';
+import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
-export class UpdateWorkspaceDto extends PartialType(CreateWorkspaceDto) {}
+export class UpdateWorkspaceDto {
+  @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsString()
+  @MinLength(1)
+  @MaxLength(255)
+  name?: string;
+}

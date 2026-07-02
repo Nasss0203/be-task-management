@@ -13,7 +13,7 @@ export class TaskResponseDto {
   sprintName: string | null;
 
   projectSeq: number | null;
-  title: string;
+  title: string | null;
   description: string | null;
 
   statusId: string;
