@@ -94,6 +94,31 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
     return Number.isSafeInteger(sequence) ? sequence : null;
   }
 
+  private mapTasksWithPosition(
+    entities: Task[],
+    rawRows: Array<Record<string, unknown>>,
+  ): TaskModel[] {
+    const positionByTaskId = new Map<string, string | null>();
+
+    for (const row of rawRows) {
+      const taskId = row.task_id;
+
+      if (typeof taskId !== 'string' || positionByTaskId.has(taskId)) {
+        continue;
+      }
+
+      const position = row.taskPosition_position ?? row.task_position_value;
+      positionByTaskId.set(
+        taskId,
+        typeof position === 'string' ? position : null,
+      );
+    }
+
+    return entities.map((entity) =>
+      TaskMapper.toModel(entity, positionByTaskId.get(entity.id) ?? null),
+    );
+  }
+
   async findAllTask(
     params: ParamTask,
     filters?: FindBacklogTasksFilters,
@@ -105,6 +130,9 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
     const assigneeIds = this.normalizeFilterValues(filters?.assigneeId);
     const statusIds = this.normalizeFilterValues(filters?.statusId);
     const priorityIds = this.normalizeFilterValues(filters?.priorityId);
+    const positionContext = filters?.context;
+    const positionContextId = filters?.contextId;
+    const shouldOrderByPosition = Boolean(positionContext && positionContextId);
 
     const qb = this.getRepo(manager)
       .createQueryBuilder('task')
@@ -116,6 +144,20 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
       .leftJoinAndSelect('assignees.assignedByUser', 'assignedByUser')
       .where('task.project_id = :projectId', { projectId })
       .andWhere('task.workspace_id = :workspaceId', { workspaceId });
+
+    if (positionContext && positionContextId) {
+      qb.leftJoin(
+        'task_positions',
+        'taskPosition',
+        `taskPosition.task_id = task.id
+          AND taskPosition.context = :positionContext
+          AND taskPosition.context_id = :positionContextId`,
+        {
+          positionContext,
+          positionContextId,
+        },
+      ).addSelect('taskPosition.position', 'taskPosition_position');
+    }
 
     if (search) {
       const projectSeq = this.parseProjectSeqSearch(search);
@@ -149,6 +191,15 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
 
     if (priorityIds.length > 0) {
       qb.andWhere('task.priority_id IN (:...priorityIds)', { priorityIds });
+    }
+
+    if (shouldOrderByPosition) {
+      const { entities, raw } = await qb
+        .orderBy('taskPosition.position', 'ASC', 'NULLS LAST')
+        .addOrderBy('task.createdAt', 'DESC')
+        .getRawAndEntities();
+
+      return this.mapTasksWithPosition(entities, raw);
     }
 
     const entities = await qb.orderBy('task.createdAt', 'DESC').getMany();
@@ -245,6 +296,18 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
 
     const qb = this.getRepo(manager)
       .createQueryBuilder('task')
+      .leftJoin(
+        'task_positions',
+        'taskPosition',
+        `taskPosition.task_id = task.id
+          AND taskPosition.context = :positionContext
+          AND taskPosition.context_id = :positionContextId`,
+        {
+          positionContext: 'backlog',
+          positionContextId: projectId,
+        },
+      )
+      .addSelect('taskPosition.position', 'taskPosition_position')
       .leftJoinAndSelect('task.status', 'status')
       .leftJoinAndSelect('task.priority', 'priority')
       .leftJoinAndSelect('task.sprint', 'sprint')
@@ -291,14 +354,17 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
       qb.andWhere('task.priority_id IN (:...priorityIds)', { priorityIds });
     }
 
-    const [entities, total] = await qb
-      .orderBy('task.createdAt', 'DESC')
+    const total = await qb.clone().getCount();
+
+    const { entities, raw } = await qb
+      .orderBy('taskPosition.position', 'ASC', 'NULLS LAST')
+      .addOrderBy('task.createdAt', 'DESC')
       .skip((page - 1) * pageSize)
       .take(pageSize)
-      .getManyAndCount();
+      .getRawAndEntities();
 
     return {
-      data: entities.map((entity) => TaskMapper.toModel(entity)),
+      data: this.mapTasksWithPosition(entities, raw),
       total,
       page,
       pageSize,
@@ -324,6 +390,6 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
       },
     });
 
-    return tasks.map(TaskMapper.toModel);
+    return tasks.map((task) => TaskMapper.toModel(task));
   }
 }

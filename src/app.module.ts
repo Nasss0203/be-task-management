@@ -53,6 +53,7 @@ import { WorkspaceInvitesModule } from './modules/workspace_invites/workspace_in
 import { WorkspaceTemplatesModule } from './modules/workspace_templates/workspace_templates.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { SprintReportsModule } from './modules/sprint_reports/sprint_reports.module';
+import { TaskPositionModule } from './modules/task_position/task_position.module';
 
 @Module({
   imports: [
@@ -118,6 +119,7 @@ import { SprintReportsModule } from './modules/sprint_reports/sprint_reports.mod
     WorkspaceFeatureSettingsModule,
     WorkspaceTemplatesModule,
     SprintReportsModule,
+    TaskPositionModule,
   ],
   controllers: [AppController],
   providers: [

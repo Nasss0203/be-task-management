@@ -35,5 +35,6 @@ export class TaskModel {
     public readonly updatedAt?: Date,
     public readonly deletedAt?: Date | null,
     public readonly deletedBy?: string | null,
+    public readonly position: string | null = null,
   ) {}
 }

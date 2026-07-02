@@ -140,7 +140,6 @@ export class TasksController {
     @Body() dto: MoveTaskSprintDto,
     @Auth() auth: IAuth,
   ): Promise<TaskResponseDto> {
-    console.log(dto);
     return this.moveTaskSprintApplication.move({
       taskId: id,
       sprintId: dto.sprintId ?? null,

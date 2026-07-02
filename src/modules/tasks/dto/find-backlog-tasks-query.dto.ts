@@ -1,5 +1,6 @@
 import { Transform, type TransformFnParams } from 'class-transformer';
 import {
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -9,6 +10,10 @@ import {
   Min,
 } from 'class-validator';
 import { FindBacklogTasksFilters } from '../interfaces/find-backlog-tasks-filters.interface';
+import {
+  TASK_POSITION_CONTEXTS,
+  type TaskPositionContext,
+} from 'src/modules/task_position/constants/task-position-context.constant';
 
 const toIdArray = ({ value }: TransformFnParams): string[] | undefined => {
   if (value === undefined || value === null || value === '') {
@@ -51,6 +56,14 @@ export class FindBacklogTasksQueryDto implements FindBacklogTasksFilters {
   @Transform(toIdArray)
   @IsUUID('4', { each: true })
   priorityId?: string | string[];
+
+  @IsOptional()
+  @IsIn(TASK_POSITION_CONTEXTS)
+  context?: TaskPositionContext;
+
+  @IsOptional()
+  @IsUUID()
+  contextId?: string;
 
   @IsOptional()
   @Transform(toNumber)

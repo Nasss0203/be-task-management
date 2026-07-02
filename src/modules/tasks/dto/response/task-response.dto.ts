@@ -31,6 +31,7 @@ export class TaskResponseDto {
   completedAt: Date | null;
 
   estimateMinutes: number | null;
+  position: string | null;
 
   createdAt?: Date;
   updatedAt?: Date;

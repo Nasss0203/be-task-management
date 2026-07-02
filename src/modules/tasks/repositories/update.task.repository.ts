@@ -101,6 +101,6 @@ export class UpdateTaskRepositoryImpl implements UpdateTaskRepository {
       },
     });
 
-    return updatedTasks.map(TaskMapper.toModel);
+    return updatedTasks.map((task) => TaskMapper.toModel(task));
   }
 }

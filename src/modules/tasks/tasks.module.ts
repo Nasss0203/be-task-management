@@ -6,6 +6,7 @@ import { PermissionModule } from '../permission/permission.module';
 import { SprintsModule } from '../sprints/sprints.module';
 import { TaskAssigneeModule } from '../task_assignee/task_assignee.module';
 import { TaskCommnentModule } from '../task_commnent/task_commnent.module';
+import { TaskPositionModule } from '../task_position/task_position.module';
 import { TaskPriorityModule } from '../task_priority/task_priority.module';
 import { TaskStatusModule } from '../task_status/task_status.module';
 import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
@@ -45,6 +46,7 @@ import { UpdateTaskServiceImpl } from './services/update-task.service';
     TypeOrmModule.forFeature([Task]),
     TaskStatusModule,
     TaskPriorityModule,
+    TaskPositionModule,
     PermissionModule,
     UserWorkspacesModule,
     ActivityModule,
