@@ -84,7 +84,14 @@ describe('CreateProjectServiceImpl', () => {
 
       const result = await service.create(dto, manager);
 
-      expect(mockRepo.save).toHaveBeenCalledWith(dto, manager);
+      expect(mockRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Test',
+          created_by: 'sys',
+          key: expect.any(String),
+        }),
+        manager,
+      );
       expect(result).toEqual({ id: '1' });
     });
   });
@@ -129,12 +136,15 @@ describe('CreateProjectServiceImpl', () => {
 
       expect(mockUsageLimitEnforcerService.checkProjectLimit).toHaveBeenCalledWith('ws-1', expect.anything());
       
-      expect(mockRepo.save).toHaveBeenCalledWith(expect.objectContaining({
-        name: 'Test Project',
-        workspace_id: 'ws-1',
-        created_by: 'usr-1',
-        key: 'Test Project--1-1234567890',
-      }), expect.anything());
+      expect(mockRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Test Project',
+          workspace_id: 'ws-1',
+          created_by: 'usr-1',
+          key: 'Test Project-usr--1234567890',
+        }),
+        expect.anything(),
+      );
 
       expect(mockCreateBoardService.create).toHaveBeenCalled();
       expect(mockCreateTaskStatusService.createMany).toHaveBeenCalled();

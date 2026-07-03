@@ -65,26 +65,33 @@ export class CreateProjectServiceImpl implements CreateProjectService {
   ) {}
 
   create(
-    createProjectDto: CreateProjectDto & { created_by?: string },
+    createProjectDto: CreateProjectDto & { created_by?: string; key?: string },
     manager: EntityManager,
   ): Promise<ProjectModel> {
     const userId = createProjectDto.created_by || 'sys';
-    const key = `${createProjectDto.name.trim()}-${userId.slice(0, 4)}-${Date.now()}`;
-    const create = this.repo.save({
-      ...createProjectDto,
-      created_by: userId,
-      key,
-    }, manager);
+    const key =
+      createProjectDto.key ||
+      `${createProjectDto.name.trim()}-${userId.slice(0, 4)}-${Date.now()}`;
+    const create = this.repo.save(
+      {
+        ...createProjectDto,
+        created_by: userId,
+        key,
+      },
+      manager,
+    );
     return create;
   }
 
   async createProjectWithPageBlock(
-    createProjectDto: CreateProjectDto & { created_by?: string },
+    createProjectDto: CreateProjectDto & { created_by?: string; key?: string },
   ): Promise<ProjectModel> {
     const workspaceId = createProjectDto.workspace_id;
     const userId = createProjectDto.created_by || 'sys';
     const nameProject = createProjectDto.name.trim();
-    const key = `${nameProject}-${userId.slice(0, 4)}-${Date.now()}`;
+    const key =
+      createProjectDto.key ||
+      `${nameProject}-${userId.slice(0, 4)}-${Date.now()}`;
 
     return this.uow.runInTransaction(async (manager) => {
       await this.usageLimitEnforcerService.checkProjectLimit(

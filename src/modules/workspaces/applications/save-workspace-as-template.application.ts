@@ -178,7 +178,7 @@ export class SaveWorkspaceAsTemplateApplicationImpl implements SaveWorkspaceAsTe
           title: t.title || 'Untitled',
           description: t.description,
           statusName: statusMap.get(t.statusId) || 'Todo',
-          priorityName: t.priorityId ? priorityMap.get(t.priorityId) || 'Medium' : 'Medium',
+          priorityName: t.priorityId ? priorityMap.get(t.priorityId) || undefined : undefined,
           estimateMinutes: t.estimateMinutes || undefined,
         });
       });

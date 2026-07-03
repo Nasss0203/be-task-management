@@ -16,7 +16,6 @@ import { NotificationType } from 'src/modules/notifications/domain/entities/noti
 import { type CreateNotificationService } from 'src/modules/notifications/interfaces/services/create.notifications.service.interface';
 import { NOTIFICATION_TYPES } from 'src/modules/notifications/interfaces/types';
 import { REALTIME_EVENTS } from 'src/modules/realtime/realtime.events';
-import { RoleName } from 'src/modules/role/domain/entities/role.entity';
 import { type FindTaskService } from 'src/modules/tasks/interfaces/services/find-task.service.interface';
 import { TASK_TYPES } from 'src/modules/tasks/interfaces/types';
 import { type FindMemberService } from 'src/modules/user_workspace/interfaces/services/find-user-workspace.service.interface';
@@ -85,16 +84,6 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
     }
 
     const isSelfAssign = input.userId === input.assignedBy;
-
-    const canAssignOther = [RoleName.OWNER, RoleName.ADMIN].includes(
-      actorMember.role_name,
-    );
-
-    if (!isSelfAssign && !canAssignOther) {
-      throw new ForbiddenException(
-        'You do not have permission to assign task to others',
-      );
-    }
 
     const result = await this.createTaskAssigneeService.assign(
       {

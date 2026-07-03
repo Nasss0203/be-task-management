@@ -86,27 +86,27 @@ export class DashboardTasksServiceImpl implements DashboardTasksService {
   }
 
   private getRemainingLabel(dueAt: Date | null, now: Date): string {
-    if (!dueAt) return 'ChÆ°a cÃ³ háº¡n';
+    if (!dueAt) return 'Chưa có hạn';
 
     const diffMs = dueAt.getTime() - now.getTime();
-    if (diffMs < 0) return 'QuÃ¡ háº¡n';
+    if (diffMs < 0) return 'Quá hạn';
 
     const hours = Math.ceil(diffMs / (1000 * 60 * 60));
-    if (hours <= 24) return `CÃ²n ${hours} giá»`;
+    if (hours <= 24) return `Còn ${hours} giờ`;
 
     const days = Math.ceil(hours / 24);
-    if (days === 1) return 'NgÃ y mai';
+    if (days === 1) return 'Ngày mai';
 
-    return `CÃ²n ${days} ngÃ y`;
+    return `Còn ${days} ngày`;
   }
 
   private buildTaskSubtitle(task: DashboardTaskResponseDto): string {
     if (task.dueAt) {
-      return `${task.projectName} / háº¡n ${this.formatTime(task.dueAt)}`;
+      return `${task.projectName} / hạn ${this.formatTime(task.dueAt)}`;
     }
 
     if (task.priorityName) {
-      return `${task.projectName} / Æ°u tiÃªn ${task.priorityName}`;
+      return `${task.projectName} / ưu tiên ${task.priorityName}`;
     }
 
     return `${task.workspaceName} / ${task.projectName}`;

@@ -1,7 +1,6 @@
 import {
   IsBoolean,
   IsEnum,
-  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
@@ -19,9 +18,6 @@ export class CreateProjectDto {
   @IsOptional()
   @IsEnum(ProjectVisibility)
   visibility?: ProjectVisibility;
-
-  created_by?: string;
-  key?: string;
 
   @IsOptional()
   @IsBoolean()
