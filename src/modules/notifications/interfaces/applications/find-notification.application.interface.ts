@@ -7,6 +7,8 @@ import { NotificationResponseDto } from '../../dto/response/notification.respons
 export interface FindMyNotificationsApplicationInput {
   userId: string;
 
+  category?: 'human' | 'system';
+
   unreadOnly?: boolean;
 
   sourceType?: NotificationSourceType;

@@ -95,6 +95,7 @@ type DeadlineRow = {
   title: string;
   type: WorkspaceOverviewDeadlineType;
   deadline: Date | string;
+  projectId: string;
 };
 
 @Injectable()
@@ -225,6 +226,7 @@ export class WorkspaceOverviewRepositoryImpl implements WorkspaceOverviewReposit
           deadline: this.toDate(row.deadline).toISOString(),
           daysRemaining,
           isUrgent: daysRemaining <= 3,
+          projectId: row.projectId,
         };
       }),
     };
@@ -619,14 +621,15 @@ export class WorkspaceOverviewRepositoryImpl implements WorkspaceOverviewReposit
     );
   }
 
-  private findUpcomingDeadlines(workspaceId: string): Promise<DeadlineRow[]> {
-    return this.dataSource.query<DeadlineRow[]>(
-      `
+	private findUpcomingDeadlines(workspaceId: string): Promise<DeadlineRow[]> {
+		return this.dataSource.query<DeadlineRow[]>(
+			`
         SELECT
           t.id AS "id",
           t.title AS "title",
           'task' AS "type",
-          t.due_at AS "deadline"
+          t.due_at AS "deadline",
+          p.id AS "projectId"
         FROM tasks t
         INNER JOIN task_statuses s
           ON s.id = t.status_id
@@ -646,7 +649,8 @@ export class WorkspaceOverviewRepositoryImpl implements WorkspaceOverviewReposit
           sp.id AS "id",
           sp.name AS "title",
           'sprint' AS "type",
-          sp.end_at AS "deadline"
+          sp.end_at AS "deadline",
+          p.id AS "projectId"
         FROM sprints sp
         INNER JOIN projects p ON p.id = sp.project_id
         WHERE sp.workspace_id = $1

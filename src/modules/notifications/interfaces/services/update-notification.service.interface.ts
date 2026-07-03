@@ -11,4 +11,6 @@ export interface UpdateNotificationService {
     input: UpdateInviteNotificationStatusServiceInput,
     manager?: EntityManager,
   ): Promise<number>;
+
+  markAllAsRead(userId: string, manager?: EntityManager): Promise<number>;
 }

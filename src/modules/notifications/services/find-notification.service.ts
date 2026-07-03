@@ -28,6 +28,7 @@ export class FindNotificationServiceImpl implements FindNotificationService {
 
     const repositoryInput: FindMyNotificationsRepositoryInput = {
       receiverId: input.userId,
+      category: input.category,
       unreadOnly: input.unreadOnly ?? false,
 
       sourceType: input.sourceType,

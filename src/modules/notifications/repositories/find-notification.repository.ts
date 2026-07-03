@@ -8,6 +8,7 @@ import { NotificationModel } from '../domain/models/notification.model';
 import {
   FindMyNotificationsRepositoryInput,
   FindNotificationRepository,
+  NotificationTaskLookupInput,
 } from '../interfaces/repositories/find-notification.repository.interface';
 import { NotificationMapper } from '../mapper/notifications.mapper';
 
@@ -41,6 +42,37 @@ export class FindNotificationRepositoryImpl implements FindNotificationRepositor
 
     if (input.unreadOnly) {
       qb.andWhere('notification.readAt IS NULL');
+    }
+
+    if (input.category === 'human') {
+      qb.andWhere('notification.type IN (:...humanTypes)', {
+        humanTypes: [
+          'WORKSPACE_INVITE',
+          'WORKSPACE_INVITE_ACCEPTED',
+          'WORKSPACE_MEMBER_JOINED',
+          'WORKSPACE_MEMBER_REMOVED',
+          'TASK_ASSIGNED',
+          'COMMENT_MENTION',
+          'COMMENT_REPLY',
+        ],
+      });
+    } else if (input.category === 'system') {
+      qb.andWhere('notification.type IN (:...systemTypes)', {
+        systemTypes: [
+          'SYSTEM_ANNOUNCEMENT',
+          'SYSTEM_MAINTENANCE',
+          'ACCOUNT_SECURITY',
+          'PASSWORD_CHANGED',
+          'EMAIL_VERIFIED',
+          'PROJECT_CREATED',
+          'PROJECT_UPDATED',
+          'TASK_UPDATED',
+          'TASK_DUE_SOON',
+          'TASK_OVERDUE',
+          'SPRINT_STARTED',
+          'SPRINT_COMPLETED',
+        ],
+      });
     }
 
     if (input.sourceType) {
@@ -81,7 +113,9 @@ export class FindNotificationRepositoryImpl implements FindNotificationRepositor
 
     const notifications = await qb.getMany();
 
-    return notifications.map(NotificationMapper.toModel);
+    return notifications.map((notification) =>
+      NotificationMapper.toModel(notification),
+    );
   }
 
   async countUnread(
@@ -97,5 +131,22 @@ export class FindNotificationRepositoryImpl implements FindNotificationRepositor
         archivedAt: IsNull(),
       },
     });
+  }
+
+  async existsByReceiverTypeAndTask(
+    input: NotificationTaskLookupInput,
+    manager?: EntityManager,
+  ): Promise<boolean> {
+    const repo = this.getRepo(manager);
+
+    const count = await repo.count({
+      where: {
+        receiverId: input.receiverId,
+        type: input.type,
+        taskId: input.taskId,
+      },
+    });
+
+    return count > 0;
   }
 }

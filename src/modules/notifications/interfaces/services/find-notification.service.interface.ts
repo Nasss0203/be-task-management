@@ -8,6 +8,8 @@ import { NotificationModel } from '../../domain/models/notification.model';
 export interface FindMyNotificationsServiceInput {
   userId: string;
 
+  category?: 'human' | 'system';
+
   unreadOnly?: boolean;
 
   sourceType?: NotificationSourceType;

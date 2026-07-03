@@ -11,6 +11,7 @@ import {
 } from '../interfaces/find-backlog-tasks-filters.interface';
 import {
   ParamTask,
+  TaskDueSoonLookup,
   TaskRestoreLookup,
   type FindTaskRepository,
 } from '../interfaces/repositories/find-task.repository.interface';
@@ -370,6 +371,68 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
       pageSize,
       totalPages: Math.ceil(total / pageSize),
     };
+  }
+
+  async findTasksDueSoon(
+    days: number,
+    manager?: EntityManager,
+  ): Promise<TaskDueSoonLookup[]> {
+    const normalizedDays = Number.isFinite(days)
+      ? Math.max(1, Math.floor(days))
+      : 3;
+    const now = new Date();
+    const dueBefore = new Date(
+      now.getTime() + normalizedDays * 24 * 60 * 60 * 1000,
+    );
+
+    const entities = await this.getRepo(manager)
+      .createQueryBuilder('task')
+      .innerJoinAndSelect('task.workspace', 'workspace')
+      .innerJoinAndSelect('task.project', 'project')
+      .leftJoinAndSelect('task.status', 'status')
+      .leftJoinAndSelect('task.assignees', 'assignees')
+      .leftJoinAndSelect('assignees.user', 'assigneeUser')
+      .where('task.due_at IS NOT NULL')
+      .andWhere('task.due_at >= :now', { now })
+      .andWhere('task.due_at <= :dueBefore', { dueBefore })
+      .andWhere('task.completed_at IS NULL')
+      .andWhere('task.deleted_at IS NULL')
+      .andWhere('workspace.deleted_at IS NULL')
+      .andWhere('project.deleted_at IS NULL')
+      .andWhere('status.is_done = false')
+      .andWhere('LOWER(status.name) NOT IN (:...doneStatusNames)', {
+        doneStatusNames: ['done', 'completed'],
+      })
+      .andWhere(
+        `EXISTS (
+          SELECT 1
+          FROM task_assignees due_assignees
+          WHERE due_assignees.task_id = task.id
+        )`,
+      )
+      .orderBy('task.due_at', 'ASC')
+      .addOrderBy('task.created_at', 'ASC')
+      .getMany();
+
+    return entities
+      .filter((entity) => entity.dueAt !== null)
+      .map((entity) => ({
+        id: entity.id,
+        workspaceId: entity.workspaceId,
+        workspaceName: entity.workspace?.name ?? null,
+        workspaceSlug: entity.workspace.slug,
+        projectId: entity.projectId,
+        projectName: entity.project?.name ?? null,
+        projectSeq: entity.projectSeq,
+        title: entity.title,
+        statusName: entity.status?.name ?? null,
+        dueAt: entity.dueAt as Date,
+        assignees:
+          entity.assignees?.map((assignee) => ({
+            userId: assignee.userId,
+            username: assignee.user?.username ?? null,
+          })) ?? [],
+      }));
   }
 
   async findByIds(
