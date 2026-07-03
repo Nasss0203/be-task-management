@@ -43,7 +43,7 @@ export interface FindTaskRepository {
     params: ParamTask,
     filters?: FindBacklogTasksFilters,
     manager?: EntityManager,
-  ): Promise<TaskModel[]>;
+  ): Promise<PaginatedTaskModels>;
   findAllTaskByWorkspace(
     workspaceId: string,
     manager?: EntityManager,

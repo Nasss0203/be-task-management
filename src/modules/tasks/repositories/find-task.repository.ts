@@ -1,12 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, In, Repository } from 'typeorm';
+import {
+  paginateQb,
+} from 'src/common/pagination/paginate-qb.util';
+import {
+  normalizePagination,
+  buildPaginationMeta,
+} from 'src/common/pagination/pagination.util';
+import { TaskAssignee } from 'src/modules/task_assignee/domain/entities/task_assignee.entity';
 import { Task } from '../domain/entities/task.entity';
 import { TaskModel } from '../domain/models/task.model';
 import {
   FindBacklogTasksFilters,
   PaginatedTaskModels,
-  PaginationQueryValue,
   TaskFilterValue,
 } from '../interfaces/find-backlog-tasks-filters.interface';
 import {
@@ -65,22 +72,31 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
       .filter(Boolean);
   }
 
-  private normalizePaginationValue(
-    value: PaginationQueryValue | undefined,
-    defaultValue: number,
-    maxValue?: number,
-  ): number {
-    const numericValue = Number(value);
+  private getAssigneeRepo(manager?: EntityManager): Repository<TaskAssignee> {
+    const em = manager ?? this.repo.manager;
+    return em.getRepository(TaskAssignee);
+  }
 
-    if (!Number.isInteger(numericValue) || numericValue < 1) {
-      return defaultValue;
+  private async loadAssigneesForTasks(
+    taskIds: string[],
+    manager?: EntityManager,
+  ): Promise<Map<string, TaskAssignee[]>> {
+    if (taskIds.length === 0) return new Map();
+
+    const assignees = await this.getAssigneeRepo(manager)
+      .createQueryBuilder('a')
+      .leftJoinAndSelect('a.user', 'user')
+      .leftJoinAndSelect('a.assignedByUser', 'assignedByUser')
+      .where('a.task_id IN (:...taskIds)', { taskIds })
+      .getMany();
+
+    const map = new Map<string, TaskAssignee[]>();
+    for (const assignee of assignees) {
+      const list = map.get(assignee.taskId) ?? [];
+      list.push(assignee);
+      map.set(assignee.taskId, list);
     }
-
-    if (maxValue !== undefined) {
-      return Math.min(numericValue, maxValue);
-    }
-
-    return numericValue;
+    return map;
   }
 
   private parseProjectSeqSearch(search: string): number | null {
@@ -98,6 +114,7 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
   private mapTasksWithPosition(
     entities: Task[],
     rawRows: Array<Record<string, unknown>>,
+    assigneesByTaskId?: Map<string, TaskAssignee[]>,
   ): TaskModel[] {
     const positionByTaskId = new Map<string, string | null>();
 
@@ -115,16 +132,20 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
       );
     }
 
-    return entities.map((entity) =>
-      TaskMapper.toModel(entity, positionByTaskId.get(entity.id) ?? null),
-    );
+    return entities.map((entity) => {
+      // Override entity.assignees with separately loaded assignees when provided
+      if (assigneesByTaskId) {
+        entity.assignees = assigneesByTaskId.get(entity.id) ?? [];
+      }
+      return TaskMapper.toModel(entity, positionByTaskId.get(entity.id) ?? null);
+    });
   }
 
   async findAllTask(
     params: ParamTask,
     filters?: FindBacklogTasksFilters,
     manager?: EntityManager,
-  ): Promise<TaskModel[]> {
+  ): Promise<PaginatedTaskModels> {
     const { projectId, workspaceId } = params;
 
     const search = filters?.search?.trim();
@@ -133,37 +154,22 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
     const priorityIds = this.normalizeFilterValues(filters?.priorityId);
     const positionContext = filters?.context;
     const positionContextId = filters?.contextId;
-    const shouldOrderByPosition = Boolean(positionContext && positionContextId);
+    const { page, pageSize, skip, take } = normalizePagination(
+      filters ?? {},
+      20,
+      100,
+    );
 
-    const qb = this.getRepo(manager)
+    // ── Base query: WHERE conditions only (no 1-N JOINs) ──────────────────────
+    const baseQb = this.getRepo(manager)
       .createQueryBuilder('task')
-      .leftJoinAndSelect('task.status', 'status')
-      .leftJoinAndSelect('task.priority', 'priority')
-      .leftJoinAndSelect('task.sprint', 'sprint')
-      .leftJoinAndSelect('task.assignees', 'assignees')
-      .leftJoinAndSelect('assignees.user', 'assigneeUser')
-      .leftJoinAndSelect('assignees.assignedByUser', 'assignedByUser')
       .where('task.project_id = :projectId', { projectId })
-      .andWhere('task.workspace_id = :workspaceId', { workspaceId });
-
-    if (positionContext && positionContextId) {
-      qb.leftJoin(
-        'task_positions',
-        'taskPosition',
-        `taskPosition.task_id = task.id
-          AND taskPosition.context = :positionContext
-          AND taskPosition.context_id = :positionContextId`,
-        {
-          positionContext,
-          positionContextId,
-        },
-      ).addSelect('taskPosition.position', 'taskPosition_position');
-    }
+      .andWhere('task.workspace_id = :workspaceId', { workspaceId })
+      .andWhere('task.deleted_at IS NULL');
 
     if (search) {
       const projectSeq = this.parseProjectSeqSearch(search);
-
-      qb.andWhere(
+      baseQb.andWhere(
         projectSeq === null
           ? 'task.title ILIKE :keyword'
           : '(task.title ILIKE :keyword OR task.project_seq = :projectSeq)',
@@ -175,7 +181,7 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
     }
 
     if (assigneeIds.length > 0) {
-      qb.andWhere(
+      baseQb.andWhere(
         `EXISTS (
           SELECT 1
           FROM task_assignees filter_assignees
@@ -187,25 +193,53 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
     }
 
     if (statusIds.length > 0) {
-      qb.andWhere('task.status_id IN (:...statusIds)', { statusIds });
+      baseQb.andWhere('task.status_id IN (:...statusIds)', { statusIds });
     }
 
     if (priorityIds.length > 0) {
-      qb.andWhere('task.priority_id IN (:...priorityIds)', { priorityIds });
+      baseQb.andWhere('task.priority_id IN (:...priorityIds)', { priorityIds });
     }
 
-    if (shouldOrderByPosition) {
-      const { entities, raw } = await qb
-        .orderBy('taskPosition.position', 'ASC', 'NULLS LAST')
-        .addOrderBy('task.createdAt', 'DESC')
-        .getRawAndEntities();
+    // ── Paginate: COUNT on baseQb, data query adds 1-1 JOINs only ─────────────
+    const { entities, raw, total } = await paginateQb(
+      baseQb,
+      (qb) => {
+        const dataQb = qb
+          .leftJoinAndSelect('task.status', 'status')
+          .leftJoinAndSelect('task.priority', 'priority')
+          .leftJoinAndSelect('task.sprint', 'sprint');
 
-      return this.mapTasksWithPosition(entities, raw);
-    }
+        if (positionContext && positionContextId) {
+          dataQb
+            .leftJoin(
+              'task_positions',
+              'taskPosition',
+              `taskPosition.task_id = task.id
+                AND taskPosition.context = :positionContext
+                AND taskPosition.context_id = :positionContextId`,
+              { positionContext, positionContextId },
+            )
+            .addSelect('taskPosition.position', 'taskPosition_position')
+            .orderBy('taskPosition.position', 'ASC', 'NULLS LAST')
+            .addOrderBy('task.createdAt', 'DESC');
+        } else {
+          dataQb.orderBy('task.createdAt', 'DESC');
+        }
 
-    const entities = await qb.orderBy('task.createdAt', 'DESC').getMany();
+        return dataQb;
+      },
+      skip,
+      take,
+    );
 
-    return entities.map((entity) => TaskMapper.toModel(entity));
+    // ── Load assignees in one separate IN query (avoids row multiplication) ────
+    const taskIds = entities.map((t) => t.id);
+    const assigneesByTaskId = await this.loadAssigneesForTasks(taskIds, manager);
+
+    return {
+      data: this.mapTasksWithPosition(entities, raw, assigneesByTaskId),
+      ...buildPaginationMeta(page, pageSize, total),
+    };
   }
 
   async findAllTaskByWorkspace(
@@ -292,29 +326,16 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
     const assigneeIds = this.normalizeFilterValues(filters?.assigneeId);
     const statusIds = this.normalizeFilterValues(filters?.statusId);
     const priorityIds = this.normalizeFilterValues(filters?.priorityId);
-    const page = this.normalizePaginationValue(filters?.page, 1);
-    const pageSize = this.normalizePaginationValue(filters?.pageSize, 10, 100);
+    const { page, pageSize, skip, take } = normalizePagination(
+      filters ?? {},
+      10,
+      100,
+    );
 
-    const qb = this.getRepo(manager)
+    // ── Base query: WHERE conditions only (no 1-N JOINs) ──────────────────────
+    // Used for COUNT so PostgreSQL doesn't inflate row count from JOINed relations.
+    const baseQb = this.getRepo(manager)
       .createQueryBuilder('task')
-      .leftJoin(
-        'task_positions',
-        'taskPosition',
-        `taskPosition.task_id = task.id
-          AND taskPosition.context = :positionContext
-          AND taskPosition.context_id = :positionContextId`,
-        {
-          positionContext: 'backlog',
-          positionContextId: projectId,
-        },
-      )
-      .addSelect('taskPosition.position', 'taskPosition_position')
-      .leftJoinAndSelect('task.status', 'status')
-      .leftJoinAndSelect('task.priority', 'priority')
-      .leftJoinAndSelect('task.sprint', 'sprint')
-      .leftJoinAndSelect('task.assignees', 'assignees')
-      .leftJoinAndSelect('assignees.user', 'assigneeUser')
-      .leftJoinAndSelect('assignees.assignedByUser', 'assignedByUser')
       .where('task.project_id = :projectId', { projectId })
       .andWhere('task.workspace_id = :workspaceId', { workspaceId })
       .andWhere('task.sprint_id IS NULL')
@@ -323,8 +344,7 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
 
     if (search) {
       const projectSeq = this.parseProjectSeqSearch(search);
-
-      qb.andWhere(
+      baseQb.andWhere(
         projectSeq === null
           ? 'task.title ILIKE :keyword'
           : '(task.title ILIKE :keyword OR task.project_seq = :projectSeq)',
@@ -336,7 +356,8 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
     }
 
     if (assigneeIds.length > 0) {
-      qb.andWhere(
+      // EXISTS subquery keeps baseQb row-safe for COUNT
+      baseQb.andWhere(
         `EXISTS (
           SELECT 1
           FROM task_assignees filter_assignees
@@ -348,28 +369,43 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
     }
 
     if (statusIds.length > 0) {
-      qb.andWhere('task.status_id IN (:...statusIds)', { statusIds });
+      baseQb.andWhere('task.status_id IN (:...statusIds)', { statusIds });
     }
 
     if (priorityIds.length > 0) {
-      qb.andWhere('task.priority_id IN (:...priorityIds)', { priorityIds });
+      baseQb.andWhere('task.priority_id IN (:...priorityIds)', { priorityIds });
     }
 
-    const total = await qb.clone().getCount();
+    // ── Paginate: COUNT on baseQb, data query adds 1-1 JOINs only ─────────────
+    const { entities, raw, total } = await paginateQb(
+      baseQb,
+      (qb) =>
+        qb
+          .leftJoin(
+            'task_positions',
+            'taskPosition',
+            `taskPosition.task_id = task.id
+              AND taskPosition.context = :positionContext
+              AND taskPosition.context_id = :positionContextId`,
+            { positionContext: 'backlog', positionContextId: projectId },
+          )
+          .addSelect('taskPosition.position', 'taskPosition_position')
+          .leftJoinAndSelect('task.status', 'status')
+          .leftJoinAndSelect('task.priority', 'priority')
+          .leftJoinAndSelect('task.sprint', 'sprint')
+          .orderBy('taskPosition.position', 'ASC', 'NULLS LAST')
+          .addOrderBy('task.createdAt', 'DESC'),
+      skip,
+      take,
+    );
 
-    const { entities, raw } = await qb
-      .orderBy('taskPosition.position', 'ASC', 'NULLS LAST')
-      .addOrderBy('task.createdAt', 'DESC')
-      .skip((page - 1) * pageSize)
-      .take(pageSize)
-      .getRawAndEntities();
+    // ── Load assignees in one separate IN query (avoids row multiplication) ────
+    const taskIds = entities.map((t) => t.id);
+    const assigneesByTaskId = await this.loadAssigneesForTasks(taskIds, manager);
 
     return {
-      data: this.mapTasksWithPosition(entities, raw),
-      total,
-      page,
-      pageSize,
-      totalPages: Math.ceil(total / pageSize),
+      data: this.mapTasksWithPosition(entities, raw, assigneesByTaskId),
+      ...buildPaginationMeta(page, pageSize, total),
     };
   }
 

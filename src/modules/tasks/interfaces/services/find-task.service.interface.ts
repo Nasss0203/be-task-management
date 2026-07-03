@@ -12,7 +12,7 @@ export interface FindTaskService {
     workspaceId: string,
     filters?: FindBacklogTasksFilters,
     manager?: EntityManager,
-  ): Promise<TaskModel[]>;
+  ): Promise<PaginatedTaskModels>;
 
   findAllTaskByWorkspace(
     workspaceId: string,

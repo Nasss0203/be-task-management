@@ -83,7 +83,7 @@ export class TasksController {
     @Param('workspaceId') workspaceId: string,
     @Query(new ValidationPipe({ transform: true }))
     query: FindBacklogTasksQueryDto,
-  ): Promise<TaskResponseDto[]> {
+  ): Promise<PaginatedTaskResponseDto> {
     return await this.app.findAllTask(projectId, workspaceId, query);
   }
 

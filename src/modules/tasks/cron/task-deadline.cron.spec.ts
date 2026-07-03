@@ -61,8 +61,8 @@ describe('TaskDeadlineCron', () => {
     };
 
     cron = new TaskDeadlineCron(
-      findTaskRepository as FindTaskRepository,
-      findNotificationRepository as FindNotificationRepository,
+      findTaskRepository as unknown as FindTaskRepository,
+      findNotificationRepository as unknown as FindNotificationRepository,
       createNotificationService as CreateNotificationService,
     );
   });
