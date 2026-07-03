@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { RoleName } from 'src/modules/role/domain/entities/role.entity';
 import {
   ActivityAction,
   ActivityEntityType,
@@ -91,6 +92,16 @@ export class DeleteTaskAssigneeApplicationImpl implements DeleteTaskAssigneeAppl
     }
 
     const isSelfUnassign = input.userId === input.deletedBy;
+
+    if (!isSelfUnassign && actorMember.role_name === RoleName.MEMBER) {
+      throw new ForbiddenException(
+        'You do not have permission to unassign tasks for other users',
+      );
+    }
+
+    if (actorMember.role_name === RoleName.VIEWER) {
+      throw new ForbiddenException('Viewers cannot unassign tasks');
+    }
 
     await this.deleteTaskAssigneeService.unassign({
       taskId: input.taskId,

@@ -152,6 +152,17 @@ export class AdminUserRepositoryImpl implements AdminUserRepository {
     );
   }
 
+  async updateSystemRole(userId: string, role: SystemRole): Promise<void> {
+    await this.userRepository.update(
+      {
+        id: userId,
+      },
+      {
+        systemRole: role,
+      },
+    );
+  }
+
   private async getUsers(query: AdminFindAllUserQueryDto): Promise<UserRaw[]> {
     const qb = this.userRepository
       .createQueryBuilder('u')

@@ -24,4 +24,5 @@ export interface AdminUserRepository {
 
   setActive(userId: string, isActive: boolean): Promise<void>;
 
+  updateSystemRole(userId: string, role: SystemRole): Promise<void>;
 }

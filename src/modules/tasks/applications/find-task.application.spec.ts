@@ -31,9 +31,21 @@ describe('FindTaskApplicationImpl', () => {
 
   describe('findAllTask', () => {
     it('should return mapped tasks', async () => {
-      mockFindTaskService.findAllTask.mockResolvedValue([{ id: '1', title: 'Task 1', assignees: [] }]);
+      mockFindTaskService.findAllTask.mockResolvedValue({
+        data: [{ id: '1', title: 'Task 1', assignees: [] }],
+        total: 1,
+        page: 1,
+        pageSize: 10,
+        totalPages: 1,
+      });
       const result = await app.findAllTask('proj-1', 'ws-1');
-      expect(result).toEqual([{ id: '1', title: 'Task 1', assignees: [] }]);
+      expect(result).toEqual({
+        data: [{ id: '1', title: 'Task 1', assignees: [] }],
+        total: 1,
+        page: 1,
+        pageSize: 10,
+        totalPages: 1,
+      });
     });
   });
 

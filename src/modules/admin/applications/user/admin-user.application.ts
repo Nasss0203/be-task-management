@@ -42,4 +42,13 @@ export class AdminUserApplicationImpl implements AdminUserApplication {
     return this.service.unlockUser(userId, actorId, actorRole);
   }
 
+  updateSystemRole(
+    userId: string,
+    dto: { role: SystemRole },
+    actorId: string,
+    actorRole: SystemRole,
+  ): Promise<void> {
+    return this.service.updateSystemRole(userId, dto.role, actorId, actorRole);
+  }
+
 }

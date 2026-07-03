@@ -34,9 +34,6 @@ describe('UpdateTaskApplicationImpl', () => {
     }).compile();
 
     app = module.get<UpdateTaskApplicationImpl>(UpdateTaskApplicationImpl);
-    
-    // Mock private assertCanUpdateStatusOrPriority to just pass
-    jest.spyOn(app as any, 'assertCanUpdateStatusOrPriority').mockResolvedValue(undefined);
   });
 
   it('should be defined', () => {

@@ -24,4 +24,10 @@ export interface AdminUserApplication {
     actorRole: SystemRole,
   ): Promise<void>;
 
+  updateSystemRole(
+    userId: string,
+    dto: { role: SystemRole },
+    actorId: string,
+    actorRole: SystemRole,
+  ): Promise<void>;
 }

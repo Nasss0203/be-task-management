@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { RoleName } from 'src/modules/role/domain/entities/role.entity';
 import {
   ActivityAction,
   ActivityEntityType,
@@ -84,6 +85,16 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
     }
 
     const isSelfAssign = input.userId === input.assignedBy;
+
+    if (!isSelfAssign && actorMember.role_name === RoleName.MEMBER) {
+      throw new ForbiddenException(
+        'You do not have permission to assign tasks to other users',
+      );
+    }
+
+    if (actorMember.role_name === RoleName.VIEWER) {
+      throw new ForbiddenException('Viewers cannot assign tasks');
+    }
 
     const result = await this.createTaskAssigneeService.assign(
       {

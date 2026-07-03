@@ -110,6 +110,24 @@ export class AdminUserServiceImpl implements AdminUserService {
     await this.repository.setActive(userId, true);
   }
 
+  async updateSystemRole(
+    userId: string,
+    role: SystemRole,
+    actorId: string,
+    actorRole: SystemRole,
+  ): Promise<void> {
+    if (actorRole !== SystemRole.SUPER_ADMIN) {
+      throw new ForbiddenException('Only SUPER_ADMIN can update user system roles');
+    }
+
+    const target = await this.getTargetUser(userId);
+    if (target.id === actorId) {
+      throw new ForbiddenException('You cannot change your own system role');
+    }
+
+    await this.repository.updateSystemRole(userId, role);
+  }
+
   private async getTargetUser(userId: string): Promise<User> {
     const target = await this.repository.findById(userId);
 

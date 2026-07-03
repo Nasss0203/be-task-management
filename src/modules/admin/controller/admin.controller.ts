@@ -224,4 +224,20 @@ export class AdminController {
     );
   }
 
+  @Patch('users/:userId/system-role')
+  @WriteRateLimit()
+  @ResponseMessage('Update user system role successfully')
+  updateUserSystemRole(
+    @Param('userId') userId: string,
+    @Body() dto: { role: SystemRole },
+    @Auth() auth: IAuth,
+  ): Promise<void> {
+    return this.adminUserApplication.updateSystemRole(
+      userId,
+      dto,
+      auth.id,
+      auth.systemRole,
+    );
+  }
+
 }

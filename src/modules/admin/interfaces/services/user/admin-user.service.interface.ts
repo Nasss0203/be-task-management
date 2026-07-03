@@ -24,4 +24,10 @@ export interface AdminUserService {
     actorRole: SystemRole,
   ): Promise<void>;
 
+  updateSystemRole(
+    userId: string,
+    role: SystemRole,
+    actorId: string,
+    actorRole: SystemRole,
+  ): Promise<void>;
 }

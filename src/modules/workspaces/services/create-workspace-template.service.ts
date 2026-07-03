@@ -543,10 +543,11 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
         }
 
         // If it's a database view, map the board ID
-        if (blockType === PageBlockType.DATABASE_VIEW && rawDataConfig?.boardTemplateKey) {
-          const board = boardMap.get(rawDataConfig.boardTemplateKey);
+        const boardTemplateKey = templateContent.boardTemplateKey;
+        if (blockType === PageBlockType.DATABASE_VIEW && boardTemplateKey) {
+          const board = boardMap.get(boardTemplateKey);
           if (!board) {
-            throw new BadRequestException(`Board template key ${rawDataConfig.boardTemplateKey} not found`);
+            throw new BadRequestException(`Board template key ${boardTemplateKey} not found`);
           }
           rawDataConfig = {
             ...rawDataConfig,
@@ -746,8 +747,8 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
         : null;
 
       if (task.priorityName && !priority) {
-        console.warn(
-          `Priority ${task.priorityName} not found for project template key ${task.projectTemplateKey}. Defaulting to null.`,
+        throw new BadRequestException(
+          `Priority ${task.priorityName} not found for project template key ${task.projectTemplateKey}`,
         );
       }
 

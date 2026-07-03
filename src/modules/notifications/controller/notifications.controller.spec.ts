@@ -10,12 +10,17 @@ describe('NotificationsController', () => {
     countUnread: jest.fn(),
   };
 
+  const mockUpdateNotificationService = {
+    markAllAsRead: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       controllers: [NotificationsController],
       providers: [
         { provide: NOTIFICATION_TYPES.applications.FindNotificationApplication, useValue: mockApp },
+        { provide: NOTIFICATION_TYPES.services.UpdateNotificationService, useValue: mockUpdateNotificationService },
       ],
     }).compile();
 
