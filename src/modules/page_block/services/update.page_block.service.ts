@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { PageBlockModel } from '../domain/models/page_block.model';
 import { ReorderPageBlockDto } from '../dto/reorder-page_block.dto';
@@ -21,6 +21,10 @@ export class UpdatePageBlockServiceImpl implements UpdatePageBlockService {
     updatePageBlockDto: UpdatePageBlockDto,
     manager: EntityManager,
   ): Promise<PageBlockModel> {
+    if (!updatePageBlockDto.id) {
+      throw new BadRequestException('Page block id is required');
+    }
+
     const payload: UpdatePageBlockInput = {
       id: updatePageBlockDto.id,
       ...(updatePageBlockDto.title !== undefined && {

@@ -11,7 +11,6 @@ import {
 } from 'src/modules/activity/domain/entities/activity.entity';
 import { type CreateActivityService } from 'src/modules/activity/interfaces/services/create-activity.service.interface';
 import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
-import { RoleName } from 'src/modules/role/domain/entities/role.entity';
 import { type FindTaskService } from 'src/modules/tasks/interfaces/services/find-task.service.interface';
 import { TASK_TYPES } from 'src/modules/tasks/interfaces/types';
 import { type FindMemberService } from 'src/modules/user_workspace/interfaces/services/find-user-workspace.service.interface';
@@ -92,16 +91,6 @@ export class DeleteTaskAssigneeApplicationImpl implements DeleteTaskAssigneeAppl
     }
 
     const isSelfUnassign = input.userId === input.deletedBy;
-
-    const canUnassignOther = [RoleName.OWNER, RoleName.ADMIN].includes(
-      actorMember.role_name,
-    );
-
-    if (!isSelfUnassign && !canUnassignOther) {
-      throw new ForbiddenException(
-        'You do not have permission to unassign task from others',
-      );
-    }
 
     await this.deleteTaskAssigneeService.unassign({
       taskId: input.taskId,

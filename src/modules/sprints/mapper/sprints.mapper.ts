@@ -22,7 +22,7 @@ export class SprintsMapper {
       entity.deletedAt ?? null,
       entity.deletedBy ?? null,
 
-      entity.tasks?.map(TaskMapper.toModel) ?? [],
+      entity.tasks?.map((task) => TaskMapper.toModel(task)) ?? [],
     );
   }
 

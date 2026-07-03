@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { JwtModule } from '@nestjs/jwt';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -53,6 +54,7 @@ import { WorkspaceInvitesModule } from './modules/workspace_invites/workspace_in
 import { WorkspaceTemplatesModule } from './modules/workspace_templates/workspace_templates.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { SprintReportsModule } from './modules/sprint_reports/sprint_reports.module';
+import { TaskPositionModule } from './modules/task_position/task_position.module';
 
 @Module({
   imports: [
@@ -60,6 +62,7 @@ import { SprintReportsModule } from './modules/sprint_reports/sprint_reports.mod
       isGlobal: true,
     }),
     EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot({
       throttlers: [
         {
@@ -118,6 +121,7 @@ import { SprintReportsModule } from './modules/sprint_reports/sprint_reports.mod
     WorkspaceFeatureSettingsModule,
     WorkspaceTemplatesModule,
     SprintReportsModule,
+    TaskPositionModule,
   ],
   controllers: [AppController],
   providers: [

@@ -9,7 +9,7 @@ export interface FindTaskApplication {
     projectId: string,
     workspaceId: string,
     filters?: FindBacklogTasksFilters,
-  ): Promise<TaskResponseDto[]>;
+  ): Promise<PaginatedTaskResponseDto>;
 
   findOneTask(taskId: string): Promise<TaskResponseDto | null>;
 

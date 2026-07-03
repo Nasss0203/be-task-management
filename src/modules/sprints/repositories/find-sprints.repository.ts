@@ -147,6 +147,16 @@ export class FindSprintRepositoryImpl implements FindSprintRepository {
     const qb = repo
       .createQueryBuilder('sprint')
       .leftJoinAndSelect('sprint.tasks', 'task', 'task.deleted_at IS NULL')
+      .leftJoin(
+        'task_positions',
+        'taskPosition',
+        `taskPosition.task_id = task.id
+          AND taskPosition.context = :taskPositionContext
+          AND taskPosition.context_id = sprint.id`,
+        {
+          taskPositionContext: 'sprint',
+        },
+      )
       .leftJoinAndSelect('task.assignees', 'assignees')
       .leftJoinAndSelect('assignees.user', 'user')
       .leftJoinAndSelect('assignees.assignedByUser', 'assignedByUser')
@@ -191,6 +201,8 @@ export class FindSprintRepositoryImpl implements FindSprintRepository {
     const sprints = await qb
       .orderBy('sprint.start_at', 'ASC')
       .addOrderBy('sprint.created_at', 'ASC')
+      .addOrderBy('taskPosition.position', 'ASC', 'NULLS LAST')
+      .addOrderBy('task.createdAt', 'DESC')
       .getMany();
 
     return sprints.map(SprintsMapper.toModel);
@@ -202,23 +214,31 @@ export class FindSprintRepositoryImpl implements FindSprintRepository {
     sprintId: string,
     manager?: EntityManager,
   ): Promise<SprintsModel | null> {
-    const sprint = await this.getRepo(manager).findOne({
-      where: {
-        workspaceId,
-        projectId,
-        id: sprintId,
-      },
-      relations: {
-        tasks: {
-          assignees: {
-            user: true,
-            assignedByUser: true,
-          },
-          status: true,
-          priority: true,
+    const sprint = await this.getRepo(manager)
+      .createQueryBuilder('sprint')
+      .leftJoinAndSelect('sprint.tasks', 'task', 'task.deleted_at IS NULL')
+      .leftJoin(
+        'task_positions',
+        'taskPosition',
+        `taskPosition.task_id = task.id
+          AND taskPosition.context = :taskPositionContext
+          AND taskPosition.context_id = sprint.id`,
+        {
+          taskPositionContext: 'sprint',
         },
-      },
-    });
+      )
+      .leftJoinAndSelect('task.assignees', 'assignees')
+      .leftJoinAndSelect('assignees.user', 'user')
+      .leftJoinAndSelect('assignees.assignedByUser', 'assignedByUser')
+      .leftJoinAndSelect('task.status', 'status')
+      .leftJoinAndSelect('task.priority', 'priority')
+      .where('sprint.workspace_id = :workspaceId', { workspaceId })
+      .andWhere('sprint.project_id = :projectId', { projectId })
+      .andWhere('sprint.id = :sprintId', { sprintId })
+      .andWhere('sprint.deleted_at IS NULL')
+      .orderBy('taskPosition.position', 'ASC', 'NULLS LAST')
+      .addOrderBy('task.createdAt', 'DESC')
+      .getOne();
 
     if (!sprint) {
       return null;

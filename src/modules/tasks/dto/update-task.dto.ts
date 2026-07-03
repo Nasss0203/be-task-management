@@ -19,7 +19,7 @@ export class UpdateTaskDto {
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  title?: string;
+  title?: string | null;
 
   @IsOptional()
   @IsString()

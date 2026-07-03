@@ -7,7 +7,7 @@ import {
 import { SaveTaskInput } from '../interfaces/repositories/create-task.repository.interface';
 
 export class TaskMapper {
-  static toModel(entity: Task): TaskModel {
+  static toModel(entity: Task, position: string | null = null): TaskModel {
     const assignees: TaskAssigneeModel[] =
       entity.assignees?.map((item) => ({
         userId: item.userId,
@@ -45,6 +45,7 @@ export class TaskMapper {
       entity.updatedAt,
       entity.deletedAt ?? null,
       entity.deletedBy ?? null,
+      position,
     );
   }
 
@@ -145,6 +146,7 @@ export class TaskMapper {
       completedAt: model.completedAt,
 
       estimateMinutes: model.estimateMinutes,
+      position: model.position,
 
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,

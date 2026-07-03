@@ -2,10 +2,12 @@ import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { ActivityModule } from '../activity/activity.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { PermissionModule } from '../permission/permission.module';
 import { SprintsModule } from '../sprints/sprints.module';
 import { TaskAssigneeModule } from '../task_assignee/task_assignee.module';
 import { TaskCommnentModule } from '../task_commnent/task_commnent.module';
+import { TaskPositionModule } from '../task_position/task_position.module';
 import { TaskPriorityModule } from '../task_priority/task_priority.module';
 import { TaskStatusModule } from '../task_status/task_status.module';
 import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
@@ -18,6 +20,7 @@ import { MoveTaskSprintApplicationImpl } from './applications/move-task-sprint.a
 import { RemoveTaskFromSprintApplicationImpl } from './applications/remove-task-sprint.application';
 import { UpdateTaskApplicationImpl } from './applications/update-task.application';
 import { TasksController } from './controller/tasks.controller';
+import { TaskDeadlineCron } from './cron/task-deadline.cron';
 import { Task } from './domain/entities/task.entity';
 import { TASK_TYPES } from './interfaces/types';
 import { CreateTaskRepositoryImpl } from './repositories/create.tasks.repository';
@@ -43,8 +46,10 @@ import { UpdateTaskServiceImpl } from './services/update-task.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Task]),
+    NotificationsModule,
     TaskStatusModule,
     TaskPriorityModule,
+    TaskPositionModule,
     PermissionModule,
     UserWorkspacesModule,
     ActivityModule,
@@ -166,6 +171,7 @@ import { UpdateTaskServiceImpl } from './services/update-task.service';
       provide: WORKSPACE_TYPES.uow.UnitOfWork,
       useClass: TypeOrmUnitOfWork,
     },
+    TaskDeadlineCron,
   ],
   exports: [
     TASK_TYPES.services.CreateTaskService,

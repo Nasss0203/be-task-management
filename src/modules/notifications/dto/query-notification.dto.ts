@@ -6,6 +6,10 @@ import {
 
 export class QueryNotificationDto {
   @IsOptional()
+  @IsString()
+  category?: 'human' | 'system';
+
+  @IsOptional()
   @IsBooleanString()
   unreadOnly?: string;
 

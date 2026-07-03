@@ -9,7 +9,7 @@ export class TaskModel {
     public readonly workspaceId: string,
     public readonly projectId: string,
     public readonly projectSeq: number | null,
-    public readonly title: string,
+    public readonly title: string | null,
     public readonly statusId: string,
     public readonly createdBy: string,
 
@@ -35,5 +35,6 @@ export class TaskModel {
     public readonly updatedAt?: Date,
     public readonly deletedAt?: Date | null,
     public readonly deletedBy?: string | null,
+    public readonly position: string | null = null,
   ) {}
 }

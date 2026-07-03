@@ -23,7 +23,7 @@ export class CreateProjectApplicationImpl implements CreateProjectApplication {
   ) {}
 
   async create(
-    createProjectDto: CreateProjectDto,
+    createProjectDto: CreateProjectDto & { created_by: string },
   ): Promise<ProjectResponseDto> {
     const model = await this.service.create(createProjectDto);
 
@@ -45,7 +45,7 @@ export class CreateProjectApplicationImpl implements CreateProjectApplication {
   }
 
   async createProjectWithPageBlock(
-    createProjectDto: CreateProjectDto,
+    createProjectDto: CreateProjectDto & { created_by: string },
   ): Promise<ProjectResponseDto> {
     const model =
       await this.service.createProjectWithPageBlock(createProjectDto);

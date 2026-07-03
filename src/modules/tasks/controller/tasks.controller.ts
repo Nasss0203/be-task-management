@@ -75,7 +75,7 @@ export class TasksController {
   ) { }
 
   @Get('/workspace/:workspaceId/project/:projectId')
-  // @WorkspaceContext({ source: 'param', key: 'workspaceId' })
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.TASK_READ)
   @ResponseMessage('Find all task')
   async findAllByTask(
@@ -83,7 +83,7 @@ export class TasksController {
     @Param('workspaceId') workspaceId: string,
     @Query(new ValidationPipe({ transform: true }))
     query: FindBacklogTasksQueryDto,
-  ): Promise<TaskResponseDto[]> {
+  ): Promise<PaginatedTaskResponseDto> {
     return await this.app.findAllTask(projectId, workspaceId, query);
   }
 
@@ -140,7 +140,6 @@ export class TasksController {
     @Body() dto: MoveTaskSprintDto,
     @Auth() auth: IAuth,
   ): Promise<TaskResponseDto> {
-    console.log(dto);
     return this.moveTaskSprintApplication.move({
       taskId: id,
       sprintId: dto.sprintId ?? null,
@@ -169,7 +168,8 @@ export class TasksController {
 
   @Patch(':taskId/restore')
   @StrictWriteRateLimit()
-  @RequirePermissions(PERMISSIONS.TASK_DELETE)
+  @WorkspaceContext({ source: 'query', key: 'workspaceId' })
+  @RequirePermissions(PERMISSIONS.TASK_UPDATE)
   async restoreTask(
     @Param('taskId') taskId: string,
     @Query('workspaceId') workspaceId: string,
@@ -187,6 +187,7 @@ export class TasksController {
   }
 
   @Get('trash')
+  @WorkspaceContext({ source: 'query', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.TASK_READ)
   async findDeletedTasks(
     @Query('workspaceId') workspaceId: string,

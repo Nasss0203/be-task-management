@@ -26,9 +26,11 @@ import { Project } from 'src/modules/projects/domain/entities/project.entity';
 import { RefreshToken } from 'src/modules/refresh_token/entities/refresh_token.entity';
 import { Role } from 'src/modules/role/domain/entities/role.entity';
 import { RolePermission } from 'src/modules/role_permission/domain/entities/role_permission.entity';
+import { SprintReport } from 'src/modules/sprint_reports/domain/entities/sprint-report.entity';
 import { Sprint } from 'src/modules/sprints/domain/entities/sprint.entity';
 import { TaskAssignee } from 'src/modules/task_assignee/domain/entities/task_assignee.entity';
 import { TaskComment } from 'src/modules/task_commnent/domain/entities/task_commnent.entity';
+import { TaskPosition } from 'src/modules/task_position/domain/entities/task_position.entity';
 import { TaskPriority } from 'src/modules/task_priority/domain/entities/task_priority.entity';
 import { TaskStatus } from 'src/modules/task_status/domain/entities/task_status.entity';
 import { Task } from 'src/modules/tasks/domain/entities/task.entity';
@@ -39,12 +41,11 @@ import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_w
 import { User } from 'src/modules/users/domain/entities/user.entity';
 import { WorkspaceFeatureSetting } from 'src/modules/workspace_feature_settings/domain/entities/workspace_feature_setting.entity';
 import { WorkspaceInvite } from 'src/modules/workspace_invites/domain/entities/workspace_invite.entity';
-import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 import { WorkspaceTemplate } from 'src/modules/workspace_templates/domain/entities/workspace_template.entity';
-import { SprintReport } from 'src/modules/sprint_reports/domain/entities/sprint-report.entity';
+import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 
 @Module({
-  imports: [ 
+  imports: [
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
@@ -99,10 +100,11 @@ import { SprintReport } from 'src/modules/sprint_reports/domain/entities/sprint-
           PlanFeature,
           WorkspaceFeatureSetting,
           WorkspaceTemplate,
-          SprintReport
+          SprintReport,
+          TaskPosition,
         ],
       }),
     }),
   ],
 })
-export class DatabaseModule { }
+export class DatabaseModule {}

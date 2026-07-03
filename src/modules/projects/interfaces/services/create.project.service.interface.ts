@@ -4,12 +4,12 @@ import { CreateProjectDto } from '../../dto/create-project.dto';
 
 export interface CreateProjectService {
   create(
-    createProjectDto: CreateProjectDto,
+    createProjectDto: CreateProjectDto & { created_by?: string; key?: string },
     manager?: EntityManager,
   ): Promise<ProjectModel>;
 
   createProjectWithPageBlock(
-    createProjectDto: CreateProjectDto,
+    createProjectDto: CreateProjectDto & { created_by?: string; key?: string },
     manager?: EntityManager,
   ): Promise<ProjectModel>;
 }

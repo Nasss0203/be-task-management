@@ -11,4 +11,6 @@ export interface UpdateNotificationRepository {
     input: UpdateInviteNotificationStatusRepositoryInput,
     manager?: EntityManager,
   ): Promise<number>;
+
+  markAllAsRead(receiverId: string, manager?: EntityManager): Promise<number>;
 }

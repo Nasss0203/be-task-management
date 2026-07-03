@@ -121,6 +121,7 @@ export class WorkspaceOverviewDeadlineDto {
   deadline: string;
   daysRemaining: number;
   isUrgent: boolean;
+  projectId: string;
 }
 
 export class GetWorkspaceOverviewResponseDto {

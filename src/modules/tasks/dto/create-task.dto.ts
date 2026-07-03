@@ -2,13 +2,27 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsDate,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
   IsUUID,
   MaxLength,
   Min,
+  ValidateNested,
 } from 'class-validator';
+import {
+  TASK_POSITION_CONTEXTS,
+  type TaskPositionContext,
+} from 'src/modules/task_position/constants/task-position-context.constant';
+
+export class CreateTaskPositionContextDto {
+  @IsIn(TASK_POSITION_CONTEXTS)
+  context: TaskPositionContext;
+
+  @IsUUID()
+  contextId: string;
+}
 
 export class CreateTaskDto {
   @IsUUID()
@@ -21,9 +35,10 @@ export class CreateTaskDto {
   @IsUUID()
   sprintId?: string | null;
 
+  @IsOptional()
   @IsString()
   @MaxLength(255)
-  title: string;
+  title?: string | null;
 
   @IsOptional()
   @IsString()
@@ -67,4 +82,9 @@ export class CreateTaskDto {
   @IsString()
   @MaxLength(5000)
   initialComment?: string | null;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateTaskPositionContextDto)
+  positionContext?: CreateTaskPositionContextDto | null;
 }

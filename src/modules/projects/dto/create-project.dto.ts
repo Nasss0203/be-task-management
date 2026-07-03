@@ -1,19 +1,29 @@
+import {
+  IsBoolean,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 import { BoardViewType } from 'src/modules/boards/domain/entities/board.entity';
 import { ProjectVisibility } from '../domain/entities/project.entity';
 
 export class CreateProjectDto {
+  @IsUUID()
   workspace_id: string;
 
+  @IsString()
   name: string;
 
-  key: string;
-
+  @IsOptional()
+  @IsEnum(ProjectVisibility)
   visibility?: ProjectVisibility;
 
-  task_seq?: number;
-
+  @IsOptional()
+  @IsBoolean()
   create_default_board?: boolean;
 
+  @IsOptional()
+  @IsEnum(BoardViewType)
   default_board_view_type?: BoardViewType;
-  created_by: string;
 }

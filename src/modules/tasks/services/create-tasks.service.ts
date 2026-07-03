@@ -1,4 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
+import type { CreateAtEndTaskPositionService } from 'src/modules/task_position/interfaces/services/create-at-end-task-position.service.interface';
+import type { PositionContextRef } from 'src/modules/task_position/interfaces/task-position.input';
+import { TASK_POSITION_TYPES } from 'src/modules/task_position/interfaces/types';
 import { EntityManager } from 'typeorm';
 import { TaskModel } from '../domain/models/task.model';
 import { type CreateTaskRepository } from '../interfaces/repositories/create-task.repository.interface';
@@ -13,7 +16,53 @@ export class CreateTaskServiceImpl implements CreateTaskService {
   constructor(
     @Inject(TASK_TYPES.repositories.CreateTaskRepository)
     private readonly repo: CreateTaskRepository,
+
+    @Inject(TASK_POSITION_TYPES.services.CreateAtEndTaskPositionService)
+    private readonly createAtEndTaskPositionService: CreateAtEndTaskPositionService,
   ) {}
+
+  private resolvePositionContext(
+    input: Pick<
+      CreateTaskServiceInput,
+      'projectId' | 'sprintId' | 'positionContext'
+    >,
+  ): PositionContextRef {
+    if (input.positionContext) {
+      return input.positionContext;
+    }
+
+    if (input.sprintId) {
+      return {
+        context: 'sprint',
+        contextId: input.sprintId,
+      };
+    }
+
+    return {
+      context: 'backlog',
+      contextId: input.projectId,
+    };
+  }
+
+  private async createTaskPositionAtEnd(
+    taskId: string,
+    input: Pick<
+      CreateTaskServiceInput,
+      'projectId' | 'sprintId' | 'positionContext'
+    >,
+    manager?: EntityManager,
+  ): Promise<void> {
+    const positionContext = this.resolvePositionContext(input);
+
+    await this.createAtEndTaskPositionService.createAtEnd(
+      {
+        taskId,
+        context: positionContext.context,
+        contextId: positionContext.contextId,
+      },
+      manager,
+    );
+  }
 
   async create(
     input: CreateTaskServiceInput,
@@ -24,13 +73,13 @@ export class CreateTaskServiceImpl implements CreateTaskService {
       input.projectId,
       manager,
     );
-    return await this.repo.save(
+    const createdTask = await this.repo.save(
       {
         workspaceId: input.workspaceId,
         projectId: input.projectId,
         projectSeq: nextProjectSeq,
 
-        title: input.title,
+        title: input.title ?? null,
         description: input.description ?? null,
 
         statusId: input.statusId,
@@ -47,19 +96,23 @@ export class CreateTaskServiceImpl implements CreateTaskService {
       },
       manager,
     );
+
+    await this.createTaskPositionAtEnd(createdTask.id, input, manager);
+
+    return createdTask;
   }
 
   async createMany(
     inputs: CreateTaskServiceInput[],
     manager?: EntityManager,
   ): Promise<TaskModel[]> {
-    return await this.repo.saveMany(
+    const createdTasks = await this.repo.saveMany(
       inputs.map((item) => ({
         workspaceId: item.workspaceId,
         projectId: item.projectId,
         projectSeq: item.projectSeq ?? 1,
 
-        title: item.title,
+        title: item.title ?? null,
         description: item.description ?? null,
 
         statusId: item.statusId,
@@ -76,5 +129,12 @@ export class CreateTaskServiceImpl implements CreateTaskService {
       })),
       manager,
     );
+
+    for (const [index, createdTask] of createdTasks.entries()) {
+      const input = inputs[index];
+      await this.createTaskPositionAtEnd(createdTask.id, input, manager);
+    }
+
+    return createdTasks;
   }
 }

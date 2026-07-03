@@ -10,6 +10,8 @@ import { NotificationModel } from '../../domain/models/notification.model';
 export interface FindMyNotificationsRepositoryInput {
   receiverId: string;
 
+  category?: 'human' | 'system';
+
   unreadOnly?: boolean;
 
   sourceType?: NotificationSourceType;
@@ -23,6 +25,12 @@ export interface FindMyNotificationsRepositoryInput {
   limit?: number;
 }
 
+export interface NotificationTaskLookupInput {
+  receiverId: string;
+  type: NotificationType;
+  taskId: string;
+}
+
 export interface FindNotificationRepository {
   findMyNotifications(
     input: FindMyNotificationsRepositoryInput,
@@ -30,4 +38,9 @@ export interface FindNotificationRepository {
   ): Promise<NotificationModel[]>;
 
   countUnread(receiverId: string, manager?: EntityManager): Promise<number>;
+
+  existsByReceiverTypeAndTask(
+    input: NotificationTaskLookupInput,
+    manager?: EntityManager,
+  ): Promise<boolean>;
 }

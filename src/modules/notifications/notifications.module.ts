@@ -53,6 +53,7 @@ import { UpdateNotificationServiceImpl } from './services/update-notification.se
     },
   ],
   exports: [
+    NOTIFICATION_TYPES.repositories.FindNotificationRepository,
     NOTIFICATION_TYPES.services.CreateNotificationService,
     NOTIFICATION_TYPES.services.UpdateNotificationService,
   ],

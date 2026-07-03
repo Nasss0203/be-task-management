@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { TASK_POSITION_TYPES } from 'src/modules/task_position/interfaces/types';
 import { CreateTaskServiceImpl } from './create-tasks.service';
 import { TASK_TYPES } from '../interfaces/types';
 
@@ -10,6 +11,9 @@ describe('CreateTaskServiceImpl', () => {
     save: jest.fn(),
     saveMany: jest.fn(),
   };
+  const mockCreateAtEndTaskPositionService = {
+    createAtEnd: jest.fn(),
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -20,6 +24,10 @@ describe('CreateTaskServiceImpl', () => {
         {
           provide: TASK_TYPES.repositories.CreateTaskRepository,
           useValue: mockCreateTaskRepository,
+        },
+        {
+          provide: TASK_POSITION_TYPES.services.CreateAtEndTaskPositionService,
+          useValue: mockCreateAtEndTaskPositionService,
         },
       ],
     }).compile();
@@ -47,7 +55,11 @@ describe('CreateTaskServiceImpl', () => {
 
       const result = await service.create(input, manager);
 
-      expect(mockCreateTaskRepository.getNextProjectSeq).toHaveBeenCalledWith('ws-1', 'proj-1', manager);
+      expect(mockCreateTaskRepository.getNextProjectSeq).toHaveBeenCalledWith(
+        'ws-1',
+        'proj-1',
+        manager,
+      );
       expect(mockCreateTaskRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({
           workspaceId: 'ws-1',
@@ -58,6 +70,16 @@ describe('CreateTaskServiceImpl', () => {
           createdBy: 'user-1',
           completedAt: null,
         }),
+        manager,
+      );
+      expect(
+        mockCreateAtEndTaskPositionService.createAtEnd,
+      ).toHaveBeenCalledWith(
+        {
+          taskId: 'task-1',
+          context: 'backlog',
+          contextId: 'proj-1',
+        },
         manager,
       );
       expect(result).toEqual({ id: 'task-1' });
@@ -88,6 +110,16 @@ describe('CreateTaskServiceImpl', () => {
             projectSeq: 1, // Fallback to 1 if not provided
           }),
         ]),
+        manager,
+      );
+      expect(
+        mockCreateAtEndTaskPositionService.createAtEnd,
+      ).toHaveBeenCalledWith(
+        {
+          taskId: 'task-1',
+          context: 'backlog',
+          contextId: 'proj-1',
+        },
         manager,
       );
       expect(result).toEqual([{ id: 'task-1' }]);

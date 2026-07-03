@@ -19,8 +19,31 @@ export type TaskRestoreLookup = {
   projectDeletedAt: Date | null;
 };
 
+export type TaskDueSoonAssignee = {
+  userId: string;
+  username: string | null;
+};
+
+export type TaskDueSoonLookup = {
+  id: string;
+  workspaceId: string;
+  workspaceName: string | null;
+  workspaceSlug: string;
+  projectId: string;
+  projectName: string | null;
+  projectSeq: number | null;
+  title: string | null;
+  statusName: string | null;
+  dueAt: Date;
+  assignees: TaskDueSoonAssignee[];
+};
+
 export interface FindTaskRepository {
-  findAllTask(params: ParamTask, filters?: FindBacklogTasksFilters, manager?: EntityManager): Promise<TaskModel[]>;
+  findAllTask(
+    params: ParamTask,
+    filters?: FindBacklogTasksFilters,
+    manager?: EntityManager,
+  ): Promise<PaginatedTaskModels>;
   findAllTaskByWorkspace(
     workspaceId: string,
     manager?: EntityManager,
@@ -49,4 +72,9 @@ export interface FindTaskRepository {
   ): Promise<PaginatedTaskModels>;
 
   findByIds(taskIds: string[], manager?: EntityManager): Promise<TaskModel[]>;
+
+  findTasksDueSoon(
+    days: number,
+    manager?: EntityManager,
+  ): Promise<TaskDueSoonLookup[]>;
 }

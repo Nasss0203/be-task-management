@@ -523,29 +523,33 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
       const dbBlocks = await this.pageTemplateBlocksService.findByTemplateId(templateId);
       
       for (const dbBlock of dbBlocks) {
-        let dataConfig: any = dbBlock.content;
+        const templateContent: any = dbBlock.content || {};
+        const title = templateContent.title ?? null;
+        const rawContent = templateContent.content ?? null;
+        let rawDataConfig = templateContent.dataConfig ?? null;
+        let styleConfig = templateContent.styles ?? null;
+
         let blockType = dbBlock.type as string;
-        let styleConfig: any = null;
 
         if (blockType === 'HEADING_1') {
           blockType = PageBlockType.HEADER;
-          styleConfig = { level: 1 };
+          styleConfig = { ...styleConfig, level: 1 };
         } else if (blockType === 'HEADING_2') {
           blockType = PageBlockType.HEADER;
-          styleConfig = { level: 2 };
+          styleConfig = { ...styleConfig, level: 2 };
         } else if (blockType === 'HEADING_3') {
           blockType = PageBlockType.HEADER;
-          styleConfig = { level: 3 };
+          styleConfig = { ...styleConfig, level: 3 };
         }
 
         // If it's a database view, map the board ID
-        if (blockType === PageBlockType.DATABASE_VIEW && dataConfig?.boardTemplateKey) {
-          const board = boardMap.get(dataConfig.boardTemplateKey);
+        if (blockType === PageBlockType.DATABASE_VIEW && rawDataConfig?.boardTemplateKey) {
+          const board = boardMap.get(rawDataConfig.boardTemplateKey);
           if (!board) {
-            throw new BadRequestException(`Board template key ${dataConfig.boardTemplateKey} not found`);
+            throw new BadRequestException(`Board template key ${rawDataConfig.boardTemplateKey} not found`);
           }
-          dataConfig = {
-            ...dataConfig,
+          rawDataConfig = {
+            ...rawDataConfig,
             workspace_id: board.workspaceId,
             project_id: board.projectId,
             default_board_id: board.id,
@@ -556,12 +560,12 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
         blocksToInsert.push({
           page_id: pageId,
           type: blockType as PageBlockType,
-          title: dataConfig?.title ?? null,
+          title: title,
           order_index: dbBlock.orderIndex,
           style_config: styleConfig,
-          data_config: blockType === PageBlockType.DATABASE_VIEW ? dataConfig : null,
+          data_config: blockType === PageBlockType.DATABASE_VIEW ? rawDataConfig : null,
           created_by: createdBy,
-          content: blockType !== PageBlockType.DATABASE_VIEW ? dbBlock.content : null,
+          content: blockType !== PageBlockType.DATABASE_VIEW ? rawContent : null,
         });
         
         // Track the max order index used by DB blocks
@@ -742,8 +746,8 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
         : null;
 
       if (task.priorityName && !priority) {
-        throw new BadRequestException(
-          `Priority ${task.priorityName} not found for project template key ${task.projectTemplateKey}`,
+        console.warn(
+          `Priority ${task.priorityName} not found for project template key ${task.projectTemplateKey}. Defaulting to null.`,
         );
       }
 

@@ -24,6 +24,8 @@ export class FindNotificationApplicationImpl implements FindNotificationApplicat
       await this.findNotificationService.findMyNotifications({
         userId: input.userId,
 
+        category: input.category,
+
         unreadOnly: input.unreadOnly ?? false,
 
         sourceType: input.sourceType,
