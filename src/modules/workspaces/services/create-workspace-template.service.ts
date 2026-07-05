@@ -793,7 +793,7 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
       } else {
         // Fallback or handle cases without template ID if needed
         templateConfig = this.getTemplateConfig({
-          template: WorkspaceTemplateType.TASK_TRACKER,
+          template: WorkspaceTemplateType.BLANK_PAGE,
           workspaceName: input.name,
         });
       }
