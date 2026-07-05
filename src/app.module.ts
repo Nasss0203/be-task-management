@@ -16,6 +16,7 @@ import { WorkspaceResolverService } from './common/services/workspace-resolver.s
 import { DatabaseModule } from './database/database.module';
 import { ActivityModule } from './modules/activity/activity.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { AiAssistantModule } from './modules/ai_assistant/ai_assistant.module';
 import { AttachmentModule } from './modules/attachment/attachment.module';
 import { AuditLogsModule } from './modules/audit_logs/audit_logs.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -38,10 +39,12 @@ import { RefreshTokenModule } from './modules/refresh_token/refresh_token.module
 import { RoleModule } from './modules/role/role.module';
 import { RolePermissionModule } from './modules/role_permission/role_permission.module';
 import { SeedsModule } from './modules/seed/seed.module';
+import { SprintReportsModule } from './modules/sprint_reports/sprint_reports.module';
 import { SprintsModule } from './modules/sprints/sprints.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { TaskAssigneeModule } from './modules/task_assignee/task_assignee.module';
 import { TaskCommnentModule } from './modules/task_commnent/task_commnent.module';
+import { TaskPositionModule } from './modules/task_position/task_position.module';
 import { TaskPriorityModule } from './modules/task_priority/task_priority.module';
 import { TaskStatusModule } from './modules/task_status/task_status.module';
 import { TasksModule } from './modules/tasks/tasks.module';
@@ -53,13 +56,12 @@ import { WorkspaceFeatureSettingsModule } from './modules/workspace_feature_sett
 import { WorkspaceInvitesModule } from './modules/workspace_invites/workspace_invites.module';
 import { WorkspaceTemplatesModule } from './modules/workspace_templates/workspace_templates.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
-import { SprintReportsModule } from './modules/sprint_reports/sprint_reports.module';
-import { TaskPositionModule } from './modules/task_position/task_position.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      cache: true,
     }),
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
@@ -81,6 +83,7 @@ import { TaskPositionModule } from './modules/task_position/task_position.module
       }),
     }),
     DatabaseModule,
+    AiAssistantModule,
     SeedsModule,
     UsersModule,
     AuthModule,

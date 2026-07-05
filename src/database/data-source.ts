@@ -3,6 +3,9 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 
 import { Activity } from 'src/modules/activity/domain/entities/activity.entity';
+import { AiConversation } from 'src/modules/ai_assistant/domain/entities/ai-conversation.entity';
+import { AiGeneration } from 'src/modules/ai_assistant/domain/entities/ai-generation.entity';
+import { AiMessage } from 'src/modules/ai_assistant/domain/entities/ai-message.entity';
 import { Attachment } from 'src/modules/attachment/domain/entities/attachment.entity';
 import { AuditLog } from 'src/modules/audit_logs/domain/entities/audit_log.entity';
 import { BillingWebhook } from 'src/modules/billing/domain/entities/billing-webhook.entity';
@@ -57,6 +60,9 @@ export default new DataSource({
   migrationsRun: false,
   logging: true,
   entities: [
+    AiConversation,
+    AiMessage,
+    AiGeneration,
     User,
     UserActivity,
     Workspace,
