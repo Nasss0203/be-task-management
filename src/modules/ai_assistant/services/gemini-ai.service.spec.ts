@@ -360,7 +360,7 @@ describe('GeminiAiService', () => {
 
       // assistantMessage phải đề cập tên task và số subtask
       expect(result.assistantMessage).toContain('Tao man hinh dang nhap');
-      expect(result.assistantMessage).toContain('1 subtasks');
+      expect(result.assistantMessage).toContain('1 công việc con');
     });
 
 
@@ -432,7 +432,7 @@ describe('GeminiAiService', () => {
         slug: 'my-workspace',
       });
       expect(result.assistantMessage).toContain(
-        'Da tao ban nhap Workspace "My Workspace"',
+        'Không gian làm việc "My Workspace"',
       );
       expect(result.totalTokens).toBe(70);
     });
@@ -479,7 +479,7 @@ describe('GeminiAiService', () => {
         visibility: 'PRIVATE',
       });
       expect(result.assistantMessage).toContain(
-        'Da tao ban nhap Project "My Project" [PROJ]',
+        'Dự án "My Project" [PROJ]',
       );
       expect(result.totalTokens).toBe(120);
     });

@@ -285,77 +285,9 @@ export class CreateWorkspaceServiceImpl implements CreateWorkspaceService {
       manager,
     );
 
-    const statusMap = new Map(createdStatuses.map((item) => [item.name, item]));
-    const priorityMap = new Map(
-      createdPriorities.map((item) => [item.name, item]),
-    );
-
-    const todoStatus = statusMap.get('Todo');
-    const inProgressStatus = statusMap.get('In Progress');
-    const doneStatus = statusMap.get('Done');
-
-    const lowPriority = priorityMap.get('Low');
-    const mediumPriority = priorityMap.get('Medium');
-    const highPriority = priorityMap.get('High');
-
-    if (!todoStatus || !inProgressStatus || !doneStatus) {
-      throw new HttpException(
-        'Default task statuses were not seeded correctly',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-
-    if (!lowPriority || !mediumPriority || !highPriority) {
-      throw new HttpException(
-        'Default task priorities were not seeded correctly',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-
-    await this.createTaskService.createMany(
-      [
-        {
-          workspaceId,
-          projectId,
-          projectSeq: 1,
-          title: 'Create first task',
-          description: 'This is the first default task for your project.',
-          statusId: todoStatus.id,
-          priorityId: mediumPriority.id,
-          createdBy: userId,
-          estimateMinutes: 30,
-        },
-        {
-          workspaceId,
-          projectId,
-          projectSeq: 2,
-          title: 'Move task across columns',
-          description: 'Try moving this task from Todo to In Progress.',
-          statusId: inProgressStatus.id,
-          priorityId: lowPriority.id,
-          createdBy: userId,
-          estimateMinutes: 20,
-        },
-        {
-          workspaceId,
-          projectId,
-          projectSeq: 3,
-          title: 'Complete your first workflow',
-          description: 'Mark this task as Done when you finish setup.',
-          statusId: doneStatus.id,
-          priorityId: highPriority.id,
-          createdBy: userId,
-          estimateMinutes: 45,
-        },
-      ],
-      manager,
-    );
-
     return {
       createdStatuses,
       createdPriorities,
-      statusMap,
-      priorityMap,
     };
   }
 

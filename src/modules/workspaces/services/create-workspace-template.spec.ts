@@ -314,11 +314,11 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
 
     expect(result).toBe(workspace);
     expect(workspaceTemplatesService.findOne).not.toHaveBeenCalled();
-    expect(createProjectService.create).toHaveBeenCalled();
-    expect(createBoardService.create).toHaveBeenCalledTimes(2);
-    expect(createTaskStatusService.create).toHaveBeenCalled();
-    expect(createTaskPriorityService.create).toHaveBeenCalled();
-    expect(createTaskService.createMany).toHaveBeenCalled();
+    expect(createProjectService.create).not.toHaveBeenCalled();
+    expect(createBoardService.create).not.toHaveBeenCalled();
+    expect(createTaskStatusService.create).not.toHaveBeenCalled();
+    expect(createTaskPriorityService.create).not.toHaveBeenCalled();
+    expect(createTaskService.createMany).not.toHaveBeenCalled();
   });
 
   it('stops when workspace limit check fails', async () => {

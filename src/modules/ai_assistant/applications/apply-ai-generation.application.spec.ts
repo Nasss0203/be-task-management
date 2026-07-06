@@ -320,14 +320,17 @@ describe('ApplyAiGenerationApplicationImpl', () => {
 
       expect(
         mockCreateProjectService.createProjectWithPageBlock,
-      ).toHaveBeenCalledWith({
-        workspace_id: 'ws-uuid-123',
-        name: 'New Proj',
-        visibility: 'PRIVATE',
-        key: 'NEW',
-        created_by: USER_ID,
-        create_default_board: true,
-      });
+      ).toHaveBeenCalledWith(
+        {
+          workspace_id: 'ws-uuid-123',
+          name: 'New Proj',
+          visibility: 'PRIVATE',
+          key: 'NEW',
+          created_by: USER_ID,
+          create_default_board: true,
+        },
+        mockEntityManager,
+      );
       expect(result.status).toBe(AiGenerationStatus.APPLIED);
     });
 

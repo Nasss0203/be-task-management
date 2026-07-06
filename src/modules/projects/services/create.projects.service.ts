@@ -190,77 +190,7 @@ export class CreateProjectServiceImpl implements CreateProjectService {
         manager,
       );
 
-      if (createProjectDto.create_default_board) {
-        const todoStatus = createdStatuses.find((item) => item.name === 'Todo');
-        const inProgressStatus = createdStatuses.find(
-          (item) => item.name === 'In Progress',
-        );
-        const doneStatus = createdStatuses.find((item) => item.name === 'Done');
 
-        const lowPriority = createdPriorities.find(
-          (item) => item.name === 'Low',
-        );
-        const mediumPriority = createdPriorities.find(
-          (item) => item.name === 'Medium',
-        );
-        const highPriority = createdPriorities.find(
-          (item) => item.name === 'High',
-        );
-
-        if (!todoStatus || !inProgressStatus || !doneStatus) {
-          throw new HttpException(
-            'Default task statuses were not seeded correctly',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-          );
-        }
-
-        if (!lowPriority || !mediumPriority || !highPriority) {
-          throw new HttpException(
-            'Default task priorities were not seeded correctly',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-          );
-        }
-
-        await this.createTaskService.createMany(
-          [
-            {
-              workspaceId,
-              projectId: project.id,
-              projectSeq: 1,
-
-              title: 'Create first task',
-              description: 'This is the first default task for your project.',
-              statusId: todoStatus.id,
-              priorityId: mediumPriority.id,
-              createdBy: userId,
-              estimateMinutes: 30,
-            },
-            {
-              workspaceId,
-              projectId: project.id,
-              projectSeq: 2,
-              title: 'Move task across columns',
-              description: 'Try moving this task from Todo to In Progress.',
-              statusId: inProgressStatus.id,
-              priorityId: lowPriority.id,
-              createdBy: userId,
-              estimateMinutes: 20,
-            },
-            {
-              workspaceId,
-              projectId: project.id,
-              projectSeq: 3,
-              title: 'Complete your first workflow',
-              description: 'Mark this task as Done when you finish setup.',
-              statusId: doneStatus.id,
-              priorityId: highPriority.id,
-              createdBy: userId,
-              estimateMinutes: 45,
-            },
-          ],
-          manager,
-        );
-      }
 
       const page = await this.findPageService.findPageByWorkspaceId(
         workspaceId,
