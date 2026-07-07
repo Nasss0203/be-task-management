@@ -41,5 +41,11 @@ export interface AiProviderService {
     input: AiProviderGenerationInput,
   ): Promise<AiGenerationResult>;
 
+  generateSubtasks(
+    title: string,
+    description: string,
+    existingSubtasks?: string[],
+  ): Promise<string[]>;
+
   classifyIntent(message: string): Promise<AiGenerationType | 'NORMAL'>;
 }

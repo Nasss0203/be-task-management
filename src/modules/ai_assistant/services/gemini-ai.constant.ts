@@ -241,4 +241,19 @@ export const GEMINI_WORKSPACE_TREE_DRAFT_RESPONSE_SCHEMA: Schema = {
   },
 };
 
+export const GEMINI_SUBTASK_RESPONSE_SCHEMA: Schema = {
+  type: Type.OBJECT,
+  required: ['subtasks'],
+  properties: {
+    subtasks: {
+      type: Type.ARRAY,
+      description: 'Danh sach tieu de cac tac vu con (subtasks) de hoan thanh cong viec.',
+      items: {
+        type: Type.STRING,
+      },
+    },
+  },
+};
+
+
 

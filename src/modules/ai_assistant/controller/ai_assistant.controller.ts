@@ -26,6 +26,7 @@ import { SendAiMessageDto } from '../dto/send-ai-message.dto';
 import { type ApplyAiGenerationApplication } from '../interfaces/applications/apply-ai-generation.application.interface';
 import { type CreateAiConversationApplication } from '../interfaces/applications/create-ai-conversation.application.interface';
 import { type DiscardAiGenerationApplication } from '../interfaces/applications/discard-ai-generation.application.interface';
+import { type GenerateTaskSubtasksApplication } from '../interfaces/applications/generate-task-subtasks.application.interface';
 import { type GetAiConversationApplication } from '../interfaces/applications/get-ai-conversation.application.interface';
 import { type ListAiConversationsApplication } from '../interfaces/applications/list-ai-conversations.application.interface';
 import { type SendAiMessageApplication } from '../interfaces/applications/send-ai-message.application.interface';
@@ -52,6 +53,9 @@ export class AiAssistantController {
 
     @Inject(AI_ASSISTANT_TYPES.applications.DiscardAiGenerationApplication)
     private readonly discardAiGenerationApplication: DiscardAiGenerationApplication,
+
+    @Inject(AI_ASSISTANT_TYPES.applications.GenerateTaskSubtasksApplication)
+    private readonly generateTaskSubtasksApplication: GenerateTaskSubtasksApplication,
   ) {}
 
   @Post('conversations')
@@ -125,6 +129,19 @@ export class AiAssistantController {
   ): Promise<AiGenerationResponseDto> {
     return this.discardAiGenerationApplication.discard({
       generationId,
+      userId: auth.id,
+    });
+  }
+
+  @Post('tasks/:taskId/subtasks')
+  @WriteRateLimit()
+  @ResponseMessage('Generate task subtasks successfully')
+  generateSubtasks(
+    @Param('taskId', ParseUUIDPipe) taskId: string,
+    @Auth() auth: IAuth,
+  ): Promise<any[]> {
+    return this.generateTaskSubtasksApplication.generate({
+      taskId,
       userId: auth.id,
     });
   }

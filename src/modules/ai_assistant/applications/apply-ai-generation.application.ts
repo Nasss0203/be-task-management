@@ -40,6 +40,11 @@ interface TaskDraftOutput {
   description?: string;
   priority?: string;
   estimatedHours?: number;
+  subtasks?: Array<{
+    title: string;
+    description?: string;
+    estimatedHours?: number;
+  }>;
 }
 
 @Injectable()
@@ -309,6 +314,34 @@ export class ApplyAiGenerationApplicationImpl implements ApplyAiGenerationApplic
                 action: 'CREATE',
                 metadata: { title: task.title },
               });
+
+              if (taskDraft.subtasks && Array.isArray(taskDraft.subtasks)) {
+                for (const subtaskDraft of taskDraft.subtasks) {
+                  const subtask = await this.createTaskService.create(
+                    {
+                      workspaceId,
+                      projectId,
+                      parentTaskId: task.id,
+                      title: subtaskDraft.title,
+                      description: subtaskDraft.description || null,
+                      statusId,
+                      priorityId,
+                      estimateMinutes: subtaskDraft.estimatedHours
+                        ? subtaskDraft.estimatedHours * 60
+                        : null,
+                      createdBy: input.userId,
+                    },
+                    transactionalEntityManager,
+                  );
+
+                  tempResults.push({
+                    entityType: AiAppliedEntityType.TASK,
+                    entityId: subtask.id,
+                    action: 'CREATE',
+                    metadata: { title: subtask.title, parentTaskId: task.id },
+                  });
+                }
+              }
             }
           });
 

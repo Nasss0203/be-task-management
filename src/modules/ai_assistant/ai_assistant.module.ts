@@ -7,6 +7,7 @@ import { TasksModule } from '../tasks/tasks.module';
 import { ApplyAiGenerationApplicationImpl } from './applications/apply-ai-generation.application';
 import { CreateAiConversationApplicationImpl } from './applications/create-ai-conversation.application';
 import { DiscardAiGenerationApplicationImpl } from './applications/discard-ai-generation.application';
+import { GenerateTaskSubtasksApplicationImpl } from './applications/generate-task-subtasks.application';
 import { GetAiConversationApplicationImpl } from './applications/get-ai-conversation.application';
 import { ListAiConversationsApplicationImpl } from './applications/list-ai-conversations.application';
 import { SendAiMessageApplicationImpl } from './applications/send-ai-message.application';
@@ -89,6 +90,10 @@ import { GeminiAiService } from './services/gemini-ai.service';
     {
       provide: AI_ASSISTANT_TYPES.applications.DiscardAiGenerationApplication,
       useClass: DiscardAiGenerationApplicationImpl,
+    },
+    {
+      provide: AI_ASSISTANT_TYPES.applications.GenerateTaskSubtasksApplication,
+      useClass: GenerateTaskSubtasksApplicationImpl,
     },
   ],
   exports: [

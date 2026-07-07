@@ -38,6 +38,7 @@ import {
   GEMINI_WORKSPACE_DRAFT_RESPONSE_SCHEMA,
   GEMINI_PROJECT_DRAFT_RESPONSE_SCHEMA,
   GEMINI_WORKSPACE_TREE_DRAFT_RESPONSE_SCHEMA,
+  GEMINI_SUBTASK_RESPONSE_SCHEMA,
 } from './gemini-ai.constant';
 
 
@@ -83,6 +84,48 @@ export class GeminiAiService implements AiProviderService {
     return this.requestWorkspaceTreeDraft(client, model, input);
   }
 
+  async generateSubtasks(
+    title: string,
+    description: string,
+    existingSubtasks: string[] = [],
+  ): Promise<string[]> {
+    const client = this.createClient();
+    const model = this.getModel();
+
+    try {
+      const response = await client.models.generateContent({
+        model,
+        contents: [
+          `Hãy phân tích công việc dưới đây và đề xuất danh sách các tác vụ con (subtasks) cụ thể, rõ ràng, thực tế để hoàn thành công việc này.`,
+          `Công việc chính: ${title}`,
+          `Mô tả chi tiết: ${description || 'Không có mô tả'}`,
+          existingSubtasks.length > 0
+            ? `Danh sách các tác vụ con đã tồn tại: [${existingSubtasks.map(t => `"${t}"`).join(', ')}].\nYêu cầu: Hãy gợi ý các tác vụ con mới, bổ sung và hoàn toàn KHÔNG ĐƯỢC trùng lặp với các tác vụ con đã có ở trên.`
+            : '',
+          ``,
+          `Yêu cầu:`,
+          `- Chia tối đa 8 tác vụ con (subtasks) mới.`,
+          `- Mỗi tác vụ con chỉ là một tiêu đề ngắn gọn, súc tích (dưới 100 ký tự).`,
+          `- Trả về kết quả dưới dạng JSON đúng cấu trúc sau: {"subtasks": ["Tác vụ mới 1", "Tác vụ mới 2"]}.`,
+          `- Chỉ trả về JSON đúng schema, không thêm markdown hoặc giải thích bên ngoài JSON.`,
+        ].filter(Boolean).join('\n'),
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: GEMINI_SUBTASK_RESPONSE_SCHEMA,
+        },
+      });
+
+      const text = response.text?.trim() || '';
+      const result = this.parseJson(text, 'subtasks') as { subtasks: string[] };
+      return result.subtasks || [];
+    } catch (error) {
+      this.logger.error(
+        'Gemini subtask generation failed',
+        error instanceof Error ? error.message : undefined,
+      );
+      throw new BadGatewayException('AI provider request failed');
+    }
+  }
 
   generateSprintPlan(
     input: AiProviderGenerationInput,

@@ -6,6 +6,7 @@ export const AI_ASSISTANT_TYPES = {
     SendAiMessageApplication: 'SendAiMessageApplication',
     ApplyAiGenerationApplication: 'ApplyAiGenerationApplication',
     DiscardAiGenerationApplication: 'DiscardAiGenerationApplication',
+    GenerateTaskSubtasksApplication: 'GenerateTaskSubtasksApplication',
   },
   services: {
     AiConversationService: 'AiConversationService',
