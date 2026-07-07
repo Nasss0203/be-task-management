@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TasksController } from './tasks.controller';
 import { TASK_TYPES } from '../interfaces/types';
 import { FindTaskApplication } from '../interfaces/applications/find-task.application.interface';
+import { CreateSubtaskApplication } from '../interfaces/applications/create-subtask.application.interface';
 import { CreateTaskApplication } from '../interfaces/applications/create-task.application.interface';
 import { UpdateTaskApplication } from '../interfaces/applications/update-task.application.interface';
 import { MoveTaskSprintApplication } from '../interfaces/applications/move-task-sprint.application.interface';
@@ -16,10 +17,15 @@ describe('TasksController', () => {
   const mockFindTaskApplication = {
     findAllTask: jest.fn(),
     findBacklogTasks: jest.fn(),
+    findOneTask: jest.fn(),
     findDeletedTasks: jest.fn(),
   };
 
   const mockCreateTaskApplication = {
+    create: jest.fn(),
+  };
+
+  const mockCreateSubtaskApplication = {
     create: jest.fn(),
   };
 
@@ -58,6 +64,10 @@ describe('TasksController', () => {
         {
           provide: TASK_TYPES.applications.CreateTaskApplication,
           useValue: mockCreateTaskApplication,
+        },
+        {
+          provide: TASK_TYPES.applications.CreateSubtaskApplication,
+          useValue: mockCreateSubtaskApplication,
         },
         {
           provide: TASK_TYPES.applications.UpdateTaskApplication,
@@ -116,6 +126,34 @@ describe('TasksController', () => {
       const result = await controller.create(dto, auth);
       expect(result).toEqual({ id: 'task-1' });
       expect(mockCreateTaskApplication.create).toHaveBeenCalledWith({ ...dto, createdBy: 'user-1' });
+    });
+  });
+
+  describe('createSubtask', () => {
+    it('should create subtask', async () => {
+      const dto = { title: 'Subtask', statusId: 'status-1' } as any;
+      const auth = { id: 'user-1' } as any;
+      mockCreateSubtaskApplication.create.mockResolvedValue({ id: 'subtask-1' } as any);
+
+      const result = await controller.createSubtask('task-1', dto, auth);
+
+      expect(result).toEqual({ id: 'subtask-1' });
+      expect(mockCreateSubtaskApplication.create).toHaveBeenCalledWith({
+        ...dto,
+        parentTaskId: 'task-1',
+        createdBy: 'user-1',
+      });
+    });
+  });
+
+  describe('findOneTask', () => {
+    it('should find task detail', async () => {
+      mockFindTaskApplication.findOneTask.mockResolvedValue({ id: 'task-1' } as any);
+
+      const result = await controller.findOneTask('task-1');
+
+      expect(result).toEqual({ id: 'task-1' });
+      expect(mockFindTaskApplication.findOneTask).toHaveBeenCalledWith('task-1');
     });
   });
 

@@ -23,6 +23,7 @@ import {
 @Index('UQ_TASKS_PROJECT_SEQ', ['projectId', 'projectSeq'], { unique: true })
 @Index('IDX_TASKS_WORKSPACE_ID', ['workspaceId'])
 @Index('IDX_TASKS_PROJECT_ID', ['projectId'])
+@Index('IDX_TASKS_PARENT_TASK_ID', ['parentTaskId'])
 @Index('IDX_TASKS_STATUS_ID', ['statusId'])
 @Index('IDX_TASKS_PRIORITY_ID', ['priorityId'])
 @Index('IDX_TASKS_CREATED_BY', ['createdBy'])
@@ -37,6 +38,9 @@ export class Task {
 
   @Column({ name: 'project_id', type: 'uuid' })
   projectId: string;
+
+  @Column({ name: 'parent_task_id', type: 'uuid', nullable: true })
+  parentTaskId: string | null;
 
   @Column({ name: 'sprint_id', type: 'uuid', nullable: true })
   sprintId: string | null;
@@ -86,6 +90,16 @@ export class Task {
   @ManyToOne(() => Workspace, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'workspace_id' })
   workspace: Workspace;
+
+  @ManyToOne(() => Task, (task) => task.subtasks, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'parent_task_id' })
+  parentTask: Task | null;
+
+  @OneToMany(() => Task, (task) => task.parentTask)
+  subtasks: Task[];
 
   @ManyToOne(() => Project, (project) => project.tasks, {
     onDelete: 'CASCADE',

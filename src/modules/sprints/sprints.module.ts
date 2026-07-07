@@ -32,6 +32,8 @@ import { FindSprintServiceImpl } from './services/find-sprint-service';
 import { GetSprintDetailServiceImpl } from './services/get-sprint-detail.service';
 import { StartSprintServiceImpl } from './services/start-sprint.service';
 import { UpdateSprintServiceImpl } from './services/udpdate-sprint.service';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { SprintDeadlineCron } from './cron/sprint-deadline.cron';
 
 @Module({
   imports: [
@@ -41,6 +43,7 @@ import { UpdateSprintServiceImpl } from './services/udpdate-sprint.service';
     TaskStatusModule,
     ActivityModule,
     SprintReportsModule,
+    NotificationsModule,
   ],
   controllers: [SprintsController],
   providers: [
@@ -144,6 +147,7 @@ import { UpdateSprintServiceImpl } from './services/udpdate-sprint.service';
       provide: SPRINT_TYPES.uow.UnitOfWork,
       useClass: TypeOrmUnitOfWork,
     },
+    SprintDeadlineCron,
   ],
   exports: [
     SPRINT_TYPES.services.FindSprintService,

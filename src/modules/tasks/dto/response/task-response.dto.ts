@@ -9,6 +9,7 @@ export class TaskResponseDto {
   id: string;
   workspaceId: string;
   projectId: string;
+  parentTaskId: string | null;
   sprintId: string | null;
   sprintName: string | null;
 
@@ -32,6 +33,7 @@ export class TaskResponseDto {
 
   estimateMinutes: number | null;
   position: string | null;
+  subtasks: TaskResponseDto[];
 
   createdAt?: Date;
   updatedAt?: Date;

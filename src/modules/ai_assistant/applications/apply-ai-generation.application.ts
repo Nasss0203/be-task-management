@@ -200,10 +200,10 @@ export class ApplyAiGenerationApplicationImpl implements ApplyAiGenerationApplic
           appliedResults = tempResults;
         } else if (generation.generationType === AiGenerationType.TASK_DRAFT) {
           const workspaceId = generation.workspaceId;
-          const projectId = generation.projectId;
-          if (!workspaceId || !projectId) {
+          let projectId = generation.projectId;
+          if (!workspaceId) {
             throw new BadRequestException(
-              'Workspace and Project context are required to apply task draft',
+              'Workspace context is required to apply task draft',
             );
           }
 
@@ -215,6 +215,45 @@ export class ApplyAiGenerationApplicationImpl implements ApplyAiGenerationApplic
           const tempResults: any[] = [];
 
           await this.dataSource.transaction(async (transactionalEntityManager) => {
+            if (!projectId) {
+              // Find if there is any project in the workspace
+              const projectRows = (await transactionalEntityManager.query(
+                `SELECT id FROM projects WHERE workspace_id = $1 ORDER BY created_at ASC LIMIT 1`,
+                [workspaceId],
+              )) as unknown as Array<{ id: string }>;
+
+              if (projectRows && projectRows.length > 0) {
+                projectId = projectRows[0].id;
+              } else {
+                // Automatically create a default project
+                const workspaceRows = (await transactionalEntityManager.query(
+                  `SELECT name FROM workspaces WHERE id = $1 LIMIT 1`,
+                  [workspaceId],
+                )) as unknown as Array<{ name: string }>;
+                const workspaceName = workspaceRows?.[0]?.name || 'Workspace';
+
+                const newProject = await this.createProjectService.createProjectWithPageBlock(
+                  {
+                    workspace_id: workspaceId,
+                    name: `${workspaceName} - Project`,
+                    visibility: 'PRIVATE' as any,
+                    key: 'PROJ',
+                    created_by: input.userId,
+                    create_default_board: true,
+                  },
+                  transactionalEntityManager,
+                );
+                projectId = newProject.id;
+
+                tempResults.push({
+                  entityType: AiAppliedEntityType.PROJECT,
+                  entityId: newProject.id,
+                  action: 'CREATE',
+                  metadata: { name: newProject.name, key: newProject.key },
+                });
+              }
+            }
+
             // Find default status for the project
             const statusRows = (await transactionalEntityManager.query(
               `SELECT id FROM task_statuses WHERE project_id = $1 ORDER BY name = 'Todo' DESC, created_at ASC LIMIT 1`,

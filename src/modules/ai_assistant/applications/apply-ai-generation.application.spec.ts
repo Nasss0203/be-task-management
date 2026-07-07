@@ -414,6 +414,110 @@ describe('ApplyAiGenerationApplicationImpl', () => {
       expect(result.status).toBe(AiGenerationStatus.APPLIED);
     });
 
+    it('automatically creates a project and tasks when generationType is TASK_DRAFT and projectId is null and workspace has no projects', async () => {
+      const taskDraft = new AiGenerationModel(
+        GENERATION_ID,
+        USER_ID,
+        CONVERSATION_ID,
+        null,
+        'ws-uuid-123',
+        null,
+        null,
+        null,
+        AiGenerationType.TASK_DRAFT,
+        'msg',
+        null,
+        {
+          tasks: [
+            {
+              title: 'New Task',
+              description: 'Desc',
+              priority: 'HIGH',
+              estimatedHours: 2,
+              subtasks: [],
+              acceptanceCriteria: [],
+              risks: [],
+            },
+          ],
+        },
+        AiProvider.GEMINI,
+        'gemini-2.5-flash',
+        AiGenerationStatus.GENERATED,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        new Date(),
+        new Date(),
+      );
+
+      mockGenerationService.findByIdForUser.mockResolvedValue(taskDraft);
+      mockEntityManager.query.mockImplementation((queryStr: unknown) => {
+        const q = queryStr as string;
+        if (q.includes('projects')) {
+          return Promise.resolve([]);
+        }
+        if (q.includes('workspaces')) {
+          return Promise.resolve([{ name: 'Workspace 1' }]);
+        }
+        if (q.includes('task_statuses')) {
+          return Promise.resolve([{ id: 'status-todo-uuid' }]);
+        }
+        if (q.includes('task_priorities')) {
+          return Promise.resolve([{ id: 'priority-high-uuid' }]);
+        }
+        return Promise.resolve([]);
+      });
+      
+      mockCreateProjectService.createProjectWithPageBlock.mockResolvedValue({
+        id: 'new-proj-uuid',
+        name: 'Workspace 1 - Project',
+        key: 'PROJ',
+      });
+
+      mockCreateTaskService.create.mockResolvedValue({
+        id: 'new-task-uuid',
+        title: 'New Task',
+      });
+      mockGenerationService.updateAppliedResults.mockResolvedValue(
+        stubAppliedModel,
+      );
+
+      const result = await application.apply({
+        generationId: GENERATION_ID,
+        userId: USER_ID,
+        dto: {},
+      });
+
+      expect(mockCreateProjectService.createProjectWithPageBlock).toHaveBeenCalledWith(
+        {
+          workspace_id: 'ws-uuid-123',
+          name: 'Workspace 1 - Project',
+          visibility: 'PRIVATE',
+          key: 'PROJ',
+          created_by: USER_ID,
+          create_default_board: true,
+        },
+        mockEntityManager,
+      );
+
+      expect(mockCreateTaskService.create).toHaveBeenCalledWith(
+        {
+          workspaceId: 'ws-uuid-123',
+          projectId: 'new-proj-uuid',
+          title: 'New Task',
+          description: 'Desc',
+          statusId: 'status-todo-uuid',
+          priorityId: 'priority-high-uuid',
+          estimateMinutes: 120,
+          createdBy: USER_ID,
+        },
+        mockEntityManager,
+      );
+      expect(result.status).toBe(AiGenerationStatus.APPLIED);
+    });
 
     it('throws ConflictException when generation status is not GENERATED', async () => {
       // Mock generation already applied

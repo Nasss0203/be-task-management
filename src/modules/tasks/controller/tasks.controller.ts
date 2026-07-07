@@ -34,9 +34,11 @@ import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorat
 import { FeatureKey } from 'src/modules/features/constants/feature-key.constant';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
+import { CreateSubtaskDto } from '../dto/create-subtask.dto';
 import { MoveTaskSprintToSprintDto } from '../dto/move-task-sprint-to-sprint.dto';
 import { MoveTaskSprintDto } from '../dto/move-task-sprint.dto';
 import { UpdateManyTasksDto } from '../dto/update-many-tasks.dto';
+import { type CreateSubtaskApplication } from '../interfaces/applications/create-subtask.application.interface';
 import { type CreateTaskApplication } from '../interfaces/applications/create-task.application.interface';
 import { type DeleteTaskApplication } from '../interfaces/applications/delete-task.application.interface';
 import { type MoveTaskSprintToSprintApplication } from '../interfaces/applications/move-task-sprint-to-sprint.application.interface';
@@ -53,6 +55,9 @@ export class TasksController {
 
     @Inject(TASK_TYPES.applications.CreateTaskApplication)
     private readonly createTaskApplication: CreateTaskApplication,
+
+    @Inject(TASK_TYPES.applications.CreateSubtaskApplication)
+    private readonly createSubtaskApplication: CreateSubtaskApplication,
 
     @Inject(TASK_TYPES.applications.UpdateTaskApplication)
     private readonly updateTaskApplication: UpdateTaskApplication,
@@ -108,6 +113,23 @@ export class TasksController {
   create(@Body() createTaskDto: CreateTaskDto, @Auth() auth: IAuth) {
     return this.createTaskApplication.create({
       ...createTaskDto,
+      createdBy: auth.id,
+    });
+  }
+
+  @Post(':parentTaskId/subtasks')
+  @WriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'task', key: 'parentTaskId' })
+  @RequirePermissions(PERMISSIONS.TASK_CREATE)
+  @ResponseMessage('Create subtask successfully')
+  createSubtask(
+    @Param('parentTaskId') parentTaskId: string,
+    @Body() createSubtaskDto: CreateSubtaskDto,
+    @Auth() auth: IAuth,
+  ): Promise<TaskResponseDto> {
+    return this.createSubtaskApplication.create({
+      ...createSubtaskDto,
+      parentTaskId,
       createdBy: auth.id,
     });
   }
@@ -198,6 +220,14 @@ export class TasksController {
     }
 
     return this.findTaskApplication.findDeletedTasks(workspaceId, projectId);
+  }
+
+  @Get(':id')
+  @WorkspaceContext({ source: 'resource', type: 'task', key: 'id' })
+  @RequirePermissions(PERMISSIONS.TASK_READ)
+  @ResponseMessage('Find task detail')
+  async findOneTask(@Param('id') id: string): Promise<TaskResponseDto | null> {
+    return this.findTaskApplication.findOneTask(id);
   }
 
   @Patch(':taskId/remove-sprint')

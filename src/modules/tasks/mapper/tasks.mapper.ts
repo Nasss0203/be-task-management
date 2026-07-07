@@ -18,6 +18,7 @@ export class TaskMapper {
       entity.id,
       entity.workspaceId,
       entity.projectId,
+      entity.parentTaskId ?? null,
       entity.projectSeq,
       entity.title,
       entity.statusId,
@@ -46,6 +47,7 @@ export class TaskMapper {
       entity.deletedAt ?? null,
       entity.deletedBy ?? null,
       position,
+      entity.subtasks?.map((subtask) => TaskMapper.toModel(subtask)) ?? [],
     );
   }
 
@@ -58,6 +60,10 @@ export class TaskMapper {
 
     e.workspaceId = model.workspaceId;
     e.projectId = model.projectId;
+
+    if ('parentTaskId' in model && model.parentTaskId !== undefined) {
+      e.parentTaskId = model.parentTaskId ?? null;
+    }
 
     if ('sprintId' in model && model.sprintId !== undefined) {
       e.sprintId = model.sprintId ?? null;
@@ -147,6 +153,10 @@ export class TaskMapper {
 
       estimateMinutes: model.estimateMinutes,
       position: model.position,
+      parentTaskId: model.parentTaskId ?? null,
+      subtasks: (model.subtasks ?? []).map((subtask) =>
+        TaskMapper.toResponse(subtask),
+      ),
 
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
