@@ -85,6 +85,7 @@ export class CreateProjectServiceImpl implements CreateProjectService {
 
   async createProjectWithPageBlock(
     createProjectDto: CreateProjectDto & { created_by?: string; key?: string },
+    manager?: EntityManager,
   ): Promise<ProjectModel> {
     const workspaceId = createProjectDto.workspace_id;
     const userId = createProjectDto.created_by || 'sys';
@@ -93,10 +94,10 @@ export class CreateProjectServiceImpl implements CreateProjectService {
       createProjectDto.key ||
       `${nameProject}-${userId.slice(0, 4)}-${Date.now()}`;
 
-    return this.uow.runInTransaction(async (manager) => {
+    const execute = async (entityManager: EntityManager) => {
       await this.usageLimitEnforcerService.checkProjectLimit(
         workspaceId,
-        manager,
+        entityManager,
       );
 
       const project = await this.repo.save(
@@ -106,7 +107,7 @@ export class CreateProjectServiceImpl implements CreateProjectService {
           workspace_id: workspaceId,
           created_by: userId,
         },
-        manager,
+        entityManager,
       );
 
       let board: BoardModel | null = null;
@@ -122,7 +123,7 @@ export class CreateProjectServiceImpl implements CreateProjectService {
             createdBy: userId,
             viewType: initialView,
           },
-          manager,
+          entityManager,
         );
       }
 
@@ -153,7 +154,7 @@ export class CreateProjectServiceImpl implements CreateProjectService {
             isDone: true,
           },
         ],
-        manager,
+        entityManager,
       );
 
       const createdPriorities = await this.createTaskPriorityService.createMany(
@@ -187,19 +188,17 @@ export class CreateProjectServiceImpl implements CreateProjectService {
             color: '#EF4444',
           },
         ],
-        manager,
+        entityManager,
       );
-
-
 
       const page = await this.findPageService.findPageByWorkspaceId(
         workspaceId,
-        manager,
+        entityManager,
       );
 
       if (page) {
         const nextOrderIndex =
-          await this.findPageBlockService.getNextOrderIndex(page.id, manager);
+          await this.findPageBlockService.getNextOrderIndex(page.id, entityManager);
 
         await this.createPageBlockService.create(
           {
@@ -221,16 +220,22 @@ export class CreateProjectServiceImpl implements CreateProjectService {
             created_by: userId,
             content: null,
           },
-          manager,
+          entityManager,
         );
       }
 
       await this.usageLimitEnforcerService.syncProjectUsedValue(
         workspaceId,
-        manager,
+        entityManager,
       );
 
       return project;
-    });
+    };
+
+    if (manager) {
+      return execute(manager);
+    } else {
+      return this.uow.runInTransaction(execute);
+    }
   }
 }

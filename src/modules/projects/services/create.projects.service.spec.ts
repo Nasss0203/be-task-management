@@ -182,5 +182,20 @@ describe('CreateProjectServiceImpl', () => {
       
       expect(mockCreatePageBlockService.create).not.toHaveBeenCalled();
     });
+
+    it('should use custom manager and bypass runInTransaction if provided', async () => {
+      const customManager = { query: jest.fn() } as any;
+      
+      await service.createProjectWithPageBlock(defaultDto as any, customManager);
+      
+      expect(mockUow.runInTransaction).not.toHaveBeenCalled();
+      expect(mockRepo.save).toHaveBeenCalledWith(expect.anything(), customManager);
+    });
+
+    it('should use runInTransaction if custom manager is not provided', async () => {
+      await service.createProjectWithPageBlock(defaultDto as any);
+      
+      expect(mockUow.runInTransaction).toHaveBeenCalled();
+    });
   });
 });
