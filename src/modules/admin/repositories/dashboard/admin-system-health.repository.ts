@@ -59,16 +59,14 @@ export class AdminSystemHealthRepositoryImpl implements AdminSystemHealthReposit
 
   private checkMailService(): SystemHealthResponseDto {
     const host =
-      this.configService.get<string>('MAIL_HOST') ??
-      this.configService.get<string>('SMTP_HOST');
-
-    const user =
-      this.configService.get<string>('MAIL_USER') ??
-      this.configService.get<string>('SMTP_USER');
-
-    const pass =
-      this.configService.get<string>('MAIL_PASS') ??
-      this.configService.get<string>('SMTP_PASS');
+      this.getConfigValue(['HOST_EMAIL', 'MAIL_HOST', 'SMTP_HOST']) ??
+      'smtp.gmail.com';
+    const user = this.getConfigValue(['USER_EMAIL', 'MAIL_USER', 'SMTP_USER']);
+    const pass = this.getConfigValue([
+      'PASSWORD_EMAIL',
+      'MAIL_PASS',
+      'SMTP_PASS',
+    ])?.replace(/\s/g, '');
 
     const isConfigured = Boolean(host && user && pass);
 
@@ -81,5 +79,17 @@ export class AdminSystemHealthRepositoryImpl implements AdminSystemHealthReposit
         ? 'Mail service configuration is available.'
         : 'Mail service configuration is missing or incomplete.',
     };
+  }
+
+  private getConfigValue(keys: string[]): string | undefined {
+    for (const key of keys) {
+      const value = this.configService.get<string>(key)?.trim();
+
+      if (value) {
+        return value;
+      }
+    }
+
+    return undefined;
   }
 }
