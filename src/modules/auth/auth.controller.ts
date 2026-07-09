@@ -195,8 +195,17 @@ export class AuthController {
   @Post('verify-email')
   @AuthRateLimit()
   @ResponseMessage('Email verified successfully')
-  async verifyEmail(@Body() dto: VerifyEmailDto) {
-    return this.authService.verifyEmail(dto.token);
+  async verifyEmail(
+    @Body() dto: VerifyEmailDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.verifyEmail(dto.token);
+
+    if (result.refresh_token) {
+      res.cookie('refresh_token', result.refresh_token, REFRESH_TOKEN_COOKIE_OPTIONS);
+    }
+
+    return result;
   }
 
   @Public()
