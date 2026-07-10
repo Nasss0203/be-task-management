@@ -3,6 +3,7 @@ import Decimal from 'decimal.js';
 import { EntityManager } from 'typeorm';
 import type { TaskPosition } from '../domain/entities/task_position.entity';
 import type { FindOneTaskPositionRepository } from '../interfaces/repositories/find-one-task-position.repository.interface';
+import type { FindLastTaskPositionRepository } from '../interfaces/repositories/find-last-task-position.repository.interface';
 import type { UpsertTaskPositionRepository } from '../interfaces/repositories/upsert-task-position.repository.interface';
 import type { NormalizeTaskPositionContextService } from '../interfaces/services/normalize-task-position-context.service.interface';
 import type { ReorderWithinContextTaskPositionService } from '../interfaces/services/reorder-within-context-task-position.service.interface';
@@ -11,6 +12,8 @@ import { TASK_POSITION_TYPES } from '../interfaces/types';
 import {
   calculatePosition,
   hasEnoughPositionGap,
+  POSITION_SCALE,
+  POSITION_STEP,
 } from '../utils/task-position.util';
 
 @Injectable()
@@ -18,6 +21,8 @@ export class ReorderWithinContextTaskPositionServiceImpl implements ReorderWithi
   constructor(
     @Inject(TASK_POSITION_TYPES.repositories.FindOneTaskPositionRepository)
     private readonly findOneRepository: FindOneTaskPositionRepository,
+    @Inject(TASK_POSITION_TYPES.repositories.FindLastTaskPositionRepository)
+    private readonly findLastRepository: FindLastTaskPositionRepository,
     @Inject(TASK_POSITION_TYPES.repositories.UpsertTaskPositionRepository)
     private readonly upsertRepository: UpsertTaskPositionRepository,
     @Inject(TASK_POSITION_TYPES.services.NormalizeTaskPositionContextService)
@@ -51,6 +56,25 @@ export class ReorderWithinContextTaskPositionServiceImpl implements ReorderWithi
         )
       : null;
 
+    if (previousTaskId && !previous) {
+      const last = await this.findLastRepository.findLastInContext(
+        { context, contextId },
+        manager,
+      );
+      const lastPos = last ? new Decimal(last.position) : new Decimal(0);
+      const newPos = lastPos.plus(POSITION_STEP).toFixed(POSITION_SCALE);
+
+      previous = await this.upsertRepository.upsert(
+        {
+          taskId: previousTaskId,
+          context,
+          contextId,
+          position: newPos,
+        },
+        manager,
+      );
+    }
+
     let next = nextTaskId
       ? await this.findOneRepository.findOneByTaskAndContext(
           {
@@ -62,15 +86,22 @@ export class ReorderWithinContextTaskPositionServiceImpl implements ReorderWithi
         )
       : null;
 
-    if (previousTaskId && !previous) {
-      throw new BadRequestException(
-        'Previous task does not exist in the target context.',
-      );
-    }
-
     if (nextTaskId && !next) {
-      throw new BadRequestException(
-        'Next task does not exist in the target context.',
+      const last = await this.findLastRepository.findLastInContext(
+        { context, contextId },
+        manager,
+      );
+      const lastPos = last ? new Decimal(last.position) : new Decimal(0);
+      const newPos = lastPos.plus(POSITION_STEP).toFixed(POSITION_SCALE);
+
+      next = await this.upsertRepository.upsert(
+        {
+          taskId: nextTaskId,
+          context,
+          contextId,
+          position: newPos,
+        },
+        manager,
       );
     }
 
