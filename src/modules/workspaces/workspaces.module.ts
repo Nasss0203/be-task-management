@@ -214,6 +214,7 @@ import { WorkspaceTemplatesModule } from '../workspace_templates/workspace_templ
   exports: [
     WORKSPACE_TYPES.repositories.WorkspaceRepository,
     WORKSPACE_TYPES.services.CreateWorkspaceService,
+    WORKSPACE_TYPES.services.CreateWorkspaceTemplateService,
     WORKSPACE_TYPES.services.AdminFindAllWorkspaceService,
     WORKSPACE_TYPES.services.FindWorkspaceService,
     WORKSPACE_TYPES.applications.AdminWorkspaceMemberSummaryApplication,

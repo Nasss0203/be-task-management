@@ -77,6 +77,7 @@ export class CreateTaskServiceImpl implements CreateTaskService {
       {
         workspaceId: input.workspaceId,
         projectId: input.projectId,
+        parentTaskId: input.parentTaskId ?? null,
         projectSeq: nextProjectSeq,
 
         title: input.title ?? null,
@@ -97,7 +98,9 @@ export class CreateTaskServiceImpl implements CreateTaskService {
       manager,
     );
 
-    await this.createTaskPositionAtEnd(createdTask.id, input, manager);
+    if (!input.skipPosition) {
+      await this.createTaskPositionAtEnd(createdTask.id, input, manager);
+    }
 
     return createdTask;
   }
@@ -110,6 +113,7 @@ export class CreateTaskServiceImpl implements CreateTaskService {
       inputs.map((item) => ({
         workspaceId: item.workspaceId,
         projectId: item.projectId,
+        parentTaskId: item.parentTaskId ?? null,
         projectSeq: item.projectSeq ?? 1,
 
         title: item.title ?? null,
@@ -132,7 +136,9 @@ export class CreateTaskServiceImpl implements CreateTaskService {
 
     for (const [index, createdTask] of createdTasks.entries()) {
       const input = inputs[index];
-      await this.createTaskPositionAtEnd(createdTask.id, input, manager);
+      if (!input.skipPosition) {
+        await this.createTaskPositionAtEnd(createdTask.id, input, manager);
+      }
     }
 
     return createdTasks;

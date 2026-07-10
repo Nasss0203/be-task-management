@@ -85,6 +85,7 @@ export class CreateProjectServiceImpl implements CreateProjectService {
 
   async createProjectWithPageBlock(
     createProjectDto: CreateProjectDto & { created_by?: string; key?: string },
+    manager?: EntityManager,
   ): Promise<ProjectModel> {
     const workspaceId = createProjectDto.workspace_id;
     const userId = createProjectDto.created_by || 'sys';
@@ -93,10 +94,10 @@ export class CreateProjectServiceImpl implements CreateProjectService {
       createProjectDto.key ||
       `${nameProject}-${userId.slice(0, 4)}-${Date.now()}`;
 
-    return this.uow.runInTransaction(async (manager) => {
+    const execute = async (entityManager: EntityManager) => {
       await this.usageLimitEnforcerService.checkProjectLimit(
         workspaceId,
-        manager,
+        entityManager,
       );
 
       const project = await this.repo.save(
@@ -106,7 +107,7 @@ export class CreateProjectServiceImpl implements CreateProjectService {
           workspace_id: workspaceId,
           created_by: userId,
         },
-        manager,
+        entityManager,
       );
 
       let board: BoardModel | null = null;
@@ -122,7 +123,7 @@ export class CreateProjectServiceImpl implements CreateProjectService {
             createdBy: userId,
             viewType: initialView,
           },
-          manager,
+          entityManager,
         );
       }
 
@@ -153,7 +154,7 @@ export class CreateProjectServiceImpl implements CreateProjectService {
             isDone: true,
           },
         ],
-        manager,
+        entityManager,
       );
 
       const createdPriorities = await this.createTaskPriorityService.createMany(
@@ -187,89 +188,17 @@ export class CreateProjectServiceImpl implements CreateProjectService {
             color: '#EF4444',
           },
         ],
-        manager,
+        entityManager,
       );
-
-      if (createProjectDto.create_default_board) {
-        const todoStatus = createdStatuses.find((item) => item.name === 'Todo');
-        const inProgressStatus = createdStatuses.find(
-          (item) => item.name === 'In Progress',
-        );
-        const doneStatus = createdStatuses.find((item) => item.name === 'Done');
-
-        const lowPriority = createdPriorities.find(
-          (item) => item.name === 'Low',
-        );
-        const mediumPriority = createdPriorities.find(
-          (item) => item.name === 'Medium',
-        );
-        const highPriority = createdPriorities.find(
-          (item) => item.name === 'High',
-        );
-
-        if (!todoStatus || !inProgressStatus || !doneStatus) {
-          throw new HttpException(
-            'Default task statuses were not seeded correctly',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-          );
-        }
-
-        if (!lowPriority || !mediumPriority || !highPriority) {
-          throw new HttpException(
-            'Default task priorities were not seeded correctly',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-          );
-        }
-
-        await this.createTaskService.createMany(
-          [
-            {
-              workspaceId,
-              projectId: project.id,
-              projectSeq: 1,
-
-              title: 'Create first task',
-              description: 'This is the first default task for your project.',
-              statusId: todoStatus.id,
-              priorityId: mediumPriority.id,
-              createdBy: userId,
-              estimateMinutes: 30,
-            },
-            {
-              workspaceId,
-              projectId: project.id,
-              projectSeq: 2,
-              title: 'Move task across columns',
-              description: 'Try moving this task from Todo to In Progress.',
-              statusId: inProgressStatus.id,
-              priorityId: lowPriority.id,
-              createdBy: userId,
-              estimateMinutes: 20,
-            },
-            {
-              workspaceId,
-              projectId: project.id,
-              projectSeq: 3,
-              title: 'Complete your first workflow',
-              description: 'Mark this task as Done when you finish setup.',
-              statusId: doneStatus.id,
-              priorityId: highPriority.id,
-              createdBy: userId,
-              estimateMinutes: 45,
-            },
-          ],
-          manager,
-        );
-      }
 
       const page = await this.findPageService.findPageByWorkspaceId(
         workspaceId,
-        manager,
+        entityManager,
       );
 
       if (page) {
         const nextOrderIndex =
-          await this.findPageBlockService.getNextOrderIndex(page.id, manager);
+          await this.findPageBlockService.getNextOrderIndex(page.id, entityManager);
 
         await this.createPageBlockService.create(
           {
@@ -291,16 +220,22 @@ export class CreateProjectServiceImpl implements CreateProjectService {
             created_by: userId,
             content: null,
           },
-          manager,
+          entityManager,
         );
       }
 
       await this.usageLimitEnforcerService.syncProjectUsedValue(
         workspaceId,
-        manager,
+        entityManager,
       );
 
       return project;
-    });
+    };
+
+    if (manager) {
+      return execute(manager);
+    } else {
+      return this.uow.runInTransaction(execute);
+    }
   }
 }

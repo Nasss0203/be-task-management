@@ -14,6 +14,7 @@ export const TASK_TYPES = {
   },
   applications: {
     CreateTaskApplication: 'CreateTaskApplication',
+    CreateSubtaskApplication: 'CreateSubtaskApplication',
     UpdateTaskApplication: 'UpdateTaskApplication',
     FindTaskApplication: 'FindTaskApplication',
     MoveTaskSprintApplication: 'MoveTaskSprintApplication',

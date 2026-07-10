@@ -5,6 +5,8 @@ import { CreateTaskDto } from '../../dto/create-task.dto';
 export type CreateTaskServiceInput = CreateTaskDto & {
   createdBy: string;
   projectSeq?: number;
+  parentTaskId?: string | null;
+  skipPosition?: boolean;
 };
 
 export interface CreateTaskService {

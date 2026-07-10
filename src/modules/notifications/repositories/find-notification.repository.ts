@@ -9,6 +9,7 @@ import {
   FindMyNotificationsRepositoryInput,
   FindNotificationRepository,
   NotificationTaskLookupInput,
+  NotificationSprintLookupInput,
 } from '../interfaces/repositories/find-notification.repository.interface';
 import { NotificationMapper } from '../mapper/notifications.mapper';
 
@@ -71,6 +72,8 @@ export class FindNotificationRepositoryImpl implements FindNotificationRepositor
           'TASK_OVERDUE',
           'SPRINT_STARTED',
           'SPRINT_COMPLETED',
+          'SPRINT_DUE_SOON',
+          'SPRINT_OVERDUE',
         ],
       });
     }
@@ -144,6 +147,23 @@ export class FindNotificationRepositoryImpl implements FindNotificationRepositor
         receiverId: input.receiverId,
         type: input.type,
         taskId: input.taskId,
+      },
+    });
+
+    return count > 0;
+  }
+
+  async existsByReceiverTypeAndSprint(
+    input: NotificationSprintLookupInput,
+    manager?: EntityManager,
+  ): Promise<boolean> {
+    const repo = this.getRepo(manager);
+
+    const count = await repo.count({
+      where: {
+        receiverId: input.receiverId,
+        type: input.type,
+        sprintId: input.sprintId,
       },
     });
 

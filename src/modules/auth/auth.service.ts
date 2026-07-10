@@ -4,6 +4,7 @@ import { ErrorCode } from 'src/common/constants/error-code.constant';
 import { hashPassword } from 'src/utils';
 import { MailService } from '../mail/mail.service';
 import { type AuthUserRepository } from './interfaces/repositories/auth-user.repository.interface';
+import { type IssueAuthTokenService } from './interfaces/services/issue-auth-token.service.interface';
 import { AUTH_TYPES } from './interfaces/types';
 
 @Injectable()
@@ -11,6 +12,8 @@ export class AuthService {
   constructor(
     @Inject(AUTH_TYPES.repositories.AuthUserRepository)
     private readonly userRepository: AuthUserRepository,
+    @Inject(AUTH_TYPES.services.IssueAuthTokenService)
+    private readonly issueAuthTokenService: IssueAuthTokenService,
     private readonly mailService: MailService,
   ) {}
 
@@ -53,6 +56,16 @@ export class AuthService {
       );
     }
 
+    if (!user.isActive) {
+      throw new HttpException(
+        {
+          code: ErrorCode.USER_INACTIVE,
+          message: 'User account is disabled or banned',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
     if (
       user.emailVerificationExpires &&
       user.emailVerificationExpires < new Date()
@@ -70,7 +83,14 @@ export class AuthService {
     user.emailVerificationToken = null;
     user.emailVerificationExpires = null;
     await this.userRepository.save(user);
-    return { success: true };
+
+    const tokens = await this.issueAuthTokenService.issueTokens(user);
+
+    return {
+      success: true,
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+    };
   }
 
   async forgotPassword(email: string) {

@@ -1,10 +1,19 @@
 import { EntityManager } from 'typeorm';
-import { SprintStatus } from '../../domain/entities/sprint.entity';
+import { Sprint, SprintStatus } from '../../domain/entities/sprint.entity';
 import { SprintsModel } from '../../domain/models/sprints.model';
 import { SprintProgressResponseDto } from '../../dto/sprint-progress.response.dto';
 import { FindSprintQuery } from '../find-sprint-query.interface';
 
 export interface FindSprintRepository {
+  findActiveSprintsDueSoon(
+    days: number,
+    manager?: EntityManager,
+  ): Promise<Sprint[]>;
+
+  findActiveSprintsOverdue(
+    manager?: EntityManager,
+  ): Promise<Sprint[]>;
+
   existsByProjectIdAndName(
     projectId: string,
     name: string,

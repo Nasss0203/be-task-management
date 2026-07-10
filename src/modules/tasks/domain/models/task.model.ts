@@ -8,6 +8,7 @@ export class TaskModel {
     public readonly id: string,
     public readonly workspaceId: string,
     public readonly projectId: string,
+    public readonly parentTaskId: string | null,
     public readonly projectSeq: number | null,
     public readonly title: string | null,
     public readonly statusId: string,
@@ -36,5 +37,6 @@ export class TaskModel {
     public readonly deletedAt?: Date | null,
     public readonly deletedBy?: string | null,
     public readonly position: string | null = null,
+    public readonly subtasks: TaskModel[] = [],
   ) {}
 }

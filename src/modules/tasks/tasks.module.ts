@@ -12,6 +12,7 @@ import { TaskPriorityModule } from '../task_priority/task_priority.module';
 import { TaskStatusModule } from '../task_status/task_status.module';
 import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
 import { WORKSPACE_TYPES } from '../workspaces/interfaces/types';
+import { CreateSubtaskApplicationImpl } from './applications/create-subtask.application';
 import { CreateTaskApplicationImpl } from './applications/create-task.application';
 import { DeleteTaskApplicationImpl } from './applications/delete-task.application';
 import { FindTaskApplicationImpl } from './applications/find-task.application';
@@ -67,6 +68,10 @@ import { UpdateTaskServiceImpl } from './services/update-task.service';
     {
       provide: TASK_TYPES.applications.CreateTaskApplication,
       useClass: CreateTaskApplicationImpl,
+    },
+    {
+      provide: TASK_TYPES.applications.CreateSubtaskApplication,
+      useClass: CreateSubtaskApplicationImpl,
     },
     {
       provide: TASK_TYPES.applications.UpdateTaskApplication,

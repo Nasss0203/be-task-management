@@ -24,13 +24,10 @@ export class DeleteTaskRepositoryImpl implements DeleteTaskRepository {
   ): Promise<void> {
     const repo = this.getRepo(manager);
 
-    await repo.update(
-      { id: input.taskId },
-      {
-        deletedAt: new Date(),
-        deletedBy: input.deletedBy,
-      },
-    );
+    await repo.update([{ id: input.taskId }, { parentTaskId: input.taskId }], {
+      deletedAt: new Date(),
+      deletedBy: input.deletedBy,
+    });
   }
 
   async restoreTask(
@@ -41,12 +38,9 @@ export class DeleteTaskRepositoryImpl implements DeleteTaskRepository {
   ): Promise<void> {
     const repo = this.getRepo(manager);
 
-    await repo.update(
-      { id: input.taskId },
-      {
-        deletedAt: null,
-        deletedBy: null,
-      },
-    );
+    await repo.update([{ id: input.taskId }, { parentTaskId: input.taskId }], {
+      deletedAt: null,
+      deletedBy: null,
+    });
   }
 }

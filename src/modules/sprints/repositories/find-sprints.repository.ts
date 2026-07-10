@@ -294,4 +294,53 @@ export class FindSprintRepositoryImpl implements FindSprintRepository {
       progressPercent,
     };
   }
+
+  async findActiveSprintsDueSoon(
+    days: number,
+    manager?: EntityManager,
+  ): Promise<Sprint[]> {
+    const normalizedDays = Number.isFinite(days)
+      ? Math.max(1, Math.floor(days))
+      : 1;
+    const now = new Date();
+    const dueBefore = new Date(
+      now.getTime() + normalizedDays * 24 * 60 * 60 * 1000,
+    );
+
+    return await this.getRepo(manager)
+      .createQueryBuilder('sprint')
+      .innerJoinAndSelect('sprint.workspace', 'workspace')
+      .innerJoinAndSelect('sprint.project', 'project')
+      .leftJoinAndSelect('sprint.tasks', 'task', 'task.deleted_at IS NULL')
+      .leftJoinAndSelect('task.status', 'status')
+      .leftJoinAndSelect('task.assignees', 'assignees')
+      .leftJoinAndSelect('assignees.user', 'assigneeUser')
+      .where('sprint.status = :status', { status: SprintStatus.ACTIVE })
+      .andWhere('sprint.end_at IS NOT NULL')
+      .andWhere('sprint.end_at >= :now', { now })
+      .andWhere('sprint.end_at <= :dueBefore', { dueBefore })
+      .andWhere('sprint.deleted_at IS NULL')
+      .andWhere('workspace.deleted_at IS NULL')
+      .andWhere('project.deleted_at IS NULL')
+      .getMany();
+  }
+
+  async findActiveSprintsOverdue(
+    manager?: EntityManager,
+  ): Promise<Sprint[]> {
+    const now = new Date();
+
+    return await this.getRepo(manager)
+      .createQueryBuilder('sprint')
+      .innerJoinAndSelect('sprint.workspace', 'workspace')
+      .innerJoinAndSelect('sprint.project', 'project')
+      .where('sprint.status = :status', { status: SprintStatus.ACTIVE })
+      .andWhere('sprint.end_at IS NOT NULL')
+      .andWhere('sprint.end_at < :now', { now })
+      .andWhere('sprint.deleted_at IS NULL')
+      .andWhere('workspace.deleted_at IS NULL')
+      .andWhere('project.deleted_at IS NULL')
+      .getMany();
+  }
 }
+

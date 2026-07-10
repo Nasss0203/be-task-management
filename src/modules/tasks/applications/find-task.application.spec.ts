@@ -39,13 +39,11 @@ describe('FindTaskApplicationImpl', () => {
         totalPages: 1,
       });
       const result = await app.findAllTask('proj-1', 'ws-1');
-      expect(result).toEqual({
-        data: [{ id: '1', title: 'Task 1', assignees: [] }],
-        total: 1,
-        page: 1,
-        pageSize: 10,
-        totalPages: 1,
-      });
+      expect(result.total).toBe(1);
+      expect(result.page).toBe(1);
+      expect(result.pageSize).toBe(10);
+      expect(result.totalPages).toBe(1);
+      expect(result.data[0]).toEqual(expect.objectContaining({ id: '1', title: 'Task 1', assignees: [] }));
     });
   });
 
@@ -60,13 +58,11 @@ describe('FindTaskApplicationImpl', () => {
       });
 
       const result = await app.findBacklogTasks('proj-1', 'ws-1', {} as any);
-      expect(result).toEqual({
-        data: [{ id: '1', title: 'Task 1', assignees: [] }],
-        total: 1,
-        page: 1,
-        pageSize: 10,
-        totalPages: 1,
-      });
+      expect(result.total).toBe(1);
+      expect(result.page).toBe(1);
+      expect(result.pageSize).toBe(10);
+      expect(result.totalPages).toBe(1);
+      expect(result.data[0]).toEqual(expect.objectContaining({ id: '1', title: 'Task 1', assignees: [] }));
     });
   });
 
@@ -80,7 +76,7 @@ describe('FindTaskApplicationImpl', () => {
     it('should return mapped task if found', async () => {
       mockFindTaskService.findOneTask.mockResolvedValue({ id: '1', title: 'Task 1', assignees: [] });
       const result = await app.findOneTask('1');
-      expect(result).toEqual({ id: '1', title: 'Task 1', assignees: [] });
+      expect(result).toEqual(expect.objectContaining({ id: '1', title: 'Task 1', assignees: [] }));
     });
   });
 
@@ -88,7 +84,7 @@ describe('FindTaskApplicationImpl', () => {
     it('should return mapped deleted tasks', async () => {
       mockFindTaskService.findDeletedTasks.mockResolvedValue([{ id: '1', title: 'Task 1', assignees: [] }]);
       const result = await app.findDeletedTasks('ws-1', 'proj-1');
-      expect(result).toEqual([{ id: '1', title: 'Task 1', assignees: [] }]);
+      expect(result[0]).toEqual(expect.objectContaining({ id: '1', title: 'Task 1', assignees: [] }));
     });
   });
 });

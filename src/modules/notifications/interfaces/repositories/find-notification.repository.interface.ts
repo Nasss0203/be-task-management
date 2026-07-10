@@ -31,6 +31,12 @@ export interface NotificationTaskLookupInput {
   taskId: string;
 }
 
+export interface NotificationSprintLookupInput {
+  receiverId: string;
+  type: NotificationType;
+  sprintId: string;
+}
+
 export interface FindNotificationRepository {
   findMyNotifications(
     input: FindMyNotificationsRepositoryInput,
@@ -41,6 +47,11 @@ export interface FindNotificationRepository {
 
   existsByReceiverTypeAndTask(
     input: NotificationTaskLookupInput,
+    manager?: EntityManager,
+  ): Promise<boolean>;
+
+  existsByReceiverTypeAndSprint(
+    input: NotificationSprintLookupInput,
     manager?: EntityManager,
   ): Promise<boolean>;
 }

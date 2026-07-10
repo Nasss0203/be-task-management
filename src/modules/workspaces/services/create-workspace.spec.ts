@@ -189,7 +189,7 @@ describe('CreateWorkspaceServiceImpl', () => {
     expect(usageLimitEnforcerService.syncProjectUsedValue).toHaveBeenCalledWith(workspace.id, manager);
     expect(createTaskStatusService.createMany).toHaveBeenCalled();
     expect(createTaskPriorityService.createMany).toHaveBeenCalled();
-    expect(createTaskService.createMany).toHaveBeenCalled();
+    expect(createTaskService.createMany).not.toHaveBeenCalled();
     expect(updatePageBlockService.update).toHaveBeenCalled();
   });
 
@@ -259,57 +259,7 @@ describe('CreateWorkspaceServiceImpl', () => {
     });
   });
 
-  it('throws internal error when default task statuses are not seeded correctly', async () => {
-    const userId = 'user-123456';
-    workspaceRepo.existsBySlug.mockResolvedValue(false);
-    workspaceRepo.save.mockResolvedValue({ id: 'workspace-1', name: 'Test' });
-    mockRbacSeedSuccess();
 
-    createPageService.createDefault.mockResolvedValue({ id: 'page-1' });
-    createProjectService.create.mockResolvedValue({ id: 'project-1' });
-    createBoardService.create.mockResolvedValue({ id: 'board-1' });
-
-    createTaskStatusService.createMany.mockResolvedValue([
-      { id: 'status-1', name: 'Todo' },
-    ]);
-
-    createTaskPriorityService.createMany.mockResolvedValue([
-      { id: 'priority-1', name: 'Low' },
-      { id: 'priority-2', name: 'Medium' },
-      { id: 'priority-3', name: 'High' },
-    ]);
-
-    await expect(service.createDefault({ userId })).rejects.toMatchObject({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      message: 'Default task statuses were not seeded correctly',
-    });
-  });
-
-  it('throws internal error when default task priorities are not seeded correctly', async () => {
-    const userId = 'user-123456';
-    workspaceRepo.existsBySlug.mockResolvedValue(false);
-    workspaceRepo.save.mockResolvedValue({ id: 'workspace-1', name: 'Test' });
-    mockRbacSeedSuccess();
-
-    createPageService.createDefault.mockResolvedValue({ id: 'page-1' });
-    createProjectService.create.mockResolvedValue({ id: 'project-1' });
-    createBoardService.create.mockResolvedValue({ id: 'board-1' });
-
-    createTaskStatusService.createMany.mockResolvedValue([
-      { id: 'status-1', name: 'Todo' },
-      { id: 'status-2', name: 'In Progress' },
-      { id: 'status-3', name: 'Done' },
-    ]);
-
-    createTaskPriorityService.createMany.mockResolvedValue([
-      { id: 'priority-1', name: 'Low' },
-    ]);
-
-    await expect(service.createDefault({ userId })).rejects.toMatchObject({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      message: 'Default task priorities were not seeded correctly',
-    });
-  });
 
   it('does not update default page block if createdPage has no pageBlock', async () => {
     const userId = 'user-123456';

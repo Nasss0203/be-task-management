@@ -165,6 +165,7 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
       .createQueryBuilder('task')
       .where('task.project_id = :projectId', { projectId })
       .andWhere('task.workspace_id = :workspaceId', { workspaceId })
+      .andWhere('task.parent_task_id IS NULL')
       .andWhere('task.deleted_at IS NULL');
 
     if (search) {
@@ -274,6 +275,14 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
           user: true,
           assignedByUser: true,
         },
+        subtasks: {
+          status: true,
+          priority: true,
+          assignees: {
+            user: true,
+            assignedByUser: true,
+          },
+        },
       },
     });
 
@@ -300,6 +309,7 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
       .where('task.workspace_id = :workspaceId', {
         workspaceId,
       })
+      .andWhere('task.parent_task_id IS NULL')
       .andWhere('task.deleted_at IS NOT NULL')
       .andWhere('project.deleted_at IS NULL')
       .andWhere('workspace.deleted_at IS NULL')
@@ -338,6 +348,7 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
       .createQueryBuilder('task')
       .where('task.project_id = :projectId', { projectId })
       .andWhere('task.workspace_id = :workspaceId', { workspaceId })
+      .andWhere('task.parent_task_id IS NULL')
       .andWhere('task.sprint_id IS NULL')
       .andWhere('task.completed_at IS NULL')
       .andWhere('task.deleted_at IS NULL');

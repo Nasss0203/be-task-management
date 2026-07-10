@@ -123,7 +123,7 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
 
     @Inject(PAGE_TEMPLATE_BLOCK_TYPES.services.PageTemplateBlocksService)
     private readonly pageTemplateBlocksService: PageTemplateBlocksService,
-  ) {}
+  ) { }
 
   private async seedWorkspaceRbac({
     workspaceId,
@@ -400,32 +400,7 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
           ],
           statuses: defaultStatuses,
           priorities: defaultPriorities,
-          tasks: [
-            {
-              projectTemplateKey: 'main',
-              title: 'Create first task',
-              description: 'This is the first default task for your project.',
-              statusName: 'Todo',
-              priorityName: 'Medium',
-              estimateMinutes: 30,
-            },
-            {
-              projectTemplateKey: 'main',
-              title: 'Move task across columns',
-              description: 'Try moving this task from Todo to In Progress.',
-              statusName: 'In Progress',
-              priorityName: 'Low',
-              estimateMinutes: 20,
-            },
-            {
-              projectTemplateKey: 'main',
-              title: 'Complete your first workflow',
-              description: 'Mark this task as Done when you finish setup.',
-              statusName: 'Done',
-              priorityName: 'High',
-              estimateMinutes: 45,
-            },
-          ],
+          tasks: [],
         };
     }
   }
@@ -521,7 +496,7 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
     // Use page template blocks from DB if a templateId exists
     if (templateId) {
       const dbBlocks = await this.pageTemplateBlocksService.findByTemplateId(templateId);
-      
+
       for (const dbBlock of dbBlocks) {
         const templateContent: any = dbBlock.content || {};
         const title = templateContent.title ?? null;
@@ -568,7 +543,7 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
           created_by: createdBy,
           content: blockType !== PageBlockType.DATABASE_VIEW ? rawContent : null,
         });
-        
+
         // Track the max order index used by DB blocks
         if (dbBlock.orderIndex >= orderIndex) {
           orderIndex = dbBlock.orderIndex + 1;
@@ -739,11 +714,11 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
 
       const priority = task.priorityName
         ? priorityMap.get(
-            this.buildTemplateStatusKey(
-              task.projectTemplateKey,
-              task.priorityName,
-            ),
-          )
+          this.buildTemplateStatusKey(
+            task.projectTemplateKey,
+            task.priorityName,
+          ),
+        )
         : null;
 
       if (task.priorityName && !priority) {
@@ -793,7 +768,7 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
       } else {
         // Fallback or handle cases without template ID if needed
         templateConfig = this.getTemplateConfig({
-          template: WorkspaceTemplateType.TASK_TRACKER,
+          template: WorkspaceTemplateType.BLANK_PAGE,
           workspaceName: input.name,
         });
       }

@@ -149,7 +149,7 @@ describe('CreateProjectServiceImpl', () => {
       expect(mockCreateBoardService.create).toHaveBeenCalled();
       expect(mockCreateTaskStatusService.createMany).toHaveBeenCalled();
       expect(mockCreateTaskPriorityService.createMany).toHaveBeenCalled();
-      expect(mockCreateTaskService.createMany).toHaveBeenCalled();
+      expect(mockCreateTaskService.createMany).not.toHaveBeenCalled();
       expect(mockCreatePageBlockService.create).toHaveBeenCalledWith(expect.objectContaining({
         page_id: 'page-1',
         type: PageBlockType.DATABASE_VIEW,
@@ -161,18 +161,6 @@ describe('CreateProjectServiceImpl', () => {
       expect(mockUsageLimitEnforcerService.syncProjectUsedValue).toHaveBeenCalledWith('ws-1', expect.anything());
       
       expect(result).toEqual(mockProject);
-    });
-
-    it('should throw HttpException if statuses are not seeded correctly', async () => {
-      mockCreateTaskStatusService.createMany.mockResolvedValue([{ id: 's1', name: 'Todo' }]); // Missing 'In Progress' and 'Done'
-      
-      await expect(service.createProjectWithPageBlock(defaultDto as any)).rejects.toThrow(HttpException);
-    });
-
-    it('should throw HttpException if priorities are not seeded correctly', async () => {
-      mockCreateTaskPriorityService.createMany.mockResolvedValue([{ id: 'p1', name: 'Low' }]); // Missing others
-      
-      await expect(service.createProjectWithPageBlock(defaultDto as any)).rejects.toThrow(HttpException);
     });
 
     it('should skip creating board and tasks if create_default_board is false', async () => {
@@ -193,6 +181,21 @@ describe('CreateProjectServiceImpl', () => {
       await service.createProjectWithPageBlock(defaultDto as any);
       
       expect(mockCreatePageBlockService.create).not.toHaveBeenCalled();
+    });
+
+    it('should use custom manager and bypass runInTransaction if provided', async () => {
+      const customManager = { query: jest.fn() } as any;
+      
+      await service.createProjectWithPageBlock(defaultDto as any, customManager);
+      
+      expect(mockUow.runInTransaction).not.toHaveBeenCalled();
+      expect(mockRepo.save).toHaveBeenCalledWith(expect.anything(), customManager);
+    });
+
+    it('should use runInTransaction if custom manager is not provided', async () => {
+      await service.createProjectWithPageBlock(defaultDto as any);
+      
+      expect(mockUow.runInTransaction).toHaveBeenCalled();
     });
   });
 });

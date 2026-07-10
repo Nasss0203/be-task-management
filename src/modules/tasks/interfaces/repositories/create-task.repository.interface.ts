@@ -5,6 +5,7 @@ export type SaveTaskInput = Pick<
   TaskModel,
   | 'workspaceId'
   | 'projectId'
+  | 'parentTaskId'
   | 'projectSeq'
   | 'title'
   | 'statusId'
