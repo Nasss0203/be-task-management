@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { randomBytes } from 'crypto';
+import { randomBytes, createHash } from 'crypto';
 import { MailService } from 'src/modules/mail/mail.service';
 import {
   SystemRole,
@@ -52,18 +52,26 @@ export class AdminUserServiceImpl implements AdminUserService {
       throw new ConflictException('System admin name is already in use');
     }
 
-    const temporaryPassword = this.generateTemporaryPassword();
+    const rawToken = randomBytes(32).toString('hex');
+    const hashedToken = createHash('sha256').update(rawToken).digest('hex');
+    const expires = new Date();
+    expires.setHours(expires.getHours() + 48); // Hết hạn sau 48 giờ
+
     const user = await this.repository.createSystemAdmin({
       email,
       username,
-      passwordHash: hashPassword(temporaryPassword),
+      passwordHash: null,
+      emailVerificationToken: hashedToken,
+      emailVerificationExpires: expires,
     });
 
+    const activationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/activate-admin?token=${rawToken}`;
+
     try {
-      await this.mailService.sendSystemAdminCredentials({
+      await this.mailService.sendSystemAdminInvitation({
         to: recipientEmail,
         accountEmail: email,
-        temporaryPassword,
+        activationUrl,
       });
     } catch (error) {
       await this.repository.deleteById(user.id);
@@ -80,10 +88,6 @@ export class AdminUserServiceImpl implements AdminUserService {
 
   findAll(query: AdminFindAllUserQueryDto): Promise<AdminUserResponseDto[]> {
     return this.repository.findAll(query);
-  }
-
-  private generateTemporaryPassword(): string {
-    return `${randomBytes(9).toString('base64url')}Aa1!`;
   }
 
   async lockUser(

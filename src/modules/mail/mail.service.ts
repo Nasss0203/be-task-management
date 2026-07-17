@@ -134,19 +134,18 @@ export class MailService {
     });
   }
 
-  async sendSystemAdminCredentials(input: {
+  async sendSystemAdminInvitation(input: {
     to: string;
     accountEmail: string;
-    temporaryPassword: string;
+    activationUrl: string;
   }): Promise<void> {
     await this.sendEmailTemplates({
       to: input.to,
-      subject: 'Tài khoản quản trị hệ thống của bạn',
+      subject: 'Kích hoạt tài khoản quản trị hệ thống của bạn',
       template: 'system-admin-credentials',
       context: {
         accountEmail: input.accountEmail,
-        temporaryPassword: input.temporaryPassword,
-        loginUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`,
+        activationUrl: input.activationUrl,
         year: new Date().getFullYear(),
         appName: 'Task Management',
       },

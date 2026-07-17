@@ -107,15 +107,19 @@ export class AdminUserRepositoryImpl implements AdminUserRepository {
   async createSystemAdmin(input: {
     email: string;
     username: string;
-    passwordHash: string;
+    passwordHash: string | null;
+    emailVerificationToken?: string | null;
+    emailVerificationExpires?: Date | null;
   }): Promise<User> {
     const user = this.userRepository.create({
       email: input.email,
       username: input.username,
       passwordHash: input.passwordHash,
       systemRole: SystemRole.SYSTEM_ADMIN,
-      isActive: true,
-      isEmailVerified: true,
+      isActive: false,
+      isEmailVerified: false,
+      emailVerificationToken: input.emailVerificationToken ?? null,
+      emailVerificationExpires: input.emailVerificationExpires ?? null,
       googleId: null,
       avatarUrl: null,
     });

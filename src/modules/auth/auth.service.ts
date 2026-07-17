@@ -142,4 +142,83 @@ export class AuthService {
     await this.userRepository.save(user);
     return { success: true };
   }
+
+  async verifyActivationToken(token: string) {
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const user =
+      await this.userRepository.findByEmailVerificationToken(hashedToken);
+
+    if (!user) {
+      throw new HttpException(
+        {
+          code: ErrorCode.INVALID_VERIFICATION_TOKEN,
+          message: 'Liên kết kích hoạt không hợp lệ hoặc không tồn tại.',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (
+      user.emailVerificationExpires &&
+      user.emailVerificationExpires < new Date()
+    ) {
+      throw new HttpException(
+        {
+          code: ErrorCode.EMAIL_VERIFICATION_EXPIRED,
+          message: 'Liên kết kích hoạt đã hết hạn sử dụng.',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return {
+      success: true,
+      email: user.email,
+      username: user.username,
+    };
+  }
+
+  async activateAdmin(token: string, password: string) {
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const user =
+      await this.userRepository.findByEmailVerificationToken(hashedToken);
+
+    if (!user) {
+      throw new HttpException(
+        {
+          code: ErrorCode.INVALID_VERIFICATION_TOKEN,
+          message: 'Liên kết kích hoạt không hợp lệ hoặc không tồn tại.',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (
+      user.emailVerificationExpires &&
+      user.emailVerificationExpires < new Date()
+    ) {
+      throw new HttpException(
+        {
+          code: ErrorCode.EMAIL_VERIFICATION_EXPIRED,
+          message: 'Liên kết kích hoạt đã hết hạn sử dụng.',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    user.passwordHash = hashPassword(password);
+    user.isActive = true;
+    user.isEmailVerified = true;
+    user.emailVerificationToken = null;
+    user.emailVerificationExpires = null;
+    await this.userRepository.save(user);
+
+    const tokens = await this.issueAuthTokenService.issueTokens(user);
+
+    return {
+      success: true,
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+    };
+  }
 }

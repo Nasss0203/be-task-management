@@ -15,7 +15,9 @@ export interface AdminUserRepository {
   createSystemAdmin(input: {
     email: string;
     username: string;
-    passwordHash: string;
+    passwordHash: string | null;
+    emailVerificationToken?: string | null;
+    emailVerificationExpires?: Date | null;
   }): Promise<User>;
 
   deleteById(userId: string): Promise<void>;

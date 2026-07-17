@@ -4,6 +4,7 @@ import {
   Get,
   Inject,
   Post,
+  Query,
   Req,
   Res,
   UseGuards,
@@ -37,6 +38,7 @@ import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { VerifyActivationTokenDto, ActivateAdminDto } from './dto/activate-admin.dto';
 
 type RefreshTokenRequest = Request & {
   cookies?: {
@@ -223,5 +225,30 @@ export class AuthController {
   @ResponseMessage('Password reset successfully')
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto.token, dto.newPassword);
+  }
+
+  @Public()
+  @Get('verify-activation-token')
+  @PublicReadRateLimit()
+  @ResponseMessage('Activation token verified successfully')
+  async verifyActivationToken(@Query() query: VerifyActivationTokenDto) {
+    return this.authService.verifyActivationToken(query.token);
+  }
+
+  @Public()
+  @Post('activate-admin')
+  @AuthRateLimit()
+  @ResponseMessage('Admin account activated successfully')
+  async activateAdmin(
+    @Body() dto: ActivateAdminDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.activateAdmin(dto.token, dto.password);
+
+    if (result.refresh_token) {
+      res.cookie('refresh_token', result.refresh_token, REFRESH_TOKEN_COOKIE_OPTIONS);
+    }
+
+    return result;
   }
 }
