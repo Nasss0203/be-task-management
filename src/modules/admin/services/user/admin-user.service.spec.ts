@@ -11,7 +11,7 @@ import { AdminUserServiceImpl } from './admin-user.service';
 describe('AdminUserServiceImpl.createSystemAdmin', () => {
   let repository: jest.Mocked<AdminUserRepository>;
   let mailService: jest.Mocked<
-    Pick<MailService, 'assertConfigured' | 'sendSystemAdminCredentials'>
+    Pick<MailService, 'assertConfigured' | 'sendSystemAdminInvitation'>
   >;
   let service: AdminUserServiceImpl;
 
@@ -24,10 +24,11 @@ describe('AdminUserServiceImpl.createSystemAdmin', () => {
       deleteById: jest.fn(),
       lockAndRevokeSessions: jest.fn(),
       setActive: jest.fn(),
+      updateSystemRole: jest.fn(),
     };
     mailService = {
       assertConfigured: jest.fn(),
-      sendSystemAdminCredentials: jest.fn(),
+      sendSystemAdminInvitation: jest.fn(),
     };
     service = new AdminUserServiceImpl(
       repository,
@@ -35,7 +36,7 @@ describe('AdminUserServiceImpl.createSystemAdmin', () => {
     );
   });
 
-  it('creates a verified system admin and emails the temporary credentials', async () => {
+  it('creates a verified system admin and emails the activation link', async () => {
     repository.findByEmailOrUsername.mockResolvedValue(null);
     repository.createSystemAdmin.mockImplementation(async (input) => {
       return {
@@ -55,12 +56,16 @@ describe('AdminUserServiceImpl.createSystemAdmin', () => {
     expect(repository.createSystemAdmin).toHaveBeenCalledWith({
       email: 'operations.admin@systemadmin.com',
       username: 'operations.admin',
-      passwordHash: expect.any(String),
+      passwordHash: null,
+      emailVerificationToken: expect.any(String),
+      emailVerificationExpires: expect.any(Date),
     });
-    expect(mailService.sendSystemAdminCredentials).toHaveBeenCalledWith({
+    expect(mailService.sendSystemAdminInvitation).toHaveBeenCalledWith({
       to: 'owner@example.com',
       accountEmail: 'operations.admin@systemadmin.com',
-      temporaryPassword: expect.any(String),
+      activationUrl: expect.stringContaining(
+        '/activate-admin?token=',
+      ),
     });
     expect(result).toEqual({
       id: 'new-admin-id',
@@ -117,7 +122,7 @@ describe('AdminUserServiceImpl.createSystemAdmin', () => {
       email: 'ops@systemadmin.com',
       username: 'ops',
     } as User);
-    mailService.sendSystemAdminCredentials.mockRejectedValue(
+    mailService.sendSystemAdminInvitation.mockRejectedValue(
       new Error('SMTP unavailable'),
     );
 
