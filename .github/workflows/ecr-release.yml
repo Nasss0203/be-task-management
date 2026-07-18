@@ -100,7 +100,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          target: build
+          target: tools
           push: true
           tags: |
             ${{ steps.image.outputs.tools_image }}
@@ -151,8 +151,8 @@ jobs:
             && export IMAGE_URI=$IMAGE_URI \
             && export SEED_IMAGE_URI=$SEED_IMAGE_URI \
             && docker compose -f docker-compose.prod.yml pull \
-            && docker compose -f docker-compose.prod.yml up -d \
-            && docker compose -f docker-compose.prod.yml run --rm seed npm run migration:fake \
+            && docker compose -f docker-compose.prod.yml up -d postgres \
             && docker compose -f docker-compose.prod.yml run --rm seed npm run migration:run \
             && docker compose -f docker-compose.prod.yml run --rm seed npm run seed:all \
+            && docker compose -f docker-compose.prod.yml up -d app caddy \
             && docker compose -f docker-compose.prod.yml ps"

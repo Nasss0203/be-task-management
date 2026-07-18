@@ -12,6 +12,13 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
+FROM node:22-bookworm-slim AS tools
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build
+
 FROM node:22-bookworm-slim AS prod-deps
 WORKDIR /app
 

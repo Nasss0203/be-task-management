@@ -4,6 +4,8 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      DB_SYNCHRONIZE: "false"
     ports:
       - "${APP_PORT:-8080}:${PORT:-8080}"
     volumes:
@@ -33,6 +35,8 @@ services:
       - tools
     env_file:
       - .env
+    environment:
+      DB_SYNCHRONIZE: "false"
     depends_on:
       postgres:
         condition: service_healthy
