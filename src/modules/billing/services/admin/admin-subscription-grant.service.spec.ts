@@ -92,4 +92,83 @@ describe('AdminSubscriptionGrantService expiration', () => {
     );
 
   });
+
+  it('expires due subscriptions even when a linked workspace is missing', async () => {
+    const subscription = {
+      id: 'subscription-id',
+      status: SubscriptionStatus.ACTIVE,
+      cancelAtPeriodEnd: true,
+      metadata: null,
+    } as Subscription;
+    const existingSubscriptionWorkspace = {
+      subscriptionId: subscription.id,
+      workspaceId: 'workspace-id',
+    } as SubscriptionWorkspace;
+    const missingSubscriptionWorkspace = {
+      subscriptionId: subscription.id,
+      workspaceId: 'missing-workspace-id',
+    } as SubscriptionWorkspace;
+    const workspace = {
+      id: existingSubscriptionWorkspace.workspaceId,
+      planType: PlanTypeWorkspace.PRO,
+    } as Workspace;
+    const freePlan = {
+      id: 'free-plan-id',
+      slug: 'free',
+      limits: {},
+    } as Plan;
+
+    const queryBuilder = {
+      setLock: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([subscription]),
+    };
+    const manager = {
+      createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
+      find: jest
+        .fn()
+        .mockResolvedValue([
+          existingSubscriptionWorkspace,
+          missingSubscriptionWorkspace,
+        ]),
+      remove: jest.fn().mockResolvedValue(undefined),
+      findOne: jest.fn().mockImplementation((entity, options) => {
+        if (entity === Workspace) {
+          return Promise.resolve(
+            options?.where?.id === workspace.id ? workspace : null,
+          );
+        }
+        if (entity === Plan) return Promise.resolve(freePlan);
+        if (entity === UsageLimit) return Promise.resolve(null);
+        return Promise.resolve(null);
+      }),
+      create: jest.fn().mockImplementation((_entity, value) => value),
+      save: jest.fn().mockImplementation((value) => Promise.resolve(value)),
+    } as unknown as EntityManager;
+    const dataSource = {
+      transaction: jest.fn((callback) => callback(manager)),
+    } as unknown as DataSource;
+    const service = new AdminSubscriptionGrantService(dataSource);
+    const now = new Date('2026-06-22T00:00:00.000Z');
+
+    const result = await service.expireDueSubscriptions(now);
+
+    expect(result).toEqual({
+      expiredSubscriptionIds: [subscription.id],
+      affectedWorkspaceIds: [workspace.id],
+    });
+    expect(manager.remove).toHaveBeenCalledWith([
+      existingSubscriptionWorkspace,
+      missingSubscriptionWorkspace,
+    ]);
+    expect(subscription.status).toBe(SubscriptionStatus.EXPIRED);
+    expect(subscription.metadata).toEqual({
+      expiration: {
+        source: 'subscription_expired',
+        expiredAt: now.toISOString(),
+        affectedWorkspaceIds: [workspace.id],
+      },
+    });
+  });
 });

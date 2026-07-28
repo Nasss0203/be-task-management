@@ -15,6 +15,11 @@ export interface FindPageBlockRepository {
     manager?: EntityManager,
   ): Promise<PageBlockModel | null>;
 
+  findActiveDatabaseViewBlocksByBoardId(
+    boardId: string,
+    manager?: EntityManager,
+  ): Promise<PageBlockModel[]>;
+
   findAllByPageId(
     pageId: string,
     manager?: EntityManager,

@@ -22,6 +22,16 @@ export class FindPageBlockServiceImpl implements FindPageBlockService {
     return this.findPageBlockRepository.findAllById(blockId, manager);
   }
 
+  async findActiveDatabaseViewBlocksByBoardId(
+    boardId: string,
+    manager?: EntityManager,
+  ): Promise<PageBlockModel[]> {
+    return this.findPageBlockRepository.findActiveDatabaseViewBlocksByBoardId(
+      boardId,
+      manager,
+    );
+  }
+
   async findAllByPageId(
     pageId: string,
     manager?: EntityManager,

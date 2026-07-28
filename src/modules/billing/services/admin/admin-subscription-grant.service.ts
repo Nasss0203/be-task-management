@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { Role, RoleName } from 'src/modules/role/domain/entities/role.entity';
@@ -81,6 +82,8 @@ export type ExpireSubscriptionsResult = {
 
 @Injectable()
 export class AdminSubscriptionGrantService {
+  private readonly logger = new Logger(AdminSubscriptionGrantService.name);
+
   constructor(private readonly dataSource: DataSource) {}
 
   expireDueSubscriptions(now = new Date()): Promise<ExpireSubscriptionsResult> {
@@ -390,19 +393,29 @@ export class AdminSubscriptionGrantService {
     );
 
     const workspaceIds = subscriptionWorkspaces.map((item) => item.workspaceId);
+    const affectedWorkspaceIds: string[] = [];
 
     if (subscriptionWorkspaces.length > 0) {
       await input.manager.remove(subscriptionWorkspaces);
     }
 
     for (const workspaceId of workspaceIds) {
-      const workspace = await this.findWorkspaceOrFail(
-        input.manager,
-        workspaceId,
-      );
+      const workspace = await input.manager.findOne(Workspace, {
+        where: {
+          id: workspaceId,
+        },
+      });
+
+      if (!workspace) {
+        this.logger.warn(
+          `Skipping missing workspace ${workspaceId} while downgrading subscription ${input.subscriptionId}`,
+        );
+        continue;
+      }
 
       workspace.planType = PlanTypeWorkspace.FREE;
       await input.manager.save(workspace);
+      affectedWorkspaceIds.push(workspaceId);
 
       await this.applyFreeUsageLimit({
         manager: input.manager,
@@ -412,7 +425,7 @@ export class AdminSubscriptionGrantService {
       });
     }
 
-    return workspaceIds;
+    return affectedWorkspaceIds;
   }
 
   private async reactivateSubscriptionWorkspaces(input: {

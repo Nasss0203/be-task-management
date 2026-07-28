@@ -36,6 +36,21 @@ export class FindPageBlockRepositoryImpl implements FindPageBlockRepository {
     return PageBlockMapper.toModel(row);
   }
 
+  async findActiveDatabaseViewBlocksByBoardId(
+    boardId: string,
+    manager?: EntityManager,
+  ): Promise<PageBlockModel[]> {
+    const rows = await this.getRepo(manager)
+      .createQueryBuilder('block')
+      .where('block.type = :type', { type: 'DATABASE_VIEW' })
+      .andWhere("block.data_config ->> 'default_board_id' = :boardId", {
+        boardId,
+      })
+      .getMany();
+
+    return rows.map((row) => PageBlockMapper.toModel(row));
+  }
+
   async findAllByPageId(
     pageId: string,
     manager?: EntityManager,
