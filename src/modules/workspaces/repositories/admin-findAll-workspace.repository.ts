@@ -27,14 +27,28 @@ type AdminWorkspaceRaw = {
   deletedAt: Date | null;
   ownerName: string | null;
   ownerEmail: string | null;
-  membersCount: string;
-  projectsCount: string;
-  boardsCount: string;
-  tasksCount: string;
+};
+
+type CountRaw = {
+  count: string;
+};
+
+type WorkspaceAggregateRaw = {
+  workspaceId: string;
+  count: string;
+};
+
+type WorkspaceCountMaps = {
+  members: Map<string, number>;
+  projects: Map<string, number>;
+  boards: Map<string, number>;
+  tasks: Map<string, number>;
 };
 
 @Injectable()
-export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspaceRepository {
+export class AdminFindAllWorkspaceRepositoryImpl
+  implements AdminFindAllWorkspaceRepository
+{
   constructor(
     @InjectRepository(Workspace)
     private readonly repo: Repository<Workspace>,
@@ -74,18 +88,102 @@ export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspac
   ): Promise<PaginatedAdminWorkspaceResponseDto> {
     const page = this.normalizePaginationValue(filter.page, 1);
     const pageSize = this.normalizePaginationValue(filter.pageSize, 10, 100);
+    const baseQb = this.buildBaseWorkspaceQuery(filter, manager);
 
+    const totalRaw = await baseQb
+      .clone()
+      .select('COUNT(DISTINCT "workspace"."id")', 'count')
+      .getRawOne<CountRaw>();
+    const total = Number(totalRaw?.count ?? 0);
+
+    const rows = await baseQb
+      .clone()
+      .select('"workspace"."id"', 'id')
+      .addSelect('"workspace"."name"', 'name')
+      .addSelect('"workspace"."slug"', 'slug')
+      .addSelect(
+        `CASE
+          WHEN MAX("activePlan"."slug") IS NULL THEN "workspace"."plan_type"
+          WHEN MAX("activePlan"."slug") = 'free' THEN 'free'
+          ELSE 'pro'
+        END`,
+        'plan',
+      )
+      .addSelect(
+        `COALESCE(
+          MAX("activePlan"."name"),
+          INITCAP("workspace"."plan_type"::text)
+        )`,
+        'planName',
+      )
+      .addSelect(
+        `COALESCE(MAX("activePlan"."slug"), "workspace"."plan_type"::text)`,
+        'planSlug',
+      )
+      .addSelect('"workspace"."created_at"', 'createdAt')
+      .addSelect('"workspace"."updated_at"', 'updatedAt')
+      .addSelect('"workspace"."deleted_at"', 'deletedAt')
+      .addSelect(
+        `CASE 
+          WHEN "workspace"."deleted_at" IS NULL THEN 'ACTIVE'
+          ELSE 'DELETED'
+        END`,
+        'status',
+      )
+      .addSelect(
+        `COALESCE(
+          MAX("ownerProfile"."full_name"),
+          MAX("ownerProfile"."display_name"),
+          MAX("ownerUser"."username"),
+          MAX("ownerUser"."email")
+        )`,
+        'ownerName',
+      )
+      .addSelect('MAX("ownerUser"."email")', 'ownerEmail')
+      .groupBy('"workspace"."id"')
+      .orderBy('"workspace"."created_at"', 'DESC')
+      .offset((page - 1) * pageSize)
+      .limit(pageSize)
+      .getRawMany<AdminWorkspaceRaw>();
+
+    const countMaps = await this.getWorkspaceCountMaps(
+      rows.map((row) => row.id),
+      manager,
+    );
+
+    return {
+      data: rows.map((row) => ({
+        id: row.id,
+        name: row.name,
+        slug: row.slug,
+        plan: row.plan,
+        planName: row.planName ?? row.plan,
+        planSlug: row.planSlug ?? row.plan,
+        status: row.status,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        deletedAt: row.deletedAt,
+        ownerName: row.ownerName,
+        ownerEmail: row.ownerEmail,
+        membersCount: countMaps.members.get(row.id) ?? 0,
+        projectsCount: countMaps.projects.get(row.id) ?? 0,
+        boardsCount: countMaps.boards.get(row.id) ?? 0,
+        tasksCount: countMaps.tasks.get(row.id) ?? 0,
+      })),
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+    };
+  }
+
+  private buildBaseWorkspaceQuery(
+    filter: AdminFindAllWorkspaceFilter,
+    manager?: EntityManager,
+  ) {
     const qb = this.getRepo(manager)
       .createQueryBuilder('workspace')
       .withDeleted()
-      .leftJoin('user_workspaces', 'uw', 'uw.workspace_id = workspace.id')
-      .leftJoin('projects', 'project', 'project.workspace_id = workspace.id')
-      .leftJoin('boards', 'board', 'board.workspace_id = workspace.id')
-      .leftJoin(
-        'tasks',
-        'task',
-        'task.workspace_id = workspace.id AND task.deleted_at IS NULL',
-      )
       .leftJoin('user_roles', 'ur', 'ur.workspace_id = workspace.id')
       .leftJoin('roles', 'role', 'role.id = ur.role_id')
       .leftJoin(
@@ -122,55 +220,7 @@ export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspac
         'plans',
         'activePlan',
         'activePlan.id = subscription.plan_id AND activePlan.is_active = true',
-      )
-      .select('workspace.id', 'id')
-      .addSelect('workspace.name', 'name')
-      .addSelect('workspace.slug', 'slug')
-      .addSelect(
-        `CASE
-          WHEN MAX("activePlan"."slug") IS NULL THEN "workspace"."plan_type"
-          WHEN MAX("activePlan"."slug") = 'free' THEN 'free'
-          ELSE 'pro'
-        END`,
-        'plan',
-      )
-      .addSelect(
-        `COALESCE(
-          MAX("activePlan"."name"),
-          INITCAP("workspace"."plan_type"::text)
-        )`,
-        'planName',
-      )
-      .addSelect(
-        `COALESCE(MAX("activePlan"."slug"), "workspace"."plan_type"::text)`,
-        'planSlug',
-      )
-      .addSelect('workspace.createdAt', 'createdAt')
-      .addSelect('workspace.updatedAt', 'updatedAt')
-      .addSelect('workspace.deletedAt', 'deletedAt')
-      .addSelect(
-        `CASE 
-          WHEN "workspace"."deleted_at" IS NULL THEN 'ACTIVE'
-          ELSE 'DELETED'
-        END`,
-        'status',
-      )
-      .addSelect(
-        `COALESCE(
-          MAX("ownerProfile"."full_name"),
-          MAX("ownerProfile"."display_name"),
-          MAX("ownerUser"."username"),
-          MAX("ownerUser"."email")
-        )`,
-        'ownerName',
-      )
-      .addSelect('MAX("ownerUser"."email")', 'ownerEmail')
-      .addSelect('COUNT(DISTINCT uw.user_id)', 'membersCount')
-      .addSelect('COUNT(DISTINCT project.id)', 'projectsCount')
-      .addSelect('COUNT(DISTINCT board.id)', 'boardsCount')
-      .addSelect('COUNT(DISTINCT task.id)', 'tasksCount')
-      .groupBy('workspace.id')
-      .orderBy('workspace.createdAt', 'DESC');
+      );
 
     qb.andWhere(
       `NOT EXISTS (
@@ -279,41 +329,76 @@ export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspac
       }
     }
 
-    const totalRows = await qb
-      .clone()
-      .select('workspace.id', 'id')
-      .getRawMany<{ id: string }>();
+    return qb;
+  }
 
-    const total = totalRows.length;
+  private async getWorkspaceCountMaps(
+    workspaceIds: string[],
+    manager?: EntityManager,
+  ): Promise<WorkspaceCountMaps> {
+    const empty: WorkspaceCountMaps = {
+      members: new Map(),
+      projects: new Map(),
+      boards: new Map(),
+      tasks: new Map(),
+    };
 
-    const rows = await qb
-      .skip((page - 1) * pageSize)
-      .take(pageSize)
-      .getRawMany<AdminWorkspaceRaw>();
+    if (!workspaceIds.length) {
+      return empty;
+    }
+
+    const queryManager = manager ?? this.repo.manager;
+    const [members, projects, boards, tasks] = await Promise.all([
+      queryManager.query<WorkspaceAggregateRaw[]>(
+        `
+          SELECT "workspace_id" AS "workspaceId", COUNT(*)::text AS "count"
+          FROM "user_workspaces"
+          WHERE "workspace_id" = ANY($1::uuid[])
+          GROUP BY "workspace_id"
+        `,
+        [workspaceIds],
+      ),
+      queryManager.query<WorkspaceAggregateRaw[]>(
+        `
+          SELECT "workspace_id" AS "workspaceId", COUNT(*)::text AS "count"
+          FROM "projects"
+          WHERE "workspace_id" = ANY($1::uuid[])
+          GROUP BY "workspace_id"
+        `,
+        [workspaceIds],
+      ),
+      queryManager.query<WorkspaceAggregateRaw[]>(
+        `
+          SELECT "workspace_id" AS "workspaceId", COUNT(*)::text AS "count"
+          FROM "boards"
+          WHERE "workspace_id" = ANY($1::uuid[])
+          GROUP BY "workspace_id"
+        `,
+        [workspaceIds],
+      ),
+      queryManager.query<WorkspaceAggregateRaw[]>(
+        `
+          SELECT "workspace_id" AS "workspaceId", COUNT(*)::text AS "count"
+          FROM "tasks"
+          WHERE "workspace_id" = ANY($1::uuid[])
+            AND "deleted_at" IS NULL
+          GROUP BY "workspace_id"
+        `,
+        [workspaceIds],
+      ),
+    ]);
 
     return {
-      data: rows.map((row) => ({
-        id: row.id,
-        name: row.name,
-        slug: row.slug,
-        plan: row.plan,
-        planName: row.planName ?? row.plan,
-        planSlug: row.planSlug ?? row.plan,
-        status: row.status,
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
-        deletedAt: row.deletedAt,
-        ownerName: row.ownerName,
-        ownerEmail: row.ownerEmail,
-        membersCount: Number(row.membersCount ?? 0),
-        projectsCount: Number(row.projectsCount ?? 0),
-        boardsCount: Number(row.boardsCount ?? 0),
-        tasksCount: Number(row.tasksCount ?? 0),
-      })),
-      total,
-      page,
-      pageSize,
-      totalPages: Math.ceil(total / pageSize),
+      members: this.toCountMap(members),
+      projects: this.toCountMap(projects),
+      boards: this.toCountMap(boards),
+      tasks: this.toCountMap(tasks),
     };
+  }
+
+  private toCountMap(rows: WorkspaceAggregateRaw[]): Map<string, number> {
+    return new Map(
+      rows.map((row) => [row.workspaceId, Number(row.count ?? 0)]),
+    );
   }
 }

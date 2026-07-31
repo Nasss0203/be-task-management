@@ -1,7 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
-import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
+import {
+  PlanTypeWorkspace,
+  Workspace,
+} from 'src/modules/workspaces/domain/entities/workspace.entity';
 import { Repository } from 'typeorm';
 
 import { Payment, PaymentStatus } from '../../domain/entities/payment.entity';
@@ -16,7 +19,10 @@ import {
   UsageLimit,
   UsageResourceType,
 } from '../../domain/entities/usage-limit.entity';
-import { RESOURCE_LIMIT_KEY_MAP } from '../../constants/default-plan-limits.constant';
+import {
+  FREE_PLAN_SLUG,
+  RESOURCE_LIMIT_KEY_MAP,
+} from '../../constants/default-plan-limits.constant';
 import {
   type CompletePaymentInput,
   type CompletePaymentService,
@@ -47,6 +53,9 @@ export class CompletePaymentServiceImpl implements CompletePaymentService {
 
     @InjectRepository(UserWorkspace)
     private readonly userWorkspaceRepository: Repository<UserWorkspace>,
+
+    @InjectRepository(Workspace)
+    private readonly workspaceRepository: Repository<Workspace>,
   ) {}
 
   async complete(input: CompletePaymentInput): Promise<void> {
@@ -196,6 +205,10 @@ export class CompletePaymentServiceImpl implements CompletePaymentService {
       workspaceId: input.workspaceId,
       plan: input.plan,
     });
+    await this.applyWorkspacePlanType({
+      workspaceId: input.workspaceId,
+      plan: input.plan,
+    });
 
     return true;
   }
@@ -339,5 +352,22 @@ export class CompletePaymentServiceImpl implements CompletePaymentService {
 
       await this.usageLimitRepository.save(usageLimit);
     }
+  }
+
+  private async applyWorkspacePlanType(input: {
+    workspaceId: string;
+    plan: Plan;
+  }): Promise<void> {
+    await this.workspaceRepository.update(
+      {
+        id: input.workspaceId,
+      },
+      {
+        planType:
+          input.plan.slug === FREE_PLAN_SLUG
+            ? PlanTypeWorkspace.FREE
+            : PlanTypeWorkspace.PRO,
+      },
+    );
   }
 }

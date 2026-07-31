@@ -8,6 +8,7 @@ import { Subscription } from '../../domain/entities/subscription.entity';
 import { UsageLimit } from '../../domain/entities/usage-limit.entity';
 import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
 import { NotFoundException } from '@nestjs/common';
+import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
 
 describe('CompletePaymentServiceImpl', () => {
   let service: CompletePaymentServiceImpl;
@@ -54,6 +55,10 @@ describe('CompletePaymentServiceImpl', () => {
     createQueryBuilder: jest.fn().mockReturnValue(mockUserWorkspaceQueryBuilder),
   };
 
+  const mockWorkspaceRepo = {
+    update: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
@@ -65,6 +70,7 @@ describe('CompletePaymentServiceImpl', () => {
         { provide: getRepositoryToken(SubscriptionWorkspace), useValue: mockSubscriptionWorkspaceRepo },
         { provide: getRepositoryToken(UsageLimit), useValue: mockUsageLimitRepo },
         { provide: getRepositoryToken(UserWorkspace), useValue: mockUserWorkspaceRepo },
+        { provide: getRepositoryToken(Workspace), useValue: mockWorkspaceRepo },
       ],
     }).compile();
 
@@ -120,6 +126,10 @@ describe('CompletePaymentServiceImpl', () => {
       expect(mockSubscriptionRepo.save).toHaveBeenCalled();
       expect(mockSubscriptionWorkspaceRepo.create).toHaveBeenCalled();
       expect(mockSubscriptionWorkspaceRepo.save).toHaveBeenCalled();
+      expect(mockWorkspaceRepo.update).toHaveBeenCalledWith(
+        { id: 'ws-1' },
+        { planType: 'pro' },
+      );
       expect(mockPaymentRepo.save).toHaveBeenCalledWith(expect.objectContaining({ subscriptionId: 'sub-new' }));
     });
   });

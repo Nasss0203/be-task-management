@@ -81,9 +81,6 @@ export class AdminUserGrowthRepositoryImpl implements AdminUserGrowthRepository 
         .groupBy(dateExpression)
         .orderBy(dateExpression, 'ASC');
 
-      console.log('User growth SQL:', queryBuilder.getSql());
-      console.log('User growth params:', queryBuilder.getParameters());
-
       const rows = await queryBuilder.getRawMany<UserGrowthRaw>();
 
       const rowMap = new Map(rows.map((row) => [row.date, Number(row.users)]));
@@ -109,7 +106,7 @@ export class AdminUserGrowthRepositoryImpl implements AdminUserGrowthRepository 
     const cursor = new Date(startDate);
 
     while (cursor <= endDate) {
-      const dateKey = cursor.toISOString().slice(0, 10);
+      const dateKey = this.formatDateKey(cursor);
 
       result.push({
         date: dateKey,
@@ -123,6 +120,14 @@ export class AdminUserGrowthRepositoryImpl implements AdminUserGrowthRepository 
     }
 
     return result;
+  }
+
+  private formatDateKey(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
   }
 
   private buildMonthlyResult(

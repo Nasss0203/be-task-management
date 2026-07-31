@@ -102,7 +102,7 @@ export class AdminWorkspaceGrowthRepositoryImpl implements AdminWorkspaceGrowthR
     const cursor = new Date(startDate);
 
     while (cursor <= endDate) {
-      const dateKey = cursor.toISOString().slice(0, 10);
+      const dateKey = this.formatDateKey(cursor);
 
       result.push({
         date: dateKey,
@@ -116,6 +116,14 @@ export class AdminWorkspaceGrowthRepositoryImpl implements AdminWorkspaceGrowthR
     }
 
     return result;
+  }
+
+  private formatDateKey(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
   }
 
   private buildMonthlyResult(
