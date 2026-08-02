@@ -154,5 +154,6 @@ jobs:
             && docker compose -f docker-compose.prod.yml up -d postgres \
             && docker compose -f docker-compose.prod.yml run --rm seed npm run migration:run \
             && docker compose -f docker-compose.prod.yml run --rm seed npm run seed:all \
+            && docker compose -f docker-compose.prod.yml run -e ALLOW_DEMO_SEED=true -e DEMO_SEED_CONFIRM=I_UNDERSTAND -e DEMO_SEED_VERSION=TASK_MANAGEMENT_DEMO_V1 -e DEMO_USER_PASSWORD=DemoUser@12345 --rm seed npm run seed:demo:large:local \
             && docker compose -f docker-compose.prod.yml up -d app caddy \
             && docker compose -f docker-compose.prod.yml ps"

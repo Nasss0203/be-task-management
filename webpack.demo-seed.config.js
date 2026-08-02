@@ -1,4 +1,5 @@
 const path = require('path');
+const nodeExternals = require('webpack-node-externals');
 
 module.exports = (options) => ({
   ...options,
@@ -12,4 +13,5 @@ module.exports = (options) => ({
     ...options.optimization,
     minimize: false,
   },
+  externals: [nodeExternals()],
 });

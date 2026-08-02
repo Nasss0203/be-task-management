@@ -7448,7 +7448,7 @@ exports.DEMO_SEED_CONFIG = {
     workspaceCount: 20,
     largeWorkspaceCount: 3,
     mediumWorkspaceCount: 7,
-    proWorkspaceCount: 10,
+    proWorkspaceCount: 0,
     mainDemoWorkspaceCount: 9,
     targetProjectCount: 51,
     targetSprintCount: 92,
