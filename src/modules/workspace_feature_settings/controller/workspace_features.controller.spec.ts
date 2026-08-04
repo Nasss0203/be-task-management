@@ -15,11 +15,18 @@ describe('WorkspaceFeaturesController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [WorkspaceFeaturesController],
       providers: [
-        { provide: WORKSPACE_FEATURE_SETTING_TYPES.applications.WorkspaceFeatureAccessApplication, useValue: mockApp },
+        {
+          provide:
+            WORKSPACE_FEATURE_SETTING_TYPES.applications
+              .WorkspaceFeatureAccessApplication,
+          useValue: mockApp,
+        },
       ],
     }).compile();
 
-    controller = module.get<WorkspaceFeaturesController>(WorkspaceFeaturesController);
+    controller = module.get<WorkspaceFeaturesController>(
+      WorkspaceFeaturesController,
+    );
   });
 
   it('should be defined', () => {
@@ -35,7 +42,12 @@ describe('WorkspaceFeaturesController', () => {
 
   it('should update workspace feature', async () => {
     mockApp.updateWorkspaceFeature.mockResolvedValue({ id: 'wf-1' });
-    const result = await controller.updateWorkspaceFeature('ws-1', 'feat-1', { enabled: true }, { id: 'u-1' } as any);
+    const result = await controller.updateWorkspaceFeature(
+      'ws-1',
+      'feat-1',
+      { enabled: true },
+      { id: 'u-1' } as any,
+    );
     expect(mockApp.updateWorkspaceFeature).toHaveBeenCalledWith({
       workspaceId: 'ws-1',
       featureCode: 'feat-1',

@@ -32,11 +32,18 @@ describe('FindRoleServiceImpl', () => {
 
   describe('findByNameAndWorkspace', () => {
     it('should return role model', async () => {
-      mockFindRoleRepository.findByNameAndWorkspace.mockResolvedValue({ id: 'r-1' });
+      mockFindRoleRepository.findByNameAndWorkspace.mockResolvedValue({
+        id: 'r-1',
+      });
 
-      const result = await service.findByNameAndWorkspace(RoleName.ADMIN, 'ws-1');
+      const result = await service.findByNameAndWorkspace(
+        RoleName.ADMIN,
+        'ws-1',
+      );
 
-      expect(mockFindRoleRepository.findByNameAndWorkspace).toHaveBeenCalledWith(RoleName.ADMIN, 'ws-1', undefined);
+      expect(
+        mockFindRoleRepository.findByNameAndWorkspace,
+      ).toHaveBeenCalledWith(RoleName.ADMIN, 'ws-1', undefined);
       expect(result).toEqual({ id: 'r-1' });
     });
   });

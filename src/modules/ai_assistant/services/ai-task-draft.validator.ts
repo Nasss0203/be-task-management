@@ -63,7 +63,13 @@ export function validateAiTaskDraftOutput(
 
     collectForbiddenKeys(item, `tasks[${index}]`, errors);
 
-    const title = readString(item.title, `tasks[${index}].title`, 3, 180, errors);
+    const title = readString(
+      item.title,
+      `tasks[${index}].title`,
+      3,
+      180,
+      errors,
+    );
     const description = readString(
       item.description,
       `tasks[${index}].description`,
@@ -141,7 +147,6 @@ export function taskDraftToOutputData(
     })),
   };
 }
-
 
 function readString(
   value: unknown,

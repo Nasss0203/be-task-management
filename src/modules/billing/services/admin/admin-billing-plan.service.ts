@@ -9,10 +9,7 @@ import { Repository } from 'typeorm';
 import { AdminCreatePlanDto } from '../../dto/request/admin-create-plan.dto';
 import { AdminUpdatePlanStatusDto } from '../../dto/request/admin-update-plan-status.dto';
 import { AdminUpdatePlanDto } from '../../dto/request/admin-update-plan.dto';
-import {
-  Plan,
-  PlanBillingInterval,
-} from '../../domain/entities/plan.entity';
+import { Plan, PlanBillingInterval } from '../../domain/entities/plan.entity';
 import {
   Subscription,
   SubscriptionStatus,
@@ -179,7 +176,9 @@ export class AdminBillingPlanService {
     }
   }
 
-  private async getPlanResponseById(planId: string): Promise<AdminBillingPlanRow> {
+  private async getPlanResponseById(
+    planId: string,
+  ): Promise<AdminBillingPlanRow> {
     const row = await this.createAdminPlanQuery()
       .andWhere('plan.id = :planId', { planId })
       .getRawOne<PlanRawRow>();

@@ -34,7 +34,13 @@ describe('CreateBoardApplicationImpl', () => {
     mockService.create.mockResolvedValue(mockModel);
     jest.spyOn(BoardMapper, 'toResponse').mockReturnValue(mockModel as any);
 
-    const dto = { name: 'Board 1', workspaceId: 'ws-1', projectId: 'p-1', createdBy: 'u-1', viewType: 'list' } as any;
+    const dto = {
+      name: 'Board 1',
+      workspaceId: 'ws-1',
+      projectId: 'p-1',
+      createdBy: 'u-1',
+      viewType: 'list',
+    } as any;
     const result = await app.create(dto);
 
     expect(mockService.create).toHaveBeenCalledWith(dto);

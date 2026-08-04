@@ -17,11 +17,28 @@ describe('AttachmentController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AttachmentController],
       providers: [
-        { provide: ATTACHMENT_TYPES.applications.UploadAttachmentApplication, useValue: mockUploadApp },
-        { provide: ATTACHMENT_TYPES.applications.FindAttachmentApplication, useValue: mockFindApp },
-        { provide: ATTACHMENT_TYPES.applications.CreateAttachmentDownloadUrlApplication, useValue: mockCreateDownloadUrlApp },
-        { provide: ATTACHMENT_TYPES.applications.UpdateAttachmentApplication, useValue: mockUpdateApp },
-        { provide: ATTACHMENT_TYPES.applications.DeleteAttachmentApplication, useValue: mockDeleteApp },
+        {
+          provide: ATTACHMENT_TYPES.applications.UploadAttachmentApplication,
+          useValue: mockUploadApp,
+        },
+        {
+          provide: ATTACHMENT_TYPES.applications.FindAttachmentApplication,
+          useValue: mockFindApp,
+        },
+        {
+          provide:
+            ATTACHMENT_TYPES.applications
+              .CreateAttachmentDownloadUrlApplication,
+          useValue: mockCreateDownloadUrlApp,
+        },
+        {
+          provide: ATTACHMENT_TYPES.applications.UpdateAttachmentApplication,
+          useValue: mockUpdateApp,
+        },
+        {
+          provide: ATTACHMENT_TYPES.applications.DeleteAttachmentApplication,
+          useValue: mockDeleteApp,
+        },
       ],
     }).compile();
 
@@ -41,7 +58,11 @@ describe('AttachmentController', () => {
 
       const result = await controller.upload('ws-1', body, file, auth);
 
-      expect(mockUploadApp.execute).toHaveBeenCalledWith(file, { taskId: 'task-1', workspaceId: 'ws-1' }, 'user-1');
+      expect(mockUploadApp.execute).toHaveBeenCalledWith(
+        file,
+        { taskId: 'task-1', workspaceId: 'ws-1' },
+        'user-1',
+      );
       expect(result).toEqual({ id: 'att-1' });
     });
   });
@@ -59,12 +80,17 @@ describe('AttachmentController', () => {
 
   describe('createDownloadUrl', () => {
     it('should call createDownloadUrlApp', async () => {
-      mockCreateDownloadUrlApp.execute.mockResolvedValue({ downloadUrl: 'http://url' });
+      mockCreateDownloadUrlApp.execute.mockResolvedValue({
+        downloadUrl: 'http://url',
+      });
       const auth = { id: 'user-1' } as any;
 
       const result = await controller.createDownloadUrl('att-1', auth);
 
-      expect(mockCreateDownloadUrlApp.execute).toHaveBeenCalledWith('att-1', 'user-1');
+      expect(mockCreateDownloadUrlApp.execute).toHaveBeenCalledWith(
+        'att-1',
+        'user-1',
+      );
       expect(result).toEqual({ downloadUrl: 'http://url' });
     });
   });
@@ -77,7 +103,11 @@ describe('AttachmentController', () => {
 
       const result = await controller.update('att-1', body, auth);
 
-      expect(mockUpdateApp.execute).toHaveBeenCalledWith('att-1', body, 'user-1');
+      expect(mockUpdateApp.execute).toHaveBeenCalledWith(
+        'att-1',
+        body,
+        'user-1',
+      );
       expect(result).toEqual({ id: 'att-1' });
     });
   });

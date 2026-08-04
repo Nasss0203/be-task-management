@@ -15,7 +15,10 @@ describe('DeleteBoardServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteBoardServiceImpl,
-        { provide: BOARD_TYPES.repositories.DeleteBoardRepository, useValue: mockRepo },
+        {
+          provide: BOARD_TYPES.repositories.DeleteBoardRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
@@ -28,11 +31,17 @@ describe('DeleteBoardServiceImpl', () => {
 
   it('should soft delete board', async () => {
     await service.softDeleteBoard({ boardId: 'b-1', deletedBy: 'u-1' });
-    expect(mockRepo.softDeleteBoard).toHaveBeenCalledWith({ boardId: 'b-1', deletedBy: 'u-1' }, undefined);
+    expect(mockRepo.softDeleteBoard).toHaveBeenCalledWith(
+      { boardId: 'b-1', deletedBy: 'u-1' },
+      undefined,
+    );
   });
 
   it('should restore board', async () => {
     await service.restoreBoard({ boardId: 'b-1' });
-    expect(mockRepo.restoreBoard).toHaveBeenCalledWith({ boardId: 'b-1' }, undefined);
+    expect(mockRepo.restoreBoard).toHaveBeenCalledWith(
+      { boardId: 'b-1' },
+      undefined,
+    );
   });
 });

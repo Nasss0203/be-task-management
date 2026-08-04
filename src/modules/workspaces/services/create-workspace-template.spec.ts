@@ -80,7 +80,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
 
   const workspaceTemplatesService = {
     findOne: jest.fn(),
-    findOneAvailableForUser: jest.fn().mockResolvedValue({ config: { projects: [], boards: [], pages: [], taskStatuses: [], taskPriorities: [], statuses: [], priorities: [], tasks: [] } }),
+    findOneAvailableForUser: jest.fn().mockResolvedValue({
+      config: {
+        projects: [],
+        boards: [],
+        pages: [],
+        taskStatuses: [],
+        taskPriorities: [],
+        statuses: [],
+        priorities: [],
+        tasks: [],
+      },
+    }),
   };
 
   const pageTemplateBlocksService = {
@@ -89,7 +100,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    workspaceTemplatesService.findOneAvailableForUser.mockResolvedValue({ config: { projects: [], boards: [], pages: [], taskStatuses: [], taskPriorities: [], statuses: [], priorities: [], tasks: [] } });
+    workspaceTemplatesService.findOneAvailableForUser.mockResolvedValue({
+      config: {
+        projects: [],
+        boards: [],
+        pages: [],
+        taskStatuses: [],
+        taskPriorities: [],
+        statuses: [],
+        priorities: [],
+        tasks: [],
+      },
+    });
 
     manager.getRepository.mockReturnValue({
       create: jest.fn((data) => data),
@@ -222,10 +244,9 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
     expect(
       checkWorkspaceLimitService.checkCanCreateWorkspace,
     ).toHaveBeenCalledWith(userId, manager);
-    expect(workspaceTemplatesService.findOneAvailableForUser).toHaveBeenCalledWith(
-      'template-1',
-      userId,
-    );
+    expect(
+      workspaceTemplatesService.findOneAvailableForUser,
+    ).toHaveBeenCalledWith('template-1', userId);
     expect(workspaceRepo.save).toHaveBeenCalled();
     expect(createUserWorkspaceService.create).toHaveBeenCalled();
     expect(roleRepository.saveMany).toHaveBeenCalled();
@@ -545,7 +566,11 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
       { type: 'HEADING_2', orderIndex: 2, content: { title: 'H2' } },
       { type: 'HEADING_3', orderIndex: 3, content: { title: 'H3' } },
       { type: 'PARAGRAPH', orderIndex: 4, content: { title: 'P' } },
-      { type: 'DATABASE_VIEW', orderIndex: 5, content: { title: 'DB', boardTemplateKey: 'main-board' } },
+      {
+        type: 'DATABASE_VIEW',
+        orderIndex: 5,
+        content: { title: 'DB', boardTemplateKey: 'main-board' },
+      },
     ]);
 
     await service.create(userId, {
@@ -553,7 +578,9 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
       templateId: 'template-1',
     });
 
-    expect(pageTemplateBlocksService.findByTemplateId).toHaveBeenCalledWith('page-template-1');
+    expect(pageTemplateBlocksService.findByTemplateId).toHaveBeenCalledWith(
+      'page-template-1',
+    );
     expect(manager.getRepository).toHaveBeenCalled();
     expect(manager.save).toHaveBeenCalled();
   });
@@ -564,7 +591,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
 
     createPageService.create.mockResolvedValue({ id: 'page-1' });
     createProjectService.create.mockResolvedValue({ id: 'project-1' });
-    
+
     workspaceTemplatesService.findOneAvailableForUser.mockResolvedValue({
       id: 'template-1',
       pageTemplateId: 'page-template-1',
@@ -579,11 +606,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
     });
 
     pageTemplateBlocksService.findByTemplateId.mockResolvedValue([
-      { type: 'DATABASE_VIEW', orderIndex: 1, content: { title: 'DB', boardTemplateKey: 'missing-board' } },
+      {
+        type: 'DATABASE_VIEW',
+        orderIndex: 1,
+        content: { title: 'DB', boardTemplateKey: 'missing-board' },
+      },
     ]);
 
     await expect(
-      service.create(userId, { name: 'My Workspace', templateId: 'template-1' })
+      service.create(userId, {
+        name: 'My Workspace',
+        templateId: 'template-1',
+      }),
     ).rejects.toMatchObject({
       status: HttpStatus.BAD_REQUEST,
     });
@@ -607,7 +641,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             templateKey: 'main-block',
             boardTemplateKey: 'missing-board',
             title: 'My Board',
-          }
+          },
         ],
         statuses: [],
         priorities: [],
@@ -616,7 +650,10 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
     });
 
     await expect(
-      service.create(userId, { name: 'My Workspace', templateId: 'template-1' })
+      service.create(userId, {
+        name: 'My Workspace',
+        templateId: 'template-1',
+      }),
     ).rejects.toMatchObject({
       status: HttpStatus.BAD_REQUEST,
     });
@@ -640,7 +677,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
           {
             projectTemplateKey: 'missing-project',
             name: 'Todo',
-          }
+          },
         ],
         priorities: [],
         tasks: [],
@@ -648,7 +685,10 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
     });
 
     await expect(
-      service.create(userId, { name: 'My Workspace', templateId: 'template-1' })
+      service.create(userId, {
+        name: 'My Workspace',
+        templateId: 'template-1',
+      }),
     ).rejects.toMatchObject({
       status: HttpStatus.BAD_REQUEST,
     });
@@ -673,14 +713,17 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
           {
             projectTemplateKey: 'missing-project',
             name: 'High',
-          }
+          },
         ],
         tasks: [],
       },
     });
 
     await expect(
-      service.create(userId, { name: 'My Workspace', templateId: 'template-1' })
+      service.create(userId, {
+        name: 'My Workspace',
+        templateId: 'template-1',
+      }),
     ).rejects.toMatchObject({
       status: HttpStatus.BAD_REQUEST,
     });
@@ -708,13 +751,16 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             projectTemplateKey: 'missing-project',
             title: 'First task',
             statusName: 'Todo',
-          }
+          },
         ],
       },
     });
 
     await expect(
-      service.create(userId, { name: 'My Workspace', templateId: 'template-1' })
+      service.create(userId, {
+        name: 'My Workspace',
+        templateId: 'template-1',
+      }),
     ).rejects.toMatchObject({
       status: HttpStatus.BAD_REQUEST,
     });
@@ -743,13 +789,16 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             title: 'First task',
             statusName: 'Todo',
             priorityName: 'missing-priority',
-          }
+          },
         ],
       },
     });
 
     await expect(
-      service.create(userId, { name: 'My Workspace', templateId: 'template-1' })
+      service.create(userId, {
+        name: 'My Workspace',
+        templateId: 'template-1',
+      }),
     ).rejects.toMatchObject({
       status: HttpStatus.BAD_REQUEST,
     });
@@ -761,12 +810,20 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
       id: 'template-1',
       pageTemplateId: null,
       config: {
-        projects: [], boards: [], pageBlocks: [], statuses: [], priorities: [], tasks: [],
+        projects: [],
+        boards: [],
+        pageBlocks: [],
+        statuses: [],
+        priorities: [],
+        tasks: [],
       },
     });
     workspaceRepo.existsBySlug.mockResolvedValue(false);
     workspaceRepo.save.mockResolvedValue({
-      id: 'workspace-1', name: 'My Workspace', slug: 'my-workspace', planType: PlanTypeWorkspace.FREE,
+      id: 'workspace-1',
+      name: 'My Workspace',
+      slug: 'my-workspace',
+      planType: PlanTypeWorkspace.FREE,
     });
     roleRepository.saveMany.mockResolvedValue([
       { id: 'role-owner', name: RoleName.OWNER },
@@ -774,12 +831,17 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
       { id: 'role-member', name: RoleName.MEMBER },
       { id: 'role-viewer', name: RoleName.VIEWER },
     ]);
-    
+
     // Return a dummy permission so permissions.length > 0
-    findPermissionRepository.findAll.mockResolvedValue([{ id: 'dummy-1', code: 'DUMMY_CODE' }]);
+    findPermissionRepository.findAll.mockResolvedValue([
+      { id: 'dummy-1', code: 'DUMMY_CODE' },
+    ]);
 
     await expect(
-      service.create(userId, { name: 'My Workspace', templateId: 'template-1' })
+      service.create(userId, {
+        name: 'My Workspace',
+        templateId: 'template-1',
+      }),
     ).rejects.toMatchObject({
       status: HttpStatus.INTERNAL_SERVER_ERROR,
     });
@@ -790,7 +852,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
   it('generates BLANK_PAGE template config correctly', () => {
     const config = (service as any).getTemplateConfig({
       template: WorkspaceTemplateType.BLANK_PAGE,
-      workspaceName: 'My Workspace'
+      workspaceName: 'My Workspace',
     });
     expect(config.projects).toHaveLength(0);
   });
@@ -798,7 +860,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
   it('generates BLANK_DATABASE template config correctly', () => {
     const config = (service as any).getTemplateConfig({
       template: WorkspaceTemplateType.BLANK_DATABASE,
-      workspaceName: 'My Workspace'
+      workspaceName: 'My Workspace',
     });
     expect(config.projects).toHaveLength(1);
   });

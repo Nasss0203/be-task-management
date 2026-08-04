@@ -6,9 +6,7 @@ import { FindWorkspaceFeatureSettingService } from '../interfaces/services/find.
 import { WORKSPACE_FEATURE_SETTING_TYPES } from '../interfaces/types';
 
 @Injectable()
-export class FindWorkspaceFeatureSettingServiceImpl
-  implements FindWorkspaceFeatureSettingService
-{
+export class FindWorkspaceFeatureSettingServiceImpl implements FindWorkspaceFeatureSettingService {
   constructor(
     @Inject(
       WORKSPACE_FEATURE_SETTING_TYPES.repositories

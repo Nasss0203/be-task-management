@@ -16,11 +16,18 @@ describe('WorkspaceFeatureAccessApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         WorkspaceFeatureAccessApplicationImpl,
-        { provide: WORKSPACE_FEATURE_SETTING_TYPES.services.WorkspaceFeatureAccessService, useValue: mockService },
+        {
+          provide:
+            WORKSPACE_FEATURE_SETTING_TYPES.services
+              .WorkspaceFeatureAccessService,
+          useValue: mockService,
+        },
       ],
     }).compile();
 
-    app = module.get<WorkspaceFeatureAccessApplicationImpl>(WorkspaceFeatureAccessApplicationImpl);
+    app = module.get<WorkspaceFeatureAccessApplicationImpl>(
+      WorkspaceFeatureAccessApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -29,7 +36,9 @@ describe('WorkspaceFeatureAccessApplicationImpl', () => {
 
   it('should find workspace features', async () => {
     mockService.findWorkspaceFeatures.mockResolvedValue([{ id: 'wf-1' }]);
-    jest.spyOn(WorkspaceFeatureStatusMapper, 'toResponse').mockReturnValue({ id: 'wf-1' } as any);
+    jest
+      .spyOn(WorkspaceFeatureStatusMapper, 'toResponse')
+      .mockReturnValue({ id: 'wf-1' } as any);
 
     const result = await app.findWorkspaceFeatures('ws-1');
     expect(mockService.findWorkspaceFeatures).toHaveBeenCalledWith('ws-1');
@@ -38,7 +47,9 @@ describe('WorkspaceFeatureAccessApplicationImpl', () => {
 
   it('should update workspace feature', async () => {
     mockService.updateWorkspaceFeature.mockResolvedValue({ id: 'wf-1' });
-    jest.spyOn(WorkspaceFeatureStatusMapper, 'toResponse').mockReturnValue({ id: 'wf-1' } as any);
+    jest
+      .spyOn(WorkspaceFeatureStatusMapper, 'toResponse')
+      .mockReturnValue({ id: 'wf-1' } as any);
 
     const result = await app.updateWorkspaceFeature({
       workspaceId: 'ws-1',

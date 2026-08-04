@@ -24,7 +24,7 @@ export class CheckWorkspaceLimitServiceImpl implements CheckWorkspaceLimitServic
   constructor(
     @Inject(BILLING_TYPES.repositories.WorkspaceLimitRepository)
     private readonly workspaceLimitRepository: WorkspaceLimitRepository,
-  ) { }
+  ) {}
 
   async checkCanCreateWorkspace(
     userId: string,

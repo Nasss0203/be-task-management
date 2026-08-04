@@ -38,7 +38,10 @@ export class CancelSprintApplicationImpl implements CancelSprintApplication {
     input: CancelSprintApplicationInput,
   ): Promise<SprintResponseDto> {
     const sprint = await this.unitOfWork.runInTransaction(async (manager) => {
-      const sprint = await this.cancelSprintService.cancelSprint(input, manager);
+      const sprint = await this.cancelSprintService.cancelSprint(
+        input,
+        manager,
+      );
 
       await this.createActivityService.create(
         {

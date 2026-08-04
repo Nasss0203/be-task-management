@@ -49,7 +49,7 @@ import { CreateWorkspaceServiceImpl } from './services/create-workspace.service'
 import { FindWorkspaceOverviewServiceImpl } from './services/find-workspace-overview.service';
 import { FindWorkspaceServiceImpl } from './services/find.workspace.service';
 import { UpdateWorkspaceServiceImpl } from './services/update-workspace.service';
-import { WorkspaceTrashServiceImpl } from './services/workspace-trash.service'; 
+import { WorkspaceTrashServiceImpl } from './services/workspace-trash.service';
 import { UpdateWorkspaceLayoutModeServiceImpl } from './services/update-workspace-layout-mode.service';
 import { BillingModule } from '../billing/billing.module';
 import { PageTemplateBlocksModule } from '../page_template_blocks/page_template_blocks.module';
@@ -110,7 +110,8 @@ import { WorkspaceTemplatesModule } from '../workspace_templates/workspace_templ
       useClass: UpdateWorkspaceApplicationImpl,
     },
     {
-      provide: WORKSPACE_TYPES.applications.UpdateWorkspaceLayoutModeApplication,
+      provide:
+        WORKSPACE_TYPES.applications.UpdateWorkspaceLayoutModeApplication,
       useClass: UpdateWorkspaceLayoutModeApplicationImpl,
     },
     {

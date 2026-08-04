@@ -29,8 +29,15 @@ describe('RegisterAuthApplicationImpl', () => {
   });
 
   it('should register user', async () => {
-    mockService.register.mockResolvedValue({ id: 'u-1', email: 'test@test.com' });
-    const dto = { email: 'test@test.com', password: 'password', full_name: 'Test' } as any;
+    mockService.register.mockResolvedValue({
+      id: 'u-1',
+      email: 'test@test.com',
+    });
+    const dto = {
+      email: 'test@test.com',
+      password: 'password',
+      full_name: 'Test',
+    } as any;
     const result = await app.register(dto);
     expect(mockService.register).toHaveBeenCalledWith(dto);
     expect(result).toEqual({ id: 'u-1', email: 'test@test.com' });

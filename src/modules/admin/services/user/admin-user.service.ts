@@ -121,7 +121,9 @@ export class AdminUserServiceImpl implements AdminUserService {
     actorRole: SystemRole,
   ): Promise<void> {
     if (actorRole !== SystemRole.SUPER_ADMIN) {
-      throw new ForbiddenException('Only SUPER_ADMIN can update user system roles');
+      throw new ForbiddenException(
+        'Only SUPER_ADMIN can update user system roles',
+      );
     }
 
     const target = await this.getTargetUser(userId);

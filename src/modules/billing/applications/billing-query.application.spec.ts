@@ -17,7 +17,10 @@ describe('BillingQueryApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BillingQueryApplicationImpl,
-        { provide: BILLING_TYPES.services.BillingQueryService, useValue: mockService },
+        {
+          provide: BILLING_TYPES.services.BillingQueryService,
+          useValue: mockService,
+        },
       ],
     }).compile();
 
@@ -52,7 +55,10 @@ describe('BillingQueryApplicationImpl', () => {
   it('should get workspace usage limits', async () => {
     mockService.getWorkspaceUsageLimits.mockResolvedValue([{ id: 'limit-1' }]);
     const result = await app.getWorkspaceUsageLimits('u-1', 'ws-1');
-    expect(mockService.getWorkspaceUsageLimits).toHaveBeenCalledWith('u-1', 'ws-1');
+    expect(mockService.getWorkspaceUsageLimits).toHaveBeenCalledWith(
+      'u-1',
+      'ws-1',
+    );
     expect(result).toEqual([{ id: 'limit-1' }]);
   });
 });

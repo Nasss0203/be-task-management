@@ -18,8 +18,14 @@ describe('StartSprintApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         StartSprintApplicationImpl,
-        { provide: SPRINT_TYPES.services.StartSprintService, useValue: mockStartSprintService },
-        { provide: ACTIVITY_TYPES.services.CreateActivityService, useValue: mockCreateActivityService },
+        {
+          provide: SPRINT_TYPES.services.StartSprintService,
+          useValue: mockStartSprintService,
+        },
+        {
+          provide: ACTIVITY_TYPES.services.CreateActivityService,
+          useValue: mockCreateActivityService,
+        },
         { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
@@ -74,14 +80,17 @@ describe('StartSprintApplicationImpl', () => {
         expect.objectContaining({
           entityId: mockSprint.id,
           actorId: input.userId,
-        })
+        }),
       );
 
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith(REALTIME_EVENTS.SPRINT_UPDATED, {
-        workspaceId: mockSprint.workspaceId,
-        projectId: mockSprint.projectId,
-        sprint: mockSprint,
-      });
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        REALTIME_EVENTS.SPRINT_UPDATED,
+        {
+          workspaceId: mockSprint.workspaceId,
+          projectId: mockSprint.projectId,
+          sprint: mockSprint,
+        },
+      );
 
       expect(result.id).toEqual(mockSprint.id);
     });

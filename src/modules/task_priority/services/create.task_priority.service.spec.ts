@@ -17,13 +17,16 @@ describe('CreateTaskPriorityServiceImpl', () => {
       providers: [
         CreateTaskPriorityServiceImpl,
         {
-          provide: TASK_PRIORITY_TYPES.repositories.CreateTaskPriorityRepository,
+          provide:
+            TASK_PRIORITY_TYPES.repositories.CreateTaskPriorityRepository,
           useValue: mockCreateTaskPriorityRepository,
         },
       ],
     }).compile();
 
-    service = module.get<CreateTaskPriorityServiceImpl>(CreateTaskPriorityServiceImpl);
+    service = module.get<CreateTaskPriorityServiceImpl>(
+      CreateTaskPriorityServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -34,11 +37,17 @@ describe('CreateTaskPriorityServiceImpl', () => {
     it('should call save on repository', async () => {
       const dto = { name: 'High' } as any;
       const manager = {} as any;
-      mockCreateTaskPriorityRepository.save.mockResolvedValue({ id: '1', name: 'High' });
+      mockCreateTaskPriorityRepository.save.mockResolvedValue({
+        id: '1',
+        name: 'High',
+      });
 
       const result = await service.create(dto, manager);
 
-      expect(mockCreateTaskPriorityRepository.save).toHaveBeenCalledWith(dto, manager);
+      expect(mockCreateTaskPriorityRepository.save).toHaveBeenCalledWith(
+        dto,
+        manager,
+      );
       expect(result).toEqual({ id: '1', name: 'High' });
     });
   });
@@ -47,11 +56,16 @@ describe('CreateTaskPriorityServiceImpl', () => {
     it('should call saveMany on repository', async () => {
       const dtos = [{ name: 'High' }] as any[];
       const manager = {} as any;
-      mockCreateTaskPriorityRepository.saveMany.mockResolvedValue([{ id: '1', name: 'High' }]);
+      mockCreateTaskPriorityRepository.saveMany.mockResolvedValue([
+        { id: '1', name: 'High' },
+      ]);
 
       const result = await service.createMany(dtos, manager);
 
-      expect(mockCreateTaskPriorityRepository.saveMany).toHaveBeenCalledWith(dtos, manager);
+      expect(mockCreateTaskPriorityRepository.saveMany).toHaveBeenCalledWith(
+        dtos,
+        manager,
+      );
       expect(result).toEqual([{ id: '1', name: 'High' }]);
     });
   });

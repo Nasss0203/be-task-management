@@ -39,7 +39,7 @@ export class CreateTaskApplicationImpl implements CreateTaskApplication {
 
     @Inject(WORKSPACE_TYPES.uow.UnitOfWork)
     private readonly unitOfWork: UnitOfWork,
-    
+
     private readonly eventEmitter: EventEmitter2,
   ) {}
 

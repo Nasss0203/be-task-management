@@ -2,7 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { StorageService } from './storage.service';
 import { ConfigService } from '@nestjs/config';
 import { R2_CLIENT } from './constant/r2.constants';
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 jest.mock('@aws-sdk/s3-request-presigner', () => ({
@@ -27,7 +32,9 @@ describe('StorageService', () => {
 
   beforeEach(async () => {
     const mockS3Client = { send: jest.fn() };
-    const mockConfigService = { getOrThrow: jest.fn().mockReturnValue('test-bucket') };
+    const mockConfigService = {
+      getOrThrow: jest.fn().mockReturnValue('test-bucket'),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -88,19 +95,30 @@ describe('StorageService', () => {
   });
 
   it('should build storage key with task id', () => {
-    const result = service.buildStorageKey({ workspaceId: 'ws-1', taskId: 't-1', fileName: 'test.txt' });
+    const result = service.buildStorageKey({
+      workspaceId: 'ws-1',
+      taskId: 't-1',
+      fileName: 'test.txt',
+    });
     expect(result).toContain('workspaces/ws-1/tasks/t-1/');
     expect(result).toContain('test.txt');
   });
 
   it('should build storage key with comment id', () => {
-    const result = service.buildStorageKey({ workspaceId: 'ws-1', commentId: 'c-1', fileName: 'test.txt' });
+    const result = service.buildStorageKey({
+      workspaceId: 'ws-1',
+      commentId: 'c-1',
+      fileName: 'test.txt',
+    });
     expect(result).toContain('workspaces/ws-1/comments/c-1/');
     expect(result).toContain('test.txt');
   });
 
   it('should build storage key without task or comment id', () => {
-    const result = service.buildStorageKey({ workspaceId: 'ws-1', fileName: 'test.txt' });
+    const result = service.buildStorageKey({
+      workspaceId: 'ws-1',
+      fileName: 'test.txt',
+    });
     expect(result).toContain('workspaces/ws-1/files/');
     expect(result).toContain('test.txt');
   });

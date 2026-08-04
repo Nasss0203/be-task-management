@@ -18,7 +18,10 @@ describe('FindPageBlockServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindPageBlockServiceImpl,
-        { provide: PAGE_BLOCK_TYPES.repositories.FindPageBlockRepository, useValue: mockRepo },
+        {
+          provide: PAGE_BLOCK_TYPES.repositories.FindPageBlockRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
@@ -46,21 +49,30 @@ describe('FindPageBlockServiceImpl', () => {
   it('should get next order index', async () => {
     mockRepo.getNextOrderIndex.mockResolvedValue(1);
     const result = await service.getNextOrderIndex('page-1');
-    expect(mockRepo.getNextOrderIndex).toHaveBeenCalledWith('page-1', undefined);
+    expect(mockRepo.getNextOrderIndex).toHaveBeenCalledWith(
+      'page-1',
+      undefined,
+    );
     expect(result).toEqual(1);
   });
 
   it('should find deleted page blocks', async () => {
     mockRepo.findDeletedPageBlocks.mockResolvedValue([{ id: 'pb-1' }]);
     const result = await service.findDeletedPageBlocks('ws-1', 'page-1');
-    expect(mockRepo.findDeletedPageBlocks).toHaveBeenCalledWith('ws-1', 'page-1');
+    expect(mockRepo.findDeletedPageBlocks).toHaveBeenCalledWith(
+      'ws-1',
+      'page-1',
+    );
     expect(result).toEqual([{ id: 'pb-1' }]);
   });
 
   it('should find one page block for restore', async () => {
     mockRepo.findOnePageBlockForRestore.mockResolvedValue({ id: 'pb-1' });
     const result = await service.findOnePageBlockForRestore('ws-1', 'pb-1');
-    expect(mockRepo.findOnePageBlockForRestore).toHaveBeenCalledWith('ws-1', 'pb-1');
+    expect(mockRepo.findOnePageBlockForRestore).toHaveBeenCalledWith(
+      'ws-1',
+      'pb-1',
+    );
     expect(result).toEqual({ id: 'pb-1' });
   });
 });

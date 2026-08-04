@@ -16,11 +16,18 @@ describe('WorkspaceFeatureAccessServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         WorkspaceFeatureAccessServiceImpl,
-        { provide: WORKSPACE_FEATURE_SETTING_TYPES.repositories.WorkspaceFeatureAccessRepository, useValue: mockRepo },
+        {
+          provide:
+            WORKSPACE_FEATURE_SETTING_TYPES.repositories
+              .WorkspaceFeatureAccessRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
-    service = module.get<WorkspaceFeatureAccessServiceImpl>(WorkspaceFeatureAccessServiceImpl);
+    service = module.get<WorkspaceFeatureAccessServiceImpl>(
+      WorkspaceFeatureAccessServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -47,22 +54,30 @@ describe('WorkspaceFeatureAccessServiceImpl', () => {
   });
 
   it('should throw ForbiddenException if feature is not available for current plan', async () => {
-    mockRepo.upsertWorkspaceFeatureSetting.mockRejectedValue(new Error('Feature is not available for current plan'));
-    await expect(service.updateWorkspaceFeature({
-      workspaceId: 'ws-1',
-      featureCode: 'feat-1',
-      enabled: true,
-      userId: 'u-1',
-    })).rejects.toThrow(ForbiddenException);
+    mockRepo.upsertWorkspaceFeatureSetting.mockRejectedValue(
+      new Error('Feature is not available for current plan'),
+    );
+    await expect(
+      service.updateWorkspaceFeature({
+        workspaceId: 'ws-1',
+        featureCode: 'feat-1',
+        enabled: true,
+        userId: 'u-1',
+      }),
+    ).rejects.toThrow(ForbiddenException);
   });
 
   it('should rethrow other errors', async () => {
-    mockRepo.upsertWorkspaceFeatureSetting.mockRejectedValue(new Error('Some other error'));
-    await expect(service.updateWorkspaceFeature({
-      workspaceId: 'ws-1',
-      featureCode: 'feat-1',
-      enabled: true,
-      userId: 'u-1',
-    })).rejects.toThrow('Some other error');
+    mockRepo.upsertWorkspaceFeatureSetting.mockRejectedValue(
+      new Error('Some other error'),
+    );
+    await expect(
+      service.updateWorkspaceFeature({
+        workspaceId: 'ws-1',
+        featureCode: 'feat-1',
+        enabled: true,
+        userId: 'u-1',
+      }),
+    ).rejects.toThrow('Some other error');
   });
 });

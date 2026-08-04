@@ -39,21 +39,31 @@ describe('UpdateTaskServiceImpl', () => {
 
       const result = await service.updateTask(dto, manager);
 
-      expect(mockUpdateTaskRepository.updateTask).toHaveBeenCalledWith(dto, manager);
+      expect(mockUpdateTaskRepository.updateTask).toHaveBeenCalledWith(
+        dto,
+        manager,
+      );
       expect(result).toEqual({ id: '1' });
     });
   });
 
   describe('updateManyTasks', () => {
     it('should call updateManyTasks on repository', async () => {
-      const input = { workspaceId: 'ws-1', projectId: 'proj-1', dto: {} } as any;
+      const input = {
+        workspaceId: 'ws-1',
+        projectId: 'proj-1',
+        dto: {},
+      } as any;
       const manager = {} as any;
 
       mockUpdateTaskRepository.updateManyTasks.mockResolvedValue([{ id: '1' }]);
 
       const result = await service.updateManyTasks(input, manager);
 
-      expect(mockUpdateTaskRepository.updateManyTasks).toHaveBeenCalledWith(input, manager);
+      expect(mockUpdateTaskRepository.updateManyTasks).toHaveBeenCalledWith(
+        input,
+        manager,
+      );
       expect(result).toEqual([{ id: '1' }]);
     });
   });

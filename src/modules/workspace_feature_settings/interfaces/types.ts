@@ -11,16 +11,20 @@ export const WORKSPACE_FEATURE_SETTING_TYPES = {
     WorkspaceFeatureAccessApplication: 'WorkspaceFeatureAccessApplication',
   },
   services: {
-    CreateWorkspaceFeatureSettingService: 'CreateWorkspaceFeatureSettingService',
+    CreateWorkspaceFeatureSettingService:
+      'CreateWorkspaceFeatureSettingService',
     FindWorkspaceFeatureSettingService: 'FindWorkspaceFeatureSettingService',
-    UpdateWorkspaceFeatureSettingService: 'UpdateWorkspaceFeatureSettingService',
-    DeleteWorkspaceFeatureSettingService: 'DeleteWorkspaceFeatureSettingService',
+    UpdateWorkspaceFeatureSettingService:
+      'UpdateWorkspaceFeatureSettingService',
+    DeleteWorkspaceFeatureSettingService:
+      'DeleteWorkspaceFeatureSettingService',
     WorkspaceFeatureAccessService: 'WorkspaceFeatureAccessService',
   },
   repositories: {
     CreateWorkspaceFeatureSettingRepository:
       'CreateWorkspaceFeatureSettingRepository',
-    FindWorkspaceFeatureSettingRepository: 'FindWorkspaceFeatureSettingRepository',
+    FindWorkspaceFeatureSettingRepository:
+      'FindWorkspaceFeatureSettingRepository',
     UpdateWorkspaceFeatureSettingRepository:
       'UpdateWorkspaceFeatureSettingRepository',
     DeleteWorkspaceFeatureSettingRepository:

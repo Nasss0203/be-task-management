@@ -10,11 +10,16 @@ describe('CreatePlanFeatureApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreatePlanFeatureApplicationImpl,
-        { provide: PLAN_FEATURE_TYPES.services.CreatePlanFeatureService, useValue: mockService },
+        {
+          provide: PLAN_FEATURE_TYPES.services.CreatePlanFeatureService,
+          useValue: mockService,
+        },
       ],
     }).compile();
 
-    application = module.get<CreatePlanFeatureApplicationImpl>(CreatePlanFeatureApplicationImpl);
+    application = module.get<CreatePlanFeatureApplicationImpl>(
+      CreatePlanFeatureApplicationImpl,
+    );
   });
 
   it('should create plan feature', async () => {

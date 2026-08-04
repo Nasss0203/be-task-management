@@ -15,11 +15,16 @@ describe('DeletePageBlockServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeletePageBlockServiceImpl,
-        { provide: PAGE_BLOCK_TYPES.repositories.DeletePageBlockRepository, useValue: mockRepo },
+        {
+          provide: PAGE_BLOCK_TYPES.repositories.DeletePageBlockRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
-    service = module.get<DeletePageBlockServiceImpl>(DeletePageBlockServiceImpl);
+    service = module.get<DeletePageBlockServiceImpl>(
+      DeletePageBlockServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -28,11 +33,17 @@ describe('DeletePageBlockServiceImpl', () => {
 
   it('should soft delete page block', async () => {
     await service.softDeletePageBlock({ blockId: 'pb-1', deletedBy: 'u-1' });
-    expect(mockRepo.softDeletePageBlock).toHaveBeenCalledWith({ blockId: 'pb-1', deletedBy: 'u-1' }, undefined);
+    expect(mockRepo.softDeletePageBlock).toHaveBeenCalledWith(
+      { blockId: 'pb-1', deletedBy: 'u-1' },
+      undefined,
+    );
   });
 
   it('should restore page block', async () => {
     await service.restorePageBlock({ blockId: 'pb-1' });
-    expect(mockRepo.restorePageBlock).toHaveBeenCalledWith({ blockId: 'pb-1' }, undefined);
+    expect(mockRepo.restorePageBlock).toHaveBeenCalledWith(
+      { blockId: 'pb-1' },
+      undefined,
+    );
   });
 });

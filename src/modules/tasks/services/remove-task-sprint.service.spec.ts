@@ -40,7 +40,9 @@ describe('RemoveTaskFromSprintServiceImpl', () => {
       ],
     }).compile();
 
-    service = module.get<RemoveTaskFromSprintServiceImpl>(RemoveTaskFromSprintServiceImpl);
+    service = module.get<RemoveTaskFromSprintServiceImpl>(
+      RemoveTaskFromSprintServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -50,30 +52,50 @@ describe('RemoveTaskFromSprintServiceImpl', () => {
   describe('remove', () => {
     it('should throw NotFoundException if task not found', async () => {
       mockFindTaskRepository.findOneTask.mockResolvedValue(null);
-      await expect(service.remove({ taskId: '1' } as any)).rejects.toThrow(NotFoundException);
+      await expect(service.remove({ taskId: '1' } as any)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException if task has no sprint (already in backlog)', async () => {
-      mockFindTaskRepository.findOneTask.mockResolvedValue({ id: '1', sprintId: null });
-      await expect(service.remove({ taskId: '1' } as any)).rejects.toThrow(BadRequestException);
+      mockFindTaskRepository.findOneTask.mockResolvedValue({
+        id: '1',
+        sprintId: null,
+      });
+      await expect(service.remove({ taskId: '1' } as any)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should call moveTaskToSprint with null and return updated task', async () => {
       const manager = {} as any;
-      mockFindTaskRepository.findOneTask.mockResolvedValue({ id: '1', sprintId: 'sprint-1' });
-      mockMoveTaskSprintRepository.moveTaskToSprint.mockResolvedValue({ id: '1', sprintId: null });
+      mockFindTaskRepository.findOneTask.mockResolvedValue({
+        id: '1',
+        sprintId: 'sprint-1',
+      });
+      mockMoveTaskSprintRepository.moveTaskToSprint.mockResolvedValue({
+        id: '1',
+        sprintId: null,
+      });
 
       const result = await service.remove({ taskId: '1' } as any, manager);
 
-      expect(mockMoveTaskSprintRepository.moveTaskToSprint).toHaveBeenCalledWith('1', null, manager);
+      expect(
+        mockMoveTaskSprintRepository.moveTaskToSprint,
+      ).toHaveBeenCalledWith('1', null, manager);
       expect(result).toEqual({ id: '1', sprintId: null });
     });
 
     it('should throw NotFoundException if moveTaskToSprint returns null', async () => {
-      mockFindTaskRepository.findOneTask.mockResolvedValue({ id: '1', sprintId: 'sprint-1' });
+      mockFindTaskRepository.findOneTask.mockResolvedValue({
+        id: '1',
+        sprintId: 'sprint-1',
+      });
       mockMoveTaskSprintRepository.moveTaskToSprint.mockResolvedValue(null);
 
-      await expect(service.remove({ taskId: '1' } as any)).rejects.toThrow(NotFoundException);
+      await expect(service.remove({ taskId: '1' } as any)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

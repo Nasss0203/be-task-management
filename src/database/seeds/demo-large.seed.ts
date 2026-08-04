@@ -737,8 +737,9 @@ class DemoLargeSeeder {
     }
 
     const subscriptionRepo = manager.getRepository(Subscription);
-    const subscriptionWorkspaceRepo =
-      manager.getRepository(SubscriptionWorkspace);
+    const subscriptionWorkspaceRepo = manager.getRepository(
+      SubscriptionWorkspace,
+    );
     const subscriptionSeedId = demoSeedId('subscription-owner', owner.id);
     const currentPeriodStart = this.baseDate;
     const currentPeriodEnd = new Date(Date.UTC(2099, 11, 31, 23, 59, 59, 0));
@@ -848,8 +849,9 @@ class DemoLargeSeeder {
     manager: EntityManager,
   ): Promise<void> {
     const subscriptionRepo = manager.getRepository(Subscription);
-    const subscriptionWorkspaceRepo =
-      manager.getRepository(SubscriptionWorkspace);
+    const subscriptionWorkspaceRepo = manager.getRepository(
+      SubscriptionWorkspace,
+    );
     const subscriptionWorkspace = await subscriptionWorkspaceRepo.findOne({
       where: {
         workspaceId: workspace.id,

@@ -19,14 +19,28 @@ describe('CreateTaskCommentServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateTaskCommentServiceImpl,
-        { provide: TASK_COMMENT_TYPES.repositories.CreateTaskCommentRepository, useValue: mockCreateTaskCommentRepository },
-        { provide: TASK_COMMENT_TYPES.repositories.FindTaskCommentReposiroty, useValue: mockFindTaskCommentReposiroty },
-        { provide: TASK_TYPES.services.FindTaskService, useValue: mockFindTaskService },
-        { provide: USER_WORKSPACE_TYPES.services.FindMemberService, useValue: mockFindMemberService },
+        {
+          provide: TASK_COMMENT_TYPES.repositories.CreateTaskCommentRepository,
+          useValue: mockCreateTaskCommentRepository,
+        },
+        {
+          provide: TASK_COMMENT_TYPES.repositories.FindTaskCommentReposiroty,
+          useValue: mockFindTaskCommentReposiroty,
+        },
+        {
+          provide: TASK_TYPES.services.FindTaskService,
+          useValue: mockFindTaskService,
+        },
+        {
+          provide: USER_WORKSPACE_TYPES.services.FindMemberService,
+          useValue: mockFindMemberService,
+        },
       ],
     }).compile();
 
-    service = module.get<CreateTaskCommentServiceImpl>(CreateTaskCommentServiceImpl);
+    service = module.get<CreateTaskCommentServiceImpl>(
+      CreateTaskCommentServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -34,41 +48,72 @@ describe('CreateTaskCommentServiceImpl', () => {
   });
 
   describe('create', () => {
-    const input = { workspaceId: 'ws-1', projectId: 'proj-1', taskId: 'task-1', authorId: 'user-1', content: 'test comment' };
+    const input = {
+      workspaceId: 'ws-1',
+      projectId: 'proj-1',
+      taskId: 'task-1',
+      authorId: 'user-1',
+      content: 'test comment',
+    };
     const manager = {} as any;
 
     it('should throw NotFoundException if task not found', async () => {
       mockFindTaskService.findOneTask.mockResolvedValue(null);
-      await expect(service.create(input, manager)).rejects.toThrow(NotFoundException);
+      await expect(service.create(input, manager)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ForbiddenException if task does not belong to project/workspace', async () => {
-      mockFindTaskService.findOneTask.mockResolvedValue({ workspaceId: 'ws-2', projectId: 'proj-1' });
-      await expect(service.create(input, manager)).rejects.toThrow(ForbiddenException);
+      mockFindTaskService.findOneTask.mockResolvedValue({
+        workspaceId: 'ws-2',
+        projectId: 'proj-1',
+      });
+      await expect(service.create(input, manager)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should throw ForbiddenException if user is not member of workspace', async () => {
-      mockFindTaskService.findOneTask.mockResolvedValue({ workspaceId: 'ws-1', projectId: 'proj-1' });
+      mockFindTaskService.findOneTask.mockResolvedValue({
+        workspaceId: 'ws-1',
+        projectId: 'proj-1',
+      });
       mockFindMemberService.findMemberInWorkspace.mockResolvedValue(null);
-      await expect(service.create(input, manager)).rejects.toThrow(ForbiddenException);
+      await expect(service.create(input, manager)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should create comment successfully', async () => {
-      mockFindTaskService.findOneTask.mockResolvedValue({ id: 'task-1', workspaceId: 'ws-1', projectId: 'proj-1' });
-      mockFindMemberService.findMemberInWorkspace.mockResolvedValue({ id: 'member-1' });
-      mockCreateTaskCommentRepository.create.mockResolvedValue({ id: 'comment-1' });
-      mockFindTaskCommentReposiroty.findById.mockResolvedValue({ id: 'comment-1' });
+      mockFindTaskService.findOneTask.mockResolvedValue({
+        id: 'task-1',
+        workspaceId: 'ws-1',
+        projectId: 'proj-1',
+      });
+      mockFindMemberService.findMemberInWorkspace.mockResolvedValue({
+        id: 'member-1',
+      });
+      mockCreateTaskCommentRepository.create.mockResolvedValue({
+        id: 'comment-1',
+      });
+      mockFindTaskCommentReposiroty.findById.mockResolvedValue({
+        id: 'comment-1',
+      });
 
       const result = await service.create(input, manager);
 
-      expect(mockCreateTaskCommentRepository.create).toHaveBeenCalledWith({
-        workspaceId: 'ws-1',
-        projectId: 'proj-1',
-        taskId: 'task-1',
-        authorId: 'user-1',
-        content: 'test comment',
-        isEdited: false,
-      }, manager);
+      expect(mockCreateTaskCommentRepository.create).toHaveBeenCalledWith(
+        {
+          workspaceId: 'ws-1',
+          projectId: 'proj-1',
+          taskId: 'task-1',
+          authorId: 'user-1',
+          content: 'test comment',
+          isEdited: false,
+        },
+        manager,
+      );
       expect(result).toEqual({ id: 'comment-1' });
     });
   });

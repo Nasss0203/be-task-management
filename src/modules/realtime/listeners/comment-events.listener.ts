@@ -1,11 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { REALTIME_EVENTS, type CommentCreatedPayload, type CommentUpdatedPayload, type CommentDeletedPayload } from '../realtime.events';
+import {
+  REALTIME_EVENTS,
+  type CommentCreatedPayload,
+  type CommentUpdatedPayload,
+  type CommentDeletedPayload,
+} from '../realtime.events';
 import { RealtimeEmitterService } from '../services/realtime-emitter.service';
 
 @Injectable()
 export class CommentEventsListener {
-  constructor(private readonly realtimeEmitterService: RealtimeEmitterService) {}
+  constructor(
+    private readonly realtimeEmitterService: RealtimeEmitterService,
+  ) {}
 
   @OnEvent(REALTIME_EVENTS.COMMENT_CREATED)
   handleCreated(payload: CommentCreatedPayload): void {

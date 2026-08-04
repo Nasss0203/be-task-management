@@ -20,7 +20,11 @@ export class DeleteTaskAssigneeServiceImpl implements DeleteTaskAssigneeService 
     );
   }
 
-  async unassignFromWorkspace(userId: string, workspaceId: string, manager?: any): Promise<void> {
+  async unassignFromWorkspace(
+    userId: string,
+    workspaceId: string,
+    manager?: any,
+  ): Promise<void> {
     return this.deleteTaskAssigneeRepository.deleteByUserAndWorkspace(
       userId,
       workspaceId,

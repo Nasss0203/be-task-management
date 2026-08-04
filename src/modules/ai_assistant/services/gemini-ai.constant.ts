@@ -82,7 +82,6 @@ export const GEMINI_TASK_DRAFT_RESPONSE_SCHEMA: Schema = {
   },
 };
 
-
 export const GEMINI_WORKSPACE_DRAFT_RESPONSE_SCHEMA: Schema = {
   type: Type.OBJECT,
   required: ['name', 'slug'],
@@ -179,7 +178,8 @@ export const GEMINI_WORKSPACE_TREE_DRAFT_RESPONSE_SCHEMA: Schema = {
           },
           slug: {
             type: Type.STRING,
-            description: 'Đuong dan url slug viet thuong, chi chua chu, so va dau gach ngang.',
+            description:
+              'Đuong dan url slug viet thuong, chi chua chu, so va dau gach ngang.',
           },
           projects: {
             type: Type.ARRAY,
@@ -194,13 +194,15 @@ export const GEMINI_WORKSPACE_TREE_DRAFT_RESPONSE_SCHEMA: Schema = {
                 },
                 key: {
                   type: Type.STRING,
-                  description: 'Ma viet tat Project viet hoa (vi du: API, UI, TASK).',
+                  description:
+                    'Ma viet tat Project viet hoa (vi du: API, UI, TASK).',
                 },
                 visibility: {
                   type: Type.STRING,
                   format: 'enum',
                   enum: ['PRIVATE', 'INTERNAL'],
-                  description: 'Che do hien thi cua Project (PRIVATE hoac INTERNAL).',
+                  description:
+                    'Che do hien thi cua Project (PRIVATE hoac INTERNAL).',
                 },
                 description: {
                   type: Type.STRING,
@@ -211,7 +213,12 @@ export const GEMINI_WORKSPACE_TREE_DRAFT_RESPONSE_SCHEMA: Schema = {
                   description: 'Danh sach cac Task thuoc Project nay.',
                   items: {
                     type: Type.OBJECT,
-                    required: ['title', 'description', 'priority', 'estimatedHours'],
+                    required: [
+                      'title',
+                      'description',
+                      'priority',
+                      'estimatedHours',
+                    ],
                     properties: {
                       title: {
                         type: Type.STRING,
@@ -247,13 +254,11 @@ export const GEMINI_SUBTASK_RESPONSE_SCHEMA: Schema = {
   properties: {
     subtasks: {
       type: Type.ARRAY,
-      description: 'Danh sach tieu de cac tac vu con (subtasks) de hoan thanh cong viec.',
+      description:
+        'Danh sach tieu de cac tac vu con (subtasks) de hoan thanh cong viec.',
       items: {
         type: Type.STRING,
       },
     },
   },
 };
-
-
-

@@ -16,10 +16,11 @@ export class FindSprintReportsServiceImpl implements FindSprintReportsService {
     workspaceId: string,
     projectId: string,
   ): Promise<SprintReportsModel[]> {
-    const reports = await this.findSprintReportsRepository.findReportsByProjectId(
-      workspaceId,
-      projectId,
-    );
+    const reports =
+      await this.findSprintReportsRepository.findReportsByProjectId(
+        workspaceId,
+        projectId,
+      );
     return reports.map(SprintReportsMapper.toModel);
   }
 }

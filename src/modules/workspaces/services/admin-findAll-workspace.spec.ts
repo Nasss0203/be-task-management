@@ -9,7 +9,9 @@ describe('AdminFindAllWorkspaceServiceImpl', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    service = new AdminFindAllWorkspaceServiceImpl(adminFindAllWorkspaceRepository as any);
+    service = new AdminFindAllWorkspaceServiceImpl(
+      adminFindAllWorkspaceRepository as any,
+    );
   });
 
   it('finds all workspace with given filter', async () => {
@@ -18,12 +20,16 @@ describe('AdminFindAllWorkspaceServiceImpl', () => {
       items: [],
       meta: { total: 0, page: 1, limit: 10, totalPages: 0 },
     };
-    
-    adminFindAllWorkspaceRepository.findAllWorkspace.mockResolvedValue(mockResponse);
+
+    adminFindAllWorkspaceRepository.findAllWorkspace.mockResolvedValue(
+      mockResponse,
+    );
 
     const result = await service.findAllWorkspace(filter as any);
 
-    expect(adminFindAllWorkspaceRepository.findAllWorkspace).toHaveBeenCalledWith(filter, undefined);
+    expect(
+      adminFindAllWorkspaceRepository.findAllWorkspace,
+    ).toHaveBeenCalledWith(filter, undefined);
     expect(result).toEqual(mockResponse);
   });
 
@@ -34,12 +40,16 @@ describe('AdminFindAllWorkspaceServiceImpl', () => {
       items: [],
       meta: { total: 0, page: 1, limit: 10, totalPages: 0 },
     };
-    
-    adminFindAllWorkspaceRepository.findAllWorkspace.mockResolvedValue(mockResponse);
+
+    adminFindAllWorkspaceRepository.findAllWorkspace.mockResolvedValue(
+      mockResponse,
+    );
 
     const result = await service.findAllWorkspace(filter as any, manager);
 
-    expect(adminFindAllWorkspaceRepository.findAllWorkspace).toHaveBeenCalledWith(filter, manager);
+    expect(
+      adminFindAllWorkspaceRepository.findAllWorkspace,
+    ).toHaveBeenCalledWith(filter, manager);
     expect(result).toEqual(mockResponse);
   });
 });

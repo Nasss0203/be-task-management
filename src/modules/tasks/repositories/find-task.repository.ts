@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, In, Repository } from 'typeorm';
-import {
-  paginateQb,
-} from 'src/common/pagination/paginate-qb.util';
+import { EntityManager, In, Repository, IsNull } from 'typeorm';
+import { paginateQb } from 'src/common/pagination/paginate-qb.util';
 import {
   normalizePagination,
   buildPaginationMeta,
@@ -137,7 +135,10 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
       if (assigneesByTaskId) {
         entity.assignees = assigneesByTaskId.get(entity.id) ?? [];
       }
-      return TaskMapper.toModel(entity, positionByTaskId.get(entity.id) ?? null);
+      return TaskMapper.toModel(
+        entity,
+        positionByTaskId.get(entity.id) ?? null,
+      );
     });
   }
 
@@ -166,6 +167,7 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
       .where('task.project_id = :projectId', { projectId })
       .andWhere('task.workspace_id = :workspaceId', { workspaceId })
       .andWhere('task.parent_task_id IS NULL')
+      .andWhere('task.completed_at IS NULL')
       .andWhere('task.deleted_at IS NULL');
 
     if (search) {
@@ -235,7 +237,10 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
 
     // ── Load assignees in one separate IN query (avoids row multiplication) ────
     const taskIds = entities.map((t) => t.id);
-    const assigneesByTaskId = await this.loadAssigneesForTasks(taskIds, manager);
+    const assigneesByTaskId = await this.loadAssigneesForTasks(
+      taskIds,
+      manager,
+    );
 
     return {
       data: this.mapTasksWithPosition(entities, raw, assigneesByTaskId),
@@ -250,6 +255,7 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
     const entities = await this.getRepo(manager).find({
       where: {
         workspaceId,
+        completedAt: IsNull(),
       },
       relations: {
         status: true,
@@ -412,7 +418,10 @@ export class FindTaskRepositoryImpl implements FindTaskRepository {
 
     // ── Load assignees in one separate IN query (avoids row multiplication) ────
     const taskIds = entities.map((t) => t.id);
-    const assigneesByTaskId = await this.loadAssigneesForTasks(taskIds, manager);
+    const assigneesByTaskId = await this.loadAssigneesForTasks(
+      taskIds,
+      manager,
+    );
 
     return {
       data: this.mapTasksWithPosition(entities, raw, assigneesByTaskId),

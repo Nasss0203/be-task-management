@@ -50,5 +50,4 @@ export class AdminUserApplicationImpl implements AdminUserApplication {
   ): Promise<void> {
     return this.service.updateSystemRole(userId, dto.role, actorId, actorRole);
   }
-
 }

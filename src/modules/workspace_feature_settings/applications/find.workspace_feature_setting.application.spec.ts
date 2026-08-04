@@ -16,11 +16,18 @@ describe('FindWorkspaceFeatureSettingApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindWorkspaceFeatureSettingApplicationImpl,
-        { provide: WORKSPACE_FEATURE_SETTING_TYPES.services.FindWorkspaceFeatureSettingService, useValue: mockService },
+        {
+          provide:
+            WORKSPACE_FEATURE_SETTING_TYPES.services
+              .FindWorkspaceFeatureSettingService,
+          useValue: mockService,
+        },
       ],
     }).compile();
 
-    app = module.get<FindWorkspaceFeatureSettingApplicationImpl>(FindWorkspaceFeatureSettingApplicationImpl);
+    app = module.get<FindWorkspaceFeatureSettingApplicationImpl>(
+      FindWorkspaceFeatureSettingApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -29,7 +36,9 @@ describe('FindWorkspaceFeatureSettingApplicationImpl', () => {
 
   it('should find all', async () => {
     mockService.findAll.mockResolvedValue([{ id: 'set-1' }]);
-    jest.spyOn(WorkspaceFeatureSettingMapper, 'toResponse').mockReturnValue({ id: 'set-1' } as any);
+    jest
+      .spyOn(WorkspaceFeatureSettingMapper, 'toResponse')
+      .mockReturnValue({ id: 'set-1' } as any);
 
     const result = await app.findAll();
     expect(mockService.findAll).toHaveBeenCalled();
@@ -38,7 +47,9 @@ describe('FindWorkspaceFeatureSettingApplicationImpl', () => {
 
   it('should find by id', async () => {
     mockService.findById.mockResolvedValue({ id: 'set-1' });
-    jest.spyOn(WorkspaceFeatureSettingMapper, 'toResponse').mockReturnValue({ id: 'set-1' } as any);
+    jest
+      .spyOn(WorkspaceFeatureSettingMapper, 'toResponse')
+      .mockReturnValue({ id: 'set-1' } as any);
 
     const result = await app.findById('set-1');
     expect(mockService.findById).toHaveBeenCalledWith('set-1');

@@ -14,6 +14,9 @@ describe('CreateTaskServiceImpl', () => {
   const mockCreateAtEndTaskPositionService = {
     createAtEnd: jest.fn(),
   };
+  const mockCreateAtTopTaskPositionService = {
+    createAtTop: jest.fn(),
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -28,6 +31,10 @@ describe('CreateTaskServiceImpl', () => {
         {
           provide: TASK_POSITION_TYPES.services.CreateAtEndTaskPositionService,
           useValue: mockCreateAtEndTaskPositionService,
+        },
+        {
+          provide: TASK_POSITION_TYPES.services.CreateAtTopTaskPositionService,
+          useValue: mockCreateAtTopTaskPositionService,
         },
       ],
     }).compile();
@@ -73,7 +80,7 @@ describe('CreateTaskServiceImpl', () => {
         manager,
       );
       expect(
-        mockCreateAtEndTaskPositionService.createAtEnd,
+        mockCreateAtTopTaskPositionService.createAtTop,
       ).toHaveBeenCalledWith(
         {
           taskId: 'task-1',
@@ -113,7 +120,7 @@ describe('CreateTaskServiceImpl', () => {
         manager,
       );
       expect(
-        mockCreateAtEndTaskPositionService.createAtEnd,
+        mockCreateAtTopTaskPositionService.createAtTop,
       ).toHaveBeenCalledWith(
         {
           taskId: 'task-1',

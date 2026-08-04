@@ -9,9 +9,7 @@ import {
 import { WORKSPACE_TYPES } from '../interfaces/types';
 
 @Injectable()
-export class UpdateWorkspaceLayoutModeServiceImpl
-  implements UpdateWorkspaceLayoutModeService
-{
+export class UpdateWorkspaceLayoutModeServiceImpl implements UpdateWorkspaceLayoutModeService {
   constructor(
     @Inject(WORKSPACE_TYPES.services.FindWorkspaceService)
     private readonly findWorkspaceService: FindWorkspaceService,

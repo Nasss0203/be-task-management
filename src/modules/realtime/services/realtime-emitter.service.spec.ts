@@ -1,4 +1,3 @@
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { RealtimeEmitterService } from './realtime-emitter.service';
 import { Injectable } from '@nestjs/common';
@@ -14,9 +13,7 @@ describe('RealtimeEmitterService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        RealtimeEmitterService,
-      ],
+      providers: [RealtimeEmitterService],
     }).compile();
 
     provider = module.get<RealtimeEmitterService>(RealtimeEmitterService);
@@ -30,7 +27,7 @@ describe('RealtimeEmitterService', () => {
     it('should execute successfully', async () => {
       try {
         await provider.setServer({} as any, {} as any, {} as any, {} as any);
-      } catch(e) {}
+      } catch (e) {}
       expect(true).toBe(true);
     });
   });
@@ -39,7 +36,7 @@ describe('RealtimeEmitterService', () => {
     it('should execute successfully', async () => {
       try {
         await provider.emitToUser({} as any, {} as any, {} as any, {} as any);
-      } catch(e) {}
+      } catch (e) {}
       expect(true).toBe(true);
     });
   });
@@ -47,8 +44,13 @@ describe('RealtimeEmitterService', () => {
   describe('emitToWorkspace', () => {
     it('should execute successfully', async () => {
       try {
-        await provider.emitToWorkspace({} as any, {} as any, {} as any, {} as any);
-      } catch(e) {}
+        await provider.emitToWorkspace(
+          {} as any,
+          {} as any,
+          {} as any,
+          {} as any,
+        );
+      } catch (e) {}
       expect(true).toBe(true);
     });
   });
@@ -56,8 +58,13 @@ describe('RealtimeEmitterService', () => {
   describe('emitToProject', () => {
     it('should execute successfully', async () => {
       try {
-        await provider.emitToProject({} as any, {} as any, {} as any, {} as any);
-      } catch(e) {}
+        await provider.emitToProject(
+          {} as any,
+          {} as any,
+          {} as any,
+          {} as any,
+        );
+      } catch (e) {}
       expect(true).toBe(true);
     });
   });

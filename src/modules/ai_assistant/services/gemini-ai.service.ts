@@ -41,7 +41,6 @@ import {
   GEMINI_SUBTASK_RESPONSE_SCHEMA,
 } from './gemini-ai.constant';
 
-
 @Injectable()
 export class GeminiAiService implements AiProviderService {
   private readonly logger = new Logger(GeminiAiService.name);
@@ -100,7 +99,7 @@ export class GeminiAiService implements AiProviderService {
           `Công việc chính: ${title}`,
           `Mô tả chi tiết: ${description || 'Không có mô tả'}`,
           existingSubtasks.length > 0
-            ? `Danh sách các tác vụ con đã tồn tại: [${existingSubtasks.map(t => `"${t}"`).join(', ')}].\nYêu cầu: Hãy gợi ý các tác vụ con mới, bổ sung và hoàn toàn KHÔNG ĐƯỢC trùng lặp với các tác vụ con đã có ở trên.`
+            ? `Danh sách các tác vụ con đã tồn tại: [${existingSubtasks.map((t) => `"${t}"`).join(', ')}].\nYêu cầu: Hãy gợi ý các tác vụ con mới, bổ sung và hoàn toàn KHÔNG ĐƯỢC trùng lặp với các tác vụ con đã có ở trên.`
             : '',
           ``,
           `Yêu cầu:`,
@@ -108,7 +107,9 @@ export class GeminiAiService implements AiProviderService {
           `- Mỗi tác vụ con chỉ là một tiêu đề ngắn gọn, súc tích (dưới 100 ký tự).`,
           `- Trả về kết quả dưới dạng JSON đúng cấu trúc sau: {"subtasks": ["Tác vụ mới 1", "Tác vụ mới 2"]}.`,
           `- Chỉ trả về JSON đúng schema, không thêm markdown hoặc giải thích bên ngoài JSON.`,
-        ].filter(Boolean).join('\n'),
+        ]
+          .filter(Boolean)
+          .join('\n'),
         config: {
           responseMimeType: 'application/json',
           responseSchema: GEMINI_SUBTASK_RESPONSE_SCHEMA,
@@ -271,11 +272,13 @@ export class GeminiAiService implements AiProviderService {
     return `Đã tạo bản nháp cho ${tasks.length} Công việc. Hãy xem lại trước khi áp dụng.`;
   }
 
-
   private parseJson(text: string, typeName: string): unknown {
     let cleanText = text.trim();
     if (cleanText.startsWith('```')) {
-      cleanText = cleanText.replace(/^```[a-zA-Z]*\n?/, '').replace(/\n?```$/, '').trim();
+      cleanText = cleanText
+        .replace(/^```[a-zA-Z]*\n?/, '')
+        .replace(/\n?```$/, '')
+        .trim();
     }
     try {
       return JSON.parse(cleanText) as unknown;
@@ -288,7 +291,6 @@ export class GeminiAiService implements AiProviderService {
       throw new BadGatewayException('AI provider returned invalid JSON');
     }
   }
-
 
   private async requestWorkspaceDraft(
     client: GoogleGenAI,
@@ -460,7 +462,11 @@ export class GeminiAiService implements AiProviderService {
     ].join('\n');
   }
 
-  private buildProjectAssistantMessage(name: string, key: string, taskCount?: number): string {
+  private buildProjectAssistantMessage(
+    name: string,
+    key: string,
+    taskCount?: number,
+  ): string {
     if (taskCount && taskCount > 0) {
       return `Đã tạo bản nháp Dự án "${name}" [${key}] cùng với ${taskCount} công việc. Hãy xem lại trước khi áp dụng.`;
     }
@@ -544,7 +550,9 @@ export class GeminiAiService implements AiProviderService {
     ].join('\n');
   }
 
-  private buildWorkspaceTreeDraftPrompt(input: AiProviderGenerationInput): string {
+  private buildWorkspaceTreeDraftPrompt(
+    input: AiProviderGenerationInput,
+  ): string {
     return ['<user_request>', input.message, '</user_request>'].join('\n');
   }
 
@@ -579,10 +587,13 @@ export class GeminiAiService implements AiProviderService {
       });
 
       const rawText = response.text?.trim().toUpperCase() || '';
-      
-      if (rawText.includes('WORKSPACE_TREE_DRAFT')) return AiGenerationType.WORKSPACE_TREE_DRAFT;
-      if (rawText.includes('WORKSPACE_DRAFT')) return AiGenerationType.WORKSPACE_DRAFT;
-      if (rawText.includes('PROJECT_DRAFT')) return AiGenerationType.PROJECT_DRAFT;
+
+      if (rawText.includes('WORKSPACE_TREE_DRAFT'))
+        return AiGenerationType.WORKSPACE_TREE_DRAFT;
+      if (rawText.includes('WORKSPACE_DRAFT'))
+        return AiGenerationType.WORKSPACE_DRAFT;
+      if (rawText.includes('PROJECT_DRAFT'))
+        return AiGenerationType.PROJECT_DRAFT;
       if (rawText.includes('TASK_DRAFT')) return AiGenerationType.TASK_DRAFT;
       if (rawText.includes('NORMAL')) return 'NORMAL';
 
@@ -605,4 +616,3 @@ export class GeminiAiService implements AiProviderService {
     );
   }
 }
-

@@ -31,7 +31,9 @@ describe('UpdateAttachmentServiceImpl', () => {
       ],
     }).compile();
 
-    service = module.get<UpdateAttachmentServiceImpl>(UpdateAttachmentServiceImpl);
+    service = module.get<UpdateAttachmentServiceImpl>(
+      UpdateAttachmentServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -42,12 +44,20 @@ describe('UpdateAttachmentServiceImpl', () => {
     it('should throw NotFoundException if attachment not found', async () => {
       mockFindRepository.findReadyById.mockResolvedValue(null);
 
-      await expect(service.execute('att-1', { fileName: 'new.png' })).rejects.toThrow(NotFoundException);
+      await expect(
+        service.execute('att-1', { fileName: 'new.png' }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should call updateRepository.update', async () => {
-      mockFindRepository.findReadyById.mockResolvedValue({ id: 'att-1', fileName: 'old.png' });
-      mockUpdateRepository.update.mockResolvedValue({ id: 'att-1', fileName: 'new.png' });
+      mockFindRepository.findReadyById.mockResolvedValue({
+        id: 'att-1',
+        fileName: 'old.png',
+      });
+      mockUpdateRepository.update.mockResolvedValue({
+        id: 'att-1',
+        fileName: 'new.png',
+      });
 
       const result = await service.execute('att-1', { fileName: 'new.png' });
 

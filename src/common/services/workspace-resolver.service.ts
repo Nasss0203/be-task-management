@@ -56,7 +56,8 @@ const WORKSPACE_LOOKUPS: Record<WorkspaceResourceType, WorkspaceLookup> = {
   },
   attachment: {
     paramKeys: ['attachmentId', 'id'],
-    query: 'SELECT workspace_id AS "workspaceId" FROM attachments WHERE id = $1',
+    query:
+      'SELECT workspace_id AS "workspaceId" FROM attachments WHERE id = $1',
   },
 };
 

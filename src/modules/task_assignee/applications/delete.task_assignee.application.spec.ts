@@ -1,6 +1,13 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ActivityAction, ActivityEntityType } from 'src/modules/activity/domain/entities/activity.entity';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { RoleName } from 'src/modules/role/domain/entities/role.entity';
 import { TASK_TYPES } from 'src/modules/tasks/interfaces/types';
@@ -23,15 +30,32 @@ describe('DeleteTaskAssigneeApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteTaskAssigneeApplicationImpl,
-        { provide: TASK_ASSIGNEE_TYPES.services.DeleteTaskAssigneeService, useValue: mockDeleteTaskAssigneeService },
-        { provide: TASK_ASSIGNEE_TYPES.services.FindTaskAssigneeService, useValue: mockFindTaskAssigneeService },
-        { provide: USER_WORKSPACE_TYPES.services.FindMemberService, useValue: mockFindMemberService },
-        { provide: TASK_TYPES.services.FindTaskService, useValue: mockFindTaskService },
-        { provide: ACTIVITY_TYPES.services.CreateActivityService, useValue: mockCreateActivityService },
+        {
+          provide: TASK_ASSIGNEE_TYPES.services.DeleteTaskAssigneeService,
+          useValue: mockDeleteTaskAssigneeService,
+        },
+        {
+          provide: TASK_ASSIGNEE_TYPES.services.FindTaskAssigneeService,
+          useValue: mockFindTaskAssigneeService,
+        },
+        {
+          provide: USER_WORKSPACE_TYPES.services.FindMemberService,
+          useValue: mockFindMemberService,
+        },
+        {
+          provide: TASK_TYPES.services.FindTaskService,
+          useValue: mockFindTaskService,
+        },
+        {
+          provide: ACTIVITY_TYPES.services.CreateActivityService,
+          useValue: mockCreateActivityService,
+        },
       ],
     }).compile();
 
-    application = module.get<DeleteTaskAssigneeApplicationImpl>(DeleteTaskAssigneeApplicationImpl);
+    application = module.get<DeleteTaskAssigneeApplicationImpl>(
+      DeleteTaskAssigneeApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -47,53 +71,89 @@ describe('DeleteTaskAssigneeApplicationImpl', () => {
 
     it('should throw NotFoundException if task not found', async () => {
       mockFindTaskService.findOneTask.mockResolvedValue(null);
-      await expect(application.unassign(input)).rejects.toThrow(NotFoundException);
+      await expect(application.unassign(input)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ForbiddenException if actor is not a member of workspace', async () => {
       mockFindTaskService.findOneTask.mockResolvedValue(task);
       mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce(null);
-      await expect(application.unassign(input)).rejects.toThrow(ForbiddenException);
+      await expect(application.unassign(input)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should throw BadRequestException if target user is not a member of workspace', async () => {
       mockFindTaskService.findOneTask.mockResolvedValue(task);
-      mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce(actorMember);
+      mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce(
+        actorMember,
+      );
       mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce(null);
-      await expect(application.unassign(input)).rejects.toThrow(BadRequestException);
+      await expect(application.unassign(input)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException if user is not assigned to task', async () => {
       mockFindTaskService.findOneTask.mockResolvedValue(task);
-      mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce(actorMember);
-      mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce(targetMember);
+      mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce(
+        actorMember,
+      );
+      mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce(
+        targetMember,
+      );
       mockFindTaskAssigneeService.findOneTaskAssignee.mockResolvedValue(null);
-      await expect(application.unassign(input)).rejects.toThrow(BadRequestException);
+      await expect(application.unassign(input)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw ForbiddenException if user tries to unassign other without permission', async () => {
       mockFindTaskService.findOneTask.mockResolvedValue(task);
-      mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce({ role_name: RoleName.MEMBER });
-      mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce(targetMember);
-      mockFindTaskAssigneeService.findOneTaskAssignee.mockResolvedValue(taskAssignee);
-      await expect(application.unassign(input)).rejects.toThrow(ForbiddenException);
+      mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce({
+        role_name: RoleName.MEMBER,
+      });
+      mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce(
+        targetMember,
+      );
+      mockFindTaskAssigneeService.findOneTaskAssignee.mockResolvedValue(
+        taskAssignee,
+      );
+      await expect(application.unassign(input)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should unassign successfully', async () => {
       mockFindTaskService.findOneTask.mockResolvedValue(task);
-      mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce(actorMember);
-      mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce(targetMember);
-      mockFindTaskAssigneeService.findOneTaskAssignee.mockResolvedValue(taskAssignee);
-      
+      mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce(
+        actorMember,
+      );
+      mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce(
+        targetMember,
+      );
+      mockFindTaskAssigneeService.findOneTaskAssignee.mockResolvedValue(
+        taskAssignee,
+      );
+
       const result = await application.unassign(input);
 
-      expect(mockDeleteTaskAssigneeService.unassign).toHaveBeenCalledWith(input);
-      expect(mockCreateActivityService.create).toHaveBeenCalledWith(expect.objectContaining({
-        action: ActivityAction.TASK_UNASSIGNED,
-        field: 'assignee',
-        oldValue: 'user-2',
-      }));
-      expect(result).toEqual({ taskId: 'task-1', userId: 'user-2', unassigned: true });
+      expect(mockDeleteTaskAssigneeService.unassign).toHaveBeenCalledWith(
+        input,
+      );
+      expect(mockCreateActivityService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: ActivityAction.TASK_UNASSIGNED,
+          field: 'assignee',
+          oldValue: 'user-2',
+        }),
+      );
+      expect(result).toEqual({
+        taskId: 'task-1',
+        userId: 'user-2',
+        unassigned: true,
+      });
     });
   });
 });

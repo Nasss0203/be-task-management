@@ -7,9 +7,7 @@ import { PLAN_FEATURE_TYPES } from '../interfaces/types';
 import { PlanFeatureMapper } from '../mapper/plan_feature.mapper';
 
 @Injectable()
-export class CreatePlanFeatureApplicationImpl
-  implements CreatePlanFeatureApplication
-{
+export class CreatePlanFeatureApplicationImpl implements CreatePlanFeatureApplication {
   constructor(
     @Inject(PLAN_FEATURE_TYPES.services.CreatePlanFeatureService)
     private readonly service: CreatePlanFeatureService,

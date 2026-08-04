@@ -22,7 +22,9 @@ describe('DeleteAttachmentServiceImpl', () => {
       ],
     }).compile();
 
-    service = module.get<DeleteAttachmentServiceImpl>(DeleteAttachmentServiceImpl);
+    service = module.get<DeleteAttachmentServiceImpl>(
+      DeleteAttachmentServiceImpl,
+    );
   });
 
   it('should be defined', () => {

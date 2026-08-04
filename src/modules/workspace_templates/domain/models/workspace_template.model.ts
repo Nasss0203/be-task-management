@@ -1,4 +1,7 @@
-import { TemplateStatus, TemplateVisibility } from 'src/common/enum/template.enum';
+import {
+  TemplateStatus,
+  TemplateVisibility,
+} from 'src/common/enum/template.enum';
 import type { WorkspaceTemplateConfig } from 'src/modules/workspaces/types/types';
 
 export class WorkspaceTemplateModel {

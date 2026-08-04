@@ -23,8 +23,14 @@ describe('CancelSprintApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CancelSprintApplicationImpl,
-        { provide: SPRINT_TYPES.services.CancelSprintService, useValue: mockCancelSprintService },
-        { provide: ACTIVITY_TYPES.services.CreateActivityService, useValue: mockCreateActivityService },
+        {
+          provide: SPRINT_TYPES.services.CancelSprintService,
+          useValue: mockCancelSprintService,
+        },
+        {
+          provide: ACTIVITY_TYPES.services.CreateActivityService,
+          useValue: mockCreateActivityService,
+        },
         { provide: SPRINT_TYPES.uow.UnitOfWork, useValue: mockUnitOfWork },
         { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
@@ -59,19 +65,25 @@ describe('CancelSprintApplicationImpl', () => {
       const result = await app.cancelSprint(input);
 
       expect(mockUnitOfWork.runInTransaction).toHaveBeenCalled();
-      expect(mockCancelSprintService.cancelSprint).toHaveBeenCalledWith(input, 'mockTransactionManager');
+      expect(mockCancelSprintService.cancelSprint).toHaveBeenCalledWith(
+        input,
+        'mockTransactionManager',
+      );
       expect(mockCreateActivityService.create).toHaveBeenCalledWith(
         expect.objectContaining({
           entityId: mockSprint.id,
           actorId: input.userId,
         }),
-        'mockTransactionManager'
+        'mockTransactionManager',
       );
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith(REALTIME_EVENTS.SPRINT_UPDATED, {
-        workspaceId: mockSprint.workspaceId,
-        projectId: mockSprint.projectId,
-        sprint: mockSprint,
-      });
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        REALTIME_EVENTS.SPRINT_UPDATED,
+        {
+          workspaceId: mockSprint.workspaceId,
+          projectId: mockSprint.projectId,
+          sprint: mockSprint,
+        },
+      );
       // SprintsMapper.toResponse maps sprint to DTO, we can check basic props
       expect(result.id).toEqual(mockSprint.id);
     });

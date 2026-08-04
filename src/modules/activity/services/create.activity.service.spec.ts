@@ -14,7 +14,10 @@ describe('CreateActivityServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateActivityServiceImpl,
-        { provide: ACTIVITY_TYPES.repositories.CreateActivityRepository, useValue: mockRepo },
+        {
+          provide: ACTIVITY_TYPES.repositories.CreateActivityRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 

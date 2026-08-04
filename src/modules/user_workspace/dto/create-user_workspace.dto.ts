@@ -1,3 +1,4 @@
+import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
 import { RoleName } from 'src/modules/role/domain/entities/role.entity';
 
 export class CreateUserWorkspaceDto {
@@ -9,11 +10,18 @@ export class CreateUserWorkspaceDto {
 }
 
 export class AddWorkspaceMemberDto {
+  @IsString()
+  @IsNotEmpty()
   user_id: string;
+
+  @IsEnum(RoleName)
+  @IsNotEmpty()
   role_name: RoleName;
 }
 
 export class UpdateWorkspaceMemberRoleDto {
+  @IsEnum(RoleName)
+  @IsNotEmpty()
   role_name: RoleName;
 }
 

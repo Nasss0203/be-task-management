@@ -16,10 +16,7 @@ export class FindFeatureServiceImpl implements FindFeatureService {
     return this.repo.findAll(manager);
   }
 
-  async findById(
-    id: string,
-    manager?: EntityManager,
-  ): Promise<FeatureModel> {
+  async findById(id: string, manager?: EntityManager): Promise<FeatureModel> {
     const feature = await this.repo.findById(id, manager);
 
     if (!feature) {

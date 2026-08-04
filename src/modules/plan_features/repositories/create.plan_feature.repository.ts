@@ -10,9 +10,7 @@ import {
 import { PlanFeatureMapper } from '../mapper/plan_feature.mapper';
 
 @Injectable()
-export class CreatePlanFeatureRepositoryImpl
-  implements CreatePlanFeatureRepository
-{
+export class CreatePlanFeatureRepositoryImpl implements CreatePlanFeatureRepository {
   constructor(
     @InjectRepository(PlanFeature)
     private readonly repo: Repository<PlanFeature>,

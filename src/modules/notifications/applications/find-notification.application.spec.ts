@@ -15,11 +15,16 @@ describe('FindNotificationApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindNotificationApplicationImpl,
-        { provide: NOTIFICATION_TYPES.services.FindNotificationService, useValue: mockService },
+        {
+          provide: NOTIFICATION_TYPES.services.FindNotificationService,
+          useValue: mockService,
+        },
       ],
     }).compile();
 
-    application = module.get<FindNotificationApplicationImpl>(FindNotificationApplicationImpl);
+    application = module.get<FindNotificationApplicationImpl>(
+      FindNotificationApplicationImpl,
+    );
   });
 
   it('should be defined', () => {

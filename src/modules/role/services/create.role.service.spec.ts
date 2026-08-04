@@ -27,7 +27,9 @@ describe('CreateRoleServiceImpl', () => {
 
   describe('create', () => {
     it('should throw method not implemented error', async () => {
-      await expect(service.create({} as any)).rejects.toThrow('Method not implemented.');
+      await expect(service.create({} as any)).rejects.toThrow(
+        'Method not implemented.',
+      );
     });
   });
 });

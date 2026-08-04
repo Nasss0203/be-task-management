@@ -12,9 +12,7 @@ import { type UpdateMemberWorkspaceService } from '../interfaces/services/update
 import { USER_WORKSPACE_TYPES } from '../interfaces/types';
 
 @Injectable()
-export class UpdateMemberWorkspaceApplicationImpl
-  implements UpdateMemberWorkspaceApplication
-{
+export class UpdateMemberWorkspaceApplicationImpl implements UpdateMemberWorkspaceApplication {
   constructor(
     @Inject(USER_WORKSPACE_TYPES.services.UpdateMemberWorkspaceService)
     private readonly updateMemberWorkspaceService: UpdateMemberWorkspaceService,

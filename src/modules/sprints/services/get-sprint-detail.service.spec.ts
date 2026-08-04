@@ -14,11 +14,16 @@ describe('GetSprintDetailServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetSprintDetailServiceImpl,
-        { provide: SPRINT_TYPES.repositories.FindSprintRepository, useValue: mockFindSprintRepository },
+        {
+          provide: SPRINT_TYPES.repositories.FindSprintRepository,
+          useValue: mockFindSprintRepository,
+        },
       ],
     }).compile();
 
-    service = module.get<GetSprintDetailServiceImpl>(GetSprintDetailServiceImpl);
+    service = module.get<GetSprintDetailServiceImpl>(
+      GetSprintDetailServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -28,23 +33,58 @@ describe('GetSprintDetailServiceImpl', () => {
   describe('getSprintDetail', () => {
     it('should throw NotFoundException if sprint not found', async () => {
       mockFindSprintRepository.findOneSprint.mockResolvedValue(null);
-      await expect(service.getSprintDetail({ workspaceId: 'ws-1', projectId: 'proj-1', sprintId: 'sprint-1' })).rejects.toThrow(NotFoundException);
+      await expect(
+        service.getSprintDetail({
+          workspaceId: 'ws-1',
+          projectId: 'proj-1',
+          sprintId: 'sprint-1',
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw BadRequestException if workspace mismatch', async () => {
-      mockFindSprintRepository.findOneSprint.mockResolvedValue({ workspaceId: 'ws-2' });
-      await expect(service.getSprintDetail({ workspaceId: 'ws-1', projectId: 'proj-1', sprintId: 'sprint-1' })).rejects.toThrow(BadRequestException);
+      mockFindSprintRepository.findOneSprint.mockResolvedValue({
+        workspaceId: 'ws-2',
+      });
+      await expect(
+        service.getSprintDetail({
+          workspaceId: 'ws-1',
+          projectId: 'proj-1',
+          sprintId: 'sprint-1',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException if project mismatch', async () => {
-      mockFindSprintRepository.findOneSprint.mockResolvedValue({ workspaceId: 'ws-1', projectId: 'proj-2' });
-      await expect(service.getSprintDetail({ workspaceId: 'ws-1', projectId: 'proj-1', sprintId: 'sprint-1' })).rejects.toThrow(BadRequestException);
+      mockFindSprintRepository.findOneSprint.mockResolvedValue({
+        workspaceId: 'ws-1',
+        projectId: 'proj-2',
+      });
+      await expect(
+        service.getSprintDetail({
+          workspaceId: 'ws-1',
+          projectId: 'proj-1',
+          sprintId: 'sprint-1',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should return sprint detail', async () => {
-      mockFindSprintRepository.findOneSprint.mockResolvedValue({ workspaceId: 'ws-1', projectId: 'proj-1', id: 'sprint-1' });
-      const result = await service.getSprintDetail({ workspaceId: 'ws-1', projectId: 'proj-1', sprintId: 'sprint-1' });
-      expect(result).toEqual({ workspaceId: 'ws-1', projectId: 'proj-1', id: 'sprint-1' });
+      mockFindSprintRepository.findOneSprint.mockResolvedValue({
+        workspaceId: 'ws-1',
+        projectId: 'proj-1',
+        id: 'sprint-1',
+      });
+      const result = await service.getSprintDetail({
+        workspaceId: 'ws-1',
+        projectId: 'proj-1',
+        sprintId: 'sprint-1',
+      });
+      expect(result).toEqual({
+        workspaceId: 'ws-1',
+        projectId: 'proj-1',
+        id: 'sprint-1',
+      });
     });
   });
 });

@@ -1,4 +1,8 @@
-import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { RoleName } from 'src/modules/role/domain/entities/role.entity';
 import { ROLE_TYPES } from 'src/modules/role/interfaces/types';
@@ -32,7 +36,8 @@ describe('AddMemberWorkspaceServiceImpl', () => {
       providers: [
         AddMemberWorkspaceServiceImpl,
         {
-          provide: USER_WORKSPACE_TYPES.repositories.FindUserWorkspaceRepository,
+          provide:
+            USER_WORKSPACE_TYPES.repositories.FindUserWorkspaceRepository,
           useValue: mockFindUserWorkspaceRepository,
         },
         {
@@ -50,7 +55,9 @@ describe('AddMemberWorkspaceServiceImpl', () => {
       ],
     }).compile();
 
-    service = module.get<AddMemberWorkspaceServiceImpl>(AddMemberWorkspaceServiceImpl);
+    service = module.get<AddMemberWorkspaceServiceImpl>(
+      AddMemberWorkspaceServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -59,44 +66,60 @@ describe('AddMemberWorkspaceServiceImpl', () => {
 
   describe('addMember', () => {
     it('should throw ForbiddenException if trying to add admin/owner and not owner', async () => {
-      mockFindUserWorkspaceRepository.findMemberInWorkspace.mockResolvedValueOnce({ role_name: RoleName.MEMBER });
+      mockFindUserWorkspaceRepository.findMemberInWorkspace.mockResolvedValueOnce(
+        { role_name: RoleName.MEMBER },
+      );
 
-      await expect(service.addMember({
-        workspace_id: 'ws-1',
-        user_id: 'user-1',
-        role_name: RoleName.ADMIN,
-        added_by: 'adder-1',
-      })).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.addMember({
+          workspace_id: 'ws-1',
+          user_id: 'user-1',
+          role_name: RoleName.ADMIN,
+          added_by: 'adder-1',
+        }),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('should throw ConflictException if user is already in workspace', async () => {
-      mockFindUserWorkspaceRepository.findMemberInWorkspace.mockResolvedValueOnce({ id: 'uw-1' }); // existing check
+      mockFindUserWorkspaceRepository.findMemberInWorkspace.mockResolvedValueOnce(
+        { id: 'uw-1' },
+      ); // existing check
 
-      await expect(service.addMember({
-        workspace_id: 'ws-1',
-        user_id: 'user-1',
-        role_name: RoleName.MEMBER,
-        added_by: 'adder-1',
-      })).rejects.toThrow(ConflictException);
+      await expect(
+        service.addMember({
+          workspace_id: 'ws-1',
+          user_id: 'user-1',
+          role_name: RoleName.MEMBER,
+          added_by: 'adder-1',
+        }),
+      ).rejects.toThrow(ConflictException);
     });
 
     it('should throw NotFoundException if role not found', async () => {
-      mockFindUserWorkspaceRepository.findMemberInWorkspace.mockResolvedValueOnce(null); // not exists
+      mockFindUserWorkspaceRepository.findMemberInWorkspace.mockResolvedValueOnce(
+        null,
+      ); // not exists
       mockUserWorkspaceRepository.create.mockResolvedValue({ id: 'uw-1' });
       mockFindRoleRepository.findByNameAndWorkspace.mockResolvedValue(null);
 
-      await expect(service.addMember({
-        workspace_id: 'ws-1',
-        user_id: 'user-1',
-        role_name: RoleName.MEMBER,
-        added_by: 'adder-1',
-      })).rejects.toThrow(NotFoundException);
+      await expect(
+        service.addMember({
+          workspace_id: 'ws-1',
+          user_id: 'user-1',
+          role_name: RoleName.MEMBER,
+          added_by: 'adder-1',
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should create membership and role assignment successfully', async () => {
-      mockFindUserWorkspaceRepository.findMemberInWorkspace.mockResolvedValueOnce(null); // not exists
+      mockFindUserWorkspaceRepository.findMemberInWorkspace.mockResolvedValueOnce(
+        null,
+      ); // not exists
       mockUserWorkspaceRepository.create.mockResolvedValue({ id: 'uw-1' });
-      mockFindRoleRepository.findByNameAndWorkspace.mockResolvedValue({ id: 'role-1' });
+      mockFindRoleRepository.findByNameAndWorkspace.mockResolvedValue({
+        id: 'role-1',
+      });
 
       const result = await service.addMember({
         workspace_id: 'ws-1',

@@ -1,4 +1,3 @@
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationCreatedRealtimeListener } from './notification-created.listener';
 import { Injectable } from '@nestjs/common';
@@ -38,14 +37,18 @@ describe('NotificationCreatedRealtimeListener', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -53,13 +56,15 @@ describe('NotificationCreatedRealtimeListener', () => {
             get: jest.fn().mockReturnValue('dummy'),
             joinUserRoom: jest.fn(),
             joinWorkspace: jest.fn(),
-            joinProject: jest.fn()
+            joinProject: jest.fn(),
           },
-        }
+        },
       ],
     }).compile();
 
-    provider = module.get<NotificationCreatedRealtimeListener>(NotificationCreatedRealtimeListener);
+    provider = module.get<NotificationCreatedRealtimeListener>(
+      NotificationCreatedRealtimeListener,
+    );
   });
 
   it('should be defined', () => {
@@ -70,7 +75,7 @@ describe('NotificationCreatedRealtimeListener', () => {
     it('should execute successfully', async () => {
       try {
         await provider.handle({} as any, {} as any, {} as any, {} as any);
-      } catch(e) {}
+      } catch (e) {}
       expect(true).toBe(true);
     });
   });

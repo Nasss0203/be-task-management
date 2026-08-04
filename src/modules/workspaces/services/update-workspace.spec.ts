@@ -24,7 +24,7 @@ describe('UpdateWorkspaceServiceImpl', () => {
     const userId = 'user-123';
     const workspaceId = 'workspace-123';
     const name = 'New Workspace Name';
-    
+
     const mockWorkspace = {
       id: workspaceId,
       name: 'Old Workspace Name',
@@ -38,11 +38,16 @@ describe('UpdateWorkspaceServiceImpl', () => {
     };
 
     findWorkspaceService.findOneByWorkspaceId.mockResolvedValue(mockWorkspace);
-    workspaceRepository.save.mockImplementation((workspace) => Promise.resolve(workspace));
+    workspaceRepository.save.mockImplementation((workspace) =>
+      Promise.resolve(workspace),
+    );
 
     const result = await service.update({ userId, workspaceId, name });
 
-    expect(findWorkspaceService.findOneByWorkspaceId).toHaveBeenCalledWith(userId, workspaceId);
+    expect(findWorkspaceService.findOneByWorkspaceId).toHaveBeenCalledWith(
+      userId,
+      workspaceId,
+    );
     expect(workspaceRepository.save).toHaveBeenCalled();
     expect(result.name).toBe(name);
     expect(result).toBeInstanceOf(WorkspaceModel);
@@ -51,7 +56,7 @@ describe('UpdateWorkspaceServiceImpl', () => {
   it('preserves old name if name is not provided', async () => {
     const userId = 'user-123';
     const workspaceId = 'workspace-123';
-    
+
     const mockWorkspace = {
       id: workspaceId,
       name: 'Old Workspace Name',
@@ -65,11 +70,16 @@ describe('UpdateWorkspaceServiceImpl', () => {
     };
 
     findWorkspaceService.findOneByWorkspaceId.mockResolvedValue(mockWorkspace);
-    workspaceRepository.save.mockImplementation((workspace) => Promise.resolve(workspace));
+    workspaceRepository.save.mockImplementation((workspace) =>
+      Promise.resolve(workspace),
+    );
 
     const result = await service.update({ userId, workspaceId });
 
-    expect(findWorkspaceService.findOneByWorkspaceId).toHaveBeenCalledWith(userId, workspaceId);
+    expect(findWorkspaceService.findOneByWorkspaceId).toHaveBeenCalledWith(
+      userId,
+      workspaceId,
+    );
     expect(workspaceRepository.save).toHaveBeenCalled();
     expect(result.name).toBe(mockWorkspace.name);
     expect(result).toBeInstanceOf(WorkspaceModel);

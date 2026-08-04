@@ -19,8 +19,14 @@ describe('CreateSprintApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateSprintApplicationImpl,
-        { provide: SPRINT_TYPES.services.CreateSprintService, useValue: mockCreateSprintService },
-        { provide: ACTIVITY_TYPES.services.CreateActivityService, useValue: mockCreateActivityService },
+        {
+          provide: SPRINT_TYPES.services.CreateSprintService,
+          useValue: mockCreateSprintService,
+        },
+        {
+          provide: ACTIVITY_TYPES.services.CreateActivityService,
+          useValue: mockCreateActivityService,
+        },
         { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
@@ -35,13 +41,23 @@ describe('CreateSprintApplicationImpl', () => {
   describe('create', () => {
     it('should throw BadRequestException if startAt is invalid date', async () => {
       await expect(
-        app.create({ workspaceId: '1', projectId: '2', userId: '3', dto: { startAt: 'invalid' } as any })
+        app.create({
+          workspaceId: '1',
+          projectId: '2',
+          userId: '3',
+          dto: { startAt: 'invalid' } as any,
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException if endAt is invalid date', async () => {
       await expect(
-        app.create({ workspaceId: '1', projectId: '2', userId: '3', dto: { endAt: 'invalid' } as any })
+        app.create({
+          workspaceId: '1',
+          projectId: '2',
+          userId: '3',
+          dto: { endAt: 'invalid' } as any,
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -52,7 +68,7 @@ describe('CreateSprintApplicationImpl', () => {
           projectId: '2',
           userId: '3',
           dto: { startAt: '2023-01-02', endAt: '2023-01-01' } as any,
-        })
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -80,11 +96,14 @@ describe('CreateSprintApplicationImpl', () => {
         goal: 'Goal 1',
       });
       expect(mockCreateActivityService.create).toHaveBeenCalled();
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith(REALTIME_EVENTS.SPRINT_CREATED, {
-        workspaceId: mockCreatedSprint.workspaceId,
-        projectId: mockCreatedSprint.projectId,
-        sprint: mockCreatedSprint,
-      });
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        REALTIME_EVENTS.SPRINT_CREATED,
+        {
+          workspaceId: mockCreatedSprint.workspaceId,
+          projectId: mockCreatedSprint.projectId,
+          sprint: mockCreatedSprint,
+        },
+      );
       expect(result.id).toEqual(mockCreatedSprint.id);
     });
   });

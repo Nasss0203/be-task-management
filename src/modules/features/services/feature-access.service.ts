@@ -45,9 +45,6 @@ export class FeatureAccessServiceImpl implements FeatureAccessService {
     workspaceId: string,
     featureKey: FeatureKey | string,
   ): Promise<boolean> {
-    return this.repo.isFeatureEnabledForWorkspace(
-      workspaceId,
-      featureKey,
-    );
+    return this.repo.isFeatureEnabledForWorkspace(workspaceId, featureKey);
   }
 }

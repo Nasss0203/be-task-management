@@ -325,9 +325,7 @@ export class FindSprintRepositoryImpl implements FindSprintRepository {
       .getMany();
   }
 
-  async findActiveSprintsOverdue(
-    manager?: EntityManager,
-  ): Promise<Sprint[]> {
+  async findActiveSprintsOverdue(manager?: EntityManager): Promise<Sprint[]> {
     const now = new Date();
 
     return await this.getRepo(manager)
@@ -343,4 +341,3 @@ export class FindSprintRepositoryImpl implements FindSprintRepository {
       .getMany();
   }
 }
-

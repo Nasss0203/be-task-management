@@ -25,10 +25,22 @@ describe('CreateBillingServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateBillingServiceImpl,
-        { provide: BILLING_TYPES.repositories.PlanRepository, useValue: mockPlanRepo },
-        { provide: BILLING_TYPES.repositories.PaymentRepository, useValue: mockPaymentRepo },
-        { provide: BILLING_TYPES.providers.VnpayPaymentProvider, useValue: mockProvider },
-        { provide: BILLING_TYPES.providers.StripePaymentProvider, useValue: mockProvider },
+        {
+          provide: BILLING_TYPES.repositories.PlanRepository,
+          useValue: mockPlanRepo,
+        },
+        {
+          provide: BILLING_TYPES.repositories.PaymentRepository,
+          useValue: mockPaymentRepo,
+        },
+        {
+          provide: BILLING_TYPES.providers.VnpayPaymentProvider,
+          useValue: mockProvider,
+        },
+        {
+          provide: BILLING_TYPES.providers.StripePaymentProvider,
+          useValue: mockProvider,
+        },
       ],
     }).compile();
 
@@ -41,16 +53,31 @@ describe('CreateBillingServiceImpl', () => {
 
   it('should throw if plan not found', async () => {
     mockPlanRepo.findActivePlanById.mockResolvedValue(null);
-    await expect(service.createPayment({ dto: { planId: 'plan-1' }, userId: 'u-1', ipAddress: '127.0.0.1' } as any)).rejects.toThrow(NotFoundException);
+    await expect(
+      service.createPayment({
+        dto: { planId: 'plan-1' },
+        userId: 'u-1',
+        ipAddress: '127.0.0.1',
+      } as any),
+    ).rejects.toThrow(NotFoundException);
   });
 
   it('should throw if plan is free', async () => {
     mockPlanRepo.findActivePlanById.mockResolvedValue({ priceAmount: 0 });
-    await expect(service.createPayment({ dto: { planId: 'plan-1' }, userId: 'u-1', ipAddress: '127.0.0.1' } as any)).rejects.toThrow(BadRequestException);
+    await expect(
+      service.createPayment({
+        dto: { planId: 'plan-1' },
+        userId: 'u-1',
+        ipAddress: '127.0.0.1',
+      } as any),
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('should create payment', async () => {
-    mockPlanRepo.findActivePlanById.mockResolvedValue({ name: 'Pro', priceAmount: 100000 });
+    mockPlanRepo.findActivePlanById.mockResolvedValue({
+      name: 'Pro',
+      priceAmount: 100000,
+    });
     mockPaymentRepo.createPendingPayment.mockResolvedValue({ id: 'pay-1' });
     mockProvider.createPayment.mockReturnValue({
       paymentUrl: 'url',
@@ -69,7 +96,11 @@ describe('CreateBillingServiceImpl', () => {
       paymentUrl: 'url',
     });
 
-    const result = await service.createPayment({ dto: { planId: 'plan-1' }, userId: 'u-1', ipAddress: '127.0.0.1' } as any);
+    const result = await service.createPayment({
+      dto: { planId: 'plan-1' },
+      userId: 'u-1',
+      ipAddress: '127.0.0.1',
+    } as any);
     expect(mockPaymentRepo.createPendingPayment).toHaveBeenCalled();
     expect(mockProvider.createPayment).toHaveBeenCalled();
     expect(mockPaymentRepo.updatePaymentGateway).toHaveBeenCalled();
@@ -77,11 +108,22 @@ describe('CreateBillingServiceImpl', () => {
   });
 
   it('should handle gateway error', async () => {
-    mockPlanRepo.findActivePlanById.mockResolvedValue({ name: 'Pro', priceAmount: 100000 });
+    mockPlanRepo.findActivePlanById.mockResolvedValue({
+      name: 'Pro',
+      priceAmount: 100000,
+    });
     mockPaymentRepo.createPendingPayment.mockResolvedValue({ id: 'pay-1' });
-    mockProvider.createPayment.mockImplementation(() => { throw new Error('Gateway error'); });
+    mockProvider.createPayment.mockImplementation(() => {
+      throw new Error('Gateway error');
+    });
 
-    await expect(service.createPayment({ dto: { planId: 'plan-1' }, userId: 'u-1', ipAddress: '127.0.0.1' } as any)).rejects.toThrow('Gateway error');
+    await expect(
+      service.createPayment({
+        dto: { planId: 'plan-1' },
+        userId: 'u-1',
+        ipAddress: '127.0.0.1',
+      } as any),
+    ).rejects.toThrow('Gateway error');
     expect(mockPaymentRepo.markPaymentFailed).toHaveBeenCalled();
   });
 });

@@ -35,9 +35,13 @@ describe('FindUserServiceImpl', () => {
 
   describe('findUserByUsername', () => {
     it('should return user by username', async () => {
-      mockFindUserRepository.findUserByUsername.mockResolvedValue({ id: 'u-1' });
+      mockFindUserRepository.findUserByUsername.mockResolvedValue({
+        id: 'u-1',
+      });
       const result = await service.findUserByUsername('testuser');
-      expect(mockFindUserRepository.findUserByUsername).toHaveBeenCalledWith('testuser');
+      expect(mockFindUserRepository.findUserByUsername).toHaveBeenCalledWith(
+        'testuser',
+      );
       expect(result).toEqual({ id: 'u-1' });
     });
   });
@@ -46,7 +50,9 @@ describe('FindUserServiceImpl', () => {
     it('should return user by email', async () => {
       mockFindUserRepository.findUserByEmail.mockResolvedValue({ id: 'u-1' });
       const result = await service.findUserByEmail('test@test.com');
-      expect(mockFindUserRepository.findUserByEmail).toHaveBeenCalledWith('test@test.com');
+      expect(mockFindUserRepository.findUserByEmail).toHaveBeenCalledWith(
+        'test@test.com',
+      );
       expect(result).toEqual({ id: 'u-1' });
     });
   });
@@ -91,7 +97,9 @@ describe('FindUserServiceImpl', () => {
     });
 
     it('should return invite users if keyword is valid', async () => {
-      mockFindUserRepository.searchInviteUsers.mockResolvedValue([{ id: 'u-2' }]);
+      mockFindUserRepository.searchInviteUsers.mockResolvedValue([
+        { id: 'u-2' },
+      ]);
       const result = await service.searchInviteUsers({
         keyword: 'test',
         workspaceId: 'ws-1',

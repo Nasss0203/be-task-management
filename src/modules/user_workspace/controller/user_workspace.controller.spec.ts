@@ -36,7 +36,8 @@ describe('UserWorkspacesController', () => {
           useValue: mockUserWorkspacesService,
         },
         {
-          provide: USER_WORKSPACE_TYPES.applications.AddWorkspaceMemberApplication,
+          provide:
+            USER_WORKSPACE_TYPES.applications.AddWorkspaceMemberApplication,
           useValue: mockAddWorkspaceMemberApplication,
         },
         {
@@ -44,11 +45,13 @@ describe('UserWorkspacesController', () => {
           useValue: mockFindAllMemberApplication,
         },
         {
-          provide: USER_WORKSPACE_TYPES.applications.UpdateMemberWorkspaceApplication,
+          provide:
+            USER_WORKSPACE_TYPES.applications.UpdateMemberWorkspaceApplication,
           useValue: mockUpdateMemberWorkspaceApplication,
         },
         {
-          provide: USER_WORKSPACE_TYPES.applications.DeleteMemberWorkspaceApplication,
+          provide:
+            USER_WORKSPACE_TYPES.applications.DeleteMemberWorkspaceApplication,
           useValue: mockDeleteMemberWorkspaceApplication,
         },
       ],
@@ -63,24 +66,34 @@ describe('UserWorkspacesController', () => {
 
   describe('addMember', () => {
     it('should call addMemberApp.addMember', async () => {
-      mockAddWorkspaceMemberApplication.addMember.mockResolvedValue({ id: 'uw-1' });
+      mockAddWorkspaceMemberApplication.addMember.mockResolvedValue({
+        id: 'uw-1',
+      });
       const dto = { user_id: 'user-1', role_name: RoleName.ADMIN } as any;
       const auth = { id: 'adder-1' } as any;
 
       const result = await controller.addMember('ws-1', dto, auth);
 
-      expect(mockAddWorkspaceMemberApplication.addMember).toHaveBeenCalledWith('ws-1', dto, 'adder-1');
+      expect(mockAddWorkspaceMemberApplication.addMember).toHaveBeenCalledWith(
+        'ws-1',
+        dto,
+        'adder-1',
+      );
       expect(result).toEqual({ id: 'uw-1' });
     });
   });
 
   describe('findAllMember', () => {
     it('should call findAllMemberApp.findAllMember', async () => {
-      mockFindAllMemberApplication.findAllMember.mockResolvedValue([{ id: 'm-1' }]);
+      mockFindAllMemberApplication.findAllMember.mockResolvedValue([
+        { id: 'm-1' },
+      ]);
 
       const result = await controller.findAllMember('ws-1');
 
-      expect(mockFindAllMemberApplication.findAllMember).toHaveBeenCalledWith('ws-1');
+      expect(mockFindAllMemberApplication.findAllMember).toHaveBeenCalledWith(
+        'ws-1',
+      );
       expect(result).toEqual([{ id: 'm-1' }]);
     });
   });

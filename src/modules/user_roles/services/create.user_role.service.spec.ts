@@ -32,7 +32,12 @@ describe('CreateUserRoleServiceImpl', () => {
   describe('create', () => {
     it('should save and return user role', async () => {
       mockUserRoleRepository.save.mockResolvedValue({ id: 'ur-1' });
-      const dto = { user_id: 'u-1', role_id: 'r-1', workspace_id: 'ws-1', assigned_by: 'a-1' };
+      const dto = {
+        user_id: 'u-1',
+        role_id: 'r-1',
+        workspace_id: 'ws-1',
+        assigned_by: 'a-1',
+      };
 
       const result = await service.create(dto);
 

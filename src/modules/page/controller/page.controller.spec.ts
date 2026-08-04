@@ -6,7 +6,10 @@ import { PAGE_TYPES } from '../interfaces/types';
 describe('PageController', () => {
   let controller: PageController;
 
-  const mockApp = { findPageByWorkspaceId: jest.fn(), findDeletedPages: jest.fn() };
+  const mockApp = {
+    findPageByWorkspaceId: jest.fn(),
+    findDeletedPages: jest.fn(),
+  };
   const mockCreatePageApplication = { create: jest.fn() };
   const mockUpdatePageApplication = { update: jest.fn() };
   const mockDeletePageApplication = { delete: jest.fn(), restore: jest.fn() };
@@ -16,10 +19,22 @@ describe('PageController', () => {
       controllers: [PageController],
       providers: [
         { provide: PageService, useValue: {} },
-        { provide: PAGE_TYPES.applications.FindPageApplication, useValue: mockApp },
-        { provide: PAGE_TYPES.applications.CreatePageApplication, useValue: mockCreatePageApplication },
-        { provide: PAGE_TYPES.applications.UpdatePageApplication, useValue: mockUpdatePageApplication },
-        { provide: PAGE_TYPES.applications.DeletePageApplication, useValue: mockDeletePageApplication },
+        {
+          provide: PAGE_TYPES.applications.FindPageApplication,
+          useValue: mockApp,
+        },
+        {
+          provide: PAGE_TYPES.applications.CreatePageApplication,
+          useValue: mockCreatePageApplication,
+        },
+        {
+          provide: PAGE_TYPES.applications.UpdatePageApplication,
+          useValue: mockUpdatePageApplication,
+        },
+        {
+          provide: PAGE_TYPES.applications.DeletePageApplication,
+          useValue: mockDeletePageApplication,
+        },
       ],
     }).compile();
 

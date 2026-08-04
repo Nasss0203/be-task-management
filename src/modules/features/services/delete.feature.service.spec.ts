@@ -11,8 +11,14 @@ describe('DeleteFeatureServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteFeatureServiceImpl,
-        { provide: FEATURE_TYPES.services.FindFeatureService, useValue: mockFindService },
-        { provide: FEATURE_TYPES.repositories.DeleteFeatureRepository, useValue: mockRepo },
+        {
+          provide: FEATURE_TYPES.services.FindFeatureService,
+          useValue: mockFindService,
+        },
+        {
+          provide: FEATURE_TYPES.repositories.DeleteFeatureRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 

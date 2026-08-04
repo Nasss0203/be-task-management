@@ -13,9 +13,7 @@ import {
 } from '../../activity/domain/entities/activity.entity';
 
 @Injectable()
-export class UploadAttachmentApplicationImpl
-  implements UploadAttachmentApplication
-{
+export class UploadAttachmentApplicationImpl implements UploadAttachmentApplication {
   constructor(
     @Inject(ATTACHMENT_TYPES.services.UploadAttachmentService)
     private readonly uploadService: UploadAttachmentService,

@@ -18,12 +18,24 @@ describe('DeleteWorkspaceFeatureSettingServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteWorkspaceFeatureSettingServiceImpl,
-        { provide: WORKSPACE_FEATURE_SETTING_TYPES.services.FindWorkspaceFeatureSettingService, useValue: mockFindService },
-        { provide: WORKSPACE_FEATURE_SETTING_TYPES.repositories.DeleteWorkspaceFeatureSettingRepository, useValue: mockRepo },
+        {
+          provide:
+            WORKSPACE_FEATURE_SETTING_TYPES.services
+              .FindWorkspaceFeatureSettingService,
+          useValue: mockFindService,
+        },
+        {
+          provide:
+            WORKSPACE_FEATURE_SETTING_TYPES.repositories
+              .DeleteWorkspaceFeatureSettingRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
-    service = module.get<DeleteWorkspaceFeatureSettingServiceImpl>(DeleteWorkspaceFeatureSettingServiceImpl);
+    service = module.get<DeleteWorkspaceFeatureSettingServiceImpl>(
+      DeleteWorkspaceFeatureSettingServiceImpl,
+    );
   });
 
   it('should be defined', () => {

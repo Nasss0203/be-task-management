@@ -30,8 +30,7 @@ export class UpdatePlanFeatureServiceImpl implements UpdatePlanFeatureService {
         planId: dto.planId ?? current.planId,
         featureId: dto.featureId ?? current.featureId,
         enabled: dto.enabled ?? current.enabled,
-        metadata:
-          dto.metadata !== undefined ? dto.metadata : current.metadata,
+        metadata: dto.metadata !== undefined ? dto.metadata : current.metadata,
         createdAt: current.createdAt,
         updatedAt: current.updatedAt,
         deletedAt: current.deletedAt,

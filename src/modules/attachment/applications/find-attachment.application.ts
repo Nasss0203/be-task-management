@@ -6,9 +6,7 @@ import { AttachmentResponseDto } from '../dto/response/attachment.response.dto';
 import { AttachmentMapper } from '../mapper/attachment.mapper';
 
 @Injectable()
-export class FindAttachmentApplicationImpl
-  implements FindAttachmentApplication
-{
+export class FindAttachmentApplicationImpl implements FindAttachmentApplication {
   constructor(
     @Inject(ATTACHMENT_TYPES.services.FindAttachmentService)
     private readonly findService: FindAttachmentService,

@@ -29,7 +29,9 @@ describe('FindPageApplicationImpl', () => {
 
   it('should find deleted pages', async () => {
     mockService.findDeletedPages.mockResolvedValue([{ id: 'page-1' }]);
-    jest.spyOn(PageMapper, 'toResponse').mockReturnValue({ id: 'page-1' } as any);
+    jest
+      .spyOn(PageMapper, 'toResponse')
+      .mockReturnValue({ id: 'page-1' } as any);
 
     const result = await app.findDeletedPages('ws-1');
     expect(mockService.findDeletedPages).toHaveBeenCalledWith('ws-1');
@@ -38,7 +40,9 @@ describe('FindPageApplicationImpl', () => {
 
   it('should find page by workspace id', async () => {
     mockService.findPageByWorkspaceId.mockResolvedValue({ id: 'page-1' });
-    jest.spyOn(PageMapper, 'toResponse').mockReturnValue({ id: 'page-1' } as any);
+    jest
+      .spyOn(PageMapper, 'toResponse')
+      .mockReturnValue({ id: 'page-1' } as any);
 
     const result = await app.findPageByWorkspaceId('ws-1');
     expect(mockService.findPageByWorkspaceId).toHaveBeenCalledWith('ws-1');

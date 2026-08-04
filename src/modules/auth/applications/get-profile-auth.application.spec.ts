@@ -21,7 +21,9 @@ describe('GetProfileAuthApplicationImpl', () => {
       ],
     }).compile();
 
-    app = module.get<GetProfileAuthApplicationImpl>(GetProfileAuthApplicationImpl);
+    app = module.get<GetProfileAuthApplicationImpl>(
+      GetProfileAuthApplicationImpl,
+    );
   });
 
   it('should be defined', () => {

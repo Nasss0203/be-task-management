@@ -8,7 +8,14 @@ export interface WorkspaceTemplatesApplication {
     userId?: string,
     filters?: FindWorkspaceTemplatesDto,
   ): Promise<PaginatedWorkspaceTemplateResponseDto>;
-  findOneAvailableForUser(id: string, userId: string): Promise<WorkspaceTemplateModel>;
-  update(id: string, userId: string, data: UpdateWorkspaceTemplateDto): Promise<void>;
+  findOneAvailableForUser(
+    id: string,
+    userId: string,
+  ): Promise<WorkspaceTemplateModel>;
+  update(
+    id: string,
+    userId: string,
+    data: UpdateWorkspaceTemplateDto,
+  ): Promise<void>;
   delete(id: string, userId: string): Promise<void>;
 }

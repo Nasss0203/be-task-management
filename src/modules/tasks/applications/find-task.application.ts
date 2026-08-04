@@ -21,7 +21,11 @@ export class FindTaskApplicationImpl implements FindTaskApplication {
     workspaceId: string,
     filters?: FindBacklogTasksFilters,
   ): Promise<PaginatedTaskResponseDto> {
-    const result = await this.service.findAllTask(projectId, workspaceId, filters);
+    const result = await this.service.findAllTask(
+      projectId,
+      workspaceId,
+      filters,
+    );
     return {
       data: result.data.map((task) => TaskMapper.toResponse(task)),
       total: result.total,

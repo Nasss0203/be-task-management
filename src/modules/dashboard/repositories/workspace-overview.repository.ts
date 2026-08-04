@@ -621,9 +621,9 @@ export class WorkspaceOverviewRepositoryImpl implements WorkspaceOverviewReposit
     );
   }
 
-	private findUpcomingDeadlines(workspaceId: string): Promise<DeadlineRow[]> {
-		return this.dataSource.query<DeadlineRow[]>(
-			`
+  private findUpcomingDeadlines(workspaceId: string): Promise<DeadlineRow[]> {
+    return this.dataSource.query<DeadlineRow[]>(
+      `
         SELECT
           t.id AS "id",
           t.title AS "title",

@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { CreateAtEndTaskPositionService } from 'src/modules/task_position/interfaces/services/create-at-end-task-position.service.interface';
+import type { CreateAtTopTaskPositionService } from 'src/modules/task_position/interfaces/services/create-at-top-task-position.service.interface';
 import type { PositionContextRef } from 'src/modules/task_position/interfaces/task-position.input';
 import { TASK_POSITION_TYPES } from 'src/modules/task_position/interfaces/types';
 import { EntityManager } from 'typeorm';
@@ -19,6 +20,9 @@ export class CreateTaskServiceImpl implements CreateTaskService {
 
     @Inject(TASK_POSITION_TYPES.services.CreateAtEndTaskPositionService)
     private readonly createAtEndTaskPositionService: CreateAtEndTaskPositionService,
+
+    @Inject(TASK_POSITION_TYPES.services.CreateAtTopTaskPositionService)
+    private readonly createAtTopTaskPositionService: CreateAtTopTaskPositionService,
   ) {}
 
   private resolvePositionContext(
@@ -54,14 +58,25 @@ export class CreateTaskServiceImpl implements CreateTaskService {
   ): Promise<void> {
     const positionContext = this.resolvePositionContext(input);
 
-    await this.createAtEndTaskPositionService.createAtEnd(
-      {
-        taskId,
-        context: positionContext.context,
-        contextId: positionContext.contextId,
-      },
-      manager,
-    );
+    if (positionContext.context === 'backlog') {
+      await this.createAtTopTaskPositionService.createAtTop(
+        {
+          taskId,
+          context: positionContext.context,
+          contextId: positionContext.contextId,
+        },
+        manager,
+      );
+    } else {
+      await this.createAtEndTaskPositionService.createAtEnd(
+        {
+          taskId,
+          context: positionContext.context,
+          contextId: positionContext.contextId,
+        },
+        manager,
+      );
+    }
   }
 
   async create(

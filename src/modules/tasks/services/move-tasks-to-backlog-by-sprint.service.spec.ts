@@ -22,7 +22,9 @@ describe('MoveTasksToBacklogBySprintServiceImpl', () => {
       ],
     }).compile();
 
-    service = module.get<MoveTasksToBacklogBySprintServiceImpl>(MoveTasksToBacklogBySprintServiceImpl);
+    service = module.get<MoveTasksToBacklogBySprintServiceImpl>(
+      MoveTasksToBacklogBySprintServiceImpl,
+    );
   });
 
   it('should be defined', () => {

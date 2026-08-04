@@ -1,11 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { REALTIME_EVENTS, type TaskCreatedPayload, type TaskUpdatedPayload, type TaskDeletedPayload } from '../realtime.events';
+import {
+  REALTIME_EVENTS,
+  type TaskCreatedPayload,
+  type TaskUpdatedPayload,
+  type TaskDeletedPayload,
+} from '../realtime.events';
 import { RealtimeEmitterService } from '../services/realtime-emitter.service';
 
 @Injectable()
 export class TaskEventsListener {
-  constructor(private readonly realtimeEmitterService: RealtimeEmitterService) {}
+  constructor(
+    private readonly realtimeEmitterService: RealtimeEmitterService,
+  ) {}
 
   @OnEvent(REALTIME_EVENTS.TASK_CREATED)
   handleCreated(payload: TaskCreatedPayload): void {

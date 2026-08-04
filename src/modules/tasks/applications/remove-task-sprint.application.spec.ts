@@ -18,13 +18,21 @@ describe('RemoveTaskFromSprintApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RemoveTaskFromSprintApplicationImpl,
-        { provide: TASK_TYPES.services.RemoveTaskFromSprintService, useValue: mockRemoveTaskFromSprintService },
-        { provide: ACTIVITY_TYPES.services.CreateActivityService, useValue: mockCreateActivityService },
+        {
+          provide: TASK_TYPES.services.RemoveTaskFromSprintService,
+          useValue: mockRemoveTaskFromSprintService,
+        },
+        {
+          provide: ACTIVITY_TYPES.services.CreateActivityService,
+          useValue: mockCreateActivityService,
+        },
         { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
 
-    app = module.get<RemoveTaskFromSprintApplicationImpl>(RemoveTaskFromSprintApplicationImpl);
+    app = module.get<RemoveTaskFromSprintApplicationImpl>(
+      RemoveTaskFromSprintApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -39,19 +47,30 @@ describe('RemoveTaskFromSprintApplicationImpl', () => {
         projectId: 'proj-1',
         userId: 'user-1',
       };
-      
-      const mockTask = { id: '1', workspaceId: 'ws-1', projectId: 'proj-1', sprintId: null, assignees: [] };
+
+      const mockTask = {
+        id: '1',
+        workspaceId: 'ws-1',
+        projectId: 'proj-1',
+        sprintId: null,
+        assignees: [],
+      };
       mockRemoveTaskFromSprintService.remove.mockResolvedValue(mockTask);
 
       const result = await app.remove(input);
 
-      expect(mockRemoveTaskFromSprintService.remove).toHaveBeenCalledWith({ taskId: input.taskId });
-      expect(mockCreateActivityService.create).toHaveBeenCalled();
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith(REALTIME_EVENTS.TASK_UPDATED, {
-        workspaceId: mockTask.workspaceId,
-        projectId: mockTask.projectId,
-        task: mockTask,
+      expect(mockRemoveTaskFromSprintService.remove).toHaveBeenCalledWith({
+        taskId: input.taskId,
       });
+      expect(mockCreateActivityService.create).toHaveBeenCalled();
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        REALTIME_EVENTS.TASK_UPDATED,
+        {
+          workspaceId: mockTask.workspaceId,
+          projectId: mockTask.projectId,
+          task: mockTask,
+        },
+      );
       expect(result.id).toEqual(mockTask.id);
     });
   });

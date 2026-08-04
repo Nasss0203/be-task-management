@@ -10,11 +10,16 @@ describe('DeleteFeatureApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteFeatureApplicationImpl,
-        { provide: FEATURE_TYPES.services.DeleteFeatureService, useValue: mockService },
+        {
+          provide: FEATURE_TYPES.services.DeleteFeatureService,
+          useValue: mockService,
+        },
       ],
     }).compile();
 
-    application = module.get<DeleteFeatureApplicationImpl>(DeleteFeatureApplicationImpl);
+    application = module.get<DeleteFeatureApplicationImpl>(
+      DeleteFeatureApplicationImpl,
+    );
   });
 
   it('should delete feature', async () => {

@@ -13,7 +13,7 @@ export class UpdateTaskRepositoryImpl implements UpdateTaskRepository {
   constructor(
     @InjectRepository(Task)
     private readonly repoTask: Repository<Task>,
-  ) { }
+  ) {}
 
   private getRepo(manager?: EntityManager): Repository<Task> {
     return manager ? manager.getRepository(Task) : this.repoTask;

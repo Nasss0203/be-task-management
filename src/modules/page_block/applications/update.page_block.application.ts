@@ -41,10 +41,7 @@ export class UpdatePageBlockApplicationImpl implements UpdatePageBlockApplicatio
   async reorder(dto: ReorderPageBlockDto): Promise<PageBlockResponseDto[]> {
     return this.uow.runInTransaction(async (manager) => {
       if (!dto.page_id) {
-        throw new HttpException(
-          'Page id is required',
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new HttpException('Page id is required', HttpStatus.BAD_REQUEST);
       }
 
       const blocks = await this.updatePageBlockService.reorder(dto, manager);

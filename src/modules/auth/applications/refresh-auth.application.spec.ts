@@ -29,7 +29,10 @@ describe('RefreshAuthApplicationImpl', () => {
   });
 
   it('should refresh token', async () => {
-    mockService.refresh.mockResolvedValue({ accessToken: 'a', refreshToken: 'r' });
+    mockService.refresh.mockResolvedValue({
+      accessToken: 'a',
+      refreshToken: 'r',
+    });
     const result = await app.refresh('old_token');
     expect(mockService.refresh).toHaveBeenCalledWith('old_token');
     expect(result).toEqual({ accessToken: 'a', refreshToken: 'r' });

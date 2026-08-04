@@ -22,7 +22,9 @@ describe('UpdateProjectApplicationImpl', () => {
       ],
     }).compile();
 
-    application = module.get<UpdateProjectApplicationImpl>(UpdateProjectApplicationImpl);
+    application = module.get<UpdateProjectApplicationImpl>(
+      UpdateProjectApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -37,7 +39,11 @@ describe('UpdateProjectApplicationImpl', () => {
 
       const result = await application.execute('1', 'workspace-1', dto);
 
-      expect(mockUpdateProjectService.execute).toHaveBeenCalledWith('1', 'workspace-1', dto);
+      expect(mockUpdateProjectService.execute).toHaveBeenCalledWith(
+        '1',
+        'workspace-1',
+        dto,
+      );
       expect(result).toEqual(mockProject);
     });
   });

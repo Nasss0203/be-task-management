@@ -34,12 +34,16 @@ describe('DeleteProjectServiceImpl', () => {
     it('should call softDeleteProject on repository', async () => {
       const input = { projectId: '1', deletedBy: 'user-1' };
       const manager = {} as any;
-      
-      mockDeleteProjectRepository.softDeleteProject.mockResolvedValue(undefined);
+
+      mockDeleteProjectRepository.softDeleteProject.mockResolvedValue(
+        undefined,
+      );
 
       await service.softDeleteProject(input, manager);
 
-      expect(mockDeleteProjectRepository.softDeleteProject).toHaveBeenCalledWith(input, manager);
+      expect(
+        mockDeleteProjectRepository.softDeleteProject,
+      ).toHaveBeenCalledWith(input, manager);
     });
   });
 
@@ -47,12 +51,15 @@ describe('DeleteProjectServiceImpl', () => {
     it('should call restoreProject on repository', async () => {
       const input = { projectId: '1' };
       const manager = {} as any;
-      
+
       mockDeleteProjectRepository.restoreProject.mockResolvedValue(undefined);
 
       await service.restoreProject(input, manager);
 
-      expect(mockDeleteProjectRepository.restoreProject).toHaveBeenCalledWith(input, manager);
+      expect(mockDeleteProjectRepository.restoreProject).toHaveBeenCalledWith(
+        input,
+        manager,
+      );
     });
   });
 });

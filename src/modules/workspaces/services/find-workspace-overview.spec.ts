@@ -27,7 +27,7 @@ describe('FindWorkspaceOverviewServiceImpl', () => {
       totalTasks: 1,
       storageUsed: 0,
     };
-    
+
     repo.findOverview.mockResolvedValue(mockOverview);
 
     const result = await service.findOverview(workspaceId);
@@ -52,7 +52,7 @@ describe('FindWorkspaceOverviewServiceImpl', () => {
       totalTasks: 1,
       storageUsed: 0,
     };
-    
+
     repo.findOverview.mockResolvedValue(mockOverview);
 
     const result = await service.findOverview(workspaceId, manager);

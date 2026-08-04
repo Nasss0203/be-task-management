@@ -7,11 +7,12 @@ import { WORKSPACE_FEATURE_SETTING_TYPES } from '../interfaces/types';
 import { WorkspaceFeatureSettingMapper } from '../mapper/workspace_feature_setting.mapper';
 
 @Injectable()
-export class CreateWorkspaceFeatureSettingApplicationImpl
-  implements CreateWorkspaceFeatureSettingApplication
-{
+export class CreateWorkspaceFeatureSettingApplicationImpl implements CreateWorkspaceFeatureSettingApplication {
   constructor(
-    @Inject(WORKSPACE_FEATURE_SETTING_TYPES.services.CreateWorkspaceFeatureSettingService)
+    @Inject(
+      WORKSPACE_FEATURE_SETTING_TYPES.services
+        .CreateWorkspaceFeatureSettingService,
+    )
     private readonly service: CreateWorkspaceFeatureSettingService,
   ) {}
 

@@ -24,7 +24,9 @@ describe('FindTaskPriorityApplicationImpl', () => {
       ],
     }).compile();
 
-    application = module.get<FindTaskPriorityApplicationImpl>(FindTaskPriorityApplicationImpl);
+    application = module.get<FindTaskPriorityApplicationImpl>(
+      FindTaskPriorityApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -34,14 +36,20 @@ describe('FindTaskPriorityApplicationImpl', () => {
   describe('findAllTaskPriority', () => {
     it('should return mapped priorities', async () => {
       const mockPriorities = [{ id: '1', name: 'High' }];
-      mockFindTaskPriorityService.findAllTaskPriority.mockResolvedValue(mockPriorities);
+      mockFindTaskPriorityService.findAllTaskPriority.mockResolvedValue(
+        mockPriorities,
+      );
 
       const originalToResponse = TaskPriorityMapper.toResponse;
-      TaskPriorityMapper.toResponse = jest.fn((val) => ({ ...val, isMapped: true }) as any);
+      TaskPriorityMapper.toResponse = jest.fn(
+        (val) => ({ ...val, isMapped: true }) as any,
+      );
 
       const result = await application.findAllTaskPriority('proj-1', 'ws-1');
 
-      expect(mockFindTaskPriorityService.findAllTaskPriority).toHaveBeenCalledWith('proj-1', 'ws-1');
+      expect(
+        mockFindTaskPriorityService.findAllTaskPriority,
+      ).toHaveBeenCalledWith('proj-1', 'ws-1');
       expect(result).toEqual([{ id: '1', name: 'High', isMapped: true }]);
 
       TaskPriorityMapper.toResponse = originalToResponse;
@@ -51,14 +59,21 @@ describe('FindTaskPriorityApplicationImpl', () => {
   describe('findDonePriority', () => {
     it('should return mapped priority if found', async () => {
       const mockPriority = { id: '1', name: 'Done' };
-      mockFindTaskPriorityService.findDonePriority.mockResolvedValue(mockPriority);
+      mockFindTaskPriorityService.findDonePriority.mockResolvedValue(
+        mockPriority,
+      );
 
       const originalToResponse = TaskPriorityMapper.toResponse;
-      TaskPriorityMapper.toResponse = jest.fn((val) => ({ ...val, isMapped: true }) as any);
+      TaskPriorityMapper.toResponse = jest.fn(
+        (val) => ({ ...val, isMapped: true }) as any,
+      );
 
       const result = await application.findDonePriority('proj-1', 'ws-1');
 
-      expect(mockFindTaskPriorityService.findDonePriority).toHaveBeenCalledWith('proj-1', 'ws-1');
+      expect(mockFindTaskPriorityService.findDonePriority).toHaveBeenCalledWith(
+        'proj-1',
+        'ws-1',
+      );
       expect(result).toEqual({ id: '1', name: 'Done', isMapped: true });
 
       TaskPriorityMapper.toResponse = originalToResponse;

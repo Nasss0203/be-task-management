@@ -41,7 +41,9 @@ describe('FindAttachmentApplicationImpl', () => {
 
       const result = await app.findByTask('task-1');
 
-      expect(mockFindAttachmentService.findByTask).toHaveBeenCalledWith('task-1');
+      expect(mockFindAttachmentService.findByTask).toHaveBeenCalledWith(
+        'task-1',
+      );
       expect(result).toEqual([{ mapped: true }]);
 
       AttachmentMapper.toResponse = originalMapper;

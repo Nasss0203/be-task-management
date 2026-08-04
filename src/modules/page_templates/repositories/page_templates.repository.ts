@@ -11,7 +11,9 @@ export class PageTemplatesRepositoryImpl implements PageTemplatesRepository {
     private readonly repo: Repository<PageTemplate>,
   ) {}
 
-  async findAll(where?: import('typeorm').FindOptionsWhere<PageTemplate>): Promise<PageTemplate[]> {
+  async findAll(
+    where?: import('typeorm').FindOptionsWhere<PageTemplate>,
+  ): Promise<PageTemplate[]> {
     return this.repo.find({
       where: where || { isSystem: true },
       order: { createdAt: 'ASC' },

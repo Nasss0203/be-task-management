@@ -45,7 +45,7 @@ export class MoveTaskSprintApplicationImpl implements MoveTaskSprintApplication 
 
     @Inject(ACTIVITY_TYPES.services.CreateActivityService)
     private readonly createActivityService: CreateActivityService,
-    
+
     private readonly eventEmitter: EventEmitter2,
   ) {}
 

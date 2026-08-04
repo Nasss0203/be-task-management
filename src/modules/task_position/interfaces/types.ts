@@ -12,6 +12,7 @@ export const TASK_POSITION_TYPES = {
   },
   services: {
     CreateAtEndTaskPositionService: 'CreateAtEndTaskPositionService',
+    CreateAtTopTaskPositionService: 'CreateAtTopTaskPositionService',
     ReorderWithinContextTaskPositionService:
       'ReorderWithinContextTaskPositionService',
     RemoveTaskPositionFromContextService:

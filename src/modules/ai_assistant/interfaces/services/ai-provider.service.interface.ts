@@ -28,7 +28,6 @@ export interface AiProviderService {
     input: AiProviderGenerationInput,
   ): Promise<AiGenerationResult>;
 
-
   generateSprintPlan(
     input: AiProviderGenerationInput,
   ): Promise<AiGenerationResult>;

@@ -29,7 +29,9 @@ describe('UserRolesService', () => {
   });
 
   it('should update', () => {
-    expect(service.update(1, {} as any)).toBe('This action updates a #1 userRole');
+    expect(service.update(1, {} as any)).toBe(
+      'This action updates a #1 userRole',
+    );
   });
 
   it('should remove', () => {

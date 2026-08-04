@@ -23,7 +23,9 @@ describe('FindTaskPriorityServiceImpl', () => {
       ],
     }).compile();
 
-    service = module.get<FindTaskPriorityServiceImpl>(FindTaskPriorityServiceImpl);
+    service = module.get<FindTaskPriorityServiceImpl>(
+      FindTaskPriorityServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -33,11 +35,19 @@ describe('FindTaskPriorityServiceImpl', () => {
   describe('findAllTaskPriority', () => {
     it('should call findAllTaskPriority on repository', async () => {
       const manager = {} as any;
-      mockFindTaskPriorityRepository.findAllTaskPriority.mockResolvedValue([{ id: '1' }]);
+      mockFindTaskPriorityRepository.findAllTaskPriority.mockResolvedValue([
+        { id: '1' },
+      ]);
 
-      const result = await service.findAllTaskPriority('proj-1', 'ws-1', manager);
+      const result = await service.findAllTaskPriority(
+        'proj-1',
+        'ws-1',
+        manager,
+      );
 
-      expect(mockFindTaskPriorityRepository.findAllTaskPriority).toHaveBeenCalledWith('proj-1', 'ws-1', manager);
+      expect(
+        mockFindTaskPriorityRepository.findAllTaskPriority,
+      ).toHaveBeenCalledWith('proj-1', 'ws-1', manager);
       expect(result).toEqual([{ id: '1' }]);
     });
   });
@@ -45,11 +55,15 @@ describe('FindTaskPriorityServiceImpl', () => {
   describe('findDonePriority', () => {
     it('should call findDonePriority on repository', async () => {
       const manager = {} as any;
-      mockFindTaskPriorityRepository.findDonePriority.mockResolvedValue({ id: '1' });
+      mockFindTaskPriorityRepository.findDonePriority.mockResolvedValue({
+        id: '1',
+      });
 
       const result = await service.findDonePriority('proj-1', 'ws-1', manager);
 
-      expect(mockFindTaskPriorityRepository.findDonePriority).toHaveBeenCalledWith('proj-1', 'ws-1', manager);
+      expect(
+        mockFindTaskPriorityRepository.findDonePriority,
+      ).toHaveBeenCalledWith('proj-1', 'ws-1', manager);
       expect(result).toEqual({ id: '1' });
     });
   });

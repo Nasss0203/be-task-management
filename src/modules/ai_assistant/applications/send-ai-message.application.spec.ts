@@ -131,7 +131,6 @@ const VALID_AI_RESULT = {
   totalTokens: 150,
 };
 
-
 const RESOLVED_CONTEXT = {
   context: {
     workspaceId: WORKSPACE_ID,
@@ -186,7 +185,6 @@ const mockApplyAiGenerationApplication = {
   apply: jest.fn(),
 };
 
-
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -216,7 +214,9 @@ describe('SendAiMessageApplicationImpl', () => {
       if (key === 'GEMINI_MODEL') return 'gemini-2.5-flash';
       return undefined;
     });
-    mockApplyAiGenerationApplication.apply.mockResolvedValue(stubGenerationGenerated);
+    mockApplyAiGenerationApplication.apply.mockResolvedValue(
+      stubGenerationGenerated,
+    );
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -254,7 +254,6 @@ describe('SendAiMessageApplicationImpl', () => {
           useValue: mockConfigService,
         },
       ],
-
     }).compile();
 
     application = module.get<SendAiMessageApplicationImpl>(
@@ -546,15 +545,27 @@ describe('SendAiMessageApplicationImpl', () => {
 
   describe('intent classification integration', () => {
     it('automatically classifies intent and runs task draft flow when classifyIntent returns TASK_DRAFT', async () => {
-      mockConversationService.findByIdForUser.mockResolvedValue(stubConversation);
-      mockAiProviderService.classifyIntent.mockResolvedValue(AiGenerationType.TASK_DRAFT);
-      mockContextSnapshotRepository.resolveTaskDraftContext.mockResolvedValue(RESOLVED_CONTEXT);
-      mockFindPermissionService.findPermissionsByUserAndWorkspace.mockResolvedValue(['task.create']);
+      mockConversationService.findByIdForUser.mockResolvedValue(
+        stubConversation,
+      );
+      mockAiProviderService.classifyIntent.mockResolvedValue(
+        AiGenerationType.TASK_DRAFT,
+      );
+      mockContextSnapshotRepository.resolveTaskDraftContext.mockResolvedValue(
+        RESOLVED_CONTEXT,
+      );
+      mockFindPermissionService.findPermissionsByUserAndWorkspace.mockResolvedValue(
+        ['task.create'],
+      );
 
       mockMessageService.create.mockResolvedValue(stubUserMessage);
       mockGenerationService.create.mockResolvedValue(stubGenerationProcessing);
-      mockAiProviderService.generateTaskDraft.mockResolvedValue(stubGenerationGenerated);
-      mockGenerationService.updateGeneratedResult.mockResolvedValue(stubGenerationGenerated);
+      mockAiProviderService.generateTaskDraft.mockResolvedValue(
+        stubGenerationGenerated,
+      );
+      mockGenerationService.updateGeneratedResult.mockResolvedValue(
+        stubGenerationGenerated,
+      );
 
       const result = await application.send({
         conversationId: CONVERSATION_ID,
@@ -566,14 +577,20 @@ describe('SendAiMessageApplicationImpl', () => {
         },
       });
 
-      expect(mockAiProviderService.classifyIntent).toHaveBeenCalledWith('Tạo giúp tôi 5 công việc lập trình');
+      expect(mockAiProviderService.classifyIntent).toHaveBeenCalledWith(
+        'Tạo giúp tôi 5 công việc lập trình',
+      );
       expect(mockAiProviderService.generateTaskDraft).toHaveBeenCalled();
       expect(result.generation).toBeDefined();
-      expect(result.generation?.generationType).toBe(AiGenerationType.TASK_DRAFT);
+      expect(result.generation?.generationType).toBe(
+        AiGenerationType.TASK_DRAFT,
+      );
     });
 
     it('returns null assistant message and generation when classifyIntent returns NORMAL', async () => {
-      mockConversationService.findByIdForUser.mockResolvedValue(stubConversation);
+      mockConversationService.findByIdForUser.mockResolvedValue(
+        stubConversation,
+      );
       mockAiProviderService.classifyIntent.mockResolvedValue('NORMAL');
       mockMessageService.create.mockResolvedValue(stubUserMessage);
 
@@ -586,7 +603,9 @@ describe('SendAiMessageApplicationImpl', () => {
         },
       });
 
-      expect(mockAiProviderService.classifyIntent).toHaveBeenCalledWith('Chào bạn');
+      expect(mockAiProviderService.classifyIntent).toHaveBeenCalledWith(
+        'Chào bạn',
+      );
       expect(mockGenerationService.create).not.toHaveBeenCalled();
       expect(result.userMessage).toBeDefined();
       expect(result.assistantMessage).toBeNull();

@@ -38,7 +38,10 @@ import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { VerifyActivationTokenDto, ActivateAdminDto } from './dto/activate-admin.dto';
+import {
+  VerifyActivationTokenDto,
+  ActivateAdminDto,
+} from './dto/activate-admin.dto';
 
 type RefreshTokenRequest = Request & {
   cookies?: {
@@ -173,7 +176,7 @@ export class AuthController {
     });
 
     res.redirect(
-      `${process.env.FRONTEND_URL || 'http://localhost:3000'}/callback?access_token=${access_token}&refresh_token=${refresh_token}`
+      `${process.env.FRONTEND_URL || 'http://localhost:3000'}/callback?access_token=${access_token}&refresh_token=${refresh_token}`,
     );
   }
 
@@ -190,7 +193,10 @@ export class AuthController {
   @ResponseMessage('Verification email resent')
   async resendVerification(@Body() dto: ResendVerificationDto) {
     await this.authService.resendVerificationEmail(dto.email);
-    return { message: 'If the email exists and is not verified, a new link has been sent.' };
+    return {
+      message:
+        'If the email exists and is not verified, a new link has been sent.',
+    };
   }
 
   @Public()
@@ -204,7 +210,11 @@ export class AuthController {
     const result = await this.authService.verifyEmail(dto.token);
 
     if (result.refresh_token) {
-      res.cookie('refresh_token', result.refresh_token, REFRESH_TOKEN_COOKIE_OPTIONS);
+      res.cookie(
+        'refresh_token',
+        result.refresh_token,
+        REFRESH_TOKEN_COOKIE_OPTIONS,
+      );
     }
 
     return result;
@@ -216,7 +226,9 @@ export class AuthController {
   @ResponseMessage('Password reset email sent')
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     await this.authService.forgotPassword(dto.email);
-    return { message: 'If the email exists, a password reset link has been sent.' };
+    return {
+      message: 'If the email exists, a password reset link has been sent.',
+    };
   }
 
   @Public()
@@ -243,10 +255,17 @@ export class AuthController {
     @Body() dto: ActivateAdminDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.authService.activateAdmin(dto.token, dto.password);
+    const result = await this.authService.activateAdmin(
+      dto.token,
+      dto.password,
+    );
 
     if (result.refresh_token) {
-      res.cookie('refresh_token', result.refresh_token, REFRESH_TOKEN_COOKIE_OPTIONS);
+      res.cookie(
+        'refresh_token',
+        result.refresh_token,
+        REFRESH_TOKEN_COOKIE_OPTIONS,
+      );
     }
 
     return result;

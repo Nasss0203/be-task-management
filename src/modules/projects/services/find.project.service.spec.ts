@@ -36,11 +36,15 @@ describe('FindProjectServiceImpl', () => {
   describe('findDeletedProjects', () => {
     it('should call findDeletedProjects on repository', async () => {
       const mockProjects = [{ id: '1' }];
-      mockFindProjectRepository.findDeletedProjects.mockResolvedValue(mockProjects);
+      mockFindProjectRepository.findDeletedProjects.mockResolvedValue(
+        mockProjects,
+      );
 
       const result = await service.findDeletedProjects('workspace-1');
 
-      expect(mockFindProjectRepository.findDeletedProjects).toHaveBeenCalledWith('workspace-1');
+      expect(
+        mockFindProjectRepository.findDeletedProjects,
+      ).toHaveBeenCalledWith('workspace-1');
       expect(result).toEqual(mockProjects);
     });
   });
@@ -48,11 +52,15 @@ describe('FindProjectServiceImpl', () => {
   describe('findOneProjectForRestore', () => {
     it('should call findOneProjectForRestore on repository', async () => {
       const mockProject = { id: '1' };
-      mockFindProjectRepository.findOneProjectForRestore.mockResolvedValue(mockProject);
+      mockFindProjectRepository.findOneProjectForRestore.mockResolvedValue(
+        mockProject,
+      );
 
       const result = await service.findOneProjectForRestore('workspace-1', '1');
 
-      expect(mockFindProjectRepository.findOneProjectForRestore).toHaveBeenCalledWith('workspace-1', '1');
+      expect(
+        mockFindProjectRepository.findOneProjectForRestore,
+      ).toHaveBeenCalledWith('workspace-1', '1');
       expect(result).toEqual(mockProject);
     });
   });
@@ -61,9 +69,15 @@ describe('FindProjectServiceImpl', () => {
     it('should call existsActiveProjectKey on repository', async () => {
       mockFindProjectRepository.existsActiveProjectKey.mockResolvedValue(true);
 
-      const result = await service.existsActiveProjectKey('workspace-1', 'KEY', 'exclude-1');
+      const result = await service.existsActiveProjectKey(
+        'workspace-1',
+        'KEY',
+        'exclude-1',
+      );
 
-      expect(mockFindProjectRepository.existsActiveProjectKey).toHaveBeenCalledWith('workspace-1', 'KEY', 'exclude-1');
+      expect(
+        mockFindProjectRepository.existsActiveProjectKey,
+      ).toHaveBeenCalledWith('workspace-1', 'KEY', 'exclude-1');
       expect(result).toBe(true);
     });
   });
@@ -71,11 +85,15 @@ describe('FindProjectServiceImpl', () => {
   describe('findAllByWorkspaceId', () => {
     it('should call findAllByWorkspaceId on repository', async () => {
       const mockProjects = [{ id: '1' }];
-      mockFindProjectRepository.findAllByWorkspaceId.mockResolvedValue(mockProjects);
+      mockFindProjectRepository.findAllByWorkspaceId.mockResolvedValue(
+        mockProjects,
+      );
 
       const result = await service.findAllByWorkspaceId('workspace-1');
 
-      expect(mockFindProjectRepository.findAllByWorkspaceId).toHaveBeenCalledWith('workspace-1');
+      expect(
+        mockFindProjectRepository.findAllByWorkspaceId,
+      ).toHaveBeenCalledWith('workspace-1');
       expect(result).toEqual(mockProjects);
     });
   });
@@ -84,11 +102,16 @@ describe('FindProjectServiceImpl', () => {
     it('should call findOneProjectById on repository', async () => {
       const mockProject = { id: '1' };
       const manager = {} as any;
-      mockFindProjectRepository.findOneProjectById.mockResolvedValue(mockProject);
+      mockFindProjectRepository.findOneProjectById.mockResolvedValue(
+        mockProject,
+      );
 
       const result = await service.findOneProjectById('1', manager);
 
-      expect(mockFindProjectRepository.findOneProjectById).toHaveBeenCalledWith('1', manager);
+      expect(mockFindProjectRepository.findOneProjectById).toHaveBeenCalledWith(
+        '1',
+        manager,
+      );
       expect(result).toEqual(mockProject);
     });
   });

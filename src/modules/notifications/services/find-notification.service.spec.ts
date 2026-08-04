@@ -16,11 +16,16 @@ describe('FindNotificationServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindNotificationServiceImpl,
-        { provide: NOTIFICATION_TYPES.repositories.FindNotificationRepository, useValue: mockRepo },
+        {
+          provide: NOTIFICATION_TYPES.repositories.FindNotificationRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
-    service = module.get<FindNotificationServiceImpl>(FindNotificationServiceImpl);
+    service = module.get<FindNotificationServiceImpl>(
+      FindNotificationServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -28,7 +33,9 @@ describe('FindNotificationServiceImpl', () => {
   });
 
   it('should fail if no userId in findMyNotifications', async () => {
-    await expect(service.findMyNotifications({ userId: '' })).rejects.toThrow(BadRequestException);
+    await expect(service.findMyNotifications({ userId: '' })).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('should find my notifications', async () => {

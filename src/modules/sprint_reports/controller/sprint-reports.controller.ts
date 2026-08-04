@@ -10,10 +10,10 @@ export class SprintReportsController {
   constructor(
     @Inject(SPRINT_REPORT_TYPES.applications.FindSprintReportsApplication)
     private readonly findSprintReportsApplication: FindSprintReportsApplication,
-  ) { }
+  ) {}
 
-  @Get("workspaces/:workspaceId/projects/:projectId")
-  @ResponseMessage("Get all sprint reports successfully")
+  @Get('workspaces/:workspaceId/projects/:projectId')
+  @ResponseMessage('Get all sprint reports successfully')
   async getSprintReports(
     @Param('workspaceId') workspaceId: string,
     @Param('projectId') projectId: string,

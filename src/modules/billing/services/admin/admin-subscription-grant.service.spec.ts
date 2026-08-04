@@ -1,4 +1,3 @@
-
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/unbound-method */
 import { DataSource, EntityManager } from 'typeorm';
 
@@ -90,7 +89,6 @@ describe('AdminSubscriptionGrantService expiration', () => {
         }),
       }),
     );
-
   });
 
   it('expires due subscriptions even when a linked workspace is missing', async () => {

@@ -1,4 +1,3 @@
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { CreateWorkspaceTemplateServiceImpl } from './create-workspace-template.service';
 import {
@@ -102,14 +101,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -132,25 +135,25 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
         },
         {
@@ -175,14 +178,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -205,25 +212,25 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
         },
         {
@@ -248,14 +255,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -278,25 +289,25 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
         },
         {
@@ -321,14 +332,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -351,25 +366,25 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
         },
         {
@@ -394,14 +409,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -424,25 +443,25 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
         },
         {
@@ -467,14 +486,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -497,25 +520,25 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
         },
         {
@@ -540,14 +563,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -570,25 +597,25 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
         },
         {
@@ -613,14 +640,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -643,25 +674,25 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
         },
         {
@@ -686,14 +717,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -716,25 +751,25 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
         },
         {
@@ -759,14 +794,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -789,25 +828,25 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
         },
         {
@@ -832,14 +871,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -862,25 +905,25 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
         },
         {
@@ -905,14 +948,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -935,25 +982,25 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
         },
         {
@@ -978,14 +1025,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -1008,25 +1059,25 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
         },
         {
@@ -1051,14 +1102,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -1081,25 +1136,25 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
         },
         {
@@ -1124,14 +1179,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -1154,31 +1213,42 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
         },
         {
           provide: WORKSPACE_TEMPLATE_TYPES.services.WorkspaceTemplatesService,
           useValue: {
-            findOneAvailableForUser: jest.fn().mockResolvedValue({ config: { projects: [], boards: [], pages: [], taskStatuses: [], taskPriorities: [], statuses: [], priorities: [], tasks: [] } }),
+            findOneAvailableForUser: jest.fn().mockResolvedValue({
+              config: {
+                projects: [],
+                boards: [],
+                pages: [],
+                taskStatuses: [],
+                taskPriorities: [],
+                statuses: [],
+                priorities: [],
+                tasks: [],
+              },
+            }),
             create: jest.fn().mockResolvedValue({}),
             find: jest.fn().mockResolvedValue([]),
             findOne: jest.fn().mockResolvedValue({}),
@@ -1198,14 +1268,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -1228,25 +1302,25 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
         },
         {
@@ -1271,14 +1345,18 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -1301,31 +1379,33 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
-        }
+        },
       ],
     }).compile();
 
-    provider = module.get<CreateWorkspaceTemplateServiceImpl>(CreateWorkspaceTemplateServiceImpl);
+    provider = module.get<CreateWorkspaceTemplateServiceImpl>(
+      CreateWorkspaceTemplateServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -1336,7 +1416,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
     it('should execute successfully', async () => {
       try {
         await provider.create({} as any, {} as any, {} as any, {} as any);
-      } catch(e) {}
+      } catch (e) {}
       expect(true).toBe(true);
     });
   });

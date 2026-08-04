@@ -32,18 +32,26 @@ describe('TaskPriorityController', () => {
 
   describe('findAllTaskPriority', () => {
     it('should call findAllTaskPriority on application', async () => {
-      mockFindTaskPriorityApplication.findAllTaskPriority.mockResolvedValue([{ id: '1' }]);
+      mockFindTaskPriorityApplication.findAllTaskPriority.mockResolvedValue([
+        { id: '1' },
+      ]);
       const result = await controller.findAllTaskPriority('ws-1', 'proj-1');
-      expect(mockFindTaskPriorityApplication.findAllTaskPriority).toHaveBeenCalledWith('proj-1', 'ws-1');
+      expect(
+        mockFindTaskPriorityApplication.findAllTaskPriority,
+      ).toHaveBeenCalledWith('proj-1', 'ws-1');
       expect(result).toEqual([{ id: '1' }]);
     });
   });
 
   describe('findDonePriority', () => {
     it('should call findDonePriority on application', async () => {
-      mockFindTaskPriorityApplication.findDonePriority.mockResolvedValue({ id: '1' });
+      mockFindTaskPriorityApplication.findDonePriority.mockResolvedValue({
+        id: '1',
+      });
       const result = await controller.findDonePriority('ws-1', 'proj-1');
-      expect(mockFindTaskPriorityApplication.findDonePriority).toHaveBeenCalledWith('proj-1', 'ws-1');
+      expect(
+        mockFindTaskPriorityApplication.findDonePriority,
+      ).toHaveBeenCalledWith('proj-1', 'ws-1');
       expect(result).toEqual({ id: '1' });
     });
   });

@@ -46,9 +46,7 @@ type WorkspaceCountMaps = {
 };
 
 @Injectable()
-export class AdminFindAllWorkspaceRepositoryImpl
-  implements AdminFindAllWorkspaceRepository
-{
+export class AdminFindAllWorkspaceRepositoryImpl implements AdminFindAllWorkspaceRepository {
   constructor(
     @InjectRepository(Workspace)
     private readonly repo: Repository<Workspace>,

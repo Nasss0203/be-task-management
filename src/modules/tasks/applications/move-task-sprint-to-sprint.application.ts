@@ -20,9 +20,7 @@ import { TASK_TYPES } from '../interfaces/types';
 import { TaskMapper } from '../mapper/tasks.mapper';
 
 @Injectable()
-export class MoveTaskSprintToSprintApplicationImpl
-  implements MoveTaskSprintToSprintApplication
-{
+export class MoveTaskSprintToSprintApplicationImpl implements MoveTaskSprintToSprintApplication {
   constructor(
     @Inject(WORKSPACE_TYPES.uow.UnitOfWork)
     private readonly uow: UnitOfWork,

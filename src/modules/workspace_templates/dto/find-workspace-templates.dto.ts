@@ -1,6 +1,17 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString, Min, IsIn } from 'class-validator';
-import { TemplateStatus, TemplateVisibility } from 'src/common/enum/template.enum';
+import {
+  IsBoolean,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+  IsIn,
+} from 'class-validator';
+import {
+  TemplateStatus,
+  TemplateVisibility,
+} from 'src/common/enum/template.enum';
 
 export class FindWorkspaceTemplatesDto {
   @IsOptional()

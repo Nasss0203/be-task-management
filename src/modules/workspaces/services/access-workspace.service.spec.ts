@@ -1,4 +1,3 @@
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { AccessWorkspaceServiceImpl } from './access-workspace.service';
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
@@ -38,14 +37,18 @@ describe('AccessWorkspaceServiceImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -68,31 +71,33 @@ describe('AccessWorkspaceServiceImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
-        }
+        },
       ],
     }).compile();
 
-    provider = module.get<AccessWorkspaceServiceImpl>(AccessWorkspaceServiceImpl);
+    provider = module.get<AccessWorkspaceServiceImpl>(
+      AccessWorkspaceServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -102,8 +107,13 @@ describe('AccessWorkspaceServiceImpl', () => {
   describe('getWorkspaceAccess', () => {
     it('should execute successfully', async () => {
       try {
-        await provider.getWorkspaceAccess({} as any, {} as any, {} as any, {} as any);
-      } catch(e) {}
+        await provider.getWorkspaceAccess(
+          {} as any,
+          {} as any,
+          {} as any,
+          {} as any,
+        );
+      } catch (e) {}
       expect(true).toBe(true);
     });
   });

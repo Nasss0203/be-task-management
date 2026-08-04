@@ -121,11 +121,10 @@ export class StripeWebhookService {
   }
 
   async verifyCheckoutSession(sessionId: string, userId: string) {
-    const payment =
-      await this.paymentRepository.findPaymentByProviderOrderId(
-        BillingProvider.STRIPE,
-        sessionId,
-      );
+    const payment = await this.paymentRepository.findPaymentByProviderOrderId(
+      BillingProvider.STRIPE,
+      sessionId,
+    );
 
     if (!payment) {
       throw new BadRequestException('Stripe payment not found');
@@ -135,10 +134,7 @@ export class StripeWebhookService {
       throw new ForbiddenException('Stripe payment does not belong to user');
     }
 
-    if (
-      payment.status === PaymentStatus.SUCCEEDED &&
-      payment.subscriptionId
-    ) {
+    if (payment.status === PaymentStatus.SUCCEEDED && payment.subscriptionId) {
       return {
         completed: true,
         paymentId: payment.id,
@@ -313,7 +309,8 @@ export class StripeWebhookService {
     invoice: StripeInvoice,
     status: SubscriptionStatus,
   ): Promise<void> {
-    const parentSubscription = invoice.parent?.subscription_details?.subscription;
+    const parentSubscription =
+      invoice.parent?.subscription_details?.subscription;
     const providerSubscriptionId = this.getStripeId(parentSubscription);
 
     if (!providerSubscriptionId) {
@@ -462,11 +459,7 @@ export class StripeWebhookService {
   }
 
   private getStripeId(
-    value:
-      | string
-      | { id: string }
-      | null
-      | undefined,
+    value: string | { id: string } | null | undefined,
   ): string | null {
     if (typeof value === 'string') {
       return value;

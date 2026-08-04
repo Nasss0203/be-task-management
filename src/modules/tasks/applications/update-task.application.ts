@@ -42,7 +42,7 @@ export class UpdateTaskApplicationImpl implements UpdateTaskApplication {
     private readonly uow: UnitOfWork,
 
     private readonly eventEmitter: EventEmitter2,
-  ) { }
+  ) {}
 
   async updateTask(updateTaskDto: UpdateTaskInput): Promise<TaskResponseDto> {
     return this.uow.runInTransaction(async (manager) => {
@@ -188,5 +188,4 @@ export class UpdateTaskApplicationImpl implements UpdateTaskApplication {
 
     return tasks.map(TaskMapper.toResponse);
   }
-
 }

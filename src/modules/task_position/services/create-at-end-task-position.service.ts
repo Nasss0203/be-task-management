@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import type { TaskPosition } from '../domain/entities/task_position.entity';
-import type { CreateTaskPositionRepository } from '../interfaces/repositories/create-task-position.repository.interface';
+import type { UpsertTaskPositionRepository } from '../interfaces/repositories/upsert-task-position.repository.interface';
 import type { FindLastTaskPositionRepository } from '../interfaces/repositories/find-last-task-position.repository.interface';
 import type { CreateAtEndTaskPositionService } from '../interfaces/services/create-at-end-task-position.service.interface';
 import type { CreateTaskPositionAtEndInput } from '../interfaces/task-position.input';
@@ -13,8 +13,8 @@ export class CreateAtEndTaskPositionServiceImpl implements CreateAtEndTaskPositi
   constructor(
     @Inject(TASK_POSITION_TYPES.repositories.FindLastTaskPositionRepository)
     private readonly findLastRepository: FindLastTaskPositionRepository,
-    @Inject(TASK_POSITION_TYPES.repositories.CreateTaskPositionRepository)
-    private readonly createRepository: CreateTaskPositionRepository,
+    @Inject(TASK_POSITION_TYPES.repositories.UpsertTaskPositionRepository)
+    private readonly upsertRepository: UpsertTaskPositionRepository,
   ) {}
 
   async createAtEnd(
@@ -34,7 +34,7 @@ export class CreateAtEndTaskPositionServiceImpl implements CreateAtEndTaskPositi
       nextPosition: null,
     });
 
-    return this.createRepository.create(
+    return this.upsertRepository.upsert(
       {
         taskId: input.taskId,
         context: input.context,

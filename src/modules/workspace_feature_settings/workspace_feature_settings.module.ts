@@ -22,7 +22,10 @@ import { WorkspaceFeatureAccessServiceImpl } from './services/workspace_feature_
 
 @Module({
   imports: [TypeOrmModule.forFeature([WorkspaceFeatureSetting])],
-  controllers: [WorkspaceFeatureSettingsController, WorkspaceFeaturesController],
+  controllers: [
+    WorkspaceFeatureSettingsController,
+    WorkspaceFeaturesController,
+  ],
   providers: [
     {
       provide:
@@ -115,10 +118,13 @@ import { WorkspaceFeatureAccessServiceImpl } from './services/workspace_feature_
     },
   ],
   exports: [
-    WORKSPACE_FEATURE_SETTING_TYPES.services.CreateWorkspaceFeatureSettingService,
+    WORKSPACE_FEATURE_SETTING_TYPES.services
+      .CreateWorkspaceFeatureSettingService,
     WORKSPACE_FEATURE_SETTING_TYPES.services.FindWorkspaceFeatureSettingService,
-    WORKSPACE_FEATURE_SETTING_TYPES.services.UpdateWorkspaceFeatureSettingService,
-    WORKSPACE_FEATURE_SETTING_TYPES.services.DeleteWorkspaceFeatureSettingService,
+    WORKSPACE_FEATURE_SETTING_TYPES.services
+      .UpdateWorkspaceFeatureSettingService,
+    WORKSPACE_FEATURE_SETTING_TYPES.services
+      .DeleteWorkspaceFeatureSettingService,
     WORKSPACE_FEATURE_SETTING_TYPES.services.WorkspaceFeatureAccessService,
   ],
 })

@@ -5,13 +5,20 @@ import { NotFoundException } from '@nestjs/common';
 
 describe('FindFeatureServiceImpl', () => {
   let service: FindFeatureServiceImpl;
-  const mockRepo = { findAll: jest.fn(), findById: jest.fn(), findByCode: jest.fn() };
+  const mockRepo = {
+    findAll: jest.fn(),
+    findById: jest.fn(),
+    findByCode: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindFeatureServiceImpl,
-        { provide: FEATURE_TYPES.repositories.FindFeatureRepository, useValue: mockRepo },
+        {
+          provide: FEATURE_TYPES.repositories.FindFeatureRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 

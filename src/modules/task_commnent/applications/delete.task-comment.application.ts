@@ -26,9 +26,7 @@ export class DeleteTaskCommentApplicationImpl implements DeleteTaskCommentApplic
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async delete(
-    input: DeleteTaskCommentApplicationInput,
-  ): Promise<void> {
+  async delete(input: DeleteTaskCommentApplicationInput): Promise<void> {
     await this.deleteTaskCommentService.delete({
       workspaceId: input.workspaceId,
       projectId: input.projectId,

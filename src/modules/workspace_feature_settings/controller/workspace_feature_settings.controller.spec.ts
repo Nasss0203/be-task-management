@@ -15,14 +15,36 @@ describe('WorkspaceFeatureSettingsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [WorkspaceFeatureSettingsController],
       providers: [
-        { provide: WORKSPACE_FEATURE_SETTING_TYPES.applications.CreateWorkspaceFeatureSettingApplication, useValue: mockCreateApp },
-        { provide: WORKSPACE_FEATURE_SETTING_TYPES.applications.FindWorkspaceFeatureSettingApplication, useValue: mockFindApp },
-        { provide: WORKSPACE_FEATURE_SETTING_TYPES.applications.UpdateWorkspaceFeatureSettingApplication, useValue: mockUpdateApp },
-        { provide: WORKSPACE_FEATURE_SETTING_TYPES.applications.DeleteWorkspaceFeatureSettingApplication, useValue: mockDeleteApp },
+        {
+          provide:
+            WORKSPACE_FEATURE_SETTING_TYPES.applications
+              .CreateWorkspaceFeatureSettingApplication,
+          useValue: mockCreateApp,
+        },
+        {
+          provide:
+            WORKSPACE_FEATURE_SETTING_TYPES.applications
+              .FindWorkspaceFeatureSettingApplication,
+          useValue: mockFindApp,
+        },
+        {
+          provide:
+            WORKSPACE_FEATURE_SETTING_TYPES.applications
+              .UpdateWorkspaceFeatureSettingApplication,
+          useValue: mockUpdateApp,
+        },
+        {
+          provide:
+            WORKSPACE_FEATURE_SETTING_TYPES.applications
+              .DeleteWorkspaceFeatureSettingApplication,
+          useValue: mockDeleteApp,
+        },
       ],
     }).compile();
 
-    controller = module.get<WorkspaceFeatureSettingsController>(WorkspaceFeatureSettingsController);
+    controller = module.get<WorkspaceFeatureSettingsController>(
+      WorkspaceFeatureSettingsController,
+    );
   });
 
   it('should be defined', () => {
@@ -52,8 +74,12 @@ describe('WorkspaceFeatureSettingsController', () => {
 
   it('should update setting', async () => {
     mockUpdateApp.update.mockResolvedValue({ id: 'set-1' });
-    const result = await controller.update('set-1', { is_enabled: false } as any);
-    expect(mockUpdateApp.update).toHaveBeenCalledWith('set-1', { is_enabled: false });
+    const result = await controller.update('set-1', {
+      is_enabled: false,
+    } as any);
+    expect(mockUpdateApp.update).toHaveBeenCalledWith('set-1', {
+      is_enabled: false,
+    });
     expect(result).toEqual({ id: 'set-1' });
   });
 

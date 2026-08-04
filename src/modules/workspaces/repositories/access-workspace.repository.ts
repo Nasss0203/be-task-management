@@ -25,7 +25,7 @@ export class AccessWorkspaceRepositoryImpl implements AccessWorkspaceRepository 
   ): Promise<WorkspaceAccessModel | null> {
     const entityManager = manager ?? this.dataSource.manager;
 
-    const roleRows = (await entityManager.query(
+    const roleRows = await entityManager.query(
       `
       SELECT DISTINCT r.id, r.name
       FROM user_roles ur
@@ -34,17 +34,17 @@ export class AccessWorkspaceRepositoryImpl implements AccessWorkspaceRepository 
         AND ur.workspace_id = $2
       `,
       [userId, workspaceId],
-    )) as RoleRow[];
+    );
 
     if (!roleRows.length) {
       return null;
     }
 
-    const roleIds: string[] = roleRows.map((role) => role.id);
+    const roleIds: string[] = (roleRows as any[]).map((role) => role.id as string);
 
-    const roles: string[] = [...new Set(roleRows.map((role) => role.name))];
+    const roles: string[] = Array.from(new Set((roleRows as any[]).map((role) => role.name as string)));
 
-    const permissionRows = (await entityManager.query(
+    const permissionRows = await entityManager.query(
       `
   SELECT DISTINCT p.code
   FROM role_permissions rp
@@ -52,11 +52,11 @@ export class AccessWorkspaceRepositoryImpl implements AccessWorkspaceRepository 
   WHERE rp.role_id = ANY($1)
   `,
       [roleIds],
-    )) as { code: string }[];
+    );
 
-    const permissions: string[] = [
-      ...new Set(permissionRows.map((permission) => permission.code)),
-    ];
+    const permissions: string[] = Array.from(
+      new Set((permissionRows as any[]).map((permission) => permission.code as string)),
+    );
     return {
       user_id: userId,
       workspace_id: workspaceId,

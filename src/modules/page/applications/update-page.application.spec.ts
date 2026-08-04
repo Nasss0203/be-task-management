@@ -20,7 +20,10 @@ describe('UpdatePageApplicationImpl', () => {
       providers: [
         UpdatePageApplicationImpl,
         { provide: PAGE_TYPES.uow.UnitOfWork, useValue: mockUow },
-        { provide: PAGE_TYPES.services.UpdatePageService, useValue: mockService },
+        {
+          provide: PAGE_TYPES.services.UpdatePageService,
+          useValue: mockService,
+        },
       ],
     }).compile();
 
@@ -33,7 +36,9 @@ describe('UpdatePageApplicationImpl', () => {
 
   it('should update page', async () => {
     mockService.update.mockResolvedValue({ id: 'page-1' });
-    jest.spyOn(PageMapper, 'toResponse').mockReturnValue({ id: 'page-1' } as any);
+    jest
+      .spyOn(PageMapper, 'toResponse')
+      .mockReturnValue({ id: 'page-1' } as any);
 
     const dto = { title: 'Test Page' } as any;
     const result = await app.update('page-1', dto);

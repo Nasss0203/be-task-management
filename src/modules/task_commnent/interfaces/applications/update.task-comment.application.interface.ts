@@ -10,5 +10,7 @@ export interface UpdateTaskCommentApplicationInput {
 }
 
 export interface UpdateTaskCommentApplication {
-  update(input: UpdateTaskCommentApplicationInput): Promise<TaskCommentResponseDto>;
+  update(
+    input: UpdateTaskCommentApplicationInput,
+  ): Promise<TaskCommentResponseDto>;
 }

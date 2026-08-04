@@ -29,9 +29,16 @@ describe('GoogleAuthApplicationImpl', () => {
   });
 
   it('should authenticate', async () => {
-    mockService.loginWithGoogle.mockResolvedValue({ accessToken: 'a', refreshToken: 'r' });
-    const result = await app.loginWithGoogle({ email: 'test@example.com' } as any);
-    expect(mockService.loginWithGoogle).toHaveBeenCalledWith({ email: 'test@example.com' });
+    mockService.loginWithGoogle.mockResolvedValue({
+      accessToken: 'a',
+      refreshToken: 'r',
+    });
+    const result = await app.loginWithGoogle({
+      email: 'test@example.com',
+    } as any);
+    expect(mockService.loginWithGoogle).toHaveBeenCalledWith({
+      email: 'test@example.com',
+    });
     expect(result).toEqual({ accessToken: 'a', refreshToken: 'r' });
   });
 });

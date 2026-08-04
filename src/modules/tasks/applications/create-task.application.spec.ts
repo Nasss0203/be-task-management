@@ -15,7 +15,11 @@ describe('CreateTaskApplicationImpl', () => {
   const mockCreateTaskAssigneeApplication = { assign: jest.fn() };
   const mockCreateTaskCommentService = { create: jest.fn() };
   const mockCreateActivityService = { create: jest.fn() };
-  const mockUnitOfWork = { runInTransaction: jest.fn(async (cb) => { return await cb('mockTransactionManager'); }) };
+  const mockUnitOfWork = {
+    runInTransaction: jest.fn(async (cb) => {
+      return await cb('mockTransactionManager');
+    }),
+  };
   const mockEventEmitter = { emit: jest.fn() };
 
   beforeEach(async () => {
@@ -24,10 +28,23 @@ describe('CreateTaskApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateTaskApplicationImpl,
-        { provide: TASK_TYPES.services.CreateTaskService, useValue: mockCreateTaskService },
-        { provide: TASK_ASSIGNEE_TYPES.applications.CreateTaskAssigneeApplication, useValue: mockCreateTaskAssigneeApplication },
-        { provide: TASK_COMMENT_TYPES.services.CreateTaskCommentService, useValue: mockCreateTaskCommentService },
-        { provide: ACTIVITY_TYPES.services.CreateActivityService, useValue: mockCreateActivityService },
+        {
+          provide: TASK_TYPES.services.CreateTaskService,
+          useValue: mockCreateTaskService,
+        },
+        {
+          provide:
+            TASK_ASSIGNEE_TYPES.applications.CreateTaskAssigneeApplication,
+          useValue: mockCreateTaskAssigneeApplication,
+        },
+        {
+          provide: TASK_COMMENT_TYPES.services.CreateTaskCommentService,
+          useValue: mockCreateTaskCommentService,
+        },
+        {
+          provide: ACTIVITY_TYPES.services.CreateActivityService,
+          useValue: mockCreateActivityService,
+        },
         { provide: WORKSPACE_TYPES.uow.UnitOfWork, useValue: mockUnitOfWork },
         { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
@@ -62,18 +79,21 @@ describe('CreateTaskApplicationImpl', () => {
 
     it('should create task, assignees, comment, activity, and emit event inside transaction', async () => {
       mockCreateTaskService.create.mockResolvedValue(mockTask);
-      
+
       const result = await app.create(input);
 
       expect(mockUnitOfWork.runInTransaction).toHaveBeenCalled();
-      
-      expect(mockCreateTaskService.create).toHaveBeenCalledWith({
-        workspaceId: 'ws-1',
-        projectId: 'proj-1',
-        createdBy: 'user-1',
-        title: 'Task 1',
-        statusId: 'status-1',
-      }, 'mockTransactionManager');
+
+      expect(mockCreateTaskService.create).toHaveBeenCalledWith(
+        {
+          workspaceId: 'ws-1',
+          projectId: 'proj-1',
+          createdBy: 'user-1',
+          title: 'Task 1',
+          statusId: 'status-1',
+        },
+        'mockTransactionManager',
+      );
 
       expect(mockCreateActivityService.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -83,25 +103,34 @@ describe('CreateTaskApplicationImpl', () => {
         'mockTransactionManager',
       );
 
-      expect(mockCreateTaskAssigneeApplication.assign).toHaveBeenCalledWith({
-        taskId: 'task-1',
-        userId: 'user-2',
-        assignedBy: 'user-1',
-      }, 'mockTransactionManager');
+      expect(mockCreateTaskAssigneeApplication.assign).toHaveBeenCalledWith(
+        {
+          taskId: 'task-1',
+          userId: 'user-2',
+          assignedBy: 'user-1',
+        },
+        'mockTransactionManager',
+      );
 
-      expect(mockCreateTaskCommentService.create).toHaveBeenCalledWith({
-        taskId: 'task-1',
-        workspaceId: 'ws-1',
-        projectId: 'proj-1',
-        content: 'Comment 1',
-        authorId: 'user-1',
-      }, 'mockTransactionManager');
+      expect(mockCreateTaskCommentService.create).toHaveBeenCalledWith(
+        {
+          taskId: 'task-1',
+          workspaceId: 'ws-1',
+          projectId: 'proj-1',
+          content: 'Comment 1',
+          authorId: 'user-1',
+        },
+        'mockTransactionManager',
+      );
 
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith(REALTIME_EVENTS.TASK_CREATED, {
-        workspaceId: mockTask.workspaceId,
-        projectId: mockTask.projectId,
-        task: mockTask,
-      });
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        REALTIME_EVENTS.TASK_CREATED,
+        {
+          workspaceId: mockTask.workspaceId,
+          projectId: mockTask.projectId,
+          task: mockTask,
+        },
+      );
 
       expect(result).toBeDefined();
     });

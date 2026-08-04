@@ -57,14 +57,11 @@ export class AdminWorkspacePlanRepositoryImpl implements AdminWorkspacePlanRepos
       .groupBy(`workspace.id`)
       .getRawMany<WorkspacePlanRaw>();
 
-    const rowMap = rows.reduce(
-      (acc, row) => {
-        const key = row.name.toLowerCase();
-        acc.set(key, (acc.get(key) ?? 0) + 1);
-        return acc;
-      },
-      new Map<string, number>(),
-    );
+    const rowMap = rows.reduce((acc, row) => {
+      const key = row.name.toLowerCase();
+      acc.set(key, (acc.get(key) ?? 0) + 1);
+      return acc;
+    }, new Map<string, number>());
 
     return [
       {

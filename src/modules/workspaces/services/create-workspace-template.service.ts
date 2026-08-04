@@ -123,7 +123,7 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
 
     @Inject(PAGE_TEMPLATE_BLOCK_TYPES.services.PageTemplateBlocksService)
     private readonly pageTemplateBlocksService: PageTemplateBlocksService,
-  ) { }
+  ) {}
 
   private async seedWorkspaceRbac({
     workspaceId,
@@ -495,7 +495,8 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
 
     // Use page template blocks from DB if a templateId exists
     if (templateId) {
-      const dbBlocks = await this.pageTemplateBlocksService.findByTemplateId(templateId);
+      const dbBlocks =
+        await this.pageTemplateBlocksService.findByTemplateId(templateId);
 
       for (const dbBlock of dbBlocks) {
         const templateContent: any = dbBlock.content || {};
@@ -504,7 +505,7 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
         let rawDataConfig = templateContent.dataConfig ?? null;
         let styleConfig = templateContent.styles ?? null;
 
-        let blockType = dbBlock.type as string;
+        let blockType = dbBlock.type;
 
         if (blockType === 'HEADING_1') {
           blockType = PageBlockType.HEADER;
@@ -522,7 +523,9 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
         if (blockType === PageBlockType.DATABASE_VIEW && boardTemplateKey) {
           const board = boardMap.get(boardTemplateKey);
           if (!board) {
-            throw new BadRequestException(`Board template key ${boardTemplateKey} not found`);
+            throw new BadRequestException(
+              `Board template key ${boardTemplateKey} not found`,
+            );
           }
           rawDataConfig = {
             ...rawDataConfig,
@@ -539,9 +542,11 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
           title: title,
           order_index: dbBlock.orderIndex,
           style_config: styleConfig,
-          data_config: blockType === PageBlockType.DATABASE_VIEW ? rawDataConfig : null,
+          data_config:
+            blockType === PageBlockType.DATABASE_VIEW ? rawDataConfig : null,
           created_by: createdBy,
-          content: blockType !== PageBlockType.DATABASE_VIEW ? rawContent : null,
+          content:
+            blockType !== PageBlockType.DATABASE_VIEW ? rawContent : null,
         });
 
         // Track the max order index used by DB blocks
@@ -558,7 +563,9 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
       for (const item of pageBlocks) {
         const board = boardMap.get(item.boardTemplateKey);
         if (!board) {
-          throw new BadRequestException(`Board template key ${item.boardTemplateKey} not found`);
+          throw new BadRequestException(
+            `Board template key ${item.boardTemplateKey} not found`,
+          );
         }
 
         if (createdProjectIds.has(board.projectId)) {
@@ -714,11 +721,11 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
 
       const priority = task.priorityName
         ? priorityMap.get(
-          this.buildTemplateStatusKey(
-            task.projectTemplateKey,
-            task.priorityName,
-          ),
-        )
+            this.buildTemplateStatusKey(
+              task.projectTemplateKey,
+              task.priorityName,
+            ),
+          )
         : null;
 
       if (task.priorityName && !priority) {
@@ -762,7 +769,11 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
       let pageTemplateId: string | null = null;
 
       if (input.templateId) {
-        const template = await this.workspaceTemplatesService.findOneAvailableForUser(input.templateId, userId);
+        const template =
+          await this.workspaceTemplatesService.findOneAvailableForUser(
+            input.templateId,
+            userId,
+          );
         templateConfig = template.config;
         pageTemplateId = template.pageTemplateId ?? null;
       } else {

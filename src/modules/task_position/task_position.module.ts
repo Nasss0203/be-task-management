@@ -13,6 +13,7 @@ import { UpdateManyTaskPositionsRepositoryImpl } from './repositories/update-man
 import { UpdateTaskPositionRepositoryImpl } from './repositories/update-task-position.repository';
 import { UpsertTaskPositionRepositoryImpl } from './repositories/upsert-task-position.repository';
 import { CreateAtEndTaskPositionServiceImpl } from './services/create-at-end-task-position.service';
+import { CreateAtTopTaskPositionServiceImpl } from './services/create-at-top-task-position.service';
 import { InitializeTaskPositionsServiceImpl } from './services/initialize-task-positions.service';
 import { NormalizeTaskPositionContextServiceImpl } from './services/normalize-task-position-context.service';
 import { RemoveTaskPositionFromContextServiceImpl } from './services/remove-task-position-from-context.service';
@@ -68,6 +69,10 @@ import { TaskPositionService } from './services/task_position.service';
       useClass: CreateAtEndTaskPositionServiceImpl,
     },
     {
+      provide: TASK_POSITION_TYPES.services.CreateAtTopTaskPositionService,
+      useClass: CreateAtTopTaskPositionServiceImpl,
+    },
+    {
       provide:
         TASK_POSITION_TYPES.services.ReorderWithinContextTaskPositionService,
       useClass: ReorderWithinContextTaskPositionServiceImpl,
@@ -88,6 +93,7 @@ import { TaskPositionService } from './services/task_position.service';
   ],
   exports: [
     TASK_POSITION_TYPES.services.CreateAtEndTaskPositionService,
+    TASK_POSITION_TYPES.services.CreateAtTopTaskPositionService,
     TASK_POSITION_TYPES.services.ReorderWithinContextTaskPositionService,
     TASK_POSITION_TYPES.services.RemoveTaskPositionFromContextService,
     TASK_POSITION_TYPES.services.InitializeTaskPositionsService,

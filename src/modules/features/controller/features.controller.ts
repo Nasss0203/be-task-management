@@ -56,9 +56,7 @@ export class FeaturesController {
   }
 
   @Get(':id')
-  findOne(
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<FeatureResponseDto> {
+  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<FeatureResponseDto> {
     return this.findFeatureApplication.findById(id);
   }
 

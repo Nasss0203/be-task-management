@@ -12,7 +12,8 @@ import { WorkspaceTemplatesApplicationImpl } from './applications/workspace_temp
   controllers: [WorkspaceTemplatesController],
   providers: [
     {
-      provide: WORKSPACE_TEMPLATE_TYPES.repositories.WorkspaceTemplatesRepository,
+      provide:
+        WORKSPACE_TEMPLATE_TYPES.repositories.WorkspaceTemplatesRepository,
       useClass: WorkspaceTemplatesRepositoryImpl,
     },
     {
@@ -20,7 +21,8 @@ import { WorkspaceTemplatesApplicationImpl } from './applications/workspace_temp
       useClass: WorkspaceTemplatesServiceImpl,
     },
     {
-      provide: WORKSPACE_TEMPLATE_TYPES.applications.WorkspaceTemplatesApplication,
+      provide:
+        WORKSPACE_TEMPLATE_TYPES.applications.WorkspaceTemplatesApplication,
       useClass: WorkspaceTemplatesApplicationImpl,
     },
   ],
@@ -30,4 +32,3 @@ import { WorkspaceTemplatesApplicationImpl } from './applications/workspace_temp
   ],
 })
 export class WorkspaceTemplatesModule {}
-

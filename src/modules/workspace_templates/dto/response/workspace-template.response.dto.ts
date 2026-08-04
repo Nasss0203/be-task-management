@@ -12,7 +12,7 @@ export class WorkspaceTemplateResponseDto {
   accessScope: 'SYSTEM' | 'PUBLIC' | 'PRIVATE_OWNER' | 'WORKSPACE';
   createdAt: Date;
   updatedAt: Date;
-  
+
   // Optionally include stats if needed later
   // useCount: number;
   // likesCount: number;

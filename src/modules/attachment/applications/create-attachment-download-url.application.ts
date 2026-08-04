@@ -4,9 +4,7 @@ import type { CreateAttachmentDownloadUrlService } from '../interfaces/services/
 import { ATTACHMENT_TYPES } from '../interfaces/types';
 
 @Injectable()
-export class CreateAttachmentDownloadUrlApplicationImpl
-  implements CreateAttachmentDownloadUrlApplication
-{
+export class CreateAttachmentDownloadUrlApplicationImpl implements CreateAttachmentDownloadUrlApplication {
   constructor(
     @Inject(ATTACHMENT_TYPES.services.CreateAttachmentDownloadUrlService)
     private readonly downloadService: CreateAttachmentDownloadUrlService,

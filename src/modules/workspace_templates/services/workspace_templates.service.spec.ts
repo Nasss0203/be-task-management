@@ -18,13 +18,16 @@ describe('WorkspaceTemplatesServiceImpl', () => {
       providers: [
         WorkspaceTemplatesServiceImpl,
         {
-          provide: WORKSPACE_TEMPLATE_TYPES.repositories.WorkspaceTemplatesRepository,
+          provide:
+            WORKSPACE_TEMPLATE_TYPES.repositories.WorkspaceTemplatesRepository,
           useValue: mockWorkspaceTemplateRepo,
         },
       ],
     }).compile();
 
-    service = module.get<WorkspaceTemplatesServiceImpl>(WorkspaceTemplatesServiceImpl);
+    service = module.get<WorkspaceTemplatesServiceImpl>(
+      WorkspaceTemplatesServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -45,7 +48,7 @@ describe('WorkspaceTemplatesServiceImpl', () => {
     it('should pass conditions to repository', async () => {
       const mockTemplates = [{ id: '1' }];
       mockWorkspaceTemplateRepo.findAll.mockResolvedValue(mockTemplates);
-      
+
       const condition = { status: 'PUBLISHED' } as any;
       const result = await service.findAll(condition);
 

@@ -12,12 +12,20 @@ describe('UpdatePlanFeatureServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdatePlanFeatureServiceImpl,
-        { provide: PLAN_FEATURE_TYPES.services.FindPlanFeatureService, useValue: mockFindService },
-        { provide: PLAN_FEATURE_TYPES.repositories.UpdatePlanFeatureRepository, useValue: mockRepo },
+        {
+          provide: PLAN_FEATURE_TYPES.services.FindPlanFeatureService,
+          useValue: mockFindService,
+        },
+        {
+          provide: PLAN_FEATURE_TYPES.repositories.UpdatePlanFeatureRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
-    service = module.get<UpdatePlanFeatureServiceImpl>(UpdatePlanFeatureServiceImpl);
+    service = module.get<UpdatePlanFeatureServiceImpl>(
+      UpdatePlanFeatureServiceImpl,
+    );
   });
 
   it('should update plan feature', async () => {

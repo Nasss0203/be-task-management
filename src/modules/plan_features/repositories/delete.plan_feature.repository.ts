@@ -5,9 +5,7 @@ import { PlanFeature } from '../domain/entities/plan_feature.entity';
 import { DeletePlanFeatureRepository } from '../interfaces/repositories/delete.plan_feature.repository.interface';
 
 @Injectable()
-export class DeletePlanFeatureRepositoryImpl
-  implements DeletePlanFeatureRepository
-{
+export class DeletePlanFeatureRepositoryImpl implements DeletePlanFeatureRepository {
   constructor(
     @InjectRepository(PlanFeature)
     private readonly repo: Repository<PlanFeature>,

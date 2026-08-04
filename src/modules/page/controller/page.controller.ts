@@ -78,10 +78,7 @@ export class PageController {
   @WriteRateLimit()
   @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
   @ResponseMessage('Update page')
-  updatePage(
-    @Param('pageId') pageId: string,
-    @Body() dto: UpdatePageDto,
-  ) {
+  updatePage(@Param('pageId') pageId: string, @Body() dto: UpdatePageDto) {
     return this.updatePageApplication.update(pageId, dto);
   }
 

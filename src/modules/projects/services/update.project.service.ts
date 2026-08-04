@@ -20,14 +20,20 @@ export class UpdateProjectServiceImpl implements UpdateProjectService {
     workspaceId: string,
     updateProjectDto: UpdateProjectDto,
   ): Promise<ProjectModel> {
-    const existingProject = await this.findRepository.findOneProjectById(projectId);
+    const existingProject =
+      await this.findRepository.findOneProjectById(projectId);
     if (!existingProject || existingProject.workspace_id !== workspaceId) {
       throw new NotFoundException('Project not found');
     }
 
-    await this.updateRepository.update(projectId, workspaceId, updateProjectDto);
+    await this.updateRepository.update(
+      projectId,
+      workspaceId,
+      updateProjectDto,
+    );
 
-    const updatedProject = await this.findRepository.findOneProjectById(projectId);
+    const updatedProject =
+      await this.findRepository.findOneProjectById(projectId);
     if (!updatedProject) {
       throw new NotFoundException('Project not found after update');
     }

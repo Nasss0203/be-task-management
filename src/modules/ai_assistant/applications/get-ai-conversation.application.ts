@@ -33,9 +33,11 @@ export class GetAiConversationApplicationImpl implements GetAiConversationApplic
     );
 
     // Fetch generations linked to this conversation
-    const generations = await this.entityManager.getRepository(AiGeneration).find({
-      where: { conversationId: conversation.id },
-    });
+    const generations = await this.entityManager
+      .getRepository(AiGeneration)
+      .find({
+        where: { conversationId: conversation.id },
+      });
 
     const generationMap = new Map<string, any>();
     for (const gen of generations) {
@@ -46,7 +48,7 @@ export class GetAiConversationApplicationImpl implements GetAiConversationApplic
       conversation: AiConversationMapper.toResponse(conversation),
       messages: messages.map((message) => {
         const response = AiMessageMapper.toResponse(message);
-        
+
         // Retrieve generationId from metadata if present
         const genId = message.metadata?.generationId as string | undefined;
         const gen = genId ? generationMap.get(genId) : null;

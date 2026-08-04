@@ -48,7 +48,8 @@ export class SprintReportsMapper {
     e.incompleteTaskDetails = data.incompleteTaskDetails;
 
     if (data.startAt !== undefined) e.startAt = data.startAt ?? null;
-    if (data.completedAt !== undefined) e.completedAt = data.completedAt ?? null;
+    if (data.completedAt !== undefined)
+      e.completedAt = data.completedAt ?? null;
 
     return e;
   }

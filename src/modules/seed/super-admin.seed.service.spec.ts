@@ -7,7 +7,11 @@ import { ConfigService } from '@nestjs/config';
 describe('SuperAdminSeedService', () => {
   let service: SuperAdminSeedService;
   let configService: jest.Mocked<ConfigService>;
-  const mockUserRepo = { findOne: jest.fn(), create: jest.fn(), save: jest.fn() };
+  const mockUserRepo = {
+    findOne: jest.fn(),
+    create: jest.fn(),
+    save: jest.fn(),
+  };
 
   beforeEach(async () => {
     const mockConfigService = { get: jest.fn() };
@@ -36,7 +40,9 @@ describe('SuperAdminSeedService', () => {
       return null;
     });
 
-    mockUserRepo.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+    mockUserRepo.findOne
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null);
     mockUserRepo.create.mockImplementation((item) => item);
     mockUserRepo.save.mockResolvedValue({});
 
@@ -52,7 +58,12 @@ describe('SuperAdminSeedService', () => {
       return null;
     });
 
-    mockUserRepo.findOne.mockResolvedValue({ id: '1', systemRole: SystemRole.USER, isActive: false, passwordHash: null });
+    mockUserRepo.findOne.mockResolvedValue({
+      id: '1',
+      systemRole: SystemRole.USER,
+      isActive: false,
+      passwordHash: null,
+    });
     mockUserRepo.save.mockResolvedValue({});
 
     await service.seed();
@@ -66,7 +77,13 @@ describe('SuperAdminSeedService', () => {
       return null;
     });
 
-    mockUserRepo.findOne.mockResolvedValue({ id: '1', systemRole: SystemRole.SUPER_ADMIN, isActive: true, passwordHash: 'hash', isEmailVerified: true });
+    mockUserRepo.findOne.mockResolvedValue({
+      id: '1',
+      systemRole: SystemRole.SUPER_ADMIN,
+      isActive: true,
+      passwordHash: 'hash',
+      isEmailVerified: true,
+    });
 
     await service.seed();
 
@@ -75,7 +92,9 @@ describe('SuperAdminSeedService', () => {
 
   it('should throw error if missing email config', async () => {
     configService.get.mockReturnValue(null);
-    await expect(service.seed()).rejects.toThrow('SUPER_ADMIN_EMAIL is required');
+    await expect(service.seed()).rejects.toThrow(
+      'SUPER_ADMIN_EMAIL is required',
+    );
   });
 
   it('should throw error if username is used', async () => {
@@ -86,9 +105,13 @@ describe('SuperAdminSeedService', () => {
       return null;
     });
 
-    mockUserRepo.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: '2' });
+    mockUserRepo.findOne
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: '2' });
 
-    await expect(service.seed()).rejects.toThrow('SUPER_ADMIN_USERNAME is already used: admin');
+    await expect(service.seed()).rejects.toThrow(
+      'SUPER_ADMIN_USERNAME is already used: admin',
+    );
   });
 
   it('should throw error if username missing', async () => {
@@ -100,7 +123,9 @@ describe('SuperAdminSeedService', () => {
 
     mockUserRepo.findOne.mockResolvedValueOnce(null);
 
-    await expect(service.seed()).rejects.toThrow('SUPER_ADMIN_USERNAME is required to create super admin');
+    await expect(service.seed()).rejects.toThrow(
+      'SUPER_ADMIN_USERNAME is required to create super admin',
+    );
   });
 
   it('should throw error if password missing', async () => {
@@ -112,6 +137,8 @@ describe('SuperAdminSeedService', () => {
 
     mockUserRepo.findOne.mockResolvedValueOnce(null);
 
-    await expect(service.seed()).rejects.toThrow('SUPER_ADMIN_PASSWORD is required to create super admin');
+    await expect(service.seed()).rejects.toThrow(
+      'SUPER_ADMIN_PASSWORD is required to create super admin',
+    );
   });
 });

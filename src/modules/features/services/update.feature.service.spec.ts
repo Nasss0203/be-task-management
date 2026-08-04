@@ -10,7 +10,10 @@ describe('UpdateFeatureServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateFeatureServiceImpl,
-        { provide: FEATURE_TYPES.repositories.UpdateFeatureRepository, useValue: mockRepo },
+        {
+          provide: FEATURE_TYPES.repositories.UpdateFeatureRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 

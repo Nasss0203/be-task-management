@@ -37,7 +37,8 @@ describe('CreateSubtaskApplicationImpl', () => {
           useValue: mockCreateTaskService,
         },
         {
-          provide: TASK_ASSIGNEE_TYPES.applications.CreateTaskAssigneeApplication,
+          provide:
+            TASK_ASSIGNEE_TYPES.applications.CreateTaskAssigneeApplication,
           useValue: mockCreateTaskAssigneeApplication,
         },
         {

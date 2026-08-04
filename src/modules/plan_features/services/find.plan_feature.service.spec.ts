@@ -5,17 +5,26 @@ import { NotFoundException } from '@nestjs/common';
 
 describe('FindPlanFeatureServiceImpl', () => {
   let service: FindPlanFeatureServiceImpl;
-  const mockRepo = { findAll: jest.fn(), findById: jest.fn(), findByPlanAndFeature: jest.fn() };
+  const mockRepo = {
+    findAll: jest.fn(),
+    findById: jest.fn(),
+    findByPlanAndFeature: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindPlanFeatureServiceImpl,
-        { provide: PLAN_FEATURE_TYPES.repositories.FindPlanFeatureRepository, useValue: mockRepo },
+        {
+          provide: PLAN_FEATURE_TYPES.repositories.FindPlanFeatureRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
-    service = module.get<FindPlanFeatureServiceImpl>(FindPlanFeatureServiceImpl);
+    service = module.get<FindPlanFeatureServiceImpl>(
+      FindPlanFeatureServiceImpl,
+    );
   });
 
   it('should find plan features', async () => {
@@ -46,6 +55,8 @@ describe('FindPlanFeatureServiceImpl', () => {
 
   it('should fail if plan feature by plan and feature not found', async () => {
     mockRepo.findByPlanAndFeature.mockResolvedValue(null);
-    await expect(service.findByPlanAndFeature('p1', 'f1')).rejects.toThrow(NotFoundException);
+    await expect(service.findByPlanAndFeature('p1', 'f1')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });

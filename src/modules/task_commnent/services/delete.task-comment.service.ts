@@ -1,8 +1,16 @@
-import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { TASK_COMMENT_TYPES } from '../interfaces/types';
 import { type FindTaskCommentReposiroty } from '../interfaces/repositories/find.task_comment.reposiroty.interface';
 import { type DeleteTaskCommentRepository } from '../interfaces/repositories/delete.task-comment.repository.interface';
-import { DeleteTaskCommentService, DeleteTaskCommentServiceInput } from '../interfaces/services/delete.task-comment.service.interface';
+import {
+  DeleteTaskCommentService,
+  DeleteTaskCommentServiceInput,
+} from '../interfaces/services/delete.task-comment.service.interface';
 
 @Injectable()
 export class DeleteTaskCommentServiceImpl implements DeleteTaskCommentService {
@@ -12,7 +20,7 @@ export class DeleteTaskCommentServiceImpl implements DeleteTaskCommentService {
 
     @Inject(TASK_COMMENT_TYPES.repositories.DeleteTaskCommentRepository)
     private readonly deleteRepo: DeleteTaskCommentRepository,
-  ) { }
+  ) {}
 
   async delete(input: DeleteTaskCommentServiceInput): Promise<void> {
     const comment = await this.findRepo.findById(

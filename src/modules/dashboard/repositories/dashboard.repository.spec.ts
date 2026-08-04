@@ -1,4 +1,3 @@
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { DashboardRepositoryImpl } from './dashboard.repository';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -46,14 +45,18 @@ describe('DashboardRepositoryImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -76,25 +79,25 @@ describe('DashboardRepositoryImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
         },
         {
@@ -119,14 +122,18 @@ describe('DashboardRepositoryImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -149,25 +156,25 @@ describe('DashboardRepositoryImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
         },
         {
@@ -192,14 +199,18 @@ describe('DashboardRepositoryImpl', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -222,27 +233,27 @@ describe('DashboardRepositoryImpl', () => {
             findRecentActivities: jest.fn().mockResolvedValue([]),
             countUnassignedTasks: jest.fn().mockResolvedValue(0),
             createQueryBuilder: jest.fn(() => ({
-                innerJoin: jest.fn().mockReturnThis(),
-                leftJoin: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                andWhere: jest.fn().mockReturnThis(),
-                leftJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                addSelect: jest.fn().mockReturnThis(),
-                groupBy: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-                addOrderBy: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                setParameters: jest.fn().mockReturnThis(),
-                setParameter: jest.fn().mockReturnThis(),
-                getRawMany: jest.fn().mockResolvedValue([]),
-                getRawOne: jest.fn().mockResolvedValue({}),
-                getMany: jest.fn().mockResolvedValue([]),
-                getOne: jest.fn().mockResolvedValue({}),
-                getCount: jest.fn().mockResolvedValue(0)
-            }))
+              innerJoin: jest.fn().mockReturnThis(),
+              leftJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
+              addSelect: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              setParameters: jest.fn().mockReturnThis(),
+              setParameter: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+              getRawOne: jest.fn().mockResolvedValue({}),
+              getMany: jest.fn().mockResolvedValue([]),
+              getOne: jest.fn().mockResolvedValue({}),
+              getCount: jest.fn().mockResolvedValue(0),
+            })),
           },
-        }
+        },
       ],
     }).compile();
 
@@ -257,7 +268,7 @@ describe('DashboardRepositoryImpl', () => {
     it('should execute successfully', async () => {
       try {
         await provider.getTaskStats({} as any, {} as any, {} as any, {} as any);
-      } catch(e) {}
+      } catch (e) {}
       expect(true).toBe(true);
     });
   });
@@ -265,8 +276,13 @@ describe('DashboardRepositoryImpl', () => {
   describe('findPriorityTasks', () => {
     it('should execute successfully', async () => {
       try {
-        await provider.findPriorityTasks({} as any, {} as any, {} as any, {} as any);
-      } catch(e) {}
+        await provider.findPriorityTasks(
+          {} as any,
+          {} as any,
+          {} as any,
+          {} as any,
+        );
+      } catch (e) {}
       expect(true).toBe(true);
     });
   });
@@ -274,8 +290,13 @@ describe('DashboardRepositoryImpl', () => {
   describe('findRecentDeadlines', () => {
     it('should execute successfully', async () => {
       try {
-        await provider.findRecentDeadlines({} as any, {} as any, {} as any, {} as any);
-      } catch(e) {}
+        await provider.findRecentDeadlines(
+          {} as any,
+          {} as any,
+          {} as any,
+          {} as any,
+        );
+      } catch (e) {}
       expect(true).toBe(true);
     });
   });
@@ -283,8 +304,13 @@ describe('DashboardRepositoryImpl', () => {
   describe('findRecentWorkspaces', () => {
     it('should execute successfully', async () => {
       try {
-        await provider.findRecentWorkspaces({} as any, {} as any, {} as any, {} as any);
-      } catch(e) {}
+        await provider.findRecentWorkspaces(
+          {} as any,
+          {} as any,
+          {} as any,
+          {} as any,
+        );
+      } catch (e) {}
       expect(true).toBe(true);
     });
   });
@@ -292,8 +318,13 @@ describe('DashboardRepositoryImpl', () => {
   describe('findRecentActivities', () => {
     it('should execute successfully', async () => {
       try {
-        await provider.findRecentActivities({} as any, {} as any, {} as any, {} as any);
-      } catch(e) {}
+        await provider.findRecentActivities(
+          {} as any,
+          {} as any,
+          {} as any,
+          {} as any,
+        );
+      } catch (e) {}
       expect(true).toBe(true);
     });
   });
@@ -301,8 +332,13 @@ describe('DashboardRepositoryImpl', () => {
   describe('countUnassignedTasks', () => {
     it('should execute successfully', async () => {
       try {
-        await provider.countUnassignedTasks({} as any, {} as any, {} as any, {} as any);
-      } catch(e) {}
+        await provider.countUnassignedTasks(
+          {} as any,
+          {} as any,
+          {} as any,
+          {} as any,
+        );
+      } catch (e) {}
       expect(true).toBe(true);
     });
   });

@@ -23,7 +23,9 @@ import { TaskPositionService } from '../services/task_position.service';
 export class TaskPositionController {
   constructor(
     private readonly taskPositionService: TaskPositionService,
-    @Inject(TASK_POSITION_TYPES.services.ReorderWithinContextTaskPositionService)
+    @Inject(
+      TASK_POSITION_TYPES.services.ReorderWithinContextTaskPositionService,
+    )
     private readonly reorderWithinContextService: ReorderWithinContextTaskPositionService,
   ) {}
 
@@ -48,15 +50,14 @@ export class TaskPositionController {
     @Body(new ValidationPipe({ transform: true }))
     dto: ReorderTaskPositionDto,
   ): Promise<TaskPositionResponseDto> {
-    const position = await this.reorderWithinContextService.reorderWithinContext(
-      {
+    const position =
+      await this.reorderWithinContextService.reorderWithinContext({
         taskId: dto.taskId,
         context: dto.context,
         contextId: dto.contextId,
         previousTaskId: dto.previousTaskId ?? null,
         nextTaskId: dto.nextTaskId ?? null,
-      },
-    );
+      });
 
     return TaskPositionMapper.toResponse(TaskPositionMapper.toModel(position));
   }

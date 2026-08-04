@@ -7,10 +7,22 @@ import { PlanFeature } from '../plan_features/domain/entities/plan_feature.entit
 
 describe('FeatureSeedService', () => {
   let service: FeatureSeedService;
-  const mockFeatureQueryBuilder = { withDeleted: jest.fn().mockReturnThis(), where: jest.fn().mockReturnThis(), getOne: jest.fn() };
-  const mockFeatureRepo = { createQueryBuilder: jest.fn().mockReturnValue(mockFeatureQueryBuilder), create: jest.fn(), save: jest.fn() };
+  const mockFeatureQueryBuilder = {
+    withDeleted: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    getOne: jest.fn(),
+  };
+  const mockFeatureRepo = {
+    createQueryBuilder: jest.fn().mockReturnValue(mockFeatureQueryBuilder),
+    create: jest.fn(),
+    save: jest.fn(),
+  };
   const mockPlanRepo = { find: jest.fn() };
-  const mockPlanFeatureRepo = { findOne: jest.fn(), create: jest.fn(), save: jest.fn() };
+  const mockPlanFeatureRepo = {
+    findOne: jest.fn(),
+    create: jest.fn(),
+    save: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -18,7 +30,10 @@ describe('FeatureSeedService', () => {
         FeatureSeedService,
         { provide: getRepositoryToken(Feature), useValue: mockFeatureRepo },
         { provide: getRepositoryToken(Plan), useValue: mockPlanRepo },
-        { provide: getRepositoryToken(PlanFeature), useValue: mockPlanFeatureRepo },
+        {
+          provide: getRepositoryToken(PlanFeature),
+          useValue: mockPlanFeatureRepo,
+        },
       ],
     }).compile();
 
@@ -30,18 +45,25 @@ describe('FeatureSeedService', () => {
   });
 
   it('should seed features and plan features', async () => {
-    mockFeatureQueryBuilder.getOne.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+    mockFeatureQueryBuilder.getOne
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null);
     mockFeatureRepo.create.mockImplementation((item) => item);
-    mockFeatureRepo.save.mockImplementation(async (item) => ({ ...item, id: 'f1' }));
-    
-    mockPlanRepo.find.mockResolvedValue([{ id: 'p1', features: { sprint_enabled: true } }]);
-    
+    mockFeatureRepo.save.mockImplementation(async (item) => ({
+      ...item,
+      id: 'f1',
+    }));
+
+    mockPlanRepo.find.mockResolvedValue([
+      { id: 'p1', features: { sprint_enabled: true } },
+    ]);
+
     mockPlanFeatureRepo.findOne.mockResolvedValue(null);
     mockPlanFeatureRepo.create.mockImplementation((item) => item);
     mockPlanFeatureRepo.save.mockResolvedValue({});
-    
+
     await service.seed();
-    
+
     expect(mockFeatureRepo.create).toHaveBeenCalled();
     expect(mockPlanRepo.find).toHaveBeenCalled();
     expect(mockPlanFeatureRepo.create).toHaveBeenCalled();
@@ -50,25 +72,29 @@ describe('FeatureSeedService', () => {
   it('should seed features - update existed exact feature', async () => {
     mockFeatureQueryBuilder.getOne.mockResolvedValueOnce({ id: 'f1' });
     mockFeatureRepo.save.mockImplementation(async (item) => item);
-    
-    mockPlanRepo.find.mockResolvedValue([{ id: 'p1', features: { sprint_enabled: true } }]);
+
+    mockPlanRepo.find.mockResolvedValue([
+      { id: 'p1', features: { sprint_enabled: true } },
+    ]);
     mockPlanFeatureRepo.findOne.mockResolvedValue({ id: 'pf1' });
-    
+
     await service.seed();
-    
+
     expect(mockFeatureRepo.create).not.toHaveBeenCalled();
     expect(mockPlanFeatureRepo.create).not.toHaveBeenCalled();
     expect(mockPlanFeatureRepo.save).toHaveBeenCalled();
   });
-  
+
   it('should seed features - update existed legacy feature', async () => {
-    mockFeatureQueryBuilder.getOne.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'f1' });
+    mockFeatureQueryBuilder.getOne
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: 'f1' });
     mockFeatureRepo.save.mockImplementation(async (item) => item);
-    
+
     mockPlanRepo.find.mockResolvedValue([]);
-    
+
     await service.seed();
-    
+
     expect(mockFeatureRepo.create).not.toHaveBeenCalled();
   });
 });

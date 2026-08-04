@@ -16,11 +16,16 @@ describe('UpdatePageBlockServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdatePageBlockServiceImpl,
-        { provide: PAGE_BLOCK_TYPES.repositories.UpdatePageBlockRepository, useValue: mockRepo },
+        {
+          provide: PAGE_BLOCK_TYPES.repositories.UpdatePageBlockRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
-    service = module.get<UpdatePageBlockServiceImpl>(UpdatePageBlockServiceImpl);
+    service = module.get<UpdatePageBlockServiceImpl>(
+      UpdatePageBlockServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -30,19 +35,22 @@ describe('UpdatePageBlockServiceImpl', () => {
   it('should update page block', async () => {
     mockRepo.save.mockResolvedValue({ id: 'pb-1' });
     const dto = { id: 'pb-1', title: 'Test Block' } as any;
-    
+
     const result = await service.update(dto, {} as EntityManager);
-    
-    expect(mockRepo.save).toHaveBeenCalledWith({ id: 'pb-1', title: 'Test Block' }, {});
+
+    expect(mockRepo.save).toHaveBeenCalledWith(
+      { id: 'pb-1', title: 'Test Block' },
+      {},
+    );
     expect(result).toEqual({ id: 'pb-1' });
   });
 
   it('should reorder page block', async () => {
     mockRepo.reorder.mockResolvedValue([{ id: 'pb-1' }]);
     const dto = { page_id: 'page-1', items: [] } as any;
-    
+
     const result = await service.reorder(dto, {} as EntityManager);
-    
+
     expect(mockRepo.reorder).toHaveBeenCalledWith('page-1', [], {});
     expect(result).toEqual([{ id: 'pb-1' }]);
   });

@@ -34,12 +34,15 @@ describe('DeleteTaskServiceImpl', () => {
     it('should call softDeleteTask on repository', async () => {
       const input = { taskId: '1', deletedBy: 'user-1' };
       const manager = {} as any;
-      
+
       mockDeleteTaskRepository.softDeleteTask.mockResolvedValue(undefined);
 
       await service.softDeleteTask(input, manager);
 
-      expect(mockDeleteTaskRepository.softDeleteTask).toHaveBeenCalledWith(input, manager);
+      expect(mockDeleteTaskRepository.softDeleteTask).toHaveBeenCalledWith(
+        input,
+        manager,
+      );
     });
   });
 
@@ -47,12 +50,15 @@ describe('DeleteTaskServiceImpl', () => {
     it('should call restoreTask on repository', async () => {
       const input = { taskId: '1' };
       const manager = {} as any;
-      
+
       mockDeleteTaskRepository.restoreTask.mockResolvedValue(undefined);
 
       await service.restoreTask(input, manager);
 
-      expect(mockDeleteTaskRepository.restoreTask).toHaveBeenCalledWith(input, manager);
+      expect(mockDeleteTaskRepository.restoreTask).toHaveBeenCalledWith(
+        input,
+        manager,
+      );
     });
   });
 });

@@ -17,7 +17,9 @@ describe('RolePermissionService', () => {
   });
 
   it('should create', () => {
-    expect(service.create({} as any)).toBe('This action adds a new rolePermission');
+    expect(service.create({} as any)).toBe(
+      'This action adds a new rolePermission',
+    );
   });
 
   it('should findAll', () => {
@@ -29,7 +31,9 @@ describe('RolePermissionService', () => {
   });
 
   it('should update', () => {
-    expect(service.update(1, {} as any)).toBe('This action updates a #1 rolePermission');
+    expect(service.update(1, {} as any)).toBe(
+      'This action updates a #1 rolePermission',
+    );
   });
 
   it('should remove', () => {

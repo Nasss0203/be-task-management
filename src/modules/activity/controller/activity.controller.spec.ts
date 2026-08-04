@@ -16,7 +16,10 @@ describe('ActivityController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ActivityController],
       providers: [
-        { provide: ACTIVITY_TYPES.applications.FindActivityApplication, useValue: mockApp },
+        {
+          provide: ACTIVITY_TYPES.applications.FindActivityApplication,
+          useValue: mockApp,
+        },
       ],
     }).compile();
 

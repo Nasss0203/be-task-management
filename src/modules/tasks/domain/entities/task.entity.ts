@@ -48,7 +48,13 @@ export class Task {
   @Column({ name: 'project_seq', type: 'int', nullable: true })
   projectSeq: number | null;
 
-  @Column({ name: 'title', type: 'varchar', length: 255, nullable: true, default: '' })
+  @Column({
+    name: 'title',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    default: '',
+  })
   title: string | null;
 
   @Column({ name: 'description', type: 'text', nullable: true })

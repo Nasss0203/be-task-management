@@ -7,9 +7,7 @@ import { UpdateAttachmentDto } from '../dto/update-attachment.dto';
 import { AttachmentMapper } from '../mapper/attachment.mapper';
 
 @Injectable()
-export class UpdateAttachmentApplicationImpl
-  implements UpdateAttachmentApplication
-{
+export class UpdateAttachmentApplicationImpl implements UpdateAttachmentApplication {
   constructor(
     @Inject(ATTACHMENT_TYPES.services.UpdateAttachmentService)
     private readonly updateService: UpdateAttachmentService,

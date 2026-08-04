@@ -29,7 +29,9 @@ describe('PermissionService', () => {
   });
 
   it('should update', () => {
-    expect(service.update(1, {} as any)).toBe('This action updates a #1 permission');
+    expect(service.update(1, {} as any)).toBe(
+      'This action updates a #1 permission',
+    );
   });
 
   it('should remove', () => {

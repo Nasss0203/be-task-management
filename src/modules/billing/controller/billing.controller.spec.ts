@@ -13,8 +13,14 @@ describe('BillingController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BillingController],
       providers: [
-        { provide: BILLING_TYPES.applications.CreateBillingApplication, useValue: mockCreateApp },
-        { provide: BILLING_TYPES.applications.BillingQueryApplication, useValue: mockQueryApp },
+        {
+          provide: BILLING_TYPES.applications.CreateBillingApplication,
+          useValue: mockCreateApp,
+        },
+        {
+          provide: BILLING_TYPES.applications.BillingQueryApplication,
+          useValue: mockQueryApp,
+        },
       ],
     }).compile();
 
@@ -43,7 +49,9 @@ describe('BillingController', () => {
       ip: '127.0.0.1',
       socket: {},
     } as any;
-    expect(() => controller.createPayment({ planId: 'plan-1' } as any, req)).toThrow('User id not found in request');
+    expect(() =>
+      controller.createPayment({ planId: 'plan-1' } as any, req),
+    ).toThrow('User id not found in request');
   });
 
   it('should get current subscription', async () => {

@@ -22,12 +22,17 @@ describe('UpdatePageBlockApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdatePageBlockApplicationImpl,
-        { provide: PAGE_BLOCK_TYPES.services.UpdatePageBlockService, useValue: mockService },
+        {
+          provide: PAGE_BLOCK_TYPES.services.UpdatePageBlockService,
+          useValue: mockService,
+        },
         { provide: WORKSPACE_TYPES.uow.UnitOfWork, useValue: mockUow },
       ],
     }).compile();
 
-    app = module.get<UpdatePageBlockApplicationImpl>(UpdatePageBlockApplicationImpl);
+    app = module.get<UpdatePageBlockApplicationImpl>(
+      UpdatePageBlockApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -36,7 +41,9 @@ describe('UpdatePageBlockApplicationImpl', () => {
 
   it('should update page block', async () => {
     mockService.update.mockResolvedValue({ id: 'pb-1' });
-    jest.spyOn(PageBlockMapper, 'toResponse').mockReturnValue({ id: 'pb-1' } as any);
+    jest
+      .spyOn(PageBlockMapper, 'toResponse')
+      .mockReturnValue({ id: 'pb-1' } as any);
 
     const dto = { id: 'pb-1', title: 'Test Block' } as any;
     const result = await app.update(dto);
@@ -52,7 +59,9 @@ describe('UpdatePageBlockApplicationImpl', () => {
 
   it('should reorder page block', async () => {
     mockService.reorder.mockResolvedValue([{ id: 'pb-1' }]);
-    jest.spyOn(PageBlockMapper, 'toResponse').mockReturnValue({ id: 'pb-1' } as any);
+    jest
+      .spyOn(PageBlockMapper, 'toResponse')
+      .mockReturnValue({ id: 'pb-1' } as any);
 
     const dto = { page_id: 'page-1', blocks: [] } as any;
     const result = await app.reorder(dto);

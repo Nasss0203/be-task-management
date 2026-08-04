@@ -4,11 +4,12 @@ import { type DeleteWorkspaceFeatureSettingService } from '../interfaces/service
 import { WORKSPACE_FEATURE_SETTING_TYPES } from '../interfaces/types';
 
 @Injectable()
-export class DeleteWorkspaceFeatureSettingApplicationImpl
-  implements DeleteWorkspaceFeatureSettingApplication
-{
+export class DeleteWorkspaceFeatureSettingApplicationImpl implements DeleteWorkspaceFeatureSettingApplication {
   constructor(
-    @Inject(WORKSPACE_FEATURE_SETTING_TYPES.services.DeleteWorkspaceFeatureSettingService)
+    @Inject(
+      WORKSPACE_FEATURE_SETTING_TYPES.services
+        .DeleteWorkspaceFeatureSettingService,
+    )
     private readonly service: DeleteWorkspaceFeatureSettingService,
   ) {}
 

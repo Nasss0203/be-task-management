@@ -14,11 +14,18 @@ describe('CreateWorkspaceFeatureSettingServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateWorkspaceFeatureSettingServiceImpl,
-        { provide: WORKSPACE_FEATURE_SETTING_TYPES.repositories.CreateWorkspaceFeatureSettingRepository, useValue: mockRepo },
+        {
+          provide:
+            WORKSPACE_FEATURE_SETTING_TYPES.repositories
+              .CreateWorkspaceFeatureSettingRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
-    service = module.get<CreateWorkspaceFeatureSettingServiceImpl>(CreateWorkspaceFeatureSettingServiceImpl);
+    service = module.get<CreateWorkspaceFeatureSettingServiceImpl>(
+      CreateWorkspaceFeatureSettingServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -35,14 +42,17 @@ describe('CreateWorkspaceFeatureSettingServiceImpl', () => {
       updatedBy: 'u-1',
       metadata: { key: 'val' },
     });
-    expect(mockRepo.save).toHaveBeenCalledWith({
-      workspaceId: 'ws-1',
-      featureId: 'feat-1',
-      enabled: true,
-      createdBy: 'u-1',
-      updatedBy: 'u-1',
-      metadata: { key: 'val' },
-    }, undefined);
+    expect(mockRepo.save).toHaveBeenCalledWith(
+      {
+        workspaceId: 'ws-1',
+        featureId: 'feat-1',
+        enabled: true,
+        createdBy: 'u-1',
+        updatedBy: 'u-1',
+        metadata: { key: 'val' },
+      },
+      undefined,
+    );
     expect(result).toEqual({ id: 'set-1' });
   });
 
@@ -52,14 +62,17 @@ describe('CreateWorkspaceFeatureSettingServiceImpl', () => {
       workspaceId: 'ws-1',
       featureId: 'feat-1',
     });
-    expect(mockRepo.save).toHaveBeenCalledWith({
-      workspaceId: 'ws-1',
-      featureId: 'feat-1',
-      enabled: false,
-      createdBy: null,
-      updatedBy: null,
-      metadata: null,
-    }, undefined);
+    expect(mockRepo.save).toHaveBeenCalledWith(
+      {
+        workspaceId: 'ws-1',
+        featureId: 'feat-1',
+        enabled: false,
+        createdBy: null,
+        updatedBy: null,
+        metadata: null,
+      },
+      undefined,
+    );
     expect(result).toEqual({ id: 'set-1' });
   });
 });

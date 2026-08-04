@@ -24,9 +24,11 @@ export class RegisterAuthServiceImpl implements RegisterAuthService {
     private readonly mailService: MailService,
     @Inject(WORKSPACE_TYPES.uow.UnitOfWork)
     private readonly uow: UnitOfWork,
-  ) { }
+  ) {}
 
-  async register(registerUserDto: RegisterUserDto): Promise<RegisterAuthResult> {
+  async register(
+    registerUserDto: RegisterUserDto,
+  ): Promise<RegisterAuthResult> {
     const exists = await this.userRepository.findByEmailOrUsername(
       registerUserDto.email,
       registerUserDto.username,
@@ -43,18 +45,24 @@ export class RegisterAuthServiceImpl implements RegisterAuthService {
     }
 
     const rawToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(rawToken)
+      .digest('hex');
     const expires = new Date();
     expires.setHours(expires.getHours() + 24);
 
     const saved = await this.uow.runInTransaction(async (manager) => {
-      const user = await this.userRepository.createLocalUser({
-        email: registerUserDto.email,
-        username: registerUserDto.username,
-        passwordHash: hashPassword(registerUserDto.password),
-        emailVerificationToken: hashedToken,
-        emailVerificationExpires: expires,
-      }, manager);
+      const user = await this.userRepository.createLocalUser(
+        {
+          email: registerUserDto.email,
+          username: registerUserDto.username,
+          passwordHash: hashPassword(registerUserDto.password),
+          emailVerificationToken: hashedToken,
+          emailVerificationExpires: expires,
+        },
+        manager,
+      );
 
       await this.createWorkspaceService.createDefault({
         userId: user.id,
@@ -64,11 +72,13 @@ export class RegisterAuthServiceImpl implements RegisterAuthService {
       return user;
     });
 
-    this.mailService.sendVerificationEmail({
-      to: saved.email,
-      recipientName: saved.username,
-      verifyUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${rawToken}`,
-    }).catch(console.error);
+    this.mailService
+      .sendVerificationEmail({
+        to: saved.email,
+        recipientName: saved.username,
+        verifyUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${rawToken}`,
+      })
+      .catch(console.error);
 
     return {
       id: saved.id,

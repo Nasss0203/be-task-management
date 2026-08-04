@@ -39,7 +39,13 @@ export function validateAiWorkspaceTreeDraftOutput(
       continue;
     }
 
-    const name = readString(ws.name, `workspaces[${wIndex}].name`, 2, 180, errors);
+    const name = readString(
+      ws.name,
+      `workspaces[${wIndex}].name`,
+      2,
+      180,
+      errors,
+    );
     const slug = readSlug(ws.slug, wIndex, errors);
 
     if (!Array.isArray(ws.projects)) {
@@ -53,17 +59,44 @@ export function validateAiWorkspaceTreeDraftOutput(
     for (let pIndex = 0; pIndex < ws.projects.length; pIndex++) {
       const proj = ws.projects[pIndex];
       if (!isRecord(proj)) {
-        errors.push(`workspaces[${wIndex}].projects[${pIndex}] must be an object`);
+        errors.push(
+          `workspaces[${wIndex}].projects[${pIndex}] must be an object`,
+        );
         continue;
       }
 
-      const pName = readString(proj.name, `workspaces[${wIndex}].projects[${pIndex}].name`, 2, 180, errors);
-      const pKey = readString(proj.key, `workspaces[${wIndex}].projects[${pIndex}].key`, 2, 10, errors).toUpperCase();
-      const pVisibility = readVisibility(proj.visibility, wIndex, pIndex, errors);
-      const pDescription = readString(proj.description, `workspaces[${wIndex}].projects[${pIndex}].description`, 10, 1000, errors);
+      const pName = readString(
+        proj.name,
+        `workspaces[${wIndex}].projects[${pIndex}].name`,
+        2,
+        180,
+        errors,
+      );
+      const pKey = readString(
+        proj.key,
+        `workspaces[${wIndex}].projects[${pIndex}].key`,
+        2,
+        10,
+        errors,
+      ).toUpperCase();
+      const pVisibility = readVisibility(
+        proj.visibility,
+        wIndex,
+        pIndex,
+        errors,
+      );
+      const pDescription = readString(
+        proj.description,
+        `workspaces[${wIndex}].projects[${pIndex}].description`,
+        10,
+        1000,
+        errors,
+      );
 
       if (!Array.isArray(proj.tasks)) {
-        errors.push(`workspaces[${wIndex}].projects[${pIndex}].tasks must be an array`);
+        errors.push(
+          `workspaces[${wIndex}].projects[${pIndex}].tasks must be an array`,
+        );
         continue;
       }
 
@@ -73,14 +106,40 @@ export function validateAiWorkspaceTreeDraftOutput(
       for (let tIndex = 0; tIndex < proj.tasks.length; tIndex++) {
         const task = proj.tasks[tIndex];
         if (!isRecord(task)) {
-          errors.push(`workspaces[${wIndex}].projects[${pIndex}].tasks[${tIndex}] must be an object`);
+          errors.push(
+            `workspaces[${wIndex}].projects[${pIndex}].tasks[${tIndex}] must be an object`,
+          );
           continue;
         }
 
-        const tTitle = readString(task.title, `workspaces[${wIndex}].projects[${pIndex}].tasks[${tIndex}].title`, 3, 180, errors);
-        const tDescription = readString(task.description, `workspaces[${wIndex}].projects[${pIndex}].tasks[${tIndex}].description`, 10, 4000, errors);
-        const tPriority = readPriority(task.priority, wIndex, pIndex, tIndex, errors);
-        const tEstimatedHours = readInteger(task.estimatedHours, `workspaces[${wIndex}].projects[${pIndex}].tasks[${tIndex}].estimatedHours`, 1, 160, errors);
+        const tTitle = readString(
+          task.title,
+          `workspaces[${wIndex}].projects[${pIndex}].tasks[${tIndex}].title`,
+          3,
+          180,
+          errors,
+        );
+        const tDescription = readString(
+          task.description,
+          `workspaces[${wIndex}].projects[${pIndex}].tasks[${tIndex}].description`,
+          10,
+          4000,
+          errors,
+        );
+        const tPriority = readPriority(
+          task.priority,
+          wIndex,
+          pIndex,
+          tIndex,
+          errors,
+        );
+        const tEstimatedHours = readInteger(
+          task.estimatedHours,
+          `workspaces[${wIndex}].projects[${pIndex}].tasks[${tIndex}].estimatedHours`,
+          1,
+          160,
+          errors,
+        );
 
         tasks.push({
           title: tTitle,
@@ -108,7 +167,9 @@ export function validateAiWorkspaceTreeDraftOutput(
 
   // Backend total entities check
   if (totalEntities > MAX_TOTAL_ENTITIES) {
-    errors.push(`Total entities in workspace tree draft exceeds limit of ${MAX_TOTAL_ENTITIES} (got ${totalEntities})`);
+    errors.push(
+      `Total entities in workspace tree draft exceeds limit of ${MAX_TOTAL_ENTITIES} (got ${totalEntities})`,
+    );
   }
 
   if (errors.length > 0) {
@@ -178,7 +239,9 @@ function readSlug(value: unknown, index: number, errors: string[]): string {
   const normalized = value.trim().toLowerCase();
 
   if (normalized.length < 2 || normalized.length > 50) {
-    errors.push(`workspaces[${index}].slug must be between 2 and 50 characters`);
+    errors.push(
+      `workspaces[${index}].slug must be between 2 and 50 characters`,
+    );
   }
 
   const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;

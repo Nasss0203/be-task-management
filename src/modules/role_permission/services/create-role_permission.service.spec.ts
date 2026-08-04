@@ -16,13 +16,16 @@ describe('CreateRolePermissionServiceImpl', () => {
       providers: [
         CreateRolePermissionServiceImpl,
         {
-          provide: ROLE_PERMISSION_TYPES.repositories.CreateRolePermissionRepository,
+          provide:
+            ROLE_PERMISSION_TYPES.repositories.CreateRolePermissionRepository,
           useValue: mockCreateRolePermissionRepository,
         },
       ],
     }).compile();
 
-    service = module.get<CreateRolePermissionServiceImpl>(CreateRolePermissionServiceImpl);
+    service = module.get<CreateRolePermissionServiceImpl>(
+      CreateRolePermissionServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -31,9 +34,14 @@ describe('CreateRolePermissionServiceImpl', () => {
 
   describe('createMany', () => {
     it('should call saveMany on repo', async () => {
-      const mockData = [{ role_id: 'r-1', permission_id: 'p-1', granted_by: 'u-1' }];
+      const mockData = [
+        { role_id: 'r-1', permission_id: 'p-1', granted_by: 'u-1' },
+      ];
       await service.createMany(mockData);
-      expect(mockCreateRolePermissionRepository.saveMany).toHaveBeenCalledWith(mockData, undefined);
+      expect(mockCreateRolePermissionRepository.saveMany).toHaveBeenCalledWith(
+        mockData,
+        undefined,
+      );
     });
   });
 });

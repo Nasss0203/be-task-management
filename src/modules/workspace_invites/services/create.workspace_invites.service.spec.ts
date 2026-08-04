@@ -15,11 +15,17 @@ describe('CreateWorkspaceInviteServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateWorkspaceInviteServiceImpl,
-        { provide: WORKSPACE_INVITE_TYPES.repositories.CreateWorkspaceInviteRepository, useValue: mockRepo },
+        {
+          provide:
+            WORKSPACE_INVITE_TYPES.repositories.CreateWorkspaceInviteRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
-    service = module.get<CreateWorkspaceInviteServiceImpl>(CreateWorkspaceInviteServiceImpl);
+    service = module.get<CreateWorkspaceInviteServiceImpl>(
+      CreateWorkspaceInviteServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -28,7 +34,13 @@ describe('CreateWorkspaceInviteServiceImpl', () => {
 
   it('should create invite', async () => {
     mockRepo.save.mockResolvedValue({ id: 'inv-1' });
-    const result = await service.save({ workspace_id: 'ws-1', type: WorkspaceInviteType.EMAIL, invited_by: 'u-1', email: 'test@example.com', role_name: 'MEMBER' } as any);
+    const result = await service.save({
+      workspace_id: 'ws-1',
+      type: WorkspaceInviteType.EMAIL,
+      invited_by: 'u-1',
+      email: 'test@example.com',
+      role_name: 'MEMBER',
+    } as any);
     expect(mockRepo.save).toHaveBeenCalled();
     expect(result.id).toEqual('inv-1');
   });

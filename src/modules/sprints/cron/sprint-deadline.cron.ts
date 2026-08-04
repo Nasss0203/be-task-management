@@ -41,7 +41,8 @@ export class SprintDeadlineCron {
   async sendDueSoonNotifications(
     days = SPRINT_DUE_SOON_WINDOW_DAYS,
   ): Promise<{ sprintsScanned: number; notificationsSent: number }> {
-    const sprints = await this.findSprintRepository.findActiveSprintsDueSoon(days);
+    const sprints =
+      await this.findSprintRepository.findActiveSprintsDueSoon(days);
     let notificationsSent = 0;
 
     for (const sprint of sprints) {
@@ -109,7 +110,10 @@ export class SprintDeadlineCron {
     };
   }
 
-  async sendOverdueNotifications(): Promise<{ sprintsScanned: number; notificationsSent: number }> {
+  async sendOverdueNotifications(): Promise<{
+    sprintsScanned: number;
+    notificationsSent: number;
+  }> {
     const sprints = await this.findSprintRepository.findActiveSprintsOverdue();
     let notificationsSent = 0;
 
@@ -161,7 +165,10 @@ export class SprintDeadlineCron {
     };
   }
 
-  private buildActionUrl(sprint: { workspace: { slug: string }; projectId: string }): string {
+  private buildActionUrl(sprint: {
+    workspace: { slug: string };
+    projectId: string;
+  }): string {
     const slug = sprint.workspace?.slug ?? '';
     const projectId = sprint.projectId ?? '';
     return `/dashboard/${encodeURIComponent(slug)}/projects/${projectId}`;

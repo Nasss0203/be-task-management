@@ -13,7 +13,9 @@ export class PageTemplateBlocksController {
   ) {}
 
   @Get('template/:templateId')
-  async findByTemplateId(@Param('templateId') templateId: string): Promise<PageTemplateBlock[]> {
+  async findByTemplateId(
+    @Param('templateId') templateId: string,
+  ): Promise<PageTemplateBlock[]> {
     return this.pageTemplateBlocksService.findByTemplateId(templateId);
   }
 }

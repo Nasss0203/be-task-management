@@ -34,11 +34,16 @@ describe('TaskStatusController', () => {
 
   describe('findAll', () => {
     it('should call findAllTaskStatus service', async () => {
-      mockFindTaskStatusService.findAllTaskStatus.mockResolvedValue([{ id: 'status-1' }]);
+      mockFindTaskStatusService.findAllTaskStatus.mockResolvedValue([
+        { id: 'status-1' },
+      ]);
 
       const result = await controller.findAll('ws-1', 'proj-1');
 
-      expect(mockFindTaskStatusService.findAllTaskStatus).toHaveBeenCalledWith('proj-1', 'ws-1');
+      expect(mockFindTaskStatusService.findAllTaskStatus).toHaveBeenCalledWith(
+        'proj-1',
+        'ws-1',
+      );
       expect(result).toEqual([{ id: 'status-1' }]);
     });
   });

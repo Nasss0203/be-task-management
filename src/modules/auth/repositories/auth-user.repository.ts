@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SystemRole, User } from 'src/modules/users/domain/entities/user.entity';
+import {
+  SystemRole,
+  User,
+} from 'src/modules/users/domain/entities/user.entity';
 import { Repository, EntityManager } from 'typeorm';
 import {
   AuthUserRepository,
@@ -23,10 +26,7 @@ export class AuthUserRepositoryImpl implements AuthUserRepository {
     return this.userRepo.findOne({ where: { googleId } });
   }
 
-  findByEmailOrUsername(
-    email: string,
-    username: string,
-  ): Promise<User | null> {
+  findByEmailOrUsername(email: string, username: string): Promise<User | null> {
     return this.userRepo.findOne({
       where: [{ email }, { username }],
     });
@@ -66,7 +66,10 @@ export class AuthUserRepositoryImpl implements AuthUserRepository {
     });
   }
 
-  async createLocalUser(input: CreateLocalAuthUserInput, manager?: EntityManager): Promise<User> {
+  async createLocalUser(
+    input: CreateLocalAuthUserInput,
+    manager?: EntityManager,
+  ): Promise<User> {
     const repo = manager ? manager.getRepository(User) : this.userRepo;
     const user = repo.create({
       email: input.email,

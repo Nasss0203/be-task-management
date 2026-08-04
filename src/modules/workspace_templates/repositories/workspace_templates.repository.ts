@@ -4,9 +4,15 @@ import { FindOptionsWhere, Repository } from 'typeorm';
 import { WorkspaceTemplate } from '../domain/entities/workspace_template.entity';
 import type { WorkspaceTemplatesRepository } from '../interfaces/repositories/workspace_templates.repository.interface';
 import { FindWorkspaceTemplatesDto } from '../dto/find-workspace-templates.dto';
-import { TemplateStatus, TemplateVisibility } from 'src/common/enum/template.enum';
+import {
+  TemplateStatus,
+  TemplateVisibility,
+} from 'src/common/enum/template.enum';
 import { WorkspaceTemplateMapper } from '../mapper/workspace_template.mapper';
-import { PaginatedWorkspaceTemplateModels, WorkspaceTemplateModel } from '../domain/models/workspace_template.model';
+import {
+  PaginatedWorkspaceTemplateModels,
+  WorkspaceTemplateModel,
+} from '../domain/models/workspace_template.model';
 
 @Injectable()
 export class WorkspaceTemplatesRepositoryImpl implements WorkspaceTemplatesRepository {
@@ -15,9 +21,11 @@ export class WorkspaceTemplatesRepositoryImpl implements WorkspaceTemplatesRepos
     private readonly repository: Repository<WorkspaceTemplate>,
   ) {}
 
-  async findAll(where?: FindOptionsWhere<WorkspaceTemplate>): Promise<WorkspaceTemplateModel[]> {
+  async findAll(
+    where?: FindOptionsWhere<WorkspaceTemplate>,
+  ): Promise<WorkspaceTemplateModel[]> {
     const entities = await this.repository.find({ where });
-    return entities.map(entity => WorkspaceTemplateMapper.toModel(entity));
+    return entities.map((entity) => WorkspaceTemplateMapper.toModel(entity));
   }
 
   async findOne(id: string): Promise<WorkspaceTemplateModel | null> {
@@ -25,7 +33,10 @@ export class WorkspaceTemplatesRepositoryImpl implements WorkspaceTemplatesRepos
     return entity ? WorkspaceTemplateMapper.toModel(entity) : null;
   }
 
-  async findOneAvailableForUser(id: string, userId: string): Promise<WorkspaceTemplateModel | null> {
+  async findOneAvailableForUser(
+    id: string,
+    userId: string,
+  ): Promise<WorkspaceTemplateModel | null> {
     const query = this.repository.createQueryBuilder('wt');
     query.where('wt.id = :id', { id });
 
@@ -86,7 +97,9 @@ export class WorkspaceTemplatesRepositoryImpl implements WorkspaceTemplatesRepos
 
     if (filters) {
       if (filters.category) {
-        query.andWhere('wt.category = :category', { category: filters.category });
+        query.andWhere('wt.category = :category', {
+          category: filters.category,
+        });
       }
 
       if (filters.search) {
@@ -97,14 +110,22 @@ export class WorkspaceTemplatesRepositoryImpl implements WorkspaceTemplatesRepos
       }
 
       if (filters.visibility) {
-        query.andWhere('wt.visibility = :visibility', { visibility: filters.visibility });
+        query.andWhere('wt.visibility = :visibility', {
+          visibility: filters.visibility,
+        });
       }
 
       if (filters.workspaceId) {
-        query.andWhere('wt.workspace_id = :workspaceId', { workspaceId: filters.workspaceId });
+        query.andWhere('wt.workspace_id = :workspaceId', {
+          workspaceId: filters.workspaceId,
+        });
       }
 
-      if (filters.ownedByMe !== undefined && filters.ownedByMe !== false && String(filters.ownedByMe) !== 'false') {
+      if (
+        filters.ownedByMe !== undefined &&
+        filters.ownedByMe !== false &&
+        String(filters.ownedByMe) !== 'false'
+      ) {
         if (userId) {
           query.andWhere('wt.created_by = :userId', { userId });
         } else {
@@ -131,7 +152,7 @@ export class WorkspaceTemplatesRepositoryImpl implements WorkspaceTemplatesRepos
     const [entities, total] = await query.getManyAndCount();
 
     return {
-      data: entities.map(entity => WorkspaceTemplateMapper.toModel(entity)),
+      data: entities.map((entity) => WorkspaceTemplateMapper.toModel(entity)),
       total,
       page,
       pageSize: limit,

@@ -20,7 +20,10 @@ describe('FindSprintServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindSprintServiceImpl,
-        { provide: SPRINT_TYPES.repositories.FindSprintRepository, useValue: mockFindSprintRepository },
+        {
+          provide: SPRINT_TYPES.repositories.FindSprintRepository,
+          useValue: mockFindSprintRepository,
+        },
       ],
     }).compile();
 
@@ -33,7 +36,9 @@ describe('FindSprintServiceImpl', () => {
 
   describe('findDeletedSprints', () => {
     it('should return deleted sprints', async () => {
-      mockFindSprintRepository.findDeletedSprints.mockResolvedValue([{ id: 'sprint-1' }]);
+      mockFindSprintRepository.findDeletedSprints.mockResolvedValue([
+        { id: 'sprint-1' },
+      ]);
       const result = await service.findDeletedSprints('ws-1', 'proj-1');
       expect(result).toEqual([{ id: 'sprint-1' }]);
     });
@@ -41,8 +46,14 @@ describe('FindSprintServiceImpl', () => {
 
   describe('findOneSprintForRestore', () => {
     it('should return sprint for restore', async () => {
-      mockFindSprintRepository.findOneSprintForRestore.mockResolvedValue({ sprintId: 'sprint-1' });
-      const result = await service.findOneSprintForRestore('ws-1', 'proj-1', 'sprint-1');
+      mockFindSprintRepository.findOneSprintForRestore.mockResolvedValue({
+        sprintId: 'sprint-1',
+      });
+      const result = await service.findOneSprintForRestore(
+        'ws-1',
+        'proj-1',
+        'sprint-1',
+      );
       expect(result).toEqual({ sprintId: 'sprint-1' });
     });
   });
@@ -55,7 +66,9 @@ describe('FindSprintServiceImpl', () => {
     });
 
     it('should return sprint', async () => {
-      mockFindSprintRepository.findOneSprint.mockResolvedValue({ id: 'sprint-1' });
+      mockFindSprintRepository.findOneSprint.mockResolvedValue({
+        id: 'sprint-1',
+      });
       const result = await service.findOneSprint('sprint-1');
       expect(result).toEqual({ id: 'sprint-1' });
     });
@@ -63,7 +76,9 @@ describe('FindSprintServiceImpl', () => {
 
   describe('findAllSprintByProject', () => {
     it('should return sprints', async () => {
-      mockFindSprintRepository.findAllSprintByProject.mockResolvedValue([{ id: 'sprint-1' }]);
+      mockFindSprintRepository.findAllSprintByProject.mockResolvedValue([
+        { id: 'sprint-1' },
+      ]);
       const result = await service.findAllSprintByProject('ws-1', 'proj-1');
       expect(result).toEqual([{ id: 'sprint-1' }]);
     });
@@ -71,16 +86,28 @@ describe('FindSprintServiceImpl', () => {
 
   describe('findTasksBySprint', () => {
     it('should return sprint with tasks', async () => {
-      mockFindSprintRepository.findTasksBySprint.mockResolvedValue({ id: 'sprint-1' });
-      const result = await service.findTasksBySprint('ws-1', 'proj-1', 'sprint-1');
+      mockFindSprintRepository.findTasksBySprint.mockResolvedValue({
+        id: 'sprint-1',
+      });
+      const result = await service.findTasksBySprint(
+        'ws-1',
+        'proj-1',
+        'sprint-1',
+      );
       expect(result).toEqual({ id: 'sprint-1' });
     });
   });
 
   describe('getSprintProgress', () => {
     it('should return sprint progress', async () => {
-      mockFindSprintRepository.getSprintProgress.mockResolvedValue({ totalTasks: 5 });
-      const result = await service.getSprintProgress('ws-1', 'proj-1', 'sprint-1');
+      mockFindSprintRepository.getSprintProgress.mockResolvedValue({
+        totalTasks: 5,
+      });
+      const result = await service.getSprintProgress(
+        'ws-1',
+        'proj-1',
+        'sprint-1',
+      );
       expect(result).toEqual({ totalTasks: 5 });
     });
   });

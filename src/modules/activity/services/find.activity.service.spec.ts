@@ -14,7 +14,10 @@ describe('FindActivityServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindActivityServiceImpl,
-        { provide: ACTIVITY_TYPES.repositories.FindActivityRepository, useValue: mockRepo },
+        {
+          provide: ACTIVITY_TYPES.repositories.FindActivityRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
@@ -26,7 +29,10 @@ describe('FindActivityServiceImpl', () => {
   });
 
   it('should find activities', async () => {
-    mockRepo.findMany.mockResolvedValue({ items: [{ id: 'act-1' }], nextCursor: 'cursor' });
+    mockRepo.findMany.mockResolvedValue({
+      items: [{ id: 'act-1' }],
+      nextCursor: 'cursor',
+    });
 
     const result = await service.findMany({
       workspaceId: 'ws-1',

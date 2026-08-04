@@ -16,10 +16,22 @@ describe('TaskCommnentController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [TaskCommnentController],
       providers: [
-        { provide: TASK_COMMENT_TYPES.applications.CreateTaskCommentApplication, useValue: mockCreateTaskCommentApplication },
-        { provide: TASK_COMMENT_TYPES.applications.FindTaskCommentApplication, useValue: mockFindTaskCommentApplication },
-        { provide: TASK_COMMENT_TYPES.applications.UpdateTaskCommentApplication, useValue: mockUpdateTaskCommentApplication },
-        { provide: TASK_COMMENT_TYPES.applications.DeleteTaskCommentApplication, useValue: mockDeleteTaskCommentApplication },
+        {
+          provide: TASK_COMMENT_TYPES.applications.CreateTaskCommentApplication,
+          useValue: mockCreateTaskCommentApplication,
+        },
+        {
+          provide: TASK_COMMENT_TYPES.applications.FindTaskCommentApplication,
+          useValue: mockFindTaskCommentApplication,
+        },
+        {
+          provide: TASK_COMMENT_TYPES.applications.UpdateTaskCommentApplication,
+          useValue: mockUpdateTaskCommentApplication,
+        },
+        {
+          provide: TASK_COMMENT_TYPES.applications.DeleteTaskCommentApplication,
+          useValue: mockDeleteTaskCommentApplication,
+        },
       ],
     }).compile();
 
@@ -35,7 +47,13 @@ describe('TaskCommnentController', () => {
       mockCreateTaskCommentApplication.create.mockResolvedValue({ id: '1' });
       const auth = { id: 'user-1' } as any;
 
-      const result = await controller.create('ws-1', 'proj-1', 'task-1', { content: 'test' }, auth);
+      const result = await controller.create(
+        'ws-1',
+        'proj-1',
+        'task-1',
+        { content: 'test' },
+        auth,
+      );
 
       expect(mockCreateTaskCommentApplication.create).toHaveBeenCalledWith({
         workspaceId: 'ws-1',
@@ -50,10 +68,17 @@ describe('TaskCommnentController', () => {
 
   describe('findByTaskId', () => {
     it('should call findByTaskId on application', async () => {
-      mockFindTaskCommentApplication.findByTaskId.mockResolvedValue([{ id: '1' }]);
+      mockFindTaskCommentApplication.findByTaskId.mockResolvedValue([
+        { id: '1' },
+      ]);
       const auth = { id: 'user-1' } as any;
 
-      const result = await controller.findByTaskId('ws-1', 'proj-1', 'task-1', auth);
+      const result = await controller.findByTaskId(
+        'ws-1',
+        'proj-1',
+        'task-1',
+        auth,
+      );
 
       expect(mockFindTaskCommentApplication.findByTaskId).toHaveBeenCalledWith({
         workspaceId: 'ws-1',

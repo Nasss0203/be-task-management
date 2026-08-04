@@ -26,7 +26,9 @@ describe('AttachmentFileValidatorServiceImpl', () => {
     });
 
     it('should throw BadRequestException if not allowed', () => {
-      expect(() => service.validateExtension('test.exe')).toThrow(BadRequestException);
+      expect(() => service.validateExtension('test.exe')).toThrow(
+        BadRequestException,
+      );
     });
   });
 

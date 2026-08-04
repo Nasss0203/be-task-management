@@ -28,8 +28,7 @@ export class StripePaymentProviderImpl implements StripePaymentProvider {
     const cancelUrl =
       this.configService.get<string>('STRIPE_CANCEL_URL') ??
       `${clientUrl}/billing`;
-    const isRecurring =
-      input.billingInterval !== PlanBillingInterval.LIFETIME;
+    const isRecurring = input.billingInterval !== PlanBillingInterval.LIFETIME;
     const metadata = {
       paymentId: input.paymentId,
       orderCode: input.orderCode,

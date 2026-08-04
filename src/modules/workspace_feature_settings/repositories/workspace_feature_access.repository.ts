@@ -19,9 +19,7 @@ type FeatureIdRow = {
 };
 
 @Injectable()
-export class WorkspaceFeatureAccessRepositoryImpl
-  implements WorkspaceFeatureAccessRepository
-{
+export class WorkspaceFeatureAccessRepositoryImpl implements WorkspaceFeatureAccessRepository {
   constructor(private readonly dataSource: DataSource) {}
 
   async findWorkspaceFeatures(

@@ -15,11 +15,18 @@ describe('CreateWorkspaceFeatureSettingApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateWorkspaceFeatureSettingApplicationImpl,
-        { provide: WORKSPACE_FEATURE_SETTING_TYPES.services.CreateWorkspaceFeatureSettingService, useValue: mockService },
+        {
+          provide:
+            WORKSPACE_FEATURE_SETTING_TYPES.services
+              .CreateWorkspaceFeatureSettingService,
+          useValue: mockService,
+        },
       ],
     }).compile();
 
-    app = module.get<CreateWorkspaceFeatureSettingApplicationImpl>(CreateWorkspaceFeatureSettingApplicationImpl);
+    app = module.get<CreateWorkspaceFeatureSettingApplicationImpl>(
+      CreateWorkspaceFeatureSettingApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -28,7 +35,9 @@ describe('CreateWorkspaceFeatureSettingApplicationImpl', () => {
 
   it('should create setting', async () => {
     mockService.create.mockResolvedValue({ id: 'set-1' });
-    jest.spyOn(WorkspaceFeatureSettingMapper, 'toResponse').mockReturnValue({ id: 'set-1' } as any);
+    jest
+      .spyOn(WorkspaceFeatureSettingMapper, 'toResponse')
+      .mockReturnValue({ id: 'set-1' } as any);
 
     const result = await app.create({ workspace_id: 'ws-1' } as any);
     expect(mockService.create).toHaveBeenCalledWith({ workspace_id: 'ws-1' });

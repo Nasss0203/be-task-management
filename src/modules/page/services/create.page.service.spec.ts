@@ -21,7 +21,10 @@ describe('CreatePageServiceImpl', () => {
       providers: [
         CreatePageServiceImpl,
         { provide: PAGE_TYPES.repositories.PageRepository, useValue: mockRepo },
-        { provide: PAGE_BLOCK_TYPES.services.CreatePageBlockService, useValue: mockCreatePageBlockService },
+        {
+          provide: PAGE_BLOCK_TYPES.services.CreatePageBlockService,
+          useValue: mockCreatePageBlockService,
+        },
       ],
     }).compile();
 
@@ -35,9 +38,9 @@ describe('CreatePageServiceImpl', () => {
   it('should create page', async () => {
     mockRepo.save.mockResolvedValue({ id: 'page-1' });
     const dto = { title: 'Test Page', workspaceId: 'ws-1' } as any;
-    
+
     const result = await service.create(dto, {} as EntityManager);
-    
+
     expect(mockRepo.save).toHaveBeenCalledWith(dto, {});
     expect(result).toEqual({ id: 'page-1' });
   });

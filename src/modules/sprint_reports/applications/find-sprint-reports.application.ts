@@ -6,9 +6,7 @@ import { SprintReportResponseDto } from '../dto/response/sprint-report.response.
 import { SprintReportsMapper } from '../mapper/sprint-reports.mapper';
 
 @Injectable()
-export class FindSprintReportsApplicationImpl
-  implements FindSprintReportsApplication
-{
+export class FindSprintReportsApplicationImpl implements FindSprintReportsApplication {
   constructor(
     @Inject(SPRINT_REPORT_TYPES.services.FindSprintReportsService)
     private readonly findSprintReportsService: FindSprintReportsService,

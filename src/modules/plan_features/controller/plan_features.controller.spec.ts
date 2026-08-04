@@ -13,10 +13,22 @@ describe('PlanFeaturesController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PlanFeaturesController],
       providers: [
-        { provide: PLAN_FEATURE_TYPES.applications.CreatePlanFeatureApplication, useValue: mockCreate },
-        { provide: PLAN_FEATURE_TYPES.applications.FindPlanFeatureApplication, useValue: mockFind },
-        { provide: PLAN_FEATURE_TYPES.applications.UpdatePlanFeatureApplication, useValue: mockUpdate },
-        { provide: PLAN_FEATURE_TYPES.applications.DeletePlanFeatureApplication, useValue: mockDelete },
+        {
+          provide: PLAN_FEATURE_TYPES.applications.CreatePlanFeatureApplication,
+          useValue: mockCreate,
+        },
+        {
+          provide: PLAN_FEATURE_TYPES.applications.FindPlanFeatureApplication,
+          useValue: mockFind,
+        },
+        {
+          provide: PLAN_FEATURE_TYPES.applications.UpdatePlanFeatureApplication,
+          useValue: mockUpdate,
+        },
+        {
+          provide: PLAN_FEATURE_TYPES.applications.DeletePlanFeatureApplication,
+          useValue: mockDelete,
+        },
       ],
     }).compile();
 

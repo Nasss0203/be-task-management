@@ -14,11 +14,16 @@ describe('CreateBillingApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateBillingApplicationImpl,
-        { provide: BILLING_TYPES.services.CreateBillingService, useValue: mockService },
+        {
+          provide: BILLING_TYPES.services.CreateBillingService,
+          useValue: mockService,
+        },
       ],
     }).compile();
 
-    app = module.get<CreateBillingApplicationImpl>(CreateBillingApplicationImpl);
+    app = module.get<CreateBillingApplicationImpl>(
+      CreateBillingApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -26,9 +31,19 @@ describe('CreateBillingApplicationImpl', () => {
   });
 
   it('should create payment', async () => {
-    mockService.createPayment.mockResolvedValue({ orderUrl: 'http://example.com' });
-    const result = await app.createPayment({ planId: 'plan-1', userId: 'u-1', billingType: 'monthly' });
-    expect(mockService.createPayment).toHaveBeenCalledWith({ planId: 'plan-1', userId: 'u-1', billingType: 'monthly' });
+    mockService.createPayment.mockResolvedValue({
+      orderUrl: 'http://example.com',
+    });
+    const result = await app.createPayment({
+      planId: 'plan-1',
+      userId: 'u-1',
+      billingType: 'monthly',
+    });
+    expect(mockService.createPayment).toHaveBeenCalledWith({
+      planId: 'plan-1',
+      userId: 'u-1',
+      billingType: 'monthly',
+    });
     expect(result).toEqual({ orderUrl: 'http://example.com' });
   });
 });

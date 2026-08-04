@@ -82,7 +82,9 @@ export class FeatureSeedService {
     return savedFeatures;
   }
 
-  private async findExistingFeature(item: FeatureSeedItem): Promise<Feature | null> {
+  private async findExistingFeature(
+    item: FeatureSeedItem,
+  ): Promise<Feature | null> {
     const code = item.code.toLowerCase();
     const exactFeature = await this.featureRepository
       .createQueryBuilder('feature')

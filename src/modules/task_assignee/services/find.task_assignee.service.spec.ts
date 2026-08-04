@@ -22,7 +22,9 @@ describe('FindTaskAssigneeServiceImpl', () => {
       ],
     }).compile();
 
-    service = module.get<FindTaskAssigneeServiceImpl>(FindTaskAssigneeServiceImpl);
+    service = module.get<FindTaskAssigneeServiceImpl>(
+      FindTaskAssigneeServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -32,11 +34,19 @@ describe('FindTaskAssigneeServiceImpl', () => {
   describe('findOneTaskAssignee', () => {
     it('should call findOneTaskAssignee on repository', async () => {
       const manager = {} as any;
-      mockFindTaskAssigneeRepository.findOneTaskAssignee.mockResolvedValue({ id: '1' });
+      mockFindTaskAssigneeRepository.findOneTaskAssignee.mockResolvedValue({
+        id: '1',
+      });
 
-      const result = await service.findOneTaskAssignee('task-1', 'user-1', manager);
+      const result = await service.findOneTaskAssignee(
+        'task-1',
+        'user-1',
+        manager,
+      );
 
-      expect(mockFindTaskAssigneeRepository.findOneTaskAssignee).toHaveBeenCalledWith('task-1', 'user-1', manager);
+      expect(
+        mockFindTaskAssigneeRepository.findOneTaskAssignee,
+      ).toHaveBeenCalledWith('task-1', 'user-1', manager);
       expect(result).toEqual({ id: '1' });
     });
   });

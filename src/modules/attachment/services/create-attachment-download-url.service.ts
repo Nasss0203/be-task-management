@@ -6,9 +6,7 @@ import { ATTACHMENT_TYPES } from '../interfaces/types';
 import { AttachmentProvider } from '../domain/entities/attachment.entity';
 
 @Injectable()
-export class CreateAttachmentDownloadUrlServiceImpl
-  implements CreateAttachmentDownloadUrlService
-{
+export class CreateAttachmentDownloadUrlServiceImpl implements CreateAttachmentDownloadUrlService {
   constructor(
     @Inject(ATTACHMENT_TYPES.repositories.FindAttachmentRepository)
     private readonly findRepository: FindAttachmentRepository,

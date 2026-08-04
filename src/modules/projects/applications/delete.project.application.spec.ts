@@ -2,8 +2,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DeleteProjectApplicationImpl } from './delete.project.application';
 import { PROJECT_TYPES } from '../interfaces/types';
 import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
-import { ActivityAction, ActivityEntityType } from 'src/modules/activity/domain/entities/activity.entity';
-import { NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
+import {
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 
 describe('DeleteProjectApplicationImpl', () => {
   let application: DeleteProjectApplicationImpl;
@@ -43,7 +50,9 @@ describe('DeleteProjectApplicationImpl', () => {
       ],
     }).compile();
 
-    application = module.get<DeleteProjectApplicationImpl>(DeleteProjectApplicationImpl);
+    application = module.get<DeleteProjectApplicationImpl>(
+      DeleteProjectApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -54,29 +63,64 @@ describe('DeleteProjectApplicationImpl', () => {
     it('should throw NotFoundException if project not found', async () => {
       mockFindProjectService.findOneProjectForRestore.mockResolvedValue(null);
 
-      await expect(application.delete({ workspaceId: 'ws-1', projectId: '1', userId: 'usr-1' })).rejects.toThrow(NotFoundException);
+      await expect(
+        application.delete({
+          workspaceId: 'ws-1',
+          projectId: '1',
+          userId: 'usr-1',
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw BadRequestException if project is already deleted', async () => {
-      mockFindProjectService.findOneProjectForRestore.mockResolvedValue({ id: '1', deletedAt: new Date() });
+      mockFindProjectService.findOneProjectForRestore.mockResolvedValue({
+        id: '1',
+        deletedAt: new Date(),
+      });
 
-      await expect(application.delete({ workspaceId: 'ws-1', projectId: '1', userId: 'usr-1' })).rejects.toThrow(BadRequestException);
+      await expect(
+        application.delete({
+          workspaceId: 'ws-1',
+          projectId: '1',
+          userId: 'usr-1',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException if workspace is deleted', async () => {
-      mockFindProjectService.findOneProjectForRestore.mockResolvedValue({ id: '1', workspaceDeletedAt: new Date() });
+      mockFindProjectService.findOneProjectForRestore.mockResolvedValue({
+        id: '1',
+        workspaceDeletedAt: new Date(),
+      });
 
-      await expect(application.delete({ workspaceId: 'ws-1', projectId: '1', userId: 'usr-1' })).rejects.toThrow(BadRequestException);
+      await expect(
+        application.delete({
+          workspaceId: 'ws-1',
+          projectId: '1',
+          userId: 'usr-1',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should call softDeleteProject and create activity', async () => {
-      mockFindProjectService.findOneProjectForRestore.mockResolvedValue({ id: '1', name: 'Test', key: 'TEST-1' });
+      mockFindProjectService.findOneProjectForRestore.mockResolvedValue({
+        id: '1',
+        name: 'Test',
+        key: 'TEST-1',
+      });
       mockDeleteProjectService.softDeleteProject.mockResolvedValue(undefined);
       mockCreateActivityService.create.mockResolvedValue(undefined);
 
-      await application.delete({ workspaceId: 'ws-1', projectId: '1', userId: 'usr-1' });
+      await application.delete({
+        workspaceId: 'ws-1',
+        projectId: '1',
+        userId: 'usr-1',
+      });
 
-      expect(mockDeleteProjectService.softDeleteProject).toHaveBeenCalledWith({ projectId: '1', deletedBy: 'usr-1' });
+      expect(mockDeleteProjectService.softDeleteProject).toHaveBeenCalledWith({
+        projectId: '1',
+        deletedBy: 'usr-1',
+      });
       expect(mockCreateActivityService.create).toHaveBeenCalledWith({
         workspaceId: 'ws-1',
         projectId: '1',
@@ -96,37 +140,83 @@ describe('DeleteProjectApplicationImpl', () => {
     it('should throw NotFoundException if project not found', async () => {
       mockFindProjectService.findOneProjectForRestore.mockResolvedValue(null);
 
-      await expect(application.restore({ workspaceId: 'ws-1', projectId: '1', userId: 'usr-1' })).rejects.toThrow(NotFoundException);
+      await expect(
+        application.restore({
+          workspaceId: 'ws-1',
+          projectId: '1',
+          userId: 'usr-1',
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw BadRequestException if project is not deleted', async () => {
-      mockFindProjectService.findOneProjectForRestore.mockResolvedValue({ id: '1', deletedAt: null });
+      mockFindProjectService.findOneProjectForRestore.mockResolvedValue({
+        id: '1',
+        deletedAt: null,
+      });
 
-      await expect(application.restore({ workspaceId: 'ws-1', projectId: '1', userId: 'usr-1' })).rejects.toThrow(BadRequestException);
+      await expect(
+        application.restore({
+          workspaceId: 'ws-1',
+          projectId: '1',
+          userId: 'usr-1',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException if workspace is deleted', async () => {
-      mockFindProjectService.findOneProjectForRestore.mockResolvedValue({ id: '1', deletedAt: new Date(), workspaceDeletedAt: new Date() });
+      mockFindProjectService.findOneProjectForRestore.mockResolvedValue({
+        id: '1',
+        deletedAt: new Date(),
+        workspaceDeletedAt: new Date(),
+      });
 
-      await expect(application.restore({ workspaceId: 'ws-1', projectId: '1', userId: 'usr-1' })).rejects.toThrow(BadRequestException);
+      await expect(
+        application.restore({
+          workspaceId: 'ws-1',
+          projectId: '1',
+          userId: 'usr-1',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw ConflictException if project key already exists', async () => {
-      mockFindProjectService.findOneProjectForRestore.mockResolvedValue({ id: '1', key: 'TEST-1', deletedAt: new Date() });
+      mockFindProjectService.findOneProjectForRestore.mockResolvedValue({
+        id: '1',
+        key: 'TEST-1',
+        deletedAt: new Date(),
+      });
       mockFindProjectService.existsActiveProjectKey.mockResolvedValue(true);
 
-      await expect(application.restore({ workspaceId: 'ws-1', projectId: '1', userId: 'usr-1' })).rejects.toThrow(ConflictException);
+      await expect(
+        application.restore({
+          workspaceId: 'ws-1',
+          projectId: '1',
+          userId: 'usr-1',
+        }),
+      ).rejects.toThrow(ConflictException);
     });
 
     it('should call restoreProject and create activity', async () => {
-      mockFindProjectService.findOneProjectForRestore.mockResolvedValue({ id: '1', name: 'Test', key: 'TEST-1', deletedAt: new Date() });
+      mockFindProjectService.findOneProjectForRestore.mockResolvedValue({
+        id: '1',
+        name: 'Test',
+        key: 'TEST-1',
+        deletedAt: new Date(),
+      });
       mockFindProjectService.existsActiveProjectKey.mockResolvedValue(false);
       mockDeleteProjectService.restoreProject.mockResolvedValue(undefined);
       mockCreateActivityService.create.mockResolvedValue(undefined);
 
-      await application.restore({ workspaceId: 'ws-1', projectId: '1', userId: 'usr-1' });
+      await application.restore({
+        workspaceId: 'ws-1',
+        projectId: '1',
+        userId: 'usr-1',
+      });
 
-      expect(mockDeleteProjectService.restoreProject).toHaveBeenCalledWith({ projectId: '1' });
+      expect(mockDeleteProjectService.restoreProject).toHaveBeenCalledWith({
+        projectId: '1',
+      });
       expect(mockCreateActivityService.create).toHaveBeenCalledWith({
         workspaceId: 'ws-1',
         projectId: '1',

@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnitOfWork } from 'src/interface/index.interface';
-import { ActivityAction, ActivityEntityType } from 'src/modules/activity/domain/entities/activity.entity';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { RoleName } from 'src/modules/role/domain/entities/role.entity';
 import { USER_WORKSPACE_TYPES } from '../interfaces/types';

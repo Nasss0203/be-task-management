@@ -14,11 +14,16 @@ describe('PageTemplateBlocksController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PageTemplateBlocksController],
       providers: [
-        { provide: PAGE_TEMPLATE_BLOCK_TYPES.services.PageTemplateBlocksService, useValue: mockService },
+        {
+          provide: PAGE_TEMPLATE_BLOCK_TYPES.services.PageTemplateBlocksService,
+          useValue: mockService,
+        },
       ],
     }).compile();
 
-    controller = module.get<PageTemplateBlocksController>(PageTemplateBlocksController);
+    controller = module.get<PageTemplateBlocksController>(
+      PageTemplateBlocksController,
+    );
   });
 
   it('should be defined', () => {

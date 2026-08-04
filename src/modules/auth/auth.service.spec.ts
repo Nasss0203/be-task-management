@@ -29,8 +29,14 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
-        { provide: AUTH_TYPES.repositories.AuthUserRepository, useValue: mockUserRepository },
-        { provide: AUTH_TYPES.services.IssueAuthTokenService, useValue: mockIssueAuthTokenService },
+        {
+          provide: AUTH_TYPES.repositories.AuthUserRepository,
+          useValue: mockUserRepository,
+        },
+        {
+          provide: AUTH_TYPES.services.IssueAuthTokenService,
+          useValue: mockIssueAuthTokenService,
+        },
         { provide: MailService, useValue: mockMailService },
       ],
     }).compile();
@@ -44,7 +50,10 @@ describe('AuthService', () => {
 
   describe('verifyEmail', () => {
     const token = 'some-token';
-    const hashedToken = require('crypto').createHash('sha256').update(token).digest('hex');
+    const hashedToken = require('crypto')
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
 
     it('should verify email and issue tokens when user is active and token is valid', async () => {
       const mockUser = {
@@ -57,7 +66,9 @@ describe('AuthService', () => {
         emailVerificationExpires: new Date(Date.now() + 60_000),
       };
 
-      mockUserRepository.findByEmailVerificationToken.mockResolvedValue(mockUser);
+      mockUserRepository.findByEmailVerificationToken.mockResolvedValue(
+        mockUser,
+      );
       mockUserRepository.save.mockResolvedValue(mockUser);
       mockIssueAuthTokenService.issueTokens.mockResolvedValue({
         access_token: 'mock-access-token',
@@ -66,12 +77,16 @@ describe('AuthService', () => {
 
       const result = await service.verifyEmail(token);
 
-      expect(mockUserRepository.findByEmailVerificationToken).toHaveBeenCalledWith(hashedToken);
+      expect(
+        mockUserRepository.findByEmailVerificationToken,
+      ).toHaveBeenCalledWith(hashedToken);
       expect(mockUser.isEmailVerified).toBe(true);
       expect(mockUser.emailVerificationToken).toBeNull();
       expect(mockUser.emailVerificationExpires).toBeNull();
       expect(mockUserRepository.save).toHaveBeenCalledWith(mockUser);
-      expect(mockIssueAuthTokenService.issueTokens).toHaveBeenCalledWith(mockUser);
+      expect(mockIssueAuthTokenService.issueTokens).toHaveBeenCalledWith(
+        mockUser,
+      );
       expect(result).toEqual({
         success: true,
         access_token: 'mock-access-token',
@@ -98,7 +113,9 @@ describe('AuthService', () => {
         emailVerificationToken: hashedToken,
       };
 
-      mockUserRepository.findByEmailVerificationToken.mockResolvedValue(mockUser);
+      mockUserRepository.findByEmailVerificationToken.mockResolvedValue(
+        mockUser,
+      );
 
       await expect(service.verifyEmail(token)).rejects.toMatchObject({
         response: {
@@ -117,7 +134,9 @@ describe('AuthService', () => {
         emailVerificationExpires: new Date(Date.now() - 60_000), // expired
       };
 
-      mockUserRepository.findByEmailVerificationToken.mockResolvedValue(mockUser);
+      mockUserRepository.findByEmailVerificationToken.mockResolvedValue(
+        mockUser,
+      );
 
       await expect(service.verifyEmail(token)).rejects.toMatchObject({
         response: {

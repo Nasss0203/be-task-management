@@ -9,9 +9,7 @@ import {
 import { SprintReportsMapper } from '../mapper/sprint-reports.mapper';
 
 @Injectable()
-export class CreateSprintReportRepositoryImpl
-  implements CreateSprintReportRepository
-{
+export class CreateSprintReportRepositoryImpl implements CreateSprintReportRepository {
   constructor(
     @InjectRepository(SprintReport)
     private readonly repo: Repository<SprintReport>,

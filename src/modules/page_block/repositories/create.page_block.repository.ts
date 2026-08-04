@@ -51,10 +51,7 @@ export class CreatePageBlockRepositoryImpl implements CreatePageBlockRepository 
     );
 
     for (const row of affectedRows) {
-      await repo.update(
-        { id: row.id },
-        { order_index: row.order_index + 1 },
-      );
+      await repo.update({ id: row.id }, { order_index: row.order_index + 1 });
     }
   }
 }

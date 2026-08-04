@@ -59,7 +59,6 @@ export class SendAiMessageApplicationImpl implements SendAiMessageApplication {
     private readonly configService: ConfigService,
   ) {}
 
-
   async send(
     input: Parameters<SendAiMessageApplication['send']>[0],
   ): Promise<SendAiMessageResponseDto> {
@@ -73,7 +72,8 @@ export class SendAiMessageApplicationImpl implements SendAiMessageApplication {
 
     let resolvedGenerationType = input.dto.generationType;
     if (!resolvedGenerationType && message) {
-      const classification = await this.aiProviderService.classifyIntent(message);
+      const classification =
+        await this.aiProviderService.classifyIntent(message);
       if (classification !== 'NORMAL') {
         resolvedGenerationType = classification;
       }
@@ -163,7 +163,6 @@ export class SendAiMessageApplicationImpl implements SendAiMessageApplication {
       );
     }
 
-
     const generation = await this.generationService.create({
       userId: input.userId,
       conversationId: conversation.id,
@@ -191,18 +190,14 @@ export class SendAiMessageApplicationImpl implements SendAiMessageApplication {
           context: resolvedContext!.context,
           contextSnapshot: resolvedContext!.contextSnapshot,
         });
-      } else if (
-        resolvedGenerationType === AiGenerationType.WORKSPACE_DRAFT
-      ) {
+      } else if (resolvedGenerationType === AiGenerationType.WORKSPACE_DRAFT) {
         result = await this.aiProviderService.generateWorkspaceDraft({
           userId: input.userId,
           conversationId: conversation.id,
           message,
           context: messageContext ?? {},
         });
-      } else if (
-        resolvedGenerationType === AiGenerationType.PROJECT_DRAFT
-      ) {
+      } else if (resolvedGenerationType === AiGenerationType.PROJECT_DRAFT) {
         result = await this.aiProviderService.generateProjectDraft({
           userId: input.userId,
           conversationId: conversation.id,
@@ -218,8 +213,6 @@ export class SendAiMessageApplicationImpl implements SendAiMessageApplication {
           context: messageContext ?? {},
         });
       }
-
-
 
       const updatedGeneration =
         await this.generationService.updateGeneratedResult({
@@ -267,7 +260,6 @@ export class SendAiMessageApplicationImpl implements SendAiMessageApplication {
         assistantMessage: AiMessageMapper.toResponse(assistantMessage),
         generation: AiGenerationMapper.toResponse(finalGeneration),
       };
-
     } catch (error) {
       await this.generationService.updateStatus({
         id: generation.id,
@@ -300,7 +292,6 @@ export class SendAiMessageApplicationImpl implements SendAiMessageApplication {
       );
     }
   }
-
 
   private getMessage(dto: SendAiMessageDto): string {
     const message = dto.message?.trim() || dto.content?.trim();

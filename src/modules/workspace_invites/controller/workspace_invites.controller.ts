@@ -25,6 +25,7 @@ import { WorkspaceInviteLinkResponseDto } from '../dto/response/workspace-invite
 import { WorkspaceInviteResponseDto } from '../dto/response/workspace_invites-response.dto';
 import { SearchInviteUserResponseDto } from '../dto/search-invite-user.response.dto';
 import { type AcceptWorkspaceInviteApplication } from '../interfaces/applications/accept-workspace-invite.application.interface';
+import { type DeclineWorkspaceInviteApplication } from '../interfaces/applications/decline-workspace-invite.application.interface';
 import { type CreateWorkspaceInviteLinkApplication } from '../interfaces/applications/create-workspace-invite-link.application.interface';
 import { type InviteWorkspaceMemberApplication } from '../interfaces/applications/invite-workspace-member.application.interface';
 import { type SearchInviteUsersApplication } from '../interfaces/applications/search-invite-users.application.interface';
@@ -43,6 +44,11 @@ export class WorkspaceInvitesController {
       WORKSPACE_INVITE_TYPES.applications.AcceptWorkspaceInviteApplication,
     )
     private readonly acceptWorkspaceInviteApplication: AcceptWorkspaceInviteApplication,
+
+    @Inject(
+      WORKSPACE_INVITE_TYPES.applications.DeclineWorkspaceInviteApplication,
+    )
+    private readonly declineWorkspaceInviteApplication: DeclineWorkspaceInviteApplication,
 
     @Inject(
       WORKSPACE_INVITE_TYPES.applications.CreateWorkspaceInviteLinkApplication,
@@ -92,6 +98,28 @@ export class WorkspaceInvitesController {
     }
 
     return this.acceptWorkspaceInviteApplication.acceptWorkspaceInvite({
+      token,
+      userId: auth.id,
+      email: auth.email,
+    });
+  }
+
+  @Post(':token/decline')
+  @InviteRateLimit()
+  @ResponseMessage('Decline workspace invite successfully')
+  async declineInvite(
+    @Param('token') token: string,
+    @Auth() auth: IAuth,
+  ): Promise<WorkspaceInviteResponseDto> {
+    if (!auth?.id) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
+    if (!auth?.email) {
+      throw new UnauthorizedException('User email not found');
+    }
+
+    return this.declineWorkspaceInviteApplication.declineWorkspaceInvite({
       token,
       userId: auth.id,
       email: auth.email,

@@ -198,7 +198,10 @@ export class CreateProjectServiceImpl implements CreateProjectService {
 
       if (page) {
         const nextOrderIndex =
-          await this.findPageBlockService.getNextOrderIndex(page.id, entityManager);
+          await this.findPageBlockService.getNextOrderIndex(
+            page.id,
+            entityManager,
+          );
 
         await this.createPageBlockService.create(
           {

@@ -13,10 +13,22 @@ describe('FeaturesController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [FeaturesController],
       providers: [
-        { provide: FEATURE_TYPES.applications.CreateFeatureApplication, useValue: mockCreate },
-        { provide: FEATURE_TYPES.applications.FindFeatureApplication, useValue: mockFind },
-        { provide: FEATURE_TYPES.applications.UpdateFeatureApplication, useValue: mockUpdate },
-        { provide: FEATURE_TYPES.applications.DeleteFeatureApplication, useValue: mockDelete },
+        {
+          provide: FEATURE_TYPES.applications.CreateFeatureApplication,
+          useValue: mockCreate,
+        },
+        {
+          provide: FEATURE_TYPES.applications.FindFeatureApplication,
+          useValue: mockFind,
+        },
+        {
+          provide: FEATURE_TYPES.applications.UpdateFeatureApplication,
+          useValue: mockUpdate,
+        },
+        {
+          provide: FEATURE_TYPES.applications.DeleteFeatureApplication,
+          useValue: mockDelete,
+        },
       ],
     }).compile();
 
@@ -25,7 +37,11 @@ describe('FeaturesController', () => {
 
   it('should create feature', async () => {
     mockCreate.create.mockResolvedValue({ id: '1' });
-    const result = await controller.create({ name: 'f1', code: 'f1', description: 'desc' });
+    const result = await controller.create({
+      name: 'f1',
+      code: 'f1',
+      description: 'desc',
+    });
     expect(mockCreate.create).toHaveBeenCalled();
     expect(result.id).toEqual('1');
   });

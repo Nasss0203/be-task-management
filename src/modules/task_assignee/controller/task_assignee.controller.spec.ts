@@ -19,11 +19,13 @@ describe('TaskAssigneeController', () => {
       controllers: [TaskAssigneeController],
       providers: [
         {
-          provide: TASK_ASSIGNEE_TYPES.applications.CreateTaskAssigneeApplication,
+          provide:
+            TASK_ASSIGNEE_TYPES.applications.CreateTaskAssigneeApplication,
           useValue: mockCreateTaskAssigneeApplication,
         },
         {
-          provide: TASK_ASSIGNEE_TYPES.applications.DeleteTaskAssigneeApplication,
+          provide:
+            TASK_ASSIGNEE_TYPES.applications.DeleteTaskAssigneeApplication,
           useValue: mockDeleteTaskAssigneeApplication,
         },
       ],
@@ -51,7 +53,7 @@ describe('TaskAssigneeController', () => {
       });
       expect(result).toEqual({ id: '1' });
     });
-    
+
     it('should fallback userId to auth.id if not provided', async () => {
       mockCreateTaskAssigneeApplication.assign.mockResolvedValue({ id: '1' });
       const dto = { taskId: 'task-1' } as any;
@@ -69,7 +71,9 @@ describe('TaskAssigneeController', () => {
 
   describe('unassignTask', () => {
     it('should call unassign on application', async () => {
-      mockDeleteTaskAssigneeApplication.unassign.mockResolvedValue({ unassigned: true });
+      mockDeleteTaskAssigneeApplication.unassign.mockResolvedValue({
+        unassigned: true,
+      });
       const auth = { id: 'auth-1' } as any;
 
       const result = await controller.unassignTask('task-1', 'user-1', auth);

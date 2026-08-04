@@ -23,7 +23,10 @@ describe('BillingQueryServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BillingQueryServiceImpl,
-        { provide: BILLING_TYPES.repositories.BillingQueryRepository, useValue: mockRepo },
+        {
+          provide: BILLING_TYPES.repositories.BillingQueryRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
@@ -37,8 +40,12 @@ describe('BillingQueryServiceImpl', () => {
   describe('getPlans', () => {
     it('should get plans', async () => {
       mockRepo.findActivePlans.mockResolvedValue([{ id: 'plan-1' }]);
-      jest.spyOn(PlanMapper, 'toModel').mockReturnValue({ id: 'plan-1' } as any);
-      jest.spyOn(PlanMapper, 'toResponseList').mockReturnValue([{ id: 'plan-1' }] as any);
+      jest
+        .spyOn(PlanMapper, 'toModel')
+        .mockReturnValue({ id: 'plan-1' } as any);
+      jest
+        .spyOn(PlanMapper, 'toResponseList')
+        .mockReturnValue([{ id: 'plan-1' }] as any);
       const result = await service.getPlans();
       expect(mockRepo.findActivePlans).toHaveBeenCalled();
       expect(result).toEqual([{ id: 'plan-1' }]);
@@ -48,13 +55,19 @@ describe('BillingQueryServiceImpl', () => {
   describe('getPlanById', () => {
     it('should throw if plan not found', async () => {
       mockRepo.findActivePlanById.mockResolvedValue(null);
-      await expect(service.getPlanById('plan-1')).rejects.toThrow(NotFoundException);
+      await expect(service.getPlanById('plan-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should get plan by id', async () => {
       mockRepo.findActivePlanById.mockResolvedValue({ id: 'plan-1' });
-      jest.spyOn(PlanMapper, 'toModel').mockReturnValue({ id: 'plan-1' } as any);
-      jest.spyOn(PlanMapper, 'toResponse').mockReturnValue({ id: 'plan-1' } as any);
+      jest
+        .spyOn(PlanMapper, 'toModel')
+        .mockReturnValue({ id: 'plan-1' } as any);
+      jest
+        .spyOn(PlanMapper, 'toResponse')
+        .mockReturnValue({ id: 'plan-1' } as any);
       const result = await service.getPlanById('plan-1');
       expect(mockRepo.findActivePlanById).toHaveBeenCalledWith('plan-1');
       expect(result).toEqual({ id: 'plan-1' });
@@ -70,10 +83,18 @@ describe('BillingQueryServiceImpl', () => {
     });
 
     it('should return current subscription', async () => {
-      mockRepo.findActiveSubscription.mockResolvedValue({ id: 'sub-1', planId: 'plan-1', status: 'ACTIVE' });
-      mockRepo.findPlanById.mockResolvedValue({ id: 'plan-1', slug: 'pro-monthly', limits: { upgradedWorkspaces: 15 } });
+      mockRepo.findActiveSubscription.mockResolvedValue({
+        id: 'sub-1',
+        planId: 'plan-1',
+        status: 'ACTIVE',
+      });
+      mockRepo.findPlanById.mockResolvedValue({
+        id: 'plan-1',
+        slug: 'pro-monthly',
+        limits: { upgradedWorkspaces: 15 },
+      });
       mockRepo.countSubscriptionWorkspaces.mockResolvedValue(2);
-      
+
       const result = await service.getCurrentSubscription('u-1');
       expect(result.plan?.id).toEqual('plan-1');
       expect(result.subscription?.id).toEqual('sub-1');
@@ -85,14 +106,28 @@ describe('BillingQueryServiceImpl', () => {
   describe('getWorkspaceUsageLimits', () => {
     it('should throw if user has no access to workspace', async () => {
       mockRepo.existsWorkspaceMember.mockResolvedValue(false);
-      await expect(service.getWorkspaceUsageLimits('u-1', 'ws-1')).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.getWorkspaceUsageLimits('u-1', 'ws-1'),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('should return workspace usage limits', async () => {
       mockRepo.existsWorkspaceMember.mockResolvedValue(true);
       mockRepo.findUsageLimitsByWorkspaceId.mockResolvedValue([
-        { id: 'ul-1', workspaceId: 'ws-1', resourceType: 'projects', limitValue: 5, usedValue: 2 },
-        { id: 'ul-2', workspaceId: 'ws-1', resourceType: 'users', limitValue: null, usedValue: 2 },
+        {
+          id: 'ul-1',
+          workspaceId: 'ws-1',
+          resourceType: 'projects',
+          limitValue: 5,
+          usedValue: 2,
+        },
+        {
+          id: 'ul-2',
+          workspaceId: 'ws-1',
+          resourceType: 'users',
+          limitValue: null,
+          usedValue: 2,
+        },
       ]);
       const result = await service.getWorkspaceUsageLimits('u-1', 'ws-1');
       expect(result.length).toEqual(2);

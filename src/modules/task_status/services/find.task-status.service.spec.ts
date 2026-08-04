@@ -32,11 +32,15 @@ describe('FindTaskStatusServiceImpl', () => {
   describe('findAllTaskStatus', () => {
     it('should return all task statuses', async () => {
       const manager = {} as any;
-      mockFindTaskStatusRepository.findAllTaskStatus.mockResolvedValue([{ id: 'status-1' }]);
+      mockFindTaskStatusRepository.findAllTaskStatus.mockResolvedValue([
+        { id: 'status-1' },
+      ]);
 
       const result = await service.findAllTaskStatus('proj-1', 'ws-1', manager);
 
-      expect(mockFindTaskStatusRepository.findAllTaskStatus).toHaveBeenCalledWith('proj-1', 'ws-1', manager);
+      expect(
+        mockFindTaskStatusRepository.findAllTaskStatus,
+      ).toHaveBeenCalledWith('proj-1', 'ws-1', manager);
       expect(result).toEqual([{ id: 'status-1' }]);
     });
   });

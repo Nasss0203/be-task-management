@@ -63,4 +63,3 @@ export class SendAiMessageDto {
   @IsBoolean()
   autoApply?: boolean;
 }
-

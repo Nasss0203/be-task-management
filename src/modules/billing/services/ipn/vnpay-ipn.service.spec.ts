@@ -2,7 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { VnpayIpnService } from './vnpay-ipn.service';
 import { BILLING_TYPES } from '../../interfaces/types';
 import { PaymentStatus } from '../../domain/entities/payment.entity';
-import { IpnFailChecksum, IpnInvalidAmount, IpnOrderNotFound, IpnSuccess, IpnUnknownError } from 'vnpay';
+import {
+  IpnFailChecksum,
+  IpnInvalidAmount,
+  IpnOrderNotFound,
+  IpnSuccess,
+  IpnUnknownError,
+} from 'vnpay';
 
 describe('VnpayIpnService', () => {
   let service: VnpayIpnService;
@@ -27,9 +33,18 @@ describe('VnpayIpnService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         VnpayIpnService,
-        { provide: BILLING_TYPES.providers.VnpayPaymentProvider, useValue: mockProvider },
-        { provide: BILLING_TYPES.repositories.PaymentRepository, useValue: mockPaymentRepo },
-        { provide: BILLING_TYPES.services.CompletePaymentService, useValue: mockCompleteService },
+        {
+          provide: BILLING_TYPES.providers.VnpayPaymentProvider,
+          useValue: mockProvider,
+        },
+        {
+          provide: BILLING_TYPES.repositories.PaymentRepository,
+          useValue: mockPaymentRepo,
+        },
+        {
+          provide: BILLING_TYPES.services.CompletePaymentService,
+          useValue: mockCompleteService,
+        },
       ],
     }).compile();
 
@@ -48,15 +63,26 @@ describe('VnpayIpnService', () => {
     });
 
     it('should handle order not found by order code', async () => {
-      mockProvider.verifyReturnUrl.mockResolvedValue({ isVerified: true, vnp_TxnRef: 'PAY_1' });
+      mockProvider.verifyReturnUrl.mockResolvedValue({
+        isVerified: true,
+        vnp_TxnRef: 'PAY_1',
+      });
       mockPaymentRepo.findPaymentByOrderCode.mockResolvedValue(null);
       const result = await service.handleReturn({} as any);
       expect(result.processingCode).toEqual('ORDER_NOT_FOUND');
     });
 
     it('should handle invalid amount', async () => {
-      mockProvider.verifyReturnUrl.mockResolvedValue({ isVerified: true, vnp_TxnRef: 'PAY_1', vnp_Amount: '1000' });
-      mockPaymentRepo.findPaymentByOrderCode.mockResolvedValue({ id: 'pay-1', amount: 2000, status: PaymentStatus.PENDING });
+      mockProvider.verifyReturnUrl.mockResolvedValue({
+        isVerified: true,
+        vnp_TxnRef: 'PAY_1',
+        vnp_Amount: '1000',
+      });
+      mockPaymentRepo.findPaymentByOrderCode.mockResolvedValue({
+        id: 'pay-1',
+        amount: 2000,
+        status: PaymentStatus.PENDING,
+      });
       const result = await service.handleReturn({} as any);
       expect(result.processingCode).toEqual('INVALID_AMOUNT');
       expect(mockPaymentRepo.markPaymentStatusFailed).toHaveBeenCalled();
@@ -64,9 +90,17 @@ describe('VnpayIpnService', () => {
 
     it('should handle payment failed', async () => {
       mockProvider.verifyReturnUrl.mockResolvedValue({
-        isVerified: true, vnp_TxnRef: 'PAY_1', vnp_Amount: '1000', vnp_ResponseCode: '24', vnp_TransactionStatus: '02'
+        isVerified: true,
+        vnp_TxnRef: 'PAY_1',
+        vnp_Amount: '1000',
+        vnp_ResponseCode: '24',
+        vnp_TransactionStatus: '02',
       });
-      mockPaymentRepo.findPaymentByOrderCode.mockResolvedValue({ id: 'pay-1', amount: 1000, status: PaymentStatus.PENDING });
+      mockPaymentRepo.findPaymentByOrderCode.mockResolvedValue({
+        id: 'pay-1',
+        amount: 1000,
+        status: PaymentStatus.PENDING,
+      });
       const result = await service.handleReturn({} as any);
       expect(result.processingCode).toEqual('PAYMENT_FAILED');
       expect(mockPaymentRepo.markPaymentStatusFailed).toHaveBeenCalled();
@@ -74,20 +108,40 @@ describe('VnpayIpnService', () => {
 
     it('should handle payment success', async () => {
       mockProvider.verifyReturnUrl.mockResolvedValue({
-        isVerified: true, vnp_TxnRef: 'PAY_1', vnp_Amount: '1000', vnp_ResponseCode: '00', vnp_TransactionStatus: '00', vnp_TransactionNo: 'TXN_1'
+        isVerified: true,
+        vnp_TxnRef: 'PAY_1',
+        vnp_Amount: '1000',
+        vnp_ResponseCode: '00',
+        vnp_TransactionStatus: '00',
+        vnp_TransactionNo: 'TXN_1',
       });
-      mockPaymentRepo.findPaymentByOrderCode.mockResolvedValue({ id: 'pay-1', amount: 1000, status: PaymentStatus.PENDING });
-      mockPaymentRepo.markPaymentSucceeded.mockResolvedValue({ id: 'pay-1', status: PaymentStatus.SUCCEEDED });
-      
+      mockPaymentRepo.findPaymentByOrderCode.mockResolvedValue({
+        id: 'pay-1',
+        amount: 1000,
+        status: PaymentStatus.PENDING,
+      });
+      mockPaymentRepo.markPaymentSucceeded.mockResolvedValue({
+        id: 'pay-1',
+        status: PaymentStatus.SUCCEEDED,
+      });
+
       const result = await service.handleReturn({} as any);
       expect(result.processingCode).toEqual('SUCCEEDED');
       expect(mockPaymentRepo.markPaymentSucceeded).toHaveBeenCalled();
-      expect(mockCompleteService.complete).toHaveBeenCalledWith({ paymentId: 'pay-1' });
+      expect(mockCompleteService.complete).toHaveBeenCalledWith({
+        paymentId: 'pay-1',
+      });
     });
 
     it('should handle already succeeded', async () => {
-      mockProvider.verifyReturnUrl.mockResolvedValue({ isVerified: true, vnp_TxnRef: 'PAY_1' });
-      mockPaymentRepo.findPaymentByOrderCode.mockResolvedValue({ id: 'pay-1', status: PaymentStatus.SUCCEEDED });
+      mockProvider.verifyReturnUrl.mockResolvedValue({
+        isVerified: true,
+        vnp_TxnRef: 'PAY_1',
+      });
+      mockPaymentRepo.findPaymentByOrderCode.mockResolvedValue({
+        id: 'pay-1',
+        status: PaymentStatus.SUCCEEDED,
+      });
       const result = await service.handleReturn({} as any);
       expect(result.processingCode).toEqual('ALREADY_SUCCEEDED');
     });
@@ -101,33 +155,63 @@ describe('VnpayIpnService', () => {
     });
 
     it('should handle ORDER_NOT_FOUND', async () => {
-      mockProvider.verifyIpn.mockResolvedValue({ isVerified: true, vnp_TxnRef: null });
+      mockProvider.verifyIpn.mockResolvedValue({
+        isVerified: true,
+        vnp_TxnRef: null,
+      });
       const result = await service.handleIpn({} as any);
       expect(result).toEqual(IpnOrderNotFound);
     });
 
     it('should handle INVALID_AMOUNT', async () => {
-      mockProvider.verifyIpn.mockResolvedValue({ isVerified: true, vnp_TxnRef: 'PAY_1', vnp_Amount: '1000' });
-      mockPaymentRepo.findPaymentByOrderCode.mockResolvedValue({ id: 'pay-1', amount: 2000, status: PaymentStatus.PENDING });
+      mockProvider.verifyIpn.mockResolvedValue({
+        isVerified: true,
+        vnp_TxnRef: 'PAY_1',
+        vnp_Amount: '1000',
+      });
+      mockPaymentRepo.findPaymentByOrderCode.mockResolvedValue({
+        id: 'pay-1',
+        amount: 2000,
+        status: PaymentStatus.PENDING,
+      });
       const result = await service.handleIpn({} as any);
       expect(result).toEqual(IpnInvalidAmount);
     });
 
     it('should handle SUCCEEDED', async () => {
       mockProvider.verifyIpn.mockResolvedValue({
-        isVerified: true, vnp_TxnRef: 'PAY_1', vnp_Amount: '1000', vnp_ResponseCode: '00', vnp_TransactionStatus: '00'
+        isVerified: true,
+        vnp_TxnRef: 'PAY_1',
+        vnp_Amount: '1000',
+        vnp_ResponseCode: '00',
+        vnp_TransactionStatus: '00',
       });
-      mockPaymentRepo.findPaymentByOrderCode.mockResolvedValue({ id: 'pay-1', amount: 1000, status: PaymentStatus.PENDING });
-      mockPaymentRepo.markPaymentSucceeded.mockResolvedValue({ id: 'pay-1', status: PaymentStatus.SUCCEEDED });
+      mockPaymentRepo.findPaymentByOrderCode.mockResolvedValue({
+        id: 'pay-1',
+        amount: 1000,
+        status: PaymentStatus.PENDING,
+      });
+      mockPaymentRepo.markPaymentSucceeded.mockResolvedValue({
+        id: 'pay-1',
+        status: PaymentStatus.SUCCEEDED,
+      });
       const result = await service.handleIpn({} as any);
       expect(result).toEqual(IpnSuccess);
     });
 
     it('should handle UNKNOWN_ERROR', async () => {
       mockProvider.verifyIpn.mockResolvedValue({
-        isVerified: true, vnp_TxnRef: 'PAY_1', vnp_Amount: '1000', vnp_ResponseCode: '24', vnp_TransactionStatus: '02'
+        isVerified: true,
+        vnp_TxnRef: 'PAY_1',
+        vnp_Amount: '1000',
+        vnp_ResponseCode: '24',
+        vnp_TransactionStatus: '02',
       });
-      mockPaymentRepo.findPaymentByOrderCode.mockResolvedValue({ id: 'pay-1', amount: 1000, status: PaymentStatus.PENDING });
+      mockPaymentRepo.findPaymentByOrderCode.mockResolvedValue({
+        id: 'pay-1',
+        amount: 1000,
+        status: PaymentStatus.PENDING,
+      });
       const result = await service.handleIpn({} as any);
       expect(result).toEqual(IpnUnknownError);
     });

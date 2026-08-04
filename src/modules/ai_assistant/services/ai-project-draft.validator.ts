@@ -48,10 +48,28 @@ export function validateAiProjectDraftOutput(
           continue;
         }
 
-        const tTitle = readString(task.title, `tasks[${tIndex}].title`, 3, 180, errors);
-        const tDescription = readString(task.description, `tasks[${tIndex}].description`, 10, 4000, errors);
+        const tTitle = readString(
+          task.title,
+          `tasks[${tIndex}].title`,
+          3,
+          180,
+          errors,
+        );
+        const tDescription = readString(
+          task.description,
+          `tasks[${tIndex}].description`,
+          10,
+          4000,
+          errors,
+        );
         const tPriority = readPriority(task.priority, tIndex, errors);
-        const tEstimatedHours = readInteger(task.estimatedHours, `tasks[${tIndex}].estimatedHours`, 1, 160, errors);
+        const tEstimatedHours = readInteger(
+          task.estimatedHours,
+          `tasks[${tIndex}].estimatedHours`,
+          1,
+          160,
+          errors,
+        );
 
         tasks.push({
           title: tTitle,
@@ -165,7 +183,12 @@ function readPriority(
   tIndex: number,
   errors: string[],
 ): 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' {
-  const allowed: Array<'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'> = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
+  const allowed: Array<'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'> = [
+    'LOW',
+    'MEDIUM',
+    'HIGH',
+    'URGENT',
+  ];
 
   if (typeof value !== 'string' || !allowed.includes(value as any)) {
     errors.push(

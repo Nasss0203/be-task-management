@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { TASK_POSITION_TYPES } from 'src/modules/task_position/interfaces/types';
 import { MoveUnfinishedTasksToBacklogServiceImpl } from './move-unfinished-tasks-to-backlog.service';
 import { TASK_TYPES } from '../interfaces/types';
 
@@ -8,6 +9,9 @@ describe('MoveUnfinishedTasksToBacklogServiceImpl', () => {
   const mockRepo = {
     move: jest.fn(),
   };
+  const mockCreateAtTopTaskPositionService = {
+    createAtTop: jest.fn(),
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -16,13 +20,20 @@ describe('MoveUnfinishedTasksToBacklogServiceImpl', () => {
       providers: [
         MoveUnfinishedTasksToBacklogServiceImpl,
         {
-          provide: TASK_TYPES.repositories.MoveUnfinishedTasksToBacklogRepository,
+          provide:
+            TASK_TYPES.repositories.MoveUnfinishedTasksToBacklogRepository,
           useValue: mockRepo,
+        },
+        {
+          provide: TASK_POSITION_TYPES.services.CreateAtTopTaskPositionService,
+          useValue: mockCreateAtTopTaskPositionService,
         },
       ],
     }).compile();
 
-    service = module.get<MoveUnfinishedTasksToBacklogServiceImpl>(MoveUnfinishedTasksToBacklogServiceImpl);
+    service = module.get<MoveUnfinishedTasksToBacklogServiceImpl>(
+      MoveUnfinishedTasksToBacklogServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -31,14 +42,36 @@ describe('MoveUnfinishedTasksToBacklogServiceImpl', () => {
 
   describe('move', () => {
     it('should call move on repository and return affected count', async () => {
-      const input = { workspaceId: 'ws-1', projectId: 'proj-1', sprintId: 'sprint-1', doneStatusId: 'done-1' };
+      const input = {
+        workspaceId: 'ws-1',
+        projectId: 'proj-1',
+        sprintId: 'sprint-1',
+        doneStatusId: 'done-1',
+        incompleteTaskIds: ['task-1'],
+      };
       const manager = {} as any;
 
       mockRepo.move.mockResolvedValue(5);
 
       const result = await service.move(input, manager);
 
-      expect(mockRepo.move).toHaveBeenCalledWith('ws-1', 'proj-1', 'sprint-1', 'done-1', manager);
+      expect(mockRepo.move).toHaveBeenCalledWith(
+        'ws-1',
+        'proj-1',
+        'sprint-1',
+        'done-1',
+        manager,
+      );
+      expect(
+        mockCreateAtTopTaskPositionService.createAtTop,
+      ).toHaveBeenCalledWith(
+        {
+          taskId: 'task-1',
+          context: 'backlog',
+          contextId: 'proj-1',
+        },
+        manager,
+      );
       expect(result).toBe(5);
     });
   });

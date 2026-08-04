@@ -13,10 +13,7 @@ export class UpdateFeatureApplicationImpl implements UpdateFeatureApplication {
     private readonly service: UpdateFeatureService,
   ) {}
 
-  async update(
-    id: string,
-    dto: UpdateFeatureDto,
-  ): Promise<FeatureResponseDto> {
+  async update(id: string, dto: UpdateFeatureDto): Promise<FeatureResponseDto> {
     const feature = await this.service.update(id, dto);
 
     return FeatureMapper.toResponse(feature);

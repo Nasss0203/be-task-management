@@ -10,9 +10,7 @@ import {
 import { PlanFeatureMapper } from '../mapper/plan_feature.mapper';
 
 @Injectable()
-export class UpdatePlanFeatureRepositoryImpl
-  implements UpdatePlanFeatureRepository
-{
+export class UpdatePlanFeatureRepositoryImpl implements UpdatePlanFeatureRepository {
   constructor(
     @InjectRepository(PlanFeature)
     private readonly repo: Repository<PlanFeature>,
@@ -26,7 +24,9 @@ export class UpdatePlanFeatureRepositoryImpl
     input: UpdatePlanFeatureInput,
     manager?: EntityManager,
   ): Promise<PlanFeatureModel> {
-    const saved = await this.getRepo(manager).save(PlanFeatureMapper.toEntity(input));
+    const saved = await this.getRepo(manager).save(
+      PlanFeatureMapper.toEntity(input),
+    );
 
     return PlanFeatureMapper.toModel(saved);
   }

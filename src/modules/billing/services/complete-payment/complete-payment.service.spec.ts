@@ -52,7 +52,9 @@ describe('CompletePaymentServiceImpl', () => {
   };
 
   const mockUserWorkspaceRepo = {
-    createQueryBuilder: jest.fn().mockReturnValue(mockUserWorkspaceQueryBuilder),
+    createQueryBuilder: jest
+      .fn()
+      .mockReturnValue(mockUserWorkspaceQueryBuilder),
   };
 
   const mockWorkspaceRepo = {
@@ -66,15 +68,29 @@ describe('CompletePaymentServiceImpl', () => {
         CompletePaymentServiceImpl,
         { provide: getRepositoryToken(Payment), useValue: mockPaymentRepo },
         { provide: getRepositoryToken(Plan), useValue: mockPlanRepo },
-        { provide: getRepositoryToken(Subscription), useValue: mockSubscriptionRepo },
-        { provide: getRepositoryToken(SubscriptionWorkspace), useValue: mockSubscriptionWorkspaceRepo },
-        { provide: getRepositoryToken(UsageLimit), useValue: mockUsageLimitRepo },
-        { provide: getRepositoryToken(UserWorkspace), useValue: mockUserWorkspaceRepo },
+        {
+          provide: getRepositoryToken(Subscription),
+          useValue: mockSubscriptionRepo,
+        },
+        {
+          provide: getRepositoryToken(SubscriptionWorkspace),
+          useValue: mockSubscriptionWorkspaceRepo,
+        },
+        {
+          provide: getRepositoryToken(UsageLimit),
+          useValue: mockUsageLimitRepo,
+        },
+        {
+          provide: getRepositoryToken(UserWorkspace),
+          useValue: mockUserWorkspaceRepo,
+        },
         { provide: getRepositoryToken(Workspace), useValue: mockWorkspaceRepo },
       ],
     }).compile();
 
-    service = module.get<CompletePaymentServiceImpl>(CompletePaymentServiceImpl);
+    service = module.get<CompletePaymentServiceImpl>(
+      CompletePaymentServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -84,35 +100,62 @@ describe('CompletePaymentServiceImpl', () => {
   describe('complete', () => {
     it('should throw if payment not found', async () => {
       mockPaymentRepo.findOne.mockResolvedValue(null);
-      await expect(service.complete({ paymentId: 'pay-1' })).rejects.toThrow(NotFoundException);
+      await expect(service.complete({ paymentId: 'pay-1' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should do nothing if payment is not succeeded', async () => {
-      mockPaymentRepo.findOne.mockResolvedValue({ id: 'pay-1', status: PaymentStatus.PENDING });
+      mockPaymentRepo.findOne.mockResolvedValue({
+        id: 'pay-1',
+        status: PaymentStatus.PENDING,
+      });
       await service.complete({ paymentId: 'pay-1' });
       expect(mockPlanRepo.findOne).not.toHaveBeenCalled();
     });
 
     it('should do nothing if payment already has subscription', async () => {
-      mockPaymentRepo.findOne.mockResolvedValue({ id: 'pay-1', status: PaymentStatus.SUCCEEDED, subscriptionId: 'sub-1' });
+      mockPaymentRepo.findOne.mockResolvedValue({
+        id: 'pay-1',
+        status: PaymentStatus.SUCCEEDED,
+        subscriptionId: 'sub-1',
+      });
       await service.complete({ paymentId: 'pay-1' });
       expect(mockPlanRepo.findOne).not.toHaveBeenCalled();
     });
 
     it('should throw if plan not found', async () => {
-      mockPaymentRepo.findOne.mockResolvedValue({ id: 'pay-1', status: PaymentStatus.SUCCEEDED, planId: 'plan-1' });
+      mockPaymentRepo.findOne.mockResolvedValue({
+        id: 'pay-1',
+        status: PaymentStatus.SUCCEEDED,
+        planId: 'plan-1',
+      });
       mockPlanRepo.findOne.mockResolvedValue(null);
-      await expect(service.complete({ paymentId: 'pay-1' })).rejects.toThrow(NotFoundException);
+      await expect(service.complete({ paymentId: 'pay-1' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should complete payment and create new subscription', async () => {
-      mockPaymentRepo.findOne.mockResolvedValue({ id: 'pay-1', status: PaymentStatus.SUCCEEDED, planId: 'plan-1', userId: 'u-1', orderCode: 'ORD' });
-      mockPlanRepo.findOne.mockResolvedValue({ id: 'plan-1', billingInterval: PlanBillingInterval.MONTH, limits: { upgradedWorkspaces: 1 } });
+      mockPaymentRepo.findOne.mockResolvedValue({
+        id: 'pay-1',
+        status: PaymentStatus.SUCCEEDED,
+        planId: 'plan-1',
+        userId: 'u-1',
+        orderCode: 'ORD',
+      });
+      mockPlanRepo.findOne.mockResolvedValue({
+        id: 'plan-1',
+        billingInterval: PlanBillingInterval.MONTH,
+        limits: { upgradedWorkspaces: 1 },
+      });
       mockSubscriptionRepo.findOne.mockResolvedValue(null);
       mockSubscriptionRepo.create.mockReturnValue({ id: 'sub-new' });
       mockSubscriptionRepo.save.mockResolvedValue({ id: 'sub-new' });
-      
-      mockUserWorkspaceQueryBuilder.getRawMany.mockResolvedValue([{ workspaceId: 'ws-1' }]);
+
+      mockUserWorkspaceQueryBuilder.getRawMany.mockResolvedValue([
+        { workspaceId: 'ws-1' },
+      ]);
       mockSubscriptionWorkspaceRepo.count.mockResolvedValue(0);
       mockSubscriptionWorkspaceRepo.findOne.mockResolvedValue(null);
       mockSubscriptionWorkspaceRepo.create.mockReturnValue({ id: 'sw-1' });
@@ -121,7 +164,7 @@ describe('CompletePaymentServiceImpl', () => {
       mockUsageLimitRepo.create.mockReturnValue({ id: 'ul-1' });
 
       await service.complete({ paymentId: 'pay-1' });
-      
+
       expect(mockSubscriptionRepo.create).toHaveBeenCalled();
       expect(mockSubscriptionRepo.save).toHaveBeenCalled();
       expect(mockSubscriptionWorkspaceRepo.create).toHaveBeenCalled();
@@ -130,7 +173,9 @@ describe('CompletePaymentServiceImpl', () => {
         { id: 'ws-1' },
         { planType: 'pro' },
       );
-      expect(mockPaymentRepo.save).toHaveBeenCalledWith(expect.objectContaining({ subscriptionId: 'sub-new' }));
+      expect(mockPaymentRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ subscriptionId: 'sub-new' }),
+      );
     });
   });
 });

@@ -23,15 +23,29 @@ describe('InviteWorkspaceMemberApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         InviteWorkspaceMemberApplicationImpl,
-        { provide: WORKSPACE_INVITE_TYPES.services.CreateWorkspaceInviteService, useValue: mockCreateInvite },
-        { provide: USER_TYPES.services.FindUserService, useValue: mockFindUser },
-        { provide: NOTIFICATION_TYPES.services.CreateNotificationService, useValue: mockCreateNotification },
-        { provide: USER_WORKSPACE_TYPES.services.FindMemberService, useValue: mockFindMember },
+        {
+          provide: WORKSPACE_INVITE_TYPES.services.CreateWorkspaceInviteService,
+          useValue: mockCreateInvite,
+        },
+        {
+          provide: USER_TYPES.services.FindUserService,
+          useValue: mockFindUser,
+        },
+        {
+          provide: NOTIFICATION_TYPES.services.CreateNotificationService,
+          useValue: mockCreateNotification,
+        },
+        {
+          provide: USER_WORKSPACE_TYPES.services.FindMemberService,
+          useValue: mockFindMember,
+        },
         { provide: MailService, useValue: mockMail },
       ],
     }).compile();
 
-    app = module.get<InviteWorkspaceMemberApplicationImpl>(InviteWorkspaceMemberApplicationImpl);
+    app = module.get<InviteWorkspaceMemberApplicationImpl>(
+      InviteWorkspaceMemberApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -39,7 +53,10 @@ describe('InviteWorkspaceMemberApplicationImpl', () => {
   });
 
   it('should invite user', async () => {
-    mockFindUser.findUserById.mockResolvedValue({ id: 'u-1', email: 'test@example.com' });
+    mockFindUser.findUserById.mockResolvedValue({
+      id: 'u-1',
+      email: 'test@example.com',
+    });
     mockCreateInvite.save.mockResolvedValue({ id: 'inv-1', token: 'tok-1' });
 
     const dto = {
@@ -53,16 +70,23 @@ describe('InviteWorkspaceMemberApplicationImpl', () => {
   });
 
   it('should throw if workspaceId missing', async () => {
-    await expect(app.invite('', 'inviter-1', { role_name: RoleName.MEMBER } as any)).rejects.toThrow(BadRequestException);
+    await expect(
+      app.invite('', 'inviter-1', { role_name: RoleName.MEMBER } as any),
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('should throw if recipient invites themselves', async () => {
-    mockFindUser.findUserById.mockResolvedValue({ id: 'inviter-1', email: 'test@example.com' });
+    mockFindUser.findUserById.mockResolvedValue({
+      id: 'inviter-1',
+      email: 'test@example.com',
+    });
     const dto = {
       role_name: RoleName.MEMBER,
       recipients: [{ type: InviteRecipientType.USER, user_id: 'inviter-1' }],
     } as any;
 
-    await expect(app.invite('ws-1', 'inviter-1', dto)).rejects.toThrow(BadRequestException);
+    await expect(app.invite('ws-1', 'inviter-1', dto)).rejects.toThrow(
+      BadRequestException,
+    );
   });
 });

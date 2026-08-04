@@ -8,9 +8,7 @@ import { WORKSPACE_TYPES } from '../interfaces/types';
 import { WorkspaceMapper } from '../mapper/workspace.mapper';
 
 @Injectable()
-export class UpdateWorkspaceApplicationImpl
-  implements UpdateWorkspaceApplication
-{
+export class UpdateWorkspaceApplicationImpl implements UpdateWorkspaceApplication {
   constructor(
     @Inject(WORKSPACE_TYPES.services.UpdateWorkspaceService)
     private readonly service: UpdateWorkspaceService,

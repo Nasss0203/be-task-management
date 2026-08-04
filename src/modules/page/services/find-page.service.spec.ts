@@ -18,7 +18,10 @@ describe('FindPageServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindPageServiceImpl,
-        { provide: PAGE_TYPES.repositories.FindPageRepository, useValue: mockRepo },
+        {
+          provide: PAGE_TYPES.repositories.FindPageRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
@@ -39,14 +42,21 @@ describe('FindPageServiceImpl', () => {
   it('should find one page for restore', async () => {
     mockRepo.findOnePageForRestore.mockResolvedValue({ id: 'page-1' });
     const result = await service.findOnePageForRestore('ws-1', 'page-1');
-    expect(mockRepo.findOnePageForRestore).toHaveBeenCalledWith('ws-1', 'page-1', undefined);
+    expect(mockRepo.findOnePageForRestore).toHaveBeenCalledWith(
+      'ws-1',
+      'page-1',
+      undefined,
+    );
     expect(result).toEqual({ id: 'page-1' });
   });
 
   it('should find page by workspace id', async () => {
     mockRepo.findPageByWorkspaceId.mockResolvedValue([{ id: 'page-1' }]);
     const result = await service.findPageByWorkspaceId('ws-1');
-    expect(mockRepo.findPageByWorkspaceId).toHaveBeenCalledWith('ws-1', undefined);
+    expect(mockRepo.findPageByWorkspaceId).toHaveBeenCalledWith(
+      'ws-1',
+      undefined,
+    );
     expect(result).toEqual([{ id: 'page-1' }]);
   });
 

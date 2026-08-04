@@ -5,7 +5,10 @@ import { SPRINT_TYPES } from '../interfaces/types';
 describe('DeleteSprintServiceImpl', () => {
   let service: DeleteSprintServiceImpl;
 
-  const mockDeleteSprintRepository = { softDeleteSprint: jest.fn(), restoreSprint: jest.fn() };
+  const mockDeleteSprintRepository = {
+    softDeleteSprint: jest.fn(),
+    restoreSprint: jest.fn(),
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -13,7 +16,10 @@ describe('DeleteSprintServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteSprintServiceImpl,
-        { provide: SPRINT_TYPES.repositories.DeleteSprintRepository, useValue: mockDeleteSprintRepository },
+        {
+          provide: SPRINT_TYPES.repositories.DeleteSprintRepository,
+          useValue: mockDeleteSprintRepository,
+        },
       ],
     }).compile();
 
@@ -27,8 +33,14 @@ describe('DeleteSprintServiceImpl', () => {
   describe('softDeleteSprint', () => {
     it('should call softDeleteSprint', async () => {
       mockDeleteSprintRepository.softDeleteSprint.mockResolvedValue(undefined);
-      await service.softDeleteSprint({ sprintId: 'sprint-1', deletedBy: 'user-1' });
-      expect(mockDeleteSprintRepository.softDeleteSprint).toHaveBeenCalledWith({ sprintId: 'sprint-1', deletedBy: 'user-1' }, undefined);
+      await service.softDeleteSprint({
+        sprintId: 'sprint-1',
+        deletedBy: 'user-1',
+      });
+      expect(mockDeleteSprintRepository.softDeleteSprint).toHaveBeenCalledWith(
+        { sprintId: 'sprint-1', deletedBy: 'user-1' },
+        undefined,
+      );
     });
   });
 
@@ -36,7 +48,10 @@ describe('DeleteSprintServiceImpl', () => {
     it('should call restoreSprint', async () => {
       mockDeleteSprintRepository.restoreSprint.mockResolvedValue(undefined);
       await service.restoreSprint({ sprintId: 'sprint-1' });
-      expect(mockDeleteSprintRepository.restoreSprint).toHaveBeenCalledWith({ sprintId: 'sprint-1' }, undefined);
+      expect(mockDeleteSprintRepository.restoreSprint).toHaveBeenCalledWith(
+        { sprintId: 'sprint-1' },
+        undefined,
+      );
     });
   });
 });

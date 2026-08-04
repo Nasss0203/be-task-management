@@ -18,9 +18,18 @@ describe('CancelSprintServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CancelSprintServiceImpl,
-        { provide: SPRINT_TYPES.repositories.CancelSprintRepository, useValue: mockCancelSprintRepository },
-        { provide: SPRINT_TYPES.repositories.FindSprintRepository, useValue: mockFindSprintRepository },
-        { provide: TASK_TYPES.services.MoveTasksToBacklogBySprintService, useValue: mockMoveTasksToBacklogBySprintService },
+        {
+          provide: SPRINT_TYPES.repositories.CancelSprintRepository,
+          useValue: mockCancelSprintRepository,
+        },
+        {
+          provide: SPRINT_TYPES.repositories.FindSprintRepository,
+          useValue: mockFindSprintRepository,
+        },
+        {
+          provide: TASK_TYPES.services.MoveTasksToBacklogBySprintService,
+          useValue: mockMoveTasksToBacklogBySprintService,
+        },
       ],
     }).compile();
 
@@ -34,39 +43,100 @@ describe('CancelSprintServiceImpl', () => {
   describe('cancelSprint', () => {
     it('should throw NotFoundException if sprint not found', async () => {
       mockFindSprintRepository.findOneSprint.mockResolvedValue(null);
-      await expect(service.cancelSprint({ sprintId: '1', workspaceId: 'ws-1', projectId: 'proj-1' } as any)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.cancelSprint({
+          sprintId: '1',
+          workspaceId: 'ws-1',
+          projectId: 'proj-1',
+        } as any),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw BadRequestException if workspace mismatch', async () => {
-      mockFindSprintRepository.findOneSprint.mockResolvedValue({ workspaceId: 'ws-2' });
-      await expect(service.cancelSprint({ sprintId: '1', workspaceId: 'ws-1', projectId: 'proj-1' } as any)).rejects.toThrow(BadRequestException);
+      mockFindSprintRepository.findOneSprint.mockResolvedValue({
+        workspaceId: 'ws-2',
+      });
+      await expect(
+        service.cancelSprint({
+          sprintId: '1',
+          workspaceId: 'ws-1',
+          projectId: 'proj-1',
+        } as any),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException if project mismatch', async () => {
-      mockFindSprintRepository.findOneSprint.mockResolvedValue({ workspaceId: 'ws-1', projectId: 'proj-2' });
-      await expect(service.cancelSprint({ sprintId: '1', workspaceId: 'ws-1', projectId: 'proj-1' } as any)).rejects.toThrow(BadRequestException);
+      mockFindSprintRepository.findOneSprint.mockResolvedValue({
+        workspaceId: 'ws-1',
+        projectId: 'proj-2',
+      });
+      await expect(
+        service.cancelSprint({
+          sprintId: '1',
+          workspaceId: 'ws-1',
+          projectId: 'proj-1',
+        } as any),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException if sprint is completed', async () => {
-      mockFindSprintRepository.findOneSprint.mockResolvedValue({ workspaceId: 'ws-1', projectId: 'proj-1', status: SprintStatus.COMPLETED });
-      await expect(service.cancelSprint({ sprintId: '1', workspaceId: 'ws-1', projectId: 'proj-1' } as any)).rejects.toThrow(BadRequestException);
+      mockFindSprintRepository.findOneSprint.mockResolvedValue({
+        workspaceId: 'ws-1',
+        projectId: 'proj-1',
+        status: SprintStatus.COMPLETED,
+      });
+      await expect(
+        service.cancelSprint({
+          sprintId: '1',
+          workspaceId: 'ws-1',
+          projectId: 'proj-1',
+        } as any),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException if sprint is already cancelled', async () => {
-      mockFindSprintRepository.findOneSprint.mockResolvedValue({ workspaceId: 'ws-1', projectId: 'proj-1', status: SprintStatus.CANCELLED });
-      await expect(service.cancelSprint({ sprintId: '1', workspaceId: 'ws-1', projectId: 'proj-1' } as any)).rejects.toThrow(BadRequestException);
+      mockFindSprintRepository.findOneSprint.mockResolvedValue({
+        workspaceId: 'ws-1',
+        projectId: 'proj-1',
+        status: SprintStatus.CANCELLED,
+      });
+      await expect(
+        service.cancelSprint({
+          sprintId: '1',
+          workspaceId: 'ws-1',
+          projectId: 'proj-1',
+        } as any),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw NotFoundException if cancelSprint repository fails', async () => {
-      mockFindSprintRepository.findOneSprint.mockResolvedValue({ workspaceId: 'ws-1', projectId: 'proj-1', status: SprintStatus.PLANNED });
+      mockFindSprintRepository.findOneSprint.mockResolvedValue({
+        workspaceId: 'ws-1',
+        projectId: 'proj-1',
+        status: SprintStatus.PLANNED,
+      });
       mockCancelSprintRepository.cancelSprint.mockResolvedValue(null);
-      await expect(service.cancelSprint({ sprintId: '1', workspaceId: 'ws-1', projectId: 'proj-1' } as any)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.cancelSprint({
+          sprintId: '1',
+          workspaceId: 'ws-1',
+          projectId: 'proj-1',
+        } as any),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should cancel sprint', async () => {
-      mockFindSprintRepository.findOneSprint.mockResolvedValue({ workspaceId: 'ws-1', projectId: 'proj-1', status: SprintStatus.PLANNED });
+      mockFindSprintRepository.findOneSprint.mockResolvedValue({
+        workspaceId: 'ws-1',
+        projectId: 'proj-1',
+        status: SprintStatus.PLANNED,
+      });
       mockCancelSprintRepository.cancelSprint.mockResolvedValue({ id: '1' });
-      const result = await service.cancelSprint({ sprintId: '1', workspaceId: 'ws-1', projectId: 'proj-1' } as any);
+      const result = await service.cancelSprint({
+        sprintId: '1',
+        workspaceId: 'ws-1',
+        projectId: 'proj-1',
+      } as any);
       expect(mockMoveTasksToBacklogBySprintService.move).toHaveBeenCalled();
       expect(result).toEqual({ id: '1' });
     });

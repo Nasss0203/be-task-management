@@ -47,11 +47,13 @@ import { UserWorkspacesService } from './user_workspace.service';
       useClass: FindAllMemberApplicationImpl,
     },
     {
-      provide: USER_WORKSPACE_TYPES.applications.UpdateMemberWorkspaceApplication,
+      provide:
+        USER_WORKSPACE_TYPES.applications.UpdateMemberWorkspaceApplication,
       useClass: UpdateMemberWorkspaceApplicationImpl,
     },
     {
-      provide: USER_WORKSPACE_TYPES.applications.DeleteMemberWorkspaceApplication,
+      provide:
+        USER_WORKSPACE_TYPES.applications.DeleteMemberWorkspaceApplication,
       useClass: DeleteMemberWorkspaceApplicationImpl,
     },
     //Repository

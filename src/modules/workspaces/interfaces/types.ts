@@ -23,7 +23,8 @@ export const WORKSPACE_TYPES = {
     WorkspaceTrashApplication: 'WorkspaceTrashApplication',
     FindWorkspaceOverviewApplication: 'FindWorkspaceOverviewApplication',
     UpdateWorkspaceApplication: 'UpdateWorkspaceApplication',
-    UpdateWorkspaceLayoutModeApplication: 'UpdateWorkspaceLayoutModeApplication',
+    UpdateWorkspaceLayoutModeApplication:
+      'UpdateWorkspaceLayoutModeApplication',
     SaveWorkspaceAsTemplateApplication: 'SaveWorkspaceAsTemplateApplication',
   },
   repositories: {

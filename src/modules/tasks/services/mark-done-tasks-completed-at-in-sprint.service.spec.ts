@@ -16,13 +16,16 @@ describe('MarkDoneTasksCompletedAtInSprintServiceImpl', () => {
       providers: [
         MarkDoneTasksCompletedAtInSprintServiceImpl,
         {
-          provide: TASK_TYPES.repositories.MarkDoneTasksCompletedAtInSprintRepository,
+          provide:
+            TASK_TYPES.repositories.MarkDoneTasksCompletedAtInSprintRepository,
           useValue: mockRepo,
         },
       ],
     }).compile();
 
-    service = module.get<MarkDoneTasksCompletedAtInSprintServiceImpl>(MarkDoneTasksCompletedAtInSprintServiceImpl);
+    service = module.get<MarkDoneTasksCompletedAtInSprintServiceImpl>(
+      MarkDoneTasksCompletedAtInSprintServiceImpl,
+    );
   });
 
   it('should be defined', () => {

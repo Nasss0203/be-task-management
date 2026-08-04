@@ -72,11 +72,15 @@ export class FindActivityApplicationImpl implements FindActivityApplication {
 
     const items = ActivityMapper.toResponseList(result.items);
 
-    const actorIds = [...new Set(items.map(item => item.actorId).filter(id => !!id))] as string[];
-    const users = await Promise.all(actorIds.map(id => this.findUserService.findUserById(id)));
-    const userMap = new Map(users.filter(u => !!u).map(u => [u!.id, u]));
+    const actorIds = [
+      ...new Set(items.map((item) => item.actorId).filter((id) => !!id)),
+    ] as string[];
+    const users = await Promise.all(
+      actorIds.map((id) => this.findUserService.findUserById(id)),
+    );
+    const userMap = new Map(users.filter((u) => !!u).map((u) => [u.id, u]));
 
-    items.forEach(item => {
+    items.forEach((item) => {
       if (item.actorId && userMap.has(item.actorId)) {
         const user = userMap.get(item.actorId)!;
         item.actor = {

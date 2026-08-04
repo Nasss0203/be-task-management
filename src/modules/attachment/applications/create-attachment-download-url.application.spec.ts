@@ -47,9 +47,9 @@ describe('CreateAttachmentDownloadUrlApplicationImpl', () => {
 
       const result = await app.execute('att-1', 'user-1');
 
-      expect(mockCreateAttachmentDownloadUrlService.execute).toHaveBeenCalledWith(
-        'att-1',
-      );
+      expect(
+        mockCreateAttachmentDownloadUrlService.execute,
+      ).toHaveBeenCalledWith('att-1');
       expect(result).toEqual(mockResult);
     });
   });

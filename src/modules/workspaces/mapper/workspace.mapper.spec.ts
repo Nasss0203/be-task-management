@@ -1,4 +1,3 @@
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { WorkspaceMapper } from './workspace.mapper';
 import { AdminWorkspaceItemResponseDto } from 'src/modules/admin/dto/response/dashboard/workspace-overview.response.dto';
@@ -12,9 +11,7 @@ describe('WorkspaceMapper', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        WorkspaceMapper,
-      ],
+      providers: [WorkspaceMapper],
     }).compile();
 
     provider = module.get<WorkspaceMapper>(WorkspaceMapper);
@@ -28,7 +25,7 @@ describe('WorkspaceMapper', () => {
     it('should execute successfully', async () => {
       try {
         await provider.toModel({} as any, {} as any, {} as any, {} as any);
-      } catch(e) {}
+      } catch (e) {}
       expect(true).toBe(true);
     });
   });
@@ -37,7 +34,7 @@ describe('WorkspaceMapper', () => {
     it('should execute successfully', async () => {
       try {
         await provider.toEntity({} as any, {} as any, {} as any, {} as any);
-      } catch(e) {}
+      } catch (e) {}
       expect(true).toBe(true);
     });
   });
@@ -46,7 +43,7 @@ describe('WorkspaceMapper', () => {
     it('should execute successfully', async () => {
       try {
         await provider.toResponse({} as any, {} as any, {} as any, {} as any);
-      } catch(e) {}
+      } catch (e) {}
       expect(true).toBe(true);
     });
   });
@@ -54,8 +51,13 @@ describe('WorkspaceMapper', () => {
   describe('toAdminWorkspaceItemResponse', () => {
     it('should execute successfully', async () => {
       try {
-        await provider.toAdminWorkspaceItemResponse({} as any, {} as any, {} as any, {} as any);
-      } catch(e) {}
+        await provider.toAdminWorkspaceItemResponse(
+          {} as any,
+          {} as any,
+          {} as any,
+          {} as any,
+        );
+      } catch (e) {}
       expect(true).toBe(true);
     });
   });

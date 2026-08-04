@@ -4,17 +4,26 @@ import { FEATURE_TYPES } from '../interfaces/types';
 
 describe('FindFeatureApplicationImpl', () => {
   let application: FindFeatureApplicationImpl;
-  const mockService = { findAll: jest.fn(), findById: jest.fn(), findByCode: jest.fn() };
+  const mockService = {
+    findAll: jest.fn(),
+    findById: jest.fn(),
+    findByCode: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindFeatureApplicationImpl,
-        { provide: FEATURE_TYPES.services.FindFeatureService, useValue: mockService },
+        {
+          provide: FEATURE_TYPES.services.FindFeatureService,
+          useValue: mockService,
+        },
       ],
     }).compile();
 
-    application = module.get<FindFeatureApplicationImpl>(FindFeatureApplicationImpl);
+    application = module.get<FindFeatureApplicationImpl>(
+      FindFeatureApplicationImpl,
+    );
   });
 
   it('should find features', async () => {

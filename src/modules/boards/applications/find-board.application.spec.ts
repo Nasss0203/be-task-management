@@ -18,7 +18,10 @@ describe('FindBoardApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindBoardApplicationImpl,
-        { provide: BOARD_TYPES.services.FindBoardService, useValue: mockService },
+        {
+          provide: BOARD_TYPES.services.FindBoardService,
+          useValue: mockService,
+        },
       ],
     }).compile();
 

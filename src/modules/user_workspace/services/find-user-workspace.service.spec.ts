@@ -22,7 +22,8 @@ describe('FindMemberServiceImpl', () => {
       providers: [
         FindMemberServiceImpl,
         {
-          provide: USER_WORKSPACE_TYPES.repositories.FindUserWorkspaceRepository,
+          provide:
+            USER_WORKSPACE_TYPES.repositories.FindUserWorkspaceRepository,
           useValue: mockFindUserWorkspaceRepository,
         },
         {
@@ -41,34 +42,48 @@ describe('FindMemberServiceImpl', () => {
 
   describe('findAllMember', () => {
     it('should throw BadRequestException if workspaceId is missing', async () => {
-      await expect(service.findAllMember('')).rejects.toThrow(BadRequestException);
+      await expect(service.findAllMember('')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should return all members', async () => {
-      mockFindUserWorkspaceRepository.findAllMember.mockResolvedValue([{ id: 'm-1' }]);
+      mockFindUserWorkspaceRepository.findAllMember.mockResolvedValue([
+        { id: 'm-1' },
+      ]);
 
       const result = await service.findAllMember('ws-1');
 
-      expect(mockFindUserWorkspaceRepository.findAllMember).toHaveBeenCalledWith('ws-1', undefined);
+      expect(
+        mockFindUserWorkspaceRepository.findAllMember,
+      ).toHaveBeenCalledWith('ws-1', undefined);
       expect(result).toEqual([{ id: 'm-1' }]);
     });
   });
 
   describe('findMemberInWorkspace', () => {
     it('should throw BadRequestException if workspaceId is missing', async () => {
-      await expect(service.findMemberInWorkspace('', 'u-1')).rejects.toThrow(BadRequestException);
+      await expect(service.findMemberInWorkspace('', 'u-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException if userId is missing', async () => {
-      await expect(service.findMemberInWorkspace('ws-1', '')).rejects.toThrow(BadRequestException);
+      await expect(service.findMemberInWorkspace('ws-1', '')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should return member', async () => {
-      mockFindUserWorkspaceRepository.findMemberInWorkspace.mockResolvedValue({ id: 'm-1' });
+      mockFindUserWorkspaceRepository.findMemberInWorkspace.mockResolvedValue({
+        id: 'm-1',
+      });
 
       const result = await service.findMemberInWorkspace('ws-1', 'u-1');
 
-      expect(mockFindUserWorkspaceRepository.findMemberInWorkspace).toHaveBeenCalledWith('ws-1', 'u-1', undefined);
+      expect(
+        mockFindUserWorkspaceRepository.findMemberInWorkspace,
+      ).toHaveBeenCalledWith('ws-1', 'u-1', undefined);
       expect(result).toEqual({ id: 'm-1' });
     });
   });

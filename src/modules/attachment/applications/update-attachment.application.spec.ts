@@ -39,9 +39,16 @@ describe('UpdateAttachmentApplicationImpl', () => {
       const originalMapper = AttachmentMapper.toResponse;
       AttachmentMapper.toResponse = jest.fn().mockReturnValue({ mapped: true });
 
-      const result = await app.execute('att-1', { fileName: 'new.png' }, 'user-1');
+      const result = await app.execute(
+        'att-1',
+        { fileName: 'new.png' },
+        'user-1',
+      );
 
-      expect(mockUpdateAttachmentService.execute).toHaveBeenCalledWith('att-1', { fileName: 'new.png' });
+      expect(mockUpdateAttachmentService.execute).toHaveBeenCalledWith(
+        'att-1',
+        { fileName: 'new.png' },
+      );
       expect(result).toEqual({ mapped: true });
 
       AttachmentMapper.toResponse = originalMapper;

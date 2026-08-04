@@ -19,8 +19,14 @@ describe('NotificationsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [NotificationsController],
       providers: [
-        { provide: NOTIFICATION_TYPES.applications.FindNotificationApplication, useValue: mockApp },
-        { provide: NOTIFICATION_TYPES.services.UpdateNotificationService, useValue: mockUpdateNotificationService },
+        {
+          provide: NOTIFICATION_TYPES.applications.FindNotificationApplication,
+          useValue: mockApp,
+        },
+        {
+          provide: NOTIFICATION_TYPES.services.UpdateNotificationService,
+          useValue: mockUpdateNotificationService,
+        },
       ],
     }).compile();
 
@@ -33,7 +39,10 @@ describe('NotificationsController', () => {
 
   it('should find my notifications', async () => {
     mockApp.findMyNotifications.mockResolvedValue([{ id: '1' }]);
-    const result = await controller.findMyNotifications({ id: 'u-1' } as any, { limit: 10 } as any);
+    const result = await controller.findMyNotifications(
+      { id: 'u-1' } as any,
+      { limit: 10 } as any,
+    );
     expect(mockApp.findMyNotifications).toHaveBeenCalled();
     expect(result[0].id).toEqual('1');
   });

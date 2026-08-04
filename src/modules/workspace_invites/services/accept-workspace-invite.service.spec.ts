@@ -18,12 +18,22 @@ describe('AcceptWorkspaceInviteServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AcceptWorkspaceInviteServiceImpl,
-        { provide: WORKSPACE_INVITE_TYPES.repositories.AcceptWorkspaceInviteRepository, useValue: mockRepo },
-        { provide: WORKSPACE_INVITE_TYPES.repositories.FindWorkspaceInviteRepository, useValue: mockFindRepo },
+        {
+          provide:
+            WORKSPACE_INVITE_TYPES.repositories.AcceptWorkspaceInviteRepository,
+          useValue: mockRepo,
+        },
+        {
+          provide:
+            WORKSPACE_INVITE_TYPES.repositories.FindWorkspaceInviteRepository,
+          useValue: mockFindRepo,
+        },
       ],
     }).compile();
 
-    service = module.get<AcceptWorkspaceInviteServiceImpl>(AcceptWorkspaceInviteServiceImpl);
+    service = module.get<AcceptWorkspaceInviteServiceImpl>(
+      AcceptWorkspaceInviteServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -31,10 +41,19 @@ describe('AcceptWorkspaceInviteServiceImpl', () => {
   });
 
   it('should accept invite', async () => {
-    mockFindRepo.findByToken.mockResolvedValue({ status: 'PENDING', type: 'LINK' });
+    mockFindRepo.findByToken.mockResolvedValue({
+      status: 'PENDING',
+      type: 'LINK',
+    });
     mockRepo.acceptWorkspaceInvite.mockResolvedValue({ id: 'inv-1' });
-    const result = await service.acceptWorkspaceInvite({ token: 'tok-1', userId: 'u-1' });
-    expect(mockRepo.acceptWorkspaceInvite).toHaveBeenCalledWith({ token: 'tok-1', userId: 'u-1' }, undefined);
+    const result = await service.acceptWorkspaceInvite({
+      token: 'tok-1',
+      userId: 'u-1',
+    });
+    expect(mockRepo.acceptWorkspaceInvite).toHaveBeenCalledWith(
+      { token: 'tok-1', userId: 'u-1' },
+      undefined,
+    );
     expect(result).toEqual({ id: 'inv-1' });
   });
 });

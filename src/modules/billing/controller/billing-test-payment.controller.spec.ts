@@ -20,12 +20,17 @@ describe('BillingTestVnpayController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BillingTestVnpayController],
       providers: [
-        { provide: BILLING_TYPES.providers.VnpayPaymentProvider, useValue: mockProvider },
+        {
+          provide: BILLING_TYPES.providers.VnpayPaymentProvider,
+          useValue: mockProvider,
+        },
         { provide: VnpayIpnService, useValue: mockIpnService },
       ],
     }).compile();
 
-    controller = module.get<BillingTestVnpayController>(BillingTestVnpayController);
+    controller = module.get<BillingTestVnpayController>(
+      BillingTestVnpayController,
+    );
   });
 
   it('should be defined', () => {
@@ -50,7 +55,9 @@ describe('BillingTestVnpayController', () => {
       socket: {},
     } as any;
     controller.createPayment({ amount: 100000 }, req);
-    expect(mockProvider.createPayment).toHaveBeenCalledWith(expect.objectContaining({ ipAddress: '127.0.0.2' }));
+    expect(mockProvider.createPayment).toHaveBeenCalledWith(
+      expect.objectContaining({ ipAddress: '127.0.0.2' }),
+    );
   });
 
   it('should handle return', async () => {

@@ -42,20 +42,33 @@ describe('UpdateProjectServiceImpl', () => {
     it('should throw NotFoundException if project does not exist', async () => {
       mockFindProjectRepository.findOneProjectById.mockResolvedValue(null);
 
-      await expect(service.execute('1', 'workspace-1', {} as any)).rejects.toThrow(NotFoundException);
-      expect(mockFindProjectRepository.findOneProjectById).toHaveBeenCalledWith('1');
+      await expect(
+        service.execute('1', 'workspace-1', {} as any),
+      ).rejects.toThrow(NotFoundException);
+      expect(mockFindProjectRepository.findOneProjectById).toHaveBeenCalledWith(
+        '1',
+      );
     });
 
     it('should throw NotFoundException if project exists but workspace does not match', async () => {
-      mockFindProjectRepository.findOneProjectById.mockResolvedValue({ id: '1', workspace_id: 'workspace-2' });
+      mockFindProjectRepository.findOneProjectById.mockResolvedValue({
+        id: '1',
+        workspace_id: 'workspace-2',
+      });
 
-      await expect(service.execute('1', 'workspace-1', {} as any)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.execute('1', 'workspace-1', {} as any),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should call update and return updated project', async () => {
-      const mockProject = { id: '1', workspace_id: 'workspace-1', name: 'Updated' };
+      const mockProject = {
+        id: '1',
+        workspace_id: 'workspace-1',
+        name: 'Updated',
+      };
       const dto = { name: 'Updated' } as any;
-      
+
       mockFindProjectRepository.findOneProjectById
         .mockResolvedValueOnce({ id: '1', workspace_id: 'workspace-1' }) // first call for existence check
         .mockResolvedValueOnce(mockProject); // second call for returning updated project
@@ -64,21 +77,29 @@ describe('UpdateProjectServiceImpl', () => {
 
       const result = await service.execute('1', 'workspace-1', dto);
 
-      expect(mockUpdateProjectRepository.update).toHaveBeenCalledWith('1', 'workspace-1', dto);
-      expect(mockFindProjectRepository.findOneProjectById).toHaveBeenCalledTimes(2);
+      expect(mockUpdateProjectRepository.update).toHaveBeenCalledWith(
+        '1',
+        'workspace-1',
+        dto,
+      );
+      expect(
+        mockFindProjectRepository.findOneProjectById,
+      ).toHaveBeenCalledTimes(2);
       expect(result).toEqual(mockProject);
     });
 
     it('should throw NotFoundException if project is not found after update', async () => {
       const dto = { name: 'Updated' } as any;
-      
+
       mockFindProjectRepository.findOneProjectById
         .mockResolvedValueOnce({ id: '1', workspace_id: 'workspace-1' })
         .mockResolvedValueOnce(null);
 
       mockUpdateProjectRepository.update.mockResolvedValue(undefined);
 
-      await expect(service.execute('1', 'workspace-1', dto)).rejects.toThrow(NotFoundException);
+      await expect(service.execute('1', 'workspace-1', dto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

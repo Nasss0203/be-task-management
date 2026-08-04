@@ -16,7 +16,10 @@ describe('DeletePageServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeletePageServiceImpl,
-        { provide: PAGE_TYPES.repositories.DeletePageRepository, useValue: mockRepo },
+        {
+          provide: PAGE_TYPES.repositories.DeletePageRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
@@ -29,11 +32,17 @@ describe('DeletePageServiceImpl', () => {
 
   it('should soft delete page', async () => {
     await service.softDeletePage({ pageId: 'page-1', deletedBy: 'u-1' });
-    expect(mockRepo.softDeletePage).toHaveBeenCalledWith({ pageId: 'page-1', deletedBy: 'u-1' }, undefined);
+    expect(mockRepo.softDeletePage).toHaveBeenCalledWith(
+      { pageId: 'page-1', deletedBy: 'u-1' },
+      undefined,
+    );
   });
 
   it('should restore page', async () => {
     await service.restorePage({ pageId: 'page-1' });
-    expect(mockRepo.restorePage).toHaveBeenCalledWith({ pageId: 'page-1' }, undefined);
+    expect(mockRepo.restorePage).toHaveBeenCalledWith(
+      { pageId: 'page-1' },
+      undefined,
+    );
   });
 });

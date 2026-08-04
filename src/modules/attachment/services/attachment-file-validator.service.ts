@@ -7,9 +7,7 @@ import {
 import { AttachmentFileValidatorService } from '../interfaces/services/attachment-file-validator.service.interface';
 
 @Injectable()
-export class AttachmentFileValidatorServiceImpl
-  implements AttachmentFileValidatorService
-{
+export class AttachmentFileValidatorServiceImpl implements AttachmentFileValidatorService {
   validateExtension(fileName: string): string {
     const ext = extname(fileName).toLowerCase();
 

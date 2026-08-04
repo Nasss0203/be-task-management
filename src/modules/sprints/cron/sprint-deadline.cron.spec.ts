@@ -4,15 +4,16 @@ import {
   NotificationType,
 } from 'src/modules/notifications/domain/entities/notification.entity';
 import { type FindNotificationRepository } from 'src/modules/notifications/interfaces/repositories/find-notification.repository.interface';
-import {
-  type CreateNotificationService,
-} from 'src/modules/notifications/interfaces/services/create.notifications.service.interface';
+import { type CreateNotificationService } from 'src/modules/notifications/interfaces/services/create.notifications.service.interface';
 import { type FindSprintRepository } from '../interfaces/repositories/find-sprint.repository.interface';
 import { SprintDeadlineCron } from './sprint-deadline.cron';
 
 describe('SprintDeadlineCron', () => {
   let findSprintRepository: jest.Mocked<
-    Pick<FindSprintRepository, 'findActiveSprintsDueSoon' | 'findActiveSprintsOverdue'>
+    Pick<
+      FindSprintRepository,
+      'findActiveSprintsDueSoon' | 'findActiveSprintsOverdue'
+    >
   >;
   let findNotificationRepository: jest.Mocked<
     Pick<FindNotificationRepository, 'existsByReceiverTypeAndSprint'>
@@ -100,17 +101,30 @@ describe('SprintDeadlineCron', () => {
   });
 
   it('sends one SPRINT_DUE_SOON notification per assignee of incomplete tasks', async () => {
-    findSprintRepository.findActiveSprintsDueSoon.mockResolvedValue([mockSprintDueSoon]);
-    findNotificationRepository.existsByReceiverTypeAndSprint.mockResolvedValue(false);
-    createNotificationService.createNotification.mockResolvedValue({ id: 'notification-1' } as any);
+    findSprintRepository.findActiveSprintsDueSoon.mockResolvedValue([
+      mockSprintDueSoon,
+    ]);
+    findNotificationRepository.existsByReceiverTypeAndSprint.mockResolvedValue(
+      false,
+    );
+    createNotificationService.createNotification.mockResolvedValue({
+      id: 'notification-1',
+    } as any);
 
     const result = await cron.sendDueSoonNotifications();
 
-    expect(findSprintRepository.findActiveSprintsDueSoon).toHaveBeenCalledWith(1);
-    expect(findNotificationRepository.existsByReceiverTypeAndSprint).toHaveBeenCalledTimes(1);
-    expect(createNotificationService.createNotification).toHaveBeenCalledTimes(1);
+    expect(findSprintRepository.findActiveSprintsDueSoon).toHaveBeenCalledWith(
+      1,
+    );
+    expect(
+      findNotificationRepository.existsByReceiverTypeAndSprint,
+    ).toHaveBeenCalledTimes(1);
+    expect(createNotificationService.createNotification).toHaveBeenCalledTimes(
+      1,
+    );
 
-    const [input] = createNotificationService.createNotification.mock.calls[0] as any;
+    const [input] = createNotificationService.createNotification.mock
+      .calls[0] as any;
     expect(input).toMatchObject({
       receiverId: 'user-1',
       senderType: NotificationSenderType.SYSTEM,
@@ -124,17 +138,28 @@ describe('SprintDeadlineCron', () => {
   });
 
   it('sends one SPRINT_OVERDUE notification to the creator of overdue sprint', async () => {
-    findSprintRepository.findActiveSprintsOverdue.mockResolvedValue([mockSprintOverdue]);
-    findNotificationRepository.existsByReceiverTypeAndSprint.mockResolvedValue(false);
-    createNotificationService.createNotification.mockResolvedValue({ id: 'notification-2' } as any);
+    findSprintRepository.findActiveSprintsOverdue.mockResolvedValue([
+      mockSprintOverdue,
+    ]);
+    findNotificationRepository.existsByReceiverTypeAndSprint.mockResolvedValue(
+      false,
+    );
+    createNotificationService.createNotification.mockResolvedValue({
+      id: 'notification-2',
+    } as any);
 
     const result = await cron.sendOverdueNotifications();
 
     expect(findSprintRepository.findActiveSprintsOverdue).toHaveBeenCalled();
-    expect(findNotificationRepository.existsByReceiverTypeAndSprint).toHaveBeenCalledTimes(1);
-    expect(createNotificationService.createNotification).toHaveBeenCalledTimes(1);
+    expect(
+      findNotificationRepository.existsByReceiverTypeAndSprint,
+    ).toHaveBeenCalledTimes(1);
+    expect(createNotificationService.createNotification).toHaveBeenCalledTimes(
+      1,
+    );
 
-    const [input] = createNotificationService.createNotification.mock.calls[0] as any;
+    const [input] = createNotificationService.createNotification.mock
+      .calls[0] as any;
     expect(input).toMatchObject({
       receiverId: 'manager-1',
       senderType: NotificationSenderType.SYSTEM,

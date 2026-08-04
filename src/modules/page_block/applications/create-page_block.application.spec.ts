@@ -22,11 +22,16 @@ describe('CreatePageBlockApplicationImpl', () => {
       providers: [
         CreatePageBlockApplicationImpl,
         { provide: WORKSPACE_TYPES.uow.UnitOfWork, useValue: mockUow },
-        { provide: PAGE_BLOCK_TYPES.services.CreatePageBlockService, useValue: mockService },
+        {
+          provide: PAGE_BLOCK_TYPES.services.CreatePageBlockService,
+          useValue: mockService,
+        },
       ],
     }).compile();
 
-    app = module.get<CreatePageBlockApplicationImpl>(CreatePageBlockApplicationImpl);
+    app = module.get<CreatePageBlockApplicationImpl>(
+      CreatePageBlockApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -35,7 +40,9 @@ describe('CreatePageBlockApplicationImpl', () => {
 
   it('should create page block', async () => {
     mockService.create.mockResolvedValue({ id: 'pb-1' });
-    jest.spyOn(PageBlockMapper, 'toResponse').mockReturnValue({ id: 'pb-1' } as any);
+    jest
+      .spyOn(PageBlockMapper, 'toResponse')
+      .mockReturnValue({ id: 'pb-1' } as any);
 
     const dto = { title: 'Test Block' } as any;
     const result = await app.create(dto);
@@ -46,7 +53,9 @@ describe('CreatePageBlockApplicationImpl', () => {
 
   it('should add database view to block', async () => {
     mockService.addDatabaseViewToBlock.mockResolvedValue({ id: 'pb-1' });
-    jest.spyOn(PageBlockMapper, 'toResponse').mockReturnValue({ id: 'pb-1' } as any);
+    jest
+      .spyOn(PageBlockMapper, 'toResponse')
+      .mockReturnValue({ id: 'pb-1' } as any);
 
     const dto = { board_id: 'b-1' } as any;
     const result = await app.addDatabaseViewToBlock('pb-1', dto);

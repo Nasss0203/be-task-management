@@ -1,6 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TaskEventsListener } from './task-events.listener';
-import { REALTIME_EVENTS, type TaskCreatedPayload, type TaskUpdatedPayload, type TaskDeletedPayload } from '../realtime.events';
+import {
+  REALTIME_EVENTS,
+  type TaskCreatedPayload,
+  type TaskUpdatedPayload,
+  type TaskDeletedPayload,
+} from '../realtime.events';
 import { RealtimeEmitterService } from '../services/realtime-emitter.service';
 
 describe('TaskEventsListener', () => {

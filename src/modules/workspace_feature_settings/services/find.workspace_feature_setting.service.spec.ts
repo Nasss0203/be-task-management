@@ -17,11 +17,18 @@ describe('FindWorkspaceFeatureSettingServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindWorkspaceFeatureSettingServiceImpl,
-        { provide: WORKSPACE_FEATURE_SETTING_TYPES.repositories.FindWorkspaceFeatureSettingRepository, useValue: mockRepo },
+        {
+          provide:
+            WORKSPACE_FEATURE_SETTING_TYPES.repositories
+              .FindWorkspaceFeatureSettingRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
-    service = module.get<FindWorkspaceFeatureSettingServiceImpl>(FindWorkspaceFeatureSettingServiceImpl);
+    service = module.get<FindWorkspaceFeatureSettingServiceImpl>(
+      FindWorkspaceFeatureSettingServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -50,12 +57,18 @@ describe('FindWorkspaceFeatureSettingServiceImpl', () => {
   it('should find by workspace and feature', async () => {
     mockRepo.findByWorkspaceAndFeature.mockResolvedValue({ id: 'set-1' });
     const result = await service.findByWorkspaceAndFeature('ws-1', 'feat-1');
-    expect(mockRepo.findByWorkspaceAndFeature).toHaveBeenCalledWith('ws-1', 'feat-1', undefined);
+    expect(mockRepo.findByWorkspaceAndFeature).toHaveBeenCalledWith(
+      'ws-1',
+      'feat-1',
+      undefined,
+    );
     expect(result).toEqual({ id: 'set-1' });
   });
 
   it('should throw NotFoundException when finding by workspace and feature', async () => {
     mockRepo.findByWorkspaceAndFeature.mockResolvedValue(null);
-    await expect(service.findByWorkspaceAndFeature('ws-1', 'feat-1')).rejects.toThrow(NotFoundException);
+    await expect(
+      service.findByWorkspaceAndFeature('ws-1', 'feat-1'),
+    ).rejects.toThrow(NotFoundException);
   });
 });

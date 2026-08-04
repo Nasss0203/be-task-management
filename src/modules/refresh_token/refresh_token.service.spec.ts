@@ -17,7 +17,9 @@ describe('RefreshTokenService', () => {
   });
 
   it('should create', () => {
-    expect(service.create({} as any)).toBe('This action adds a new refreshToken');
+    expect(service.create({} as any)).toBe(
+      'This action adds a new refreshToken',
+    );
   });
 
   it('should findAll', () => {
@@ -29,7 +31,9 @@ describe('RefreshTokenService', () => {
   });
 
   it('should update', () => {
-    expect(service.update(1, {} as any)).toBe('This action updates a #1 refreshToken');
+    expect(service.update(1, {} as any)).toBe(
+      'This action updates a #1 refreshToken',
+    );
   });
 
   it('should remove', () => {

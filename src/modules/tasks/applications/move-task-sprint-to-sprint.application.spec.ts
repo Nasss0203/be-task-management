@@ -11,7 +11,11 @@ describe('MoveTaskSprintToSprintApplicationImpl', () => {
 
   const mockMoveTaskSprintToSprintService = { move: jest.fn() };
   const mockCreateActivityService = { create: jest.fn() };
-  const mockUnitOfWork = { runInTransaction: jest.fn(async (cb) => { return await cb('mockTransactionManager'); }) };
+  const mockUnitOfWork = {
+    runInTransaction: jest.fn(async (cb) => {
+      return await cb('mockTransactionManager');
+    }),
+  };
   const mockEventEmitter = { emit: jest.fn() };
 
   beforeEach(async () => {
@@ -20,14 +24,22 @@ describe('MoveTaskSprintToSprintApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MoveTaskSprintToSprintApplicationImpl,
-        { provide: TASK_TYPES.services.MoveTaskSprintToSprintService, useValue: mockMoveTaskSprintToSprintService },
-        { provide: ACTIVITY_TYPES.services.CreateActivityService, useValue: mockCreateActivityService },
+        {
+          provide: TASK_TYPES.services.MoveTaskSprintToSprintService,
+          useValue: mockMoveTaskSprintToSprintService,
+        },
+        {
+          provide: ACTIVITY_TYPES.services.CreateActivityService,
+          useValue: mockCreateActivityService,
+        },
         { provide: WORKSPACE_TYPES.uow.UnitOfWork, useValue: mockUnitOfWork },
         { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
 
-    app = module.get<MoveTaskSprintToSprintApplicationImpl>(MoveTaskSprintToSprintApplicationImpl);
+    app = module.get<MoveTaskSprintToSprintApplicationImpl>(
+      MoveTaskSprintToSprintApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -44,20 +56,32 @@ describe('MoveTaskSprintToSprintApplicationImpl', () => {
         targetSprintId: 'sprint-2',
         userId: 'user-1',
       };
-      
-      const mockTask = { id: '1', workspaceId: 'ws-1', projectId: 'proj-1', sprintId: 'sprint-2', assignees: [] };
+
+      const mockTask = {
+        id: '1',
+        workspaceId: 'ws-1',
+        projectId: 'proj-1',
+        sprintId: 'sprint-2',
+        assignees: [],
+      };
       mockMoveTaskSprintToSprintService.move.mockResolvedValue(mockTask);
 
       const result = await app.move(input);
 
       expect(mockUnitOfWork.runInTransaction).toHaveBeenCalled();
-      expect(mockMoveTaskSprintToSprintService.move).toHaveBeenCalledWith(input, 'mockTransactionManager');
+      expect(mockMoveTaskSprintToSprintService.move).toHaveBeenCalledWith(
+        input,
+        'mockTransactionManager',
+      );
       expect(mockCreateActivityService.create).toHaveBeenCalled();
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith(REALTIME_EVENTS.TASK_UPDATED, {
-        workspaceId: mockTask.workspaceId,
-        projectId: mockTask.projectId,
-        task: mockTask,
-      });
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        REALTIME_EVENTS.TASK_UPDATED,
+        {
+          workspaceId: mockTask.workspaceId,
+          projectId: mockTask.projectId,
+          task: mockTask,
+        },
+      );
       expect(result.id).toEqual(mockTask.id);
     });
   });

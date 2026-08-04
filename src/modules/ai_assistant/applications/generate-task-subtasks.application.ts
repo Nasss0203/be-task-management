@@ -22,10 +22,7 @@ export class GenerateTaskSubtasksApplicationImpl implements GenerateTaskSubtasks
     private readonly dataSource: DataSource,
   ) {}
 
-  async generate(input: {
-    taskId: string;
-    userId: string;
-  }): Promise<any[]> {
+  async generate(input: { taskId: string; userId: string }): Promise<any[]> {
     const task = await this.findTaskService.findOneTask(input.taskId);
     if (!task) {
       throw new NotFoundException('Task not found');

@@ -42,12 +42,13 @@ const VALID_TASK_DRAFT_JSON = JSON.stringify({
           estimatedHours: 3,
         },
       ],
-      acceptanceCriteria: ['Nguoi dung dang nhap thanh cong voi thong tin hop le'],
+      acceptanceCriteria: [
+        'Nguoi dung dang nhap thanh cong voi thong tin hop le',
+      ],
       risks: ['Thieu thong tin xu ly loi tu API'],
     },
   ],
 });
-
 
 const VALID_WORKSPACE_DRAFT_JSON = JSON.stringify({
   name: 'My Workspace',
@@ -312,7 +313,6 @@ describe('GeminiAiService', () => {
       GoogleGenAI.mockImplementation(() => makeMockClient(withForbiddenFields));
 
       await expect(service.generateTaskDraft(BASE_INPUT)).rejects.toThrow(
-
         BadGatewayException,
       );
     });
@@ -362,7 +362,6 @@ describe('GeminiAiService', () => {
       expect(result.assistantMessage).toContain('Tao man hinh dang nhap');
       expect(result.assistantMessage).toContain('1 công việc con');
     });
-
 
     it('uses GEMINI_DEFAULT_MODEL (gemini-2.5-flash) as fallback when GEMINI_MODEL env is not set', async () => {
       configService.get.mockImplementation((key: string) => {
@@ -478,9 +477,7 @@ describe('GeminiAiService', () => {
         key: 'PROJ',
         visibility: 'PRIVATE',
       });
-      expect(result.assistantMessage).toContain(
-        'Dự án "My Project" [PROJ]',
-      );
+      expect(result.assistantMessage).toContain('Dự án "My Project" [PROJ]');
       expect(result.totalTokens).toBe(120);
     });
 
@@ -516,7 +513,9 @@ describe('GeminiAiService', () => {
     });
 
     it('returns AiGenerationType.WORKSPACE_TREE_DRAFT when Gemini returns WORKSPACE_TREE_DRAFT', async () => {
-      GoogleGenAI.mockImplementation(() => makeMockClient('WORKSPACE_TREE_DRAFT'));
+      GoogleGenAI.mockImplementation(() =>
+        makeMockClient('WORKSPACE_TREE_DRAFT'),
+      );
       const result = await service.classifyIntent('Tạo một workspace mới');
       expect(result).toBe(AiGenerationType.WORKSPACE_TREE_DRAFT);
     });
@@ -530,7 +529,9 @@ describe('GeminiAiService', () => {
     it('returns NORMAL as fallback when Gemini request throws error', async () => {
       GoogleGenAI.mockImplementation(() => ({
         models: {
-          generateContent: jest.fn().mockRejectedValue(new Error('Gemini error')),
+          generateContent: jest
+            .fn()
+            .mockRejectedValue(new Error('Gemini error')),
         },
       }));
       const result = await service.classifyIntent('Chào bạn');

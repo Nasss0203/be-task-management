@@ -19,9 +19,7 @@ import {
 import { USER_WORKSPACE_TYPES } from '../interfaces/types';
 
 @Injectable()
-export class UpdateMemberWorkspaceServiceImpl
-  implements UpdateMemberWorkspaceService
-{
+export class UpdateMemberWorkspaceServiceImpl implements UpdateMemberWorkspaceService {
   constructor(
     @Inject(USER_WORKSPACE_TYPES.repositories.FindUserWorkspaceRepository)
     private readonly findUserWorkspaceRepository: FindUserWorkspaceRepository,

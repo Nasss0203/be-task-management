@@ -5,9 +5,7 @@ import { WorkspaceFeatureAccessService } from '../interfaces/services/workspace_
 import { WORKSPACE_FEATURE_SETTING_TYPES } from '../interfaces/types';
 
 @Injectable()
-export class WorkspaceFeatureAccessServiceImpl
-  implements WorkspaceFeatureAccessService
-{
+export class WorkspaceFeatureAccessServiceImpl implements WorkspaceFeatureAccessService {
   constructor(
     @Inject(
       WORKSPACE_FEATURE_SETTING_TYPES.repositories

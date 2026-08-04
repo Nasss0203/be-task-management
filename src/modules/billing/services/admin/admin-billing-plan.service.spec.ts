@@ -46,7 +46,12 @@ describe('AdminBillingPlanService', () => {
   describe('getPlans', () => {
     it('should get plans', async () => {
       mockQueryBuilder.getRawMany.mockResolvedValue([
-        { id: 'plan-1', priceAmount: 120000, billingInterval: 'YEAR', activeSubscriptions: '5' },
+        {
+          id: 'plan-1',
+          priceAmount: 120000,
+          billingInterval: 'YEAR',
+          activeSubscriptions: '5',
+        },
       ]);
       const result = await service.getPlans();
       expect(mockQueryBuilder.getRawMany).toHaveBeenCalled();
@@ -59,16 +64,28 @@ describe('AdminBillingPlanService', () => {
   describe('createPlan', () => {
     it('should throw if slug already exists', async () => {
       mockRepo.findOne.mockResolvedValue({ id: 'existing-plan' });
-      await expect(service.createPlan({ slug: 'test' } as any)).rejects.toThrow(ConflictException);
+      await expect(service.createPlan({ slug: 'test' } as any)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should create plan', async () => {
       mockRepo.findOne.mockResolvedValue(null);
       mockRepo.create.mockReturnValue({ id: 'plan-1' });
       mockRepo.save.mockResolvedValue({ id: 'plan-1' });
-      mockQueryBuilder.getRawOne.mockResolvedValue({ id: 'plan-1', priceAmount: 100000, billingInterval: 'MONTH', activeSubscriptions: '0' });
+      mockQueryBuilder.getRawOne.mockResolvedValue({
+        id: 'plan-1',
+        priceAmount: 100000,
+        billingInterval: 'MONTH',
+        activeSubscriptions: '0',
+      });
 
-      const result = await service.createPlan({ name: 'Plan 1', slug: 'plan-1', priceAmount: 100000, billingInterval: 'MONTH' as any });
+      const result = await service.createPlan({
+        name: 'Plan 1',
+        slug: 'plan-1',
+        priceAmount: 100000,
+        billingInterval: 'MONTH' as any,
+      });
       expect(mockRepo.create).toHaveBeenCalled();
       expect(mockRepo.save).toHaveBeenCalled();
       expect(result.id).toEqual('plan-1');
@@ -78,27 +95,43 @@ describe('AdminBillingPlanService', () => {
   describe('updatePlan', () => {
     it('should throw if plan not found', async () => {
       mockRepo.findOne.mockResolvedValue(null);
-      await expect(service.updatePlan('plan-1', {})).rejects.toThrow(NotFoundException);
+      await expect(service.updatePlan('plan-1', {})).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw if new slug exists', async () => {
       mockRepo.findOne.mockImplementation(({ where }) => {
-        if (where.id === 'plan-1') return Promise.resolve({ id: 'plan-1', slug: 'old-slug' });
-        if (where.slug === 'new-slug') return Promise.resolve({ id: 'plan-2', slug: 'new-slug' });
+        if (where.id === 'plan-1')
+          return Promise.resolve({ id: 'plan-1', slug: 'old-slug' });
+        if (where.slug === 'new-slug')
+          return Promise.resolve({ id: 'plan-2', slug: 'new-slug' });
         return Promise.resolve(null);
       });
-      await expect(service.updatePlan('plan-1', { slug: 'new-slug' })).rejects.toThrow(ConflictException);
+      await expect(
+        service.updatePlan('plan-1', { slug: 'new-slug' }),
+      ).rejects.toThrow(ConflictException);
     });
 
     it('should update plan', async () => {
       mockRepo.findOne.mockImplementation(({ where }) => {
-        if (where.id === 'plan-1') return Promise.resolve({ id: 'plan-1', slug: 'old-slug' });
+        if (where.id === 'plan-1')
+          return Promise.resolve({ id: 'plan-1', slug: 'old-slug' });
         return Promise.resolve(null);
       });
       mockRepo.save.mockResolvedValue({ id: 'plan-1' });
-      mockQueryBuilder.getRawOne.mockResolvedValue({ id: 'plan-1', slug: 'new-slug', priceAmount: 100000, billingInterval: 'MONTH', activeSubscriptions: '0' });
+      mockQueryBuilder.getRawOne.mockResolvedValue({
+        id: 'plan-1',
+        slug: 'new-slug',
+        priceAmount: 100000,
+        billingInterval: 'MONTH',
+        activeSubscriptions: '0',
+      });
 
-      const result = await service.updatePlan('plan-1', { slug: 'new-slug', name: 'New Name' });
+      const result = await service.updatePlan('plan-1', {
+        slug: 'new-slug',
+        name: 'New Name',
+      });
       expect(mockRepo.save).toHaveBeenCalled();
       expect(result.slug).toEqual('new-slug');
     });
@@ -108,10 +141,20 @@ describe('AdminBillingPlanService', () => {
     it('should update plan status', async () => {
       mockRepo.findOne.mockResolvedValue({ id: 'plan-1', isActive: false });
       mockRepo.save.mockResolvedValue({ id: 'plan-1', isActive: true });
-      mockQueryBuilder.getRawOne.mockResolvedValue({ id: 'plan-1', isActive: true, priceAmount: 100000, billingInterval: 'MONTH', activeSubscriptions: '0' });
+      mockQueryBuilder.getRawOne.mockResolvedValue({
+        id: 'plan-1',
+        isActive: true,
+        priceAmount: 100000,
+        billingInterval: 'MONTH',
+        activeSubscriptions: '0',
+      });
 
-      const result = await service.updatePlanStatus('plan-1', { isActive: true });
-      expect(mockRepo.save).toHaveBeenCalledWith(expect.objectContaining({ isActive: true }));
+      const result = await service.updatePlanStatus('plan-1', {
+        isActive: true,
+      });
+      expect(mockRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ isActive: true }),
+      );
       expect(result.isActive).toEqual(true);
     });
   });

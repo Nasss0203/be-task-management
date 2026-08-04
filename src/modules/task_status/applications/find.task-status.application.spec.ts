@@ -23,7 +23,9 @@ describe('FindTaskStatusApplicationImpl', () => {
       ],
     }).compile();
 
-    application = module.get<FindTaskStatusApplicationImpl>(FindTaskStatusApplicationImpl);
+    application = module.get<FindTaskStatusApplicationImpl>(
+      FindTaskStatusApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -36,15 +38,22 @@ describe('FindTaskStatusApplicationImpl', () => {
         { id: 'status-1', name: 'Todo' },
         { id: 'status-2', name: 'Done' },
       ];
-      mockFindTaskStatusService.findAllTaskStatus.mockResolvedValue(mockTaskStatuses);
+      mockFindTaskStatusService.findAllTaskStatus.mockResolvedValue(
+        mockTaskStatuses,
+      );
 
       // We mock the mapper to avoid dealing with the actual implementation detail
       const originalToResponse = TaskStatusMapper.toResponse;
-      TaskStatusMapper.toResponse = jest.fn((val) => ({ ...val, isMapped: true }) as any);
+      TaskStatusMapper.toResponse = jest.fn(
+        (val) => ({ ...val, isMapped: true }) as any,
+      );
 
       const result = await application.findAllTaskStatus('proj-1', 'ws-1');
 
-      expect(mockFindTaskStatusService.findAllTaskStatus).toHaveBeenCalledWith('proj-1', 'ws-1');
+      expect(mockFindTaskStatusService.findAllTaskStatus).toHaveBeenCalledWith(
+        'proj-1',
+        'ws-1',
+      );
       expect(result).toEqual([
         { id: 'status-1', name: 'Todo', isMapped: true },
         { id: 'status-2', name: 'Done', isMapped: true },

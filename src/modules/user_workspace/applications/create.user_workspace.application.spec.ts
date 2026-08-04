@@ -34,14 +34,20 @@ describe('CreateUserWorkspaceApplicationImpl', () => {
 
   describe('create', () => {
     it('should call service.create and map response', async () => {
-      const mockDto = { workspace_id: 'ws-1', user_id: 'user-1', role_name: RoleName.ADMIN };
+      const mockDto = {
+        workspace_id: 'ws-1',
+        user_id: 'user-1',
+        role_name: RoleName.ADMIN,
+      };
       const mockModel = { ...mockDto, joined_at: new Date() } as any;
 
       mockCreateUserWorkspaceService.create.mockResolvedValue(mockModel);
 
       const result = await app.create(mockDto);
 
-      expect(mockCreateUserWorkspaceService.create).toHaveBeenCalledWith(mockDto);
+      expect(mockCreateUserWorkspaceService.create).toHaveBeenCalledWith(
+        mockDto,
+      );
       expect(result).toHaveProperty('workspace_id', 'ws-1');
       expect(result).toHaveProperty('user_id', 'user-1');
     });

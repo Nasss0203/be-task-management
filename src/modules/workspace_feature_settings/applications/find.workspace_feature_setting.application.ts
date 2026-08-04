@@ -6,11 +6,12 @@ import { WORKSPACE_FEATURE_SETTING_TYPES } from '../interfaces/types';
 import { WorkspaceFeatureSettingMapper } from '../mapper/workspace_feature_setting.mapper';
 
 @Injectable()
-export class FindWorkspaceFeatureSettingApplicationImpl
-  implements FindWorkspaceFeatureSettingApplication
-{
+export class FindWorkspaceFeatureSettingApplicationImpl implements FindWorkspaceFeatureSettingApplication {
   constructor(
-    @Inject(WORKSPACE_FEATURE_SETTING_TYPES.services.FindWorkspaceFeatureSettingService)
+    @Inject(
+      WORKSPACE_FEATURE_SETTING_TYPES.services
+        .FindWorkspaceFeatureSettingService,
+    )
     private readonly service: FindWorkspaceFeatureSettingService,
   ) {}
 

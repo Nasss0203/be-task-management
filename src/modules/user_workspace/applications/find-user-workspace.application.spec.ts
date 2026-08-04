@@ -23,7 +23,9 @@ describe('FindAllMemberApplicationImpl', () => {
       ],
     }).compile();
 
-    app = module.get<FindAllMemberApplicationImpl>(FindAllMemberApplicationImpl);
+    app = module.get<FindAllMemberApplicationImpl>(
+      FindAllMemberApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -32,7 +34,11 @@ describe('FindAllMemberApplicationImpl', () => {
 
   describe('findAllMember', () => {
     it('should return mapped members', async () => {
-      const mockMember = { id: 'm-1', user: { id: 'u-1', email: 'a@a.com', full_name: 'A', avatar_url: '' }, joined_at: new Date() } as any;
+      const mockMember = {
+        id: 'm-1',
+        user: { id: 'u-1', email: 'a@a.com', full_name: 'A', avatar_url: '' },
+        joined_at: new Date(),
+      } as any;
       mockFindMemberService.findAllMember.mockResolvedValue([mockMember]);
 
       const result = await app.findAllMember('ws-1');
@@ -45,12 +51,19 @@ describe('FindAllMemberApplicationImpl', () => {
 
   describe('findMemberInWorkspace', () => {
     it('should return mapped member if found', async () => {
-      const mockMember = { id: 'm-1', user: { id: 'u-1', email: 'a@a.com', full_name: 'A', avatar_url: '' }, joined_at: new Date() } as any;
+      const mockMember = {
+        id: 'm-1',
+        user: { id: 'u-1', email: 'a@a.com', full_name: 'A', avatar_url: '' },
+        joined_at: new Date(),
+      } as any;
       mockFindMemberService.findMemberInWorkspace.mockResolvedValue(mockMember);
 
       const result = await app.findMemberInWorkspace('ws-1', 'u-1');
 
-      expect(mockFindMemberService.findMemberInWorkspace).toHaveBeenCalledWith('ws-1', 'u-1');
+      expect(mockFindMemberService.findMemberInWorkspace).toHaveBeenCalledWith(
+        'ws-1',
+        'u-1',
+      );
       expect(result).toHaveProperty('id', 'm-1');
     });
 

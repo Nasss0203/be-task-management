@@ -19,8 +19,14 @@ describe('UpdatePageServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdatePageServiceImpl,
-        { provide: PAGE_TYPES.repositories.UpdatePageRepository, useValue: mockRepo },
-        { provide: PAGE_TYPES.repositories.FindPageRepository, useValue: mockFindRepo },
+        {
+          provide: PAGE_TYPES.repositories.UpdatePageRepository,
+          useValue: mockRepo,
+        },
+        {
+          provide: PAGE_TYPES.repositories.FindPageRepository,
+          useValue: mockFindRepo,
+        },
       ],
     }).compile();
 
@@ -35,10 +41,13 @@ describe('UpdatePageServiceImpl', () => {
     mockFindRepo.findPageById.mockResolvedValue({ id: 'page-1' });
     mockRepo.save.mockResolvedValue({ id: 'page-1' });
     const dto = { title: 'Test Page' } as any;
-    
+
     const result = await service.update('page-1', dto, {} as EntityManager);
-    
-    expect(mockRepo.save).toHaveBeenCalledWith({ id: 'page-1', title: 'Test Page' }, {});
+
+    expect(mockRepo.save).toHaveBeenCalledWith(
+      { id: 'page-1', title: 'Test Page' },
+      {},
+    );
     expect(result).toEqual({ id: 'page-1' });
   });
 });

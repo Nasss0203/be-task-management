@@ -1,5 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ActivityAction, ActivityEntityType } from 'src/modules/activity/domain/entities/activity.entity';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
 import { TASK_COMMENT_TYPES } from '../interfaces/types';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -18,13 +21,24 @@ describe('CreateTaskCommentApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateTaskCommentApplicationImpl,
-        { provide: TASK_COMMENT_TYPES.services.CreateTaskCommentService, useValue: mockCreateTaskCommentService },
-        { provide: ACTIVITY_TYPES.services.CreateActivityService, useValue: mockCreateActivityService },
-        { provide: EventEmitter2, useValue: { emitAsync: jest.fn(), emit: jest.fn() } },
+        {
+          provide: TASK_COMMENT_TYPES.services.CreateTaskCommentService,
+          useValue: mockCreateTaskCommentService,
+        },
+        {
+          provide: ACTIVITY_TYPES.services.CreateActivityService,
+          useValue: mockCreateActivityService,
+        },
+        {
+          provide: EventEmitter2,
+          useValue: { emitAsync: jest.fn(), emit: jest.fn() },
+        },
       ],
     }).compile();
 
-    application = module.get<CreateTaskCommentApplicationImpl>(CreateTaskCommentApplicationImpl);
+    application = module.get<CreateTaskCommentApplicationImpl>(
+      CreateTaskCommentApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -33,13 +47,28 @@ describe('CreateTaskCommentApplicationImpl', () => {
 
   describe('create', () => {
     it('should create comment and activity successfully', async () => {
-      const input = { workspaceId: 'ws-1', projectId: 'proj-1', taskId: 'task-1', userId: 'user-1', content: 'test comment' };
-      const comment = { id: 'comment-1', workspaceId: 'ws-1', projectId: 'proj-1', taskId: 'task-1', authorId: 'user-1', content: 'test comment' };
-      
+      const input = {
+        workspaceId: 'ws-1',
+        projectId: 'proj-1',
+        taskId: 'task-1',
+        userId: 'user-1',
+        content: 'test comment',
+      };
+      const comment = {
+        id: 'comment-1',
+        workspaceId: 'ws-1',
+        projectId: 'proj-1',
+        taskId: 'task-1',
+        authorId: 'user-1',
+        content: 'test comment',
+      };
+
       mockCreateTaskCommentService.create.mockResolvedValue(comment);
-      
+
       const originalMapper = TaskCommentMapper.toResponse;
-      TaskCommentMapper.toResponse = jest.fn().mockReturnValue({ id: 'comment-1', mapped: true });
+      TaskCommentMapper.toResponse = jest
+        .fn()
+        .mockReturnValue({ id: 'comment-1', mapped: true });
 
       const result = await application.create(input);
 

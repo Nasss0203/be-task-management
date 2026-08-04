@@ -98,13 +98,11 @@ const stubAppliedModel = new AiGenerationModel(
   new Date(),
 );
 
-
 const mockGenerationService = {
   findByIdForUser: jest.fn(),
   updateAppliedResults: jest.fn(),
   updateStatus: jest.fn(),
 };
-
 
 const mockCreateWorkspaceTemplateService = {
   create: jest.fn(),
@@ -126,7 +124,6 @@ const mockDataSource = {
   query: jest.fn(),
   transaction: jest.fn().mockImplementation((cb) => cb(mockEntityManager)),
 };
-
 
 describe('ApplyAiGenerationApplicationImpl', () => {
   let application: ApplyAiGenerationApplicationImpl;
@@ -470,7 +467,7 @@ describe('ApplyAiGenerationApplicationImpl', () => {
         }
         return Promise.resolve([]);
       });
-      
+
       mockCreateProjectService.createProjectWithPageBlock.mockResolvedValue({
         id: 'new-proj-uuid',
         name: 'Workspace 1 - Project',
@@ -491,7 +488,9 @@ describe('ApplyAiGenerationApplicationImpl', () => {
         dto: {},
       });
 
-      expect(mockCreateProjectService.createProjectWithPageBlock).toHaveBeenCalledWith(
+      expect(
+        mockCreateProjectService.createProjectWithPageBlock,
+      ).toHaveBeenCalledWith(
         {
           workspace_id: 'ws-uuid-123',
           name: 'Workspace 1 - Project',
@@ -585,14 +584,16 @@ describe('ApplyAiGenerationApplicationImpl', () => {
       );
 
       it('successfully creates workspace, project, and task and updates status to APPLIED', async () => {
-        mockGenerationService.findByIdForUser.mockResolvedValue(stubTreeGeneratedModel);
-        
+        mockGenerationService.findByIdForUser.mockResolvedValue(
+          stubTreeGeneratedModel,
+        );
+
         mockCreateWorkspaceTemplateService.create.mockResolvedValue({
           id: 'created-ws-uuid',
           name: 'Workspace 1',
           slug: 'workspace-1',
         });
-        
+
         mockCreateProjectService.createProjectWithPageBlock.mockResolvedValue({
           id: 'created-proj-uuid',
           name: 'Project A',
@@ -631,7 +632,9 @@ describe('ApplyAiGenerationApplicationImpl', () => {
           mockEntityManager,
         );
 
-        expect(mockCreateProjectService.createProjectWithPageBlock).toHaveBeenCalledWith(
+        expect(
+          mockCreateProjectService.createProjectWithPageBlock,
+        ).toHaveBeenCalledWith(
           {
             workspace_id: 'created-ws-uuid',
             name: 'Project A',
@@ -661,8 +664,10 @@ describe('ApplyAiGenerationApplicationImpl', () => {
       });
 
       it('handles quota limit, updates status to APPLY_BLOCKED, and throws ConflictException', async () => {
-        mockGenerationService.findByIdForUser.mockResolvedValue(stubTreeGeneratedModel);
-        
+        mockGenerationService.findByIdForUser.mockResolvedValue(
+          stubTreeGeneratedModel,
+        );
+
         mockCreateWorkspaceTemplateService.create.mockRejectedValue(
           new ConflictException('Workspace limit exceeded'),
         );
@@ -674,7 +679,7 @@ describe('ApplyAiGenerationApplicationImpl', () => {
             generationId: GENERATION_ID,
             userId: USER_ID,
             dto: {},
-          })
+          }),
         ).rejects.toThrow(ConflictException);
 
         expect(mockGenerationService.updateStatus).toHaveBeenCalledWith({
@@ -687,4 +692,3 @@ describe('ApplyAiGenerationApplicationImpl', () => {
     });
   });
 });
-

@@ -5,7 +5,11 @@ import { Plan } from '../billing/domain/entities/plan.entity';
 
 describe('BillingPlanSeedService', () => {
   let service: BillingPlanSeedService;
-  const mockPlanRepo = { findOne: jest.fn(), create: jest.fn(), save: jest.fn() };
+  const mockPlanRepo = {
+    findOne: jest.fn(),
+    create: jest.fn(),
+    save: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -26,9 +30,9 @@ describe('BillingPlanSeedService', () => {
     mockPlanRepo.findOne.mockResolvedValue(null);
     mockPlanRepo.create.mockImplementation((item) => item);
     mockPlanRepo.save.mockResolvedValue({});
-    
+
     await service.seed();
-    
+
     expect(mockPlanRepo.findOne).toHaveBeenCalled();
     expect(mockPlanRepo.create).toHaveBeenCalled();
     expect(mockPlanRepo.save).toHaveBeenCalled();
@@ -37,9 +41,9 @@ describe('BillingPlanSeedService', () => {
   it('should seed plans - update existed', async () => {
     mockPlanRepo.findOne.mockResolvedValue({ id: '1' });
     mockPlanRepo.save.mockResolvedValue({});
-    
+
     await service.seed();
-    
+
     expect(mockPlanRepo.findOne).toHaveBeenCalled();
     expect(mockPlanRepo.create).not.toHaveBeenCalled();
     expect(mockPlanRepo.save).toHaveBeenCalled();

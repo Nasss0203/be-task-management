@@ -18,12 +18,24 @@ describe('UpdateWorkspaceFeatureSettingServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateWorkspaceFeatureSettingServiceImpl,
-        { provide: WORKSPACE_FEATURE_SETTING_TYPES.services.FindWorkspaceFeatureSettingService, useValue: mockFindService },
-        { provide: WORKSPACE_FEATURE_SETTING_TYPES.repositories.UpdateWorkspaceFeatureSettingRepository, useValue: mockRepo },
+        {
+          provide:
+            WORKSPACE_FEATURE_SETTING_TYPES.services
+              .FindWorkspaceFeatureSettingService,
+          useValue: mockFindService,
+        },
+        {
+          provide:
+            WORKSPACE_FEATURE_SETTING_TYPES.repositories
+              .UpdateWorkspaceFeatureSettingRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
-    service = module.get<UpdateWorkspaceFeatureSettingServiceImpl>(UpdateWorkspaceFeatureSettingServiceImpl);
+    service = module.get<UpdateWorkspaceFeatureSettingServiceImpl>(
+      UpdateWorkspaceFeatureSettingServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -48,10 +60,13 @@ describe('UpdateWorkspaceFeatureSettingServiceImpl', () => {
 
     const result = await service.update('set-1', { enabled: true });
     expect(mockFindService.findById).toHaveBeenCalledWith('set-1', undefined);
-    expect(mockRepo.save).toHaveBeenCalledWith({
-      ...current,
-      enabled: true,
-    }, undefined);
+    expect(mockRepo.save).toHaveBeenCalledWith(
+      {
+        ...current,
+        enabled: true,
+      },
+      undefined,
+    );
     expect(result.enabled).toEqual(true);
   });
 });

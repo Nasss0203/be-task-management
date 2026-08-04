@@ -28,10 +28,13 @@ export class FindTaskServiceImpl implements FindTaskService {
     workspaceId: string,
     filters?: FindBacklogTasksFilters,
   ): Promise<PaginatedTaskModels> {
-    return this.findTaskRepository.findAllTask({
-      projectId,
-      workspaceId,
-    }, filters);
+    return this.findTaskRepository.findAllTask(
+      {
+        projectId,
+        workspaceId,
+      },
+      filters,
+    );
   }
 
   async findOneTask(

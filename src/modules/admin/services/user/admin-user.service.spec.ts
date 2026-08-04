@@ -4,7 +4,10 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { MailService } from 'src/modules/mail/mail.service';
-import { SystemRole, User } from 'src/modules/users/domain/entities/user.entity';
+import {
+  SystemRole,
+  User,
+} from 'src/modules/users/domain/entities/user.entity';
 import { AdminUserRepository } from '../../interfaces/repositories/user/admin-user.repository.interface';
 import { AdminUserServiceImpl } from './admin-user.service';
 
@@ -63,9 +66,7 @@ describe('AdminUserServiceImpl.createSystemAdmin', () => {
     expect(mailService.sendSystemAdminInvitation).toHaveBeenCalledWith({
       to: 'owner@example.com',
       accountEmail: 'operations.admin@systemadmin.com',
-      activationUrl: expect.stringContaining(
-        '/activate-admin?token=',
-      ),
+      activationUrl: expect.stringContaining('/activate-admin?token='),
     });
     expect(result).toEqual({
       id: 'new-admin-id',
@@ -103,7 +104,9 @@ describe('AdminUserServiceImpl.createSystemAdmin', () => {
   });
 
   it('rejects an account name that is already used', async () => {
-    repository.findByEmailOrUsername.mockResolvedValue({ id: 'existing' } as User);
+    repository.findByEmailOrUsername.mockResolvedValue({
+      id: 'existing',
+    } as User);
 
     await expect(
       service.createSystemAdmin(

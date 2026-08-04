@@ -10,11 +10,16 @@ describe('DeletePlanFeatureApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeletePlanFeatureApplicationImpl,
-        { provide: PLAN_FEATURE_TYPES.services.DeletePlanFeatureService, useValue: mockService },
+        {
+          provide: PLAN_FEATURE_TYPES.services.DeletePlanFeatureService,
+          useValue: mockService,
+        },
       ],
     }).compile();
 
-    application = module.get<DeletePlanFeatureApplicationImpl>(DeletePlanFeatureApplicationImpl);
+    application = module.get<DeletePlanFeatureApplicationImpl>(
+      DeletePlanFeatureApplicationImpl,
+    );
   });
 
   it('should delete plan feature', async () => {

@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Inject, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import {
   ReadRateLimit,
@@ -96,7 +105,9 @@ export class TaskCommnentController {
     });
   }
 
-  @Delete('workspaces/:workspaceId/projects/:projectId/tasks/:taskId/:commentId')
+  @Delete(
+    'workspaces/:workspaceId/projects/:projectId/tasks/:taskId/:commentId',
+  )
   @WriteRateLimit()
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.TASK_COMMENT_DELETE)

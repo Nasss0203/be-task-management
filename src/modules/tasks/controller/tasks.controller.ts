@@ -68,7 +68,6 @@ export class TasksController {
     @Inject(TASK_TYPES.applications.DeleteTaskApplication)
     private readonly deleteTaskApplication: DeleteTaskApplication,
 
-
     @Inject(TASK_TYPES.applications.FindTaskApplication)
     private readonly findTaskApplication: FindTaskApplication,
 
@@ -77,7 +76,7 @@ export class TasksController {
 
     @Inject(TASK_TYPES.applications.MoveTaskSprintToSprintApplication)
     private readonly moveTaskSprintToSprintApplication: MoveTaskSprintToSprintApplication,
-  ) { }
+  ) {}
 
   @Get('/workspace/:workspaceId/project/:projectId')
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })

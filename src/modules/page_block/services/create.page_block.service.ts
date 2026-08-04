@@ -38,11 +38,10 @@ export class CreatePageBlockServiceImpl implements CreatePageBlockService {
     let orderIndex: number;
 
     if (createPageBlockDto.insert_after_block_id) {
-      const insertAfterBlock =
-        await this.findPageBlockRepository.findAllById(
-          createPageBlockDto.insert_after_block_id,
-          manager,
-        );
+      const insertAfterBlock = await this.findPageBlockRepository.findAllById(
+        createPageBlockDto.insert_after_block_id,
+        manager,
+      );
 
       if (!insertAfterBlock) {
         throw new NotFoundException('Insert after page block not found');

@@ -14,11 +14,17 @@ describe('PageTemplateBlocksServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PageTemplateBlocksServiceImpl,
-        { provide: PAGE_TEMPLATE_BLOCK_TYPES.repositories.PageTemplateBlocksRepository, useValue: mockRepo },
+        {
+          provide:
+            PAGE_TEMPLATE_BLOCK_TYPES.repositories.PageTemplateBlocksRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
-    service = module.get<PageTemplateBlocksServiceImpl>(PageTemplateBlocksServiceImpl);
+    service = module.get<PageTemplateBlocksServiceImpl>(
+      PageTemplateBlocksServiceImpl,
+    );
   });
 
   it('should be defined', () => {

@@ -25,8 +25,14 @@ describe('UpdateSprintApplicationImpl', () => {
       providers: [
         UpdateSprintApplicationImpl,
         { provide: DataSource, useValue: mockDataSource },
-        { provide: SPRINT_TYPES.services.UpdateSprintService, useValue: mockUpdateSprintService },
-        { provide: ACTIVITY_TYPES.services.CreateActivityService, useValue: mockCreateActivityService },
+        {
+          provide: SPRINT_TYPES.services.UpdateSprintService,
+          useValue: mockUpdateSprintService,
+        },
+        {
+          provide: ACTIVITY_TYPES.services.CreateActivityService,
+          useValue: mockCreateActivityService,
+        },
         { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
@@ -61,26 +67,32 @@ describe('UpdateSprintApplicationImpl', () => {
       const result = await app.updateSprint(input);
 
       expect(mockDataSource.transaction).toHaveBeenCalled();
-      expect(mockUpdateSprintService.updateSprint).toHaveBeenCalledWith({
-        id: input.sprintId,
-        workspaceId: input.workspaceId,
-        projectId: input.projectId,
-        name: input.name,
-      }, 'mockTransactionManager');
+      expect(mockUpdateSprintService.updateSprint).toHaveBeenCalledWith(
+        {
+          id: input.sprintId,
+          workspaceId: input.workspaceId,
+          projectId: input.projectId,
+          name: input.name,
+        },
+        'mockTransactionManager',
+      );
 
       expect(mockCreateActivityService.create).toHaveBeenCalledWith(
         expect.objectContaining({
           entityId: mockSprint.id,
           actorId: input.userId,
         }),
-        'mockTransactionManager'
+        'mockTransactionManager',
       );
 
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith(REALTIME_EVENTS.SPRINT_UPDATED, {
-        workspaceId: mockSprint.workspaceId,
-        projectId: mockSprint.projectId,
-        sprint: mockSprint,
-      });
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        REALTIME_EVENTS.SPRINT_UPDATED,
+        {
+          workspaceId: mockSprint.workspaceId,
+          projectId: mockSprint.projectId,
+          sprint: mockSprint,
+        },
+      );
 
       expect(result.id).toEqual(mockSprint.id);
     });

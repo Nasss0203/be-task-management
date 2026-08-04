@@ -19,4 +19,3 @@ export interface AiTaskDraftItem {
 export interface AiTaskDraft {
   tasks: AiTaskDraftItem[];
 }
-

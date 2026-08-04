@@ -23,14 +23,22 @@ describe('CompleteSprintApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CompleteSprintApplicationImpl,
-        { provide: SPRINT_TYPES.services.CompleteSprintService, useValue: mockCompleteSprintService },
-        { provide: ACTIVITY_TYPES.services.CreateActivityService, useValue: mockCreateActivityService },
+        {
+          provide: SPRINT_TYPES.services.CompleteSprintService,
+          useValue: mockCompleteSprintService,
+        },
+        {
+          provide: ACTIVITY_TYPES.services.CreateActivityService,
+          useValue: mockCreateActivityService,
+        },
         { provide: SPRINT_TYPES.uow.UnitOfWork, useValue: mockUnitOfWork },
         { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
 
-    app = module.get<CompleteSprintApplicationImpl>(CompleteSprintApplicationImpl);
+    app = module.get<CompleteSprintApplicationImpl>(
+      CompleteSprintApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -61,21 +69,28 @@ describe('CompleteSprintApplicationImpl', () => {
 
       expect(mockUnitOfWork.runInTransaction).toHaveBeenCalled();
       expect(mockCompleteSprintService.completeSprint).toHaveBeenCalledWith(
-        { workspaceId: input.workspaceId, projectId: input.projectId, sprintId: input.sprintId }, 
-        'mockTransactionManager'
+        {
+          workspaceId: input.workspaceId,
+          projectId: input.projectId,
+          sprintId: input.sprintId,
+        },
+        'mockTransactionManager',
       );
       expect(mockCreateActivityService.create).toHaveBeenCalledWith(
         expect.objectContaining({
           entityId: mockSprint.id,
           actorId: input.userId,
         }),
-        'mockTransactionManager'
+        'mockTransactionManager',
       );
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith(REALTIME_EVENTS.SPRINT_UPDATED, {
-        workspaceId: mockSprint.workspaceId,
-        projectId: mockSprint.projectId,
-        sprint: mockSprint,
-      });
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        REALTIME_EVENTS.SPRINT_UPDATED,
+        {
+          workspaceId: mockSprint.workspaceId,
+          projectId: mockSprint.projectId,
+          sprint: mockSprint,
+        },
+      );
       // SprintsMapper.toResponse maps sprint to DTO, we can check basic props
       expect(result.id).toEqual(mockSprint.id);
     });

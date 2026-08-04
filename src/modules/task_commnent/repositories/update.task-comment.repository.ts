@@ -15,7 +15,11 @@ export class UpdateTaskCommentRepositoryImpl implements UpdateTaskCommentReposit
     return manager ? manager.getRepository(TaskComment) : this.repo;
   }
 
-  async update(id: string, content: string, manager?: EntityManager): Promise<void> {
+  async update(
+    id: string,
+    content: string,
+    manager?: EntityManager,
+  ): Promise<void> {
     const repo = this.getRepo(manager);
     await repo.update(id, { content, isEdited: true });
   }

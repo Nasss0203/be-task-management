@@ -5,15 +5,15 @@ import { WorkspaceFeatureSetting } from '../domain/entities/workspace_feature_se
 import { DeleteWorkspaceFeatureSettingRepository } from '../interfaces/repositories/delete.workspace_feature_setting.repository.interface';
 
 @Injectable()
-export class DeleteWorkspaceFeatureSettingRepositoryImpl
-  implements DeleteWorkspaceFeatureSettingRepository
-{
+export class DeleteWorkspaceFeatureSettingRepositoryImpl implements DeleteWorkspaceFeatureSettingRepository {
   constructor(
     @InjectRepository(WorkspaceFeatureSetting)
     private readonly repo: Repository<WorkspaceFeatureSetting>,
   ) {}
 
-  private getRepo(manager?: EntityManager): Repository<WorkspaceFeatureSetting> {
+  private getRepo(
+    manager?: EntityManager,
+  ): Repository<WorkspaceFeatureSetting> {
     return manager ? manager.getRepository(WorkspaceFeatureSetting) : this.repo;
   }
 

@@ -153,7 +153,9 @@ export class CompletePaymentServiceImpl implements CompletePaymentService {
 
     return [
       targetWorkspaceId,
-      ...workspaceIds.filter((workspaceId) => workspaceId !== targetWorkspaceId),
+      ...workspaceIds.filter(
+        (workspaceId) => workspaceId !== targetWorkspaceId,
+      ),
     ];
   }
 
@@ -241,8 +243,7 @@ export class CompletePaymentServiceImpl implements CompletePaymentService {
     const periodEnd = this.calculatePeriodEnd(periodStart, plan);
 
     if (!currentSubscription) {
-      const providerSubscriptionId =
-        this.getProviderSubscriptionId(payment);
+      const providerSubscriptionId = this.getProviderSubscriptionId(payment);
       const subscription = this.subscriptionRepository.create({
         userId: payment.userId,
         planId: plan.id,

@@ -8,9 +8,7 @@ import {
 } from '../interfaces/repositories/auth-refresh-token.repository.interface';
 
 @Injectable()
-export class AuthRefreshTokenRepositoryImpl
-  implements AuthRefreshTokenRepository
-{
+export class AuthRefreshTokenRepositoryImpl implements AuthRefreshTokenRepository {
   constructor(
     @InjectRepository(RefreshToken)
     private readonly refreshRepo: Repository<RefreshToken>,

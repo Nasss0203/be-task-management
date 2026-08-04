@@ -15,7 +15,10 @@ describe('PageTemplatesServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PageTemplatesServiceImpl,
-        { provide: PAGE_TEMPLATE_TYPES.repositories.PageTemplatesRepository, useValue: mockRepo },
+        {
+          provide: PAGE_TEMPLATE_TYPES.repositories.PageTemplatesRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 

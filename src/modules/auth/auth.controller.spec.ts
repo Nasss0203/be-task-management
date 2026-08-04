@@ -31,7 +31,10 @@ describe('AuthController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        JwtModule.register({ secret: 'test', signOptions: { expiresIn: '60s' } })
+        JwtModule.register({
+          secret: 'test',
+          signOptions: { expiresIn: '60s' },
+        }),
       ],
       controllers: [AuthController],
       providers: [
@@ -62,7 +65,7 @@ describe('AuthController', () => {
         {
           provide: AuthService,
           useValue: mockAuthService,
-        }
+        },
       ],
     }).compile();
 

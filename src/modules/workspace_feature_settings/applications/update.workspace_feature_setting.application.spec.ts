@@ -15,11 +15,18 @@ describe('UpdateWorkspaceFeatureSettingApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateWorkspaceFeatureSettingApplicationImpl,
-        { provide: WORKSPACE_FEATURE_SETTING_TYPES.services.UpdateWorkspaceFeatureSettingService, useValue: mockService },
+        {
+          provide:
+            WORKSPACE_FEATURE_SETTING_TYPES.services
+              .UpdateWorkspaceFeatureSettingService,
+          useValue: mockService,
+        },
       ],
     }).compile();
 
-    app = module.get<UpdateWorkspaceFeatureSettingApplicationImpl>(UpdateWorkspaceFeatureSettingApplicationImpl);
+    app = module.get<UpdateWorkspaceFeatureSettingApplicationImpl>(
+      UpdateWorkspaceFeatureSettingApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -28,10 +35,14 @@ describe('UpdateWorkspaceFeatureSettingApplicationImpl', () => {
 
   it('should update setting', async () => {
     mockService.update.mockResolvedValue({ id: 'set-1' });
-    jest.spyOn(WorkspaceFeatureSettingMapper, 'toResponse').mockReturnValue({ id: 'set-1' } as any);
+    jest
+      .spyOn(WorkspaceFeatureSettingMapper, 'toResponse')
+      .mockReturnValue({ id: 'set-1' } as any);
 
     const result = await app.update('set-1', { is_enabled: true } as any);
-    expect(mockService.update).toHaveBeenCalledWith('set-1', { is_enabled: true });
+    expect(mockService.update).toHaveBeenCalledWith('set-1', {
+      is_enabled: true,
+    });
     expect(result).toEqual({ id: 'set-1' });
   });
 });

@@ -10,15 +10,15 @@ import {
 import { WorkspaceFeatureSettingMapper } from '../mapper/workspace_feature_setting.mapper';
 
 @Injectable()
-export class UpdateWorkspaceFeatureSettingRepositoryImpl
-  implements UpdateWorkspaceFeatureSettingRepository
-{
+export class UpdateWorkspaceFeatureSettingRepositoryImpl implements UpdateWorkspaceFeatureSettingRepository {
   constructor(
     @InjectRepository(WorkspaceFeatureSetting)
     private readonly repo: Repository<WorkspaceFeatureSetting>,
   ) {}
 
-  private getRepo(manager?: EntityManager): Repository<WorkspaceFeatureSetting> {
+  private getRepo(
+    manager?: EntityManager,
+  ): Repository<WorkspaceFeatureSetting> {
     return manager ? manager.getRepository(WorkspaceFeatureSetting) : this.repo;
   }
 

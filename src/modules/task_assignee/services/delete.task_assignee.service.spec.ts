@@ -16,13 +16,16 @@ describe('DeleteTaskAssigneeServiceImpl', () => {
       providers: [
         DeleteTaskAssigneeServiceImpl,
         {
-          provide: TASK_ASSIGNEE_TYPES.repositories.DeleteTaskAssigneeRepository,
+          provide:
+            TASK_ASSIGNEE_TYPES.repositories.DeleteTaskAssigneeRepository,
           useValue: mockDeleteTaskAssigneeRepository,
         },
       ],
     }).compile();
 
-    service = module.get<DeleteTaskAssigneeServiceImpl>(DeleteTaskAssigneeServiceImpl);
+    service = module.get<DeleteTaskAssigneeServiceImpl>(
+      DeleteTaskAssigneeServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -36,7 +39,9 @@ describe('DeleteTaskAssigneeServiceImpl', () => {
 
       await service.unassign(input);
 
-      expect(mockDeleteTaskAssigneeRepository.deleteByTaskAndUser).toHaveBeenCalledWith('task-1', 'user-1');
+      expect(
+        mockDeleteTaskAssigneeRepository.deleteByTaskAndUser,
+      ).toHaveBeenCalledWith('task-1', 'user-1');
     });
   });
 });

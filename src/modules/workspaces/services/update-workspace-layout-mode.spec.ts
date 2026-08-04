@@ -24,7 +24,7 @@ describe('UpdateWorkspaceLayoutModeServiceImpl', () => {
     const userId = 'user-123';
     const workspaceId = 'workspace-123';
     const layoutMode = 'LIST';
-    
+
     const mockWorkspace = {
       id: workspaceId,
       name: 'Workspace Name',
@@ -38,11 +38,20 @@ describe('UpdateWorkspaceLayoutModeServiceImpl', () => {
     };
 
     findWorkspaceService.findOneByWorkspaceId.mockResolvedValue(mockWorkspace);
-    workspaceRepository.save.mockImplementation((workspace) => Promise.resolve(workspace));
+    workspaceRepository.save.mockImplementation((workspace) =>
+      Promise.resolve(workspace),
+    );
 
-    const result = await service.updateLayoutMode({ userId, workspaceId, layoutMode: layoutMode as any });
+    const result = await service.updateLayoutMode({
+      userId,
+      workspaceId,
+      layoutMode: layoutMode as any,
+    });
 
-    expect(findWorkspaceService.findOneByWorkspaceId).toHaveBeenCalledWith(userId, workspaceId);
+    expect(findWorkspaceService.findOneByWorkspaceId).toHaveBeenCalledWith(
+      userId,
+      workspaceId,
+    );
     expect(workspaceRepository.save).toHaveBeenCalled();
     expect(result.layoutMode).toBe(layoutMode);
     expect(result).toBeInstanceOf(WorkspaceModel);

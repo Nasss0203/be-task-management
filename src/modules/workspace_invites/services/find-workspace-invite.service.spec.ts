@@ -14,11 +14,17 @@ describe('FindWorkspaceInviteServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindWorkspaceInviteServiceImpl,
-        { provide: WORKSPACE_INVITE_TYPES.repositories.FindWorkspaceInviteRepository, useValue: mockRepo },
+        {
+          provide:
+            WORKSPACE_INVITE_TYPES.repositories.FindWorkspaceInviteRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
-    service = module.get<FindWorkspaceInviteServiceImpl>(FindWorkspaceInviteServiceImpl);
+    service = module.get<FindWorkspaceInviteServiceImpl>(
+      FindWorkspaceInviteServiceImpl,
+    );
   });
 
   it('should be defined', () => {

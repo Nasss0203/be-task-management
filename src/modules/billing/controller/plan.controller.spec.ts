@@ -15,7 +15,10 @@ describe('PlanController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PlanController],
       providers: [
-        { provide: BILLING_TYPES.applications.BillingQueryApplication, useValue: mockQueryApp },
+        {
+          provide: BILLING_TYPES.applications.BillingQueryApplication,
+          useValue: mockQueryApp,
+        },
       ],
     }).compile();
 

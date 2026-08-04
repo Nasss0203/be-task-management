@@ -30,19 +30,23 @@ describe('ReorderWithinContextTaskPositionServiceImpl', () => {
       providers: [
         ReorderWithinContextTaskPositionServiceImpl,
         {
-          provide: TASK_POSITION_TYPES.repositories.FindOneTaskPositionRepository,
+          provide:
+            TASK_POSITION_TYPES.repositories.FindOneTaskPositionRepository,
           useValue: mockFindOneRepository,
         },
         {
-          provide: TASK_POSITION_TYPES.repositories.FindLastTaskPositionRepository,
+          provide:
+            TASK_POSITION_TYPES.repositories.FindLastTaskPositionRepository,
           useValue: mockFindLastRepository,
         },
         {
-          provide: TASK_POSITION_TYPES.repositories.UpsertTaskPositionRepository,
+          provide:
+            TASK_POSITION_TYPES.repositories.UpsertTaskPositionRepository,
           useValue: mockUpsertRepository,
         },
         {
-          provide: TASK_POSITION_TYPES.services.NormalizeTaskPositionContextService,
+          provide:
+            TASK_POSITION_TYPES.services.NormalizeTaskPositionContextService,
           useValue: mockNormalizeService,
         },
       ],
@@ -91,8 +95,14 @@ describe('ReorderWithinContextTaskPositionServiceImpl', () => {
     });
 
     it('should calculate correct position when both previous and next exist', async () => {
-      const prevTaskPos = { taskId: 'prev-1', position: '1000.000000000000000' };
-      const nextTaskPos = { taskId: 'next-1', position: '2000.000000000000000' };
+      const prevTaskPos = {
+        taskId: 'prev-1',
+        position: '1000.000000000000000',
+      };
+      const nextTaskPos = {
+        taskId: 'next-1',
+        position: '2000.000000000000000',
+      };
 
       mockFindOneRepository.findOneByTaskAndContext
         .mockResolvedValueOnce(prevTaskPos)
@@ -125,7 +135,10 @@ describe('ReorderWithinContextTaskPositionServiceImpl', () => {
       // previous is missing, next exists
       mockFindOneRepository.findOneByTaskAndContext
         .mockResolvedValueOnce(null) // previous
-        .mockResolvedValueOnce({ taskId: 'next-1', position: '3000.000000000000000' }); // next
+        .mockResolvedValueOnce({
+          taskId: 'next-1',
+          position: '3000.000000000000000',
+        }); // next
 
       // Mock finding the last task position in context to be 1000
       mockFindLastRepository.findLastInContext.mockResolvedValue({
@@ -171,7 +184,10 @@ describe('ReorderWithinContextTaskPositionServiceImpl', () => {
     it('should dynamically create next task position when missing', async () => {
       // previous exists, next is missing
       mockFindOneRepository.findOneByTaskAndContext
-        .mockResolvedValueOnce({ taskId: 'prev-1', position: '1000.000000000000000' }) // previous
+        .mockResolvedValueOnce({
+          taskId: 'prev-1',
+          position: '1000.000000000000000',
+        }) // previous
         .mockResolvedValueOnce(null); // next
 
       // Mock finding the last task position in context to be 1000 (after previous is processed)
@@ -213,8 +229,14 @@ describe('ReorderWithinContextTaskPositionServiceImpl', () => {
 
     it('should throw BadRequestException if previous task position is greater than or equal to next task position', async () => {
       mockFindOneRepository.findOneByTaskAndContext
-        .mockResolvedValueOnce({ taskId: 'prev-1', position: '2000.000000000000000' })
-        .mockResolvedValueOnce({ taskId: 'next-1', position: '1000.000000000000000' });
+        .mockResolvedValueOnce({
+          taskId: 'prev-1',
+          position: '2000.000000000000000',
+        })
+        .mockResolvedValueOnce({
+          taskId: 'next-1',
+          position: '1000.000000000000000',
+        });
 
       await expect(
         service.reorderWithinContext({

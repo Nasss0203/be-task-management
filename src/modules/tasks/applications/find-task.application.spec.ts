@@ -18,7 +18,10 @@ describe('FindTaskApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindTaskApplicationImpl,
-        { provide: TASK_TYPES.services.FindTaskService, useValue: mockFindTaskService },
+        {
+          provide: TASK_TYPES.services.FindTaskService,
+          useValue: mockFindTaskService,
+        },
       ],
     }).compile();
 
@@ -43,7 +46,9 @@ describe('FindTaskApplicationImpl', () => {
       expect(result.page).toBe(1);
       expect(result.pageSize).toBe(10);
       expect(result.totalPages).toBe(1);
-      expect(result.data[0]).toEqual(expect.objectContaining({ id: '1', title: 'Task 1', assignees: [] }));
+      expect(result.data[0]).toEqual(
+        expect.objectContaining({ id: '1', title: 'Task 1', assignees: [] }),
+      );
     });
   });
 
@@ -62,7 +67,9 @@ describe('FindTaskApplicationImpl', () => {
       expect(result.page).toBe(1);
       expect(result.pageSize).toBe(10);
       expect(result.totalPages).toBe(1);
-      expect(result.data[0]).toEqual(expect.objectContaining({ id: '1', title: 'Task 1', assignees: [] }));
+      expect(result.data[0]).toEqual(
+        expect.objectContaining({ id: '1', title: 'Task 1', assignees: [] }),
+      );
     });
   });
 
@@ -74,17 +81,27 @@ describe('FindTaskApplicationImpl', () => {
     });
 
     it('should return mapped task if found', async () => {
-      mockFindTaskService.findOneTask.mockResolvedValue({ id: '1', title: 'Task 1', assignees: [] });
+      mockFindTaskService.findOneTask.mockResolvedValue({
+        id: '1',
+        title: 'Task 1',
+        assignees: [],
+      });
       const result = await app.findOneTask('1');
-      expect(result).toEqual(expect.objectContaining({ id: '1', title: 'Task 1', assignees: [] }));
+      expect(result).toEqual(
+        expect.objectContaining({ id: '1', title: 'Task 1', assignees: [] }),
+      );
     });
   });
 
   describe('findDeletedTasks', () => {
     it('should return mapped deleted tasks', async () => {
-      mockFindTaskService.findDeletedTasks.mockResolvedValue([{ id: '1', title: 'Task 1', assignees: [] }]);
+      mockFindTaskService.findDeletedTasks.mockResolvedValue([
+        { id: '1', title: 'Task 1', assignees: [] },
+      ]);
       const result = await app.findDeletedTasks('ws-1', 'proj-1');
-      expect(result[0]).toEqual(expect.objectContaining({ id: '1', title: 'Task 1', assignees: [] }));
+      expect(result[0]).toEqual(
+        expect.objectContaining({ id: '1', title: 'Task 1', assignees: [] }),
+      );
     });
   });
 });

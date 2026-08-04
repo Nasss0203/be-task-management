@@ -88,7 +88,9 @@ describe('GenerateTaskSubtasksApplicationImpl', () => {
       'Create ERD',
       'Write schemas',
     ]);
-    mockCreateTaskService.create.mockImplementation((input) => Promise.resolve({ id: `subtask-${input.title}` }));
+    mockCreateTaskService.create.mockImplementation((input) =>
+      Promise.resolve({ id: `subtask-${input.title}` }),
+    );
 
     const result = await application.generate({
       taskId: 'parent-1',
@@ -135,10 +137,7 @@ describe('GenerateTaskSubtasksApplicationImpl', () => {
       statusId: 'status-todo',
       priorityId: 'priority-high',
       sprintId: 'sprint-1',
-      subtasks: [
-        { title: 'Create ERD' },
-        { title: 'Write Schemas' },
-      ],
+      subtasks: [{ title: 'Create ERD' }, { title: 'Write Schemas' }],
     };
 
     mockFindTaskService.findOneTask.mockResolvedValue(parentTask);
@@ -147,7 +146,9 @@ describe('GenerateTaskSubtasksApplicationImpl', () => {
       'write schemas', // Case-insensitive duplicate
       'Refine ERD', // New subtask
     ]);
-    mockCreateTaskService.create.mockImplementation((input) => Promise.resolve({ id: `subtask-${input.title}` }));
+    mockCreateTaskService.create.mockImplementation((input) =>
+      Promise.resolve({ id: `subtask-${input.title}` }),
+    );
 
     const result = await application.generate({
       taskId: 'parent-1',

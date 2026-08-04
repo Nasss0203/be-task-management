@@ -37,7 +37,9 @@ describe('AiWorkspaceTreeDraftValidator', () => {
       if (result.success) {
         expect(result.data.workspaces).toHaveLength(1);
         expect(result.data.workspaces[0].name).toBe('Workspace A');
-        expect(result.data.workspaces[0].projects[0].tasks[0].title).toBe('Task A');
+        expect(result.data.workspaces[0].projects[0].tasks[0].title).toBe(
+          'Task A',
+        );
       }
     });
 

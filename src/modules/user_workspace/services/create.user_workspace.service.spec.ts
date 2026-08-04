@@ -22,7 +22,9 @@ describe('CreateUserWorkspaceServiceImpl', () => {
       ],
     }).compile();
 
-    service = module.get<CreateUserWorkspaceServiceImpl>(CreateUserWorkspaceServiceImpl);
+    service = module.get<CreateUserWorkspaceServiceImpl>(
+      CreateUserWorkspaceServiceImpl,
+    );
   });
 
   it('should be defined', () => {

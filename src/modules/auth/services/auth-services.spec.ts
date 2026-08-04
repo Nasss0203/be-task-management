@@ -86,8 +86,10 @@ describe('Auth services', () => {
     it('throws when email or username already exists', async () => {
       const userRepository = createUserRepositoryMock();
       const createWorkspaceService = createWorkspaceServiceMock();
-      const mailService = { sendVerificationEmail: jest.fn().mockResolvedValue({}) } as any;
-      const uow = { runInTransaction: jest.fn(cb => cb({})) } as any;
+      const mailService = {
+        sendVerificationEmail: jest.fn().mockResolvedValue({}),
+      } as any;
+      const uow = { runInTransaction: jest.fn((cb) => cb({})) } as any;
       const service = new RegisterAuthServiceImpl(
         userRepository,
         createWorkspaceService,
@@ -114,8 +116,10 @@ describe('Auth services', () => {
     it('creates user and default workspace', async () => {
       const userRepository = createUserRepositoryMock();
       const createWorkspaceService = createWorkspaceServiceMock();
-      const mailService = { sendVerificationEmail: jest.fn().mockResolvedValue({}) } as any;
-      const uow = { runInTransaction: jest.fn(cb => cb({})) } as any;
+      const mailService = {
+        sendVerificationEmail: jest.fn().mockResolvedValue({}),
+      } as any;
+      const uow = { runInTransaction: jest.fn((cb) => cb({})) } as any;
       const service = new RegisterAuthServiceImpl(
         userRepository,
         createWorkspaceService,
@@ -133,13 +137,16 @@ describe('Auth services', () => {
         password: 'password',
       } as RegisterUserDto);
 
-      expect(userRepository.createLocalUser).toHaveBeenCalledWith({
-        email: user.email,
-        username: user.username,
-        passwordHash: expect.any(String),
-        emailVerificationToken: expect.any(String),
-        emailVerificationExpires: expect.any(Date),
-      }, expect.any(Object));
+      expect(userRepository.createLocalUser).toHaveBeenCalledWith(
+        {
+          email: user.email,
+          username: user.username,
+          passwordHash: expect.any(String),
+          emailVerificationToken: expect.any(String),
+          emailVerificationExpires: expect.any(Date),
+        },
+        expect.any(Object),
+      );
       expect(createWorkspaceService.createDefault).toHaveBeenCalledWith({
         userId: user.id,
         manager: expect.any(Object),

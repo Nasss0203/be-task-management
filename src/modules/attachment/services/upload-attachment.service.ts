@@ -5,7 +5,10 @@ import type { AttachmentFileValidatorService } from '../interfaces/services/atta
 import type { AttachmentStorageRouterService } from '../interfaces/services/attachment-storage-router.service.interface';
 import type { UploadAttachmentRepository } from '../interfaces/repositories/upload-attachment.repository.interface';
 import { ATTACHMENT_TYPES } from '../interfaces/types';
-import { AttachmentProvider, AttachmentStatus } from '../domain/entities/attachment.entity';
+import {
+  AttachmentProvider,
+  AttachmentStatus,
+} from '../domain/entities/attachment.entity';
 
 @Injectable()
 export class UploadAttachmentServiceImpl implements UploadAttachmentService {
@@ -16,7 +19,7 @@ export class UploadAttachmentServiceImpl implements UploadAttachmentService {
     private readonly storageRouter: AttachmentStorageRouterService,
     @Inject(ATTACHMENT_TYPES.repositories.UploadAttachmentRepository)
     private readonly repository: UploadAttachmentRepository,
-  ) { }
+  ) {}
 
   async execute(
     file: Express.Multer.File,

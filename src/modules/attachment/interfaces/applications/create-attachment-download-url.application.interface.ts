@@ -1,4 +1,3 @@
-
 type AttachmentDownloadUrlDto = {
   attachmentId: string;
   fileName: string;

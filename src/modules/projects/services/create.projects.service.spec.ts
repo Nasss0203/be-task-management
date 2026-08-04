@@ -55,17 +55,47 @@ describe('CreateProjectServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateProjectServiceImpl,
-        { provide: PROJECT_TYPES.repositories.CreateProjectRepository, useValue: mockRepo },
-        { provide: PROJECT_TYPES.repositories.FindProjectRepository, useValue: mockFindProjectRepository },
-        { provide: PAGE_TYPES.services.FindPageService, useValue: mockFindPageService },
+        {
+          provide: PROJECT_TYPES.repositories.CreateProjectRepository,
+          useValue: mockRepo,
+        },
+        {
+          provide: PROJECT_TYPES.repositories.FindProjectRepository,
+          useValue: mockFindProjectRepository,
+        },
+        {
+          provide: PAGE_TYPES.services.FindPageService,
+          useValue: mockFindPageService,
+        },
         { provide: WORKSPACE_TYPES.uow.UnitOfWork, useValue: mockUow },
-        { provide: BOARD_TYPES.services.CreateBoardService, useValue: mockCreateBoardService },
-        { provide: PAGE_BLOCK_TYPES.services.CreatePageBlockService, useValue: mockCreatePageBlockService },
-        { provide: PAGE_BLOCK_TYPES.services.FindPageBlockService, useValue: mockFindPageBlockService },
-        { provide: TASK_STATUS_TYPES.services.CreateTaskStatusService, useValue: mockCreateTaskStatusService },
-        { provide: TASK_PRIORITY_TYPES.services.CreateTaskPriorityService, useValue: mockCreateTaskPriorityService },
-        { provide: TASK_TYPES.services.CreateTaskService, useValue: mockCreateTaskService },
-        { provide: BILLING_TYPES.services.UsageLimitEnforcerService, useValue: mockUsageLimitEnforcerService },
+        {
+          provide: BOARD_TYPES.services.CreateBoardService,
+          useValue: mockCreateBoardService,
+        },
+        {
+          provide: PAGE_BLOCK_TYPES.services.CreatePageBlockService,
+          useValue: mockCreatePageBlockService,
+        },
+        {
+          provide: PAGE_BLOCK_TYPES.services.FindPageBlockService,
+          useValue: mockFindPageBlockService,
+        },
+        {
+          provide: TASK_STATUS_TYPES.services.CreateTaskStatusService,
+          useValue: mockCreateTaskStatusService,
+        },
+        {
+          provide: TASK_PRIORITY_TYPES.services.CreateTaskPriorityService,
+          useValue: mockCreateTaskPriorityService,
+        },
+        {
+          provide: TASK_TYPES.services.CreateTaskService,
+          useValue: mockCreateTaskService,
+        },
+        {
+          provide: BILLING_TYPES.services.UsageLimitEnforcerService,
+          useValue: mockUsageLimitEnforcerService,
+        },
       ],
     }).compile();
 
@@ -123,19 +153,27 @@ describe('CreateProjectServiceImpl', () => {
       mockRepo.save.mockResolvedValue(mockProject);
       mockCreateBoardService.create.mockResolvedValue(mockBoard);
       mockCreateTaskStatusService.createMany.mockResolvedValue(mockStatuses);
-      mockCreateTaskPriorityService.createMany.mockResolvedValue(mockPriorities);
+      mockCreateTaskPriorityService.createMany.mockResolvedValue(
+        mockPriorities,
+      );
       mockCreateTaskService.createMany.mockResolvedValue([]);
-      mockFindPageService.findPageByWorkspaceId.mockResolvedValue({ id: 'page-1' });
+      mockFindPageService.findPageByWorkspaceId.mockResolvedValue({
+        id: 'page-1',
+      });
       mockFindPageBlockService.getNextOrderIndex.mockResolvedValue(1);
     });
 
     it('should create project with all default resources if create_default_board is true', async () => {
       Date.now = jest.fn(() => 1234567890); // Mock Date.now for predictable key
-      
-      const result = await service.createProjectWithPageBlock(defaultDto as any);
 
-      expect(mockUsageLimitEnforcerService.checkProjectLimit).toHaveBeenCalledWith('ws-1', expect.anything());
-      
+      const result = await service.createProjectWithPageBlock(
+        defaultDto as any,
+      );
+
+      expect(
+        mockUsageLimitEnforcerService.checkProjectLimit,
+      ).toHaveBeenCalledWith('ws-1', expect.anything());
+
       expect(mockRepo.save).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'Test Project',
@@ -150,24 +188,29 @@ describe('CreateProjectServiceImpl', () => {
       expect(mockCreateTaskStatusService.createMany).toHaveBeenCalled();
       expect(mockCreateTaskPriorityService.createMany).toHaveBeenCalled();
       expect(mockCreateTaskService.createMany).not.toHaveBeenCalled();
-      expect(mockCreatePageBlockService.create).toHaveBeenCalledWith(expect.objectContaining({
-        page_id: 'page-1',
-        type: PageBlockType.DATABASE_VIEW,
-        data_config: expect.objectContaining({
-          project_id: 'proj-1',
-          default_board_id: 'board-1',
+      expect(mockCreatePageBlockService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          page_id: 'page-1',
+          type: PageBlockType.DATABASE_VIEW,
+          data_config: expect.objectContaining({
+            project_id: 'proj-1',
+            default_board_id: 'board-1',
+          }),
         }),
-      }), expect.anything());
-      expect(mockUsageLimitEnforcerService.syncProjectUsedValue).toHaveBeenCalledWith('ws-1', expect.anything());
-      
+        expect.anything(),
+      );
+      expect(
+        mockUsageLimitEnforcerService.syncProjectUsedValue,
+      ).toHaveBeenCalledWith('ws-1', expect.anything());
+
       expect(result).toEqual(mockProject);
     });
 
     it('should skip creating board and tasks if create_default_board is false', async () => {
       const dto = { ...defaultDto, create_default_board: false };
-      
+
       await service.createProjectWithPageBlock(dto as any);
-      
+
       expect(mockCreateBoardService.create).not.toHaveBeenCalled();
       expect(mockCreateTaskService.createMany).not.toHaveBeenCalled();
       // Statuses and priorities should still be created
@@ -177,24 +220,30 @@ describe('CreateProjectServiceImpl', () => {
 
     it('should skip creating page block if page is not found', async () => {
       mockFindPageService.findPageByWorkspaceId.mockResolvedValue(null);
-      
+
       await service.createProjectWithPageBlock(defaultDto as any);
-      
+
       expect(mockCreatePageBlockService.create).not.toHaveBeenCalled();
     });
 
     it('should use custom manager and bypass runInTransaction if provided', async () => {
       const customManager = { query: jest.fn() } as any;
-      
-      await service.createProjectWithPageBlock(defaultDto as any, customManager);
-      
+
+      await service.createProjectWithPageBlock(
+        defaultDto as any,
+        customManager,
+      );
+
       expect(mockUow.runInTransaction).not.toHaveBeenCalled();
-      expect(mockRepo.save).toHaveBeenCalledWith(expect.anything(), customManager);
+      expect(mockRepo.save).toHaveBeenCalledWith(
+        expect.anything(),
+        customManager,
+      );
     });
 
     it('should use runInTransaction if custom manager is not provided', async () => {
       await service.createProjectWithPageBlock(defaultDto as any);
-      
+
       expect(mockUow.runInTransaction).toHaveBeenCalled();
     });
   });

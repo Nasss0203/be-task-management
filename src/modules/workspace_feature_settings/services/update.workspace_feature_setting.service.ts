@@ -8,11 +8,12 @@ import { UpdateWorkspaceFeatureSettingService } from '../interfaces/services/upd
 import { WORKSPACE_FEATURE_SETTING_TYPES } from '../interfaces/types';
 
 @Injectable()
-export class UpdateWorkspaceFeatureSettingServiceImpl
-  implements UpdateWorkspaceFeatureSettingService
-{
+export class UpdateWorkspaceFeatureSettingServiceImpl implements UpdateWorkspaceFeatureSettingService {
   constructor(
-    @Inject(WORKSPACE_FEATURE_SETTING_TYPES.services.FindWorkspaceFeatureSettingService)
+    @Inject(
+      WORKSPACE_FEATURE_SETTING_TYPES.services
+        .FindWorkspaceFeatureSettingService,
+    )
     private readonly findService: FindWorkspaceFeatureSettingService,
 
     @Inject(
@@ -39,8 +40,7 @@ export class UpdateWorkspaceFeatureSettingServiceImpl
           dto.createdBy !== undefined ? dto.createdBy : current.createdBy,
         updatedBy:
           dto.updatedBy !== undefined ? dto.updatedBy : current.updatedBy,
-        metadata:
-          dto.metadata !== undefined ? dto.metadata : current.metadata,
+        metadata: dto.metadata !== undefined ? dto.metadata : current.metadata,
         createdAt: current.createdAt,
         updatedAt: current.updatedAt,
         deletedAt: current.deletedAt,

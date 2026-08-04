@@ -4,9 +4,7 @@ import type { DeleteAttachmentService } from '../interfaces/services/delete-atta
 import { ATTACHMENT_TYPES } from '../interfaces/types';
 
 @Injectable()
-export class DeleteAttachmentApplicationImpl
-  implements DeleteAttachmentApplication
-{
+export class DeleteAttachmentApplicationImpl implements DeleteAttachmentApplication {
   constructor(
     @Inject(ATTACHMENT_TYPES.services.DeleteAttachmentService)
     private readonly deleteService: DeleteAttachmentService,

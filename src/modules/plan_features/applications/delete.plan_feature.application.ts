@@ -4,9 +4,7 @@ import { type DeletePlanFeatureService } from '../interfaces/services/delete.pla
 import { PLAN_FEATURE_TYPES } from '../interfaces/types';
 
 @Injectable()
-export class DeletePlanFeatureApplicationImpl
-  implements DeletePlanFeatureApplication
-{
+export class DeletePlanFeatureApplicationImpl implements DeletePlanFeatureApplication {
   constructor(
     @Inject(PLAN_FEATURE_TYPES.services.DeletePlanFeatureService)
     private readonly service: DeletePlanFeatureService,

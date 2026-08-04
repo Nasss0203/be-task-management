@@ -13,9 +13,7 @@ describe('UserActivityController', () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UserActivityController],
-      providers: [
-        { provide: UserActivityService, useValue: mockService },
-      ],
+      providers: [{ provide: UserActivityService, useValue: mockService }],
     }).compile();
 
     controller = module.get<UserActivityController>(UserActivityController);

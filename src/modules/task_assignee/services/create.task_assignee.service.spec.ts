@@ -16,13 +16,16 @@ describe('CreateTaskAssigneeServiceImpl', () => {
       providers: [
         CreateTaskAssigneeServiceImpl,
         {
-          provide: TASK_ASSIGNEE_TYPES.repositories.CreateTaskAssigneeRepository,
+          provide:
+            TASK_ASSIGNEE_TYPES.repositories.CreateTaskAssigneeRepository,
           useValue: mockCreateTaskAssigneeRepository,
         },
       ],
     }).compile();
 
-    service = module.get<CreateTaskAssigneeServiceImpl>(CreateTaskAssigneeServiceImpl);
+    service = module.get<CreateTaskAssigneeServiceImpl>(
+      CreateTaskAssigneeServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -31,7 +34,11 @@ describe('CreateTaskAssigneeServiceImpl', () => {
 
   describe('assign', () => {
     it('should call save on repository', async () => {
-      const input = { taskId: 'task-1', userId: 'user-1', assignedBy: 'user-2' };
+      const input = {
+        taskId: 'task-1',
+        userId: 'user-1',
+        assignedBy: 'user-2',
+      };
       const manager = {} as any;
       mockCreateTaskAssigneeRepository.save.mockResolvedValue({ id: '1' });
 

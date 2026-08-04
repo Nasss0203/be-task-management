@@ -9,7 +9,7 @@ import { AUTH_TYPES } from 'src/modules/auth/interfaces/types';
 export class LocalStrategy extends PassportStrategy(Strategy) {
   constructor(
     @Inject(AUTH_TYPES.services.ValidateUserAuthService)
-    private readonly validateUserAuthService: ValidateUserAuthService
+    private readonly validateUserAuthService: ValidateUserAuthService,
   ) {
     super({
       usernameField: 'email',

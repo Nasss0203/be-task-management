@@ -29,7 +29,9 @@ describe('AdminService', () => {
   });
 
   it('update should return string', () => {
-    expect(service.update(1, {} as any)).toEqual('This action updates a #1 admin');
+    expect(service.update(1, {} as any)).toEqual(
+      'This action updates a #1 admin',
+    );
   });
 
   it('remove should return string', () => {

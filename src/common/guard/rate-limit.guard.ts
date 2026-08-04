@@ -8,9 +8,7 @@ import {
   type ThrottlerModuleOptions,
   type ThrottlerStorage,
 } from '@nestjs/throttler';
-import {
-  RATE_LIMIT_MESSAGE_METADATA,
-} from 'src/common/decorator/rate-limit.decorator';
+import { RATE_LIMIT_MESSAGE_METADATA } from 'src/common/decorator/rate-limit.decorator';
 import { ErrorCode } from '../constants/error-code.constant';
 
 @Injectable()

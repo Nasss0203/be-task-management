@@ -36,8 +36,10 @@ export class CreateSprintServiceImpl implements CreateSprintService {
   ): Promise<SprintsModel> {
     const projectId = input.projectId;
 
-    const findProject =
-      await this.findProjectRepository.findOneProjectById(projectId, manager);
+    const findProject = await this.findProjectRepository.findOneProjectById(
+      projectId,
+      manager,
+    );
 
     if (!findProject) {
       throw new HttpException('Project not found', HttpStatus.NOT_FOUND);

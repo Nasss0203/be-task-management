@@ -1,5 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AttachmentProvider, AttachmentStatus } from '../domain/entities/attachment.entity';
+import {
+  AttachmentProvider,
+  AttachmentStatus,
+} from '../domain/entities/attachment.entity';
 import { ATTACHMENT_TYPES } from '../interfaces/types';
 import { UploadAttachmentServiceImpl } from './upload-attachment.service';
 
@@ -42,7 +45,9 @@ describe('UploadAttachmentServiceImpl', () => {
       ],
     }).compile();
 
-    service = module.get<UploadAttachmentServiceImpl>(UploadAttachmentServiceImpl);
+    service = module.get<UploadAttachmentServiceImpl>(
+      UploadAttachmentServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -50,7 +55,11 @@ describe('UploadAttachmentServiceImpl', () => {
   });
 
   describe('execute', () => {
-    const file = { originalname: 'test.png', buffer: Buffer.from(''), size: 1024 } as any;
+    const file = {
+      originalname: 'test.png',
+      buffer: Buffer.from(''),
+      size: 1024,
+    } as any;
 
     it('should upload to Cloudinary if it is an image', async () => {
       mockFileValidator.validateExtension.mockReturnValue('.png');
@@ -62,7 +71,13 @@ describe('UploadAttachmentServiceImpl', () => {
       });
       mockRepository.save.mockResolvedValue({ id: 'att-1' });
 
-      const result = await service.execute(file, 'ws-1', 'task-1', null, 'user-1');
+      const result = await service.execute(
+        file,
+        'ws-1',
+        'task-1',
+        null,
+        'user-1',
+      );
 
       expect(mockStorageRouter.uploadToCloudinary).toHaveBeenCalledWith({
         buffer: file.buffer,
@@ -90,12 +105,20 @@ describe('UploadAttachmentServiceImpl', () => {
 
     it('should upload to R2 if it is not an image', async () => {
       mockFileValidator.validateExtension.mockReturnValue('.pdf');
-      mockFileValidator.validateRealFileType.mockResolvedValue('application/pdf');
+      mockFileValidator.validateRealFileType.mockResolvedValue(
+        'application/pdf',
+      );
       mockStorageRouter.buildStorageKey.mockReturnValue('path/to/test.pdf');
       mockStorageRouter.uploadBuffer.mockResolvedValue(undefined);
       mockRepository.save.mockResolvedValue({ id: 'att-1' });
 
-      const result = await service.execute({ ...file, originalname: 'test.pdf' }, 'ws-1', 'task-1', null, 'user-1');
+      const result = await service.execute(
+        { ...file, originalname: 'test.pdf' },
+        'ws-1',
+        'task-1',
+        null,
+        'user-1',
+      );
 
       expect(mockStorageRouter.buildStorageKey).toHaveBeenCalledWith({
         workspaceId: 'ws-1',

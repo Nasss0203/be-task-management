@@ -18,9 +18,7 @@ import {
 import { USER_WORKSPACE_TYPES } from '../interfaces/types';
 
 @Injectable()
-export class DeleteMemberWorkspaceServiceImpl
-  implements DeleteMemberWorkspaceService
-{
+export class DeleteMemberWorkspaceServiceImpl implements DeleteMemberWorkspaceService {
   constructor(
     @Inject(USER_WORKSPACE_TYPES.repositories.FindUserWorkspaceRepository)
     private readonly findUserWorkspaceRepository: FindUserWorkspaceRepository,
@@ -32,7 +30,10 @@ export class DeleteMemberWorkspaceServiceImpl
     private readonly userRoleRepository: UserRoleRepository,
   ) {}
 
-  async deleteMember(input: DeleteMemberWorkspaceInput, manager?: EntityManager) {
+  async deleteMember(
+    input: DeleteMemberWorkspaceInput,
+    manager?: EntityManager,
+  ) {
     const targetMember =
       await this.findUserWorkspaceRepository.findMemberInWorkspace(
         input.workspace_id,
@@ -64,7 +65,9 @@ export class DeleteMemberWorkspaceServiceImpl
 
       if (actorMember.role_name === RoleName.ADMIN) {
         if ([RoleName.OWNER, RoleName.ADMIN].includes(targetMember.role_name)) {
-          throw new ForbiddenException('Admins cannot remove Owners or other Admins');
+          throw new ForbiddenException(
+            'Admins cannot remove Owners or other Admins',
+          );
         }
       }
     }
@@ -77,7 +80,7 @@ export class DeleteMemberWorkspaceServiceImpl
       const ownerCount = allMembers.filter(
         (m) => m.role_name === RoleName.OWNER,
       ).length;
-      
+
       if (ownerCount <= 1) {
         throw new BadRequestException(
           'Cannot remove the last owner of the workspace. Please transfer ownership first.',

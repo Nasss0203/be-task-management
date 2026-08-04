@@ -102,17 +102,35 @@ describe('TasksController', () => {
   describe('findAllByTask', () => {
     it('should return tasks', async () => {
       mockFindTaskApplication.findAllTask.mockResolvedValue([]);
-      const result = await controller.findAllByTask('proj-1', 'ws-1', {} as any);
+      const result = await controller.findAllByTask(
+        'proj-1',
+        'ws-1',
+        {} as any,
+      );
       expect(result).toEqual([]);
-      expect(mockFindTaskApplication.findAllTask).toHaveBeenCalledWith('proj-1', 'ws-1', {});
+      expect(mockFindTaskApplication.findAllTask).toHaveBeenCalledWith(
+        'proj-1',
+        'ws-1',
+        {},
+      );
     });
   });
 
   describe('findAllBacklogTask', () => {
     it('should return paginated backlog tasks', async () => {
-      const mockResult = { data: [], total: 0, page: 1, pageSize: 10, totalPages: 0 };
+      const mockResult = {
+        data: [],
+        total: 0,
+        page: 1,
+        pageSize: 10,
+        totalPages: 0,
+      };
       mockFindTaskApplication.findBacklogTasks.mockResolvedValue(mockResult);
-      const result = await controller.findAllBacklogTask('proj-1', 'ws-1', {} as any);
+      const result = await controller.findAllBacklogTask(
+        'proj-1',
+        'ws-1',
+        {} as any,
+      );
       expect(result).toEqual(mockResult);
     });
   });
@@ -121,11 +139,16 @@ describe('TasksController', () => {
     it('should create task', async () => {
       const dto = {} as any;
       const auth = { id: 'user-1' } as any;
-      mockCreateTaskApplication.create.mockResolvedValue({ id: 'task-1' } as any);
-      
+      mockCreateTaskApplication.create.mockResolvedValue({
+        id: 'task-1',
+      } as any);
+
       const result = await controller.create(dto, auth);
       expect(result).toEqual({ id: 'task-1' });
-      expect(mockCreateTaskApplication.create).toHaveBeenCalledWith({ ...dto, createdBy: 'user-1' });
+      expect(mockCreateTaskApplication.create).toHaveBeenCalledWith({
+        ...dto,
+        createdBy: 'user-1',
+      });
     });
   });
 
@@ -133,7 +156,9 @@ describe('TasksController', () => {
     it('should create subtask', async () => {
       const dto = { title: 'Subtask', statusId: 'status-1' } as any;
       const auth = { id: 'user-1' } as any;
-      mockCreateSubtaskApplication.create.mockResolvedValue({ id: 'subtask-1' } as any);
+      mockCreateSubtaskApplication.create.mockResolvedValue({
+        id: 'subtask-1',
+      } as any);
 
       const result = await controller.createSubtask('task-1', dto, auth);
 
@@ -148,12 +173,16 @@ describe('TasksController', () => {
 
   describe('findOneTask', () => {
     it('should find task detail', async () => {
-      mockFindTaskApplication.findOneTask.mockResolvedValue({ id: 'task-1' } as any);
+      mockFindTaskApplication.findOneTask.mockResolvedValue({
+        id: 'task-1',
+      } as any);
 
       const result = await controller.findOneTask('task-1');
 
       expect(result).toEqual({ id: 'task-1' });
-      expect(mockFindTaskApplication.findOneTask).toHaveBeenCalledWith('task-1');
+      expect(mockFindTaskApplication.findOneTask).toHaveBeenCalledWith(
+        'task-1',
+      );
     });
   });
 
@@ -161,11 +190,17 @@ describe('TasksController', () => {
     it('should update task', async () => {
       const dto = {} as any;
       const auth = { id: 'user-1' } as any;
-      mockUpdateTaskApplication.updateTask.mockResolvedValue({ id: 'task-1' } as any);
-      
+      mockUpdateTaskApplication.updateTask.mockResolvedValue({
+        id: 'task-1',
+      } as any);
+
       const result = await controller.updateTask('task-1', dto, auth);
       expect(result).toEqual({ id: 'task-1' });
-      expect(mockUpdateTaskApplication.updateTask).toHaveBeenCalledWith({ ...dto, id: 'task-1', actorId: 'user-1' });
+      expect(mockUpdateTaskApplication.updateTask).toHaveBeenCalledWith({
+        ...dto,
+        id: 'task-1',
+        actorId: 'user-1',
+      });
     });
   });
 
@@ -173,11 +208,17 @@ describe('TasksController', () => {
     it('should move task to sprint', async () => {
       const dto = { sprintId: 'sprint-1' } as any;
       const auth = { id: 'user-1' } as any;
-      mockMoveTaskSprintApplication.move.mockResolvedValue({ id: 'task-1' } as any);
-      
+      mockMoveTaskSprintApplication.move.mockResolvedValue({
+        id: 'task-1',
+      } as any);
+
       const result = await controller.moveTaskToSprint('task-1', dto, auth);
       expect(result).toEqual({ id: 'task-1' });
-      expect(mockMoveTaskSprintApplication.move).toHaveBeenCalledWith({ taskId: 'task-1', sprintId: 'sprint-1', userId: 'user-1' });
+      expect(mockMoveTaskSprintApplication.move).toHaveBeenCalledWith({
+        taskId: 'task-1',
+        sprintId: 'sprint-1',
+        userId: 'user-1',
+      });
     });
   });
 
@@ -185,10 +226,14 @@ describe('TasksController', () => {
     it('should delete task', async () => {
       const auth = { id: 'user-1' } as any;
       mockDeleteTaskApplication.delete.mockResolvedValue(undefined);
-      
+
       const result = await controller.deleteTask('task-1', 'ws-1', auth);
       expect(result).toEqual({ success: true });
-      expect(mockDeleteTaskApplication.delete).toHaveBeenCalledWith({ workspaceId: 'ws-1', taskId: 'task-1', userId: 'user-1' });
+      expect(mockDeleteTaskApplication.delete).toHaveBeenCalledWith({
+        workspaceId: 'ws-1',
+        taskId: 'task-1',
+        userId: 'user-1',
+      });
     });
   });
 
@@ -196,34 +241,48 @@ describe('TasksController', () => {
     it('should restore task', async () => {
       const auth = { id: 'user-1' } as any;
       mockDeleteTaskApplication.restore.mockResolvedValue(undefined);
-      
+
       const result = await controller.restoreTask('task-1', 'ws-1', auth);
       expect(result).toEqual({ success: true });
-      expect(mockDeleteTaskApplication.restore).toHaveBeenCalledWith({ workspaceId: 'ws-1', taskId: 'task-1', userId: 'user-1' });
+      expect(mockDeleteTaskApplication.restore).toHaveBeenCalledWith({
+        workspaceId: 'ws-1',
+        taskId: 'task-1',
+        userId: 'user-1',
+      });
     });
   });
 
   describe('findDeletedTasks', () => {
     it('should throw BadRequestException if workspaceId is not provided', async () => {
-      await expect(controller.findDeletedTasks('')).rejects.toThrow(BadRequestException);
+      await expect(controller.findDeletedTasks('')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should find deleted tasks', async () => {
       mockFindTaskApplication.findDeletedTasks.mockResolvedValue([]);
       const result = await controller.findDeletedTasks('ws-1', 'proj-1');
       expect(result).toEqual([]);
-      expect(mockFindTaskApplication.findDeletedTasks).toHaveBeenCalledWith('ws-1', 'proj-1');
+      expect(mockFindTaskApplication.findDeletedTasks).toHaveBeenCalledWith(
+        'ws-1',
+        'proj-1',
+      );
     });
   });
 
   describe('removeTaskFromSprint', () => {
     it('should remove task from sprint', async () => {
       const auth = { id: 'user-1' } as any;
-      mockRemoveTaskFromSprintApplication.remove.mockResolvedValue({ id: 'task-1' } as any);
-      
+      mockRemoveTaskFromSprintApplication.remove.mockResolvedValue({
+        id: 'task-1',
+      } as any);
+
       const result = await controller.removeTaskFromSprint('task-1', auth);
       expect(result).toEqual({ id: 'task-1' });
-      expect(mockRemoveTaskFromSprintApplication.remove).toHaveBeenCalledWith({ taskId: 'task-1', userId: 'user-1' });
+      expect(mockRemoveTaskFromSprintApplication.remove).toHaveBeenCalledWith({
+        taskId: 'task-1',
+        userId: 'user-1',
+      });
     });
   });
 
@@ -231,9 +290,18 @@ describe('TasksController', () => {
     it('should move task from one sprint to another', async () => {
       const dto = { targetSprintId: 'target-sprint' } as any;
       const auth = { id: 'user-1' } as any;
-      mockMoveTaskSprintToSprintApplication.move.mockResolvedValue({ id: 'task-1' } as any);
-      
-      const result = await controller.moveTaskSprintToSprint('ws-1', 'proj-1', 'source-sprint', 'task-1', dto, auth);
+      mockMoveTaskSprintToSprintApplication.move.mockResolvedValue({
+        id: 'task-1',
+      } as any);
+
+      const result = await controller.moveTaskSprintToSprint(
+        'ws-1',
+        'proj-1',
+        'source-sprint',
+        'task-1',
+        dto,
+        auth,
+      );
       expect(result).toEqual({ id: 'task-1' });
       expect(mockMoveTaskSprintToSprintApplication.move).toHaveBeenCalledWith({
         workspaceId: 'ws-1',
@@ -251,8 +319,13 @@ describe('TasksController', () => {
       const dto = {} as any;
       const auth = { id: 'user-1' } as any;
       mockUpdateTaskApplication.updateManyTasks.mockResolvedValue([]);
-      
-      const result = await controller.updateManyTasks('ws-1', 'proj-1', dto, auth);
+
+      const result = await controller.updateManyTasks(
+        'ws-1',
+        'proj-1',
+        dto,
+        auth,
+      );
       expect(result).toEqual([]);
       expect(mockUpdateTaskApplication.updateManyTasks).toHaveBeenCalledWith({
         workspaceId: 'ws-1',

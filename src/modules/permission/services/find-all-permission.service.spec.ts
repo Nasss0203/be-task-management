@@ -31,11 +31,21 @@ describe('FindPermissionServiceImpl', () => {
 
   describe('findPermissionsByUserAndWorkspace', () => {
     it('should call repo to find permissions', async () => {
-      mockRepo.findPermissionsByUserAndWorkspace.mockResolvedValue(['READ', 'WRITE']);
+      mockRepo.findPermissionsByUserAndWorkspace.mockResolvedValue([
+        'READ',
+        'WRITE',
+      ]);
 
-      const result = await service.findPermissionsByUserAndWorkspace('u-1', 'ws-1');
+      const result = await service.findPermissionsByUserAndWorkspace(
+        'u-1',
+        'ws-1',
+      );
 
-      expect(mockRepo.findPermissionsByUserAndWorkspace).toHaveBeenCalledWith('u-1', 'ws-1', undefined);
+      expect(mockRepo.findPermissionsByUserAndWorkspace).toHaveBeenCalledWith(
+        'u-1',
+        'ws-1',
+        undefined,
+      );
       expect(result).toEqual(['READ', 'WRITE']);
     });
   });

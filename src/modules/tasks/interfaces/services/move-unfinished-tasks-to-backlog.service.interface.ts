@@ -5,6 +5,7 @@ export type MoveUnfinishedTasksToBacklogServiceInput = {
   projectId: string;
   sprintId: string;
   doneStatusId: string;
+  incompleteTaskIds?: string[];
 };
 
 export interface MoveUnfinishedTasksToBacklogService {

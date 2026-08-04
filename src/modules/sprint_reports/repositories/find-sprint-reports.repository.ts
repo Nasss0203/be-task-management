@@ -5,9 +5,7 @@ import { SprintReport } from '../domain/entities/sprint-report.entity';
 import { FindSprintReportsRepository } from '../interfaces/repositories/find-sprint-reports.repository.interface';
 
 @Injectable()
-export class FindSprintReportsRepositoryImpl
-  implements FindSprintReportsRepository
-{
+export class FindSprintReportsRepositoryImpl implements FindSprintReportsRepository {
   constructor(
     @InjectRepository(SprintReport)
     private readonly repo: Repository<SprintReport>,

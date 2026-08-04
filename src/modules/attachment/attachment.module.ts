@@ -97,7 +97,8 @@ const applications = [
     useClass: DeleteAttachmentApplicationImpl,
   },
   {
-    provide: ATTACHMENT_TYPES.applications.CreateAttachmentDownloadUrlApplication,
+    provide:
+      ATTACHMENT_TYPES.applications.CreateAttachmentDownloadUrlApplication,
     useClass: CreateAttachmentDownloadUrlApplicationImpl,
   },
 ];
@@ -112,7 +113,12 @@ const applications = [
     StorageModule,
   ],
   controllers: [AttachmentController],
-  providers: [...repositories, ...services, ...applications, MulterConfigService],
+  providers: [
+    ...repositories,
+    ...services,
+    ...applications,
+    MulterConfigService,
+  ],
   exports: [...applications],
 })
 export class AttachmentModule {}

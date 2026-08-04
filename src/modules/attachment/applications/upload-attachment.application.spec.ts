@@ -1,6 +1,9 @@
 import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ActivityAction, ActivityEntityType } from '../../activity/domain/entities/activity.entity';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from '../../activity/domain/entities/activity.entity';
 import { ACTIVITY_TYPES } from '../../activity/interfaces/types';
 import { ATTACHMENT_TYPES } from '../interfaces/types';
 import { AttachmentMapper } from '../mapper/attachment.mapper';
@@ -18,12 +21,20 @@ describe('UploadAttachmentApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UploadAttachmentApplicationImpl,
-        { provide: ATTACHMENT_TYPES.services.UploadAttachmentService, useValue: mockUploadAttachmentService },
-        { provide: ACTIVITY_TYPES.services.CreateActivityService, useValue: mockCreateActivityService },
+        {
+          provide: ATTACHMENT_TYPES.services.UploadAttachmentService,
+          useValue: mockUploadAttachmentService,
+        },
+        {
+          provide: ACTIVITY_TYPES.services.CreateActivityService,
+          useValue: mockCreateActivityService,
+        },
       ],
     }).compile();
 
-    app = module.get<UploadAttachmentApplicationImpl>(UploadAttachmentApplicationImpl);
+    app = module.get<UploadAttachmentApplicationImpl>(
+      UploadAttachmentApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -34,7 +45,9 @@ describe('UploadAttachmentApplicationImpl', () => {
     const file = { originalname: 'test.png' } as any;
 
     it('should throw BadRequestException if neither taskId nor commentId is provided', async () => {
-      await expect(app.execute(file, { workspaceId: 'ws-1' }, 'user-1')).rejects.toThrow(BadRequestException);
+      await expect(
+        app.execute(file, { workspaceId: 'ws-1' }, 'user-1'),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should call uploadService and create activity if taskId is provided', async () => {
@@ -52,7 +65,11 @@ describe('UploadAttachmentApplicationImpl', () => {
       const originalMapper = AttachmentMapper.toResponse;
       AttachmentMapper.toResponse = jest.fn().mockReturnValue({ mapped: true });
 
-      const result = await app.execute(file, { workspaceId: 'ws-1', taskId: 'task-1' }, 'user-1');
+      const result = await app.execute(
+        file,
+        { workspaceId: 'ws-1', taskId: 'task-1' },
+        'user-1',
+      );
 
       expect(mockUploadAttachmentService.execute).toHaveBeenCalledWith(
         file,
@@ -95,7 +112,11 @@ describe('UploadAttachmentApplicationImpl', () => {
       const originalMapper = AttachmentMapper.toResponse;
       AttachmentMapper.toResponse = jest.fn().mockReturnValue({ mapped: true });
 
-      const result = await app.execute(file, { workspaceId: 'ws-1', commentId: 'comment-1' }, 'user-1');
+      const result = await app.execute(
+        file,
+        { workspaceId: 'ws-1', commentId: 'comment-1' },
+        'user-1',
+      );
 
       expect(mockUploadAttachmentService.execute).toHaveBeenCalledWith(
         file,

@@ -3,7 +3,10 @@ import { v4 as uuidv4 } from 'uuid';
 import type { UnitOfWork } from 'src/interface/index.interface';
 import { EntityManager } from 'typeorm';
 
-import { SaveWorkspaceAsTemplateApplication, SaveWorkspaceAsTemplateCommand } from '../interfaces/applications/save-workspace-as-template.application.interface';
+import {
+  SaveWorkspaceAsTemplateApplication,
+  SaveWorkspaceAsTemplateCommand,
+} from '../interfaces/applications/save-workspace-as-template.application.interface';
 import { WORKSPACE_TYPES } from '../interfaces/types';
 import type { FindWorkspaceApplication } from '../interfaces/applications/find.workspace.application.interface';
 
@@ -44,7 +47,7 @@ import {
   TemplateTaskStatusConfig,
   TemplateTaskPriorityConfig,
   TemplateTaskConfig,
-  TemplatePageBlockConfig
+  TemplatePageBlockConfig,
 } from '../types/types';
 import { TemplateStatus } from 'src/common/enum/template.enum';
 
@@ -77,46 +80,74 @@ export class SaveWorkspaceAsTemplateApplicationImpl implements SaveWorkspaceAsTe
 
     @Inject(TASK_TYPES.services.FindTaskService)
     private readonly findTaskService: FindTaskService,
-  ) { }
+  ) {}
 
   async save(command: SaveWorkspaceAsTemplateCommand) {
     const { userId, workspaceId, dto } = command;
 
     return this.uow.runInTransaction(async (manager) => {
       // 1. Validate Access
-      await this.findWorkspaceApplication.findOneWorkspaceById(userId, workspaceId);
+      await this.findWorkspaceApplication.findOneWorkspaceById(
+        userId,
+        workspaceId,
+      );
 
       // 2. Fetch the default canvas page
-      const page = await this.findPageService.findPageByWorkspaceId(workspaceId, manager);
+      const page = await this.findPageService.findPageByWorkspaceId(
+        workspaceId,
+        manager,
+      );
       if (!page) {
-        throw new HttpException('Default canvas page not found for workspace', HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          'Default canvas page not found for workspace',
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       // 3. Fetch dependencies
-      const pageBlocks = await this.findPageBlockService.findAllByPageId(page.id, manager);
-      const projects = await this.findProjectService.findAllByWorkspaceId(workspaceId);
+      const pageBlocks = await this.findPageBlockService.findAllByPageId(
+        page.id,
+        manager,
+      );
+      const projects =
+        await this.findProjectService.findAllByWorkspaceId(workspaceId);
 
       const boards: BoardModel[] = [];
       for (const p of projects) {
-        const pBoards = await this.findBoardService.findAllByProjectId(p.id, workspaceId);
+        const pBoards = await this.findBoardService.findAllByProjectId(
+          p.id,
+          workspaceId,
+        );
         boards.push(...pBoards);
       }
 
       const statuses: TaskStatusModel[] = [];
       for (const p of projects) {
-        const pStatuses = await this.findTaskStatusService.findAllTaskStatus(p.id, workspaceId, manager);
+        const pStatuses = await this.findTaskStatusService.findAllTaskStatus(
+          p.id,
+          workspaceId,
+          manager,
+        );
         statuses.push(...pStatuses);
       }
 
       const priorities: TaskPriorityModel[] = [];
       for (const p of projects) {
-        const pPriorities = await this.findTaskPriorityService.findAllTaskPriority(p.id, workspaceId, manager);
+        const pPriorities =
+          await this.findTaskPriorityService.findAllTaskPriority(
+            p.id,
+            workspaceId,
+            manager,
+          );
         priorities.push(...pPriorities);
       }
 
       const tasks: TaskModel[] = [];
       if (dto.includeSampleTasks) {
-        const wTasks = await this.findTaskService.findAllTaskByWorkspace(workspaceId, manager);
+        const wTasks = await this.findTaskService.findAllTaskByWorkspace(
+          workspaceId,
+          manager,
+        );
         tasks.push(...wTasks);
       }
 
@@ -178,7 +209,9 @@ export class SaveWorkspaceAsTemplateApplicationImpl implements SaveWorkspaceAsTe
           title: t.title || 'Untitled',
           description: t.description,
           statusName: statusMap.get(t.statusId) || 'Todo',
-          priorityName: t.priorityId ? priorityMap.get(t.priorityId) || undefined : undefined,
+          priorityName: t.priorityId
+            ? priorityMap.get(t.priorityId) || undefined
+            : undefined,
           estimateMinutes: t.estimateMinutes || undefined,
         });
       });
@@ -197,19 +230,25 @@ export class SaveWorkspaceAsTemplateApplicationImpl implements SaveWorkspaceAsTe
 
       // 6. Clone PageBlocks into PageTemplateBlocks
       const blockIdMap = new Map<string, string>();
-      pageBlocks.forEach(b => {
+      pageBlocks.forEach((b) => {
         blockIdMap.set(b.id, uuidv4());
       });
 
-      const templateBlocksToInsert = pageBlocks.map(b => {
+      const templateBlocksToInsert = pageBlocks.map((b) => {
         const newBlockId = blockIdMap.get(b.id);
         const newParentId = null; // No parentId in PageBlockModel
 
         // Handle DATABASE_VIEW config translation
-        let newDataConfig = b.data_config ? JSON.parse(JSON.stringify(b.data_config)) : null;
+        const newDataConfig = b.data_config
+          ? JSON.parse(JSON.stringify(b.data_config))
+          : null;
         if (b.type === PageBlockType.DATABASE_VIEW && newDataConfig) {
-          newDataConfig.projectTemplateKey = projectMap.get(newDataConfig.project_id) || newDataConfig.project_id;
-          newDataConfig.boardTemplateKey = boardMap.get(newDataConfig.default_board_id) || newDataConfig.default_board_id;
+          newDataConfig.projectTemplateKey =
+            projectMap.get(newDataConfig.project_id) ||
+            newDataConfig.project_id;
+          newDataConfig.boardTemplateKey =
+            boardMap.get(newDataConfig.default_board_id) ||
+            newDataConfig.default_board_id;
 
           delete newDataConfig.workspace_id;
           delete newDataConfig.project_id;
@@ -237,7 +276,7 @@ export class SaveWorkspaceAsTemplateApplicationImpl implements SaveWorkspaceAsTe
         await manager.insert(PageTemplateBlock, templateBlocksToInsert);
       }
 
-      // We don't necessarily populate pageBlocks config if we copy them as TemplateBlocks. 
+      // We don't necessarily populate pageBlocks config if we copy them as TemplateBlocks.
       // But we can leave it empty or map it if needed. The user spec says "create PageTemplateBlocks".
       const configSummaryObj: WorkspaceTemplateConfig = {
         projects: configProjects,
@@ -276,7 +315,7 @@ export class SaveWorkspaceAsTemplateApplicationImpl implements SaveWorkspaceAsTe
           priorities: priorities.length,
           sampleTasks: tasks.length,
           blocks: pageBlocks.length,
-        }
+        },
       };
     });
   }

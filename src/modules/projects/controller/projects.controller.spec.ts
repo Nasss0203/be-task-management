@@ -61,7 +61,9 @@ describe('ProjectsController', () => {
     it('should call findAllByWorkspaceId on application', async () => {
       mockFindProjectApplication.findAllByWorkspaceId.mockResolvedValue([]);
       const result = await controller.findAllByWorkspaceId('ws-1');
-      expect(mockFindProjectApplication.findAllByWorkspaceId).toHaveBeenCalledWith('ws-1');
+      expect(
+        mockFindProjectApplication.findAllByWorkspaceId,
+      ).toHaveBeenCalledWith('ws-1');
       expect(result).toEqual([]);
     });
   });
@@ -70,11 +72,15 @@ describe('ProjectsController', () => {
     it('should call createProjectWithPageBlock on application', async () => {
       const dto = { name: 'Test' } as any;
       const auth = { id: 'usr-1' } as IAuth;
-      mockCreateProjectApplication.createProjectWithPageBlock.mockResolvedValue({ id: '1' });
-      
+      mockCreateProjectApplication.createProjectWithPageBlock.mockResolvedValue(
+        { id: '1' },
+      );
+
       const result = await controller.createProjectWithPageBlock(dto, auth);
-      
-      expect(mockCreateProjectApplication.createProjectWithPageBlock).toHaveBeenCalledWith({
+
+      expect(
+        mockCreateProjectApplication.createProjectWithPageBlock,
+      ).toHaveBeenCalledWith({
         ...dto,
         created_by: 'usr-1',
       });
@@ -84,13 +90,17 @@ describe('ProjectsController', () => {
 
   describe('findDeletedProjects', () => {
     it('should throw BadRequestException if workspaceId is not provided', async () => {
-      await expect(controller.findDeletedProjects('')).rejects.toThrow(BadRequestException);
+      await expect(controller.findDeletedProjects('')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should call findDeletedProjects on application', async () => {
       mockFindProjectApplication.findDeletedProjects.mockResolvedValue([]);
       const result = await controller.findDeletedProjects('ws-1');
-      expect(mockFindProjectApplication.findDeletedProjects).toHaveBeenCalledWith('ws-1');
+      expect(
+        mockFindProjectApplication.findDeletedProjects,
+      ).toHaveBeenCalledWith('ws-1');
       expect(result).toEqual([]);
     });
   });
@@ -100,7 +110,11 @@ describe('ProjectsController', () => {
       const dto = { name: 'Update' } as any;
       mockUpdateProjectApplication.execute.mockResolvedValue({ id: '1' });
       const result = await controller.updateProject('ws-1', '1', dto);
-      expect(mockUpdateProjectApplication.execute).toHaveBeenCalledWith('1', 'ws-1', dto);
+      expect(mockUpdateProjectApplication.execute).toHaveBeenCalledWith(
+        '1',
+        'ws-1',
+        dto,
+      );
       expect(result).toEqual({ id: '1' });
     });
   });
@@ -109,9 +123,9 @@ describe('ProjectsController', () => {
     it('should call delete on delete application', async () => {
       const auth = { id: 'usr-1' } as IAuth;
       mockDeleteProjectApplication.delete.mockResolvedValue(undefined);
-      
+
       const result = await controller.deleteProject('ws-1', '1', auth);
-      
+
       expect(mockDeleteProjectApplication.delete).toHaveBeenCalledWith({
         workspaceId: 'ws-1',
         projectId: '1',
@@ -125,9 +139,9 @@ describe('ProjectsController', () => {
     it('should call restore on delete application', async () => {
       const auth = { id: 'usr-1' } as IAuth;
       mockDeleteProjectApplication.restore.mockResolvedValue(undefined);
-      
+
       const result = await controller.restoreProject('ws-1', '1', auth);
-      
+
       expect(mockDeleteProjectApplication.restore).toHaveBeenCalledWith({
         workspaceId: 'ws-1',
         projectId: '1',

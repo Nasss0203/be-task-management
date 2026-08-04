@@ -20,7 +20,10 @@ describe('CreatePageApplicationImpl', () => {
       providers: [
         CreatePageApplicationImpl,
         { provide: PAGE_TYPES.uow.UnitOfWork, useValue: mockUow },
-        { provide: PAGE_TYPES.services.CreatePageService, useValue: mockService },
+        {
+          provide: PAGE_TYPES.services.CreatePageService,
+          useValue: mockService,
+        },
       ],
     }).compile();
 
@@ -33,7 +36,9 @@ describe('CreatePageApplicationImpl', () => {
 
   it('should create page', async () => {
     mockService.create.mockResolvedValue({ id: 'page-1' });
-    jest.spyOn(PageMapper, 'toResponse').mockReturnValue({ id: 'page-1' } as any);
+    jest
+      .spyOn(PageMapper, 'toResponse')
+      .mockReturnValue({ id: 'page-1' } as any);
 
     const dto = { title: 'Test Page' } as any;
     const result = await app.create(dto);

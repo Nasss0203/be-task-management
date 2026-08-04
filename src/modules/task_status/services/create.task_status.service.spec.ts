@@ -23,7 +23,9 @@ describe('CreateTaskStatusServiceImpl', () => {
       ],
     }).compile();
 
-    service = module.get<CreateTaskStatusServiceImpl>(CreateTaskStatusServiceImpl);
+    service = module.get<CreateTaskStatusServiceImpl>(
+      CreateTaskStatusServiceImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -34,11 +36,17 @@ describe('CreateTaskStatusServiceImpl', () => {
     it('should call save on repository', async () => {
       const dto = { name: 'Todo' } as any;
       const manager = {} as any;
-      mockCreateTaskStatusRepository.save.mockResolvedValue({ id: '1', name: 'Todo' });
+      mockCreateTaskStatusRepository.save.mockResolvedValue({
+        id: '1',
+        name: 'Todo',
+      });
 
       const result = await service.create(dto, manager);
 
-      expect(mockCreateTaskStatusRepository.save).toHaveBeenCalledWith(dto, manager);
+      expect(mockCreateTaskStatusRepository.save).toHaveBeenCalledWith(
+        dto,
+        manager,
+      );
       expect(result).toEqual({ id: '1', name: 'Todo' });
     });
   });
@@ -47,11 +55,16 @@ describe('CreateTaskStatusServiceImpl', () => {
     it('should call saveMany on repository', async () => {
       const dtos = [{ name: 'Todo' }] as any[];
       const manager = {} as any;
-      mockCreateTaskStatusRepository.saveMany.mockResolvedValue([{ id: '1', name: 'Todo' }]);
+      mockCreateTaskStatusRepository.saveMany.mockResolvedValue([
+        { id: '1', name: 'Todo' },
+      ]);
 
       const result = await service.createMany(dtos, manager);
 
-      expect(mockCreateTaskStatusRepository.saveMany).toHaveBeenCalledWith(dtos, manager);
+      expect(mockCreateTaskStatusRepository.saveMany).toHaveBeenCalledWith(
+        dtos,
+        manager,
+      );
       expect(result).toEqual([{ id: '1', name: 'Todo' }]);
     });
   });

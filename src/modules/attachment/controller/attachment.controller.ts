@@ -46,13 +46,15 @@ export class AttachmentController {
     private readonly uploadApp: UploadAttachmentApplication,
     @Inject(ATTACHMENT_TYPES.applications.FindAttachmentApplication)
     private readonly findApp: FindAttachmentApplication,
-    @Inject(ATTACHMENT_TYPES.applications.CreateAttachmentDownloadUrlApplication)
+    @Inject(
+      ATTACHMENT_TYPES.applications.CreateAttachmentDownloadUrlApplication,
+    )
     private readonly createDownloadUrlApp: CreateAttachmentDownloadUrlApplication,
     @Inject(ATTACHMENT_TYPES.applications.UpdateAttachmentApplication)
     private readonly updateApp: UpdateAttachmentApplication,
     @Inject(ATTACHMENT_TYPES.applications.DeleteAttachmentApplication)
     private readonly deleteApp: DeleteAttachmentApplication,
-  ) { }
+  ) {}
 
   @Post('upload/:workspaceId')
   @UploadRateLimit()

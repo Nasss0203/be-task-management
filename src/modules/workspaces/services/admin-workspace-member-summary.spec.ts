@@ -20,7 +20,7 @@ describe('AdminWorkspaceMemberSummaryServiceImpl', () => {
       activeMembers: 3,
       inactiveMembers: 2,
     };
-    
+
     repo.getMemberSummary.mockResolvedValue(mockSummary);
 
     const result = await service.getMemberSummary(workspaceId);
@@ -38,7 +38,7 @@ describe('AdminWorkspaceMemberSummaryServiceImpl', () => {
       activeMembers: 3,
       inactiveMembers: 2,
     };
-    
+
     repo.getMemberSummary.mockResolvedValue(mockSummary);
 
     const result = await service.getMemberSummary(workspaceId, manager);

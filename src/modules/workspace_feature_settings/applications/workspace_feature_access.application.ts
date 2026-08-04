@@ -7,9 +7,7 @@ import { WORKSPACE_FEATURE_SETTING_TYPES } from '../interfaces/types';
 import { WorkspaceFeatureStatusMapper } from '../mapper/workspace_feature_status.mapper';
 
 @Injectable()
-export class WorkspaceFeatureAccessApplicationImpl
-  implements WorkspaceFeatureAccessApplication
-{
+export class WorkspaceFeatureAccessApplicationImpl implements WorkspaceFeatureAccessApplication {
   constructor(
     @Inject(
       WORKSPACE_FEATURE_SETTING_TYPES.services.WorkspaceFeatureAccessService,

@@ -183,10 +183,15 @@ describe('CreateWorkspaceServiceImpl', () => {
     expect(createRolePermissionService.createMany).toHaveBeenCalled();
     expect(createUserRoleService.create).toHaveBeenCalled();
     expect(createPageService.createDefault).toHaveBeenCalled();
-    expect(checkWorkspaceLimitService.applyBillingForNewWorkspace).toHaveBeenCalledWith(userId, workspace.id, manager);
+    expect(
+      checkWorkspaceLimitService.applyBillingForNewWorkspace,
+    ).toHaveBeenCalledWith(userId, workspace.id, manager);
     expect(createProjectService.create).toHaveBeenCalled();
     expect(createBoardService.create).toHaveBeenCalled();
-    expect(usageLimitEnforcerService.syncProjectUsedValue).toHaveBeenCalledWith(workspace.id, manager);
+    expect(usageLimitEnforcerService.syncProjectUsedValue).toHaveBeenCalledWith(
+      workspace.id,
+      manager,
+    );
     expect(createTaskStatusService.createMany).toHaveBeenCalled();
     expect(createTaskPriorityService.createMany).toHaveBeenCalled();
     expect(createTaskService.createMany).not.toHaveBeenCalled();
@@ -209,7 +214,7 @@ describe('CreateWorkspaceServiceImpl', () => {
     const userId = 'user-123456';
     workspaceRepo.existsBySlug.mockResolvedValue(false);
     workspaceRepo.save.mockResolvedValue({ id: 'workspace-1', name: 'Test' });
-    
+
     roleRepository.saveMany.mockResolvedValue([
       { id: 'role-admin', name: RoleName.ADMIN },
     ]);
@@ -225,7 +230,7 @@ describe('CreateWorkspaceServiceImpl', () => {
     const userId = 'user-123456';
     workspaceRepo.existsBySlug.mockResolvedValue(false);
     workspaceRepo.save.mockResolvedValue({ id: 'workspace-1', name: 'Test' });
-    
+
     roleRepository.saveMany.mockResolvedValue([
       { id: 'role-owner', name: RoleName.OWNER },
       { id: 'role-admin', name: RoleName.ADMIN },
@@ -244,7 +249,7 @@ describe('CreateWorkspaceServiceImpl', () => {
     const userId = 'user-123456';
     workspaceRepo.existsBySlug.mockResolvedValue(false);
     workspaceRepo.save.mockResolvedValue({ id: 'workspace-1', name: 'Test' });
-    
+
     roleRepository.saveMany.mockResolvedValue([
       { id: 'role-owner', name: RoleName.OWNER },
       { id: 'role-admin', name: RoleName.ADMIN },
@@ -252,25 +257,33 @@ describe('CreateWorkspaceServiceImpl', () => {
       { id: 'role-viewer', name: RoleName.VIEWER },
     ]);
 
-    findPermissionRepository.findAll.mockResolvedValue([{ id: 'dummy-1', code: 'DUMMY_CODE' }]);
+    findPermissionRepository.findAll.mockResolvedValue([
+      { id: 'dummy-1', code: 'DUMMY_CODE' },
+    ]);
 
     await expect(service.createDefault({ userId })).rejects.toMatchObject({
       status: HttpStatus.INTERNAL_SERVER_ERROR,
     });
   });
 
-
-
   it('does not update default page block if createdPage has no pageBlock', async () => {
     const userId = 'user-123456';
-    const workspace = { id: 'workspace-1', name: 'Task management', slug: 'task-management', planType: PlanTypeWorkspace.FREE };
-    
+    const workspace = {
+      id: 'workspace-1',
+      name: 'Task management',
+      slug: 'task-management',
+      planType: PlanTypeWorkspace.FREE,
+    };
+
     workspaceRepo.existsBySlug.mockResolvedValue(false);
     workspaceRepo.save.mockResolvedValue(workspace);
     mockRbacSeedSuccess();
 
     createPageService.createDefault.mockResolvedValue({ id: 'page-1' }); // missing pageBlock
-    createProjectService.create.mockResolvedValue({ id: 'project-1', name: 'Proj' });
+    createProjectService.create.mockResolvedValue({
+      id: 'project-1',
+      name: 'Proj',
+    });
     createBoardService.create.mockResolvedValue({ id: 'board-1' });
 
     createTaskStatusService.createMany.mockResolvedValue([

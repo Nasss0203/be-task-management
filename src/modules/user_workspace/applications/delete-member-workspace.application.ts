@@ -13,9 +13,7 @@ import { TASK_ASSIGNEE_TYPES } from 'src/modules/task_assignee/interfaces/types'
 import { USER_WORKSPACE_TYPES } from '../interfaces/types';
 
 @Injectable()
-export class DeleteMemberWorkspaceApplicationImpl
-  implements DeleteMemberWorkspaceApplication
-{
+export class DeleteMemberWorkspaceApplicationImpl implements DeleteMemberWorkspaceApplication {
   constructor(
     @Inject(USER_WORKSPACE_TYPES.services.DeleteMemberWorkspaceService)
     private readonly deleteMemberWorkspaceService: DeleteMemberWorkspaceService,

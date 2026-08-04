@@ -29,7 +29,10 @@ describe('LoginAuthApplicationImpl', () => {
   });
 
   it('should login', async () => {
-    mockService.login.mockResolvedValue({ accessToken: 'a', refreshToken: 'r' });
+    mockService.login.mockResolvedValue({
+      accessToken: 'a',
+      refreshToken: 'r',
+    });
     const auth = { email: 'test@example.com', password: 'password' } as any;
     const result = await app.login(auth);
     expect(mockService.login).toHaveBeenCalledWith(auth);

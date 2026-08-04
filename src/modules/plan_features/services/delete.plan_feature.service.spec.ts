@@ -11,12 +11,20 @@ describe('DeletePlanFeatureServiceImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeletePlanFeatureServiceImpl,
-        { provide: PLAN_FEATURE_TYPES.services.FindPlanFeatureService, useValue: mockFindService },
-        { provide: PLAN_FEATURE_TYPES.repositories.DeletePlanFeatureRepository, useValue: mockRepo },
+        {
+          provide: PLAN_FEATURE_TYPES.services.FindPlanFeatureService,
+          useValue: mockFindService,
+        },
+        {
+          provide: PLAN_FEATURE_TYPES.repositories.DeletePlanFeatureRepository,
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
-    service = module.get<DeletePlanFeatureServiceImpl>(DeletePlanFeatureServiceImpl);
+    service = module.get<DeletePlanFeatureServiceImpl>(
+      DeletePlanFeatureServiceImpl,
+    );
   });
 
   it('should delete plan feature', async () => {

@@ -55,7 +55,11 @@ describe('AttachmentStorageRouterServiceImpl', () => {
 
   describe('uploadBuffer', () => {
     it('should call storageService.uploadBuffer', async () => {
-      const params = { key: 'key', buffer: Buffer.from(''), contentType: 'image/png' };
+      const params = {
+        key: 'key',
+        buffer: Buffer.from(''),
+        contentType: 'image/png',
+      };
 
       await service.uploadBuffer(params);
 
@@ -66,7 +70,10 @@ describe('AttachmentStorageRouterServiceImpl', () => {
   describe('createDownloadUrl', () => {
     it('should call storageService.createDownloadUrl', async () => {
       const params = { key: 'key', fileName: 'file.png' };
-      mockStorageService.createDownloadUrl.mockResolvedValue({ downloadUrl: 'url', expiresIn: 3600 });
+      mockStorageService.createDownloadUrl.mockResolvedValue({
+        downloadUrl: 'url',
+        expiresIn: 3600,
+      });
 
       const result = await service.createDownloadUrl(params);
 

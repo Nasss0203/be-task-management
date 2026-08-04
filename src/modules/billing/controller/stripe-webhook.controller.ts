@@ -16,9 +16,7 @@ import { StripeWebhookService } from '../services/webhook/stripe-webhook.service
 
 @Controller('billing/stripe')
 export class StripeWebhookController {
-  constructor(
-    private readonly stripeWebhookService: StripeWebhookService,
-  ) {}
+  constructor(private readonly stripeWebhookService: StripeWebhookService) {}
 
   @Post('webhook')
   @Public()
@@ -39,7 +37,8 @@ export class StripeWebhookController {
   @Get('checkout-session/:sessionId')
   verifyCheckoutSession(
     @Param('sessionId') sessionId: string,
-    @Req() req: Request & {
+    @Req()
+    req: Request & {
       user?: { id?: string; sub?: string; userId?: string };
     },
   ) {

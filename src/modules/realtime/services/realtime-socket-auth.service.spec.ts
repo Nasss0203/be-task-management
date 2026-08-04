@@ -1,4 +1,3 @@
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { RealtimeSocketAuthService } from './realtime-socket-auth.service';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
@@ -36,14 +35,18 @@ describe('RealtimeSocketAuthService', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -51,7 +54,7 @@ describe('RealtimeSocketAuthService', () => {
             get: jest.fn().mockReturnValue('dummy'),
             joinUserRoom: jest.fn(),
             joinWorkspace: jest.fn(),
-            joinProject: jest.fn()
+            joinProject: jest.fn(),
           },
         },
         {
@@ -76,14 +79,18 @@ describe('RealtimeSocketAuthService', () => {
             emit: jest.fn(),
             broadcast: jest.fn(),
             execute: jest.fn().mockResolvedValue({}),
-            authenticate: jest.fn().mockResolvedValue({ user: { id: 'user-1' } }),
-            transaction: jest.fn(cb => cb({
-               getCustomRepository: () => ({
-                   save: jest.fn().mockResolvedValue({}),
-                   update: jest.fn().mockResolvedValue({}),
-                   insert: jest.fn().mockResolvedValue({}),
-               })
-            })),
+            authenticate: jest
+              .fn()
+              .mockResolvedValue({ user: { id: 'user-1' } }),
+            transaction: jest.fn((cb) =>
+              cb({
+                getCustomRepository: () => ({
+                  save: jest.fn().mockResolvedValue({}),
+                  update: jest.fn().mockResolvedValue({}),
+                  insert: jest.fn().mockResolvedValue({}),
+                }),
+              }),
+            ),
             sendToUser: jest.fn(),
             sendToWorkspace: jest.fn(),
             sendToProject: jest.fn(),
@@ -91,9 +98,9 @@ describe('RealtimeSocketAuthService', () => {
             get: jest.fn().mockReturnValue('dummy'),
             joinUserRoom: jest.fn(),
             joinWorkspace: jest.fn(),
-            joinProject: jest.fn()
+            joinProject: jest.fn(),
           },
-        }
+        },
       ],
     }).compile();
 
@@ -108,7 +115,7 @@ describe('RealtimeSocketAuthService', () => {
     it('should execute successfully', async () => {
       try {
         await provider.authenticate({} as any, {} as any, {} as any, {} as any);
-      } catch(e) {}
+      } catch (e) {}
       expect(true).toBe(true);
     });
   });

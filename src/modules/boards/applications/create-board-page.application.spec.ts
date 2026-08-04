@@ -26,12 +26,20 @@ describe('CreateBoardAndAttachToPageApplicationImpl', () => {
       providers: [
         CreateBoardAndAttachToPageApplicationImpl,
         { provide: WORKSPACE_TYPES.uow.UnitOfWork, useValue: mockUow },
-        { provide: BOARD_TYPES.services.CreateBoardService, useValue: mockCreateBoardService },
-        { provide: PAGE_BLOCK_TYPES.services.CreatePageBlockService, useValue: mockCreatePageBlockService },
+        {
+          provide: BOARD_TYPES.services.CreateBoardService,
+          useValue: mockCreateBoardService,
+        },
+        {
+          provide: PAGE_BLOCK_TYPES.services.CreatePageBlockService,
+          useValue: mockCreatePageBlockService,
+        },
       ],
     }).compile();
 
-    app = module.get<CreateBoardAndAttachToPageApplicationImpl>(CreateBoardAndAttachToPageApplicationImpl);
+    app = module.get<CreateBoardAndAttachToPageApplicationImpl>(
+      CreateBoardAndAttachToPageApplicationImpl,
+    );
   });
 
   it('should be defined', () => {
@@ -55,7 +63,9 @@ describe('CreateBoardAndAttachToPageApplicationImpl', () => {
     const result = await app.execute(dto);
 
     expect(mockCreateBoardService.create).toHaveBeenCalled();
-    expect(mockCreatePageBlockService.addDatabaseViewToBlock).toHaveBeenCalled();
+    expect(
+      mockCreatePageBlockService.addDatabaseViewToBlock,
+    ).toHaveBeenCalled();
     expect(result).toEqual(mockBoard);
   });
 });

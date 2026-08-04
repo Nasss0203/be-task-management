@@ -6,5 +6,9 @@ export type DeleteTaskAssigneeInput = {
 
 export interface DeleteTaskAssigneeService {
   unassign(input: DeleteTaskAssigneeInput): Promise<void>;
-  unassignFromWorkspace(userId: string, workspaceId: string, manager?: any): Promise<void>;
+  unassignFromWorkspace(
+    userId: string,
+    workspaceId: string,
+    manager?: any,
+  ): Promise<void>;
 }

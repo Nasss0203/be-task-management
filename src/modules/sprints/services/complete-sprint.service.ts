@@ -46,7 +46,7 @@ export class CompleteSprintServiceImpl implements CompleteSprintService {
 
     @Inject(SPRINT_REPORT_TYPES.repositories.CreateSprintReportRepository)
     private readonly createSprintReportRepository: CreateSprintReportRepository,
-  ) { }
+  ) {}
 
   async completeSprint(
     input: CompleteSprintServiceInput,
@@ -97,7 +97,9 @@ export class CompleteSprintServiceImpl implements CompleteSprintService {
     );
 
     // Calculate and save Sprint Report snapshot before moving tasks
-    const taskRepo = manager ? manager.getRepository(Task) : this.completeSprintRepository['repo'].manager.getRepository(Task);
+    const taskRepo = manager
+      ? manager.getRepository(Task)
+      : this.completeSprintRepository['repo'].manager.getRepository(Task);
     const tasks = await taskRepo.find({
       where: {
         workspaceId: input.workspaceId,
@@ -124,11 +126,12 @@ export class CompleteSprintServiceImpl implements CompleteSprintService {
       const estimate = t.estimateMinutes || 0;
       totalEstimate += estimate;
 
-      const assignees = t.assignees?.map(a => ({
-        userId: a.userId,
-        name: a.user?.name || a.user?.email,
-        avatar: a.user?.avatar,
-      })) || [];
+      const assignees =
+        t.assignees?.map((a) => ({
+          userId: a.userId,
+          name: a.user?.name || a.user?.email,
+          avatar: a.user?.avatar,
+        })) || [];
 
       const taskDetail = {
         id: t.id,
@@ -204,6 +207,7 @@ export class CompleteSprintServiceImpl implements CompleteSprintService {
         projectId: input.projectId,
         sprintId: input.sprintId,
         doneStatusId: doneStatus.id,
+        incompleteTaskIds,
       },
       manager,
     );

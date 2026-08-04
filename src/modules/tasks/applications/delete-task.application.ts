@@ -33,7 +33,7 @@ export class DeleteTaskApplicationImpl implements DeleteTaskApplication {
 
     @Inject(WORKSPACE_TYPES.uow.UnitOfWork)
     private readonly uow: UnitOfWork,
-    
+
     private readonly eventEmitter: EventEmitter2,
   ) {}
 

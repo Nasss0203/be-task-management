@@ -10,16 +10,25 @@ describe('CreateFeatureApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateFeatureApplicationImpl,
-        { provide: FEATURE_TYPES.services.CreateFeatureService, useValue: mockService },
+        {
+          provide: FEATURE_TYPES.services.CreateFeatureService,
+          useValue: mockService,
+        },
       ],
     }).compile();
 
-    application = module.get<CreateFeatureApplicationImpl>(CreateFeatureApplicationImpl);
+    application = module.get<CreateFeatureApplicationImpl>(
+      CreateFeatureApplicationImpl,
+    );
   });
 
   it('should create feature', async () => {
     mockService.create.mockResolvedValue({ id: '1' });
-    const result = await application.create({ name: 'f1', code: 'f1', description: 'desc' });
+    const result = await application.create({
+      name: 'f1',
+      code: 'f1',
+      description: 'desc',
+    });
     expect(mockService.create).toHaveBeenCalled();
     expect(result.id).toEqual('1');
   });

@@ -59,7 +59,10 @@ describe('AdminBillingController', () => {
       providers: [
         { provide: AdminBillingPlanService, useValue: mockPlanService },
         { provide: AdminSubscriptionGrantService, useValue: mockGrantService },
-        { provide: getRepositoryToken(Subscription), useValue: mockSubscriptionRepo },
+        {
+          provide: getRepositoryToken(Subscription),
+          useValue: mockSubscriptionRepo,
+        },
         { provide: getRepositoryToken(Payment), useValue: mockPaymentRepo },
       ],
     }).compile();
@@ -87,49 +90,76 @@ describe('AdminBillingController', () => {
 
   it('should update plan', async () => {
     mockPlanService.updatePlan.mockResolvedValue({ id: 'plan-1' });
-    const result = await controller.updatePlan('plan-1', { name: 'Plan 1' } as any);
-    expect(mockPlanService.updatePlan).toHaveBeenCalledWith('plan-1', { name: 'Plan 1' });
+    const result = await controller.updatePlan('plan-1', {
+      name: 'Plan 1',
+    } as any);
+    expect(mockPlanService.updatePlan).toHaveBeenCalledWith('plan-1', {
+      name: 'Plan 1',
+    });
     expect(result).toEqual({ id: 'plan-1' });
   });
 
   it('should update plan status', async () => {
     mockPlanService.updatePlanStatus.mockResolvedValue({ id: 'plan-1' });
-    const result = await controller.updatePlanStatus('plan-1', { isActive: true } as any);
-    expect(mockPlanService.updatePlanStatus).toHaveBeenCalledWith('plan-1', { isActive: true });
+    const result = await controller.updatePlanStatus('plan-1', {
+      isActive: true,
+    } as any);
+    expect(mockPlanService.updatePlanStatus).toHaveBeenCalledWith('plan-1', {
+      isActive: true,
+    });
     expect(result).toEqual({ id: 'plan-1' });
   });
 
   it('should grant subscription', async () => {
     mockGrantService.grant.mockResolvedValue({ id: 'sub-1' });
-    const result = await controller.grantSubscription({ planId: 'plan-1' } as any);
+    const result = await controller.grantSubscription({
+      planId: 'plan-1',
+    } as any);
     expect(mockGrantService.grant).toHaveBeenCalledWith({ planId: 'plan-1' });
     expect(result).toEqual({ id: 'sub-1' });
   });
 
   it('should revoke subscription', async () => {
     mockGrantService.revoke.mockResolvedValue({ id: 'sub-1' });
-    const result = await controller.revokeSubscription({ subscriptionId: 'sub-1' } as any);
-    expect(mockGrantService.revoke).toHaveBeenCalledWith({ subscriptionId: 'sub-1' });
+    const result = await controller.revokeSubscription({
+      subscriptionId: 'sub-1',
+    } as any);
+    expect(mockGrantService.revoke).toHaveBeenCalledWith({
+      subscriptionId: 'sub-1',
+    });
     expect(result).toEqual({ id: 'sub-1' });
   });
 
   it('should cancel subscription', async () => {
     mockGrantService.cancel.mockResolvedValue({ id: 'sub-1' });
-    const result = await controller.cancelSubscription('sub-1', { reason: 'reason' } as any);
-    expect(mockGrantService.cancel).toHaveBeenCalledWith('sub-1', { reason: 'reason' });
+    const result = await controller.cancelSubscription('sub-1', {
+      reason: 'reason',
+    } as any);
+    expect(mockGrantService.cancel).toHaveBeenCalledWith('sub-1', {
+      reason: 'reason',
+    });
     expect(result).toEqual({ id: 'sub-1' });
   });
 
   it('should resume subscription', async () => {
     mockGrantService.resume.mockResolvedValue({ id: 'sub-1' });
-    const result = await controller.resumeSubscription('sub-1', { reason: 'reason' } as any);
-    expect(mockGrantService.resume).toHaveBeenCalledWith('sub-1', { reason: 'reason' });
+    const result = await controller.resumeSubscription('sub-1', {
+      reason: 'reason',
+    } as any);
+    expect(mockGrantService.resume).toHaveBeenCalledWith('sub-1', {
+      reason: 'reason',
+    });
     expect(result).toEqual({ id: 'sub-1' });
   });
 
   it('should get subscriptions', async () => {
     mockSubscriptionQueryBuilder.getRawMany.mockResolvedValue([
-      { id: 'sub-1', workspaceId: 'ws-1', userEmail: 'test@example.com', createdAt: new Date() },
+      {
+        id: 'sub-1',
+        workspaceId: 'ws-1',
+        userEmail: 'test@example.com',
+        createdAt: new Date(),
+      },
     ]);
     const result = await controller.getSubscriptions();
     expect(mockSubscriptionQueryBuilder.getRawMany).toHaveBeenCalled();
@@ -140,7 +170,12 @@ describe('AdminBillingController', () => {
 
   it('should get payments', async () => {
     mockPaymentQueryBuilder.getRawMany.mockResolvedValue([
-      { id: 'pay-1', amount: 100, orderCode: 'ORDER123', createdAt: new Date() },
+      {
+        id: 'pay-1',
+        amount: 100,
+        orderCode: 'ORDER123',
+        createdAt: new Date(),
+      },
     ]);
     const result = await controller.getPayments();
     expect(mockPaymentQueryBuilder.getRawMany).toHaveBeenCalled();

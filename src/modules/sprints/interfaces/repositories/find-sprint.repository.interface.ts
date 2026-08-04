@@ -10,9 +10,7 @@ export interface FindSprintRepository {
     manager?: EntityManager,
   ): Promise<Sprint[]>;
 
-  findActiveSprintsOverdue(
-    manager?: EntityManager,
-  ): Promise<Sprint[]>;
+  findActiveSprintsOverdue(manager?: EntityManager): Promise<Sprint[]>;
 
   existsByProjectIdAndName(
     projectId: string,

@@ -14,7 +14,10 @@ describe('PageTemplatesController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PageTemplatesController],
       providers: [
-        { provide: PAGE_TEMPLATE_TYPES.services.PageTemplatesService, useValue: mockService },
+        {
+          provide: PAGE_TEMPLATE_TYPES.services.PageTemplatesService,
+          useValue: mockService,
+        },
       ],
     }).compile();
 
