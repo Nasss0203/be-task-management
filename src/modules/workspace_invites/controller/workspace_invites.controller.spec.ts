@@ -9,6 +9,7 @@ describe('WorkspaceInvitesController', () => {
   const mockInviteApp = { invite: jest.fn() };
   const mockSearchApp = { search: jest.fn() };
   const mockAcceptApp = { acceptWorkspaceInvite: jest.fn() };
+  const mockDeclineApp = { declineWorkspaceInvite: jest.fn() };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -37,6 +38,12 @@ describe('WorkspaceInvitesController', () => {
             WORKSPACE_INVITE_TYPES.applications
               .AcceptWorkspaceInviteApplication,
           useValue: mockAcceptApp,
+        },
+        {
+          provide:
+            WORKSPACE_INVITE_TYPES.applications
+              .DeclineWorkspaceInviteApplication,
+          useValue: mockDeclineApp,
         },
       ],
     }).compile();
