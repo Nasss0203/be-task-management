@@ -5,7 +5,6 @@ import { VnpayService } from 'nestjs-vnpay';
 import {
   ProductCode,
   VnpLocale,
-  dateFormat,
   type ReturnQueryFromVNPay,
 } from 'vnpay';
 
@@ -23,7 +22,7 @@ export class VnpayPaymentProviderImpl implements VnpayPaymentProvider {
   constructor(
     private readonly vnpayService: VnpayService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   createPayment(input: CreateGatewayPaymentInput): CreateGatewayPaymentResult {
     const clientUrl =
@@ -43,8 +42,8 @@ export class VnpayPaymentProviderImpl implements VnpayPaymentProvider {
       vnp_OrderType: ProductCode.Other,
       vnp_ReturnUrl: returnUrl,
       vnp_Locale: VnpLocale.VN,
-      vnp_CreateDate: dateFormat(new Date()),
-      vnp_ExpireDate: dateFormat(expiredAt),
+      vnp_CreateDate: this.formatVnTime(new Date()),
+      vnp_ExpireDate: this.formatVnTime(expiredAt),
     });
 
     return {
@@ -94,9 +93,9 @@ export class VnpayPaymentProviderImpl implements VnpayPaymentProvider {
       ...result,
       isSuccess:
         this.normalizeVnpayCode(result.vnp_ResponseCode) ===
-          VNPAY_SUCCESS_CODE &&
+        VNPAY_SUCCESS_CODE &&
         this.normalizeVnpayCode(result.vnp_TransactionStatus) ===
-          VNPAY_SUCCESS_CODE,
+        VNPAY_SUCCESS_CODE,
     };
   }
 
@@ -106,5 +105,19 @@ export class VnpayPaymentProviderImpl implements VnpayPaymentProvider {
     }
 
     return value.toString().padStart(2, '0');
+  }
+
+  private formatVnTime(date: Date): number {
+    // VNPay expects GMT+7 (Vietnam time)
+    const vnTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+
+    const year = vnTime.getUTCFullYear();
+    const month = String(vnTime.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(vnTime.getUTCDate()).padStart(2, '0');
+    const hour = String(vnTime.getUTCHours()).padStart(2, '0');
+    const minute = String(vnTime.getUTCMinutes()).padStart(2, '0');
+    const second = String(vnTime.getUTCSeconds()).padStart(2, '0');
+
+    return Number(`${year}${month}${day}${hour}${minute}${second}`);
   }
 }
