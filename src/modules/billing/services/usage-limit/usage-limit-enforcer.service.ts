@@ -1,6 +1,7 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 
+import { ErrorCode } from 'src/common/constants/error-code.constant';
 import { UsageResourceType } from '../../domain/entities/usage-limit.entity';
 import { type UsageLimitRepository } from '../../interfaces/repositories/usage-limit/usage-limit.repository.interface';
 import { type UsageLimitEnforcerService } from '../../interfaces/services/usage-limit/usage-limit-enforcer.service.interface';
@@ -39,9 +40,10 @@ export class UsageLimitEnforcerServiceImpl implements UsageLimitEnforcerService 
       );
 
     if (currentProjectCount >= usageLimit.limitValue) {
-      throw new BadRequestException(
-        `Project limit reached. Your plan allows up to ${usageLimit.limitValue} projects`,
-      );
+      throw new BadRequestException({
+        code: ErrorCode.PROJECT_LIMIT_EXCEEDED,
+        message: `Project limit reached. Your plan allows up to ${usageLimit.limitValue} projects`,
+      });
     }
   }
 
