@@ -74,4 +74,26 @@ export class UpdateNotificationRepositoryImpl implements UpdateNotificationRepos
 
     return result.affected ?? 0;
   }
+
+  async markAsRead(
+    notificationId: string,
+    receiverId: string,
+    manager?: EntityManager,
+  ): Promise<number> {
+    const repo = this.getRepo(manager);
+
+    const result = await repo
+      .createQueryBuilder()
+      .update(Notification)
+      .set({
+        readAt: () => 'CURRENT_TIMESTAMP',
+      })
+      .where('id = :notificationId', { notificationId })
+      .andWhere('receiver_id = :receiverId', { receiverId })
+      .andWhere('read_at IS NULL')
+      .andWhere('archived_at IS NULL')
+      .execute();
+
+    return result.affected ?? 0;
+  }
 }

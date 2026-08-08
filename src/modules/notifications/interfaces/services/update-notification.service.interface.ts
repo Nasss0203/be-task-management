@@ -13,4 +13,10 @@ export interface UpdateNotificationService {
   ): Promise<number>;
 
   markAllAsRead(userId: string, manager?: EntityManager): Promise<number>;
+
+  markAsRead(
+    notificationId: string,
+    userId: string,
+    manager?: EntityManager,
+  ): Promise<number>;
 }

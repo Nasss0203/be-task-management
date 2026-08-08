@@ -42,4 +42,24 @@ export class UpdateNotificationServiceImpl implements UpdateNotificationService 
 
     return this.updateNotificationRepository.markAllAsRead(userId, manager);
   }
+
+  async markAsRead(
+    notificationId: string,
+    userId: string,
+    manager?: EntityManager,
+  ): Promise<number> {
+    if (!notificationId) {
+      throw new BadRequestException('notificationId is required');
+    }
+
+    if (!userId) {
+      throw new BadRequestException('userId is required');
+    }
+
+    return this.updateNotificationRepository.markAsRead(
+      notificationId,
+      userId,
+      manager,
+    );
+  }
 }

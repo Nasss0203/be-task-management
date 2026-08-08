@@ -21,4 +21,9 @@ export interface DashboardTasksService {
   buildRhythmBlocks(
     tasks: DashboardTaskResponseDto[],
   ): DashboardRhythmBlockResponseDto[];
+
+  getRecentCompletedTasks(
+    userId: string,
+    limit: number,
+  ): Promise<DashboardTaskResponseDto[]>;
 }

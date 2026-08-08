@@ -75,6 +75,11 @@ export interface DashboardRepository {
     limit: number,
   ): Promise<DashboardTaskRow[]>;
 
+  findRecentCompletedTasks(
+    userId: string,
+    limit: number,
+  ): Promise<DashboardTaskRow[]>;
+
   findRecentWorkspaces(
     userId: string,
     limit: number,

@@ -109,7 +109,7 @@ describe('DeleteTaskAssigneeApplicationImpl', () => {
       );
     });
 
-    it('should throw ForbiddenException if user tries to unassign other without permission', async () => {
+    it('should allow member to unassign other user', async () => {
       mockFindTaskService.findOneTask.mockResolvedValue(task);
       mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce({
         role_name: RoleName.MEMBER,
@@ -120,9 +120,17 @@ describe('DeleteTaskAssigneeApplicationImpl', () => {
       mockFindTaskAssigneeService.findOneTaskAssignee.mockResolvedValue(
         taskAssignee,
       );
-      await expect(application.unassign(input)).rejects.toThrow(
-        ForbiddenException,
+
+      const result = await application.unassign(input);
+
+      expect(mockDeleteTaskAssigneeService.unassign).toHaveBeenCalledWith(
+        input,
       );
+      expect(result).toEqual({
+        taskId: 'task-1',
+        userId: 'user-2',
+        unassigned: true,
+      });
     });
 
     it('should unassign successfully', async () => {

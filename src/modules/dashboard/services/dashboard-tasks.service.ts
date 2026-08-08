@@ -63,6 +63,18 @@ export class DashboardTasksServiceImpl implements DashboardTasksService {
     }));
   }
 
+  async getRecentCompletedTasks(
+    userId: string,
+    limit: number,
+  ): Promise<DashboardTaskResponseDto[]> {
+    const rows = await this.dashboardRepository.findRecentCompletedTasks(
+      userId,
+      limit,
+    );
+
+    return rows.map((row) => this.toTaskResponse(row));
+  }
+
   private toTaskResponse(row: DashboardTaskRow): DashboardTaskResponseDto {
     return {
       id: row.id,

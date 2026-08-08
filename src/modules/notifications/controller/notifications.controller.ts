@@ -1,4 +1,4 @@
-import { Controller, Get, Inject, Patch, Query } from '@nestjs/common';
+import { Controller, Get, Inject, Param, Patch, Query } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import {
   ReadRateLimit,
@@ -58,6 +58,18 @@ export class NotificationsController {
   @ResponseMessage('Mark all notifications as read successfully')
   async markAllAsRead(@Auth() auth: IAuth) {
     const updated = await this.updateNotificationService.markAllAsRead(auth.id);
+
+    return { updated };
+  }
+
+  @Patch(':id/read')
+  @WriteRateLimit()
+  @ResponseMessage('Mark notification as read successfully')
+  async markAsRead(@Auth() auth: IAuth, @Param('id') id: string) {
+    const updated = await this.updateNotificationService.markAsRead(
+      id,
+      auth.id,
+    );
 
     return { updated };
   }

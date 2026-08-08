@@ -86,12 +86,6 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
 
     const isSelfAssign = input.userId === input.assignedBy;
 
-    if (!isSelfAssign && actorMember.role_name === RoleName.MEMBER) {
-      throw new ForbiddenException(
-        'You do not have permission to assign tasks to other users',
-      );
-    }
-
     if (actorMember.role_name === RoleName.VIEWER) {
       throw new ForbiddenException('Viewers cannot assign tasks');
     }
@@ -123,6 +117,32 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
     );
 
     if (!isSelfAssign) {
+      let projectName = '';
+      let workspaceName = '';
+      
+      if (manager) {
+        const projectResult = await manager.query(
+          'SELECT name FROM projects WHERE id = $1 AND deleted_at IS NULL',
+          [task.projectId],
+        );
+        if (projectResult && projectResult.length > 0) {
+          projectName = projectResult[0].name;
+        }
+
+        const workspaceResult = await manager.query(
+          'SELECT name FROM workspaces WHERE id = $1 AND deleted_at IS NULL',
+          [task.workspaceId],
+        );
+        if (workspaceResult && workspaceResult.length > 0) {
+          workspaceName = workspaceResult[0].name;
+        }
+      }
+
+      const taskTitle = task.title?.trim() || "Untitled";
+      const messageContent = projectName 
+        ? `Task "${taskTitle}" trong dự án "${projectName}"`
+        : `Task "${taskTitle}"`;
+
       const notification =
         await this.createNotificationService.createNotification(
           {
@@ -130,7 +150,7 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
             actorId: input.assignedBy,
             type: NotificationType.TASK_ASSIGNED,
             title: 'Bạn được giao một task mới',
-            message: task.title,
+            message: messageContent,
             workspaceId: task.workspaceId,
             projectId: task.projectId,
             taskId: task.id,

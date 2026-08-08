@@ -290,6 +290,49 @@ export class DashboardRepositoryImpl implements DashboardRepository {
       ]);
   }
 
+  private baseAssignedDoneTaskQuery(userId: string) {
+    return this.taskRepository
+      .createQueryBuilder('task')
+      .innerJoin('task.assignees', 'assignee', 'assignee.user_id = :userId', {
+        userId,
+      })
+      .innerJoin('task.status', 'status')
+      .innerJoin('task.workspace', 'workspace')
+      .innerJoin('task.project', 'project')
+      .leftJoin('task.priority', 'priority')
+      .where('task.deleted_at IS NULL')
+      .andWhere('workspace.deleted_at IS NULL')
+      .andWhere('project.deleted_at IS NULL')
+      .andWhere('status.is_done = true')
+      .select([
+        'task.id AS "id"',
+        'task.workspace_id AS "workspaceId"',
+        'task.project_id AS "projectId"',
+        'task.title AS "title"',
+        'task.due_at AS "dueAt"',
+        'task.start_at AS "startAt"',
+        'task.estimate_minutes AS "estimateMinutes"',
+        'workspace.name AS "workspaceName"',
+        'project.name AS "projectName"',
+        'priority.name AS "priorityName"',
+        'priority.level AS "priorityLevel"',
+        'status.name AS "statusName"',
+        'status.is_done AS "statusIsDone"',
+      ]);
+  }
+
+  async findRecentCompletedTasks(
+    userId: string,
+    limit: number,
+  ): Promise<DashboardTaskRow[]> {
+    const rows = await this.baseAssignedDoneTaskQuery(userId)
+      .orderBy('task.completed_at', 'DESC', 'NULLS LAST')
+      .limit(limit)
+      .getRawMany<RawTaskRow>();
+
+    return rows.map((row) => this.mapTaskRow(row));
+  }
+
   private mapTaskRow(row: RawTaskRow): DashboardTaskRow {
     return {
       id: row.id,

@@ -93,12 +93,6 @@ export class DeleteTaskAssigneeApplicationImpl implements DeleteTaskAssigneeAppl
 
     const isSelfUnassign = input.userId === input.deletedBy;
 
-    if (!isSelfUnassign && actorMember.role_name === RoleName.MEMBER) {
-      throw new ForbiddenException(
-        'You do not have permission to unassign tasks for other users',
-      );
-    }
-
     if (actorMember.role_name === RoleName.VIEWER) {
       throw new ForbiddenException('Viewers cannot unassign tasks');
     }

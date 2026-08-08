@@ -83,6 +83,7 @@ export class MyDashboardResponseDto {
   focus: DashboardFocusResponseDto;
   rhythmBlocks: DashboardRhythmBlockResponseDto[];
   recentDeadlines: DashboardDeadlineResponseDto[];
+  recentCompletedTasks: DashboardTaskResponseDto[];
   stats: DashboardStatsResponseDto;
   priorityTasks: DashboardTaskResponseDto[];
   recentWorkspaces: DashboardWorkspaceResponseDto[];

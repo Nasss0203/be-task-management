@@ -47,12 +47,14 @@ export class GetMyDashboardApplicationImpl implements GetMyDashboardApplication 
       stats,
       priorityTasks,
       recentDeadlines,
+      recentCompletedTasks,
       recentWorkspaces,
       activities,
     ] = await Promise.all([
       this.dashboardStatsService.getStats(input.userId, range),
       this.dashboardTasksService.getPriorityTasks(input.userId, range, limit),
       this.dashboardTasksService.getRecentDeadlines(input.userId, range, 3),
+      this.dashboardTasksService.getRecentCompletedTasks(input.userId, limit),
       this.dashboardWorkspacesService.getRecentWorkspaces(input.userId, 3),
       this.dashboardActivityService.getRecentActivities(input.userId, 5),
     ]);
@@ -89,6 +91,7 @@ export class GetMyDashboardApplicationImpl implements GetMyDashboardApplication 
       }),
       rhythmBlocks: this.dashboardTasksService.buildRhythmBlocks(priorityTasks),
       recentDeadlines,
+      recentCompletedTasks,
       stats: this.buildStatsResponse(stats, weeklyGoalPercent),
       priorityTasks,
       recentWorkspaces,

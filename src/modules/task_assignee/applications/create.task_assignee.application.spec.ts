@@ -106,7 +106,7 @@ describe('CreateTaskAssigneeApplicationImpl', () => {
       );
     });
 
-    it('should throw ForbiddenException if user tries to assign other without permission', async () => {
+    it('should allow member to assign other user', async () => {
       mockFindTaskService.findOneTask.mockResolvedValue(task);
       mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce({
         role_name: RoleName.MEMBER,
@@ -114,9 +114,33 @@ describe('CreateTaskAssigneeApplicationImpl', () => {
       mockFindMemberService.findMemberInWorkspace.mockResolvedValueOnce(
         targetMember,
       );
-      await expect(application.assign(input)).rejects.toThrow(
-        ForbiddenException,
+      mockCreateTaskAssigneeService.assign.mockResolvedValue({
+        id: 'assignee-1',
+        taskId: 'task-1',
+        userId: 'user-2',
+        username: 'target-user',
+        assignedBy: 'user-1',
+        assignedByUsername: 'actor-user',
+        assignedAt: new Date('2026-01-01T00:00:00.000Z'),
+      });
+      mockCreateNotificationService.createNotification.mockResolvedValue({
+        id: 'noti-1',
+      });
+
+      const originalMapper = TaskAssigneeMapper.toResponse;
+      TaskAssigneeMapper.toResponse = jest
+        .fn()
+        .mockReturnValue({ isMapped: true });
+
+      const result = await application.assign(input);
+
+      expect(mockCreateTaskAssigneeService.assign).toHaveBeenCalledWith(
+        input,
+        undefined,
       );
+      expect(result).toEqual({ isMapped: true });
+
+      TaskAssigneeMapper.toResponse = originalMapper;
     });
 
     it('should assign successfully and send notification when assigning other user', async () => {
