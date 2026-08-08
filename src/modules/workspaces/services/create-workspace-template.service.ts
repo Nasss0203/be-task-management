@@ -518,8 +518,9 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
           styleConfig = { ...styleConfig, level: 3 };
         }
 
-        // If it's a database view, map the board ID
-        const boardTemplateKey = templateContent.boardTemplateKey;
+        // If it's a database view, map the template board key back to the new board ID.
+        const boardTemplateKey =
+          templateContent.boardTemplateKey ?? rawDataConfig?.boardTemplateKey;
         if (blockType === PageBlockType.DATABASE_VIEW && boardTemplateKey) {
           const board = boardMap.get(boardTemplateKey);
           if (!board) {
@@ -527,8 +528,11 @@ export class CreateWorkspaceTemplateServiceImpl implements CreateWorkspaceTempla
               `Board template key ${boardTemplateKey} not found`,
             );
           }
+          const restDataConfig = { ...(rawDataConfig ?? {}) };
+          delete restDataConfig.boardTemplateKey;
+          delete restDataConfig.projectTemplateKey;
           rawDataConfig = {
-            ...rawDataConfig,
+            ...restDataConfig,
             workspace_id: board.workspaceId,
             project_id: board.projectId,
             default_board_id: board.id,

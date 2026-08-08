@@ -1329,6 +1329,7 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
             create: jest.fn().mockResolvedValue({}),
             find: jest.fn().mockResolvedValue([]),
             findOne: jest.fn().mockResolvedValue({}),
+            findByTemplateId: jest.fn().mockResolvedValue([]),
             update: jest.fn().mockResolvedValue({}),
             delete: jest.fn().mockResolvedValue({}),
             save: jest.fn().mockResolvedValue({}),
@@ -1418,6 +1419,77 @@ describe('CreateWorkspaceTemplateServiceImpl', () => {
         await provider.create({} as any, {} as any, {} as any, {} as any);
       } catch (e) {}
       expect(true).toBe(true);
+    });
+
+    it('should remap database view template block dataConfig boardTemplateKey to created board id', async () => {
+      const pageTemplateBlocksService = (provider as any)
+        .pageTemplateBlocksService;
+      pageTemplateBlocksService.findByTemplateId.mockResolvedValue([
+        {
+          type: PageBlockType.DATABASE_VIEW,
+          content: {
+            title: 'Sprint Board',
+            dataConfig: {
+              boardTemplateKey: 'board-1',
+              projectTemplateKey: 'project-1',
+            },
+            styles: { collapsed: false },
+          },
+          orderIndex: 3,
+        },
+      ]);
+
+      const savedBlocks: Partial<PageBlock>[][] = [];
+      const manager = {
+        getRepository: jest.fn().mockReturnValue({
+          create: jest.fn((blocks) => blocks),
+        }),
+        save: jest.fn(async (_entity, blocks) => {
+          savedBlocks.push(blocks);
+          return blocks;
+        }),
+      } as any;
+
+      const board = new BoardModel(
+        'new-board-1',
+        'new-workspace-1',
+        'new-project-1',
+        'Sprint Board',
+        BoardViewType.BOARD,
+        'user-1',
+        null,
+        new Date('2026-01-01T00:00:00.000Z'),
+        new Date('2026-01-01T00:00:00.000Z'),
+      );
+
+      await (provider as any).createManyPageBlocks({
+        pageId: 'page-1',
+        createdBy: 'user-1',
+        templateId: 'template-1',
+        pageBlocks: [],
+        boardMap: new Map([['board-1', board]]),
+        manager,
+      });
+
+      expect(manager.save).toHaveBeenCalledWith(PageBlock, [
+        expect.objectContaining({
+          page_id: 'page-1',
+          type: PageBlockType.DATABASE_VIEW,
+          title: 'Sprint Board',
+          data_config: {
+            workspace_id: 'new-workspace-1',
+            project_id: 'new-project-1',
+            default_board_id: 'new-board-1',
+            default_view_type: BoardViewType.BOARD,
+          },
+        }),
+      ]);
+      expect(savedBlocks[0][0].data_config).not.toHaveProperty(
+        'boardTemplateKey',
+      );
+      expect(savedBlocks[0][0].data_config).not.toHaveProperty(
+        'projectTemplateKey',
+      );
     });
   });
 });
