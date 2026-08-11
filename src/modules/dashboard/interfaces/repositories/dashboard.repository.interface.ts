@@ -32,6 +32,7 @@ export interface DashboardTaskRow {
   priorityLevel: number | null;
   statusName: string | null;
   statusIsDone: boolean;
+  completedAt: Date | null;
   dueAt: Date | null;
   startAt: Date | null;
   estimateMinutes: number | null;
@@ -43,6 +44,7 @@ export interface DashboardWorkspaceRow {
   slug: string;
   projectCount: number;
   openTaskCount: number;
+  completedTaskCount: number;
   lastOpenedAt: Date | null;
 }
 

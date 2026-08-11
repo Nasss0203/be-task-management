@@ -762,6 +762,9 @@ class DemoLargeSeeder {
       subscription.currentPeriodStart = currentPeriodStart;
       subscription.currentPeriodEnd = currentPeriodEnd;
       subscription.trialEnd = null;
+      subscription.amount = plan.priceAmount;
+      subscription.currency = plan.currency;
+      subscription.billingInterval = plan.billingInterval;
       subscription.cancelAtPeriodEnd = false;
       subscription.cancelledAt = null;
       subscription.metadata = {
@@ -769,6 +772,9 @@ class DemoLargeSeeder {
         seedKey: DEMO_SEED_KEY,
         seedId: subscriptionSeedId,
         planSlug: plan.slug,
+        amount: plan.priceAmount,
+        currency: plan.currency,
+        billingInterval: plan.billingInterval,
         workspaceIds: this.mergeWorkspaceIds(
           subscription.metadata?.workspaceIds,
           workspace.id,
@@ -787,12 +793,18 @@ class DemoLargeSeeder {
           currentPeriodStart,
           currentPeriodEnd,
           trialEnd: null,
+          amount: plan.priceAmount,
+          currency: plan.currency,
+          billingInterval: plan.billingInterval,
           cancelAtPeriodEnd: false,
           cancelledAt: null,
           metadata: {
             seedKey: DEMO_SEED_KEY,
             seedId: subscriptionSeedId,
             planSlug: plan.slug,
+            amount: plan.priceAmount,
+            currency: plan.currency,
+            billingInterval: plan.billingInterval,
             workspaceIds: [workspace.id],
           },
         }),

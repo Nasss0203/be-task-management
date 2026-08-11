@@ -7,7 +7,6 @@ import { UpdateManyTasksDto } from '../dto/update-many-tasks.dto';
 import { UpdateTaskInput } from '../interfaces/applications/update-task.application.interface';
 import { UpdateTaskRepository } from '../interfaces/repositories/update-task.repository.interface';
 import { TaskMapper } from '../mapper/tasks.mapper';
-import { TaskStatus } from 'src/modules/task_status/domain/entities/task_status.entity';
 
 @Injectable()
 export class UpdateTaskRepositoryImpl implements UpdateTaskRepository {
@@ -30,18 +29,6 @@ export class UpdateTaskRepositoryImpl implements UpdateTaskRepository {
     const payload: any = Object.fromEntries(
       Object.entries(entityFields).filter(([, value]) => value !== undefined),
     );
-
-    if (payload.statusId) {
-      const statusRepo = manager
-        ? manager.getRepository(TaskStatus)
-        : this.repoTask.manager.getRepository(TaskStatus);
-      const status = await statusRepo.findOne({
-        where: { id: payload.statusId },
-      });
-      if (status) {
-        payload.completedAt = status.isDone ? new Date() : null;
-      }
-    }
 
     const task = await repo.preload({
       ...payload,
@@ -77,18 +64,6 @@ export class UpdateTaskRepositoryImpl implements UpdateTaskRepository {
         estimateMinutes: dto.estimateMinutes,
       }).filter(([, value]) => value !== undefined),
     );
-
-    if (updatePayload.statusId) {
-      const statusRepo = manager
-        ? manager.getRepository(TaskStatus)
-        : this.repoTask.manager.getRepository(TaskStatus);
-      const status = await statusRepo.findOne({
-        where: { id: updatePayload.statusId },
-      });
-      if (status) {
-        updatePayload.completedAt = status.isDone ? new Date() : null;
-      }
-    }
 
     if (!Object.keys(updatePayload).length) {
       throw new HttpException('No fields to update', HttpStatus.BAD_REQUEST);

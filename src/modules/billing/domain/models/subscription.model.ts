@@ -2,6 +2,7 @@ import {
   BillingProvider,
   SubscriptionStatus,
 } from '../entities/subscription.entity';
+import { PlanBillingInterval } from '../entities/plan.entity';
 
 export class SubscriptionModel {
   constructor(
@@ -14,6 +15,9 @@ export class SubscriptionModel {
     public readonly currentPeriodStart: Date | null,
     public readonly currentPeriodEnd: Date | null,
     public readonly trialEnd: Date | null,
+    public readonly amount: number,
+    public readonly currency: string,
+    public readonly billingInterval: PlanBillingInterval,
     public readonly cancelAtPeriodEnd: boolean,
     public readonly cancelledAt: Date | null,
     public readonly metadata: Record<string, unknown> | null,

@@ -253,11 +253,17 @@ export class CompletePaymentServiceImpl implements CompletePaymentService {
         currentPeriodStart: periodStart,
         currentPeriodEnd: periodEnd,
         trialEnd: null,
+        amount: payment.amount,
+        currency: payment.currency,
+        billingInterval: plan.billingInterval,
         cancelAtPeriodEnd: false,
         cancelledAt: null,
         metadata: {
           paymentId: payment.id,
           orderCode: payment.orderCode,
+          amount: payment.amount,
+          currency: payment.currency,
+          billingInterval: plan.billingInterval,
         },
       });
 
@@ -272,12 +278,18 @@ export class CompletePaymentServiceImpl implements CompletePaymentService {
     currentSubscription.status = SubscriptionStatus.ACTIVE;
     currentSubscription.currentPeriodStart = periodStart;
     currentSubscription.currentPeriodEnd = periodEnd;
+    currentSubscription.amount = payment.amount;
+    currentSubscription.currency = payment.currency;
+    currentSubscription.billingInterval = plan.billingInterval;
     currentSubscription.cancelAtPeriodEnd = false;
     currentSubscription.cancelledAt = null;
     currentSubscription.metadata = {
       ...(currentSubscription.metadata ?? {}),
       lastPaymentId: payment.id,
       lastOrderCode: payment.orderCode,
+      lastAmount: payment.amount,
+      lastCurrency: payment.currency,
+      lastBillingInterval: plan.billingInterval,
     };
 
     return this.subscriptionRepository.save(currentSubscription);

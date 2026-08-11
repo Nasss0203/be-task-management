@@ -622,6 +622,9 @@ export class AdminSubscriptionGrantService {
       workspaceIds: input.workspaceIds,
       note: input.note,
       grantedAt: input.now.toISOString(),
+      amount: input.plan.priceAmount,
+      currency: input.plan.currency,
+      billingInterval: input.plan.billingInterval,
     };
 
     if (!currentSubscription) {
@@ -634,6 +637,9 @@ export class AdminSubscriptionGrantService {
         currentPeriodStart: input.now,
         currentPeriodEnd: periodEnd,
         trialEnd: null,
+        amount: input.plan.priceAmount,
+        currency: input.plan.currency,
+        billingInterval: input.plan.billingInterval,
         cancelAtPeriodEnd: false,
         cancelledAt: null,
         metadata,
@@ -648,6 +654,9 @@ export class AdminSubscriptionGrantService {
     currentSubscription.status = SubscriptionStatus.ACTIVE;
     currentSubscription.currentPeriodStart = input.now;
     currentSubscription.currentPeriodEnd = periodEnd;
+    currentSubscription.amount = input.plan.priceAmount;
+    currentSubscription.currency = input.plan.currency;
+    currentSubscription.billingInterval = input.plan.billingInterval;
     currentSubscription.cancelAtPeriodEnd = false;
     currentSubscription.cancelledAt = null;
     currentSubscription.metadata = metadata;

@@ -26,10 +26,11 @@ type RawTaskRow = Omit<
 
 type RawWorkspaceRow = Omit<
   DashboardWorkspaceRow,
-  'projectCount' | 'openTaskCount'
+  'projectCount' | 'openTaskCount' | 'completedTaskCount'
 > & {
   projectCount: string | number;
   openTaskCount: string | number;
+  completedTaskCount: string | number;
 };
 
 @Injectable()
@@ -61,41 +62,64 @@ export class DashboardRepositoryImpl implements DashboardRepository {
       .andWhere('workspace.deleted_at IS NULL')
       .andWhere('project.deleted_at IS NULL')
       .select([
-        `COUNT(*) FILTER (WHERE status.is_done = false)::int AS "myTasks"`,
         `COUNT(*) FILTER (
           WHERE status.is_done = false
+          AND task.completed_at IS NULL
+        )::int AS "myTasks"`,
+        `COUNT(*) FILTER (
+          WHERE status.is_done = false
+          AND task.completed_at IS NULL
           AND task.due_at >= :dayStart
           AND task.due_at < :dayEnd
         )::int AS "todayTasks"`,
         `COUNT(*) FILTER (
           WHERE status.is_done = false
+          AND task.completed_at IS NULL
           AND task.due_at >= :dayStart
           AND task.due_at < :upcomingEnd
         )::int AS "upcoming"`,
         `COUNT(*) FILTER (
           WHERE status.is_done = false
+          AND task.completed_at IS NULL
           AND task.due_at IS NOT NULL
           AND task.due_at < :now
         )::int AS "overdue"`,
         `COUNT(*) FILTER (
-          WHERE task.completed_at >= :dayStart
-          AND task.completed_at < :dayEnd
+          WHERE (
+            (task.completed_at >= :dayStart AND task.completed_at < :dayEnd)
+            OR (
+              task.completed_at IS NULL
+              AND status.is_done = true
+              AND task.updated_at >= :dayStart
+              AND task.updated_at < :dayEnd
+            )
+          )
         )::int AS "completedToday"`,
         `COUNT(*) FILTER (
-          WHERE task.completed_at >= :weekStart
-          AND task.completed_at < :weekEnd
+          WHERE (
+            (task.completed_at >= :weekStart AND task.completed_at < :weekEnd)
+            OR (
+              task.completed_at IS NULL
+              AND status.is_done = true
+              AND task.updated_at >= :weekStart
+              AND task.updated_at < :weekEnd
+            )
+          )
         )::int AS "completedThisWeek"`,
         `COUNT(*) FILTER (
           WHERE status.is_done = false
+          AND task.completed_at IS NULL
           AND task.due_at >= :now
           AND task.due_at < :weekEnd
         )::int AS "remainingThisWeek"`,
         `COUNT(*) FILTER (
           WHERE status.is_done = false
+          AND task.completed_at IS NULL
           AND LOWER(status.name) LIKE '%review%'
         )::int AS "reviewTaskCount"`,
         `COALESCE(SUM(task.estimate_minutes) FILTER (
           WHERE status.is_done = false
+          AND task.completed_at IS NULL
           AND task.due_at >= :dayStart
           AND task.due_at < :dayEnd
         ), 0)::int AS "deepWorkMinutes"`,
@@ -191,8 +215,22 @@ export class DashboardRepositoryImpl implements DashboardRepository {
             ON status.id = task.status_id
             AND status.is_done = false
           WHERE task.workspace_id = workspace.id
+          AND task.completed_at IS NULL
           AND task.deleted_at IS NULL)`,
         'openTaskCount',
+      )
+      .addSelect(
+        `(SELECT COUNT(DISTINCT task.id)
+          FROM tasks task
+          INNER JOIN task_assignees assignee
+            ON assignee.task_id = task.id
+            AND assignee.user_id = :userId
+          INNER JOIN task_statuses status
+            ON status.id = task.status_id
+          WHERE task.workspace_id = workspace.id
+          AND (status.is_done = true OR task.completed_at IS NOT NULL)
+          AND task.deleted_at IS NULL)`,
+        'completedTaskCount',
       )
       .orderBy('uw.last_opened_at', 'DESC', 'NULLS LAST')
       .addOrderBy('workspace.updated_at', 'DESC')
@@ -205,6 +243,7 @@ export class DashboardRepositoryImpl implements DashboardRepository {
       slug: row.slug,
       projectCount: this.toNumber(row.projectCount),
       openTaskCount: this.toNumber(row.openTaskCount),
+      completedTaskCount: this.toNumber(row.completedTaskCount),
       lastOpenedAt: row.lastOpenedAt,
     }));
   }
@@ -253,6 +292,7 @@ export class DashboardRepositoryImpl implements DashboardRepository {
       .andWhere('workspace.deleted_at IS NULL')
       .andWhere('project.deleted_at IS NULL')
       .andWhere('status.is_done = false')
+      .andWhere('task.completed_at IS NULL')
       .andWhere('assignee.id IS NULL')
       .getCount();
 
@@ -273,6 +313,7 @@ export class DashboardRepositoryImpl implements DashboardRepository {
       .andWhere('workspace.deleted_at IS NULL')
       .andWhere('project.deleted_at IS NULL')
       .andWhere('status.is_done = false')
+      .andWhere('task.completed_at IS NULL')
       .select([
         'task.id AS "id"',
         'task.workspace_id AS "workspaceId"',
@@ -280,6 +321,7 @@ export class DashboardRepositoryImpl implements DashboardRepository {
         'task.title AS "title"',
         'task.due_at AS "dueAt"',
         'task.start_at AS "startAt"',
+        'task.completed_at AS "completedAt"',
         'task.estimate_minutes AS "estimateMinutes"',
         'workspace.name AS "workspaceName"',
         'project.name AS "projectName"',
@@ -303,7 +345,7 @@ export class DashboardRepositoryImpl implements DashboardRepository {
       .where('task.deleted_at IS NULL')
       .andWhere('workspace.deleted_at IS NULL')
       .andWhere('project.deleted_at IS NULL')
-      .andWhere('status.is_done = true')
+      .andWhere('(status.is_done = true OR task.completed_at IS NOT NULL)')
       .select([
         'task.id AS "id"',
         'task.workspace_id AS "workspaceId"',
@@ -311,6 +353,7 @@ export class DashboardRepositoryImpl implements DashboardRepository {
         'task.title AS "title"',
         'task.due_at AS "dueAt"',
         'task.start_at AS "startAt"',
+        'task.completed_at AS "completedAt"',
         'task.estimate_minutes AS "estimateMinutes"',
         'workspace.name AS "workspaceName"',
         'project.name AS "projectName"',
@@ -326,7 +369,7 @@ export class DashboardRepositoryImpl implements DashboardRepository {
     limit: number,
   ): Promise<DashboardTaskRow[]> {
     const rows = await this.baseAssignedDoneTaskQuery(userId)
-      .orderBy('task.completed_at', 'DESC', 'NULLS LAST')
+      .orderBy('COALESCE(task.completed_at, task.updated_at)', 'DESC')
       .limit(limit)
       .getRawMany<RawTaskRow>();
 
@@ -348,6 +391,7 @@ export class DashboardRepositoryImpl implements DashboardRepository {
       statusIsDone: row.statusIsDone === true || row.statusIsDone === 'true',
       dueAt: row.dueAt,
       startAt: row.startAt,
+      completedAt: row.completedAt,
       estimateMinutes:
         row.estimateMinutes === null
           ? null

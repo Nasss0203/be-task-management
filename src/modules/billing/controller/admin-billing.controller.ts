@@ -21,7 +21,7 @@ import { CancelAdminSubscriptionDto } from '../dto/request/cancel-admin-subscrip
 import { GrantAdminSubscriptionDto } from '../dto/request/grant-admin-subscription.dto';
 import { RevokeAdminSubscriptionDto } from '../dto/request/revoke-admin-subscription.dto';
 import { ResumeAdminSubscriptionDto } from '../dto/request/resume-admin-subscription.dto';
-import { Payment } from '../domain/entities/payment.entity';
+import { Payment, PaymentStatus } from '../domain/entities/payment.entity';
 import { Subscription } from '../domain/entities/subscription.entity';
 import {
   AdminBillingPlanRow,
@@ -198,11 +198,11 @@ export class AdminBillingController {
       .addSelect('plan.slug', 'planCode')
       .addSelect('plan.name', 'planName')
       .addSelect('subscription.status', 'status')
-      .addSelect('plan.billingInterval', 'billingCycle')
+      .addSelect('subscription.billingInterval', 'billingCycle')
       .addSelect('subscription.currentPeriodStart', 'currentPeriodStart')
       .addSelect('subscription.currentPeriodEnd', 'renewAt')
       .addSelect('subscription.trialEnd', 'trialEndsAt')
-      .addSelect('plan.priceAmount', 'amount')
+      .addSelect('subscription.amount', 'amount')
       .addSelect('subscription.provider', 'subscriptionProvider')
       .addSelect(
         (qb) =>
@@ -219,7 +219,7 @@ export class AdminBillingController {
         'paymentMethod',
       )
       .addSelect('subscription.createdAt', 'createdAt')
-      .setParameter('succeededStatus', 'SUCCEEDED')
+      .setParameter('succeededStatus', PaymentStatus.SUCCEEDED)
       .orderBy('subscription.createdAt', 'DESC')
       .getRawMany<SubscriptionRawRow>();
 
@@ -240,7 +240,7 @@ export class AdminBillingController {
       startedAt: row.currentPeriodStart ?? row.createdAt,
       renewAt: row.renewAt,
       trialEndsAt: row.trialEndsAt,
-      amount: row.amount,
+      amount: Number(row.amount),
       paymentMethod: row.paymentMethod ?? row.subscriptionProvider ?? 'MANUAL',
       couponCode: null,
     }));

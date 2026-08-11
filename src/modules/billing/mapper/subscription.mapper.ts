@@ -3,6 +3,7 @@ import {
   Subscription,
   SubscriptionStatus,
 } from '../domain/entities/subscription.entity';
+import { PlanBillingInterval } from '../domain/entities/plan.entity';
 import { SubscriptionModel } from '../domain/models/subscription.model';
 import { SubscriptionResponseDto } from '../dto/response/subscription.response.dto';
 
@@ -16,6 +17,9 @@ export type SaveSubscriptionInput = {
   currentPeriodStart?: Date | null;
   currentPeriodEnd?: Date | null;
   trialEnd?: Date | null;
+  amount?: number;
+  currency?: string;
+  billingInterval?: PlanBillingInterval;
   cancelAtPeriodEnd?: boolean;
   cancelledAt?: Date | null;
   metadata?: Record<string, unknown> | null;
@@ -35,6 +39,9 @@ export class SubscriptionMapper {
       entity.currentPeriodStart ?? null,
       entity.currentPeriodEnd ?? null,
       entity.trialEnd ?? null,
+      entity.amount,
+      entity.currency,
+      entity.billingInterval,
       entity.cancelAtPeriodEnd,
       entity.cancelledAt ?? null,
       entity.metadata ?? null,
@@ -64,6 +71,9 @@ export class SubscriptionMapper {
     e.currentPeriodStart = model.currentPeriodStart ?? null;
     e.currentPeriodEnd = model.currentPeriodEnd ?? null;
     e.trialEnd = model.trialEnd ?? null;
+    e.amount = model.amount ?? 0;
+    e.currency = model.currency ?? 'VND';
+    e.billingInterval = model.billingInterval ?? PlanBillingInterval.MONTH;
     e.cancelAtPeriodEnd = model.cancelAtPeriodEnd ?? false;
     e.cancelledAt = model.cancelledAt ?? null;
     e.metadata = model.metadata ?? null;
@@ -90,6 +100,9 @@ export class SubscriptionMapper {
       currentPeriodStart: model.currentPeriodStart,
       currentPeriodEnd: model.currentPeriodEnd,
       trialEnd: model.trialEnd,
+      amount: model.amount,
+      currency: model.currency,
+      billingInterval: model.billingInterval,
       cancelAtPeriodEnd: model.cancelAtPeriodEnd,
       cancelledAt: model.cancelledAt,
       metadata: model.metadata,

@@ -86,8 +86,10 @@ export class DashboardTasksServiceImpl implements DashboardTasksService {
       priorityName: row.priorityName,
       priorityLevel: row.priorityLevel,
       statusName: row.statusName,
+      statusIsDone: row.statusIsDone,
       dueAt: row.dueAt,
       startAt: row.startAt,
+      completedAt: row.completedAt,
       estimateMinutes: row.estimateMinutes,
       progressPercent: this.getProgressPercent(),
     };

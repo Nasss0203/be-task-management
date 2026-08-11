@@ -45,6 +45,7 @@ type PlanRawRow = {
   limits: Record<string, unknown> | null;
   isActive: boolean;
   activeSubscriptions: string;
+  estimatedMrr: string | number | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -214,7 +215,27 @@ export class AdminBillingPlanService {
             .andWhere('subscription.status = :status'),
         'activeSubscriptions',
       )
-      .setParameter('status', SubscriptionStatus.ACTIVE);
+      .addSelect(
+        (qb) =>
+          qb
+            .select(
+              `COALESCE(SUM(CASE
+                WHEN subscription.billing_interval = :yearBillingInterval
+                  THEN ROUND(subscription.amount / 12.0)
+                WHEN subscription.billing_interval = :monthBillingInterval
+                  THEN subscription.amount
+                ELSE 0
+              END), 0)`,
+              'mrr',
+            )
+            .from(Subscription, 'subscription')
+            .where('subscription.plan_id = plan.id')
+            .andWhere('subscription.status = :status'),
+        'estimatedMrr',
+      )
+      .setParameter('status', SubscriptionStatus.ACTIVE)
+      .setParameter('monthBillingInterval', PlanBillingInterval.MONTH)
+      .setParameter('yearBillingInterval', PlanBillingInterval.YEAR);
   }
 
   private toAdminPlanRow(row: PlanRawRow): AdminBillingPlanRow {
@@ -223,6 +244,7 @@ export class AdminBillingPlanService {
       row.billingInterval,
     );
     const activeSubscriptions = Number(row.activeSubscriptions);
+    const estimatedMrr = Math.round(Number(row.estimatedMrr ?? 0));
 
     return {
       id: row.id,
@@ -237,7 +259,7 @@ export class AdminBillingPlanService {
       isActive: row.isActive,
       activeSubscriptions,
       monthlyAmount,
-      estimatedMrr: monthlyAmount * activeSubscriptions,
+      estimatedMrr,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };

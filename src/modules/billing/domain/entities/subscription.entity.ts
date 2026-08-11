@@ -9,7 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Plan } from './plan.entity';
+import { Plan, PlanBillingInterval } from './plan.entity';
 
 export enum BillingProvider {
   MANUAL = 'MANUAL',
@@ -91,6 +91,21 @@ export class Subscription {
 
   @Column({ name: 'trial_end', type: 'timestamp', nullable: true })
   trialEnd: Date | null;
+
+  @Column({ name: 'amount', type: 'int', default: 0 })
+  amount: number;
+
+  @Column({ type: 'varchar', length: 10, default: 'VND' })
+  currency: string;
+
+  @Column({
+    name: 'billing_interval',
+    type: 'enum',
+    enum: PlanBillingInterval,
+    enumName: 'plans_billing_interval_enum',
+    default: PlanBillingInterval.MONTH,
+  })
+  billingInterval: PlanBillingInterval;
 
   @Column({ name: 'cancel_at_period_end', type: 'boolean', default: false })
   cancelAtPeriodEnd: boolean;

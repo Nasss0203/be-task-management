@@ -45,8 +45,10 @@ export class DashboardTaskResponseDto {
   priorityName: string | null;
   priorityLevel: number | null;
   statusName: string | null;
+  statusIsDone: boolean;
   dueAt: Date | null;
   startAt: Date | null;
+  completedAt: Date | null;
   estimateMinutes: number | null;
   progressPercent: number | null;
 }
@@ -61,6 +63,7 @@ export class DashboardWorkspaceResponseDto {
   slug: string;
   projectCount: number;
   openTaskCount: number;
+  completedTaskCount: number;
   lastOpenedAt: Date | null;
 }
 

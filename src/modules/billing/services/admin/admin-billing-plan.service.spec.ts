@@ -51,6 +51,7 @@ describe('AdminBillingPlanService', () => {
           priceAmount: 120000,
           billingInterval: 'YEAR',
           activeSubscriptions: '5',
+          estimatedMrr: '50000',
         },
       ]);
       const result = await service.getPlans();

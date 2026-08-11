@@ -2,6 +2,7 @@ import {
   BillingProvider,
   SubscriptionStatus,
 } from '../../domain/entities/subscription.entity';
+import { PlanBillingInterval } from '../../domain/entities/plan.entity';
 
 export class SubscriptionResponseDto {
   id: string;
@@ -13,6 +14,9 @@ export class SubscriptionResponseDto {
   currentPeriodStart: Date | null;
   currentPeriodEnd: Date | null;
   trialEnd: Date | null;
+  amount: number;
+  currency: string;
+  billingInterval: PlanBillingInterval;
   cancelAtPeriodEnd: boolean;
   cancelledAt: Date | null;
   metadata: Record<string, unknown> | null;

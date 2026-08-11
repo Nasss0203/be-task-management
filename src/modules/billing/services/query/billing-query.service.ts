@@ -92,6 +92,10 @@ export class BillingQueryServiceImpl implements BillingQueryService {
       subscription: {
         id: subscription.id,
         status: subscription.status,
+        amount: subscription.amount ?? plan?.priceAmount ?? 0,
+        currency: subscription.currency ?? plan?.currency ?? 'VND',
+        billingInterval:
+          subscription.billingInterval ?? plan?.billingInterval ?? 'MONTH',
         currentPeriodStart: subscription.currentPeriodStart,
         currentPeriodEnd: subscription.currentPeriodEnd,
         cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
