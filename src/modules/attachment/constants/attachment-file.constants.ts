@@ -1,7 +1,7 @@
-export const MAX_ATTACHMENT_SIZE = 20 * 1024 * 1024; // 20MB
+export const MAX_ATTACHMENT_SIZE = 50 * 1024 * 1024; // 50MB
 
 export const ALLOWED_FILE_MIME_REGEX =
-  /^(image\/(jpeg|png|gif|webp|svg\+xml)|text\/(plain|csv)|application\/(pdf|msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document|vnd\.ms-excel|vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet|vnd\.ms-powerpoint|vnd\.openxmlformats-officedocument\.presentationml\.presentation|zip|x-zip-compressed|octet-stream))$/i;
+  /^(image\/(jpeg|png|gif|webp|svg\+xml)|text\/(plain|csv)|application\/(pdf|msword|x-cfb|vnd\.openxmlformats-officedocument\.wordprocessingml\.document|vnd\.ms-excel|vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet|vnd\.ms-powerpoint|vnd\.openxmlformats-officedocument\.presentationml\.presentation|zip|x-zip-compressed|octet-stream))$/i;
 
 export const ALLOWED_EXTENSIONS = [
   '.jpg',
@@ -43,6 +43,7 @@ export const ALLOWED_MIME_TYPES = [
   'application/pdf',
 
   'application/msword',
+  'application/x-cfb',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 
   'application/vnd.ms-excel',

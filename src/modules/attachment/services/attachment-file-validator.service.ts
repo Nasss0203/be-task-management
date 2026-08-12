@@ -1,13 +1,51 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { loadEsm } from 'load-esm';
 import { extname } from 'path';
+import { pathToFileURL } from 'url';
 import {
   ALLOWED_EXTENSIONS,
   ALLOWED_MIME_TYPES,
 } from '../constants/attachment-file.constants';
 import { AttachmentFileValidatorService } from '../interfaces/services/attachment-file-validator.service.interface';
 
+const OFFICE_OPEN_XML_MIME_BY_EXTENSION: Record<string, string> = {
+  '.docx':
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  '.pptx':
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+};
+
+const OFFICE_BINARY_MIME_BY_EXTENSION: Record<string, string> = {
+  '.doc': 'application/msword',
+  '.xls': 'application/vnd.ms-excel',
+  '.ppt': 'application/vnd.ms-powerpoint',
+};
+
+type FileTypeModule = typeof import('file-type');
+
 @Injectable()
 export class AttachmentFileValidatorServiceImpl implements AttachmentFileValidatorService {
+  private async loadFileTypeModule(): Promise<FileTypeModule> {
+    try {
+      return await loadEsm<FileTypeModule>(
+        pathToFileURL(require.resolve('file-type')).href,
+      );
+    } catch {
+      return await loadEsm<FileTypeModule>('file-type');
+    }
+  }
+
+  private isLikelyTextBuffer(buffer: Buffer): boolean {
+    if (buffer.length === 0) return true;
+
+    const sample = buffer.subarray(0, Math.min(buffer.length, 4096));
+
+    return sample.every(
+      (byte) => byte === 9 || byte === 10 || byte === 13 || byte >= 32,
+    );
+  }
+
   validateExtension(fileName: string): string {
     const ext = extname(fileName).toLowerCase();
 
@@ -22,18 +60,25 @@ export class AttachmentFileValidatorServiceImpl implements AttachmentFileValidat
     file: Express.Multer.File,
     ext: string,
   ): Promise<string> {
-    const { fileTypeFromBuffer } = await import('file-type');
+    const { fileTypeFromBuffer } = await this.loadFileTypeModule();
 
     const detected = await fileTypeFromBuffer(file.buffer);
 
     if (!detected) {
-      if (ext === '.txt' && file.mimetype === 'text/plain') {
+      if (
+        ext === '.txt' &&
+        ['text/plain', 'application/octet-stream'].includes(file.mimetype) &&
+        this.isLikelyTextBuffer(file.buffer)
+      ) {
         return 'text/plain';
       }
 
       if (
         ext === '.csv' &&
-        ['text/csv', 'text/plain'].includes(file.mimetype)
+        ['text/csv', 'text/plain', 'application/octet-stream'].includes(
+          file.mimetype,
+        ) &&
+        this.isLikelyTextBuffer(file.buffer)
       ) {
         return 'text/csv';
       }
@@ -46,28 +91,27 @@ export class AttachmentFileValidatorServiceImpl implements AttachmentFileValidat
     }
 
     const detectedMime = detected.mime;
-    const officeExtensions = ['.docx', '.xlsx', '.pptx'];
-    const isOfficeZip =
-      officeExtensions.includes(ext) && detectedMime === 'application/zip';
+    const officeOpenXmlMime = OFFICE_OPEN_XML_MIME_BY_EXTENSION[ext];
+    const isOfficeZip = Boolean(
+      officeOpenXmlMime && detectedMime === 'application/zip',
+    );
+    const officeBinaryMime = OFFICE_BINARY_MIME_BY_EXTENSION[ext];
+    const isOfficeBinary = Boolean(
+      officeBinaryMime && detectedMime === 'application/x-cfb',
+    );
 
     const isAllowedMime = ALLOWED_MIME_TYPES.includes(detectedMime);
 
-    if (!isAllowedMime && !isOfficeZip) {
+    if (!isAllowedMime && !isOfficeZip && !isOfficeBinary) {
       throw new BadRequestException(`File type ${detectedMime} is not allowed`);
     }
 
     if (isOfficeZip) {
-      if (ext === '.docx') {
-        return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-      }
+      return officeOpenXmlMime;
+    }
 
-      if (ext === '.xlsx') {
-        return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-      }
-
-      if (ext === '.pptx') {
-        return 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
-      }
+    if (isOfficeBinary) {
+      return officeBinaryMime;
     }
 
     const expectedByExt: Record<string, string[]> = {
@@ -79,9 +123,9 @@ export class AttachmentFileValidatorServiceImpl implements AttachmentFileValidat
       '.svg': ['image/svg+xml'],
       '.pdf': ['application/pdf'],
       '.zip': ['application/zip', 'application/x-zip-compressed'],
-      '.doc': ['application/msword'],
-      '.xls': ['application/vnd.ms-excel'],
-      '.ppt': ['application/vnd.ms-powerpoint'],
+      '.doc': ['application/msword', 'application/x-cfb'],
+      '.xls': ['application/vnd.ms-excel', 'application/x-cfb'],
+      '.ppt': ['application/vnd.ms-powerpoint', 'application/x-cfb'],
     };
 
     const expectedMimes = expectedByExt[ext];

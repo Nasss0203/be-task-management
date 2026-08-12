@@ -40,9 +40,13 @@ export class AccessWorkspaceRepositoryImpl implements AccessWorkspaceRepository 
       return null;
     }
 
-    const roleIds: string[] = (roleRows as any[]).map((role) => role.id as string);
+    const roleIds: string[] = (roleRows as any[]).map(
+      (role) => role.id as string,
+    );
 
-    const roles: string[] = Array.from(new Set((roleRows as any[]).map((role) => role.name as string)));
+    const roles: string[] = Array.from(
+      new Set((roleRows as any[]).map((role) => role.name as string)),
+    );
 
     const permissionRows = await entityManager.query(
       `
@@ -55,7 +59,11 @@ export class AccessWorkspaceRepositoryImpl implements AccessWorkspaceRepository 
     );
 
     const permissions: string[] = Array.from(
-      new Set((permissionRows as any[]).map((permission) => permission.code as string)),
+      new Set(
+        (permissionRows as any[]).map(
+          (permission) => permission.code as string,
+        ),
+      ),
     );
     return {
       user_id: userId,

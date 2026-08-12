@@ -119,7 +119,7 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
     if (!isSelfAssign) {
       let projectName = '';
       let workspaceName = '';
-      
+
       if (manager) {
         const projectResult = await manager.query(
           'SELECT name FROM projects WHERE id = $1 AND deleted_at IS NULL',
@@ -138,8 +138,8 @@ export class CreateTaskAssigneeApplicationImpl implements CreateTaskAssigneeAppl
         }
       }
 
-      const taskTitle = task.title?.trim() || "Untitled";
-      const messageContent = projectName 
+      const taskTitle = task.title?.trim() || 'Untitled';
+      const messageContent = projectName
         ? `Task "${taskTitle}" trong dự án "${projectName}"`
         : `Task "${taskTitle}"`;
 

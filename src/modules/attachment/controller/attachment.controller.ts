@@ -5,7 +5,6 @@ import {
   HttpStatus,
   Inject,
   Param,
-  Query,
   Patch,
   Delete,
   ParseFilePipeBuilder,
@@ -76,6 +75,7 @@ export class AttachmentController {
       new ParseFilePipeBuilder()
         .addFileTypeValidator({
           fileType: ALLOWED_FILE_MIME_REGEX,
+          fallbackToMimetype: true,
         })
         .addMaxSizeValidator({
           maxSize: MAX_ATTACHMENT_SIZE,
