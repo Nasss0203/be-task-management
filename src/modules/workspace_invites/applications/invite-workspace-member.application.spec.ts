@@ -4,10 +4,14 @@ import { WORKSPACE_INVITE_TYPES } from '../interfaces/types';
 import { USER_TYPES } from 'src/modules/users/interfaces/types';
 import { NOTIFICATION_TYPES } from 'src/modules/notifications/interfaces/types';
 import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/types';
+import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
 import { MailService } from 'src/modules/mail/mail.service';
 import { BadRequestException } from '@nestjs/common';
 import { RoleName } from 'src/modules/role/domain/entities/role.entity';
-import { InviteRecipientType } from '../dto/create-workspace_invite.dto';
+import {
+  CreateWorkspaceInviteDto,
+  InviteRecipientType,
+} from '../dto/create-workspace_invite.dto';
 
 describe('InviteWorkspaceMemberApplicationImpl', () => {
   let app: InviteWorkspaceMemberApplicationImpl;
@@ -16,10 +20,18 @@ describe('InviteWorkspaceMemberApplicationImpl', () => {
   const mockFindUser = { findUserById: jest.fn() };
   const mockCreateNotification = { createNotification: jest.fn() };
   const mockFindMember = { findMemberInWorkspace: jest.fn() };
-  const mockMail = { sendEmailTemplates: jest.fn() };
+  const mockFindWorkspace = { findOneByWorkspaceId: jest.fn() };
+  const mockMail = { sendInviteMember: jest.fn() };
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockCreateNotification.createNotification.mockResolvedValue({});
+    mockFindMember.findMemberInWorkspace.mockResolvedValue(null);
+    mockFindWorkspace.findOneByWorkspaceId.mockResolvedValue({
+      name: 'Task Management',
+    });
+    mockMail.sendInviteMember.mockResolvedValue(undefined);
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         InviteWorkspaceMemberApplicationImpl,
@@ -39,6 +51,10 @@ describe('InviteWorkspaceMemberApplicationImpl', () => {
           provide: USER_WORKSPACE_TYPES.services.FindMemberService,
           useValue: mockFindMember,
         },
+        {
+          provide: WORKSPACE_TYPES.services.FindWorkspaceService,
+          useValue: mockFindWorkspace,
+        },
         { provide: MailService, useValue: mockMail },
       ],
     }).compile();
@@ -53,26 +69,92 @@ describe('InviteWorkspaceMemberApplicationImpl', () => {
   });
 
   it('should invite user', async () => {
-    mockFindUser.findUserById.mockResolvedValue({
-      id: 'u-1',
-      email: 'test@example.com',
+    mockFindUser.findUserById
+      .mockResolvedValueOnce({
+        id: 'u-1',
+        email: 'test@example.com',
+      })
+      .mockResolvedValueOnce({
+        id: 'inviter-1',
+        email: 'inviter@example.com',
+        username: 'nass',
+      });
+    mockFindMember.findMemberInWorkspace.mockResolvedValue({
+      full_name: 'Nass',
+      email: 'inviter@example.com',
+    });
+    mockFindWorkspace.findOneByWorkspaceId.mockResolvedValue({
+      name: 'Product Team',
     });
     mockCreateInvite.save.mockResolvedValue({ id: 'inv-1', token: 'tok-1' });
+    mockMail.sendInviteMember.mockResolvedValue(undefined);
 
-    const dto = {
+    const dto: CreateWorkspaceInviteDto = {
       role_name: RoleName.MEMBER,
       recipients: [{ type: InviteRecipientType.USER, user_id: 'u-1' }],
-    } as any;
+    };
 
     const result = await app.invite('ws-1', 'inviter-1', dto);
     expect(mockCreateInvite.save).toHaveBeenCalled();
-    expect(mockMail.sendEmailTemplates).toHaveBeenCalled();
+    const notificationCalls = mockCreateNotification.createNotification.mock
+      .calls as unknown[][];
+    const notificationInput = notificationCalls[0]?.[0];
+
+    expect(notificationInput).toMatchObject({
+      message: 'Nass invited you to join Product Team.',
+      metadata: {
+        workspaceName: 'Product Team',
+        inviterName: 'Nass',
+        inviterEmail: 'inviter@example.com',
+      },
+    });
+    expect(mockMail.sendInviteMember).toHaveBeenCalledWith(
+      expect.objectContaining({
+        workspaceName: 'Product Team',
+        inviterName: 'Nass',
+      }),
+    );
+    expect(result).toHaveLength(1);
+  });
+
+  it('should not fail the invite when email sending fails', async () => {
+    mockFindUser.findUserById
+      .mockResolvedValueOnce({
+        id: 'u-1',
+        email: 'test@example.com',
+      })
+      .mockResolvedValueOnce({
+        id: 'inviter-1',
+        email: 'inviter@example.com',
+        username: 'nass',
+      });
+    mockFindMember.findMemberInWorkspace.mockResolvedValue({
+      full_name: 'Nass',
+      email: 'inviter@example.com',
+    });
+    mockFindWorkspace.findOneByWorkspaceId.mockResolvedValue({
+      name: 'Product Team',
+    });
+    mockCreateInvite.save.mockResolvedValue({ id: 'inv-1', token: 'tok-1' });
+    mockMail.sendInviteMember.mockRejectedValue(new Error('SMTP timeout'));
+
+    const dto: CreateWorkspaceInviteDto = {
+      role_name: RoleName.MEMBER,
+      recipients: [{ type: InviteRecipientType.USER, user_id: 'u-1' }],
+    };
+
+    await expect(app.invite('ws-1', 'inviter-1', dto)).resolves.toHaveLength(1);
   });
 
   it('should throw if workspaceId missing', async () => {
-    await expect(
-      app.invite('', 'inviter-1', { role_name: RoleName.MEMBER } as any),
-    ).rejects.toThrow(BadRequestException);
+    const dto: CreateWorkspaceInviteDto = {
+      role_name: RoleName.MEMBER,
+      recipients: [{ type: InviteRecipientType.USER, user_id: 'u-1' }],
+    };
+
+    await expect(app.invite('', 'inviter-1', dto)).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('should throw if recipient invites themselves', async () => {
@@ -80,10 +162,10 @@ describe('InviteWorkspaceMemberApplicationImpl', () => {
       id: 'inviter-1',
       email: 'test@example.com',
     });
-    const dto = {
+    const dto: CreateWorkspaceInviteDto = {
       role_name: RoleName.MEMBER,
       recipients: [{ type: InviteRecipientType.USER, user_id: 'inviter-1' }],
-    } as any;
+    };
 
     await expect(app.invite('ws-1', 'inviter-1', dto)).rejects.toThrow(
       BadRequestException,

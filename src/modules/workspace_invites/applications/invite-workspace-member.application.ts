@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { MailService } from 'src/modules/mail/mail.service';
@@ -18,6 +19,8 @@ import { type FindMemberService } from 'src/modules/user_workspace/interfaces/se
 import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/types';
 import { type FindUserService } from 'src/modules/users/interfaces/services/find-user.service.interface';
 import { USER_TYPES } from 'src/modules/users/interfaces/types';
+import { type FindWorkspaceService } from 'src/modules/workspaces/interfaces/services/find.workspace.service.interface';
+import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
 import {
   CreateWorkspaceInviteDto,
   InviteRecipientDto,
@@ -31,6 +34,10 @@ import { WorkspaceInviteMapper } from '../mapper/workspace_invites.mapper';
 
 @Injectable()
 export class InviteWorkspaceMemberApplicationImpl implements InviteWorkspaceMemberApplication {
+  private readonly logger = new Logger(
+    InviteWorkspaceMemberApplicationImpl.name,
+  );
+
   constructor(
     @Inject(WORKSPACE_INVITE_TYPES.services.CreateWorkspaceInviteService)
     private readonly createWorkspaceInviteService: CreateWorkspaceInviteService,
@@ -43,6 +50,9 @@ export class InviteWorkspaceMemberApplicationImpl implements InviteWorkspaceMemb
 
     @Inject(USER_WORKSPACE_TYPES.services.FindMemberService)
     private readonly findMemberService: FindMemberService,
+
+    @Inject(WORKSPACE_TYPES.services.FindWorkspaceService)
+    private readonly findWorkspaceService: FindWorkspaceService,
 
     private readonly mailService: MailService,
   ) {}
@@ -70,7 +80,27 @@ export class InviteWorkspaceMemberApplicationImpl implements InviteWorkspaceMemb
       throw new BadRequestException('recipients is required');
     }
 
-    const resolvedRecipients = await this.resolveRecipients(dto.recipients);
+    const [resolvedRecipients, workspace, inviterMember, inviterUser] =
+      await Promise.all([
+        this.resolveRecipients(dto.recipients),
+        this.findWorkspaceService.findOneByWorkspaceId(invitedBy, workspaceId),
+        this.findMemberService.findMemberInWorkspace(workspaceId, invitedBy),
+        this.findUserService.findUserById(invitedBy),
+      ]);
+
+    const workspaceName = workspace.name;
+    const inviterName =
+      inviterMember?.full_name?.trim() ||
+      inviterUser?.username?.trim() ||
+      inviterMember?.email?.trim() ||
+      inviterUser?.email?.trim() ||
+      'Một thành viên';
+    const inviterEmail = inviterMember?.email ?? inviterUser?.email ?? null;
+    const acceptUrlBase = (
+      process.env.FRONTEND_URL ||
+      process.env.CLIENT_URL ||
+      'http://localhost:3000'
+    ).replace(/\/$/, '');
 
     const result: WorkspaceInviteResponseDto[] = [];
 
@@ -106,7 +136,7 @@ export class InviteWorkspaceMemberApplicationImpl implements InviteWorkspaceMemb
           type: NotificationType.WORKSPACE_INVITE,
 
           title: 'Workspace invitation',
-          message: `You have been invited to join Task Management.`,
+          message: `${inviterName} invited you to join ${workspaceName}.`,
 
           actionUrl: `/invite/workspace?token=${invite.token}`,
 
@@ -115,34 +145,45 @@ export class InviteWorkspaceMemberApplicationImpl implements InviteWorkspaceMemb
             inviteToken: invite.token,
             inviteStatus: invite.status,
             workspaceId,
-            workspaceName: 'Task Management',
+            workspaceName,
             roleName: dto.role_name,
             invitedBy,
+            inviterName,
+            inviterEmail,
             email: recipient.email,
           },
         });
       }
 
-      await this.mailService.sendEmailTemplates({
+      this.queueInviteEmail({
         to: recipient.email,
-        subject: 'Lời mời tham gia workspace',
-        template: 'invite-member',
-        context: {
-          recipientName: recipient.email,
-          workspaceName: 'Task Management',
-          inviterName: 'Nass',
-          roleName: dto.role_name,
-          acceptUrl: `http://localhost:3000/invite/workspace?token=${invite.token}`,
-          expiredAt: '7 ngày kể từ lúc nhận email',
-          year: new Date().getFullYear(),
-          appName: 'Task Management',
-        },
+        workspaceName,
+        inviterName,
+        roleName: dto.role_name,
+        acceptUrl: `${acceptUrlBase}/invite/workspace?token=${invite.token}`,
       });
 
       result.push(WorkspaceInviteMapper.toResponse(invite));
     }
 
     return result;
+  }
+
+  private queueInviteEmail(input: {
+    to: string;
+    workspaceName: string;
+    inviterName: string;
+    roleName: string;
+    acceptUrl: string;
+  }): void {
+    void this.mailService.sendInviteMember(input).catch((error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : 'Unknown mail transport error';
+
+      this.logger.warn(
+        `Workspace invite email failed for ${input.to}: ${message}`,
+      );
+    });
   }
 
   private async resolveRecipients(recipients: InviteRecipientDto[]): Promise<

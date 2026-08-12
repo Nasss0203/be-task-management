@@ -7,6 +7,7 @@ import { RoleModule } from '../role/role.module';
 import { UserRolesModule } from '../user_roles/user_roles.module';
 import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
 import { UsersModule } from '../users/users.module';
+import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { WORKSPACE_TYPES } from '../workspaces/interfaces/types';
 import { AcceptWorkspaceInviteApplicationImpl } from './applications/accept-workspace-invite.application';
 import { DeclineWorkspaceInviteApplicationImpl } from './applications/decline-workspace-invite.application';
@@ -35,6 +36,7 @@ import { WorkspaceInvitesService } from './workspace_invites.service';
     UserRolesModule,
     UserWorkspacesModule,
     NotificationsModule,
+    WorkspacesModule,
   ],
   controllers: [WorkspaceInvitesController],
   providers: [
