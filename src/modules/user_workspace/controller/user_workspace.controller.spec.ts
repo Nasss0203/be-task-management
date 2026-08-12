@@ -1,11 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { AddWorkspaceMemberDto } from '../dto/create-user_workspace.dto';
 import { RoleName } from 'src/modules/role/domain/entities/role.entity';
+import { SystemRole } from 'src/modules/users/domain/entities/user.entity';
+import { type IAuth } from 'src/types/auth';
 import { UserWorkspacesController } from './user_workspace.controller';
 import { USER_WORKSPACE_TYPES } from '../interfaces/types';
 import { UserWorkspacesService } from '../user_workspace.service';
 
 describe('UserWorkspacesController', () => {
   let controller: UserWorkspacesController;
+
+  const createAuth = (id: string): IAuth => ({
+    id,
+    username: `${id}-username`,
+    email: `${id}@example.com`,
+    systemRole: SystemRole.USER,
+  });
 
   const mockAddWorkspaceMemberApplication = {
     addMember: jest.fn(),
@@ -69,8 +79,11 @@ describe('UserWorkspacesController', () => {
       mockAddWorkspaceMemberApplication.addMember.mockResolvedValue({
         id: 'uw-1',
       });
-      const dto = { user_id: 'user-1', role_name: RoleName.ADMIN } as any;
-      const auth = { id: 'adder-1' } as any;
+      const dto: AddWorkspaceMemberDto = {
+        user_id: 'user-1',
+        role_name: RoleName.ADMIN,
+      };
+      const auth = createAuth('adder-1');
 
       const result = await controller.addMember('ws-1', dto, auth);
 
@@ -95,6 +108,18 @@ describe('UserWorkspacesController', () => {
         'ws-1',
       );
       expect(result).toEqual([{ id: 'm-1' }]);
+    });
+  });
+
+  describe('leaveWorkspace', () => {
+    it('should remove the current user from the workspace', async () => {
+      const auth = createAuth('user-1');
+
+      await controller.leaveWorkspace('ws-1', auth);
+
+      expect(
+        mockDeleteMemberWorkspaceApplication.deleteMember,
+      ).toHaveBeenCalledWith('ws-1', 'user-1', 'user-1');
     });
   });
 });

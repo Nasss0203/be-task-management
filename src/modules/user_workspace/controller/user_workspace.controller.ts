@@ -94,6 +94,19 @@ export class UserWorkspacesController {
     );
   }
 
+  @Delete(':workspaceId/members/me')
+  @ResponseMessage('Leave workspace')
+  async leaveWorkspace(
+    @Param('workspaceId') workspaceId: string,
+    @Auth() auth: IAuth,
+  ) {
+    await this.deleteMemberWorkspaceApplication.deleteMember(
+      workspaceId,
+      auth.id,
+      auth.id,
+    );
+  }
+
   @Delete(':workspaceId/members/:userId')
   @ResponseMessage('Remove member from workspace')
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
