@@ -23,6 +23,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { BoardsModule } from './modules/boards/boards.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { DatabaseModule as DatabaseModules } from './modules/database/database.module';
 import { FeaturesModule } from './modules/features/features.module';
 import { MailModule } from './modules/mail/mail.module';
 import { MentionsModule } from './modules/mentions/mentions.module';
@@ -125,6 +126,8 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
     WorkspaceTemplatesModule,
     SprintReportsModule,
     TaskPositionModule,
+    //V2
+    DatabaseModules,
   ],
   controllers: [AppController],
   providers: [

@@ -99,10 +99,9 @@ export class Subscription {
   currency: string;
 
   @Column({
-    name: 'billing_interval',
     type: 'enum',
     enum: PlanBillingInterval,
-    enumName: 'plans_billing_interval_enum',
+    enumName: 'subscriptions_billing_interval_enum',
     default: PlanBillingInterval.MONTH,
   })
   billingInterval: PlanBillingInterval;

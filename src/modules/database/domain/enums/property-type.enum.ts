@@ -1,0 +1,23 @@
+export enum PropertyType {
+  TITLE = 'TITLE',
+  TEXT = 'TEXT',
+  NUMBER = 'NUMBER',
+
+  SELECT = 'SELECT',
+  MULTI_SELECT = 'MULTI_SELECT',
+  STATUS = 'STATUS',
+
+  DATE = 'DATE',
+  CHECKBOX = 'CHECKBOX',
+  PERSON = 'PERSON',
+
+  URL = 'URL',
+  EMAIL = 'EMAIL',
+  PHONE = 'PHONE',
+
+  FILE = 'FILE',
+
+  CREATED_TIME = 'CREATED_TIME',
+  UPDATED_TIME = 'UPDATED_TIME',
+  CREATED_BY = 'CREATED_BY',
+}

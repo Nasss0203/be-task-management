@@ -34,6 +34,9 @@ import { Sprint } from 'src/modules/sprints/domain/entities/sprint.entity';
 import { TaskAssignee } from 'src/modules/task_assignee/domain/entities/task_assignee.entity';
 import { TaskComment } from 'src/modules/task_commnent/domain/entities/task_commnent.entity';
 
+import { DatabasePropertyOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-property.orm-entity';
+import { DatabaseOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database.orm-entity';
+import { PropertyOptionOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/property-option.orm-entity';
 import { TaskPosition } from 'src/modules/task_position/domain/entities/task_position.entity';
 import { TaskPriority } from 'src/modules/task_priority/domain/entities/task_priority.entity';
 import { TaskStatus } from 'src/modules/task_status/domain/entities/task_status.entity';
@@ -104,6 +107,10 @@ export default new DataSource({
     WorkspaceFeatureSetting,
     WorkspaceTemplate,
     TaskPosition,
+    // V2
+    DatabasePropertyOrmEntity,
+    DatabaseOrmEntity,
+    PropertyOptionOrmEntity,
   ],
   migrations: ['src/database/migrations/*{.ts,.js}'],
 });
