@@ -5,6 +5,7 @@ import { DATABASE_TYPES } from '../../../database.types';
 import { DatabaseProperty } from '../../../domain/aggregates/database/database-property.entity';
 import { type DatabaseRepository } from '../../../domain/repositories/database.repository';
 
+import { DatabasePropertyDto } from '../../dto/database-property.dto';
 import { AddPropertyCommand } from './add-property.command';
 
 @Injectable()
@@ -14,7 +15,7 @@ export class AddPropertyHandler {
     private readonly databaseRepository: DatabaseRepository,
   ) {}
 
-  async execute(command: AddPropertyCommand): Promise<DatabaseProperty> {
+  async execute(command: AddPropertyCommand): Promise<DatabasePropertyDto> {
     const database = await this.databaseRepository.findById(command.databaseId);
 
     if (!database) {
@@ -32,6 +33,19 @@ export class AddPropertyHandler {
 
     await this.databaseRepository.save(database);
 
-    return property;
+    return {
+      id: property.getId(),
+      databaseId: property.getDatabaseId(),
+      name: property.getName(),
+      type: property.getType(),
+      position: property.getPosition(),
+
+      options: property.getOptions().map((option) => ({
+        id: option.getId(),
+        name: option.getName(),
+        color: option.getColor(),
+        position: option.getPosition(),
+      })),
+    };
   }
 }

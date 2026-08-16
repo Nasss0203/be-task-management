@@ -1,5 +1,9 @@
 import { PropertyType } from '../../enums/property-type.enum';
+import { CannotDeleteTitlePropertyException } from '../../exceptions/cannot-delete-title-property.exception';
+import { DatabasePropertyNotFoundException } from '../../exceptions/database-property-not-found.exception';
+import { DuplicatePropertyNameException } from '../../exceptions/duplicate-property-name.exception';
 import { DatabaseProperty } from './database-property.entity';
+import { PropertyOption } from './property-option.entity';
 
 interface CreateDatabaseParams {
   id: string;
@@ -104,6 +108,77 @@ export class Database {
     }
 
     this.properties.push(property);
+  }
+
+  renameProperty(propertyId: string, name: string): DatabaseProperty {
+    const property = this.properties.find(
+      (item) => item.getId() === propertyId,
+    );
+
+    if (!property) {
+      throw new DatabasePropertyNotFoundException();
+    }
+
+    const duplicateName = this.properties.some(
+      (item) => item.getId() !== propertyId && item.hasSameName(name),
+    );
+
+    if (duplicateName) {
+      throw new DuplicatePropertyNameException();
+    }
+
+    property.rename(name);
+
+    return property;
+  }
+
+  removeProperty(propertyId: string): DatabaseProperty {
+    const propertyIndex = this.properties.findIndex(
+      (property) => property.getId() === propertyId,
+    );
+
+    if (propertyIndex === -1) {
+      throw new DatabasePropertyNotFoundException();
+    }
+
+    const property = this.properties[propertyIndex];
+
+    if (property.getType() === PropertyType.TITLE) {
+      throw new CannotDeleteTitlePropertyException();
+    }
+
+    this.properties.splice(propertyIndex, 1);
+
+    return property;
+  }
+
+  updatePropertyOption(
+    propertyId: string,
+    optionId: string,
+    name: string,
+    color: string | null,
+  ): PropertyOption {
+    const property = this.properties.find(
+      (item) => item.getId() === propertyId,
+    );
+
+    if (!property) {
+      throw new DatabasePropertyNotFoundException();
+    }
+
+    return property.updateOption(optionId, name, color);
+  }
+
+  removePropertyOption(propertyId: string, optionId: string): PropertyOption {
+    const property = this.properties.find(
+      (item) => item.getId() === propertyId,
+    );
+
+    if (!property) {
+      throw new DatabasePropertyNotFoundException();
+    }
+
+    return property.removeOption(optionId);
   }
 
   private validateName(name: string): void {

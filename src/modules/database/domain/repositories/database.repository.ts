@@ -6,4 +6,8 @@ export interface DatabaseRepository {
   findByPageId(pageId: string): Promise<Database[]>;
 
   save(database: Database): Promise<void>;
+
+  deleteProperty(propertyId: string): Promise<void>;
+
+  deletePropertyOption(optionId: string): Promise<void>;
 }

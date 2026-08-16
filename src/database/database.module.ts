@@ -17,8 +17,10 @@ import { Subscription } from 'src/modules/billing/domain/entities/subscription.e
 import { UsageLimit } from 'src/modules/billing/domain/entities/usage-limit.entity';
 import { Board } from 'src/modules/boards/domain/entities/board.entity';
 import { DatabasePropertyOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-property.orm-entity';
+import { DatabaseRowOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-row.orm-entity';
 import { DatabaseOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database.orm-entity';
 import { PropertyOptionOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/property-option.orm-entity';
+import { RowValueOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/row-value.orm-entity';
 import { Feature } from 'src/modules/features/domain/entities/feature.entity';
 import { Mention } from 'src/modules/mentions/domain/entities/mention.entity';
 import { Notification } from 'src/modules/notifications/domain/entities/notification.entity';
@@ -116,6 +118,8 @@ import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.enti
           DatabasePropertyOrmEntity,
           DatabaseOrmEntity,
           PropertyOptionOrmEntity,
+          DatabaseRowOrmEntity,
+          RowValueOrmEntity,
         ],
       }),
     }),
