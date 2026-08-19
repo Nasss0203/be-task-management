@@ -19,8 +19,15 @@ import { DeletePageServiceImpl } from './services/delete.page.service';
 import { DeletePageRepositoryImpl } from './repositories/delete-page.repository';
 import { UpdatePageServiceImpl } from './services/update.page.service';
 
+import { DatabaseModule } from 'src/database/database.module';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([Page]), PageBlockModule, ActivityModule],
+  imports: [
+    TypeOrmModule.forFeature([Page]),
+    PageBlockModule,
+    ActivityModule,
+    DatabaseModule,
+  ],
   controllers: [PageController],
   providers: [
     // Application
@@ -73,10 +80,6 @@ import { UpdatePageServiceImpl } from './services/update.page.service';
     {
       provide: PAGE_TYPES.services.DeletePageService,
       useClass: DeletePageServiceImpl,
-    },
-    {
-      provide: PAGE_TYPES.uow.UnitOfWork,
-      useClass: TypeOrmUnitOfWork,
     },
   ],
   exports: [

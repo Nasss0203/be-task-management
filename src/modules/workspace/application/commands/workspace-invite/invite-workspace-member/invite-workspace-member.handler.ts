@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   HttpException,
   HttpStatus,
@@ -14,6 +15,7 @@ import {
   NotificationSourceType,
   NotificationType,
 } from 'src/modules/notifications/domain/entities/notification.entity';
+import { WorkspaceInviteStatus } from 'src/modules/workspace/domain/enums/workspace-invite-status.enum';
 import { type CreateNotificationService } from 'src/modules/notifications/interfaces/services/create.notifications.service.interface';
 import { NOTIFICATION_TYPES } from 'src/modules/notifications/interfaces/types';
 import { type FindUserService } from 'src/modules/users/interfaces/services/find-user.service.interface';
@@ -91,24 +93,55 @@ export class InviteWorkspaceMemberHandler {
 
     const workspaceName = workspace.getName();
     const inviterName =
-      inviterMember?.getFullName().trim() ||
       inviterUser?.username?.trim() ||
-      inviterMember?.getEmail().trim() ||
       inviterUser?.email?.trim() ||
       'Một thành viên';
     const inviterEmail =
       inviterMember?.getEmail() ?? inviterUser?.email ?? null;
-    const acceptUrlBase = (
-      process.env.FRONTEND_URL ||
-      process.env.CLIENT_URL ||
-      'http://localhost:3000'
-    ).replace(/\/$/, '');
+    const acceptUrlBase =
+      process.env.FRONTEND_URL?.replace(/\/$/, '') ||
+      process.env.CLIENT_URL?.replace(/\/$/, '');
+
+    if (!acceptUrlBase) {
+      throw new HttpException(
+        'FRONTEND_URL config is missing',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
 
     const result: WorkspaceInviteResponseDto[] = [];
 
     for (const recipient of resolvedRecipients) {
       if (recipient.user_id && recipient.user_id === invitedBy) {
         throw new BadRequestException('You cannot invite yourself');
+      }
+
+      if (recipient.user_id) {
+        const existingMember =
+          await this.workspaceMemberRepository.findByWorkspaceAndUser(
+            workspaceId,
+            recipient.user_id,
+          );
+        if (existingMember) {
+          throw new ConflictException(
+            `User ${recipient.email} is already a member of this workspace`,
+          );
+        }
+      }
+
+      const existingInvite =
+        await this.workspaceInviteRepository.findByWorkspaceAndEmail(
+          workspaceId,
+          recipient.email,
+        );
+      if (
+        existingInvite &&
+        existingInvite.getStatus() === WorkspaceInviteStatus.PENDING &&
+        existingInvite.getExpiresAt() > new Date()
+      ) {
+        throw new ConflictException(
+          `A pending invite for ${recipient.email} already exists`,
+        );
       }
 
       const invite = await this.createEmailInvite(workspaceId, invitedBy, dto, {

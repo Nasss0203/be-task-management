@@ -10,8 +10,7 @@ export type WorkspaceMemberDetailRaw = {
   avatar_url?: string | null;
   role_name: WorkspaceRole;
   lastOpenedAt: Date | null;
-  joinedAt?: Date;
-  taskCount?: number;
+  joinedAt: Date;
 };
 
 export class WorkspaceMemberDetailMapper {
@@ -25,8 +24,7 @@ export class WorkspaceMemberDetailMapper {
       role: raw.role_name,
       avatarUrl: raw.avatar_url ?? null,
       lastOpenedAt: raw.lastOpenedAt ?? null,
-      joinedAt: raw.joinedAt ?? null,
-      taskCount: raw.taskCount ? Number(raw.taskCount) : 0,
+      joinedAt: raw.joinedAt,
     });
   }
 }

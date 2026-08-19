@@ -34,7 +34,10 @@ import { InviteWorkspaceMemberCommand } from 'src/modules/workspace/application/
 import { InviteWorkspaceMemberHandler } from 'src/modules/workspace/application/commands/workspace-invite/invite-workspace-member/invite-workspace-member.handler';
 import { SearchInviteUsersHandler } from 'src/modules/workspace/application/queries/workspace-invite/search-invite-users/search-invite-users.handler';
 import { SearchInviteUsersQuery } from 'src/modules/workspace/application/queries/workspace-invite/search-invite-users/search-invite-users.query';
-
+import { RevokeWorkspaceInviteCommand } from 'src/modules/workspace/application/commands/workspace-invite/revoke-workspace-invite/revoke-workspace-invite.command';
+import { RevokeWorkspaceInviteHandler } from 'src/modules/workspace/application/commands/workspace-invite/revoke-workspace-invite/revoke-workspace-invite.handler';
+import { ResendWorkspaceInviteCommand } from 'src/modules/workspace/application/commands/workspace-invite/resend-workspace-invite/resend-workspace-invite.command';
+import { ResendWorkspaceInviteHandler } from 'src/modules/workspace/application/commands/workspace-invite/resend-workspace-invite/resend-workspace-invite.handler';
 @Controller('workspace-invites')
 export class WorkspaceInviteController {
   constructor(
@@ -43,6 +46,8 @@ export class WorkspaceInviteController {
     private readonly declineWorkspaceInviteHandler: DeclineWorkspaceInviteHandler,
     private readonly createWorkspaceInviteLinkHandler: CreateWorkspaceInviteLinkHandler,
     private readonly searchInviteUsersHandler: SearchInviteUsersHandler,
+    private readonly revokeWorkspaceInviteHandler: RevokeWorkspaceInviteHandler,
+    private readonly resendWorkspaceInviteHandler: ResendWorkspaceInviteHandler,
   ) {}
 
   @Post(':workspaceId/members')
@@ -143,6 +148,44 @@ export class WorkspaceInviteController {
 
     return this.searchInviteUsersHandler.execute(
       new SearchInviteUsersQuery(workspaceId, q, auth.id),
+    );
+  }
+
+  @Post(':workspaceId/invites/:inviteId/revoke')
+  @InviteRateLimit()
+  @ResponseMessage('Revoke workspace invite successfully')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
+  @RequirePermissions(PERMISSIONS.WORKSPACE_MEMBER_ADD)
+  async revokeInvite(
+    @Param('workspaceId') workspaceId: string,
+    @Param('inviteId') inviteId: string,
+    @Auth() auth: IAuth,
+  ): Promise<WorkspaceInviteResponseDto> {
+    if (!auth?.id) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
+    return this.revokeWorkspaceInviteHandler.execute(
+      new RevokeWorkspaceInviteCommand(inviteId, auth.id, workspaceId),
+    );
+  }
+
+  @Post(':workspaceId/invites/:inviteId/resend')
+  @InviteRateLimit()
+  @ResponseMessage('Resend workspace invite successfully')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
+  @RequirePermissions(PERMISSIONS.WORKSPACE_MEMBER_ADD)
+  async resendInvite(
+    @Param('workspaceId') workspaceId: string,
+    @Param('inviteId') inviteId: string,
+    @Auth() auth: IAuth,
+  ): Promise<WorkspaceInviteResponseDto> {
+    if (!auth?.id) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
+    return this.resendWorkspaceInviteHandler.execute(
+      new ResendWorkspaceInviteCommand(inviteId, auth.id, workspaceId),
     );
   }
 }

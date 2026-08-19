@@ -6,6 +6,7 @@ import { type CreatePageApplication } from '../interfaces/applications/create-pa
 import { type CreatePageService } from '../interfaces/services/create.page.service.interface';
 import { PAGE_TYPES } from '../interfaces/types';
 import { PageMapper } from '../mapper/page.mapper';
+import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 
 @Injectable()
 export class CreatePageApplicationImpl implements CreatePageApplication {
@@ -13,7 +14,7 @@ export class CreatePageApplicationImpl implements CreatePageApplication {
     @Inject(PAGE_TYPES.services.CreatePageService)
     private readonly createPageService: CreatePageService,
 
-    @Inject(PAGE_TYPES.uow.UnitOfWork)
+    @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
   ) {}
 

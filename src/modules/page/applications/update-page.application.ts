@@ -6,6 +6,7 @@ import { type UpdatePageApplication } from '../interfaces/applications/update-pa
 import { type UpdatePageService } from '../interfaces/services/update-page.service.interface';
 import { PAGE_TYPES } from '../interfaces/types';
 import { PageMapper } from '../mapper/page.mapper';
+import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 
 @Injectable()
 export class UpdatePageApplicationImpl implements UpdatePageApplication {
@@ -13,7 +14,7 @@ export class UpdatePageApplicationImpl implements UpdatePageApplication {
     @Inject(PAGE_TYPES.services.UpdatePageService)
     private readonly updatePageService: UpdatePageService,
 
-    @Inject(PAGE_TYPES.uow.UnitOfWork)
+    @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
   ) {}
 

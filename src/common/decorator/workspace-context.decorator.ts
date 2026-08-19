@@ -3,10 +3,7 @@ import { SetMetadata } from '@nestjs/common';
 export const WORKSPACE_CONTEXT_KEY = 'workspace_context';
 
 export type WorkspaceResourceType =
-  | 'task'
-  | 'project'
-  | 'board'
-  | 'sprint'
+  | 'workspace'
   | 'page'
   | 'page_block'
   | 'attachment';

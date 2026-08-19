@@ -20,8 +20,14 @@ import { DeletePageBlockApplicationImpl } from './applications/delete.page-block
 import { DeletePageBlockRepositoryImpl } from './repositories/delete.page-block.repository';
 import { DeletePageBlockServiceImpl } from './services/delete.page-block.service';
 
+import { DatabaseModule } from 'src/database/database.module';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([PageBlock]), ActivityModule],
+  imports: [
+    TypeOrmModule.forFeature([PageBlock]),
+    ActivityModule,
+    DatabaseModule,
+  ],
   controllers: [PageBlockController],
   providers: [
     //application
@@ -70,10 +76,6 @@ import { DeletePageBlockServiceImpl } from './services/delete.page-block.service
     {
       provide: PAGE_BLOCK_TYPES.services.FindPageBlockService,
       useClass: FindPageBlockServiceImpl,
-    },
-    {
-      provide: PERSISTENCE_TYPES.UnitOfWork,
-      useClass: TypeOrmUnitOfWork,
     },
     {
       provide: PAGE_BLOCK_TYPES.services.DeletePageBlockService,

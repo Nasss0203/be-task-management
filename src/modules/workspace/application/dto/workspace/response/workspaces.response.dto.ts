@@ -1,6 +1,5 @@
 import { Workspace } from 'src/modules/workspace/domain/aggregates/workspace/workspace.aggregate';
 import { WorkspaceLayoutMode } from 'src/modules/workspace/domain/enums/workspace-layout-mode.enum';
-import { PlanTypeWorkspace } from 'src/modules/workspace/domain/enums/workspace-plan-type.enum';
 
 export class WorkspaceResponseDto {
   id: string;
@@ -8,8 +7,6 @@ export class WorkspaceResponseDto {
   name: string;
 
   slug: string;
-
-  planType: PlanTypeWorkspace;
 
   layoutMode: WorkspaceLayoutMode;
 
@@ -28,7 +25,6 @@ export class WorkspaceResponseDto {
       id: workspace.getId(),
       name: workspace.getName(),
       slug: workspace.getSlug(),
-      planType: workspace.getPlanType(),
       layoutMode: workspace.getLayoutMode(),
       createdAt: workspace.getCreatedAt(),
       updatedAt: workspace.getUpdatedAt(),

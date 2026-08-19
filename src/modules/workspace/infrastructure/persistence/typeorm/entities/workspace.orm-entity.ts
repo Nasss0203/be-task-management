@@ -9,7 +9,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { WorkspaceLayoutMode } from '../../../../domain/enums/workspace-layout-mode.enum';
-import { PlanTypeWorkspace } from '../../../../domain/enums/workspace-plan-type.enum';
 import { WorkspaceMemberOrmEntity } from './workspace-member.orm-entity';
 
 @Entity('workspaces')
@@ -23,14 +22,6 @@ export class WorkspaceOrmEntity {
 
   @Column({ type: 'varchar', length: 255, unique: true })
   slug: string;
-
-  @Column({
-    type: 'enum',
-    enum: PlanTypeWorkspace,
-    default: PlanTypeWorkspace.FREE,
-    name: 'plan_type',
-  })
-  planType: PlanTypeWorkspace;
 
   @Column({
     type: 'enum',

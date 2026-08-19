@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
 } from '@nestjs/common';
@@ -43,7 +45,17 @@ export class CreateWorkspaceInviteLinkHandler {
     await this.ensureCanInviteRole(workspaceId, invitedBy, dto.role_name);
 
     const invite = await this.createLinkInvite(workspaceId, invitedBy, dto);
-    const inviteUrl = `http://localhost:3000/invite/workspace?token=${invite.getToken()}`;
+
+    const acceptUrlBase =
+      process.env.FRONTEND_URL?.replace(/\/$/, '') ||
+      process.env.CLIENT_URL?.replace(/\/$/, '');
+    if (!acceptUrlBase) {
+      throw new HttpException(
+        'FRONTEND_URL config is missing',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+    const inviteUrl = `${acceptUrlBase}/invite/workspace?token=${invite.getToken()}`;
 
     return WorkspaceInviteLinkResponseDto.fromDomain(invite, inviteUrl);
   }

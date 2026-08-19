@@ -93,12 +93,11 @@ export class TypeOrmWorkspaceMemberRepository implements WorkspaceMemberReposito
         'uw.user_id as user_id',
         'u.username as full_name',
         'u.email as email',
-        'NULL::text as avatar_url',
+        'u.avatar_url as avatar_url',
         'uw.role_name as role_name',
         'uw.last_opened_at as "lastOpenedAt"',
         'uw.joined_at as "joinedAt"',
       ])
-      .addSelect('0', 'taskCount')
       .where('uw.workspace_id = :workspaceId', { workspaceId })
       .andWhere('uw.user_id = :userId', { userId })
       .getRawOne<WorkspaceMemberDetailRaw>();
@@ -121,11 +120,10 @@ export class TypeOrmWorkspaceMemberRepository implements WorkspaceMemberReposito
           uw.user_id AS user_id,
           u.username AS full_name,
           u.email AS email,
-          NULL::text AS avatar_url,
+          u.avatar_url AS avatar_url,
           uw.role_name AS role_name,
           uw.last_opened_at AS "lastOpenedAt",
-          uw.joined_at AS "joinedAt",
-          0::int AS "taskCount"
+          uw.joined_at AS "joinedAt"
         FROM workspace_members uw
         INNER JOIN users u
           ON u.id = uw.user_id

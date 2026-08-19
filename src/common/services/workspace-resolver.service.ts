@@ -25,21 +25,9 @@ const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const WORKSPACE_LOOKUPS: Record<WorkspaceResourceType, WorkspaceLookup> = {
-  task: {
-    paramKeys: ['taskId', 'id'],
-    query: 'SELECT workspace_id AS "workspaceId" FROM tasks WHERE id = $1',
-  },
-  project: {
-    paramKeys: ['projectId', 'id'],
-    query: 'SELECT workspace_id AS "workspaceId" FROM projects WHERE id = $1',
-  },
-  board: {
-    paramKeys: ['boardId', 'id'],
-    query: 'SELECT workspace_id AS "workspaceId" FROM boards WHERE id = $1',
-  },
-  sprint: {
-    paramKeys: ['sprintId', 'sourceSprintId', 'id'],
-    query: 'SELECT workspace_id AS "workspaceId" FROM sprints WHERE id = $1',
+  workspace: {
+    paramKeys: ['workspaceId', 'id'],
+    query: 'SELECT id AS "workspaceId" FROM workspaces WHERE id = $1',
   },
   page: {
     paramKeys: ['pageId', 'id'],

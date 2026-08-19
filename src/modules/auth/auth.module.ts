@@ -31,6 +31,8 @@ import { RefreshAuthServiceImpl } from './services/refresh-auth.service';
 import { RegisterAuthServiceImpl } from './services/register-auth.service';
 import { ValidateUserAuthServiceImpl } from './services/validate-user-auth.service';
 
+import { DatabaseModule } from 'src/database/database.module';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, RefreshToken]),
@@ -48,6 +50,7 @@ import { ValidateUserAuthServiceImpl } from './services/validate-user-auth.servi
     PassportModule,
     WorkspaceModule,
     MailModule,
+    DatabaseModule,
   ],
   providers: [
     AuthService,

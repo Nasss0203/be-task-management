@@ -17,6 +17,8 @@ import { AcceptWorkspaceInviteHandler } from './application/commands/workspace-i
 import { CreateWorkspaceInviteLinkHandler } from './application/commands/workspace-invite/create-workspace-invite-link/create-workspace-invite-link.handler';
 import { DeclineWorkspaceInviteHandler } from './application/commands/workspace-invite/decline-workspace-invite/decline-workspace-invite.handler';
 import { InviteWorkspaceMemberHandler } from './application/commands/workspace-invite/invite-workspace-member/invite-workspace-member.handler';
+import { RevokeWorkspaceInviteHandler } from './application/commands/workspace-invite/revoke-workspace-invite/revoke-workspace-invite.handler';
+import { ResendWorkspaceInviteHandler } from './application/commands/workspace-invite/resend-workspace-invite/resend-workspace-invite.handler';
 import { AddWorkspaceMemberHandler } from './application/commands/workspace-member/add-workspace-member/add-workspace-member.handler';
 import { DeleteWorkspaceMemberHandler } from './application/commands/workspace-member/delete-workspace-member/delete-workspace-member.handler';
 import { UpdateWorkspaceMemberRoleHandler } from './application/commands/workspace-member/update-workspace-member-role/update-workspace-member-role.handler';
@@ -38,6 +40,8 @@ import { WorkspacesController } from './presentation/http/controllers/workspace.
 import { WorkspaceInviteController } from './presentation/http/controllers/workspace-invite.controller';
 import { WORKSPACE_TYPES } from './workspace.types';
 
+import { DatabaseModule } from 'src/database/database.module';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -50,6 +54,7 @@ import { WORKSPACE_TYPES } from './workspace.types';
     UsersModule,
     MailModule,
     NotificationsModule,
+    DatabaseModule,
   ],
   controllers: [
     WorkspacesController,
@@ -72,6 +77,8 @@ import { WORKSPACE_TYPES } from './workspace.types';
     AcceptWorkspaceInviteHandler,
     DeclineWorkspaceInviteHandler,
     CreateWorkspaceInviteLinkHandler,
+    RevokeWorkspaceInviteHandler,
+    ResendWorkspaceInviteHandler,
     SearchInviteUsersHandler,
     AddWorkspaceMemberHandler,
     UpdateWorkspaceMemberRoleHandler,
@@ -88,10 +95,6 @@ import { WORKSPACE_TYPES } from './workspace.types';
     {
       provide: WORKSPACE_TYPES.repositories.WorkspaceInviteRepository,
       useClass: TypeOrmWorkspaceInviteRepository,
-    },
-    {
-      provide: PERSISTENCE_TYPES.UnitOfWork,
-      useClass: TypeOrmUnitOfWork,
     },
   ],
   exports: [CreateWorkspaceHandler],

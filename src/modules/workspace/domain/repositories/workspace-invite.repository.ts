@@ -11,4 +11,15 @@ export interface WorkspaceInviteRepository {
     token: string,
     context?: PersistenceContext,
   ): Promise<WorkspaceInvite | null>;
+
+  findById(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<WorkspaceInvite | null>;
+
+  findByWorkspaceAndEmail(
+    workspaceId: string,
+    email: string,
+    context?: PersistenceContext,
+  ): Promise<WorkspaceInvite | null>;
 }

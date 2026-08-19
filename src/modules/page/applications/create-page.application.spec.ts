@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CreatePageApplicationImpl } from './create-page.application';
 import { PAGE_TYPES } from '../interfaces/types';
 import { PageMapper } from '../mapper/page.mapper';
+import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 
 describe('CreatePageApplicationImpl', () => {
   let app: CreatePageApplicationImpl;
@@ -19,7 +20,7 @@ describe('CreatePageApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreatePageApplicationImpl,
-        { provide: PAGE_TYPES.uow.UnitOfWork, useValue: mockUow },
+        { provide: PERSISTENCE_TYPES.UnitOfWork, useValue: mockUow },
         {
           provide: PAGE_TYPES.services.CreatePageService,
           useValue: mockService,

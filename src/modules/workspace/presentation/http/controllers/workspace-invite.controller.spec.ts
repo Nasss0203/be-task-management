@@ -6,6 +6,8 @@ import { AcceptWorkspaceInviteHandler } from 'src/modules/workspace/application/
 import { CreateWorkspaceInviteLinkHandler } from 'src/modules/workspace/application/commands/workspace-invite/create-workspace-invite-link/create-workspace-invite-link.handler';
 import { DeclineWorkspaceInviteHandler } from 'src/modules/workspace/application/commands/workspace-invite/decline-workspace-invite/decline-workspace-invite.handler';
 import { SearchInviteUsersHandler } from 'src/modules/workspace/application/queries/workspace-invite/search-invite-users/search-invite-users.handler';
+import { RevokeWorkspaceInviteHandler } from 'src/modules/workspace/application/commands/workspace-invite/revoke-workspace-invite/revoke-workspace-invite.handler';
+import { ResendWorkspaceInviteHandler } from 'src/modules/workspace/application/commands/workspace-invite/resend-workspace-invite/resend-workspace-invite.handler';
 
 describe('WorkspaceInviteController', () => {
   let controller: WorkspaceInviteController;
@@ -15,6 +17,8 @@ describe('WorkspaceInviteController', () => {
   const mockSearchHandler = { execute: jest.fn() };
   const mockAcceptHandler = { execute: jest.fn() };
   const mockDeclineHandler = { execute: jest.fn() };
+  const mockRevokeHandler = { execute: jest.fn() };
+  const mockResendHandler = { execute: jest.fn() };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -40,6 +44,14 @@ describe('WorkspaceInviteController', () => {
         {
           provide: DeclineWorkspaceInviteHandler,
           useValue: mockDeclineHandler,
+        },
+        {
+          provide: RevokeWorkspaceInviteHandler,
+          useValue: mockRevokeHandler,
+        },
+        {
+          provide: ResendWorkspaceInviteHandler,
+          useValue: mockResendHandler,
         },
       ],
     }).compile();

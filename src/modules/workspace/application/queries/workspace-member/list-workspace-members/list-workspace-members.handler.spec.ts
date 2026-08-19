@@ -43,7 +43,6 @@ describe('ListWorkspaceMembersHandler', () => {
       avatarUrl: null,
       lastOpenedAt: null,
       joinedAt: new Date(),
-      taskCount: 0,
     });
     mockWorkspaceMemberRepository.findDetailsByWorkspace.mockResolvedValue([
       member,

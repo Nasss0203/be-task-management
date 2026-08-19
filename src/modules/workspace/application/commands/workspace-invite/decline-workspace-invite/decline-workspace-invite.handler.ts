@@ -79,7 +79,7 @@ export class DeclineWorkspaceInviteHandler {
         }
       }
 
-      invite.markRevoked();
+      invite.markDeclined();
 
       const declined = await this.workspaceInviteRepository.save(
         invite,

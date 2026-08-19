@@ -3,4 +3,5 @@ export enum WorkspaceInviteStatus {
   ACCEPTED = 'ACCEPTED',
   EXPIRED = 'EXPIRED',
   REVOKED = 'REVOKED',
+  DECLINED = 'DECLINED',
 }

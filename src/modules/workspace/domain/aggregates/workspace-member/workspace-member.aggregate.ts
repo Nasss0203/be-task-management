@@ -93,8 +93,7 @@ type RestoreWorkspaceMemberDetailParams = {
   role: WorkspaceRole;
   avatarUrl?: string | null;
   lastOpenedAt?: Date | null;
-  joinedAt: Date | null;
-  taskCount?: number;
+  joinedAt: Date;
 };
 
 export class WorkspaceMemberDetail {
@@ -107,8 +106,7 @@ export class WorkspaceMemberDetail {
     private readonly role: WorkspaceRole,
     private readonly avatarUrl: string | null,
     private readonly lastOpenedAt: Date | null,
-    private readonly joinedAt: Date | null,
-    private readonly taskCount: number,
+    private readonly joinedAt: Date,
   ) {}
 
   static restore(params: RestoreWorkspaceMemberDetailParams) {
@@ -122,7 +120,6 @@ export class WorkspaceMemberDetail {
       params.avatarUrl ?? null,
       params.lastOpenedAt ?? null,
       params.joinedAt,
-      params.taskCount ?? 0,
     );
   }
 
@@ -158,11 +155,7 @@ export class WorkspaceMemberDetail {
     return this.lastOpenedAt;
   }
 
-  getJoinedAt(): Date | null {
+  getJoinedAt(): Date {
     return this.joinedAt;
-  }
-
-  getTaskCount(): number {
-    return this.taskCount;
   }
 }

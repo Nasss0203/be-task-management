@@ -34,7 +34,6 @@ export class WorkspaceMemberDetailResponseDto {
   role_name: WorkspaceRole;
   lastOpenedAt: Date | null;
   joinedAt: Date | null;
-  taskCount?: number;
 
   static fromDomain(
     member: WorkspaceMemberDetail,
@@ -49,7 +48,6 @@ export class WorkspaceMemberDetailResponseDto {
       role_name: member.getRole(),
       joinedAt: member.getJoinedAt(),
       lastOpenedAt: member.getLastOpenedAt(),
-      taskCount: member.getTaskCount(),
     };
   }
 }

@@ -6,7 +6,6 @@ import { PAGE_TYPES } from 'src/modules/page/interfaces/types';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import { Workspace } from 'src/modules/workspace/domain/aggregates/workspace/workspace.aggregate';
 import { WorkspaceLayoutMode } from 'src/modules/workspace/domain/enums/workspace-layout-mode.enum';
-import { PlanTypeWorkspace } from 'src/modules/workspace/domain/enums/workspace-plan-type.enum';
 import { WorkspaceMember } from 'src/modules/workspace/domain/aggregates/workspace-member/workspace-member.aggregate';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { generateSlug } from 'src/utils';
@@ -47,7 +46,6 @@ export class CreateWorkspaceHandler {
     const create = async (transactionManager: EntityManager) => {
       const workspace = await this.createWorkspaceCoreDefault({
         name: 'Task management',
-        planType: PlanTypeWorkspace.FREE,
         userId,
         manager: transactionManager,
       });
@@ -74,12 +72,10 @@ export class CreateWorkspaceHandler {
 
   private async createWorkspaceCoreDefault({
     name,
-    planType,
     userId,
     manager,
   }: {
     name: string;
-    planType?: PlanTypeWorkspace;
     userId: string;
     manager: EntityManager;
   }): Promise<Workspace> {
@@ -99,7 +95,6 @@ export class CreateWorkspaceHandler {
       Workspace.create({
         name,
         slug,
-        planType: planType ?? PlanTypeWorkspace.FREE,
         layoutMode: WorkspaceLayoutMode.TABS,
         createdBy: userId,
       }),

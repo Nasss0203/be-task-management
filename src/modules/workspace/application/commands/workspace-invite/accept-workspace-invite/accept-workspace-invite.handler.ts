@@ -67,6 +67,17 @@ export class AcceptWorkspaceInviteHandler {
       throw new NotFoundException('User not found');
     }
 
+    const existingMember =
+      await this.workspaceMemberRepository.findByWorkspaceAndUser(
+        invite.getWorkspaceId(),
+        user.id,
+      );
+    if (existingMember) {
+      throw new BadRequestException(
+        'You are already a member of this workspace',
+      );
+    }
+
     this.ensureInviteCanBeAccepted(invite, command, user.id);
 
     const acceptedInvite = await this.uow.runInTransaction(async (manager) => {

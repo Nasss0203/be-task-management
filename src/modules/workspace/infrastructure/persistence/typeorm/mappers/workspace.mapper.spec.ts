@@ -1,6 +1,5 @@
 import { Workspace } from 'src/modules/workspace/domain/aggregates/workspace/workspace.aggregate';
 import { WorkspaceLayoutMode } from 'src/modules/workspace/domain/enums/workspace-layout-mode.enum';
-import { PlanTypeWorkspace } from 'src/modules/workspace/domain/enums/workspace-plan-type.enum';
 import { WorkspaceOrmEntity } from '../entities/workspace.orm-entity';
 import { WorkspaceMapper } from './workspace.mapper';
 
@@ -13,7 +12,6 @@ describe('WorkspaceMapper', () => {
     entity.id = 'workspace-1';
     entity.name = 'Task management';
     entity.slug = 'task-management';
-    entity.planType = PlanTypeWorkspace.FREE;
     entity.layoutMode = WorkspaceLayoutMode.TABS;
     entity.createdAt = createdAt;
     entity.updatedAt = updatedAt;
@@ -34,7 +32,6 @@ describe('WorkspaceMapper', () => {
       id: 'workspace-1',
       name: 'Task management',
       slug: 'task-management',
-      planType: PlanTypeWorkspace.FREE,
       layoutMode: WorkspaceLayoutMode.TABS,
       createdAt,
       updatedAt,

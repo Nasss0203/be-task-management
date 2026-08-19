@@ -25,6 +25,9 @@ import { WorkspaceInviteOrmEntity } from 'src/modules/workspace/infrastructure/p
 import { WorkspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-member.orm-entity';
 import { WorkspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace.orm-entity';
 
+import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
+import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
+
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
@@ -70,5 +73,12 @@ import { WorkspaceOrmEntity } from 'src/modules/workspace/infrastructure/persist
       }),
     }),
   ],
+  providers: [
+    {
+      provide: PERSISTENCE_TYPES.UnitOfWork,
+      useClass: TypeOrmUnitOfWork,
+    },
+  ],
+  exports: [PERSISTENCE_TYPES.UnitOfWork],
 })
 export class DatabaseModule {}

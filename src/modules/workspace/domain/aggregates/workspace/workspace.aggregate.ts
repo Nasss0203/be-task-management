@@ -1,12 +1,10 @@
 import { randomUUID } from 'crypto';
 import { WorkspaceLayoutMode } from '../../enums/workspace-layout-mode.enum';
-import { PlanTypeWorkspace } from '../../enums/workspace-plan-type.enum';
 
 type CreateWorkspaceParams = {
   id?: string;
   name: string;
   slug: string;
-  planType?: PlanTypeWorkspace;
   layoutMode?: WorkspaceLayoutMode;
   createdAt?: Date;
   updatedAt?: Date;
@@ -19,7 +17,6 @@ type RestoreWorkspaceParams = {
   id: string;
   name: string;
   slug: string;
-  planType: PlanTypeWorkspace;
   layoutMode: WorkspaceLayoutMode;
   createdAt: Date;
   updatedAt: Date;
@@ -33,7 +30,6 @@ export class Workspace {
     private readonly id: string,
     private name: string,
     private readonly slug: string,
-    private readonly planType: PlanTypeWorkspace,
     private layoutMode: WorkspaceLayoutMode,
     private readonly createdAt: Date,
     private updatedAt: Date,
@@ -49,7 +45,6 @@ export class Workspace {
       params.id ?? randomUUID(),
       params.name,
       params.slug,
-      params.planType ?? PlanTypeWorkspace.FREE,
       params.layoutMode ?? WorkspaceLayoutMode.TABS,
       params.createdAt ?? now,
       params.updatedAt ?? now,
@@ -64,7 +59,6 @@ export class Workspace {
       params.id,
       params.name,
       params.slug,
-      params.planType,
       params.layoutMode,
       params.createdAt,
       params.updatedAt,
@@ -84,10 +78,6 @@ export class Workspace {
 
   getSlug(): string {
     return this.slug;
-  }
-
-  getPlanType(): PlanTypeWorkspace {
-    return this.planType;
   }
 
   getLayoutMode(): WorkspaceLayoutMode {

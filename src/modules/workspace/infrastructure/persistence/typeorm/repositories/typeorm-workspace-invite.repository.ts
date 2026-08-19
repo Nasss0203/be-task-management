@@ -56,4 +56,35 @@ export class TypeOrmWorkspaceInviteRepository implements WorkspaceInviteReposito
 
     return WorkspaceInviteMapper.toDomain(row);
   }
+
+  async findById(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<WorkspaceInvite | null> {
+    const row = await this.getRepo(context).findOne({
+      where: { id },
+    });
+
+    if (!row) {
+      return null;
+    }
+
+    return WorkspaceInviteMapper.toDomain(row);
+  }
+
+  async findByWorkspaceAndEmail(
+    workspaceId: string,
+    email: string,
+    context?: PersistenceContext,
+  ): Promise<WorkspaceInvite | null> {
+    const row = await this.getRepo(context).findOne({
+      where: { workspaceId, email },
+    });
+
+    if (!row) {
+      return null;
+    }
+
+    return WorkspaceInviteMapper.toDomain(row);
+  }
 }

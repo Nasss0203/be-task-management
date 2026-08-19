@@ -7,7 +7,6 @@ export class WorkspaceMapper {
       id: entity.id,
       name: entity.name,
       slug: entity.slug,
-      planType: entity.planType,
       layoutMode: entity.layoutMode,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
@@ -24,7 +23,6 @@ export class WorkspaceMapper {
 
     e.name = model.getName();
     e.slug = model.getSlug();
-    e.planType = model.getPlanType();
     e.layoutMode = model.getLayoutMode();
     e.createdAt = model.getCreatedAt();
     e.updatedAt = model.getUpdatedAt();

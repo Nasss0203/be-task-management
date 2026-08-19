@@ -229,6 +229,11 @@ export class WorkspaceInvite {
     this.touch();
   }
 
+  markDeclined(): void {
+    this.status = WorkspaceInviteStatus.DECLINED;
+    this.touch();
+  }
+
   private touch(): void {
     this.updatedAt = new Date();
   }

@@ -175,13 +175,8 @@ export class TypeOrmWorkspaceRepository implements WorkspaceRepository {
     return {
       workspaceId,
       metrics: {
-        projects: 0,
-        openTasks: 0,
-        overdueTasks: 0,
         members: Number(metricsRaw?.members ?? 0),
       },
-      projects: [],
-      attentions: [],
     };
   }
 
