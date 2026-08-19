@@ -1,8 +1,8 @@
+import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UpdatePageBlockApplicationImpl } from './update.page_block.application';
-import { PAGE_BLOCK_TYPES } from '../interfaces/types';
-import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
 import { HttpException } from '@nestjs/common';
+import { PAGE_BLOCK_TYPES } from '../interfaces/types';
 import { PageBlockMapper } from '../mapper/page_block.mapper';
 
 describe('UpdatePageBlockApplicationImpl', () => {
@@ -26,7 +26,7 @@ describe('UpdatePageBlockApplicationImpl', () => {
           provide: PAGE_BLOCK_TYPES.services.UpdatePageBlockService,
           useValue: mockService,
         },
-        { provide: WORKSPACE_TYPES.uow.UnitOfWork, useValue: mockUow },
+        { provide: PERSISTENCE_TYPES.UnitOfWork, useValue: mockUow },
       ],
     }).compile();
 

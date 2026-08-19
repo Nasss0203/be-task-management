@@ -9,8 +9,7 @@ import { LocalStrategy } from 'src/common/strategy/local.strategy';
 import { MailModule } from '../mail/mail.module';
 import { RefreshToken } from '../refresh_token/entities/refresh_token.entity';
 import { User } from '../users/domain/entities/user.entity';
-import { Workspace } from '../workspaces/domain/entities/workspace.entity';
-import { WorkspacesModule } from '../workspaces/workspaces.module';
+import { WorkspaceModule } from '../workspace/workspace.module';
 import { GetProfileAuthApplicationImpl } from './applications/get-profile-auth.application';
 import { GoogleAuthApplicationImpl } from './applications/google-auth.application';
 import { LoginAuthApplicationImpl } from './applications/login-auth.application';
@@ -34,7 +33,7 @@ import { ValidateUserAuthServiceImpl } from './services/validate-user-auth.servi
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, RefreshToken, Workspace]),
+    TypeOrmModule.forFeature([User, RefreshToken]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -47,7 +46,7 @@ import { ValidateUserAuthServiceImpl } from './services/validate-user-auth.servi
       inject: [ConfigService],
     }),
     PassportModule,
-    WorkspacesModule,
+    WorkspaceModule,
     MailModule,
   ],
   providers: [

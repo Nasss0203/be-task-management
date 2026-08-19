@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { type UnitOfWork } from 'src/interface/index.interface';
-import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
+import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import {
   AddDatabaseViewToBlockDto,
   CreatePageBlockDto,
@@ -14,7 +14,7 @@ import { PageBlockMapper } from '../mapper/page_block.mapper';
 @Injectable()
 export class CreatePageBlockApplicationImpl implements CreatePageBlockApplication {
   constructor(
-    @Inject(WORKSPACE_TYPES.uow.UnitOfWork)
+    @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
 
     @Inject(PAGE_BLOCK_TYPES.services.CreatePageBlockService)

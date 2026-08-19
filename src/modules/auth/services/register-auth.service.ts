@@ -1,12 +1,13 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { ErrorCode } from 'src/common/constants/error-code.constant';
 import { RegisterUserDto } from 'src/modules/users/dto/create-user.dto';
-import { type CreateWorkspaceService } from 'src/modules/workspaces/interfaces/services/create-workspace.service.interface';
-import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
+import { CreateWorkspaceCommand } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.command';
+import { CreateWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.handler';
 import { hashPassword } from 'src/utils';
 import { MailService } from 'src/modules/mail/mail.service';
 import * as crypto from 'crypto';
 import { type UnitOfWork } from 'src/interface/index.interface';
+import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { type AuthUserRepository } from '../interfaces/repositories/auth-user.repository.interface';
 import {
   RegisterAuthResult,
@@ -19,10 +20,9 @@ export class RegisterAuthServiceImpl implements RegisterAuthService {
   constructor(
     @Inject(AUTH_TYPES.repositories.AuthUserRepository)
     private readonly userRepository: AuthUserRepository,
-    @Inject(WORKSPACE_TYPES.services.CreateWorkspaceService)
-    private readonly createWorkspaceService: CreateWorkspaceService,
+    private readonly createWorkspaceHandler: CreateWorkspaceHandler,
     private readonly mailService: MailService,
-    @Inject(WORKSPACE_TYPES.uow.UnitOfWork)
+    @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
   ) {}
 
@@ -64,10 +64,9 @@ export class RegisterAuthServiceImpl implements RegisterAuthService {
         manager,
       );
 
-      await this.createWorkspaceService.createDefault({
-        userId: user.id,
-        manager,
-      });
+      await this.createWorkspaceHandler.execute(
+        new CreateWorkspaceCommand(user.id, undefined, manager),
+      );
 
       return user;
     });

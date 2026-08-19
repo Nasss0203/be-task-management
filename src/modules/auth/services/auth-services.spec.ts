@@ -7,7 +7,6 @@ import {
   User,
 } from 'src/modules/users/domain/entities/user.entity';
 import { RegisterUserDto } from 'src/modules/users/dto/create-user.dto';
-import { CreateWorkspaceService } from 'src/modules/workspaces/interfaces/services/create-workspace.service.interface';
 import { hashToken } from 'src/utils';
 import { AuthRefreshTokenRepository } from '../interfaces/repositories/auth-refresh-token.repository.interface';
 import { AuthUserRepository } from '../interfaces/repositories/auth-user.repository.interface';
@@ -75,24 +74,23 @@ const createIssueTokenServiceMock = (): jest.Mocked<IssueAuthTokenService> => ({
   issueTokens: jest.fn(),
 });
 
-const createWorkspaceServiceMock = (): jest.Mocked<CreateWorkspaceService> =>
+const createWorkspaceHandlerMock = () =>
   ({
-    create: jest.fn(),
-    createDefault: jest.fn(),
-  }) as unknown as jest.Mocked<CreateWorkspaceService>;
+    execute: jest.fn(),
+  }) as any;
 
 describe('Auth services', () => {
   describe('RegisterAuthServiceImpl', () => {
     it('throws when email or username already exists', async () => {
       const userRepository = createUserRepositoryMock();
-      const createWorkspaceService = createWorkspaceServiceMock();
+      const createWorkspaceHandler = createWorkspaceHandlerMock();
       const mailService = {
         sendVerificationEmail: jest.fn().mockResolvedValue({}),
       } as any;
       const uow = { runInTransaction: jest.fn((cb) => cb({})) } as any;
       const service = new RegisterAuthServiceImpl(
         userRepository,
-        createWorkspaceService,
+        createWorkspaceHandler,
         mailService,
         uow,
       );
@@ -115,14 +113,14 @@ describe('Auth services', () => {
 
     it('creates user and default workspace', async () => {
       const userRepository = createUserRepositoryMock();
-      const createWorkspaceService = createWorkspaceServiceMock();
+      const createWorkspaceHandler = createWorkspaceHandlerMock();
       const mailService = {
         sendVerificationEmail: jest.fn().mockResolvedValue({}),
       } as any;
       const uow = { runInTransaction: jest.fn((cb) => cb({})) } as any;
       const service = new RegisterAuthServiceImpl(
         userRepository,
-        createWorkspaceService,
+        createWorkspaceHandler,
         mailService,
         uow,
       );
@@ -147,10 +145,12 @@ describe('Auth services', () => {
         },
         expect.any(Object),
       );
-      expect(createWorkspaceService.createDefault).toHaveBeenCalledWith({
-        userId: user.id,
-        manager: expect.any(Object),
-      });
+      expect(createWorkspaceHandler.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: user.id,
+          manager: expect.any(Object),
+        }),
+      );
       expect(result).toEqual({
         id: user.id,
         email: user.email,
@@ -385,11 +385,11 @@ describe('Auth services', () => {
     it('creates user and default workspace when google user is new', async () => {
       const userRepository = createUserRepositoryMock();
       const issueTokenService = createIssueTokenServiceMock();
-      const createWorkspaceService = createWorkspaceServiceMock();
+      const createWorkspaceHandler = createWorkspaceHandlerMock();
       const service = new GoogleAuthServiceImpl(
         userRepository,
         issueTokenService,
-        createWorkspaceService,
+        createWorkspaceHandler,
       );
       const user = createUser({
         googleId: 'google-1',
@@ -421,9 +421,11 @@ describe('Auth services', () => {
         googleId: 'google-1',
         avatarUrl: user.avatarUrl,
       });
-      expect(createWorkspaceService.createDefault).toHaveBeenCalledWith({
-        userId: user.id,
-      });
+      expect(createWorkspaceHandler.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: user.id,
+        }),
+      );
     });
   });
 });

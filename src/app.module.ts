@@ -26,10 +26,8 @@ import { PageTemplatesModule } from './modules/page_templates/page_templates.mod
 import { PermissionModule } from './modules/permission/permission.module';
 import { RefreshTokenModule } from './modules/refresh_token/refresh_token.module';
 import { UserProfilesModule } from './modules/user_profiles/user_profiles.module';
-import { WorkspaceMemberModule } from './modules/workspace_member/workspace_member.module';
 import { UsersModule } from './modules/users/users.module';
-import { WorkspaceInvitesModule } from './modules/workspace_invites/workspace_invites.module';
-import { WorkspacesModule } from './modules/workspaces/workspaces.module';
+import { WorkspaceModule } from './modules/workspace/workspace.module';
 
 @Module({
   imports: [
@@ -58,15 +56,13 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
     DatabaseModule,
     UsersModule,
     AuthModule,
-    WorkspacesModule,
+    WorkspaceModule,
     PermissionModule,
     RefreshTokenModule,
     UserProfilesModule,
-    WorkspaceMemberModule,
     PageModule,
     PageBlockModule,
     MailModule,
-    WorkspaceInvitesModule,
     AttachmentModule,
     ActivityModule,
     PageTemplatesModule,

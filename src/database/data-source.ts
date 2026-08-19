@@ -21,10 +21,10 @@ import { DatabaseOrmEntity } from 'src/modules/database/infrastructure/persisten
 import { PropertyOptionOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/property-option.orm-entity';
 import { RowValueOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/row-value.orm-entity';
 import { UserProfile } from 'src/modules/user_profiles/domain/entities/user_profile.entity';
-import { WorkspaceMember } from 'src/modules/workspace_member/domain/entities/workspace-member.entity';
 import { User } from 'src/modules/users/domain/entities/user.entity';
-import { WorkspaceInvite } from 'src/modules/workspace_invites/domain/entities/workspace_invite.entity';
-import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
+import { WorkspaceInviteOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-invite.orm-entity';
+import { WorkspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-member.orm-entity';
+import { WorkspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace.orm-entity';
 
 export default new DataSource({
   type: 'postgres',
@@ -39,14 +39,14 @@ export default new DataSource({
   logging: true,
   entities: [
     User,
-    Workspace,
+    WorkspaceOrmEntity,
     Permission,
     UserProfile,
     RefreshToken,
-    WorkspaceMember,
+    WorkspaceMemberOrmEntity,
     Page,
     PageBlock,
-    WorkspaceInvite,
+    WorkspaceInviteOrmEntity,
     Attachment,
     Activity,
     Mention,

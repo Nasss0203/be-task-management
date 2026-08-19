@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UpdateNotificationServiceImpl } from './update-notification.service';
 import { NOTIFICATION_TYPES } from '../interfaces/types';
 import { BadRequestException } from '@nestjs/common';
-import { WorkspaceInviteStatus } from '../../workspace_invites/domain/entities/workspace_invite.entity';
+import { WorkspaceInviteStatus } from 'src/modules/workspace/domain/enums/workspace-invite-status.enum';
 
 describe('UpdateNotificationServiceImpl', () => {
   let service: UpdateNotificationServiceImpl;

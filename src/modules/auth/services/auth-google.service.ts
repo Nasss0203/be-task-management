@@ -5,8 +5,8 @@ import { Repository } from 'typeorm';
 import { randomBytes } from 'crypto';
 import { RefreshToken } from 'src/modules/refresh_token/entities/refresh_token.entity';
 import { User } from 'src/modules/users/domain/entities/user.entity';
-import { type CreateWorkspaceService } from 'src/modules/workspaces/interfaces/services/create-workspace.service.interface';
-import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
+import { CreateWorkspaceCommand } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.command';
+import { CreateWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.handler';
 import { GoogleUserPayload } from 'src/types/google-user-payload.interface';
 import { IUserJwtPayload } from '../interfaces/type';
 import { hashToken } from 'src/utils';
@@ -22,8 +22,7 @@ export class AuthGoogleService {
     @InjectRepository(RefreshToken)
     private readonly refreshRepo: Repository<RefreshToken>,
 
-    @Inject(WORKSPACE_TYPES.services.CreateWorkspaceService)
-    private readonly createWorkspaceService: CreateWorkspaceService,
+    private readonly createWorkspaceHandler: CreateWorkspaceHandler,
   ) {}
 
   async loginWithGoogle(googleUser: GoogleUserPayload) {
@@ -56,9 +55,9 @@ export class AuthGoogleService {
 
         user = await this.userRepo.save(createdUser);
 
-        await this.createWorkspaceService.createDefault({
-          userId: user.id,
-        });
+        await this.createWorkspaceHandler.execute(
+          new CreateWorkspaceCommand(user.id),
+        );
       }
     }
 

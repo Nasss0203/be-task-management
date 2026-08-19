@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { WorkspaceMember } from '../workspace_member/domain/entities/workspace-member.entity';
+import { WorkspaceMemberOrmEntity } from '../workspace/infrastructure/persistence/typeorm/entities/workspace-member.orm-entity';
 import { PermissionController } from './controller/permission.controller';
 import { Permission } from './domain/entities/permission.entity';
 import { PERMISSION_TYPES } from './interfaces/types';
@@ -9,7 +9,7 @@ import { FindPermissionRepositoryImpl } from './repositories/find-all-permission
 import { FindPermissionServiceImpl } from './services/find-all-permission.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Permission, WorkspaceMember])],
+  imports: [TypeOrmModule.forFeature([Permission, WorkspaceMemberOrmEntity])],
   controllers: [PermissionController],
   providers: [
     PermissionService,

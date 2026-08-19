@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { type UnitOfWork } from 'src/interface/index.interface';
-import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
+import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { PageBlockResponseDto } from '../dto/response/page_block.response.dto';
 import { ReorderPageBlockDto } from '../dto/reorder-page_block.dto';
 import { UpdatePageBlockDto } from '../dto/update-page_block.dto';
@@ -15,7 +15,7 @@ export class UpdatePageBlockApplicationImpl implements UpdatePageBlockApplicatio
     @Inject(PAGE_BLOCK_TYPES.services.UpdatePageBlockService)
     private readonly updatePageBlockService: UpdatePageBlockService,
 
-    @Inject(WORKSPACE_TYPES.uow.UnitOfWork)
+    @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
   ) {}
   async update(

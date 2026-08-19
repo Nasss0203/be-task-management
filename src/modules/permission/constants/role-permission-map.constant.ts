@@ -1,5 +1,5 @@
 import { PERMISSIONS, PermissionCode } from './permission.constant';
-import { WorkspaceRole } from 'src/shared/domain/enums/workspace-role.enum';
+import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 
 export const ROLE_PERMISSION_MAP: Record<WorkspaceRole, PermissionCode[]> = {
   [WorkspaceRole.OWNER]: Object.values(PERMISSIONS),

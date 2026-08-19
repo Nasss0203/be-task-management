@@ -6,7 +6,7 @@ import { PageBlock } from './domain/entities/page_block.entity';
 import { PAGE_BLOCK_TYPES } from './interfaces/types';
 
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
-import { WORKSPACE_TYPES } from '../workspaces/interfaces/types';
+import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { CreatePageBlockApplicationImpl } from './applications/create-page_block.application';
 import { UpdatePageBlockApplicationImpl } from './applications/update.page_block.application';
 import { CreatePageBlockRepositoryImpl } from './repositories/create.page_block.repository';
@@ -72,7 +72,7 @@ import { DeletePageBlockServiceImpl } from './services/delete.page-block.service
       useClass: FindPageBlockServiceImpl,
     },
     {
-      provide: WORKSPACE_TYPES.uow.UnitOfWork,
+      provide: PERSISTENCE_TYPES.UnitOfWork,
       useClass: TypeOrmUnitOfWork,
     },
     {

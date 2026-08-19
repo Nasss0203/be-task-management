@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { WorkspaceMember } from 'src/modules/workspace_member/domain/entities/workspace-member.entity';
-import { WorkspaceRole } from 'src/shared/domain/enums/workspace-role.enum';
+import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
+import { WorkspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-member.orm-entity';
 import { EntityManager, Repository } from 'typeorm';
 import { PERMISSIONS } from '../constants/permission.constant';
 import { ROLE_PERMISSION_MAP } from '../constants/role-permission-map.constant';
@@ -15,8 +15,8 @@ export class FindPermissionRepositoryImpl implements FindPermissionRepository {
     @InjectRepository(Permission)
     private readonly repo: Repository<Permission>,
 
-    @InjectRepository(WorkspaceMember)
-    private readonly workspaceMemberRepo: Repository<WorkspaceMember>,
+    @InjectRepository(WorkspaceMemberOrmEntity)
+    private readonly workspaceMemberRepo: Repository<WorkspaceMemberOrmEntity>,
   ) {}
 
   private getRepo(manager?: EntityManager): Repository<Permission> {
@@ -40,17 +40,17 @@ export class FindPermissionRepositoryImpl implements FindPermissionRepository {
     manager?: EntityManager,
   ): Promise<string[]> {
     const repo = manager
-      ? manager.getRepository(WorkspaceMember)
+      ? manager.getRepository(WorkspaceMemberOrmEntity)
       : this.workspaceMemberRepo;
 
     const membership = await repo.findOne({
       select: {
         id: true,
-        role_name: true,
+        roleName: true,
       },
       where: {
-        user_id: userId,
-        workspace_id: workspaceId,
+        userId,
+        workspaceId,
       },
     });
 
@@ -58,10 +58,10 @@ export class FindPermissionRepositoryImpl implements FindPermissionRepository {
       return [];
     }
 
-    if (membership.role_name === WorkspaceRole.OWNER) {
+    if (membership.roleName === WorkspaceRole.OWNER) {
       return Object.values(PERMISSIONS);
     }
 
-    return ROLE_PERMISSION_MAP[membership.role_name] ?? [];
+    return ROLE_PERMISSION_MAP[membership.roleName] ?? [];
   }
 }

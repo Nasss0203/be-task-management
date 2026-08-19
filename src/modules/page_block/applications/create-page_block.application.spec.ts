@@ -1,6 +1,6 @@
+import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { Test, TestingModule } from '@nestjs/testing';
 import { CreatePageBlockApplicationImpl } from './create-page_block.application';
-import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
 import { PAGE_BLOCK_TYPES } from '../interfaces/types';
 import { PageBlockMapper } from '../mapper/page_block.mapper';
 
@@ -21,7 +21,7 @@ describe('CreatePageBlockApplicationImpl', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreatePageBlockApplicationImpl,
-        { provide: WORKSPACE_TYPES.uow.UnitOfWork, useValue: mockUow },
+        { provide: PERSISTENCE_TYPES.UnitOfWork, useValue: mockUow },
         {
           provide: PAGE_BLOCK_TYPES.services.CreatePageBlockService,
           useValue: mockService,

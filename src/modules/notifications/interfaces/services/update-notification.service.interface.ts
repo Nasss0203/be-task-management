@@ -1,5 +1,5 @@
 import { EntityManager } from 'typeorm';
-import { WorkspaceInviteStatus } from 'src/modules/workspace_invites/domain/entities/workspace_invite.entity';
+import { WorkspaceInviteStatus } from 'src/modules/workspace/domain/enums/workspace-invite-status.enum';
 
 export type UpdateInviteNotificationStatusServiceInput = {
   inviteId: string;
