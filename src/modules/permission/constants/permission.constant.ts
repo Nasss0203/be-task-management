@@ -5,8 +5,6 @@ export const PERMISSIONS = {
   WORKSPACE_BILLING_READ: 'workspace.billing.read',
   WORKSPACE_BILLING_MANAGE: 'workspace.billing.manage',
   WORKSPACE_USAGE_READ: 'workspace.usage.read',
-  WORKSPACE_FEATURE_READ: 'workspace.feature.read',
-  WORKSPACE_FEATURE_UPDATE: 'workspace.feature.update',
 
   WORKSPACE_MEMBER_READ: 'workspace.member.read',
   WORKSPACE_MEMBER_ADD: 'workspace.member.add',
@@ -89,15 +87,6 @@ export const PERMISSION_SEED_DATA: {
     code: PERMISSIONS.WORKSPACE_USAGE_READ,
     description: 'Read workspace usage limits',
   },
-  {
-    code: PERMISSIONS.WORKSPACE_FEATURE_READ,
-    description: 'Read workspace features',
-  },
-  {
-    code: PERMISSIONS.WORKSPACE_FEATURE_UPDATE,
-    description: 'Update workspace features',
-  },
-
   {
     code: PERMISSIONS.WORKSPACE_MEMBER_READ,
     description: 'Read workspace members',

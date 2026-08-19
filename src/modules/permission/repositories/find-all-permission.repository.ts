@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RolePermission } from 'src/modules/role_permission/domain/entities/role_permission.entity';
-import { Role, RoleName } from 'src/modules/role/domain/entities/role.entity';
-import { UserRole } from 'src/modules/user_roles/domain/entities/user_role.entity';
+import { WorkspaceMember } from 'src/modules/workspace_member/domain/entities/workspace-member.entity';
+import { WorkspaceRole } from 'src/shared/domain/enums/workspace-role.enum';
 import { EntityManager, Repository } from 'typeorm';
 import { PERMISSIONS } from '../constants/permission.constant';
+import { ROLE_PERMISSION_MAP } from '../constants/role-permission-map.constant';
 import { Permission } from '../domain/entities/permission.entity';
 import { PermissionModel } from '../domain/models/permission.model';
 import { FindPermissionRepository } from '../interfaces/repositories/find-all-permission.repository.interface';
@@ -15,8 +15,8 @@ export class FindPermissionRepositoryImpl implements FindPermissionRepository {
     @InjectRepository(Permission)
     private readonly repo: Repository<Permission>,
 
-    @InjectRepository(UserRole)
-    private readonly userRoleRepo: Repository<UserRole>,
+    @InjectRepository(WorkspaceMember)
+    private readonly workspaceMemberRepo: Repository<WorkspaceMember>,
   ) {}
 
   private getRepo(manager?: EntityManager): Repository<Permission> {
@@ -39,30 +39,29 @@ export class FindPermissionRepositoryImpl implements FindPermissionRepository {
     workspaceId: string,
     manager?: EntityManager,
   ): Promise<string[]> {
-    const repo = manager ? manager.getRepository(UserRole) : this.userRoleRepo;
+    const repo = manager
+      ? manager.getRepository(WorkspaceMember)
+      : this.workspaceMemberRepo;
 
-    const ownerRole = await repo
-      .createQueryBuilder('ur')
-      .innerJoin(Role, 'r', 'r.id = ur.role_id')
-      .select('1', 'exists')
-      .where('ur.user_id = :userId', { userId })
-      .andWhere('ur.workspace_id = :workspaceId', { workspaceId })
-      .andWhere('r.name = :roleName', { roleName: RoleName.OWNER })
-      .getRawOne();
+    const membership = await repo.findOne({
+      select: {
+        id: true,
+        role_name: true,
+      },
+      where: {
+        user_id: userId,
+        workspace_id: workspaceId,
+      },
+    });
 
-    if (ownerRole) {
+    if (!membership) {
+      return [];
+    }
+
+    if (membership.role_name === WorkspaceRole.OWNER) {
       return Object.values(PERMISSIONS);
     }
 
-    const rows = await repo
-      .createQueryBuilder('ur')
-      .innerJoin(RolePermission, 'rp', 'rp.role_id = ur.role_id')
-      .innerJoin(Permission, 'p', 'p.id = rp.permission_id')
-      .select('DISTINCT p.code', 'code')
-      .where('ur.user_id = :userId', { userId })
-      .andWhere('ur.workspace_id = :workspaceId', { workspaceId })
-      .getRawMany();
-
-    return rows.map((row) => row.code);
+    return ROLE_PERMISSION_MAP[membership.role_name] ?? [];
   }
 }

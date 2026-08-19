@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
+import { WorkspaceMember } from 'src/modules/workspace_member/domain/entities/workspace-member.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { Workspace } from '../domain/entities/workspace.entity';
 import { WorkspaceModel } from '../domain/models/workspaces.model';
@@ -10,17 +10,17 @@ import { WorkspaceMapper } from '../mapper/workspace.mapper';
 @Injectable()
 export class FindWorkspaceRepositoryImpl implements FindWorkspaceRepository {
   constructor(
-    @InjectRepository(UserWorkspace)
-    private readonly repoUserWorkspace: Repository<UserWorkspace>,
+    @InjectRepository(WorkspaceMember)
+    private readonly repoWorkspaceMember: Repository<WorkspaceMember>,
 
     @InjectRepository(Workspace)
     private readonly repoWorkspace: Repository<Workspace>,
   ) {}
 
-  private getRepo(manager?: EntityManager): Repository<UserWorkspace> {
+  private getRepo(manager?: EntityManager): Repository<WorkspaceMember> {
     return manager
-      ? manager.getRepository(UserWorkspace)
-      : this.repoUserWorkspace;
+      ? manager.getRepository(WorkspaceMember)
+      : this.repoWorkspaceMember;
   }
 
   // Version 1

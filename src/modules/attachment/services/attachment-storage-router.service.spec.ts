@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
-import { StorageService } from '../../storage/storage.service';
+import { StorageService } from 'src/shared/infrastructure/storage/storage.service';
 import { AttachmentStorageRouterServiceImpl } from './attachment-storage-router.service';
 
 describe('AttachmentStorageRouterServiceImpl', () => {

@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { ROLE_PERMISSION_MAP } from 'src/modules/permission/constants/role-permission-map.constant';
+import { WorkspaceRole } from 'src/shared/domain/enums/workspace-role.enum';
 import { DataSource, EntityManager } from 'typeorm';
 import {
   AccessWorkspaceRepository,
@@ -6,12 +8,7 @@ import {
 } from '../interfaces/repositories/access-workspace.repository.interface';
 
 type RoleRow = {
-  id: string;
-  name: string;
-};
-
-type PermissionRow = {
-  name: string;
+  roleName: WorkspaceRole;
 };
 
 @Injectable()
@@ -25,13 +22,13 @@ export class AccessWorkspaceRepositoryImpl implements AccessWorkspaceRepository 
   ): Promise<WorkspaceAccessModel | null> {
     const entityManager = manager ?? this.dataSource.manager;
 
-    const roleRows = await entityManager.query(
+    const roleRows = await entityManager.query<RoleRow[]>(
       `
-      SELECT DISTINCT r.id, r.name
-      FROM user_roles ur
-      INNER JOIN roles r ON r.id = ur.role_id
-      WHERE ur.user_id = $1
-        AND ur.workspace_id = $2
+      SELECT role_name AS "roleName"
+      FROM workspace_members
+      WHERE user_id = $1
+        AND workspace_id = $2
+      LIMIT 1
       `,
       [userId, workspaceId],
     );
@@ -40,31 +37,14 @@ export class AccessWorkspaceRepositoryImpl implements AccessWorkspaceRepository 
       return null;
     }
 
-    const roleIds: string[] = (roleRows as any[]).map(
-      (role) => role.id as string,
-    );
-
     const roles: string[] = Array.from(
-      new Set((roleRows as any[]).map((role) => role.name as string)),
-    );
-
-    const permissionRows = await entityManager.query(
-      `
-  SELECT DISTINCT p.code
-  FROM role_permissions rp
-  INNER JOIN permissions p ON p.id = rp.permission_id
-  WHERE rp.role_id = ANY($1)
-  `,
-      [roleIds],
+      new Set(roleRows.map((role) => role.roleName)),
     );
 
     const permissions: string[] = Array.from(
-      new Set(
-        (permissionRows as any[]).map(
-          (permission) => permission.code as string,
-        ),
-      ),
+      new Set(roleRows.flatMap((role) => ROLE_PERMISSION_MAP[role.roleName])),
     );
+
     return {
       user_id: userId,
       workspace_id: workspaceId,

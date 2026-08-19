@@ -65,7 +65,7 @@ export class FindUserRepositoryImpl implements FindUserRepository {
       .limit(10)
       .getMany();
 
-    return users.map(UserMapper.toModel);
+    return users.map((user) => UserMapper.toModel(user));
   }
 
   async searchInviteUsers(
@@ -82,7 +82,7 @@ export class FindUserRepositoryImpl implements FindUserRepository {
       .createQueryBuilder('u')
       .leftJoin('user_profiles', 'up', 'up.user_id = u.id')
       .leftJoin(
-        'user_workspaces',
+        'workspace_members',
         'uw',
         `
         uw.user_id = u.id

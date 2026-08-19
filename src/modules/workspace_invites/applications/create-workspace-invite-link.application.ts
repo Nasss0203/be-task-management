@@ -5,9 +5,9 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { RoleName } from 'src/modules/role/domain/entities/role.entity';
-import { type FindMemberService } from 'src/modules/user_workspace/interfaces/services/find-user-workspace.service.interface';
-import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/types';
+import { WorkspaceRole } from 'src/shared/domain/enums/workspace-role.enum';
+import { type FindWorkspaceMemberService } from 'src/modules/workspace_member/interfaces/services/find-workspace-member.service.interface';
+import { WORKSPACE_MEMBER_TYPES } from 'src/modules/workspace_member/interfaces/types';
 import {
   WorkspaceInviteStatus,
   WorkspaceInviteType,
@@ -25,8 +25,8 @@ export class CreateWorkspaceInviteLinkApplicationImpl implements CreateWorkspace
     @Inject(WORKSPACE_INVITE_TYPES.repositories.CreateWorkspaceInviteRepository)
     private readonly createWorkspaceInviteRepository: CreateWorkspaceInviteRepository,
 
-    @Inject(USER_WORKSPACE_TYPES.services.FindMemberService)
-    private readonly findMemberService: FindMemberService,
+    @Inject(WORKSPACE_MEMBER_TYPES.services.FindWorkspaceMemberService)
+    private readonly findMemberService: FindWorkspaceMemberService,
   ) {}
 
   async createLink(
@@ -83,16 +83,16 @@ export class CreateWorkspaceInviteLinkApplicationImpl implements CreateWorkspace
   private async ensureCanInviteRole(
     workspaceId: string,
     invitedBy: string,
-    roleName: RoleName,
+    roleName: WorkspaceRole,
   ): Promise<void> {
-    if (![RoleName.OWNER, RoleName.ADMIN].includes(roleName)) return;
+    if (![WorkspaceRole.OWNER, WorkspaceRole.ADMIN].includes(roleName)) return;
 
     const inviterMember = await this.findMemberService.findMemberInWorkspace(
       workspaceId,
       invitedBy,
     );
 
-    if (!inviterMember || inviterMember.role_name !== RoleName.OWNER) {
+    if (!inviterMember || inviterMember.role_name !== WorkspaceRole.OWNER) {
       throw new ForbiddenException(
         'Only workspace owner can create owner or admin invite links',
       );

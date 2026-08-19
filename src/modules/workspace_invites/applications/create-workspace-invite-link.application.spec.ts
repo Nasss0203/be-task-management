@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CreateWorkspaceInviteLinkApplicationImpl } from './create-workspace-invite-link.application';
 import { WORKSPACE_INVITE_TYPES } from '../interfaces/types';
-import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/types';
+import { WORKSPACE_MEMBER_TYPES } from 'src/modules/workspace_member/interfaces/types';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
-import { RoleName } from 'src/modules/role/domain/entities/role.entity';
+import { WorkspaceRole } from 'src/shared/domain/enums/workspace-role.enum';
 
 describe('CreateWorkspaceInviteLinkApplicationImpl', () => {
   let app: CreateWorkspaceInviteLinkApplicationImpl;
@@ -12,7 +12,7 @@ describe('CreateWorkspaceInviteLinkApplicationImpl', () => {
     save: jest.fn(),
   };
 
-  const mockFindMemberService = {
+  const mockFindWorkspaceMemberService = {
     findMemberInWorkspace: jest.fn(),
   };
 
@@ -27,8 +27,8 @@ describe('CreateWorkspaceInviteLinkApplicationImpl', () => {
           useValue: mockRepo,
         },
         {
-          provide: USER_WORKSPACE_TYPES.services.FindMemberService,
-          useValue: mockFindMemberService,
+          provide: WORKSPACE_MEMBER_TYPES.services.FindWorkspaceMemberService,
+          useValue: mockFindWorkspaceMemberService,
         },
       ],
     }).compile();
@@ -45,7 +45,7 @@ describe('CreateWorkspaceInviteLinkApplicationImpl', () => {
   it('should create link', async () => {
     mockRepo.save.mockResolvedValue({ id: 'inv-1', token: 'tok-1' });
     const result = await app.createLink('ws-1', 'u-1', {
-      role_name: RoleName.MEMBER,
+      role_name: WorkspaceRole.MEMBER,
     } as any);
     expect(mockRepo.save).toHaveBeenCalled();
     expect(result.id).toEqual('inv-1');
@@ -53,16 +53,16 @@ describe('CreateWorkspaceInviteLinkApplicationImpl', () => {
 
   it('should throw if workspaceId missing', async () => {
     await expect(
-      app.createLink('', 'u-1', { role_name: RoleName.MEMBER } as any),
+      app.createLink('', 'u-1', { role_name: WorkspaceRole.MEMBER } as any),
     ).rejects.toThrow(BadRequestException);
   });
 
   it('should throw if role is OWNER and inviter is not OWNER', async () => {
-    mockFindMemberService.findMemberInWorkspace.mockResolvedValue({
-      role_name: RoleName.MEMBER,
+    mockFindWorkspaceMemberService.findMemberInWorkspace.mockResolvedValue({
+      role_name: WorkspaceRole.MEMBER,
     });
     await expect(
-      app.createLink('ws-1', 'u-1', { role_name: RoleName.OWNER } as any),
+      app.createLink('ws-1', 'u-1', { role_name: WorkspaceRole.OWNER } as any),
     ).rejects.toThrow(ForbiddenException);
   });
 });

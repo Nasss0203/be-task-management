@@ -1,5 +1,5 @@
 import { Page } from 'src/modules/page/domain/entities/page.entity';
-import { BoardViewType } from 'src/modules/boards/domain/entities/board.entity';
+import { DatabaseViewType } from 'src/modules/database/domain/enums/database-view-type.enum';
 import { User } from 'src/modules/users/domain/entities/user.entity';
 import {
   Column,
@@ -42,7 +42,7 @@ export type PageBlockDatabaseViewDataConfig = {
   workspace_id: string;
   project_id: string;
   default_board_id: string | null;
-  default_view_type: BoardViewType;
+  default_view_type: DatabaseViewType;
 };
 
 export type PageBlockJson =

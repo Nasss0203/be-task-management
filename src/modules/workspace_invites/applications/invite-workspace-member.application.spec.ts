@@ -3,11 +3,11 @@ import { InviteWorkspaceMemberApplicationImpl } from './invite-workspace-member.
 import { WORKSPACE_INVITE_TYPES } from '../interfaces/types';
 import { USER_TYPES } from 'src/modules/users/interfaces/types';
 import { NOTIFICATION_TYPES } from 'src/modules/notifications/interfaces/types';
-import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/types';
+import { WORKSPACE_MEMBER_TYPES } from 'src/modules/workspace_member/interfaces/types';
 import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
 import { MailService } from 'src/modules/mail/mail.service';
 import { BadRequestException } from '@nestjs/common';
-import { RoleName } from 'src/modules/role/domain/entities/role.entity';
+import { WorkspaceRole } from 'src/shared/domain/enums/workspace-role.enum';
 import {
   CreateWorkspaceInviteDto,
   InviteRecipientType,
@@ -48,7 +48,7 @@ describe('InviteWorkspaceMemberApplicationImpl', () => {
           useValue: mockCreateNotification,
         },
         {
-          provide: USER_WORKSPACE_TYPES.services.FindMemberService,
+          provide: WORKSPACE_MEMBER_TYPES.services.FindWorkspaceMemberService,
           useValue: mockFindMember,
         },
         {
@@ -90,7 +90,7 @@ describe('InviteWorkspaceMemberApplicationImpl', () => {
     mockMail.sendInviteMember.mockResolvedValue(undefined);
 
     const dto: CreateWorkspaceInviteDto = {
-      role_name: RoleName.MEMBER,
+      role_name: WorkspaceRole.MEMBER,
       recipients: [{ type: InviteRecipientType.USER, user_id: 'u-1' }],
     };
 
@@ -139,7 +139,7 @@ describe('InviteWorkspaceMemberApplicationImpl', () => {
     mockMail.sendInviteMember.mockRejectedValue(new Error('SMTP timeout'));
 
     const dto: CreateWorkspaceInviteDto = {
-      role_name: RoleName.MEMBER,
+      role_name: WorkspaceRole.MEMBER,
       recipients: [{ type: InviteRecipientType.USER, user_id: 'u-1' }],
     };
 
@@ -148,7 +148,7 @@ describe('InviteWorkspaceMemberApplicationImpl', () => {
 
   it('should throw if workspaceId missing', async () => {
     const dto: CreateWorkspaceInviteDto = {
-      role_name: RoleName.MEMBER,
+      role_name: WorkspaceRole.MEMBER,
       recipients: [{ type: InviteRecipientType.USER, user_id: 'u-1' }],
     };
 
@@ -163,7 +163,7 @@ describe('InviteWorkspaceMemberApplicationImpl', () => {
       email: 'test@example.com',
     });
     const dto: CreateWorkspaceInviteDto = {
-      role_name: RoleName.MEMBER,
+      role_name: WorkspaceRole.MEMBER,
       recipients: [{ type: InviteRecipientType.USER, user_id: 'inviter-1' }],
     };
 

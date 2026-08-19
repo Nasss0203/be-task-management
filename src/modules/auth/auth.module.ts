@@ -8,7 +8,6 @@ import { JwtStrategy } from 'src/common/strategy/jwt.strategy';
 import { LocalStrategy } from 'src/common/strategy/local.strategy';
 import { MailModule } from '../mail/mail.module';
 import { RefreshToken } from '../refresh_token/entities/refresh_token.entity';
-import { UserActivityModule } from '../user_activity/user_activity.module';
 import { User } from '../users/domain/entities/user.entity';
 import { Workspace } from '../workspaces/domain/entities/workspace.entity';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
@@ -49,7 +48,6 @@ import { ValidateUserAuthServiceImpl } from './services/validate-user-auth.servi
     }),
     PassportModule,
     WorkspacesModule,
-    UserActivityModule,
     MailModule,
   ],
   providers: [

@@ -3,9 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { MailModule } from '../mail/mail.module';
 import { NotificationsModule } from '../notifications/notifications.module';
-import { RoleModule } from '../role/role.module';
-import { UserRolesModule } from '../user_roles/user_roles.module';
-import { UserWorkspacesModule } from '../user_workspace/user_workspace.module';
+import { WorkspaceMemberModule } from '../workspace_member/workspace_member.module';
 import { UsersModule } from '../users/users.module';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { WORKSPACE_TYPES } from '../workspaces/interfaces/types';
@@ -32,9 +30,7 @@ import { WorkspaceInvitesService } from './workspace_invites.service';
     TypeOrmModule.forFeature([WorkspaceInvite]),
     UsersModule,
     MailModule,
-    RoleModule,
-    UserRolesModule,
-    UserWorkspacesModule,
+    WorkspaceMemberModule,
     NotificationsModule,
     WorkspacesModule,
   ],

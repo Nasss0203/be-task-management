@@ -22,11 +22,7 @@ import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
 import { WorkspaceOverviewResponseDto } from '../dto/response/workspace-overview.response.dto';
 import { UpdateWorkspaceDto } from '../dto/update-workspace.dto';
 import { UpdateWorkspaceLayoutModeDto } from '../dto/update-workspace-layout-mode.dto';
-import { SaveWorkspaceAsTemplateDto } from '../dto/save-workspace-template.dto';
 import { type AccessWorkspaceApplication } from '../interfaces/applications/access-workspace.application.interface';
-import { type SaveWorkspaceAsTemplateApplication } from '../interfaces/applications/save-workspace-as-template.application.interface';
-import type { CreateWorkspaceTemplateDto } from '../interfaces/applications/create-workspace-template.application.interface';
-import { type CreateWorkspaceTemplateApplication } from '../interfaces/applications/create-workspace-template.application.interface';
 import { type CreateWorkspaceApplication } from '../interfaces/applications/create-workspace.application.interface';
 import { type FindWorkspaceOverviewApplication } from '../interfaces/applications/find-workspace-overview.application.interface';
 import { type FindWorkspaceApplication } from '../interfaces/applications/find.workspace.application.interface';
@@ -42,9 +38,6 @@ export class WorkspacesController {
   constructor(
     @Inject(WORKSPACE_TYPES.applications.CreateWorkspaceApplication)
     private readonly createWorkspaceMultiServiceAppImpl: CreateWorkspaceApplication,
-
-    @Inject(WORKSPACE_TYPES.applications.CreateWorkspaceTemplateApplication)
-    private readonly createWorkspaceTemplateApplication: CreateWorkspaceTemplateApplication,
 
     @Inject(WORKSPACE_TYPES.applications.FindWorkspaceApplication)
     private readonly findWorkspaceApplicationImpl: FindWorkspaceApplication,
@@ -63,9 +56,6 @@ export class WorkspacesController {
 
     @Inject(WORKSPACE_TYPES.applications.UpdateWorkspaceLayoutModeApplication)
     private readonly updateWorkspaceLayoutModeApplication: UpdateWorkspaceLayoutModeApplication,
-
-    @Inject(WORKSPACE_TYPES.applications.SaveWorkspaceAsTemplateApplication)
-    private readonly saveWorkspaceAsTemplateApplication: SaveWorkspaceAsTemplateApplication,
   ) {}
 
   @Post('default')
@@ -76,19 +66,6 @@ export class WorkspacesController {
     @Auth() auth: IAuth,
   ) {
     return await this.createWorkspaceMultiServiceAppImpl.createDeault({
-      userId: auth.id,
-      createWorkspaceDto,
-    });
-  }
-
-  @Post()
-  @StrictWriteRateLimit()
-  @ResponseMessage('Create workspace template')
-  async createByTemplate(
-    @Body() createWorkspaceDto: CreateWorkspaceTemplateDto,
-    @Auth() auth: IAuth,
-  ) {
-    return this.createWorkspaceTemplateApplication.create({
       userId: auth.id,
       createWorkspaceDto,
     });
@@ -160,23 +137,6 @@ export class WorkspacesController {
     @Auth() auth: IAuth,
   ) {
     return this.updateWorkspaceLayoutModeApplication.updateLayoutMode({
-      userId: auth.id,
-      workspaceId,
-      dto,
-    });
-  }
-
-  @Post(':workspaceId/templates')
-  @StrictWriteRateLimit()
-  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
-  @RequirePermissions(PERMISSIONS.WORKSPACE_UPDATE)
-  @ResponseMessage('Save workspace as template')
-  async saveWorkspaceAsTemplate(
-    @Auth() auth: IAuth,
-    @Param('workspaceId') workspaceId: string,
-    @Body() dto: SaveWorkspaceAsTemplateDto,
-  ) {
-    return this.saveWorkspaceAsTemplateApplication.save({
       userId: auth.id,
       workspaceId,
       dto,

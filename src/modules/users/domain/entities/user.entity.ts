@@ -1,10 +1,12 @@
 import { UserProfile } from 'src/modules/user_profiles/domain/entities/user_profile.entity';
+import { WorkspaceMember } from 'src/modules/workspace_member/domain/entities/workspace-member.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
   Index,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -95,4 +97,7 @@ export class User {
 
   @OneToOne(() => UserProfile, (profile) => profile.user)
   profile: UserProfile;
+
+  @OneToMany(() => WorkspaceMember, (workspaceMember) => workspaceMember.user)
+  workspaceMembers: WorkspaceMember[];
 }

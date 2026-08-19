@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
+import { WorkspaceMember } from 'src/modules/workspace_member/domain/entities/workspace-member.entity';
 import { EntityManager, IsNull, Not, Repository } from 'typeorm';
 import { Workspace } from '../domain/entities/workspace.entity';
 import { WorkspaceModel } from '../domain/models/workspaces.model';
@@ -10,19 +10,19 @@ import { WorkspaceMapper } from '../mapper/workspace.mapper';
 @Injectable()
 export class WorkspaceTrashRepositoryImpl implements WorkspaceTrashRepository {
   constructor(
-    @InjectRepository(UserWorkspace)
-    private readonly userWorkspaceRepo: Repository<UserWorkspace>,
+    @InjectRepository(WorkspaceMember)
+    private readonly workspaceMemberRepo: Repository<WorkspaceMember>,
 
     @InjectRepository(Workspace)
     private readonly workspaceRepo: Repository<Workspace>,
   ) {}
 
-  private getUserWorkspaceRepo(
+  private getWorkspaceMemberRepo(
     manager?: EntityManager,
-  ): Repository<UserWorkspace> {
+  ): Repository<WorkspaceMember> {
     return manager
-      ? manager.getRepository(UserWorkspace)
-      : this.userWorkspaceRepo;
+      ? manager.getRepository(WorkspaceMember)
+      : this.workspaceMemberRepo;
   }
 
   private getWorkspaceRepo(manager?: EntityManager): Repository<Workspace> {
@@ -33,7 +33,7 @@ export class WorkspaceTrashRepositoryImpl implements WorkspaceTrashRepository {
     userId: string,
     manager?: EntityManager,
   ): Promise<WorkspaceModel[]> {
-    const rows = await this.getUserWorkspaceRepo(manager).find({
+    const rows = await this.getWorkspaceMemberRepo(manager).find({
       where: {
         user_id: userId,
         workspace: {
@@ -59,7 +59,7 @@ export class WorkspaceTrashRepositoryImpl implements WorkspaceTrashRepository {
     workspaceId: string,
     manager?: EntityManager,
   ): Promise<WorkspaceModel | null> {
-    const row = await this.getUserWorkspaceRepo(manager).findOne({
+    const row = await this.getWorkspaceMemberRepo(manager).findOne({
       where: {
         user_id: userId,
         workspace_id: workspaceId,
@@ -85,7 +85,7 @@ export class WorkspaceTrashRepositoryImpl implements WorkspaceTrashRepository {
     workspaceId: string,
     manager?: EntityManager,
   ): Promise<WorkspaceModel | null> {
-    const membership = await this.getUserWorkspaceRepo(manager).findOne({
+    const membership = await this.getWorkspaceMemberRepo(manager).findOne({
       where: {
         user_id: userId,
         workspace_id: workspaceId,
@@ -154,7 +154,7 @@ export class WorkspaceTrashRepositoryImpl implements WorkspaceTrashRepository {
     workspaceId: string,
     manager?: EntityManager,
   ): Promise<void> {
-    const repo = this.getUserWorkspaceRepo(manager);
+    const repo = this.getWorkspaceMemberRepo(manager);
 
     const membership = await repo.findOne({
       where: {

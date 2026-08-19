@@ -3,7 +3,7 @@ import { FindWorkspaceRepositoryImpl } from './find.workspace.repository';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
+import { WorkspaceMember } from 'src/modules/workspace_member/domain/entities/workspace-member.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { Workspace } from '../domain/entities/workspace.entity';
 import { WorkspaceModel } from '../domain/models/workspaces.model';
@@ -18,7 +18,7 @@ describe('FindWorkspaceRepositoryImpl', () => {
       providers: [
         FindWorkspaceRepositoryImpl,
         {
-          provide: getRepositoryToken(UserWorkspace),
+          provide: getRepositoryToken(WorkspaceMember),
           useValue: {
             create: jest.fn().mockResolvedValue({}),
             find: jest.fn().mockResolvedValue([]),

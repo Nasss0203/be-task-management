@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AttachmentStorageRouterService } from '../interfaces/services/attachment-storage-router.service.interface';
-import { StorageService } from '../../storage/storage.service';
+import { StorageService } from 'src/shared/infrastructure/storage/storage.service';
 import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary } from 'cloudinary';
 

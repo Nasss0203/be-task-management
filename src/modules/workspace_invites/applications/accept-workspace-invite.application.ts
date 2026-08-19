@@ -6,12 +6,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { type UnitOfWork } from 'src/interface/index.interface';
-import { type FindRoleService } from 'src/modules/role/interfaces/services/find-role.service.interface';
-import { ROLE_TYPES } from 'src/modules/role/interfaces/types';
-import { type CreateUserRoleService } from 'src/modules/user_roles/interfaces/services/create.user_role.service.interface';
-import { USER_ROLE_TYPES } from 'src/modules/user_roles/interfaces/types';
-import { type CreateUserWorkspaceService } from 'src/modules/user_workspace/interfaces/services/create.user_workspace.service.interface';
-import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/types';
+import { type CreateWorkspaceMemberService } from 'src/modules/workspace_member/interfaces/services/create-workspace-member.service.interface';
+import { WORKSPACE_MEMBER_TYPES } from 'src/modules/workspace_member/interfaces/types';
 import { type FindUserService } from 'src/modules/users/interfaces/services/find-user.service.interface';
 import { USER_TYPES } from 'src/modules/users/interfaces/types';
 import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
@@ -43,14 +39,8 @@ export class AcceptWorkspaceInviteApplicationImpl implements AcceptWorkspaceInvi
     @Inject(USER_TYPES.services.FindUserService)
     private readonly findUserService: FindUserService,
 
-    @Inject(USER_WORKSPACE_TYPES.services.CreateUserWorkspaceService)
-    private readonly createUserWorkspaceService: CreateUserWorkspaceService,
-
-    @Inject(USER_ROLE_TYPES.services.CreateUserRoleService)
-    private readonly createUserRoleService: CreateUserRoleService,
-
-    @Inject(ROLE_TYPES.services.FindRoleService)
-    private readonly findRoleService: FindRoleService,
+    @Inject(WORKSPACE_MEMBER_TYPES.services.CreateWorkspaceMemberService)
+    private readonly createWorkspaceMemberService: CreateWorkspaceMemberService,
 
     @Inject(NOTIFICATION_TYPES.services.UpdateNotificationService)
     private readonly updateNotificationService: UpdateNotificationService,
@@ -122,30 +112,11 @@ export class AcceptWorkspaceInviteApplicationImpl implements AcceptWorkspaceInvi
     }
 
     const acceptedInvite = await this.uow.runInTransaction(async (manager) => {
-      await this.createUserWorkspaceService.create(
+      await this.createWorkspaceMemberService.create(
         {
           workspace_id: invite.workspace_id,
           user_id: user.id,
-        },
-        manager,
-      );
-
-      const role = await this.findRoleService.findByNameAndWorkspace(
-        invite.role_name,
-        invite.workspace_id,
-        manager,
-      );
-
-      if (!role) {
-        throw new NotFoundException('Role not found in workspace');
-      }
-
-      await this.createUserRoleService.create(
-        {
-          workspace_id: invite.workspace_id,
-          user_id: user.id,
-          role_id: role.id,
-          assigned_by: invite.invited_by,
+          role_name: invite.role_name,
         },
         manager,
       );

@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MulterConfigService } from 'src/config/multer.config';
+import { StorageInfrastructureModule } from 'src/shared/infrastructure/storage/storage.module';
 import { ActivityModule } from '../activity/activity.module';
-import { StorageModule } from '../storage/storage.module';
 
 import { AttachmentController } from './controller/attachment.controller';
 import { Attachment } from './domain/entities/attachment.entity';
@@ -110,7 +110,7 @@ const applications = [
     }),
     TypeOrmModule.forFeature([Attachment]),
     ActivityModule,
-    StorageModule,
+    StorageInfrastructureModule,
   ],
   controllers: [AttachmentController],
   providers: [

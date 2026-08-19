@@ -1,107 +1,140 @@
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { AcceptWorkspaceInviteApplicationImpl } from './accept-workspace-invite.application';
-import { WORKSPACE_INVITE_TYPES } from '../interfaces/types';
-import { USER_TYPES } from 'src/modules/users/interfaces/types';
-import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/types';
-import { USER_ROLE_TYPES } from 'src/modules/user_roles/interfaces/types';
-import { ROLE_TYPES } from 'src/modules/role/interfaces/types';
 import { NOTIFICATION_TYPES } from 'src/modules/notifications/interfaces/types';
+import { WORKSPACE_MEMBER_TYPES } from 'src/modules/workspace_member/interfaces/types';
+import { USER_TYPES } from 'src/modules/users/interfaces/types';
 import { WORKSPACE_TYPES } from 'src/modules/workspaces/interfaces/types';
+import { WorkspaceRole } from 'src/shared/domain/enums/workspace-role.enum';
 import {
   WorkspaceInviteStatus,
   WorkspaceInviteType,
 } from '../domain/entities/workspace_invite.entity';
-import {
-  BadRequestException,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { WORKSPACE_INVITE_TYPES } from '../interfaces/types';
 import { WorkspaceInviteMapper } from '../mapper/workspace_invites.mapper';
+import { AcceptWorkspaceInviteApplicationImpl } from './accept-workspace-invite.application';
 
 describe('AcceptWorkspaceInviteApplicationImpl', () => {
   let app: AcceptWorkspaceInviteApplicationImpl;
 
-  const mockFindInvite = { findByToken: jest.fn() };
-  const mockAcceptInvite = { acceptWorkspaceInvite: jest.fn() };
-  const mockFindUser = { findUserById: jest.fn() };
-  const mockCreateUserWorkspace = { create: jest.fn() };
-  const mockCreateUserRole = { create: jest.fn() };
-  const mockFindRole = { findByNameAndWorkspace: jest.fn() };
-  const mockUpdateNotification = { updateInviteNotificationStatus: jest.fn() };
-  const mockUow = { runInTransaction: jest.fn((cb) => cb()) };
+  const manager = {} as any;
+  const findInvite = { findByToken: jest.fn() };
+  const acceptInvite = { acceptWorkspaceInvite: jest.fn() };
+  const findUser = { findUserById: jest.fn() };
+  const createWorkspaceMember = { create: jest.fn() };
+  const updateNotification = { updateInviteNotificationStatus: jest.fn() };
+  const uow = { runInTransaction: jest.fn((callback) => callback(manager)) };
 
   beforeEach(async () => {
     jest.clearAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AcceptWorkspaceInviteApplicationImpl,
         {
           provide: WORKSPACE_INVITE_TYPES.services.FindWorkspaceInviteService,
-          useValue: mockFindInvite,
+          useValue: findInvite,
         },
         {
           provide: WORKSPACE_INVITE_TYPES.services.AcceptWorkspaceInviteService,
-          useValue: mockAcceptInvite,
+          useValue: acceptInvite,
         },
         {
           provide: USER_TYPES.services.FindUserService,
-          useValue: mockFindUser,
+          useValue: findUser,
         },
         {
-          provide: USER_WORKSPACE_TYPES.services.CreateUserWorkspaceService,
-          useValue: mockCreateUserWorkspace,
-        },
-        {
-          provide: USER_ROLE_TYPES.services.CreateUserRoleService,
-          useValue: mockCreateUserRole,
-        },
-        {
-          provide: ROLE_TYPES.services.FindRoleService,
-          useValue: mockFindRole,
+          provide: WORKSPACE_MEMBER_TYPES.services.CreateWorkspaceMemberService,
+          useValue: createWorkspaceMember,
         },
         {
           provide: NOTIFICATION_TYPES.services.UpdateNotificationService,
-          useValue: mockUpdateNotification,
+          useValue: updateNotification,
         },
-        { provide: WORKSPACE_TYPES.uow.UnitOfWork, useValue: mockUow },
+        { provide: WORKSPACE_TYPES.uow.UnitOfWork, useValue: uow },
       ],
     }).compile();
 
-    app = module.get<AcceptWorkspaceInviteApplicationImpl>(
-      AcceptWorkspaceInviteApplicationImpl,
-    );
+    app = module.get(AcceptWorkspaceInviteApplicationImpl);
   });
 
-  it('should be defined', () => {
-    expect(app).toBeDefined();
-  });
-
-  it('should accept invite', async () => {
-    mockFindInvite.findByToken.mockResolvedValue({
+  it('accepts an invite and writes role_name on workspace_members', async () => {
+    const invite = {
+      id: 'invite-1',
       status: WorkspaceInviteStatus.PENDING,
-      workspace_id: 'ws-1',
-    });
-    mockFindUser.findUserById.mockResolvedValue({ id: 'u-1' });
-    mockFindRole.findByNameAndWorkspace.mockResolvedValue({ id: 'r-1' });
-    mockAcceptInvite.acceptWorkspaceInvite.mockResolvedValue({
-      id: 'inv-1',
+      type: WorkspaceInviteType.LINK,
+      workspace_id: 'workspace-1',
+      role_name: WorkspaceRole.MEMBER,
+      used_count: 0,
+      max_uses: null,
+      expires_at: new Date(Date.now() + 60_000),
+    };
+    const acceptedInvite = {
+      ...invite,
       status: WorkspaceInviteStatus.ACCEPTED,
-    });
+    };
+
+    findInvite.findByToken.mockResolvedValue(invite);
+    findUser.findUserById.mockResolvedValue({ id: 'user-1' });
+    acceptInvite.acceptWorkspaceInvite.mockResolvedValue(acceptedInvite);
     jest
       .spyOn(WorkspaceInviteMapper, 'toResponse')
-      .mockReturnValue({ id: 'inv-1' } as any);
+      .mockReturnValue({ id: acceptedInvite.id } as any);
 
     const result = await app.acceptWorkspaceInvite({
-      token: 'tok-1',
-      userId: 'u-1',
+      token: 'token-1',
+      userId: 'user-1',
     });
-    expect(mockCreateUserWorkspace.create).toHaveBeenCalled();
-    expect(result).toEqual({ id: 'inv-1' });
+
+    expect(createWorkspaceMember.create).toHaveBeenCalledWith(
+      {
+        workspace_id: invite.workspace_id,
+        user_id: 'user-1',
+        role_name: WorkspaceRole.MEMBER,
+      },
+      manager,
+    );
+    expect(
+      updateNotification.updateInviteNotificationStatus,
+    ).toHaveBeenCalled();
+    expect(result).toEqual({ id: acceptedInvite.id });
   });
 
-  it('should throw if token missing', async () => {
+  it('throws if token is missing', async () => {
     await expect(
-      app.acceptWorkspaceInvite({ userId: 'u-1' } as any),
+      app.acceptWorkspaceInvite({ userId: 'user-1' } as any),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws if invite is not found', async () => {
+    findInvite.findByToken.mockResolvedValue(null);
+
+    await expect(
+      app.acceptWorkspaceInvite({ token: 'missing', userId: 'user-1' }),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('rejects email invite accepted by a different account email', async () => {
+    findInvite.findByToken.mockResolvedValue({
+      status: WorkspaceInviteStatus.PENDING,
+      type: WorkspaceInviteType.EMAIL,
+      workspace_id: 'workspace-1',
+      role_name: WorkspaceRole.MEMBER,
+      email: 'invited@example.com',
+      used_count: 0,
+      max_uses: null,
+    });
+    findUser.findUserById.mockResolvedValue({ id: 'user-1' });
+
+    await expect(
+      app.acceptWorkspaceInvite({
+        token: 'token-1',
+        userId: 'user-1',
+        email: 'other@example.com',
+      }),
+    ).rejects.toThrow(ForbiddenException);
   });
 });

@@ -2,7 +2,6 @@
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { REALTIME_EVENTS } from 'src/modules/realtime/realtime.events';
 import { EntityManager } from 'typeorm';
 import {
   NotificationSenderType,
@@ -15,6 +14,8 @@ import {
   CreateNotificationServiceInput,
 } from '../interfaces/services/create.notifications.service.interface';
 import { NOTIFICATION_TYPES } from '../interfaces/types';
+
+const NOTIFICATION_CREATED_EVENT = 'notification.created';
 
 @Injectable()
 export class CreateNotificationServiceImpl implements CreateNotificationService {
@@ -67,7 +68,7 @@ export class CreateNotificationServiceImpl implements CreateNotificationService 
         manager,
       );
 
-    this.eventEmitter.emit(REALTIME_EVENTS.NOTIFICATION_CREATED, {
+    this.eventEmitter.emit(NOTIFICATION_CREATED_EVENT, {
       recipientUserId: notification.receiverId,
       notification: {
         id: notification.id,

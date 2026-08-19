@@ -1,4 +1,4 @@
-import { RoleName } from 'src/modules/role/domain/entities/role.entity';
+import { WorkspaceRole } from 'src/shared/domain/enums/workspace-role.enum';
 import {
   WorkspaceInviteStatus,
   WorkspaceInviteType,
@@ -11,7 +11,7 @@ export class WorkspaceInviteModel {
     public readonly user_id: string | null,
     public readonly email: string | null,
     public readonly type: WorkspaceInviteType,
-    public readonly role_name: RoleName,
+    public readonly role_name: WorkspaceRole,
     public readonly invited_by: string,
     public readonly token: string,
     public readonly status: WorkspaceInviteStatus,

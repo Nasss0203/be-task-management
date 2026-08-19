@@ -8,7 +8,7 @@ import {
   IsUUID,
   Min,
 } from 'class-validator';
-import { BoardViewType } from 'src/modules/boards/domain/entities/board.entity';
+import { DatabaseViewType } from 'src/modules/database/domain/enums/database-view-type.enum';
 import {
   PageBlockType,
   type PageBlockJson,
@@ -81,6 +81,6 @@ export class AddDatabaseViewToBlockDto {
   @IsUUID()
   project_id: string;
 
-  @IsEnum(BoardViewType)
-  view_type: BoardViewType;
+  @IsEnum(DatabaseViewType)
+  view_type: DatabaseViewType;
 }

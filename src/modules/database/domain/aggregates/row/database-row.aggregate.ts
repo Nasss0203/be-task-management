@@ -188,7 +188,7 @@ export class DatabaseRow {
       value === null ||
       Array.isArray(value) ||
       !('start' in value) ||
-      typeof (value as DateRowValue).start !== 'string'
+      typeof value.start !== 'string'
     ) {
       throw new Error('DATE property requires a date value');
     }

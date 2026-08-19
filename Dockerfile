@@ -10,7 +10,7 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build:seed:demo:large && npm run build
+RUN npm run build
 
 FROM node:22-bookworm-slim AS tools
 WORKDIR /app
@@ -37,7 +37,6 @@ ENV PORT=8080
 
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
-COPY --from=build /app/dist-seeds ./dist-seeds
 COPY package*.json ./
 COPY src/modules/mail/templates ./src/modules/mail/templates
 

@@ -1,5 +1,4 @@
-import { Project } from 'src/modules/projects/domain/entities/project.entity';
-import { UserWorkspace } from 'src/modules/user_workspace/domain/entities/user_workspace.entity';
+import { WorkspaceMember } from 'src/modules/workspace_member/domain/entities/workspace-member.entity';
 import {
   Column,
   CreateDateColumn,
@@ -49,11 +48,11 @@ export class Workspace {
   })
   layoutMode: WorkspaceLayoutMode;
 
-  @OneToMany(() => Project, (project) => project.workspace)
-  projects: Project[];
-
-  @OneToMany(() => UserWorkspace, (userWorkspace) => userWorkspace.workspace)
-  userWorkspaces: UserWorkspace[];
+  @OneToMany(
+    () => WorkspaceMember,
+    (workspaceMember) => workspaceMember.workspace,
+  )
+  workspaceMembers: WorkspaceMember[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

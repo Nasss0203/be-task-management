@@ -13,7 +13,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { RoleName } from 'src/modules/role/domain/entities/role.entity';
+import { WorkspaceRole } from 'src/shared/domain/enums/workspace-role.enum';
 
 export enum InviteRecipientType {
   USER = 'USER',
@@ -33,8 +33,8 @@ export class InviteRecipientDto {
 }
 
 export class CreateWorkspaceInviteDto {
-  @IsEnum(RoleName)
-  role_name: RoleName;
+  @IsEnum(WorkspaceRole)
+  role_name: WorkspaceRole;
 
   @IsArray()
   @ArrayMinSize(1)
@@ -44,8 +44,8 @@ export class CreateWorkspaceInviteDto {
 }
 
 export class CreateWorkspaceInviteLinkDto {
-  @IsEnum(RoleName)
-  role_name: RoleName;
+  @IsEnum(WorkspaceRole)
+  role_name: WorkspaceRole;
 
   @IsOptional()
   @IsInt()

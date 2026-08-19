@@ -14,9 +14,9 @@ import {
 } from 'src/modules/notifications/domain/entities/notification.entity';
 import { type CreateNotificationService } from 'src/modules/notifications/interfaces/services/create.notifications.service.interface';
 import { NOTIFICATION_TYPES } from 'src/modules/notifications/interfaces/types';
-import { RoleName } from 'src/modules/role/domain/entities/role.entity';
-import { type FindMemberService } from 'src/modules/user_workspace/interfaces/services/find-user-workspace.service.interface';
-import { USER_WORKSPACE_TYPES } from 'src/modules/user_workspace/interfaces/types';
+import { WorkspaceRole } from 'src/shared/domain/enums/workspace-role.enum';
+import { type FindWorkspaceMemberService } from 'src/modules/workspace_member/interfaces/services/find-workspace-member.service.interface';
+import { WORKSPACE_MEMBER_TYPES } from 'src/modules/workspace_member/interfaces/types';
 import { type FindUserService } from 'src/modules/users/interfaces/services/find-user.service.interface';
 import { USER_TYPES } from 'src/modules/users/interfaces/types';
 import { type FindWorkspaceService } from 'src/modules/workspaces/interfaces/services/find.workspace.service.interface';
@@ -48,8 +48,8 @@ export class InviteWorkspaceMemberApplicationImpl implements InviteWorkspaceMemb
     @Inject(NOTIFICATION_TYPES.services.CreateNotificationService)
     private readonly createNotificationService: CreateNotificationService,
 
-    @Inject(USER_WORKSPACE_TYPES.services.FindMemberService)
-    private readonly findMemberService: FindMemberService,
+    @Inject(WORKSPACE_MEMBER_TYPES.services.FindWorkspaceMemberService)
+    private readonly findMemberService: FindWorkspaceMemberService,
 
     @Inject(WORKSPACE_TYPES.services.FindWorkspaceService)
     private readonly findWorkspaceService: FindWorkspaceService,
@@ -247,16 +247,16 @@ export class InviteWorkspaceMemberApplicationImpl implements InviteWorkspaceMemb
   private async ensureCanInviteRole(
     workspaceId: string,
     invitedBy: string,
-    roleName: RoleName,
+    roleName: WorkspaceRole,
   ): Promise<void> {
-    if (![RoleName.OWNER, RoleName.ADMIN].includes(roleName)) return;
+    if (![WorkspaceRole.OWNER, WorkspaceRole.ADMIN].includes(roleName)) return;
 
     const inviterMember = await this.findMemberService.findMemberInWorkspace(
       workspaceId,
       invitedBy,
     );
 
-    if (!inviterMember || inviterMember.role_name !== RoleName.OWNER) {
+    if (!inviterMember || inviterMember.role_name !== WorkspaceRole.OWNER) {
       throw new ForbiddenException(
         'Only workspace owner can invite owner or admin members',
       );

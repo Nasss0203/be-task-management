@@ -1,16 +1,14 @@
 import { PERMISSIONS, PermissionCode } from './permission.constant';
-import { RoleName } from '../../role/domain/entities/role.entity';
+import { WorkspaceRole } from 'src/shared/domain/enums/workspace-role.enum';
 
-export const ROLE_PERMISSION_MAP: Record<RoleName, PermissionCode[]> = {
-  [RoleName.OWNER]: Object.values(PERMISSIONS),
+export const ROLE_PERMISSION_MAP: Record<WorkspaceRole, PermissionCode[]> = {
+  [WorkspaceRole.OWNER]: Object.values(PERMISSIONS),
 
-  [RoleName.ADMIN]: [
+  [WorkspaceRole.ADMIN]: [
     PERMISSIONS.WORKSPACE_READ,
     PERMISSIONS.WORKSPACE_UPDATE,
     PERMISSIONS.WORKSPACE_BILLING_READ, // Admin cần xem subscription plan đang dùng
     PERMISSIONS.WORKSPACE_USAGE_READ,
-    PERMISSIONS.WORKSPACE_FEATURE_READ,
-    PERMISSIONS.WORKSPACE_FEATURE_UPDATE,
 
     PERMISSIONS.WORKSPACE_MEMBER_READ,
     PERMISSIONS.WORKSPACE_MEMBER_ADD,
@@ -70,10 +68,9 @@ export const ROLE_PERMISSION_MAP: Record<RoleName, PermissionCode[]> = {
     PERMISSIONS.AUDIT_LOG_READ, // Admin cần xem audit log để quản lý workspace
   ],
 
-  [RoleName.MEMBER]: [
+  [WorkspaceRole.MEMBER]: [
     PERMISSIONS.WORKSPACE_READ,
     PERMISSIONS.WORKSPACE_MEMBER_READ,
-    PERMISSIONS.WORKSPACE_FEATURE_READ,
 
     PERMISSIONS.PROJECT_READ,
     PERMISSIONS.BOARD_READ,
@@ -108,24 +105,6 @@ export const ROLE_PERMISSION_MAP: Record<RoleName, PermissionCode[]> = {
     PERMISSIONS.ATTACHMENT_READ,
     PERMISSIONS.ATTACHMENT_DELETE,
 
-    PERMISSIONS.ACTIVITY_READ,
-  ],
-
-  [RoleName.VIEWER]: [
-    PERMISSIONS.WORKSPACE_READ,
-    PERMISSIONS.WORKSPACE_MEMBER_READ,
-    PERMISSIONS.WORKSPACE_FEATURE_READ,
-
-    PERMISSIONS.PROJECT_READ,
-    PERMISSIONS.BOARD_READ,
-    PERMISSIONS.TASK_READ,
-    PERMISSIONS.TASK_COMMENT_READ,
-    PERMISSIONS.SPRINT_READ,
-    PERMISSIONS.PAGE_READ,
-    PERMISSIONS.PAGE_BLOCK_READ,
-    PERMISSIONS.TASK_STATUS_READ,
-    PERMISSIONS.TASK_PRIORITY_READ,
-    PERMISSIONS.ATTACHMENT_READ,
     PERMISSIONS.ACTIVITY_READ,
   ],
 };

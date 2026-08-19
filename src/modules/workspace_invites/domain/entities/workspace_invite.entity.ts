@@ -1,6 +1,6 @@
-import { RoleName } from 'src/modules/role/domain/entities/role.entity';
 import { User } from 'src/modules/users/domain/entities/user.entity';
 import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.entity';
+import { WorkspaceRole } from 'src/shared/domain/enums/workspace-role.enum';
 import {
   Column,
   CreateDateColumn,
@@ -73,8 +73,13 @@ export class WorkspaceInvite {
   })
   type: WorkspaceInviteType;
 
-  @Column({ type: 'enum', enum: RoleName, default: RoleName.MEMBER })
-  role_name: RoleName;
+  @Column({
+    type: 'enum',
+    enum: WorkspaceRole,
+    enumName: 'workspace_invites_role_name_enum',
+    default: WorkspaceRole.MEMBER,
+  })
+  role_name: WorkspaceRole;
 
   @Column({ type: 'uuid' })
   invited_by: string;
