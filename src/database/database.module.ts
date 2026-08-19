@@ -18,6 +18,8 @@ import { UsageLimit } from 'src/modules/billing/domain/entities/usage-limit.enti
 import { Board } from 'src/modules/boards/domain/entities/board.entity';
 import { DatabasePropertyOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-property.orm-entity';
 import { DatabaseRowOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-row.orm-entity';
+import { DatabaseViewPropertyOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-view-property.orm-entity';
+import { DatabaseViewOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-view.orm-entity';
 import { DatabaseOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database.orm-entity';
 import { PropertyOptionOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/property-option.orm-entity';
 import { RowValueOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/row-value.orm-entity';
@@ -120,6 +122,8 @@ import { Workspace } from 'src/modules/workspaces/domain/entities/workspace.enti
           PropertyOptionOrmEntity,
           DatabaseRowOrmEntity,
           RowValueOrmEntity,
+          DatabaseViewOrmEntity,
+          DatabaseViewPropertyOrmEntity,
         ],
       }),
     }),

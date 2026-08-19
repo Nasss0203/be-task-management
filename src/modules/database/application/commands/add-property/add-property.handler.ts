@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 
 import { DATABASE_TYPES } from '../../../database.types';
 import { DatabaseProperty } from '../../../domain/aggregates/database/database-property.entity';
+import { type DatabaseViewRepository } from '../../../domain/repositories/database-view.repository';
 import { type DatabaseRepository } from '../../../domain/repositories/database.repository';
 
 import { DatabasePropertyDto } from '../../dto/database-property.dto';
@@ -13,6 +14,9 @@ export class AddPropertyHandler {
   constructor(
     @Inject(DATABASE_TYPES.repositories.DatabaseRepository)
     private readonly databaseRepository: DatabaseRepository,
+
+    @Inject(DATABASE_TYPES.repositories.DatabaseViewRepository)
+    private readonly databaseViewRepository: DatabaseViewRepository,
   ) {}
 
   async execute(command: AddPropertyCommand): Promise<DatabasePropertyDto> {
@@ -21,6 +25,7 @@ export class AddPropertyHandler {
     if (!database) {
       throw new NotFoundException('Database not found');
     }
+
     const property = new DatabaseProperty(
       randomUUID(),
       database.getId(),
@@ -32,6 +37,22 @@ export class AddPropertyHandler {
     database.addProperty(property);
 
     await this.databaseRepository.save(database);
+
+    const views = await this.databaseViewRepository.findByDatabaseId(
+      command.databaseId,
+    );
+
+    for (const view of views) {
+      view.addProperty({
+        id: randomUUID(),
+        propertyId: property.getId(),
+        position: String(view.getProperties().length),
+        visible: true,
+        width: null,
+      });
+
+      await this.databaseViewRepository.save(view);
+    }
 
     return {
       id: property.getId(),

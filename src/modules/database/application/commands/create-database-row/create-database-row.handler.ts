@@ -20,11 +20,7 @@ export class CreateDatabaseRowHandler {
   ) {}
 
   async execute(command: CreateDatabaseRowCommand): Promise<DatabaseRow> {
-    console.log('1 databaseId:', command.databaseId);
-
     const database = await this.databaseRepository.findById(command.databaseId);
-
-    console.log('2 database:', database?.getId());
 
     if (!database) {
       throw new NotFoundException('Database not found');
@@ -35,15 +31,7 @@ export class CreateDatabaseRowHandler {
       databaseId: database.getId(),
     });
 
-    console.log('3 row:', {
-      id: row.getId(),
-      databaseId: row.getDatabaseId(),
-      values: row.getValues(),
-    });
-
     await this.databaseRowRepository.save(row);
-
-    console.log('4 saved');
 
     return row;
   }
