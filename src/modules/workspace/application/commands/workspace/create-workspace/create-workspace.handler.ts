@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import type { EntityManager } from 'typeorm';
 import type { UnitOfWork } from 'src/interface/index.interface';
-import type { CreatePageService } from 'src/modules/page/interfaces/services/create.page.service.interface';
-import { PAGE_TYPES } from 'src/modules/page/interfaces/types';
+import { CONTENT_TYPES } from 'src/modules/content/content.types';
+import type { CreatePageHandler } from 'src/modules/content/application/commands/page/create-page.handler';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import { Workspace } from 'src/modules/workspace/domain/aggregates/workspace/workspace.aggregate';
 import { WorkspaceLayoutMode } from 'src/modules/workspace/domain/enums/workspace-layout-mode.enum';
@@ -24,8 +24,8 @@ export class CreateWorkspaceHandler {
     @Inject(WORKSPACE_TYPES.repositories.WorkspaceMemberRepository)
     private readonly workspaceMemberRepository: WorkspaceMemberRepository,
 
-    @Inject(PAGE_TYPES.services.CreatePageService)
-    private readonly createPageService: CreatePageService,
+    @Inject(CONTENT_TYPES.applications.CreatePageHandler)
+    private readonly createPageHandler: CreatePageHandler,
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
@@ -50,14 +50,15 @@ export class CreateWorkspaceHandler {
         manager: transactionManager,
       });
 
-      await this.createPageService.createDefault(
+      await this.createPageHandler.executeDefault(
         {
           workspace_id: workspace.getId(),
           title: workspace.getName(),
           slug: workspace.getSlug(),
           created_by: userId,
+          is_template: false,
         },
-        transactionManager,
+        transactionManager
       );
 
       return workspace;

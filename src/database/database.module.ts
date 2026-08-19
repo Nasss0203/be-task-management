@@ -13,10 +13,10 @@ import { PropertyOptionOrmEntity } from 'src/modules/database/infrastructure/per
 import { RowValueOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/row-value.orm-entity';
 import { Mention } from 'src/modules/mentions/domain/entities/mention.entity';
 import { Notification } from 'src/modules/notifications/domain/entities/notification.entity';
-import { Page } from 'src/modules/page/domain/entities/page.entity';
-import { PageBlock } from 'src/modules/page_block/domain/entities/page_block.entity';
-import { PageTemplateBlock } from 'src/modules/page_template_blocks/domain/entities/page_template_block.entity';
-import { PageTemplate } from 'src/modules/page_templates/domain/entities/page_template.entity';
+import { PageOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page.orm-entity';
+import { PageBlockOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-block.orm-entity';
+import { PageTemplateBlockOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-template-block.orm-entity';
+import { PageTemplateOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 import { Permission } from 'src/modules/permission/domain/entities/permission.entity';
 import { RefreshToken } from 'src/modules/refresh_token/entities/refresh_token.entity';
 import { UserProfile } from 'src/modules/user_profiles/domain/entities/user_profile.entity';
@@ -51,15 +51,15 @@ import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
           UserProfile,
           RefreshToken,
           WorkspaceMemberOrmEntity,
-          Page,
-          PageBlock,
+          PageOrmEntity,
+          PageBlockOrmEntity,
           WorkspaceInviteOrmEntity,
           Attachment,
           Activity,
           Mention,
           Notification,
-          PageTemplateBlock,
-          PageTemplate,
+          PageTemplateBlockOrmEntity,
+          PageTemplateOrmEntity,
 
           // V2
           DatabasePropertyOrmEntity,

@@ -19,10 +19,7 @@ import { DatabaseModule as DatabaseModules } from './modules/database/database.m
 import { MailModule } from './modules/mail/mail.module';
 import { MentionsModule } from './modules/mentions/mentions.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
-import { PageModule } from './modules/page/page.module';
-import { PageBlockModule } from './modules/page_block/page_block.module';
-import { PageTemplateBlocksModule } from './modules/page_template_blocks/page_template_blocks.module';
-import { PageTemplatesModule } from './modules/page_templates/page_templates.module';
+import { ContentModule } from './modules/content/content.module';
 import { PermissionModule } from './modules/permission/permission.module';
 import { RefreshTokenModule } from './modules/refresh_token/refresh_token.module';
 import { UserProfilesModule } from './modules/user_profiles/user_profiles.module';
@@ -60,13 +57,10 @@ import { WorkspaceModule } from './modules/workspace/workspace.module';
     PermissionModule,
     RefreshTokenModule,
     UserProfilesModule,
-    PageModule,
-    PageBlockModule,
+    ContentModule,
     MailModule,
     AttachmentModule,
     ActivityModule,
-    PageTemplatesModule,
-    PageTemplateBlocksModule,
     MentionsModule,
     NotificationsModule,
     //V2

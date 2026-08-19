@@ -4,7 +4,7 @@ import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { ActivityModule } from 'src/modules/activity/activity.module';
 import { MailModule } from 'src/modules/mail/mail.module';
 import { NotificationsModule } from 'src/modules/notifications/notifications.module';
-import { PageModule } from 'src/modules/page/page.module';
+import { ContentModule } from 'src/modules/content/content.module';
 import { UsersModule } from 'src/modules/users/users.module';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { CreateWorkspaceHandler } from './application/commands/workspace/create-workspace/create-workspace.handler';
@@ -49,7 +49,7 @@ import { DatabaseModule } from 'src/database/database.module';
       WorkspaceMemberOrmEntity,
       WorkspaceInviteOrmEntity,
     ]),
-    PageModule,
+    ContentModule,
     ActivityModule,
     UsersModule,
     MailModule,

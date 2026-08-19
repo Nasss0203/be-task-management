@@ -1,0 +1,193 @@
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
+import { Auth } from 'src/common/decorator/auth.decorator';
+import {
+  ReadRateLimit,
+  StrictWriteRateLimit,
+  WriteRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
+import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
+import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
+import { type IAuth } from 'src/types/auth';
+import { CONTENT_TYPES } from 'src/modules/content/content.types';
+import {
+  AddDatabaseViewToBlockDto,
+  CreatePageBlockDto,
+} from 'src/modules/content/application/dto/page/create-page-block.dto';
+import { ReorderPageBlockDto } from 'src/modules/content/application/dto/page/reorder-page-block.dto';
+import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/response/page-block.response.dto';
+import { UpdatePageBlockDto } from 'src/modules/content/application/dto/page/update-page-block.dto';
+import {
+  CreatePageBlockCommand,
+  AddDatabaseViewToBlockCommand,
+  CreatePageBlockHandler,
+} from 'src/modules/content/application/commands/page/create-page-block.handler';
+import {
+  UpdatePageBlockCommand,
+  ReorderPageBlockCommand,
+  UpdatePageBlockHandler,
+} from 'src/modules/content/application/commands/page/update-page-block.handler';
+import {
+  DeletePageBlockCommand,
+  RestorePageBlockCommand,
+  DeletePageBlockHandler,
+} from 'src/modules/content/application/commands/page/delete-page-block.handler';
+import {
+  FindPageBlockByPageQuery,
+  FindDeletedPageBlocksQuery,
+  FindPageBlockHandler,
+} from 'src/modules/content/application/queries/page/find-page-block.handler';
+
+@Controller('pageBlock')
+@ReadRateLimit()
+export class PageBlockController {
+  constructor(
+    @Inject(CONTENT_TYPES.applications.UpdatePageBlockHandler)
+    private readonly updatePageBlockHandler: UpdatePageBlockHandler,
+
+    @Inject(CONTENT_TYPES.applications.CreatePageBlockHandler)
+    private readonly createPageBlockHandler: CreatePageBlockHandler,
+
+    @Inject(CONTENT_TYPES.applications.FindPageBlockHandler)
+    private readonly findPageBlockHandler: FindPageBlockHandler,
+
+    @Inject(CONTENT_TYPES.applications.DeletePageBlockHandler)
+    private readonly deletePageBlockHandler: DeletePageBlockHandler,
+  ) {}
+
+  @Post()
+  @WriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'page_id' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
+  @ResponseMessage('Create page block')
+  create(
+    @Body() createPageBlockDto: CreatePageBlockDto,
+    @Auth() auth: IAuth,
+  ): Promise<PageBlockResponseDto> {
+    return this.createPageBlockHandler.execute(
+      new CreatePageBlockCommand({
+        ...createPageBlockDto,
+        created_by: auth.id,
+      })
+    );
+  }
+
+  @Get('page/:pageId')
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
+  @ResponseMessage('Find page blocks by page')
+  findAllByPageId(
+    @Param('pageId', ParseUUIDPipe) pageId: string,
+  ): Promise<PageBlockResponseDto[]> {
+    return this.findPageBlockHandler.findAllByPageId(
+      new FindPageBlockByPageQuery(pageId)
+    );
+  }
+
+  @Patch('reorder')
+  @WriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'page_id' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+  @ResponseMessage('Reorder page blocks')
+  reorder(
+    @Body() reorderPageBlockDto: ReorderPageBlockDto,
+  ): Promise<PageBlockResponseDto[]> {
+    return this.updatePageBlockHandler.reorder(
+      new ReorderPageBlockCommand(reorderPageBlockDto)
+    );
+  }
+
+  @Patch(':id')
+  @WriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'id' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updatePageBlockDto: UpdatePageBlockDto,
+  ) {
+    return this.updatePageBlockHandler.execute(
+      new UpdatePageBlockCommand({
+        ...updatePageBlockDto,
+        id,
+      })
+    );
+  }
+
+  @Post(':blockId/database-views')
+  @WriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'blockId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+  @ResponseMessage('Add database view')
+  async addDatabaseViewToBlock(
+    @Param('blockId', ParseUUIDPipe) blockId: string,
+    @Body() dto: AddDatabaseViewToBlockDto,
+  ): Promise<PageBlockResponseDto> {
+    return await this.createPageBlockHandler.addDatabaseViewToBlock(
+      new AddDatabaseViewToBlockCommand(blockId, dto)
+    );
+  }
+
+  @Get('trash')
+  @WorkspaceContext({ source: 'query', key: 'workspaceId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
+  async findDeletedPageBlocks(
+    @Query('workspaceId') workspaceId: string,
+    @Query('pageId') pageId?: string,
+  ) {
+    if (!workspaceId) {
+      throw new BadRequestException('workspaceId is required');
+    }
+    return this.findPageBlockHandler.findDeletedPageBlocks(
+      new FindDeletedPageBlocksQuery(workspaceId, pageId)
+    );
+  }
+
+  @Delete(':blockId')
+  @StrictWriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'blockId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
+  async deletePageBlock(
+    @Param('blockId', ParseUUIDPipe) blockId: string,
+    @Query('workspaceId') workspaceId: string,
+    @Auth() auth: IAuth,
+  ) {
+    if (!workspaceId) {
+      throw new BadRequestException('workspaceId is required');
+    }
+    await this.deletePageBlockHandler.delete(
+      new DeletePageBlockCommand(workspaceId, blockId, auth.id)
+    );
+    return { success: true };
+  }
+
+  @Patch(':blockId/restore')
+  @StrictWriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'blockId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
+  async restorePageBlock(
+    @Param('blockId', ParseUUIDPipe) blockId: string,
+    @Query('workspaceId') workspaceId: string,
+    @Auth() auth: IAuth,
+  ) {
+    if (!workspaceId) {
+      throw new BadRequestException('workspaceId is required');
+    }
+    await this.deletePageBlockHandler.restore(
+      new RestorePageBlockCommand(workspaceId, blockId, auth.id)
+    );
+    return { success: true };
+  }
+}
