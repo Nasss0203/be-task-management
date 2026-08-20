@@ -1,6 +1,4 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
-import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
@@ -9,8 +7,16 @@ import { PageBlock, PageBlockType } from 'src/modules/content/domain/entities/pa
 import { CreatePageDto } from 'src/modules/content/application/dto/page/create-page.dto';
 import { PageResponseDto } from 'src/modules/content/application/dto/page/response/page.response.dto';
 
+import { generateSlug } from 'src/utils';
+
 export class CreatePageCommand {
-  constructor(public readonly dto: CreatePageDto) {}
+  constructor(
+    public readonly userId: string,
+    public readonly workspaceId: string,
+    public readonly title: string,
+    public readonly icon?: string | null,
+    public readonly coverUrl?: string | null,
+  ) {}
 }
 
 @Injectable()
@@ -20,32 +26,30 @@ export class CreatePageHandler {
     private readonly pageRepo: PageRepository,
     @Inject(CONTENT_TYPES.repositories.PageBlockRepository)
     private readonly pageBlockRepo: PageBlockRepository,
-    @Inject(PERSISTENCE_TYPES.UnitOfWork)
-    private readonly uow: UnitOfWork,
   ) {}
 
   async execute(command: CreatePageCommand): Promise<PageResponseDto> {
-    return this.uow.runInTransaction(async (manager) => {
-      const page = Page.create({
-        workspaceId: command.dto.workspace_id,
-        title: command.dto.title,
-        createdBy: command.dto.created_by,
-        slug: command.dto.slug,
-        icon: command.dto.icon,
-        coverUrl: command.dto.cover_url,
-        isTemplate: command.dto.is_template,
-      });
+    const baseSlug = generateSlug(command.title).toLowerCase();
+    let slug = baseSlug;
 
-      const savedPage = await this.pageRepo.save(page, { manager });
+    if (await this.pageRepo.existsBySlug(command.workspaceId, slug)) {
+      const uniqueSuffix = Date.now().toString(36);
+      slug = `${baseSlug}-${uniqueSuffix}`;
+    }
 
-      // If it's a default workspace creation or something, wait - createDefault was a separate method.
-      // But looking at the original PageController:
-      // it calls `createPageApplication.create({...createPageDto})` which only called `createPageService.create`.
-      // So no default block is created from HTTP POST /page!
-      // The default block was created via `createDefault` which is called by `create-workspace.handler.ts`
-
-      return PageResponseDto.fromDomain(savedPage); // Assume this method exists or we use the old PageResponseDto
+    const page = Page.create({
+      workspaceId: command.workspaceId,
+      title: command.title,
+      createdBy: command.userId,
+      slug,
+      icon: command.icon || null,
+      coverUrl: command.coverUrl || null,
+      isTemplate: false,
     });
+
+    const savedPage = await this.pageRepo.save(page);
+
+    return PageResponseDto.fromDomain(savedPage);
   }
 
 }

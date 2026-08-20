@@ -8,9 +8,6 @@ export class CreatePageDto {
   @IsString()
   title: string;
 
-  @IsString()
-  slug: string;
-
   @IsOptional()
   @IsString()
   icon?: string | null;
@@ -18,13 +15,4 @@ export class CreatePageDto {
   @IsOptional()
   @IsString()
   cover_url?: string | null;
-
-  @IsOptional()
-  is_template?: boolean;
-
-  @IsOptional()
-  @IsUUID()
-  created_by: string;
-
-  blocks?: PageBlock[];
 }

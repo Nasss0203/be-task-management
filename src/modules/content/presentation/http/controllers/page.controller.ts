@@ -58,18 +58,22 @@ export class PageController {
 
     @Inject(CONTENT_TYPES.applications.UpdatePageHandler)
     private readonly updatePageHandler: UpdatePageHandler,
-  ) {}
+  ) { }
 
   @Post()
   @WriteRateLimit()
+  @WorkspaceContext({ source: 'body', key: 'workspace_id' })
   @RequirePermissions(PERMISSIONS.PAGE_CREATE)
   @ResponseMessage('Create page')
   create(@Body() createPageDto: CreatePageDto, @Auth() auth: IAuth) {
     return this.createPageHandler.execute(
-      new CreatePageCommand({
-        ...createPageDto,
-        created_by: auth.id,
-      })
+      new CreatePageCommand(
+        auth.id,
+        createPageDto.workspace_id,
+        createPageDto.title,
+        createPageDto.icon,
+        createPageDto.cover_url,
+      )
     );
   }
 
@@ -84,6 +88,7 @@ export class PageController {
   }
 
   @Get('trash')
+  @WorkspaceContext({ source: 'query', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.PAGE_READ)
   async findDeletedPages(@Query('workspaceId') workspaceId: string) {
     if (!workspaceId) {

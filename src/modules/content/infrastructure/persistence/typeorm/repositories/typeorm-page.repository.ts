@@ -58,4 +58,11 @@ export class TypeOrmPageRepository implements PageRepository {
   async delete(id: string, context?: PersistenceContext): Promise<void> {
     await this.resolveRepo(context).softDelete(id);
   }
+
+  async existsBySlug(workspaceId: string, slug: string, context?: PersistenceContext): Promise<boolean> {
+    const count = await this.resolveRepo(context).count({
+      where: { workspace_id: workspaceId, slug },
+    });
+    return count > 0;
+  }
 }
