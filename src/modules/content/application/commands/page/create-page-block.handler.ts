@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { UnitOfWork } from 'src/interface/index.interface';
+import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';

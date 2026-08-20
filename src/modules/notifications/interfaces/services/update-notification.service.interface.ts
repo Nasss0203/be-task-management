@@ -1,4 +1,4 @@
-import { EntityManager } from 'typeorm';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { WorkspaceInviteStatus } from 'src/modules/workspace/domain/enums/workspace-invite-status.enum';
 
 export type UpdateInviteNotificationStatusServiceInput = {
@@ -9,14 +9,14 @@ export type UpdateInviteNotificationStatusServiceInput = {
 export interface UpdateNotificationService {
   updateInviteNotificationStatus(
     input: UpdateInviteNotificationStatusServiceInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<number>;
 
-  markAllAsRead(userId: string, manager?: EntityManager): Promise<number>;
+  markAllAsRead(userId: string, context?: PersistenceContext): Promise<number>;
 
   markAsRead(
     notificationId: string,
     userId: string,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<number>;
 }

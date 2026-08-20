@@ -1,6 +1,6 @@
 // src/modules/notifications/interfaces/repositories/find-notification.repository.interface.ts
 
-import { EntityManager } from 'typeorm';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import {
   NotificationSourceType,
   NotificationType,
@@ -40,18 +40,18 @@ export interface NotificationSprintLookupInput {
 export interface FindNotificationRepository {
   findMyNotifications(
     input: FindMyNotificationsRepositoryInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<NotificationModel[]>;
 
-  countUnread(receiverId: string, manager?: EntityManager): Promise<number>;
+  countUnread(receiverId: string, context?: PersistenceContext): Promise<number>;
 
   existsByReceiverTypeAndTask(
     input: NotificationTaskLookupInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<boolean>;
 
   existsByReceiverTypeAndSprint(
     input: NotificationSprintLookupInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<boolean>;
 }

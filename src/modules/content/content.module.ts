@@ -57,6 +57,8 @@ const repositories = [
   },
 ];
 
+import { ContentPageProvisioningService } from './application/services/content-page-provisioning.service';
+
 const pageHandlers = [
   {
     provide: CONTENT_TYPES.applications.CreatePageHandler,
@@ -106,6 +108,15 @@ const pageTemplateHandlers = [
   },
 ];
 
+const ports = [
+  {
+    provide: CONTENT_TYPES.ports.PageProvisioning,
+    useClass: ContentPageProvisioningService,
+  },
+];
+
+import { DatabaseModule } from 'src/database/database.module';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -114,6 +125,7 @@ const pageTemplateHandlers = [
       PageTemplateOrmEntity,
       PageTemplateBlockOrmEntity,
     ]),
+    DatabaseModule,
   ],
   controllers: [
     PageController,
@@ -126,9 +138,10 @@ const pageTemplateHandlers = [
     ...pageHandlers,
     ...pageBlockHandlers,
     ...pageTemplateHandlers,
+    ...ports,
   ],
   exports: [
-    CONTENT_TYPES.applications.CreatePageHandler,
+    CONTENT_TYPES.ports.PageProvisioning,
     CONTENT_TYPES.repositories.PageRepository,
     CONTENT_TYPES.repositories.PageBlockRepository,
   ],

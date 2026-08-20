@@ -1,3 +1,4 @@
+import { EntityManager } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
@@ -5,8 +6,7 @@ import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
 import { PageBlockOrmEntity } from '../entities/page-block.orm-entity';
 import { PageBlockMapper } from '../mappers/page-block.mapper';
-import { EntityManager } from 'typeorm';
-type PersistenceContext = { manager?: EntityManager };
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 @Injectable()
 export class TypeOrmPageBlockRepository implements PageBlockRepository {
@@ -16,8 +16,8 @@ export class TypeOrmPageBlockRepository implements PageBlockRepository {
   ) {}
 
   private resolveRepo(context?: PersistenceContext): Repository<PageBlockOrmEntity> {
-    if (context && context.manager instanceof EntityManager) {
-      return context.manager.getRepository(PageBlockOrmEntity);
+    if (context) {
+      return (context as EntityManager).getRepository(PageBlockOrmEntity);
     }
     return this.repo;
   }

@@ -1,6 +1,6 @@
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { Test, TestingModule } from '@nestjs/testing';
-import { EntityManager } from 'typeorm';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import {
   ActivityAction,
   ActivityEntityType,
@@ -23,7 +23,7 @@ describe('AddWorkspaceMemberHandler', () => {
   const mockUow = {
     runInTransaction: jest
       .fn()
-      .mockImplementation((cb: (manager: EntityManager) => unknown) =>
+      .mockImplementation((cb: (context: PersistenceContext) => unknown) =>
         cb(mockManager),
       ),
   };

@@ -1,3 +1,4 @@
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
@@ -17,15 +18,15 @@ export class UpdateNotificationRepositoryImpl implements UpdateNotificationRepos
     private readonly repo: Repository<Notification>,
   ) {}
 
-  private getRepo(manager?: EntityManager): Repository<Notification> {
-    return manager ? manager.getRepository(Notification) : this.repo;
+  private getRepo(context?: PersistenceContext): Repository<Notification> {
+    return context ? (context as EntityManager).getRepository(Notification) : this.repo;
   }
 
   async updateInviteNotificationStatus(
     input: UpdateInviteNotificationStatusRepositoryInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<number> {
-    const repo = this.getRepo(manager);
+    const repo = this.getRepo(context);
 
     const notifications = await repo
       .createQueryBuilder('notification')
@@ -57,9 +58,9 @@ export class UpdateNotificationRepositoryImpl implements UpdateNotificationRepos
 
   async markAllAsRead(
     receiverId: string,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<number> {
-    const repo = this.getRepo(manager);
+    const repo = this.getRepo(context);
 
     const result = await repo
       .createQueryBuilder()
@@ -78,9 +79,9 @@ export class UpdateNotificationRepositoryImpl implements UpdateNotificationRepos
   async markAsRead(
     notificationId: string,
     receiverId: string,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<number> {
-    const repo = this.getRepo(manager);
+    const repo = this.getRepo(context);
 
     const result = await repo
       .createQueryBuilder()

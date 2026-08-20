@@ -70,7 +70,7 @@ export class WorkspacesController {
     @Auth() auth: IAuth,
   ) {
     return this.createWorkspaceHandler.execute(
-      new CreateWorkspaceCommand(auth.id, createWorkspaceDto),
+      new CreateWorkspaceCommand(auth.id),
     );
   }
 

@@ -1,3 +1,4 @@
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -68,9 +69,9 @@ export class AuthUserRepositoryImpl implements AuthUserRepository {
 
   async createLocalUser(
     input: CreateLocalAuthUserInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<User> {
-    const repo = manager ? manager.getRepository(User) : this.userRepo;
+    const repo = context ? (context as EntityManager).getRepository(User) : this.userRepo;
     const user = repo.create({
       email: input.email,
       username: input.username,

@@ -1,19 +1,19 @@
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
-import type { EntityManager } from 'typeorm';
-import type { UnitOfWork } from 'src/interface/index.interface';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
+import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
-import type { CreatePageHandler } from 'src/modules/content/application/commands/page/create-page.handler';
-import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
+import { WorkspaceResponseDto } from 'src/modules/workspace/application/dto/workspace/response/workspaces.response.dto';
+import { WorkspaceMember } from 'src/modules/workspace/domain/aggregates/workspace-member/workspace-member.aggregate';
 import { Workspace } from 'src/modules/workspace/domain/aggregates/workspace/workspace.aggregate';
 import { WorkspaceLayoutMode } from 'src/modules/workspace/domain/enums/workspace-layout-mode.enum';
-import { WorkspaceMember } from 'src/modules/workspace/domain/aggregates/workspace-member/workspace-member.aggregate';
-import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
-import { generateSlug } from 'src/utils';
+import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 import type { WorkspaceRepository } from 'src/modules/workspace/domain/repositories/workspace.repository';
-import { WorkspaceResponseDto } from 'src/modules/workspace/application/dto/workspace/response/workspaces.response.dto';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
+import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
+import { generateSlug } from 'src/utils';
 import { CreateWorkspaceCommand } from './create-workspace.command';
+import type { ContentPageProvisioningPort } from 'src/modules/content/application/ports/content-page-provisioning.port';
+import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 @Injectable()
 export class CreateWorkspaceHandler {
@@ -24,8 +24,8 @@ export class CreateWorkspaceHandler {
     @Inject(WORKSPACE_TYPES.repositories.WorkspaceMemberRepository)
     private readonly workspaceMemberRepository: WorkspaceMemberRepository,
 
-    @Inject(CONTENT_TYPES.applications.CreatePageHandler)
-    private readonly createPageHandler: CreatePageHandler,
+    @Inject(CONTENT_TYPES.ports.PageProvisioning)
+    private readonly pageProvisioningPort: ContentPageProvisioningPort,
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
@@ -34,62 +34,40 @@ export class CreateWorkspaceHandler {
   async execute(
     command: CreateWorkspaceCommand,
   ): Promise<WorkspaceResponseDto> {
-    const workspace = await this.createDefault(command.userId, command.manager);
+    const workspace = await this.uow.runInTransaction(async (context) => {
+      const createdWorkspace = await this.createWorkspaceCoreDefault(
+        { name: 'Task management', userId: command.userId },
+        context,
+      );
+
+      await this.pageProvisioningPort.createDefaultPage(
+        {
+          workspaceId: createdWorkspace.getId(),
+          title: createdWorkspace.getName(),
+          slug: createdWorkspace.getSlug(),
+          createdBy: command.userId,
+          isTemplate: false,
+        },
+        context,
+      );
+
+      return createdWorkspace;
+    });
 
     return WorkspaceResponseDto.fromDomain(workspace);
   }
 
-  private async createDefault(
-    userId: string,
-    manager?: EntityManager,
+  private async createWorkspaceCoreDefault(
+    { name, userId }: { name: string; userId: string },
+    context?: PersistenceContext,
   ): Promise<Workspace> {
-    const create = async (transactionManager: EntityManager) => {
-      const workspace = await this.createWorkspaceCoreDefault({
-        name: 'Task management',
-        userId,
-        manager: transactionManager,
-      });
-
-      await this.createPageHandler.executeDefault(
-        {
-          workspace_id: workspace.getId(),
-          title: workspace.getName(),
-          slug: workspace.getSlug(),
-          created_by: userId,
-          is_template: false,
-        },
-        transactionManager
-      );
-
-      return workspace;
-    };
-
-    if (manager) {
-      return create(manager);
-    }
-
-    return this.uow.runInTransaction(create);
-  }
-
-  private async createWorkspaceCoreDefault({
-    name,
-    userId,
-    manager,
-  }: {
-    name: string;
-    userId: string;
-    manager: EntityManager;
-  }): Promise<Workspace> {
     const baseSlug = generateSlug(name).toLowerCase();
     const slug = `${baseSlug}-${userId.slice(0, 6)}-${Date.now()}`;
 
-    const exists = await this.workspaceRepository.existsBySlug(slug, manager);
+    const exists = await this.workspaceRepository.existsBySlug(slug, context);
 
     if (exists) {
-      throw new HttpException(
-        'Workspace slug already exists',
-        HttpStatus.CONFLICT,
-      );
+      throw new ConflictException('Workspace slug already exists');
     }
 
     const workspace = await this.workspaceRepository.save(
@@ -99,7 +77,7 @@ export class CreateWorkspaceHandler {
         layoutMode: WorkspaceLayoutMode.TABS,
         createdBy: userId,
       }),
-      manager,
+      context,
     );
 
     await this.workspaceMemberRepository.save(
@@ -108,7 +86,7 @@ export class CreateWorkspaceHandler {
         workspaceId: workspace.getId(),
         role: WorkspaceRole.OWNER,
       }),
-      manager,
+      context,
     );
 
     return workspace;

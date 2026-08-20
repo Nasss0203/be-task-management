@@ -1,6 +1,5 @@
 import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity';
-import { EntityManager } from 'typeorm';
-type PersistenceContext = { manager?: EntityManager };
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 export interface PageBlockRepository {
   findById(id: string, context?: PersistenceContext): Promise<PageBlock | null>;

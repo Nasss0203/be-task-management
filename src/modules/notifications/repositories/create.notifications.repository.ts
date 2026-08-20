@@ -1,3 +1,4 @@
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 // src/modules/notifications/repositories/create-notification.repository.impl.ts
 
 import { Injectable } from '@nestjs/common';
@@ -18,15 +19,15 @@ export class CreateNotificationRepositoryImpl implements CreateNotificationRepos
     private readonly repo: Repository<Notification>,
   ) {}
 
-  private getRepo(manager?: EntityManager): Repository<Notification> {
-    return manager ? manager.getRepository(Notification) : this.repo;
+  private getRepo(context?: PersistenceContext): Repository<Notification> {
+    return context ? (context as EntityManager).getRepository(Notification) : this.repo;
   }
 
   async saveNotification(
     input: SaveNotificationInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<NotificationModel> {
-    const repo = this.getRepo(manager);
+    const repo = this.getRepo(context);
 
     const entity = NotificationMapper.toEntity(input);
 

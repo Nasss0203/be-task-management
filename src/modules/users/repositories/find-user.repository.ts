@@ -1,3 +1,4 @@
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, EntityManager, Repository } from 'typeorm';
@@ -18,8 +19,8 @@ export class FindUserRepositoryImpl implements FindUserRepository {
     private readonly repoUser: Repository<User>,
   ) {}
 
-  private getRepo(manager?: EntityManager): Repository<User> {
-    return manager ? manager.getRepository(User) : this.repoUser;
+  private getRepo(context?: PersistenceContext): Repository<User> {
+    return context ? (context as EntityManager).getRepository(User) : this.repoUser;
   }
 
   async findUserByUsername(username: string): Promise<UserModel | null> {
@@ -46,9 +47,9 @@ export class FindUserRepositoryImpl implements FindUserRepository {
 
   async searchUsers(
     keyword: string,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<UserModel[]> {
-    const repo = this.getRepo(manager);
+    const repo = this.getRepo(context);
 
     const trimmedKeyword = keyword.trim();
 
@@ -70,9 +71,9 @@ export class FindUserRepositoryImpl implements FindUserRepository {
 
   async searchInviteUsers(
     input: SearchInviteUsersRepositoryInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<SearchInviteUsersRepositoryOutput[]> {
-    const repo = this.getRepo(manager);
+    const repo = this.getRepo(context);
 
     const trimmedKeyword = input.keyword.trim();
 

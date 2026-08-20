@@ -1,6 +1,5 @@
 import { PageTemplate } from 'src/modules/content/domain/aggregates/page-template/page-template.aggregate';
-import { EntityManager } from 'typeorm';
-type PersistenceContext = { manager?: EntityManager };
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 export interface PageTemplateRepository {
   findById(id: string, context?: PersistenceContext): Promise<PageTemplate | null>;

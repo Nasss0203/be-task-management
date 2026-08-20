@@ -1,5 +1,5 @@
 import { WorkspaceInvite } from '../aggregates/workspace-invite/workspace-invite.aggregate';
-import { PersistenceContext } from './persistence-context';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 export interface WorkspaceInviteRepository {
   save(

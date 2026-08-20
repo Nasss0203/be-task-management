@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ROLE_PERMISSION_MAP } from 'src/modules/permission/constants/role-permission-map.constant';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
-import { PersistenceContext } from 'src/modules/workspace/domain/repositories/persistence-context';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import {
   WorkspaceAccess,
   WorkspaceOverview,

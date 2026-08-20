@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { EntityManager } from 'typeorm';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { type FindPermissionRepository } from '../interfaces/repositories/find-all-permission.repository.interface';
 import { FindPermissionService } from '../interfaces/services/find-all-permission.service.interface';
 import { PERMISSION_TYPES } from '../interfaces/types';
@@ -14,12 +14,12 @@ export class FindPermissionServiceImpl implements FindPermissionService {
   findPermissionsByUserAndWorkspace(
     userId: string,
     workspaceId: string,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<string[]> {
     return this.repo.findPermissionsByUserAndWorkspace(
       userId,
       workspaceId,
-      manager,
+      context,
     );
   }
 }

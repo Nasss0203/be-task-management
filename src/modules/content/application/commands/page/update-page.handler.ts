@@ -3,7 +3,7 @@ import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import { UpdatePageDto } from 'src/modules/content/application/dto/page/update-page.dto';
 import { PageResponseDto } from 'src/modules/content/application/dto/page/response/page.response.dto';
-import type { UnitOfWork } from 'src/interface/index.interface';
+import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 
 export class UpdatePageCommand {

@@ -1,4 +1,7 @@
 export const CONTENT_TYPES = {
+  ports: {
+    PageProvisioning: Symbol.for('PageProvisioning'),
+  },
   applications: {
     CreatePageHandler: Symbol.for('CreatePageHandler'),
     FindPageHandler: Symbol.for('FindPageHandler'),

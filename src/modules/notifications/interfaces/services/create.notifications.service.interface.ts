@@ -1,4 +1,4 @@
-import { EntityManager } from 'typeorm';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import {
   NotificationSenderType,
   NotificationSourceType,
@@ -32,6 +32,6 @@ export interface CreateNotificationServiceInput {
 export interface CreateNotificationService {
   createNotification(
     input: CreateNotificationServiceInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<NotificationModel>;
 }

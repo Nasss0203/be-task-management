@@ -1,6 +1,6 @@
 // src/modules/activities/interfaces/services/create-activity.service.interface.ts
 
-import { EntityManager } from 'typeorm';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import {
   ActivityAction,
   ActivityEntityType,
@@ -24,6 +24,6 @@ export type CreateActivityServiceInput = {
 export interface CreateActivityService {
   create(
     input: CreateActivityServiceInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<ActivityModel>;
 }

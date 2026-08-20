@@ -2,7 +2,7 @@
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { EntityManager } from 'typeorm';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import {
   NotificationSenderType,
   NotificationSourceType,
@@ -28,7 +28,7 @@ export class CreateNotificationServiceImpl implements CreateNotificationService 
 
   async createNotification(
     input: CreateNotificationServiceInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<NotificationModel> {
     if (!input.receiverId) {
       throw new BadRequestException('receiverId is required');
@@ -65,7 +65,7 @@ export class CreateNotificationServiceImpl implements CreateNotificationService 
           readAt: null,
           archivedAt: null,
         },
-        manager,
+        context,
       );
 
     this.eventEmitter.emit(NOTIFICATION_CREATED_EVENT, {

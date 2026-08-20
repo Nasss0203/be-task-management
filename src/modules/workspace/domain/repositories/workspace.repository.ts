@@ -1,5 +1,5 @@
 import { Workspace } from '../aggregates/workspace/workspace.aggregate';
-import { PersistenceContext } from './persistence-context';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 export type WorkspaceAccess = {
   userId: string;

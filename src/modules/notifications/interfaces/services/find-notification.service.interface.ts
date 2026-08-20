@@ -1,4 +1,4 @@
-import { EntityManager } from 'typeorm';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import {
   NotificationSourceType,
   NotificationType,
@@ -26,8 +26,8 @@ export interface FindMyNotificationsServiceInput {
 export interface FindNotificationService {
   findMyNotifications(
     input: FindMyNotificationsServiceInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<NotificationModel[]>;
 
-  countUnread(userId: string, manager?: EntityManager): Promise<number>;
+  countUnread(userId: string, context?: PersistenceContext): Promise<number>;
 }

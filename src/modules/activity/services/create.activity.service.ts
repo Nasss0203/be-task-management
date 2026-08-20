@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { EntityManager } from 'typeorm';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { ActivityModel } from '../domain/models/activity.model';
 import { type CreateActivityRepository } from '../interfaces/repositories/create-activity.repository.interface';
 import {
@@ -17,7 +17,7 @@ export class CreateActivityServiceImpl implements CreateActivityService {
 
   async create(
     input: CreateActivityServiceInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<ActivityModel> {
     return await this.createActivityRepository.save(
       {
@@ -37,7 +37,7 @@ export class CreateActivityServiceImpl implements CreateActivityService {
         metadata: input.metadata ?? null,
         isSystem: input.isSystem ?? false,
       },
-      manager,
+      context,
     );
   }
 }

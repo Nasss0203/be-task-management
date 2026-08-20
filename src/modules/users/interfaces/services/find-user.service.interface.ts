@@ -1,4 +1,4 @@
-import { EntityManager } from 'typeorm';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { UserModel } from '../../domain/models/user.model';
 
 export type InviteUserSuggestionStatus =
@@ -24,7 +24,7 @@ export interface FindUserService {
   findUserByUsername(username: string): Promise<UserModel | null>;
   findUserByEmail(email: string): Promise<UserModel | null>;
   findUserById(id: string): Promise<UserModel | null>;
-  searchUsers(keyword: string, manager?: EntityManager): Promise<UserModel[]>;
+  searchUsers(keyword: string, context?: PersistenceContext): Promise<UserModel[]>;
 
   searchInviteUsers(
     input: SearchInviteUsersServiceInput,

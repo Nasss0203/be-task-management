@@ -148,7 +148,6 @@ describe('Auth services', () => {
       expect(createWorkspaceHandler.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: user.id,
-          manager: expect.any(Object),
         }),
       );
       expect(result).toEqual({

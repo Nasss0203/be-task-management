@@ -6,7 +6,7 @@ import { CreateWorkspaceHandler } from 'src/modules/workspace/application/comman
 import { hashPassword } from 'src/utils';
 import { MailService } from 'src/modules/mail/mail.service';
 import * as crypto from 'crypto';
-import { type UnitOfWork } from 'src/interface/index.interface';
+import { type UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { type AuthUserRepository } from '../interfaces/repositories/auth-user.repository.interface';
 import {
@@ -65,7 +65,7 @@ export class RegisterAuthServiceImpl implements RegisterAuthService {
       );
 
       await this.createWorkspaceHandler.execute(
-        new CreateWorkspaceCommand(user.id, undefined, manager),
+        new CreateWorkspaceCommand(user.id),
       );
 
       return user;

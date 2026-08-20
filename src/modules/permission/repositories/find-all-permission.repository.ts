@@ -1,3 +1,4 @@
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
@@ -19,12 +20,12 @@ export class FindPermissionRepositoryImpl implements FindPermissionRepository {
     private readonly workspaceMemberRepo: Repository<WorkspaceMemberOrmEntity>,
   ) {}
 
-  private getRepo(manager?: EntityManager): Repository<Permission> {
-    return manager ? manager.getRepository(Permission) : this.repo;
+  private getRepo(context?: PersistenceContext): Repository<Permission> {
+    return context ? (context as EntityManager).getRepository(Permission) : this.repo;
   }
 
-  async findAll(manager?: EntityManager): Promise<PermissionModel[]> {
-    const permissions = await this.getRepo(manager).find();
+  async findAll(context?: PersistenceContext): Promise<PermissionModel[]> {
+    const permissions = await this.getRepo(context).find();
 
     return permissions.map((permission) => ({
       id: permission.id,
@@ -37,10 +38,9 @@ export class FindPermissionRepositoryImpl implements FindPermissionRepository {
   async findPermissionsByUserAndWorkspace(
     userId: string,
     workspaceId: string,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<string[]> {
-    const repo = manager
-      ? manager.getRepository(WorkspaceMemberOrmEntity)
+    const repo = context ? (context as EntityManager).getRepository(WorkspaceMemberOrmEntity)
       : this.workspaceMemberRepo;
 
     const membership = await repo.findOne({

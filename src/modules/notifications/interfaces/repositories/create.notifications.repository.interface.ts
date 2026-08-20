@@ -1,6 +1,6 @@
 // src/modules/notifications/interfaces/repositories/notification.repository.interface.ts
 
-import { EntityManager } from 'typeorm';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import {
   NotificationSenderType,
   NotificationSourceType,
@@ -42,6 +42,6 @@ export interface SaveNotificationInput {
 export interface CreateNotificationRepository {
   saveNotification(
     input: SaveNotificationInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<NotificationModel>;
 }

@@ -1,7 +1,7 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
-import type { UnitOfWork } from 'src/interface/index.interface';
+import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { UpdatePageBlockDto } from 'src/modules/content/application/dto/page/update-page-block.dto';
 import { ReorderPageBlockDto } from 'src/modules/content/application/dto/page/reorder-page-block.dto';

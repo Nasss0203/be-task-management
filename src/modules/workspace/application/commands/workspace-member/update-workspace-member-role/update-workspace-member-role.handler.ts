@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { type UnitOfWork } from 'src/interface/index.interface';
+import { type UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import {
   ActivityAction,
   ActivityEntityType,

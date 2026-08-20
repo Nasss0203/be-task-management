@@ -1,5 +1,5 @@
 import { User } from 'src/modules/users/domain/entities/user.entity';
-import { EntityManager } from 'typeorm';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 export interface CreateLocalAuthUserInput {
   email: string;
@@ -26,7 +26,7 @@ export interface AuthUserRepository {
   findProfileById(id: string): Promise<User | null>;
   createLocalUser(
     input: CreateLocalAuthUserInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<User>;
   createGoogleUser(input: CreateGoogleAuthUserInput): Promise<User>;
   save(user: User): Promise<User>;

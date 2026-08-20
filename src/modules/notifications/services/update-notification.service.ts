@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { EntityManager } from 'typeorm';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { type UpdateNotificationRepository } from '../interfaces/repositories/update-notification.repository.interface';
 import {
   UpdateInviteNotificationStatusServiceInput,
@@ -16,7 +16,7 @@ export class UpdateNotificationServiceImpl implements UpdateNotificationService 
 
   async updateInviteNotificationStatus(
     input: UpdateInviteNotificationStatusServiceInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<number> {
     if (!input.inviteId) {
       throw new BadRequestException('inviteId is required');
@@ -28,25 +28,25 @@ export class UpdateNotificationServiceImpl implements UpdateNotificationService 
 
     return this.updateNotificationRepository.updateInviteNotificationStatus(
       input,
-      manager,
+      context,
     );
   }
 
   async markAllAsRead(
     userId: string,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<number> {
     if (!userId) {
       throw new BadRequestException('userId is required');
     }
 
-    return this.updateNotificationRepository.markAllAsRead(userId, manager);
+    return this.updateNotificationRepository.markAllAsRead(userId, context);
   }
 
   async markAsRead(
     notificationId: string,
     userId: string,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<number> {
     if (!notificationId) {
       throw new BadRequestException('notificationId is required');
@@ -59,7 +59,7 @@ export class UpdateNotificationServiceImpl implements UpdateNotificationService 
     return this.updateNotificationRepository.markAsRead(
       notificationId,
       userId,
-      manager,
+      context,
     );
   }
 }

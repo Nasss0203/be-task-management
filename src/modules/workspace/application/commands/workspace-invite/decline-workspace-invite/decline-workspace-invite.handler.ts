@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { UnitOfWork } from 'src/interface/index.interface';
+import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { type UpdateNotificationService } from 'src/modules/notifications/interfaces/services/update-notification.service.interface';
 import { NOTIFICATION_TYPES } from 'src/modules/notifications/interfaces/types';
 import { WorkspaceInviteResponseDto } from 'src/modules/workspace/application/dto/workspace-invite/response/workspace-invite.response.dto';

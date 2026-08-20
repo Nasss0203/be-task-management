@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { EntityManager } from 'typeorm';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { NotificationModel } from '../domain/models/notification.model';
 import {
   FindMyNotificationsRepositoryInput,
@@ -20,7 +20,7 @@ export class FindNotificationServiceImpl implements FindNotificationService {
 
   async findMyNotifications(
     input: FindMyNotificationsServiceInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<NotificationModel[]> {
     if (!input.userId) {
       throw new BadRequestException('userId is required');
@@ -44,15 +44,15 @@ export class FindNotificationServiceImpl implements FindNotificationService {
 
     return this.findNotificationRepository.findMyNotifications(
       repositoryInput,
-      manager,
+      context,
     );
   }
 
-  async countUnread(userId: string, manager?: EntityManager): Promise<number> {
+  async countUnread(userId: string, context?: PersistenceContext): Promise<number> {
     if (!userId) {
       throw new BadRequestException('userId is required');
     }
 
-    return this.findNotificationRepository.countUnread(userId, manager);
+    return this.findNotificationRepository.countUnread(userId, context);
   }
 }

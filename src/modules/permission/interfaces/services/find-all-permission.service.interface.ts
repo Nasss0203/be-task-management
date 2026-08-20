@@ -1,9 +1,9 @@
-import { EntityManager } from 'typeorm';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 export interface FindPermissionService {
   findPermissionsByUserAndWorkspace(
     userId: string,
     workspaceId: string,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<string[]>;
 }

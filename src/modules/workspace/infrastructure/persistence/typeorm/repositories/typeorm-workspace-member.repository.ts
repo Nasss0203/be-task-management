@@ -4,7 +4,7 @@ import {
   WorkspaceMember,
   WorkspaceMemberDetail,
 } from 'src/modules/workspace/domain/aggregates/workspace-member/workspace-member.aggregate';
-import { PersistenceContext } from 'src/modules/workspace/domain/repositories/persistence-context';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 import { DataSource, EntityManager, IsNull, Not, Repository } from 'typeorm';
 import {

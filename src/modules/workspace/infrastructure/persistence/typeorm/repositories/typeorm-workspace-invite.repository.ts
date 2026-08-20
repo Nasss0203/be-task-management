@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WorkspaceInvite } from 'src/modules/workspace/domain/aggregates/workspace-invite/workspace-invite.aggregate';
-import { PersistenceContext } from 'src/modules/workspace/domain/repositories/persistence-context';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { WorkspaceInviteRepository } from 'src/modules/workspace/domain/repositories/workspace-invite.repository';
 import { EntityManager, Repository } from 'typeorm';
 import { WorkspaceInviteMapper } from '../mappers/workspace-invite.mapper';

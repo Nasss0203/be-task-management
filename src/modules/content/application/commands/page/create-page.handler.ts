@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { UnitOfWork } from 'src/interface/index.interface';
+import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
@@ -48,41 +48,4 @@ export class CreatePageHandler {
     });
   }
 
-  async executeDefault(dto: CreatePageDto, externalManager?: any): Promise<any> {
-    const doWork = async (manager: any) => {
-      const page = Page.create({
-        workspaceId: dto.workspace_id,
-        title: dto.title,
-        createdBy: dto.created_by,
-        slug: dto.slug,
-        icon: dto.icon,
-        coverUrl: dto.cover_url,
-        isTemplate: dto.is_template,
-      });
-
-      const savedPage = await this.pageRepo.save(page, { manager });
-
-      const block = PageBlock.create({
-        pageId: savedPage.getId(),
-        type: PageBlockType.DATABASE_VIEW,
-        title: savedPage.getTitle(),
-        positionX: 0,
-        positionY: 0,
-        width: 12,
-        height: 1,
-        orderIndex: 0,
-        createdBy: savedPage.getCreatedBy(),
-        isOpen: true,
-      });
-
-      const savedBlock = await this.pageBlockRepo.save(block, { manager });
-
-      return {
-        page: PageResponseDto.fromDomain(savedPage),
-        pageBlock: savedBlock,
-      };
-    };
-
-    return externalManager ? doWork(externalManager) : this.uow.runInTransaction(doWork);
-  }
 }

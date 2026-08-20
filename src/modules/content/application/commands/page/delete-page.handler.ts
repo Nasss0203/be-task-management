@@ -1,7 +1,7 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
-import type { UnitOfWork } from 'src/interface/index.interface';
+import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 
 export class DeletePageCommand {

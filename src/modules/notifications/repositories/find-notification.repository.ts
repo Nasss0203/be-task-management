@@ -1,3 +1,4 @@
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 // src/modules/notifications/repositories/find-notification.repository.impl.ts
 
 import { Injectable } from '@nestjs/common';
@@ -20,15 +21,15 @@ export class FindNotificationRepositoryImpl implements FindNotificationRepositor
     private readonly repo: Repository<Notification>,
   ) {}
 
-  private getRepo(manager?: EntityManager): Repository<Notification> {
-    return manager ? manager.getRepository(Notification) : this.repo;
+  private getRepo(context?: PersistenceContext): Repository<Notification> {
+    return context ? (context as EntityManager).getRepository(Notification) : this.repo;
   }
 
   async findMyNotifications(
     input: FindMyNotificationsRepositoryInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<NotificationModel[]> {
-    const repo = this.getRepo(manager);
+    const repo = this.getRepo(context);
 
     const limit = input.limit ?? 30;
 
@@ -123,9 +124,9 @@ export class FindNotificationRepositoryImpl implements FindNotificationRepositor
 
   async countUnread(
     receiverId: string,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<number> {
-    const repo = this.getRepo(manager);
+    const repo = this.getRepo(context);
 
     return repo.count({
       where: {
@@ -138,9 +139,9 @@ export class FindNotificationRepositoryImpl implements FindNotificationRepositor
 
   async existsByReceiverTypeAndTask(
     input: NotificationTaskLookupInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<boolean> {
-    const repo = this.getRepo(manager);
+    const repo = this.getRepo(context);
 
     const count = await repo.count({
       where: {
@@ -155,9 +156,9 @@ export class FindNotificationRepositoryImpl implements FindNotificationRepositor
 
   async existsByReceiverTypeAndSprint(
     input: NotificationSprintLookupInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<boolean> {
-    const repo = this.getRepo(manager);
+    const repo = this.getRepo(context);
 
     const count = await repo.count({
       where: {

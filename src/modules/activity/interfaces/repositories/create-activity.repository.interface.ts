@@ -1,4 +1,4 @@
-import { EntityManager } from 'typeorm';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import {
   ActivityAction,
   ActivityEntityType,
@@ -23,6 +23,6 @@ export type SaveActivityInput = {
 export interface CreateActivityRepository {
   save(
     activity: SaveActivityInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<ActivityModel>;
 }

@@ -1,3 +1,4 @@
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
@@ -16,15 +17,15 @@ export class CreateActivityRepositoryImpl implements CreateActivityRepository {
     private readonly repo: Repository<Activity>,
   ) {}
 
-  private getRepo(manager?: EntityManager): Repository<Activity> {
-    return manager ? manager.getRepository(Activity) : this.repo;
+  private getRepo(context?: PersistenceContext): Repository<Activity> {
+    return context ? (context as EntityManager).getRepository(Activity) : this.repo;
   }
 
   async save(
     activity: SaveActivityInput,
-    manager?: EntityManager,
+    context?: PersistenceContext,
   ): Promise<ActivityModel> {
-    const repo = this.getRepo(manager);
+    const repo = this.getRepo(context);
 
     const entity = ActivityMapper.toEntity(activity);
 

@@ -2,7 +2,7 @@ import {
   WorkspaceMember,
   WorkspaceMemberDetail,
 } from '../aggregates/workspace-member/workspace-member.aggregate';
-import { PersistenceContext } from './persistence-context';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 export interface WorkspaceMemberRepository {
   save(
