@@ -18,12 +18,11 @@ import { RequirePermissions } from 'src/common/decorator/require-permissions.dec
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
-import { CreateWorkspaceDto } from 'src/modules/workspace/application/dto/workspace/create-workspace.dto';
+
 import { WorkspaceOverviewResponseDto } from 'src/modules/workspace/application/dto/workspace/response/workspace-overview.response.dto';
 import { UpdateWorkspaceDto } from 'src/modules/workspace/application/dto/workspace/update-workspace.dto';
 import { UpdateWorkspaceLayoutModeDto } from 'src/modules/workspace/application/dto/workspace/update-workspace-layout-mode.dto';
-import { CreateWorkspaceCommand } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.command';
-import { CreateWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.handler';
+
 import { RemoveWorkspaceFromTrashCommand } from 'src/modules/workspace/application/commands/workspace/remove-workspace-from-trash/remove-workspace-from-trash.command';
 import { RemoveWorkspaceFromTrashHandler } from 'src/modules/workspace/application/commands/workspace/remove-workspace-from-trash/remove-workspace-from-trash.handler';
 import { RestoreWorkspaceCommand } from 'src/modules/workspace/application/commands/workspace/restore-workspace/restore-workspace.command';
@@ -45,6 +44,10 @@ import { ListDeletedWorkspacesHandler } from 'src/modules/workspace/application/
 import { ListWorkspacesQuery } from 'src/modules/workspace/application/queries/workspace/list-workspaces/list-workspaces.query';
 import { ListWorkspacesHandler } from 'src/modules/workspace/application/queries/workspace/list-workspaces/list-workspaces.handler';
 
+import { CreateWorkspaceDto } from 'src/modules/workspace/application/dto/workspace/create-workspace.dto';
+import { CreateWorkspaceCommand } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.command';
+import { CreateWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.handler';
+
 @Controller('workspaces')
 @ReadRateLimit()
 export class WorkspacesController {
@@ -62,17 +65,19 @@ export class WorkspacesController {
     private readonly removeWorkspaceFromTrashHandler: RemoveWorkspaceFromTrashHandler,
   ) {}
 
-  @Post('default')
+  @Post()
   @StrictWriteRateLimit()
-  @ResponseMessage('Workspaces created')
+  @ResponseMessage('Workspace created')
   async create(
-    @Body() createWorkspaceDto: CreateWorkspaceDto,
+    @Body() dto: CreateWorkspaceDto,
     @Auth() auth: IAuth,
   ) {
     return this.createWorkspaceHandler.execute(
-      new CreateWorkspaceCommand(auth.id),
+      new CreateWorkspaceCommand(auth.id, dto.name),
     );
   }
+
+
 
   @Get()
   @ResponseMessage('Find all workspace')

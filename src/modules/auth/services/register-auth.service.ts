@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { ErrorCode } from 'src/common/constants/error-code.constant';
 import { RegisterUserDto } from 'src/modules/users/dto/create-user.dto';
-import { CreateWorkspaceCommand } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.command';
-import { CreateWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.handler';
+import { CreateDefaultWorkspaceCommand } from 'src/modules/workspace/application/commands/workspace/create-default-workspace/create-default-workspace.command';
+import { CreateDefaultWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/create-default-workspace/create-default-workspace.handler';
 import { hashPassword } from 'src/utils';
 import { MailService } from 'src/modules/mail/mail.service';
 import * as crypto from 'crypto';
@@ -20,7 +20,7 @@ export class RegisterAuthServiceImpl implements RegisterAuthService {
   constructor(
     @Inject(AUTH_TYPES.repositories.AuthUserRepository)
     private readonly userRepository: AuthUserRepository,
-    private readonly createWorkspaceHandler: CreateWorkspaceHandler,
+    private readonly createDefaultWorkspaceHandler: CreateDefaultWorkspaceHandler,
     private readonly mailService: MailService,
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
@@ -64,8 +64,8 @@ export class RegisterAuthServiceImpl implements RegisterAuthService {
         manager,
       );
 
-      await this.createWorkspaceHandler.execute(
-        new CreateWorkspaceCommand(user.id),
+      await this.createDefaultWorkspaceHandler.execute(
+        new CreateDefaultWorkspaceCommand(user.id),
       );
 
       return user;

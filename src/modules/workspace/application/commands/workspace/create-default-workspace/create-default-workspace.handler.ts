@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import type { ContentPageProvisioningPort } from 'src/modules/content/application/ports/content-page-provisioning.port';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import { WorkspaceResponseDto } from 'src/modules/workspace/application/dto/workspace/response/workspaces.response.dto';
@@ -13,10 +13,10 @@ import type { PersistenceContext } from 'src/shared/infrastructure/persistence/p
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { generateSlug } from 'src/utils';
-import { CreateWorkspaceCommand } from './create-workspace.command';
+import { CreateDefaultWorkspaceCommand } from './create-default-workspace.command';
 
 @Injectable()
-export class CreateWorkspaceHandler {
+export class CreateDefaultWorkspaceHandler {
   constructor(
     @Inject(WORKSPACE_TYPES.repositories.WorkspaceRepository)
     private readonly workspaceRepository: WorkspaceRepository,
@@ -32,11 +32,11 @@ export class CreateWorkspaceHandler {
   ) {}
 
   async execute(
-    command: CreateWorkspaceCommand,
+    command: CreateDefaultWorkspaceCommand,
   ): Promise<WorkspaceResponseDto> {
     const workspace = await this.uow.runInTransaction(async (context) => {
-      const createdWorkspace = await this.createWorkspaceCore(
-        { name: command.name, userId: command.userId },
+      const createdWorkspace = await this.createWorkspaceCoreDefault(
+        { name: 'Task management', userId: command.userId },
         context,
       );
 
@@ -57,16 +57,17 @@ export class CreateWorkspaceHandler {
     return WorkspaceResponseDto.fromDomain(workspace);
   }
 
-  private async createWorkspaceCore(
+  private async createWorkspaceCoreDefault(
     { name, userId }: { name: string; userId: string },
     context?: PersistenceContext,
   ): Promise<Workspace> {
     const baseSlug = generateSlug(name).toLowerCase();
-    let slug = baseSlug;
+    const slug = `${baseSlug}-${userId.slice(0, 6)}-${Date.now()}`;
 
-    if (await this.workspaceRepository.existsBySlug(slug, context)) {
-      const uniqueSuffix = Date.now().toString(36);
-      slug = `${baseSlug}-${uniqueSuffix}`;
+    const exists = await this.workspaceRepository.existsBySlug(slug, context);
+
+    if (exists) {
+      throw new ConflictException('Workspace slug already exists');
     }
 
     const workspace = await this.workspaceRepository.save(

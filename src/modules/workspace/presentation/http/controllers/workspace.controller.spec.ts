@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CreateWorkspaceCommand } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.command';
 import { CreateWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.handler';
 import { RemoveWorkspaceFromTrashHandler } from 'src/modules/workspace/application/commands/workspace/remove-workspace-from-trash/remove-workspace-from-trash.handler';
 import { RestoreWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/restore-workspace/restore-workspace.handler';
@@ -73,16 +72,4 @@ describe('WorkspacesController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('creates the default workspace through the V2 application', async () => {
-    const dto = { name: 'Task management' } as any;
-    const auth = { id: 'user-1' } as any;
-    const response = { id: 'workspace-1' };
-
-    createWorkspaceHandler.execute.mockResolvedValue(response);
-
-    await expect(controller.create(dto, auth)).resolves.toBe(response);
-    expect(createWorkspaceHandler.execute).toHaveBeenCalledWith(
-      new CreateWorkspaceCommand(auth.id, dto),
-    );
-  });
 });

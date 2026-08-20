@@ -7,6 +7,7 @@ import { NotificationsModule } from 'src/modules/notifications/notifications.mod
 import { ContentModule } from 'src/modules/content/content.module';
 import { UsersModule } from 'src/modules/users/users.module';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
+import { CreateDefaultWorkspaceHandler } from './application/commands/workspace/create-default-workspace/create-default-workspace.handler';
 import { CreateWorkspaceHandler } from './application/commands/workspace/create-workspace/create-workspace.handler';
 import { RemoveWorkspaceFromTrashHandler } from './application/commands/workspace/remove-workspace-from-trash/remove-workspace-from-trash.handler';
 import { RestoreWorkspaceHandler } from './application/commands/workspace/restore-workspace/restore-workspace.handler';
@@ -62,6 +63,7 @@ import { DatabaseModule } from 'src/database/database.module';
     WorkspaceInviteController,
   ],
   providers: [
+    CreateDefaultWorkspaceHandler,
     CreateWorkspaceHandler,
     UpdateWorkspaceHandler,
     UpdateWorkspaceLayoutModeHandler,
@@ -97,6 +99,6 @@ import { DatabaseModule } from 'src/database/database.module';
       useClass: TypeOrmWorkspaceInviteRepository,
     },
   ],
-  exports: [CreateWorkspaceHandler],
+  exports: [CreateDefaultWorkspaceHandler],
 })
 export class WorkspaceModule {}

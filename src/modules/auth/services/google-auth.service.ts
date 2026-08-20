@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
-import { CreateWorkspaceCommand } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.command';
-import { CreateWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.handler';
+import { CreateDefaultWorkspaceCommand } from 'src/modules/workspace/application/commands/workspace/create-default-workspace/create-default-workspace.command';
+import { CreateDefaultWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/create-default-workspace/create-default-workspace.handler';
 import { GoogleUserPayload } from 'src/types/google-user-payload.interface';
 import { type AuthUserRepository } from '../interfaces/repositories/auth-user.repository.interface';
 import { type IssueAuthTokenService } from '../interfaces/services/issue-auth-token.service.interface';
@@ -17,7 +17,7 @@ export class GoogleAuthServiceImpl implements GoogleAuthService {
     private readonly userRepository: AuthUserRepository,
     @Inject(AUTH_TYPES.services.IssueAuthTokenService)
     private readonly issueAuthTokenService: IssueAuthTokenService,
-    private readonly createWorkspaceHandler: CreateWorkspaceHandler,
+    private readonly createDefaultWorkspaceHandler: CreateDefaultWorkspaceHandler,
   ) {}
 
   async loginWithGoogle(
@@ -44,8 +44,8 @@ export class GoogleAuthServiceImpl implements GoogleAuthService {
           avatarUrl: googleUser.avatarUrl ?? null,
         });
 
-        await this.createWorkspaceHandler.execute(
-          new CreateWorkspaceCommand(user.id),
+        await this.createDefaultWorkspaceHandler.execute(
+          new CreateDefaultWorkspaceCommand(user.id),
         );
       }
     }
