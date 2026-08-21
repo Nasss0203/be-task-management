@@ -20,6 +20,10 @@ export class RestorePageCommand {
   ) {}
 }
 
+export class PermanentlyDeletePageCommand {
+  constructor(public readonly pageId: string) {}
+}
+
 @Injectable()
 export class DeletePageHandler {
   constructor(
@@ -43,23 +47,35 @@ export class DeletePageHandler {
 
       page.markAsDeleted(command.userId);
       await this.pageRepo.save(page, { manager });
-      // We also do softDelete in the repo for relation cascades, or the DB handles it?
-      // TypeORM softDelete can be called. Or let's just use the repo's delete.
-      await this.pageRepo.delete(page.getId(), { manager });
     });
   }
 
   async restore(command: RestorePageCommand): Promise<void> {
     await this.uow.runInTransaction(async (manager) => {
-      // Find deleted page
-      const deletedPages = await this.pageRepo.findDeletedByWorkspace(command.workspaceId, { manager });
-      const page = deletedPages.find(p => p.getId() === command.pageId);
+      // Find deleted page by ID directly
+      const page = await this.pageRepo.findDeletedById(command.pageId, { manager });
       if (!page) {
         throw new NotFoundException('Deleted page not found');
       }
 
+      if (page.getWorkspaceId() !== command.workspaceId) {
+        throw new NotFoundException('Deleted page not found in workspace');
+      }
+
       page.restoreDeleted();
       await this.pageRepo.save(page, { manager });
+    });
+  }
+
+  async permanentlyDelete(command: PermanentlyDeletePageCommand): Promise<void> {
+    await this.uow.runInTransaction(async (manager) => {
+      const page = await this.pageRepo.findDeletedById(command.pageId, { manager });
+
+      if (!page) {
+        throw new NotFoundException('Deleted page not found');
+      }
+
+      await this.pageRepo.deletePermanently(command.pageId, { manager });
     });
   }
 }

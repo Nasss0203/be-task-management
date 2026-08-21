@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import { PageResponseDto } from 'src/modules/content/application/dto/page/response/page.response.dto';
@@ -9,6 +9,10 @@ export class FindPageByWorkspaceQuery {
 
 export class FindDeletedPagesQuery {
   constructor(public readonly workspaceId: string) {}
+}
+
+export class FindPageByIdQuery {
+  constructor(public readonly pageId: string) {}
 }
 
 @Injectable()
@@ -26,5 +30,15 @@ export class FindPageHandler {
   async findDeletedPages(query: FindDeletedPagesQuery): Promise<PageResponseDto[]> {
     const pages = await this.pageRepo.findDeletedByWorkspace(query.workspaceId);
     return pages.map((page) => PageResponseDto.fromDomain(page));
+  }
+
+  async findPageById(query: FindPageByIdQuery): Promise<PageResponseDto> {
+    const page = await this.pageRepo.findById(query.pageId);
+
+    if (!page) {
+      throw new NotFoundException('Page not found');
+    }
+
+    return PageResponseDto.fromDomain(page);
   }
 }

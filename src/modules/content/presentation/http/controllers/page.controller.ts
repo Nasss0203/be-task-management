@@ -34,12 +34,14 @@ import {
 } from 'src/modules/content/application/commands/page/update-page.handler';
 import {
   DeletePageCommand,
+  PermanentlyDeletePageCommand,
   RestorePageCommand,
   DeletePageHandler,
 } from 'src/modules/content/application/commands/page/delete-page.handler';
 import {
   FindPageByWorkspaceQuery,
   FindDeletedPagesQuery,
+  FindPageByIdQuery,
   FindPageHandler,
 } from 'src/modules/content/application/queries/page/find-page.handler';
 
@@ -77,16 +79,6 @@ export class PageController {
     );
   }
 
-  @ResponseMessage('Find page by workspace')
-  @Get('workspace/:workspaceId')
-  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
-  @RequirePermissions(PERMISSIONS.PAGE_READ)
-  async findAll(@Param('workspaceId') workspaceId: string) {
-    return await this.findPageHandler.findPageByWorkspaceId(
-      new FindPageByWorkspaceQuery(workspaceId)
-    );
-  }
-
   @Get('trash')
   @WorkspaceContext({ source: 'query', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.PAGE_READ)
@@ -99,8 +91,39 @@ export class PageController {
     );
   }
 
+  @Delete('trash/:pageId')
+  @StrictWriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
+  @RequirePermissions(PERMISSIONS.PAGE_DELETE)
+  async permanentlyDeletePage(@Param('pageId') pageId: string) {
+    await this.deletePageHandler.permanentlyDelete(
+      new PermanentlyDeletePageCommand(pageId)
+    );
+    return { success: true };
+  }
+
+  @ResponseMessage('Find page by workspace')
+  @Get('workspace/:workspaceId')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
+  @RequirePermissions(PERMISSIONS.PAGE_READ)
+  async findAll(@Param('workspaceId') workspaceId: string) {
+    return await this.findPageHandler.findPageByWorkspaceId(
+      new FindPageByWorkspaceQuery(workspaceId)
+    );
+  }
+
+  @Get(':pageId')
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
+  @RequirePermissions(PERMISSIONS.PAGE_READ)
+  async findPageById(@Param('pageId') pageId: string) {
+    return this.findPageHandler.findPageById(
+      new FindPageByIdQuery(pageId)
+    );
+  }
+
   @Patch(':pageId')
   @WriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
   @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
   @ResponseMessage('Update page')
   updatePage(@Param('pageId') pageId: string, @Body() dto: UpdatePageDto) {
@@ -111,6 +134,7 @@ export class PageController {
 
   @Delete(':pageId')
   @StrictWriteRateLimit()
+  @WorkspaceContext({ source: 'query', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.PAGE_DELETE)
   async deletePage(
     @Param('pageId') pageId: string,
@@ -128,6 +152,7 @@ export class PageController {
 
   @Patch(':pageId/restore')
   @StrictWriteRateLimit()
+  @WorkspaceContext({ source: 'query', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.PAGE_DELETE)
   async restorePage(
     @Param('pageId') pageId: string,

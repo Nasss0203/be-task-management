@@ -59,10 +59,26 @@ export class TypeOrmPageRepository implements PageRepository {
     await this.resolveRepo(context).softDelete(id);
   }
 
+  async deletePermanently(id: string, context?: PersistenceContext): Promise<void> {
+    await this.resolveRepo(context).delete({ id });
+  }
+
   async existsBySlug(workspaceId: string, slug: string, context?: PersistenceContext): Promise<boolean> {
     const count = await this.resolveRepo(context).count({
       where: { workspace_id: workspaceId, slug },
     });
     return count > 0;
+  }
+
+  async findDeletedById(id: string, context?: PersistenceContext): Promise<Page | null> {
+    const orm = await this.resolveRepo(context).findOne({
+      where: { id },
+      withDeleted: true,
+    });
+    // Ensure it is actually deleted
+    if (orm && orm.deletedAt !== null) {
+      return PageMapper.toDomain(orm);
+    }
+    return null;
   }
 }

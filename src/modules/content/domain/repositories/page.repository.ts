@@ -7,5 +7,7 @@ export interface PageRepository {
   findDeletedByWorkspace(workspaceId: string, context?: PersistenceContext): Promise<Page[]>;
   save(page: Page, context?: PersistenceContext): Promise<Page>;
   delete(id: string, context?: PersistenceContext): Promise<void>;
+  deletePermanently(id: string, context?: PersistenceContext): Promise<void>;
   existsBySlug(workspaceId: string, slug: string, context?: PersistenceContext): Promise<boolean>;
+  findDeletedById(id: string, context?: PersistenceContext): Promise<Page | null>;
 }
