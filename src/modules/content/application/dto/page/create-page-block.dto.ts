@@ -49,10 +49,6 @@ export class CreatePageBlockDto {
   order_index?: number;
 
   @IsOptional()
-  @IsUUID()
-  insert_after_block_id?: string;
-
-  @IsOptional()
   content?: PageBlockJson;
 
   @IsOptional()
@@ -61,10 +57,6 @@ export class CreatePageBlockDto {
 
   @IsOptional()
   data_config?: PageBlockJson;
-
-  @IsOptional()
-  @IsUUID()
-  created_by: string;
 
   @IsOptional()
   @IsBoolean()

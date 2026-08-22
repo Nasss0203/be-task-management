@@ -6,18 +6,13 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
 
 export class DeletePageBlockCommand {
   constructor(
-    public readonly workspaceId: string,
     public readonly blockId: string,
     public readonly userId: string,
   ) {}
 }
 
 export class RestorePageBlockCommand {
-  constructor(
-    public readonly workspaceId: string,
-    public readonly blockId: string,
-    public readonly userId: string,
-  ) {}
+  constructor(public readonly blockId: string) {}
 }
 
 @Injectable()
@@ -38,14 +33,13 @@ export class DeletePageBlockHandler {
 
       block.markAsDeleted(command.userId);
       await this.pageBlockRepo.save(block, { manager });
-      await this.pageBlockRepo.delete(block.getId(), { manager });
     });
   }
 
   async restore(command: RestorePageBlockCommand): Promise<void> {
     await this.uow.runInTransaction(async (manager) => {
-      const deletedBlocks = await this.pageBlockRepo.findDeletedByWorkspace(command.workspaceId, undefined, { manager });
-      const block = deletedBlocks.find(b => b.getId() === command.blockId);
+      const block = await this.pageBlockRepo.findDeletedById(command.blockId, { manager });
+
       if (!block) {
         throw new NotFoundException('Deleted page block not found');
       }

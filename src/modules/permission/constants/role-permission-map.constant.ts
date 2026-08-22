@@ -37,8 +37,8 @@ export const ROLE_PERMISSION_MAP: Record<WorkspaceRole, PermissionCode[]> = {
     PERMISSIONS.PAGE_READ,
     PERMISSIONS.PAGE_BLOCK_CREATE,
     PERMISSIONS.PAGE_BLOCK_READ,
-    PERMISSIONS.PAGE_BLOCK_UPDATE, // Member có thể sửa block mình tạo
-    PERMISSIONS.PAGE_BLOCK_DELETE, // Member có thể xóa block mình tạo
+    PERMISSIONS.PAGE_BLOCK_UPDATE, // Member can edit blocks in accessible pages
+    PERMISSIONS.PAGE_BLOCK_DELETE, // Member can delete blocks in accessible pages
 
     PERMISSIONS.ATTACHMENT_UPLOAD,
     PERMISSIONS.ATTACHMENT_READ,

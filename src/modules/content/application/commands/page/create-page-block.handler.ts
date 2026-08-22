@@ -1,16 +1,35 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
-import { PageBlock, PageBlockType } from 'src/modules/content/domain/entities/page-block.entity';
-import { CreatePageBlockDto, AddDatabaseViewToBlockDto } from 'src/modules/content/application/dto/page/create-page-block.dto';
+import {
+  PageBlock,
+  PageBlockType,
+  type PageBlockJson,
+  type PageBlockStyleConfig,
+} from 'src/modules/content/domain/entities/page-block.entity';
+import { AddDatabaseViewToBlockDto } from 'src/modules/content/application/dto/page/create-page-block.dto';
 import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/response/page-block.response.dto';
-import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
-import { NotFoundException } from '@nestjs/common';
 
 export class CreatePageBlockCommand {
-  constructor(public readonly dto: CreatePageBlockDto & { created_by: string }) {}
+  constructor(
+    public readonly input: {
+      pageId: string;
+      type: PageBlockType;
+      createdBy: string;
+      title?: string | null;
+      positionX?: number | null;
+      positionY?: number | null;
+      width?: number | null;
+      height?: number | null;
+      orderIndex?: number;
+      content?: PageBlockJson;
+      styleConfig?: PageBlockStyleConfig;
+      dataConfig?: PageBlockJson;
+      isOpen?: boolean;
+    },
+  ) {}
 }
 
 export class AddDatabaseViewToBlockCommand {
@@ -22,8 +41,6 @@ export class CreatePageBlockHandler {
   constructor(
     @Inject(CONTENT_TYPES.repositories.PageBlockRepository)
     private readonly pageBlockRepo: PageBlockRepository,
-    @Inject(CONTENT_TYPES.repositories.PageRepository)
-    private readonly pageRepo: PageRepository,
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
   ) {}
@@ -32,25 +49,25 @@ export class CreatePageBlockHandler {
     return this.uow.runInTransaction(async (manager) => {
       // Shift order indexes if needed
       await this.pageBlockRepo.shiftOrderIndexesForInsert(
-        command.dto.page_id,
-        command.dto.order_index ?? 0,
+        command.input.pageId,
+        command.input.orderIndex ?? 0,
         { manager }
       );
 
       const block = PageBlock.create({
-        pageId: command.dto.page_id,
-        type: command.dto.type,
-        title: command.dto.title,
-        positionX: command.dto.position_x,
-        positionY: command.dto.position_y,
-        width: command.dto.width,
-        height: command.dto.height,
-        orderIndex: command.dto.order_index ?? 0,
-        content: command.dto.content,
-        styleConfig: command.dto.style_config,
-        dataConfig: command.dto.data_config,
-        createdBy: command.dto.created_by,
-        isOpen: true,
+        pageId: command.input.pageId,
+        type: command.input.type,
+        title: command.input.title,
+        positionX: command.input.positionX,
+        positionY: command.input.positionY,
+        width: command.input.width,
+        height: command.input.height,
+        orderIndex: command.input.orderIndex ?? 0,
+        content: command.input.content,
+        styleConfig: command.input.styleConfig,
+        dataConfig: command.input.dataConfig,
+        createdBy: command.input.createdBy,
+        isOpen: command.input.isOpen ?? true,
       });
 
       const savedBlock = await this.pageBlockRepo.save(block, { manager });

@@ -37,6 +37,17 @@ export class TypeOrmPageBlockRepository implements PageBlockRepository {
     return orms.map(PageBlockMapper.toDomain);
   }
 
+  async findDeletedById(id: string, context?: PersistenceContext): Promise<PageBlock | null> {
+    const orm = await this.resolveRepo(context).findOne({
+      where: { id },
+      withDeleted: true,
+    });
+
+    return orm && orm.deleted_at !== null
+      ? PageBlockMapper.toDomain(orm)
+      : null;
+  }
+
   async findDeletedByWorkspace(workspaceId: string, pageId?: string, context?: PersistenceContext): Promise<PageBlock[]> {
     const qb = this.resolveRepo(context)
       .createQueryBuilder('block')

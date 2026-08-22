@@ -47,6 +47,7 @@ import {
 } from 'src/modules/content/application/commands/page/delete-page-block.handler';
 import {
   FindPageBlockByPageQuery,
+  FindPageBlockByIdQuery,
   FindDeletedPageBlocksQuery,
   FindPageBlockHandler,
 } from 'src/modules/content/application/queries/page/find-page-block.handler';
@@ -79,8 +80,19 @@ export class PageBlockController {
   ): Promise<PageBlockResponseDto> {
     return this.createPageBlockHandler.execute(
       new CreatePageBlockCommand({
-        ...createPageBlockDto,
-        created_by: auth.id,
+        pageId: createPageBlockDto.page_id,
+        type: createPageBlockDto.type,
+        title: createPageBlockDto.title,
+        positionX: createPageBlockDto.position_x,
+        positionY: createPageBlockDto.position_y,
+        width: createPageBlockDto.width,
+        height: createPageBlockDto.height,
+        orderIndex: createPageBlockDto.order_index,
+        content: createPageBlockDto.content,
+        styleConfig: createPageBlockDto.style_config,
+        dataConfig: createPageBlockDto.data_config,
+        createdBy: auth.id,
+        isOpen: createPageBlockDto.is_open,
       })
     );
   }
@@ -94,6 +106,33 @@ export class PageBlockController {
   ): Promise<PageBlockResponseDto[]> {
     return this.findPageBlockHandler.findAllByPageId(
       new FindPageBlockByPageQuery(pageId)
+    );
+  }
+
+  @Get('trash')
+  @WorkspaceContext({ source: 'query', key: 'workspaceId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
+  async findDeletedPageBlocks(
+    @Query('workspaceId') workspaceId: string,
+    @Query('pageId') pageId?: string,
+  ) {
+    if (!workspaceId) {
+      throw new BadRequestException('workspaceId is required');
+    }
+    return this.findPageBlockHandler.findDeletedPageBlocks(
+      new FindDeletedPageBlocksQuery(workspaceId, pageId)
+    );
+  }
+
+  @Get(':blockId')
+  @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'blockId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
+  @ResponseMessage('Find page block by id')
+  findById(
+    @Param('blockId', ParseUUIDPipe) blockId: string,
+  ): Promise<PageBlockResponseDto> {
+    return this.findPageBlockHandler.findById(
+      new FindPageBlockByIdQuery(blockId)
     );
   }
 
@@ -119,9 +158,16 @@ export class PageBlockController {
     @Body() updatePageBlockDto: UpdatePageBlockDto,
   ) {
     return this.updatePageBlockHandler.execute(
-      new UpdatePageBlockCommand({
-        ...updatePageBlockDto,
-        id,
+      new UpdatePageBlockCommand(id, {
+        title: updatePageBlockDto.title,
+        positionX: updatePageBlockDto.position_x,
+        positionY: updatePageBlockDto.position_y,
+        width: updatePageBlockDto.width,
+        height: updatePageBlockDto.height,
+        content: updatePageBlockDto.content,
+        styleConfig: updatePageBlockDto.style_config,
+        dataConfig: updatePageBlockDto.data_config,
+        isOpen: updatePageBlockDto.is_open,
       })
     );
   }
@@ -140,35 +186,16 @@ export class PageBlockController {
     );
   }
 
-  @Get('trash')
-  @WorkspaceContext({ source: 'query', key: 'workspaceId' })
-  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
-  async findDeletedPageBlocks(
-    @Query('workspaceId') workspaceId: string,
-    @Query('pageId') pageId?: string,
-  ) {
-    if (!workspaceId) {
-      throw new BadRequestException('workspaceId is required');
-    }
-    return this.findPageBlockHandler.findDeletedPageBlocks(
-      new FindDeletedPageBlocksQuery(workspaceId, pageId)
-    );
-  }
-
   @Delete(':blockId')
   @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'blockId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async deletePageBlock(
     @Param('blockId', ParseUUIDPipe) blockId: string,
-    @Query('workspaceId') workspaceId: string,
     @Auth() auth: IAuth,
   ) {
-    if (!workspaceId) {
-      throw new BadRequestException('workspaceId is required');
-    }
     await this.deletePageBlockHandler.delete(
-      new DeletePageBlockCommand(workspaceId, blockId, auth.id)
+      new DeletePageBlockCommand(blockId, auth.id)
     );
     return { success: true };
   }
@@ -179,14 +206,9 @@ export class PageBlockController {
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async restorePageBlock(
     @Param('blockId', ParseUUIDPipe) blockId: string,
-    @Query('workspaceId') workspaceId: string,
-    @Auth() auth: IAuth,
   ) {
-    if (!workspaceId) {
-      throw new BadRequestException('workspaceId is required');
-    }
     await this.deletePageBlockHandler.restore(
-      new RestorePageBlockCommand(workspaceId, blockId, auth.id)
+      new RestorePageBlockCommand(blockId)
     );
     return { success: true };
   }
