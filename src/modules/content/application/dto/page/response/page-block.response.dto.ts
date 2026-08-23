@@ -1,8 +1,14 @@
-import { PageBlock, PageBlockType, PageBlockJson, PageBlockStyleConfig } from 'src/modules/content/domain/entities/page-block.entity';
+import {
+  PageBlock,
+  PageBlockJson,
+  PageBlockStyleConfig,
+  PageBlockType,
+} from 'src/modules/content/domain/entities/page-block.entity';
 
 export class PageBlockResponseDto {
   id: string;
   page_id: string;
+  parent_block_id: string | null;
   type: PageBlockType;
   title: string | null;
   position_x: number | null;
@@ -24,6 +30,7 @@ export class PageBlockResponseDto {
     const dto = new PageBlockResponseDto();
     dto.id = block.getId();
     dto.page_id = block.getPageId();
+    dto.parent_block_id = block.getParentBlockId();
     dto.type = block.getType();
     dto.title = block.getTitle();
     dto.position_x = block.getPositionX();

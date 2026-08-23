@@ -22,22 +22,31 @@ export class TypeOrmPageRepository implements PageRepository {
     return this.repo;
   }
 
-  async findById(id: string, context?: PersistenceContext): Promise<Page | null> {
+  async findById(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<Page | null> {
     const orm = await this.resolveRepo(context).findOne({
-      where: { id, },
+      where: { id },
     });
     return orm ? PageMapper.toDomain(orm) : null;
   }
 
-  async findByWorkspace(workspaceId: string, context?: PersistenceContext): Promise<Page[]> {
+  async findByWorkspace(
+    workspaceId: string,
+    context?: PersistenceContext,
+  ): Promise<Page[]> {
     const orms = await this.resolveRepo(context).find({
-      where: { workspace_id: workspaceId, },
+      where: { workspace_id: workspaceId },
       order: { createdAt: 'ASC' },
     });
-    return orms.map(PageMapper.toDomain);
+    return orms.map((orm) => PageMapper.toDomain(orm));
   }
 
-  async findDeletedByWorkspace(workspaceId: string, context?: PersistenceContext): Promise<Page[]> {
+  async findDeletedByWorkspace(
+    workspaceId: string,
+    context?: PersistenceContext,
+  ): Promise<Page[]> {
     const qb = this.resolveRepo(context)
       .createQueryBuilder('page')
       .withDeleted()
@@ -45,7 +54,7 @@ export class TypeOrmPageRepository implements PageRepository {
       .andWhere('page.deleted_at IS NOT NULL')
       .orderBy('page.deleted_at', 'DESC');
     const orms = await qb.getMany();
-    return orms.map(PageMapper.toDomain);
+    return orms.map((orm) => PageMapper.toDomain(orm));
   }
 
   async save(page: Page, context?: PersistenceContext): Promise<Page> {
@@ -59,18 +68,28 @@ export class TypeOrmPageRepository implements PageRepository {
     await this.resolveRepo(context).softDelete(id);
   }
 
-  async deletePermanently(id: string, context?: PersistenceContext): Promise<void> {
+  async deletePermanently(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<void> {
     await this.resolveRepo(context).delete({ id });
   }
 
-  async existsBySlug(workspaceId: string, slug: string, context?: PersistenceContext): Promise<boolean> {
+  async existsBySlug(
+    workspaceId: string,
+    slug: string,
+    context?: PersistenceContext,
+  ): Promise<boolean> {
     const count = await this.resolveRepo(context).count({
       where: { workspace_id: workspaceId, slug },
     });
     return count > 0;
   }
 
-  async findDeletedById(id: string, context?: PersistenceContext): Promise<Page | null> {
+  async findDeletedById(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<Page | null> {
     const orm = await this.resolveRepo(context).findOne({
       where: { id },
       withDeleted: true,

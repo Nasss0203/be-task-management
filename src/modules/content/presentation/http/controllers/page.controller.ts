@@ -60,7 +60,7 @@ export class PageController {
 
     @Inject(CONTENT_TYPES.applications.UpdatePageHandler)
     private readonly updatePageHandler: UpdatePageHandler,
-  ) { }
+  ) {}
 
   @Post()
   @WriteRateLimit()
@@ -75,7 +75,7 @@ export class PageController {
         createPageDto.title,
         createPageDto.icon,
         createPageDto.cover_url,
-      )
+      ),
     );
   }
 
@@ -87,7 +87,7 @@ export class PageController {
       throw new BadRequestException('workspaceId is required');
     }
     return this.findPageHandler.findDeletedPages(
-      new FindDeletedPagesQuery(workspaceId)
+      new FindDeletedPagesQuery(workspaceId),
     );
   }
 
@@ -97,7 +97,7 @@ export class PageController {
   @RequirePermissions(PERMISSIONS.PAGE_DELETE)
   async permanentlyDeletePage(@Param('pageId') pageId: string) {
     await this.deletePageHandler.permanentlyDelete(
-      new PermanentlyDeletePageCommand(pageId)
+      new PermanentlyDeletePageCommand(pageId),
     );
     return { success: true };
   }
@@ -108,7 +108,7 @@ export class PageController {
   @RequirePermissions(PERMISSIONS.PAGE_READ)
   async findAll(@Param('workspaceId') workspaceId: string) {
     return await this.findPageHandler.findPageByWorkspaceId(
-      new FindPageByWorkspaceQuery(workspaceId)
+      new FindPageByWorkspaceQuery(workspaceId),
     );
   }
 
@@ -116,9 +116,7 @@ export class PageController {
   @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
   @RequirePermissions(PERMISSIONS.PAGE_READ)
   async findPageById(@Param('pageId') pageId: string) {
-    return this.findPageHandler.findPageById(
-      new FindPageByIdQuery(pageId)
-    );
+    return this.findPageHandler.findPageById(new FindPageByIdQuery(pageId));
   }
 
   @Patch(':pageId')
@@ -127,9 +125,7 @@ export class PageController {
   @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
   @ResponseMessage('Update page')
   updatePage(@Param('pageId') pageId: string, @Body() dto: UpdatePageDto) {
-    return this.updatePageHandler.execute(
-      new UpdatePageCommand(pageId, dto)
-    );
+    return this.updatePageHandler.execute(new UpdatePageCommand(pageId, dto));
   }
 
   @Delete(':pageId')
@@ -145,7 +141,7 @@ export class PageController {
       throw new BadRequestException('workspaceId is required');
     }
     await this.deletePageHandler.delete(
-      new DeletePageCommand(workspaceId, pageId, auth.id)
+      new DeletePageCommand(workspaceId, pageId, auth.id),
     );
     return { success: true };
   }
@@ -163,7 +159,7 @@ export class PageController {
       throw new BadRequestException('workspaceId is required');
     }
     await this.deletePageHandler.restore(
-      new RestorePageCommand(workspaceId, pageId, auth.id)
+      new RestorePageCommand(workspaceId, pageId, auth.id),
     );
     return { success: true };
   }

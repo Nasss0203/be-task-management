@@ -15,29 +15,116 @@ export class TypeOrmPageBlockRepository implements PageBlockRepository {
     private readonly repo: Repository<PageBlockOrmEntity>,
   ) {}
 
-  private resolveRepo(context?: PersistenceContext): Repository<PageBlockOrmEntity> {
+  private resolveRepo(
+    context?: PersistenceContext,
+  ): Repository<PageBlockOrmEntity> {
     if (context) {
       return (context as EntityManager).getRepository(PageBlockOrmEntity);
     }
     return this.repo;
   }
 
-  async findById(id: string, context?: PersistenceContext): Promise<PageBlock | null> {
+  async findById(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<PageBlock | null> {
     const orm = await this.resolveRepo(context).findOne({
-      where: { id, },
+      where: { id },
     });
     return orm ? PageBlockMapper.toDomain(orm) : null;
   }
 
-  async findByPageId(pageId: string, context?: PersistenceContext): Promise<PageBlock[]> {
-    const orms = await this.resolveRepo(context).find({
-      where: { page_id: pageId, },
-      order: { order_index: 'ASC', created_at: 'ASC' },
-    });
-    return orms.map(PageBlockMapper.toDomain);
+  async findByPageId(
+    pageId: string,
+    context?: PersistenceContext,
+  ): Promise<PageBlock[]> {
+    const orms = await this.resolveRepo(context)
+      .createQueryBuilder('block')
+      .where('block.page_id = :pageId', { pageId })
+      .andWhere('block.deleted_at IS NULL')
+      .orderBy(
+        'CASE WHEN block.parent_block_id IS NULL THEN 0 ELSE 1 END',
+        'ASC',
+      )
+      .addOrderBy('block.parent_block_id', 'ASC', 'NULLS FIRST')
+      .addOrderBy('block.order_index', 'ASC')
+      .addOrderBy('block.created_at', 'ASC')
+      .getMany();
+
+    return orms.map((orm) => PageBlockMapper.toDomain(orm));
   }
 
-  async findDeletedById(id: string, context?: PersistenceContext): Promise<PageBlock | null> {
+  async findActiveSiblings(
+    pageId: string,
+    parentBlockId: string | null,
+    context?: PersistenceContext,
+  ): Promise<PageBlock[]> {
+    const qb = this.resolveRepo(context)
+      .createQueryBuilder('block')
+      .where('block.page_id = :pageId', { pageId })
+      .andWhere('block.deleted_at IS NULL');
+
+    if (parentBlockId === null) {
+      qb.andWhere('block.parent_block_id IS NULL');
+    } else {
+      qb.andWhere('block.parent_block_id = :parentBlockId', {
+        parentBlockId,
+      });
+    }
+
+    const orms = await qb
+      .orderBy('block.order_index', 'ASC')
+      .addOrderBy('block.created_at', 'ASC')
+      .getMany();
+
+    return orms.map((orm) => PageBlockMapper.toDomain(orm));
+  }
+
+  async findLastSibling(
+    pageId: string,
+    parentBlockId: string | null,
+    context?: PersistenceContext,
+  ): Promise<PageBlock | null> {
+    const qb = this.resolveRepo(context)
+      .createQueryBuilder('block')
+      .where('block.page_id = :pageId', { pageId })
+      .andWhere('block.deleted_at IS NULL');
+
+    if (parentBlockId === null) {
+      qb.andWhere('block.parent_block_id IS NULL');
+    } else {
+      qb.andWhere('block.parent_block_id = :parentBlockId', {
+        parentBlockId,
+      });
+    }
+
+    const orm = await qb
+      .orderBy('block.order_index', 'DESC')
+      .addOrderBy('block.created_at', 'DESC')
+      .getOne();
+
+    return orm ? PageBlockMapper.toDomain(orm) : null;
+  }
+
+  async findActiveChildren(
+    parentBlockId: string,
+    context?: PersistenceContext,
+  ): Promise<PageBlock[]> {
+    const orms = await this.resolveRepo(context)
+      .createQueryBuilder('block')
+      .where('block.parent_block_id = :parentBlockId', { parentBlockId })
+      .andWhere('block.deleted_at IS NULL')
+      .orderBy('block.order_index', 'ASC')
+      .addOrderBy('block.created_at', 'ASC')
+      .getMany();
+
+    return orms.map((orm) => PageBlockMapper.toDomain(orm));
+  }
+
+  async findDeletedById(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<PageBlock | null> {
     const orm = await this.resolveRepo(context).findOne({
       where: { id },
       withDeleted: true,
@@ -48,7 +135,11 @@ export class TypeOrmPageBlockRepository implements PageBlockRepository {
       : null;
   }
 
-  async findDeletedByWorkspace(workspaceId: string, pageId?: string, context?: PersistenceContext): Promise<PageBlock[]> {
+  async findDeletedByWorkspace(
+    workspaceId: string,
+    pageId?: string,
+    context?: PersistenceContext,
+  ): Promise<PageBlock[]> {
     const qb = this.resolveRepo(context)
       .createQueryBuilder('block')
       .withDeleted()
@@ -61,36 +152,27 @@ export class TypeOrmPageBlockRepository implements PageBlockRepository {
     }
     qb.orderBy('block.deleted_at', 'DESC');
     const orms = await qb.getMany();
-    return orms.map(PageBlockMapper.toDomain);
+    return orms.map((orm) => PageBlockMapper.toDomain(orm));
   }
 
-  async save(pageBlock: PageBlock, context?: PersistenceContext): Promise<PageBlock> {
+  async save(
+    pageBlock: PageBlock,
+    context?: PersistenceContext,
+  ): Promise<PageBlock> {
     const orm = PageBlockMapper.toOrm(pageBlock);
     const saved = await this.resolveRepo(context).save(orm);
     return PageBlockMapper.toDomain(saved);
   }
 
-  async saveMany(pageBlocks: PageBlock[], context?: PersistenceContext): Promise<PageBlock[]> {
+  async saveMany(
+    pageBlocks: PageBlock[],
+    context?: PersistenceContext,
+  ): Promise<PageBlock[]> {
     if (pageBlocks.length === 0) return [];
-    const orms = pageBlocks.map(PageBlockMapper.toOrm);
+    const orms = pageBlocks.map((pageBlock) =>
+      PageBlockMapper.toOrm(pageBlock),
+    );
     const saved = await this.resolveRepo(context).save(orms);
-    return saved.map(PageBlockMapper.toDomain);
-  }
-
-  async delete(id: string, context?: PersistenceContext): Promise<void> {
-    await this.resolveRepo(context).softDelete(id);
-  }
-
-  async shiftOrderIndexesForInsert(pageId: string, fromOrderIndex: number, context?: PersistenceContext): Promise<void> {
-    const repo = this.resolveRepo(context);
-    const rows = await repo.find({
-      where: { page_id: pageId, },
-      order: { order_index: 'DESC' },
-    });
-
-    const affectedRows = rows.filter((row) => row.order_index >= fromOrderIndex);
-    for (const row of affectedRows) {
-      await repo.update({ id: row.id }, { order_index: row.order_index + 1 });
-    }
+    return saved.map((orm) => PageBlockMapper.toDomain(orm));
   }
 }

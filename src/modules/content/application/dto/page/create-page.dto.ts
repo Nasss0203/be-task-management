@@ -1,5 +1,4 @@
-import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity';
-import { IsOptional, IsString, IsUUID, IsBoolean } from 'class-validator';
+import { IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreatePageDto {
   @IsUUID()

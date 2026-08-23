@@ -6,6 +6,7 @@ export class PageBlockMapper {
     return PageBlock.restore({
       id: orm.id,
       pageId: orm.page_id,
+      parentBlockId: orm.parent_block_id,
       type: orm.type,
       title: orm.title,
       positionX: orm.position_x,
@@ -29,6 +30,7 @@ export class PageBlockMapper {
     const orm = new PageBlockOrmEntity();
     orm.id = domain.getId();
     orm.page_id = domain.getPageId();
+    orm.parent_block_id = domain.getParentBlockId();
     orm.type = domain.getType();
     orm.title = domain.getTitle();
     orm.position_x = domain.getPositionX();

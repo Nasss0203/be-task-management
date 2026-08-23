@@ -1,6 +1,8 @@
+import type {
+  PageBlockJson,
+  PageBlockStyleConfig,
+} from 'src/modules/content/domain/entities/page-block.entity';
 import { PageBlockType } from 'src/modules/content/domain/entities/page-block.entity';
-import type { PageBlockJson, PageBlockStyleConfig } from 'src/modules/content/domain/entities/page-block.entity';
-import { PageOrmEntity } from './page.orm-entity';
 import { User } from 'src/modules/users/domain/entities/user.entity';
 import {
   Column,
@@ -13,14 +15,24 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { PageOrmEntity } from './page.orm-entity';
 
 @Entity('page_blocks')
 @Index('IDX_PAGE_BLOCKS_PAGE_ID', ['page_id'])
 @Index('IDX_PAGE_BLOCKS_DELETED_AT', ['deleted_at'])
-@Index('UQ_PAGE_BLOCKS_PAGE_ORDER_ACTIVE', ['page_id', 'order_index'], {
+@Index('IDX_PAGE_BLOCKS_PARENT_BLOCK_ID', ['parent_block_id'])
+@Index('UQ_PAGE_BLOCKS_ROOT_ORDER_ACTIVE', ['page_id', 'order_index'], {
   unique: true,
-  where: '"deleted_at" IS NULL',
+  where: '"parent_block_id" IS NULL AND "deleted_at" IS NULL',
 })
+@Index(
+  'UQ_PAGE_BLOCKS_CHILD_ORDER_ACTIVE',
+  ['page_id', 'parent_block_id', 'order_index'],
+  {
+    unique: true,
+    where: '"parent_block_id" IS NOT NULL AND "deleted_at" IS NULL',
+  },
+)
 export class PageBlockOrmEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -28,9 +40,24 @@ export class PageBlockOrmEntity {
   @Column('uuid')
   page_id: string;
 
-  @ManyToOne(() => PageOrmEntity, (page) => page.blocks, { onDelete: 'CASCADE' })
+  @ManyToOne(() => PageOrmEntity, (page) => page.blocks, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'page_id' })
   page: PageOrmEntity;
+
+  @Column({
+    type: 'uuid',
+    nullable: true,
+  })
+  parent_block_id: string | null;
+
+  @ManyToOne(() => PageBlockOrmEntity, {
+    nullable: true,
+    onDelete: 'NO ACTION',
+  })
+  @JoinColumn({ name: 'parent_block_id' })
+  parentBlock?: PageBlockOrmEntity | null;
 
   @Column({
     type: 'enum',

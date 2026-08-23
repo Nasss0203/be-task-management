@@ -1,12 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
-import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
 import { Page } from 'src/modules/content/domain/aggregates/page/page.aggregate';
-import { PageBlock, PageBlockType } from 'src/modules/content/domain/entities/page-block.entity';
-import { CreatePageDto } from 'src/modules/content/application/dto/page/create-page.dto';
 import { PageResponseDto } from 'src/modules/content/application/dto/page/response/page.response.dto';
-
 import { generateSlug } from 'src/utils';
 
 export class CreatePageCommand {
@@ -24,8 +20,6 @@ export class CreatePageHandler {
   constructor(
     @Inject(CONTENT_TYPES.repositories.PageRepository)
     private readonly pageRepo: PageRepository,
-    @Inject(CONTENT_TYPES.repositories.PageBlockRepository)
-    private readonly pageBlockRepo: PageBlockRepository,
   ) {}
 
   async execute(command: CreatePageCommand): Promise<PageResponseDto> {
@@ -51,5 +45,4 @@ export class CreatePageHandler {
 
     return PageResponseDto.fromDomain(savedPage);
   }
-
 }

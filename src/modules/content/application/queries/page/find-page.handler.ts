@@ -22,12 +22,16 @@ export class FindPageHandler {
     private readonly pageRepo: PageRepository,
   ) {}
 
-  async findPageByWorkspaceId(query: FindPageByWorkspaceQuery): Promise<PageResponseDto[]> {
+  async findPageByWorkspaceId(
+    query: FindPageByWorkspaceQuery,
+  ): Promise<PageResponseDto[]> {
     const pages = await this.pageRepo.findByWorkspace(query.workspaceId);
     return pages.map((page) => PageResponseDto.fromDomain(page));
   }
 
-  async findDeletedPages(query: FindDeletedPagesQuery): Promise<PageResponseDto[]> {
+  async findDeletedPages(
+    query: FindDeletedPagesQuery,
+  ): Promise<PageResponseDto[]> {
     const pages = await this.pageRepo.findDeletedByWorkspace(query.workspaceId);
     return pages.map((page) => PageResponseDto.fromDomain(page));
   }

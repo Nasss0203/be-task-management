@@ -7,7 +7,10 @@ import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-w
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 
 export class UpdatePageCommand {
-  constructor(public readonly pageId: string, public readonly dto: UpdatePageDto) {}
+  constructor(
+    public readonly pageId: string,
+    public readonly dto: UpdatePageDto,
+  ) {}
 }
 
 @Injectable()

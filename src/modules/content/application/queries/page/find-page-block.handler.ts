@@ -12,7 +12,10 @@ export class FindPageBlockByIdQuery {
 }
 
 export class FindDeletedPageBlocksQuery {
-  constructor(public readonly workspaceId: string, public readonly pageId?: string) {}
+  constructor(
+    public readonly workspaceId: string,
+    public readonly pageId?: string,
+  ) {}
 }
 
 @Injectable()
@@ -22,7 +25,9 @@ export class FindPageBlockHandler {
     private readonly pageBlockRepo: PageBlockRepository,
   ) {}
 
-  async findAllByPageId(query: FindPageBlockByPageQuery): Promise<PageBlockResponseDto[]> {
+  async findAllByPageId(
+    query: FindPageBlockByPageQuery,
+  ): Promise<PageBlockResponseDto[]> {
     const blocks = await this.pageBlockRepo.findByPageId(query.pageId);
     return blocks.map((b) => PageBlockResponseDto.fromDomain(b));
   }
@@ -37,8 +42,13 @@ export class FindPageBlockHandler {
     return PageBlockResponseDto.fromDomain(block);
   }
 
-  async findDeletedPageBlocks(query: FindDeletedPageBlocksQuery): Promise<PageBlockResponseDto[]> {
-    const blocks = await this.pageBlockRepo.findDeletedByWorkspace(query.workspaceId, query.pageId);
+  async findDeletedPageBlocks(
+    query: FindDeletedPageBlocksQuery,
+  ): Promise<PageBlockResponseDto[]> {
+    const blocks = await this.pageBlockRepo.findDeletedByWorkspace(
+      query.workspaceId,
+      query.pageId,
+    );
     return blocks.map((b) => PageBlockResponseDto.fromDomain(b));
   }
 }

@@ -8,7 +8,6 @@ import {
   IsUUID,
   Min,
 } from 'class-validator';
-import { DatabaseViewType } from 'src/modules/database/domain/enums/database-view-type.enum';
 import {
   PageBlockType,
   type PageBlockJson,
@@ -17,6 +16,10 @@ import {
 export class CreatePageBlockDto {
   @IsUUID()
   page_id: string;
+
+  @IsOptional()
+  @IsUUID()
+  parent_block_id?: string | null;
 
   @IsEnum(PageBlockType)
   type: PageBlockType;
@@ -44,11 +47,6 @@ export class CreatePageBlockDto {
   height?: number | null;
 
   @IsOptional()
-  @IsInt()
-  @Min(0)
-  order_index?: number;
-
-  @IsOptional()
   content?: PageBlockJson;
 
   @IsOptional()
@@ -65,14 +63,8 @@ export class CreatePageBlockDto {
 
 export class AddDatabaseViewToBlockDto {
   @IsUUID()
-  board_id: string;
+  database_id: string;
 
   @IsUUID()
-  workspace_id: string;
-
-  @IsUUID()
-  project_id: string;
-
-  @IsEnum(DatabaseViewType)
-  view_type: DatabaseViewType;
+  view_id: string;
 }

@@ -53,7 +53,9 @@ export class DeletePageHandler {
   async restore(command: RestorePageCommand): Promise<void> {
     await this.uow.runInTransaction(async (manager) => {
       // Find deleted page by ID directly
-      const page = await this.pageRepo.findDeletedById(command.pageId, { manager });
+      const page = await this.pageRepo.findDeletedById(command.pageId, {
+        manager,
+      });
       if (!page) {
         throw new NotFoundException('Deleted page not found');
       }
@@ -67,9 +69,13 @@ export class DeletePageHandler {
     });
   }
 
-  async permanentlyDelete(command: PermanentlyDeletePageCommand): Promise<void> {
+  async permanentlyDelete(
+    command: PermanentlyDeletePageCommand,
+  ): Promise<void> {
     await this.uow.runInTransaction(async (manager) => {
-      const page = await this.pageRepo.findDeletedById(command.pageId, { manager });
+      const page = await this.pageRepo.findDeletedById(command.pageId, {
+        manager,
+      });
 
       if (!page) {
         throw new NotFoundException('Deleted page not found');

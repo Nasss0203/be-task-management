@@ -28,6 +28,7 @@ import {
   CreatePageBlockDto,
 } from 'src/modules/content/application/dto/page/create-page-block.dto';
 import { ReorderPageBlockDto } from 'src/modules/content/application/dto/page/reorder-page-block.dto';
+import { MovePageBlockDto } from 'src/modules/content/application/dto/page/move-page-block.dto';
 import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/response/page-block.response.dto';
 import { UpdatePageBlockDto } from 'src/modules/content/application/dto/page/update-page-block.dto';
 import {
@@ -38,6 +39,7 @@ import {
 import {
   UpdatePageBlockCommand,
   ReorderPageBlockCommand,
+  MovePageBlockCommand,
   UpdatePageBlockHandler,
 } from 'src/modules/content/application/commands/page/update-page-block.handler';
 import {
@@ -81,19 +83,19 @@ export class PageBlockController {
     return this.createPageBlockHandler.execute(
       new CreatePageBlockCommand({
         pageId: createPageBlockDto.page_id,
+        parentBlockId: createPageBlockDto.parent_block_id,
         type: createPageBlockDto.type,
         title: createPageBlockDto.title,
         positionX: createPageBlockDto.position_x,
         positionY: createPageBlockDto.position_y,
         width: createPageBlockDto.width,
         height: createPageBlockDto.height,
-        orderIndex: createPageBlockDto.order_index,
         content: createPageBlockDto.content,
         styleConfig: createPageBlockDto.style_config,
         dataConfig: createPageBlockDto.data_config,
         createdBy: auth.id,
         isOpen: createPageBlockDto.is_open,
-      })
+      }),
     );
   }
 
@@ -105,7 +107,7 @@ export class PageBlockController {
     @Param('pageId', ParseUUIDPipe) pageId: string,
   ): Promise<PageBlockResponseDto[]> {
     return this.findPageBlockHandler.findAllByPageId(
-      new FindPageBlockByPageQuery(pageId)
+      new FindPageBlockByPageQuery(pageId),
     );
   }
 
@@ -120,7 +122,7 @@ export class PageBlockController {
       throw new BadRequestException('workspaceId is required');
     }
     return this.findPageBlockHandler.findDeletedPageBlocks(
-      new FindDeletedPageBlocksQuery(workspaceId, pageId)
+      new FindDeletedPageBlocksQuery(workspaceId, pageId),
     );
   }
 
@@ -132,7 +134,7 @@ export class PageBlockController {
     @Param('blockId', ParseUUIDPipe) blockId: string,
   ): Promise<PageBlockResponseDto> {
     return this.findPageBlockHandler.findById(
-      new FindPageBlockByIdQuery(blockId)
+      new FindPageBlockByIdQuery(blockId),
     );
   }
 
@@ -145,7 +147,21 @@ export class PageBlockController {
     @Body() reorderPageBlockDto: ReorderPageBlockDto,
   ): Promise<PageBlockResponseDto[]> {
     return this.updatePageBlockHandler.reorder(
-      new ReorderPageBlockCommand(reorderPageBlockDto)
+      new ReorderPageBlockCommand(reorderPageBlockDto),
+    );
+  }
+
+  @Patch(':blockId/move')
+  @WriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'blockId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+  @ResponseMessage('Move page block')
+  move(
+    @Param('blockId', ParseUUIDPipe) blockId: string,
+    @Body() movePageBlockDto: MovePageBlockDto,
+  ): Promise<PageBlockResponseDto> {
+    return this.updatePageBlockHandler.move(
+      new MovePageBlockCommand(blockId, movePageBlockDto),
     );
   }
 
@@ -168,7 +184,7 @@ export class PageBlockController {
         styleConfig: updatePageBlockDto.style_config,
         dataConfig: updatePageBlockDto.data_config,
         isOpen: updatePageBlockDto.is_open,
-      })
+      }),
     );
   }
 
@@ -182,7 +198,7 @@ export class PageBlockController {
     @Body() dto: AddDatabaseViewToBlockDto,
   ): Promise<PageBlockResponseDto> {
     return await this.createPageBlockHandler.addDatabaseViewToBlock(
-      new AddDatabaseViewToBlockCommand(blockId, dto)
+      new AddDatabaseViewToBlockCommand(blockId, dto),
     );
   }
 
@@ -195,7 +211,7 @@ export class PageBlockController {
     @Auth() auth: IAuth,
   ) {
     await this.deletePageBlockHandler.delete(
-      new DeletePageBlockCommand(blockId, auth.id)
+      new DeletePageBlockCommand(blockId, auth.id),
     );
     return { success: true };
   }
@@ -204,11 +220,9 @@ export class PageBlockController {
   @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'blockId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
-  async restorePageBlock(
-    @Param('blockId', ParseUUIDPipe) blockId: string,
-  ) {
+  async restorePageBlock(@Param('blockId', ParseUUIDPipe) blockId: string) {
     await this.deletePageBlockHandler.restore(
-      new RestorePageBlockCommand(blockId)
+      new RestorePageBlockCommand(blockId),
     );
     return { success: true };
   }

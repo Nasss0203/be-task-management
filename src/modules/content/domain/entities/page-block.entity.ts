@@ -1,5 +1,3 @@
-import { DatabaseViewType } from 'src/modules/database/domain/enums/database-view-type.enum';
-
 export enum PageBlockType {
   TEXT = 'TEXT',
   HEADER = 'HEADER',
@@ -26,10 +24,8 @@ export enum PageBlockType {
 }
 
 export type PageBlockDatabaseViewDataConfig = {
-  workspace_id: string;
-  project_id: string;
-  default_board_id: string | null;
-  default_view_type: DatabaseViewType;
+  database_id: string;
+  view_id: string;
 };
 
 export type PageBlockJson =
@@ -43,6 +39,7 @@ export class PageBlock {
   constructor(
     private readonly id: string,
     private pageId: string,
+    private parentBlockId: string | null,
     private type: PageBlockType,
     private title: string | null,
     private positionX: number | null,
@@ -64,6 +61,7 @@ export class PageBlock {
   static restore(params: {
     id: string;
     pageId: string;
+    parentBlockId: string | null;
     type: PageBlockType;
     title: string | null;
     positionX: number | null;
@@ -84,6 +82,7 @@ export class PageBlock {
     return new PageBlock(
       params.id,
       params.pageId,
+      params.parentBlockId,
       params.type,
       params.title,
       params.positionX,
@@ -105,6 +104,7 @@ export class PageBlock {
 
   static create(params: {
     pageId: string;
+    parentBlockId?: string | null;
     type: PageBlockType;
     createdBy: string;
     title?: string | null;
@@ -121,6 +121,7 @@ export class PageBlock {
     return new PageBlock(
       crypto.randomUUID(),
       params.pageId,
+      params.parentBlockId ?? null,
       params.type,
       params.title ?? null,
       params.positionX ?? null,
@@ -143,6 +144,9 @@ export class PageBlock {
   }
   getPageId(): string {
     return this.pageId;
+  }
+  getParentBlockId(): string | null {
+    return this.parentBlockId;
   }
   getType(): PageBlockType {
     return this.type;
@@ -194,29 +198,35 @@ export class PageBlock {
   }
 
   update(params: {
-    type?: PageBlockType;
     title?: string | null;
     positionX?: number | null;
     positionY?: number | null;
     width?: number | null;
     height?: number | null;
-    orderIndex?: number;
     content?: PageBlockJson;
     styleConfig?: PageBlockStyleConfig;
     dataConfig?: PageBlockJson;
     isOpen?: boolean;
   }) {
-    if (params.type !== undefined) this.type = params.type;
     if (params.title !== undefined) this.title = params.title;
     if (params.positionX !== undefined) this.positionX = params.positionX;
     if (params.positionY !== undefined) this.positionY = params.positionY;
     if (params.width !== undefined) this.width = params.width;
     if (params.height !== undefined) this.height = params.height;
-    if (params.orderIndex !== undefined) this.orderIndex = params.orderIndex;
     if (params.content !== undefined) this.content = params.content;
     if (params.styleConfig !== undefined) this.styleConfig = params.styleConfig;
     if (params.dataConfig !== undefined) this.dataConfig = params.dataConfig;
     if (params.isOpen !== undefined) this.isOpen = params.isOpen;
+    this.updatedAt = new Date();
+  }
+
+  moveToParent(parentBlockId: string | null) {
+    this.parentBlockId = parentBlockId;
+    this.updatedAt = new Date();
+  }
+
+  changeOrder(orderIndex: number) {
+    this.orderIndex = orderIndex;
     this.updatedAt = new Date();
   }
 
