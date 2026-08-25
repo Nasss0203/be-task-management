@@ -16,12 +16,12 @@ export class TypeOrmUnitOfWork implements UnitOfWork {
     const activeManager = transactionAls.getStore();
 
     if (activeManager) {
-      return fn(activeManager as unknown as PersistenceContext);
+      return fn(activeManager as unknown);
     }
 
     return this.dataSource.transaction(async (manager: EntityManager) => {
       return transactionAls.run(manager, () => {
-        return fn(manager as unknown as PersistenceContext);
+        return fn(manager as unknown);
       });
     });
   }

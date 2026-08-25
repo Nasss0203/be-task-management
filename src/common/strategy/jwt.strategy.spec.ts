@@ -1,14 +1,14 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AuthUserRepository } from 'src/modules/auth/interfaces/repositories/auth-user.repository.interface';
+import { UserRepository } from 'src/modules/identity/domain/repositories/user.repository';
 import {
   SystemRole,
   User,
-} from 'src/modules/users/domain/entities/user.entity';
+} from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user.orm-entity';
 import { JwtStrategy } from './jwt.strategy';
 
 describe('JwtStrategy', () => {
-  let userRepository: jest.Mocked<AuthUserRepository>;
+  let userRepository: jest.Mocked<UserRepository>;
   let strategy: JwtStrategy;
 
   beforeEach(() => {

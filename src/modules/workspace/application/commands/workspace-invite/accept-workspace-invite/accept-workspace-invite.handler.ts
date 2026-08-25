@@ -8,8 +8,8 @@ import {
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { type UpdateNotificationService } from 'src/modules/notifications/interfaces/services/update-notification.service.interface';
 import { NOTIFICATION_TYPES } from 'src/modules/notifications/interfaces/types';
-import { type FindUserService } from 'src/modules/users/interfaces/services/find-user.service.interface';
-import { USER_TYPES } from 'src/modules/users/interfaces/types';
+import { type FindUserService } from 'src/modules/identity/application/ports/find-user.service.interface';
+import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
 import { WorkspaceInviteResponseDto } from 'src/modules/workspace/application/dto/workspace-invite/response/workspace-invite.response.dto';
 import { WorkspaceInvite } from 'src/modules/workspace/domain/aggregates/workspace-invite/workspace-invite.aggregate';
 import { WorkspaceMember } from 'src/modules/workspace/domain/aggregates/workspace-member/workspace-member.aggregate';
@@ -30,7 +30,7 @@ export class AcceptWorkspaceInviteHandler {
     @Inject(WORKSPACE_TYPES.repositories.WorkspaceMemberRepository)
     private readonly workspaceMemberRepository: WorkspaceMemberRepository,
 
-    @Inject(USER_TYPES.services.FindUserService)
+    @Inject(IDENTITY_TYPES.services.FindUserService)
     private readonly findUserService: FindUserService,
 
     @Inject(NOTIFICATION_TYPES.services.UpdateNotificationService)

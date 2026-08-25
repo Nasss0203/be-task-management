@@ -3,16 +3,22 @@ import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import { Page } from 'src/modules/content/domain/aggregates/page/page.aggregate';
-import { PageBlock, PageBlockType } from 'src/modules/content/domain/entities/page-block.entity';
+import {
+  PageBlock,
+  PageBlockType,
+} from 'src/modules/content/domain/entities/page-block.entity';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
-import { ContentPageProvisioningPort, CreateDefaultPageInput } from '../ports/content-page-provisioning.port';
+import {
+  ContentPageProvisioningPort,
+  CreateDefaultPageInput,
+} from '../ports/content-page-provisioning.port';
 
 @Injectable()
 export class ContentPageProvisioningService implements ContentPageProvisioningPort {
   constructor(
     @Inject(CONTENT_TYPES.repositories.PageRepository)
     private readonly pageRepo: PageRepository,
-    
+
     @Inject(CONTENT_TYPES.repositories.PageBlockRepository)
     private readonly pageBlockRepo: PageBlockRepository,
   ) {}

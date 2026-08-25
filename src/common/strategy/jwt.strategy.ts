@@ -3,16 +3,16 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { IAuth } from 'src/types/auth';
-import { type AuthUserRepository } from 'src/modules/auth/interfaces/repositories/auth-user.repository.interface';
-import { AUTH_TYPES } from 'src/modules/auth/interfaces/types';
+import { type UserRepository } from 'src/modules/identity/domain/repositories/user.repository';
+import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
 import { ErrorCode } from 'src/common/constants/error-code.constant';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     configService: ConfigService,
-    @Inject(AUTH_TYPES.repositories.AuthUserRepository)
-    private readonly userRepository: AuthUserRepository,
+    @Inject(IDENTITY_TYPES.repositories.UserRepository)
+    private readonly userRepository: UserRepository,
   ) {
     const jwtAccessTokenSecret = configService.get<string>(
       'JWT_ACCESS_TOKEN_SECRET',

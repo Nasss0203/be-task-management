@@ -15,29 +15,42 @@ export class TypeOrmPageTemplateBlockRepository implements PageTemplateBlockRepo
     private readonly repo: Repository<PageTemplateBlockOrmEntity>,
   ) {}
 
-  private resolveRepo(context?: PersistenceContext): Repository<PageTemplateBlockOrmEntity> {
+  private resolveRepo(
+    context?: PersistenceContext,
+  ): Repository<PageTemplateBlockOrmEntity> {
     if (context) {
-      return (context as EntityManager).getRepository(PageTemplateBlockOrmEntity);
+      return (context as EntityManager).getRepository(
+        PageTemplateBlockOrmEntity,
+      );
     }
     return this.repo;
   }
 
-  async findById(id: string, context?: PersistenceContext): Promise<PageTemplateBlock | null> {
+  async findById(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<PageTemplateBlock | null> {
     const orm = await this.resolveRepo(context).findOne({
-      where: { id, },
+      where: { id },
     });
     return orm ? PageTemplateBlockMapper.toDomain(orm) : null;
   }
 
-  async findByTemplateId(templateId: string, context?: PersistenceContext): Promise<PageTemplateBlock[]> {
+  async findByTemplateId(
+    templateId: string,
+    context?: PersistenceContext,
+  ): Promise<PageTemplateBlock[]> {
     const orms = await this.resolveRepo(context).find({
-      where: { templateId, },
+      where: { templateId },
       order: { orderIndex: 'ASC' },
     });
     return orms.map(PageTemplateBlockMapper.toDomain);
   }
 
-  async save(block: PageTemplateBlock, context?: PersistenceContext): Promise<PageTemplateBlock> {
+  async save(
+    block: PageTemplateBlock,
+    context?: PersistenceContext,
+  ): Promise<PageTemplateBlock> {
     const orm = PageTemplateBlockMapper.toOrm(block);
     const saved = await this.resolveRepo(context).save(orm);
     return PageTemplateBlockMapper.toDomain(saved);

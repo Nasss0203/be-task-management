@@ -1,15 +1,13 @@
-import { HttpException, HttpStatus, Injectable, Inject } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { ErrorCode } from '../constants/error-code.constant';
-import { type ValidateUserAuthService } from 'src/modules/auth/interfaces/services/validate-user-auth.service.interface';
-import { AUTH_TYPES } from 'src/modules/auth/interfaces/types';
+import { ValidateUserAuthServiceImpl } from 'src/modules/identity/application/services/validate-user-auth.service';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
   constructor(
-    @Inject(AUTH_TYPES.services.ValidateUserAuthService)
-    private readonly validateUserAuthService: ValidateUserAuthService,
+    private readonly validateUserAuthService: ValidateUserAuthServiceImpl,
   ) {
     super({
       usernameField: 'email',

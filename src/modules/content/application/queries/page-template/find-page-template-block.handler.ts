@@ -14,7 +14,9 @@ export class FindPageTemplateBlockHandler {
     private readonly repo: PageTemplateBlockRepository,
   ) {}
 
-  async execute(query: FindPageTemplateBlockByTemplateQuery): Promise<PageTemplateBlockResponseDto[]> {
+  async execute(
+    query: FindPageTemplateBlockByTemplateQuery,
+  ): Promise<PageTemplateBlockResponseDto[]> {
     const blocks = await this.repo.findByTemplateId(query.templateId);
     return blocks.map((b) => PageTemplateBlockResponseDto.fromDomain(b));
   }

@@ -1,5 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
-import { SystemRole } from 'src/modules/users/domain/entities/user.entity';
+import { SystemRole } from 'src/modules/identity/identity.types';
 
 export const SYSTEM_ROLES_KEY = 'system_roles';
 

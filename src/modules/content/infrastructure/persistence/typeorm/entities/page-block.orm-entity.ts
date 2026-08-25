@@ -3,7 +3,7 @@ import type {
   PageBlockStyleConfig,
 } from 'src/modules/content/domain/entities/page-block.entity';
 import { PageBlockType } from 'src/modules/content/domain/entities/page-block.entity';
-import { User } from 'src/modules/users/domain/entities/user.entity';
+import { User } from 'src/modules/identity/identity.types';
 import {
   Column,
   CreateDateColumn,

@@ -14,16 +14,13 @@ import { WorkspaceResolverService } from './common/services/workspace-resolver.s
 import { DatabaseModule } from './database/database.module';
 import { ActivityModule } from './modules/activity/activity.module';
 import { AttachmentModule } from './modules/attachment/attachment.module';
-import { AuthModule } from './modules/auth/auth.module';
+import { IdentityModule } from './modules/identity/identity.module';
 import { DatabaseModule as DatabaseModules } from './modules/database/database.module';
 import { MailModule } from './modules/mail/mail.module';
 import { MentionsModule } from './modules/mentions/mentions.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ContentModule } from './modules/content/content.module';
 import { PermissionModule } from './modules/permission/permission.module';
-import { RefreshTokenModule } from './modules/refresh_token/refresh_token.module';
-import { UserProfilesModule } from './modules/user_profiles/user_profiles.module';
-import { UsersModule } from './modules/users/users.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
 
 @Module({
@@ -51,12 +48,9 @@ import { WorkspaceModule } from './modules/workspace/workspace.module';
       }),
     }),
     DatabaseModule,
-    UsersModule,
-    AuthModule,
+    IdentityModule,
     WorkspaceModule,
     PermissionModule,
-    RefreshTokenModule,
-    UserProfilesModule,
     ContentModule,
     MailModule,
     AttachmentModule,

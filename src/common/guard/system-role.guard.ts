@@ -1,4 +1,4 @@
-// src/modules/auth/guards/system-role.guard.ts
+// Shared authorization guard; Identity owns the SystemRole contract.
 import {
   CanActivate,
   ExecutionContext,
@@ -6,7 +6,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { SystemRole } from 'src/modules/users/domain/entities/user.entity';
+import { SystemRole } from 'src/modules/identity/identity.types';
 import { SYSTEM_ROLES_KEY } from '../decorator/require-system-roles.decorator';
 
 @Injectable()

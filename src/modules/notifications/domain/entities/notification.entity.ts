@@ -1,6 +1,6 @@
 // src/modules/notifications/domain/entities/notification.entity.ts
 
-import { User } from 'src/modules/users/domain/entities/user.entity';
+import { User } from 'src/modules/identity/identity.types';
 import {
   Column,
   CreateDateColumn,

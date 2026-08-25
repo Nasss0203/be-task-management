@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AddWorkspaceMemberDto } from 'src/modules/workspace/application/dto/workspace-member/workspace-member.dto';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
-import { SystemRole } from 'src/modules/users/domain/entities/user.entity';
+import { SystemRole } from 'src/modules/identity/identity.types';
 import { type IAuth } from 'src/types/auth';
 import { WorkspaceMemberController } from './workspace-member.controller';
 import { AddWorkspaceMemberCommand } from 'src/modules/workspace/application/commands/workspace-member/add-workspace-member/add-workspace-member.command';

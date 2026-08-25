@@ -14,7 +14,9 @@ export class FindPageTemplateHandler {
     private readonly repo: PageTemplateRepository,
   ) {}
 
-  async execute(query: FindPageTemplateQuery): Promise<PageTemplateResponseDto> {
+  async execute(
+    query: FindPageTemplateQuery,
+  ): Promise<PageTemplateResponseDto> {
     const template = await this.repo.findById(query.id);
     if (!template) {
       throw new NotFoundException('Template not found');

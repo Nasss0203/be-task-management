@@ -1,5 +1,5 @@
 import { PageBlockOrmEntity } from './page-block.orm-entity';
-import { User } from 'src/modules/users/domain/entities/user.entity';
+import { User } from 'src/modules/identity/identity.types';
 import { WorkspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace.orm-entity';
 import {
   Column,

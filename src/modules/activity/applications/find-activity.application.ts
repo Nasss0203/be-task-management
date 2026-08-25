@@ -8,15 +8,15 @@ import {
 import { type FindActivityService } from '../interfaces/services/find-activity.service.interface';
 import { ACTIVITY_TYPES } from '../interfaces/types';
 import { ActivityMapper } from '../mapper/activity.mapper';
-import { USER_TYPES } from '../../users/interfaces/types';
-import { type FindUserService } from '../../users/interfaces/services/find-user.service.interface';
+import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
+import { type FindUserService } from 'src/modules/identity/application/ports/find-user.service.interface';
 
 @Injectable()
 export class FindActivityApplicationImpl implements FindActivityApplication {
   constructor(
     @Inject(ACTIVITY_TYPES.services.FindActivityService)
     private readonly findActivityService: FindActivityService,
-    @Inject(USER_TYPES.services.FindUserService)
+    @Inject(IDENTITY_TYPES.services.FindUserService)
     private readonly findUserService: FindUserService,
   ) {}
 

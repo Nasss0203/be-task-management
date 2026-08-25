@@ -88,7 +88,8 @@ export class PageTemplateBlock {
     content?: Record<string, unknown> | null;
     orderIndex?: number;
   }) {
-    if (params.parentBlockId !== undefined) this.parentBlockId = params.parentBlockId;
+    if (params.parentBlockId !== undefined)
+      this.parentBlockId = params.parentBlockId;
     if (params.type !== undefined) this.type = params.type;
     if (params.content !== undefined) this.content = params.content;
     if (params.orderIndex !== undefined) this.orderIndex = params.orderIndex;

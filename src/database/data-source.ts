@@ -11,7 +11,7 @@ import { PageBlockOrmEntity } from 'src/modules/content/infrastructure/persisten
 import { PageTemplateBlockOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-template-block.orm-entity';
 import { PageTemplateOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 import { Permission } from 'src/modules/permission/domain/entities/permission.entity';
-import { RefreshToken } from 'src/modules/refresh_token/entities/refresh_token.entity';
+import { RefreshToken } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/refresh-token.orm-entity';
 
 import { DatabasePropertyOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-property.orm-entity';
 import { DatabaseRowOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-row.orm-entity';
@@ -20,8 +20,8 @@ import { DatabaseViewOrmEntity } from 'src/modules/database/infrastructure/persi
 import { DatabaseOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database.orm-entity';
 import { PropertyOptionOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/property-option.orm-entity';
 import { RowValueOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/row-value.orm-entity';
-import { UserProfile } from 'src/modules/user_profiles/domain/entities/user_profile.entity';
-import { User } from 'src/modules/users/domain/entities/user.entity';
+import { UserProfile } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user-profile.orm-entity';
+import { User } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user.orm-entity';
 import { WorkspaceInviteOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-invite.orm-entity';
 import { WorkspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-member.orm-entity';
 import { WorkspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace.orm-entity';

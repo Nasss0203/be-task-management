@@ -18,9 +18,9 @@ import { PageBlockOrmEntity } from 'src/modules/content/infrastructure/persisten
 import { PageTemplateBlockOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-template-block.orm-entity';
 import { PageTemplateOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 import { Permission } from 'src/modules/permission/domain/entities/permission.entity';
-import { RefreshToken } from 'src/modules/refresh_token/entities/refresh_token.entity';
-import { UserProfile } from 'src/modules/user_profiles/domain/entities/user_profile.entity';
-import { User } from 'src/modules/users/domain/entities/user.entity';
+import { RefreshToken } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/refresh-token.orm-entity';
+import { UserProfile } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user-profile.orm-entity';
+import { User } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user.orm-entity';
 import { WorkspaceInviteOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-invite.orm-entity';
 import { WorkspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-member.orm-entity';
 import { WorkspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace.orm-entity';

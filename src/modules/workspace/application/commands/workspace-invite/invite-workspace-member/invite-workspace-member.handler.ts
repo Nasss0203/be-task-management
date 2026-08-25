@@ -18,8 +18,8 @@ import {
 import { WorkspaceInviteStatus } from 'src/modules/workspace/domain/enums/workspace-invite-status.enum';
 import { type CreateNotificationService } from 'src/modules/notifications/interfaces/services/create.notifications.service.interface';
 import { NOTIFICATION_TYPES } from 'src/modules/notifications/interfaces/types';
-import { type FindUserService } from 'src/modules/users/interfaces/services/find-user.service.interface';
-import { USER_TYPES } from 'src/modules/users/interfaces/types';
+import { type FindUserService } from 'src/modules/identity/application/ports/find-user.service.interface';
+import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
 import {
   CreateWorkspaceInviteDto,
   InviteRecipientDto,
@@ -48,7 +48,7 @@ export class InviteWorkspaceMemberHandler {
     @Inject(WORKSPACE_TYPES.repositories.WorkspaceRepository)
     private readonly workspaceRepository: WorkspaceRepository,
 
-    @Inject(USER_TYPES.services.FindUserService)
+    @Inject(IDENTITY_TYPES.services.FindUserService)
     private readonly findUserService: FindUserService,
 
     @Inject(NOTIFICATION_TYPES.services.CreateNotificationService)

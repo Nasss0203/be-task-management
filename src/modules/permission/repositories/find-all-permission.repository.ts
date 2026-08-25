@@ -21,7 +21,9 @@ export class FindPermissionRepositoryImpl implements FindPermissionRepository {
   ) {}
 
   private getRepo(context?: PersistenceContext): Repository<Permission> {
-    return context ? (context as EntityManager).getRepository(Permission) : this.repo;
+    return context
+      ? (context as EntityManager).getRepository(Permission)
+      : this.repo;
   }
 
   async findAll(context?: PersistenceContext): Promise<PermissionModel[]> {
@@ -40,7 +42,8 @@ export class FindPermissionRepositoryImpl implements FindPermissionRepository {
     workspaceId: string,
     context?: PersistenceContext,
   ): Promise<string[]> {
-    const repo = context ? (context as EntityManager).getRepository(WorkspaceMemberOrmEntity)
+    const repo = context
+      ? (context as EntityManager).getRepository(WorkspaceMemberOrmEntity)
       : this.workspaceMemberRepo;
 
     const membership = await repo.findOne({

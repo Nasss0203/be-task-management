@@ -18,8 +18,8 @@ import type { WorkspaceInviteRepository } from 'src/modules/workspace/domain/rep
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 import type { WorkspaceRepository } from 'src/modules/workspace/domain/repositories/workspace.repository';
 import { MailService } from 'src/modules/mail/mail.service';
-import { type FindUserService } from 'src/modules/users/interfaces/services/find-user.service.interface';
-import { USER_TYPES } from 'src/modules/users/interfaces/types';
+import { type FindUserService } from 'src/modules/identity/application/ports/find-user.service.interface';
+import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
 
 @Injectable()
 export class ResendWorkspaceInviteHandler {
@@ -35,7 +35,7 @@ export class ResendWorkspaceInviteHandler {
     @Inject(WORKSPACE_TYPES.repositories.WorkspaceRepository)
     private readonly workspaceRepository: WorkspaceRepository,
 
-    @Inject(USER_TYPES.services.FindUserService)
+    @Inject(IDENTITY_TYPES.services.FindUserService)
     private readonly findUserService: FindUserService,
 
     private readonly mailService: MailService,

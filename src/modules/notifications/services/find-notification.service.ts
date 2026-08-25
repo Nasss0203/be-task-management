@@ -48,7 +48,10 @@ export class FindNotificationServiceImpl implements FindNotificationService {
     );
   }
 
-  async countUnread(userId: string, context?: PersistenceContext): Promise<number> {
+  async countUnread(
+    userId: string,
+    context?: PersistenceContext,
+  ): Promise<number> {
     if (!userId) {
       throw new BadRequestException('userId is required');
     }

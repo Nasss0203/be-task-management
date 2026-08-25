@@ -43,7 +43,10 @@ export interface FindNotificationRepository {
     context?: PersistenceContext,
   ): Promise<NotificationModel[]>;
 
-  countUnread(receiverId: string, context?: PersistenceContext): Promise<number>;
+  countUnread(
+    receiverId: string,
+    context?: PersistenceContext,
+  ): Promise<number>;
 
   existsByReceiverTypeAndTask(
     input: NotificationTaskLookupInput,

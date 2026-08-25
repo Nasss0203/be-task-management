@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FindActivityApplicationImpl } from './applications/find-activity.application';
 import { ActivityController } from './controller/activity.controller';
@@ -8,10 +8,13 @@ import { CreateActivityRepositoryImpl } from './repositories/create.activity.rep
 import { FindActivityRepositoryImpl } from './repositories/find.activity.repository';
 import { CreateActivityServiceImpl } from './services/create.activity.service';
 import { FindActivityServiceImpl } from './services/find.activity.service';
-import { UsersModule } from '../users/users.module';
+import { IdentityModule } from '../identity/identity.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Activity]), UsersModule],
+  imports: [
+    TypeOrmModule.forFeature([Activity]),
+    forwardRef(() => IdentityModule),
+  ],
   controllers: [ActivityController],
   providers: [
     {

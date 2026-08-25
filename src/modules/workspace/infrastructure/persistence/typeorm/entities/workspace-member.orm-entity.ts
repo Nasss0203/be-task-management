@@ -1,4 +1,4 @@
-import { User } from 'src/modules/users/domain/entities/user.entity';
+import { User } from 'src/modules/identity/identity.types';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import {
   Column,

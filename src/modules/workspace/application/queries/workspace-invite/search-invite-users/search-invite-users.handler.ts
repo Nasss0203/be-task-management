@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { type FindUserService } from 'src/modules/users/interfaces/services/find-user.service.interface';
-import { USER_TYPES } from 'src/modules/users/interfaces/types';
+import { type FindUserService } from 'src/modules/identity/application/ports/find-user.service.interface';
+import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
 import {
   InviteSuggestionStatus,
   InviteSuggestionType,
@@ -11,7 +11,7 @@ import { SearchInviteUsersQuery } from './search-invite-users.query';
 @Injectable()
 export class SearchInviteUsersHandler {
   constructor(
-    @Inject(USER_TYPES.services.FindUserService)
+    @Inject(IDENTITY_TYPES.services.FindUserService)
     private readonly findUserService: FindUserService,
   ) {}
 

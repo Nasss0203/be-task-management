@@ -15,32 +15,40 @@ export class TypeOrmPageTemplateRepository implements PageTemplateRepository {
     private readonly repo: Repository<PageTemplateOrmEntity>,
   ) {}
 
-  private resolveRepo(context?: PersistenceContext): Repository<PageTemplateOrmEntity> {
+  private resolveRepo(
+    context?: PersistenceContext,
+  ): Repository<PageTemplateOrmEntity> {
     if (context) {
       return (context as EntityManager).getRepository(PageTemplateOrmEntity);
     }
     return this.repo;
   }
 
-  async findById(id: string, context?: PersistenceContext): Promise<PageTemplate | null> {
+  async findById(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<PageTemplate | null> {
     const orm = await this.resolveRepo(context).findOne({
-      where: { id, },
+      where: { id },
     });
     return orm ? PageTemplateMapper.toDomain(orm) : null;
   }
 
-  async findByWorkspace(workspaceId: string, context?: PersistenceContext): Promise<PageTemplate[]> {
+  async findByWorkspace(
+    workspaceId: string,
+    context?: PersistenceContext,
+  ): Promise<PageTemplate[]> {
     const orms = await this.resolveRepo(context).find({
-      where: [
-        { workspaceId, },
-        { isSystem: true, },
-      ],
+      where: [{ workspaceId }, { isSystem: true }],
       order: { createdAt: 'DESC' },
     });
     return orms.map(PageTemplateMapper.toDomain);
   }
 
-  async save(template: PageTemplate, context?: PersistenceContext): Promise<PageTemplate> {
+  async save(
+    template: PageTemplate,
+    context?: PersistenceContext,
+  ): Promise<PageTemplate> {
     const orm = PageTemplateMapper.toOrm(template);
     const saved = await this.resolveRepo(context).save(orm);
     return PageTemplateMapper.toDomain(saved);

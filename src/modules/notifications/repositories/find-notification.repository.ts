@@ -22,7 +22,9 @@ export class FindNotificationRepositoryImpl implements FindNotificationRepositor
   ) {}
 
   private getRepo(context?: PersistenceContext): Repository<Notification> {
-    return context ? (context as EntityManager).getRepository(Notification) : this.repo;
+    return context
+      ? (context as EntityManager).getRepository(Notification)
+      : this.repo;
   }
 
   async findMyNotifications(

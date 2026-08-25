@@ -20,7 +20,7 @@ export class PageTemplateBlocksController {
     @Param('templateId') templateId: string,
   ): Promise<PageTemplateBlockResponseDto[]> {
     return this.findPageTemplateBlockHandler.execute(
-      new FindPageTemplateBlockByTemplateQuery(templateId)
+      new FindPageTemplateBlockByTemplateQuery(templateId),
     );
   }
 }

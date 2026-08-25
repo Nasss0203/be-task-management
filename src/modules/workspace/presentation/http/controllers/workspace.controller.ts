@@ -68,16 +68,11 @@ export class WorkspacesController {
   @Post()
   @StrictWriteRateLimit()
   @ResponseMessage('Workspace created')
-  async create(
-    @Body() dto: CreateWorkspaceDto,
-    @Auth() auth: IAuth,
-  ) {
+  async create(@Body() dto: CreateWorkspaceDto, @Auth() auth: IAuth) {
     return this.createWorkspaceHandler.execute(
       new CreateWorkspaceCommand(auth.id, dto.name),
     );
   }
-
-
 
   @Get()
   @ResponseMessage('Find all workspace')

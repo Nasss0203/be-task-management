@@ -12,7 +12,10 @@ export interface UpdateNotificationRepository {
     context?: PersistenceContext,
   ): Promise<number>;
 
-  markAllAsRead(receiverId: string, context?: PersistenceContext): Promise<number>;
+  markAllAsRead(
+    receiverId: string,
+    context?: PersistenceContext,
+  ): Promise<number>;
 
   markAsRead(
     notificationId: string,

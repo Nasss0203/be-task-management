@@ -1,11 +1,11 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { ActivityModule } from 'src/modules/activity/activity.module';
 import { MailModule } from 'src/modules/mail/mail.module';
 import { NotificationsModule } from 'src/modules/notifications/notifications.module';
 import { ContentModule } from 'src/modules/content/content.module';
-import { UsersModule } from 'src/modules/users/users.module';
+import { IdentityModule } from 'src/modules/identity/identity.module';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { CreateDefaultWorkspaceHandler } from './application/commands/workspace/create-default-workspace/create-default-workspace.handler';
 import { CreateWorkspaceHandler } from './application/commands/workspace/create-workspace/create-workspace.handler';
@@ -51,8 +51,8 @@ import { DatabaseModule } from 'src/database/database.module';
       WorkspaceInviteOrmEntity,
     ]),
     ContentModule,
-    ActivityModule,
-    UsersModule,
+    forwardRef(() => ActivityModule),
+    forwardRef(() => IdentityModule),
     MailModule,
     NotificationsModule,
     DatabaseModule,

@@ -8,7 +8,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { type FindPermissionService } from 'src/modules/permission/interfaces/services/find-all-permission.service.interface';
 import { PERMISSION_TYPES } from 'src/modules/permission/interfaces/types';
-import { SystemRole } from 'src/modules/users/domain/entities/user.entity';
+import { SystemRole } from 'src/modules/identity/identity.types';
 import { PERMISSIONS_KEY } from '../decorator/require-permissions.decorator';
 import {
   WORKSPACE_CONTEXT_KEY,

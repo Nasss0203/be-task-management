@@ -18,7 +18,9 @@ export class CreateActivityRepositoryImpl implements CreateActivityRepository {
   ) {}
 
   private getRepo(context?: PersistenceContext): Repository<Activity> {
-    return context ? (context as EntityManager).getRepository(Activity) : this.repo;
+    return context
+      ? (context as EntityManager).getRepository(Activity)
+      : this.repo;
   }
 
   async save(
