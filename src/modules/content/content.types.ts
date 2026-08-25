@@ -11,6 +11,8 @@ export const CONTENT_TYPES = {
     CreatePageBlockHandler: Symbol.for('CreatePageBlockHandler'),
     FindPageBlockHandler: Symbol.for('FindPageBlockHandler'),
     UpdatePageBlockHandler: Symbol.for('UpdatePageBlockHandler'),
+    ReorderPageBlockHandler: Symbol.for('ReorderPageBlockHandler'),
+    MovePageBlockHandler: Symbol.for('MovePageBlockHandler'),
     DeletePageBlockHandler: Symbol.for('DeletePageBlockHandler'),
 
     CreatePageTemplateHandler: Symbol.for('CreatePageTemplateHandler'),
@@ -18,10 +20,16 @@ export const CONTENT_TYPES = {
     UpdatePageTemplateHandler: Symbol.for('UpdatePageTemplateHandler'),
     DeletePageTemplateHandler: Symbol.for('DeletePageTemplateHandler'),
 
-    CreatePageTemplateBlockHandler: Symbol.for('CreatePageTemplateBlockHandler'),
+    CreatePageTemplateBlockHandler: Symbol.for(
+      'CreatePageTemplateBlockHandler',
+    ),
     FindPageTemplateBlockHandler: Symbol.for('FindPageTemplateBlockHandler'),
-    UpdatePageTemplateBlockHandler: Symbol.for('UpdatePageTemplateBlockHandler'),
-    DeletePageTemplateBlockHandler: Symbol.for('DeletePageTemplateBlockHandler'),
+    UpdatePageTemplateBlockHandler: Symbol.for(
+      'UpdatePageTemplateBlockHandler',
+    ),
+    DeletePageTemplateBlockHandler: Symbol.for(
+      'DeletePageTemplateBlockHandler',
+    ),
   },
   repositories: {
     PageRepository: Symbol.for('PageRepository'),

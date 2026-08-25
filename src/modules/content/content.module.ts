@@ -23,6 +23,8 @@ import { FindPageHandler } from './application/queries/page/find-page.handler';
 // PageBlock Handlers
 import { CreatePageBlockHandler } from './application/commands/page/create-page-block.handler';
 import { UpdatePageBlockHandler } from './application/commands/page/update-page-block.handler';
+import { ReorderPageBlockHandler } from './application/commands/page/reorder-page-block.handler';
+import { MovePageBlockHandler } from './application/commands/page/move-page-block.handler';
 import { DeletePageBlockHandler } from './application/commands/page/delete-page-block.handler';
 import { FindPageBlockHandler } from './application/queries/page/find-page-block.handler';
 
@@ -58,6 +60,7 @@ const repositories = [
 ];
 
 import { ContentPageProvisioningService } from './application/services/content-page-provisioning.service';
+import { PageBlockOrderingService } from './application/services/page-block-ordering.service';
 
 const pageHandlers = [
   {
@@ -88,6 +91,14 @@ const pageBlockHandlers = [
     useClass: UpdatePageBlockHandler,
   },
   {
+    provide: CONTENT_TYPES.applications.ReorderPageBlockHandler,
+    useClass: ReorderPageBlockHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.MovePageBlockHandler,
+    useClass: MovePageBlockHandler,
+  },
+  {
     provide: CONTENT_TYPES.applications.DeletePageBlockHandler,
     useClass: DeletePageBlockHandler,
   },
@@ -115,6 +126,8 @@ const ports = [
   },
 ];
 
+const applicationServices = [PageBlockOrderingService];
+
 import { DatabaseModule } from 'src/database/database.module';
 
 @Module({
@@ -138,6 +151,7 @@ import { DatabaseModule } from 'src/database/database.module';
     ...pageHandlers,
     ...pageBlockHandlers,
     ...pageTemplateHandlers,
+    ...applicationServices,
     ...ports,
   ],
   exports: [

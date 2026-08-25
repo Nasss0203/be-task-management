@@ -38,10 +38,16 @@ import {
 } from 'src/modules/content/application/commands/page/create-page-block.handler';
 import {
   UpdatePageBlockCommand,
-  ReorderPageBlockCommand,
-  MovePageBlockCommand,
   UpdatePageBlockHandler,
 } from 'src/modules/content/application/commands/page/update-page-block.handler';
+import {
+  ReorderPageBlockCommand,
+  ReorderPageBlockHandler,
+} from 'src/modules/content/application/commands/page/reorder-page-block.handler';
+import {
+  MovePageBlockCommand,
+  MovePageBlockHandler,
+} from 'src/modules/content/application/commands/page/move-page-block.handler';
 import {
   DeletePageBlockCommand,
   RestorePageBlockCommand,
@@ -60,6 +66,12 @@ export class PageBlockController {
   constructor(
     @Inject(CONTENT_TYPES.applications.UpdatePageBlockHandler)
     private readonly updatePageBlockHandler: UpdatePageBlockHandler,
+
+    @Inject(CONTENT_TYPES.applications.ReorderPageBlockHandler)
+    private readonly reorderPageBlockHandler: ReorderPageBlockHandler,
+
+    @Inject(CONTENT_TYPES.applications.MovePageBlockHandler)
+    private readonly movePageBlockHandler: MovePageBlockHandler,
 
     @Inject(CONTENT_TYPES.applications.CreatePageBlockHandler)
     private readonly createPageBlockHandler: CreatePageBlockHandler,
@@ -146,7 +158,7 @@ export class PageBlockController {
   reorder(
     @Body() reorderPageBlockDto: ReorderPageBlockDto,
   ): Promise<PageBlockResponseDto[]> {
-    return this.updatePageBlockHandler.reorder(
+    return this.reorderPageBlockHandler.execute(
       new ReorderPageBlockCommand(reorderPageBlockDto),
     );
   }
@@ -160,7 +172,7 @@ export class PageBlockController {
     @Param('blockId', ParseUUIDPipe) blockId: string,
     @Body() movePageBlockDto: MovePageBlockDto,
   ): Promise<PageBlockResponseDto> {
-    return this.updatePageBlockHandler.move(
+    return this.movePageBlockHandler.execute(
       new MovePageBlockCommand(blockId, movePageBlockDto),
     );
   }

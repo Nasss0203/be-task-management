@@ -21,6 +21,7 @@ export enum PageBlockType {
   TABLE_SIMPLE = 'TABLE_SIMPLE',
   MERMAID = 'MERMAID',
   BUTTON = 'BUTTON',
+  TOGGLE = 'TOGGLE',
 }
 
 export type PageBlockDatabaseViewDataConfig = {

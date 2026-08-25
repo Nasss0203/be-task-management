@@ -13,6 +13,7 @@ import {
   type PageBlockJson,
   type PageBlockStyleConfig,
 } from 'src/modules/content/domain/entities/page-block.entity';
+import { canContainChildren } from 'src/modules/content/domain/policies/page-block-container.policy';
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
@@ -72,6 +73,12 @@ export class CreatePageBlockHandler {
         if (parent.getPageId() !== command.input.pageId) {
           throw new BadRequestException(
             'Parent page block belongs to another page',
+          );
+        }
+
+        if (!canContainChildren(parent.getType())) {
+          throw new BadRequestException(
+            `Block type ${parent.getType()} cannot contain children`,
           );
         }
       }
