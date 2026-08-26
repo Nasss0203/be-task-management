@@ -7,8 +7,10 @@ import { CreateDatabaseRowHandler } from './application/commands/create-database
 import { CreateDatabaseViewHandler } from './application/commands/create-database-view/create-database-view.handler';
 import { CreateDatabaseHandler } from './application/commands/create-database/create-database.handler';
 import { DeleteDatabaseRowHandler } from './application/commands/delete-database-row/delete-database-row.handler';
+import { DeleteDatabaseViewHandler } from './application/commands/delete-database-view/delete-database-view.handler';
 import { DeletePropertyOptionHandler } from './application/commands/delete-property-option/delete-property-option.handler';
 import { DeletePropertyHandler } from './application/commands/delete-property/delete-property.handler';
+import { RenameDatabaseViewHandler } from './application/commands/rename-database-view/rename-database-view.handler';
 import { RenamePropertyHandler } from './application/commands/rename-property/rename-property.handler';
 import { SetRowValueHandler } from './application/commands/set-row-value/set-row-value.handler';
 import { UpdatePropertyOptionHandler } from './application/commands/update-property-option/update-property-option.handler';
@@ -72,6 +74,8 @@ import { DatabaseController } from './presentation/http/controllers/database.con
     DeletePropertyOptionHandler,
     CreateDatabaseViewHandler,
     GetDatabaseViewsHandler,
+    RenameDatabaseViewHandler,
+    DeleteDatabaseViewHandler,
     {
       provide: DATABASE_TYPES.repositories.DatabaseRepository,
       useClass: TypeOrmDatabaseRepository,

@@ -2,9 +2,11 @@ export const IDENTITY_TYPES = {
   repositories: {
     UserRepository: Symbol('IdentityUserRepository'),
     RefreshTokenRepository: Symbol('IdentityRefreshTokenRepository'),
+    UserProfileRepository: Symbol('UserProfileRepository'),
   },
   services: {
     FindUserService: Symbol('IdentityFindUserService'),
+    UserProfilePreferenceService: Symbol('UserProfilePreferenceService'),
   },
 };
 

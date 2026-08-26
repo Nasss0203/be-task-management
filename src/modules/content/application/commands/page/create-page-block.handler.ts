@@ -117,8 +117,15 @@ export class CreatePageBlockHandler {
   ): Promise<PageBlockResponseDto> {
     return this.uow.runInTransaction(async (context) => {
       const block = await this.pageBlockRepo.findById(command.blockId, context);
+
       if (!block) {
         throw new NotFoundException('Page block not found');
+      }
+
+      if (block.getType() !== PageBlockType.DATABASE_VIEW) {
+        throw new BadRequestException(
+          'Only DATABASE_VIEW blocks can reference a database view',
+        );
       }
 
       block.update({
@@ -129,6 +136,7 @@ export class CreatePageBlockHandler {
       });
 
       const updatedBlock = await this.pageBlockRepo.save(block, context);
+
       return PageBlockResponseDto.fromDomain(updatedBlock);
     });
   }

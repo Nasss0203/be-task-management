@@ -1,6 +1,6 @@
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
-import { SystemRole } from '../enums/system-role.enum';
 import { UserModel } from '../aggregates/user/user.model';
+import { SystemRole } from '../enums/system-role.enum';
 
 export interface UserRecord {
   id: string;
@@ -74,7 +74,10 @@ export interface UserRepository {
     input: CreateLocalUserInput,
     context?: PersistenceContext,
   ): Promise<UserRecord>;
-  createGoogleUser(input: CreateGoogleUserInput): Promise<UserRecord>;
+  createGoogleUser(
+    input: CreateGoogleUserInput,
+    context?: PersistenceContext,
+  ): Promise<UserRecord>;
   save(user: UserRecord): Promise<UserRecord>;
 
   findUserByUsername(username: string): Promise<UserModel | null>;

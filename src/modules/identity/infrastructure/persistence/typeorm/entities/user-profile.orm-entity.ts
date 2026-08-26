@@ -1,4 +1,3 @@
-import { User } from './user.orm-entity';
 import {
   Column,
   CreateDateColumn,
@@ -8,6 +7,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { User } from './user.orm-entity';
 
 @Entity('user_profiles')
 export class UserProfile {
@@ -20,6 +20,13 @@ export class UserProfile {
   @OneToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @Column({
+    name: 'last_active_workspace_id',
+    type: 'uuid',
+    nullable: true,
+  })
+  lastActiveWorkspaceId: string | null;
 
   @Column({
     name: 'display_name',

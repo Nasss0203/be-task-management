@@ -8,7 +8,6 @@ import {
   Post,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
-import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 import {
   ReadRateLimit,
   StrictWriteRateLimit,
@@ -16,12 +15,13 @@ import {
 } from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
 
 import { WorkspaceOverviewResponseDto } from 'src/modules/workspace/application/dto/workspace/response/workspace-overview.response.dto';
-import { UpdateWorkspaceDto } from 'src/modules/workspace/application/dto/workspace/update-workspace.dto';
 import { UpdateWorkspaceLayoutModeDto } from 'src/modules/workspace/application/dto/workspace/update-workspace-layout-mode.dto';
+import { UpdateWorkspaceDto } from 'src/modules/workspace/application/dto/workspace/update-workspace.dto';
 
 import { RemoveWorkspaceFromTrashCommand } from 'src/modules/workspace/application/commands/workspace/remove-workspace-from-trash/remove-workspace-from-trash.command';
 import { RemoveWorkspaceFromTrashHandler } from 'src/modules/workspace/application/commands/workspace/remove-workspace-from-trash/remove-workspace-from-trash.handler';
@@ -29,24 +29,26 @@ import { RestoreWorkspaceCommand } from 'src/modules/workspace/application/comma
 import { RestoreWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/restore-workspace/restore-workspace.handler';
 import { SoftDeleteWorkspaceCommand } from 'src/modules/workspace/application/commands/workspace/soft-delete-workspace/soft-delete-workspace.command';
 import { SoftDeleteWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/soft-delete-workspace/soft-delete-workspace.handler';
-import { UpdateWorkspaceCommand } from 'src/modules/workspace/application/commands/workspace/update-workspace/update-workspace.command';
-import { UpdateWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/update-workspace/update-workspace.handler';
 import { UpdateWorkspaceLayoutModeCommand } from 'src/modules/workspace/application/commands/workspace/update-workspace-layout-mode/update-workspace-layout-mode.command';
 import { UpdateWorkspaceLayoutModeHandler } from 'src/modules/workspace/application/commands/workspace/update-workspace-layout-mode/update-workspace-layout-mode.handler';
-import { GetWorkspaceQuery } from 'src/modules/workspace/application/queries/workspace/get-workspace/get-workspace.query';
-import { GetWorkspaceHandler } from 'src/modules/workspace/application/queries/workspace/get-workspace/get-workspace.handler';
-import { GetWorkspaceAccessQuery } from 'src/modules/workspace/application/queries/workspace/get-workspace-access/get-workspace-access.query';
+import { UpdateWorkspaceCommand } from 'src/modules/workspace/application/commands/workspace/update-workspace/update-workspace.command';
+import { UpdateWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/update-workspace/update-workspace.handler';
 import { GetWorkspaceAccessHandler } from 'src/modules/workspace/application/queries/workspace/get-workspace-access/get-workspace-access.handler';
-import { GetWorkspaceOverviewQuery } from 'src/modules/workspace/application/queries/workspace/get-workspace-overview/get-workspace-overview.query';
+import { GetWorkspaceAccessQuery } from 'src/modules/workspace/application/queries/workspace/get-workspace-access/get-workspace-access.query';
 import { GetWorkspaceOverviewHandler } from 'src/modules/workspace/application/queries/workspace/get-workspace-overview/get-workspace-overview.handler';
-import { ListDeletedWorkspacesQuery } from 'src/modules/workspace/application/queries/workspace/list-deleted-workspaces/list-deleted-workspaces.query';
+import { GetWorkspaceOverviewQuery } from 'src/modules/workspace/application/queries/workspace/get-workspace-overview/get-workspace-overview.query';
+import { GetWorkspaceHandler } from 'src/modules/workspace/application/queries/workspace/get-workspace/get-workspace.handler';
+import { GetWorkspaceQuery } from 'src/modules/workspace/application/queries/workspace/get-workspace/get-workspace.query';
 import { ListDeletedWorkspacesHandler } from 'src/modules/workspace/application/queries/workspace/list-deleted-workspaces/list-deleted-workspaces.handler';
-import { ListWorkspacesQuery } from 'src/modules/workspace/application/queries/workspace/list-workspaces/list-workspaces.query';
+import { ListDeletedWorkspacesQuery } from 'src/modules/workspace/application/queries/workspace/list-deleted-workspaces/list-deleted-workspaces.query';
 import { ListWorkspacesHandler } from 'src/modules/workspace/application/queries/workspace/list-workspaces/list-workspaces.handler';
+import { ListWorkspacesQuery } from 'src/modules/workspace/application/queries/workspace/list-workspaces/list-workspaces.query';
 
-import { CreateWorkspaceDto } from 'src/modules/workspace/application/dto/workspace/create-workspace.dto';
 import { CreateWorkspaceCommand } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.command';
 import { CreateWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.handler';
+import { SelectWorkspaceCommand } from 'src/modules/workspace/application/commands/workspace/select-workspace/select-workspace.command';
+import { SelectWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/select-workspace/select-workspace.handler';
+import { CreateWorkspaceDto } from 'src/modules/workspace/application/dto/workspace/create-workspace.dto';
 
 @Controller('workspaces')
 @ReadRateLimit()
@@ -63,6 +65,7 @@ export class WorkspacesController {
     private readonly softDeleteWorkspaceHandler: SoftDeleteWorkspaceHandler,
     private readonly restoreWorkspaceHandler: RestoreWorkspaceHandler,
     private readonly removeWorkspaceFromTrashHandler: RemoveWorkspaceFromTrashHandler,
+    private readonly selectWorkspaceHandler: SelectWorkspaceHandler,
   ) {}
 
   @Post()
@@ -124,6 +127,24 @@ export class WorkspacesController {
     return this.getWorkspaceAccessHandler.execute(
       new GetWorkspaceAccessQuery(auth.id, workspaceId),
     );
+  }
+
+  @Patch(':workspaceId/select')
+  @WriteRateLimit()
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
+  @RequirePermissions(PERMISSIONS.WORKSPACE_READ)
+  @ResponseMessage('Workspace selected')
+  async selectWorkspace(
+    @Param('workspaceId') workspaceId: string,
+    @Auth() auth: IAuth,
+  ) {
+    await this.selectWorkspaceHandler.execute(
+      new SelectWorkspaceCommand(auth.id, workspaceId),
+    );
+
+    return {
+      workspaceId,
+    };
   }
 
   @Patch(':workspaceId/layout-mode')

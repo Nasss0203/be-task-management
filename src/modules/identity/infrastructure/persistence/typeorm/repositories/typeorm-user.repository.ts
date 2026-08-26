@@ -1,19 +1,19 @@
-import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, Repository, EntityManager } from 'typeorm';
+import { UserModel } from 'src/modules/identity/domain/aggregates/user/user.model';
 import { SystemRole } from 'src/modules/identity/domain/enums/system-role.enum';
 import {
   CreateGoogleUserInput,
   CreateLocalUserInput,
   SearchInviteUsersInput,
   SearchInviteUsersOutput,
-  UserRepository,
   UserRecord,
+  UserRepository,
 } from 'src/modules/identity/domain/repositories/user.repository';
-import { UserModel } from 'src/modules/identity/domain/aggregates/user/user.model';
 import { User } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user.orm-entity';
 import { UserMapper } from 'src/modules/identity/infrastructure/persistence/typeorm/mappers/users.mapper';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
+import { Brackets, EntityManager, Repository } from 'typeorm';
 
 @Injectable()
 export class TypeOrmUserRepository implements UserRepository {
@@ -102,8 +102,13 @@ export class TypeOrmUserRepository implements UserRepository {
     return repo.save(user);
   }
 
-  async createGoogleUser(input: CreateGoogleUserInput): Promise<UserRecord> {
-    const user = this.userRepo.create({
+  async createGoogleUser(
+    input: CreateGoogleUserInput,
+    context?: PersistenceContext,
+  ): Promise<UserRecord> {
+    const repo = this.getRepo(context);
+
+    const user = repo.create({
       email: input.email,
       username: input.username,
       googleId: input.googleId,
@@ -113,9 +118,8 @@ export class TypeOrmUserRepository implements UserRepository {
       isEmailVerified: true,
     });
 
-    return this.userRepo.save(user);
+    return repo.save(user);
   }
-
   save(user: UserRecord): Promise<UserRecord> {
     return this.userRepo.save(user as User);
   }

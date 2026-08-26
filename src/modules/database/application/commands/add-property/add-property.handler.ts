@@ -1,12 +1,21 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+
 import { randomUUID } from 'crypto';
 
 import { DATABASE_TYPES } from '../../../database.types';
+
 import { DatabaseProperty } from '../../../domain/aggregates/database/database-property.entity';
-import { type DatabaseViewRepository } from '../../../domain/repositories/database-view.repository';
-import { type DatabaseRepository } from '../../../domain/repositories/database.repository';
+import { PropertyOption } from '../../../domain/aggregates/database/property-option.entity';
+
+import { PropertyType } from '../../../domain/enums/property-type.enum';
+
+import type { DatabaseViewRepository } from '../../../domain/repositories/database-view.repository';
+
+import type { DatabaseRepository } from '../../../domain/repositories/database.repository';
 
 import { DatabasePropertyDto } from '../../dto/database-property.dto';
+
+import { DEFAULT_STATUS_OPTIONS } from 'src/modules/database/domain/constants/default-property-options.constant';
 import { AddPropertyCommand } from './add-property.command';
 
 @Injectable()
@@ -33,6 +42,19 @@ export class AddPropertyHandler {
       command.type,
       String(database.getProperties().length),
     );
+
+    if (command.type === PropertyType.STATUS) {
+      for (const [index, option] of DEFAULT_STATUS_OPTIONS.entries()) {
+        property.addOption(
+          new PropertyOption(
+            randomUUID(),
+            option.name,
+            option.color,
+            String(index),
+          ),
+        );
+      }
+    }
 
     database.addProperty(property);
 

@@ -1,18 +1,32 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 
 import { CreateDatabaseViewCommand } from '../../../application/commands/create-database-view/create-database-view.command';
 import { CreateDatabaseViewHandler } from '../../../application/commands/create-database-view/create-database-view.handler';
 
+import { DeleteDatabaseViewCommand } from 'src/modules/database/application/commands/delete-database-view/delete-database-view.command';
+import { DeleteDatabaseViewHandler } from 'src/modules/database/application/commands/delete-database-view/delete-database-view.handler';
+import { RenameDatabaseViewCommand } from 'src/modules/database/application/commands/rename-database-view/rename-database-view.command';
+import { RenameDatabaseViewHandler } from 'src/modules/database/application/commands/rename-database-view/rename-database-view.handler';
 import { GetDatabaseViewsHandler } from 'src/modules/database/application/queries/get-database-views/get-database-views.handler';
 import { GetDatabaseViewsQuery } from 'src/modules/database/application/queries/get-database-views/get-database-views.query';
 import { CreateDatabaseViewRequest } from '../requests/create-database-view.request';
+import { RenameDatabaseViewRequest } from '../requests/rename-database-view.request';
 
 @Controller('databases/:databaseId/views')
 export class DatabaseViewController {
   constructor(
     private readonly createDatabaseViewHandler: CreateDatabaseViewHandler,
-
+    private readonly deleteDatabaseViewHandler: DeleteDatabaseViewHandler,
     private readonly getDatabaseViewsHandler: GetDatabaseViewsHandler,
+    private readonly renameDatabaseViewHandler: RenameDatabaseViewHandler,
   ) {}
 
   @Post()
@@ -30,5 +44,30 @@ export class DatabaseViewController {
     return this.getDatabaseViewsHandler.execute(
       new GetDatabaseViewsQuery(databaseId),
     );
+  }
+
+  @Patch(':viewId')
+  async renameView(
+    @Param('databaseId') databaseId: string,
+    @Param('viewId') viewId: string,
+    @Body() request: RenameDatabaseViewRequest,
+  ) {
+    return this.renameDatabaseViewHandler.execute(
+      new RenameDatabaseViewCommand(databaseId, viewId, request.name),
+    );
+  }
+
+  @Delete(':viewId')
+  async deleteView(
+    @Param('databaseId') databaseId: string,
+    @Param('viewId') viewId: string,
+  ) {
+    await this.deleteDatabaseViewHandler.execute(
+      new DeleteDatabaseViewCommand(databaseId, viewId),
+    );
+
+    return {
+      id: viewId,
+    };
   }
 }
