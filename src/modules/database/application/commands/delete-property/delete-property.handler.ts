@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 
 import { DATABASE_TYPES } from '../../../database.types';
-import { CannotDeleteTitlePropertyException } from '../../../domain/exceptions/cannot-delete-title-property.exception';
+import { CannotDeleteDefaultPropertyException } from '../../../domain/exceptions/cannot-delete-default-property.exception';
 import { DatabasePropertyNotFoundException } from '../../../domain/exceptions/database-property-not-found.exception';
 import { type DatabaseRepository } from '../../../domain/repositories/database.repository';
 
@@ -37,7 +37,7 @@ export class DeletePropertyHandler {
         throw new HttpException(error.message, HttpStatus.NOT_FOUND);
       }
 
-      if (error instanceof CannotDeleteTitlePropertyException) {
+      if (error instanceof CannotDeleteDefaultPropertyException) {
         throw new BadRequestException(error.message);
       }
 

@@ -40,6 +40,8 @@ export class AddPropertyHandler {
       database.getId(),
       command.name,
       command.type,
+      false,
+      true,
       String(database.getProperties().length),
     );
 
@@ -81,8 +83,9 @@ export class AddPropertyHandler {
       databaseId: property.getDatabaseId(),
       name: property.getName(),
       type: property.getType(),
+      isDefault: property.getIsDefault(),
+      isHideable: property.getIsHideable(),
       position: property.getPosition(),
-
       options: property.getOptions().map((option) => ({
         id: option.getId(),
         name: option.getName(),

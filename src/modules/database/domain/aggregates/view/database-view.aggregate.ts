@@ -1,4 +1,5 @@
 import { DatabaseViewType } from '../../enums/database-view-type.enum';
+import { DatabaseViewPropertyNotFoundException } from '../../exceptions/database-view-property-not-found.exception';
 import { DatabaseViewProperty } from './database-view-property.entity';
 
 interface CreateDatabaseViewProps {
@@ -127,5 +128,17 @@ export class DatabaseView {
     this.properties.push(viewProperty);
 
     return viewProperty;
+  }
+
+  setPropertyVisibility(propertyId: string, visible: boolean): void {
+    const property = this.properties.find(
+      (item) => item.getPropertyId() === propertyId,
+    );
+
+    if (!property) {
+      throw new DatabaseViewPropertyNotFoundException();
+    }
+
+    property.setVisible(visible);
   }
 }

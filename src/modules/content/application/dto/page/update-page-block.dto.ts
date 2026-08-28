@@ -1,17 +1,22 @@
 import {
   IsBoolean,
+  IsEnum,
   IsInt,
   IsObject,
   IsOptional,
   IsString,
   Min,
 } from 'class-validator';
-import type {
-  PageBlockJson,
-  PageBlockStyleConfig,
+import {
+  PageBlockType,
+  type PageBlockJson,
+  type PageBlockStyleConfig,
 } from 'src/modules/content/domain/entities/page-block.entity';
-
 export class UpdatePageBlockDto {
+  @IsOptional()
+  @IsEnum(PageBlockType)
+  type?: PageBlockType;
+
   @IsOptional()
   @IsString()
   title?: string | null;

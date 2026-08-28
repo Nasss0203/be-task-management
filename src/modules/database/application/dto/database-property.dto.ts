@@ -12,6 +12,8 @@ export interface DatabasePropertyDto {
   databaseId: string;
   name: string;
   type: PropertyType;
+  isDefault: boolean;
+  isHideable: boolean;
   position: string;
   options: PropertyOptionDto[];
 }

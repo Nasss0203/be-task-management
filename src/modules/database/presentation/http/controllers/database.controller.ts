@@ -25,6 +25,7 @@ export class DatabaseController {
         id: property.getId(),
         name: property.getName(),
         type: property.getType(),
+        isDefault: property.getIsDefault(),
         position: property.getPosition(),
       })),
     };

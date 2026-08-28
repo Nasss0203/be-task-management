@@ -35,4 +35,10 @@ export interface PageBlockRepository {
     pageBlocks: PageBlock[],
     context?: PersistenceContext,
   ): Promise<PageBlock[]>;
+  shiftSiblingOrderIndexes(
+    pageId: string,
+    parentBlockId: string | null,
+    fromOrderIndex: number,
+    context?: PersistenceContext,
+  ): Promise<void>;
 }

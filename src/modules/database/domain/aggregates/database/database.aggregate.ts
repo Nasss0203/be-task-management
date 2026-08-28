@@ -1,5 +1,5 @@
 import { PropertyType } from '../../enums/property-type.enum';
-import { CannotDeleteTitlePropertyException } from '../../exceptions/cannot-delete-title-property.exception';
+import { CannotDeleteDefaultPropertyException } from '../../exceptions/cannot-delete-default-property.exception';
 import { DatabasePropertyNotFoundException } from '../../exceptions/database-property-not-found.exception';
 import { DuplicatePropertyNameException } from '../../exceptions/duplicate-property-name.exception';
 import { DatabaseProperty } from './database-property.entity';
@@ -9,9 +9,11 @@ interface CreateDatabaseParams {
   id: string;
   pageId: string;
   name: string;
-  titlePropertyId: string;
-}
 
+  titlePropertyId: string;
+  assigneePropertyId: string;
+  dueDatePropertyId: string;
+}
 interface RestoreDatabaseParams {
   id: string;
   pageId: string;
@@ -44,10 +46,34 @@ export class Database {
       params.id,
       'Name',
       PropertyType.TITLE,
+      true, // isDefault
+      false, // isHideable
       '0',
     );
 
+    const assigneeProperty = new DatabaseProperty(
+      params.assigneePropertyId,
+      params.id,
+      'Assignee',
+      PropertyType.PERSON,
+      true, // isDefault
+      true, // isHideable
+      '1',
+    );
+
+    const dueDateProperty = new DatabaseProperty(
+      params.dueDatePropertyId,
+      params.id,
+      'Due date',
+      PropertyType.DATE,
+      true, // isDefault
+      true, // isHideable
+      '2',
+    );
+
     database.addProperty(titleProperty);
+    database.addProperty(assigneeProperty);
+    database.addProperty(dueDateProperty);
 
     return database;
   }
@@ -143,8 +169,8 @@ export class Database {
 
     const property = this.properties[propertyIndex];
 
-    if (property.getType() === PropertyType.TITLE) {
-      throw new CannotDeleteTitlePropertyException();
+    if (property.getIsDefault()) {
+      throw new CannotDeleteDefaultPropertyException();
     }
 
     this.properties.splice(propertyIndex, 1);

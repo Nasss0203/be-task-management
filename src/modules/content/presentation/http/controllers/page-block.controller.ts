@@ -20,45 +20,45 @@ import {
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
-import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
-import { type IAuth } from 'src/types/auth';
-import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import {
-  AddDatabaseViewToBlockDto,
-  CreatePageBlockDto,
-} from 'src/modules/content/application/dto/page/create-page-block.dto';
-import { ReorderPageBlockDto } from 'src/modules/content/application/dto/page/reorder-page-block.dto';
-import { MovePageBlockDto } from 'src/modules/content/application/dto/page/move-page-block.dto';
-import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/response/page-block.response.dto';
-import { UpdatePageBlockDto } from 'src/modules/content/application/dto/page/update-page-block.dto';
-import {
-  CreatePageBlockCommand,
   AddDatabaseViewToBlockCommand,
+  CreatePageBlockCommand,
   CreatePageBlockHandler,
 } from 'src/modules/content/application/commands/page/create-page-block.handler';
 import {
-  UpdatePageBlockCommand,
-  UpdatePageBlockHandler,
-} from 'src/modules/content/application/commands/page/update-page-block.handler';
-import {
-  ReorderPageBlockCommand,
-  ReorderPageBlockHandler,
-} from 'src/modules/content/application/commands/page/reorder-page-block.handler';
+  DeletePageBlockCommand,
+  DeletePageBlockHandler,
+  RestorePageBlockCommand,
+} from 'src/modules/content/application/commands/page/delete-page-block.handler';
 import {
   MovePageBlockCommand,
   MovePageBlockHandler,
 } from 'src/modules/content/application/commands/page/move-page-block.handler';
 import {
-  DeletePageBlockCommand,
-  RestorePageBlockCommand,
-  DeletePageBlockHandler,
-} from 'src/modules/content/application/commands/page/delete-page-block.handler';
+  ReorderPageBlockCommand,
+  ReorderPageBlockHandler,
+} from 'src/modules/content/application/commands/page/reorder-page-block.handler';
 import {
-  FindPageBlockByPageQuery,
-  FindPageBlockByIdQuery,
+  UpdatePageBlockCommand,
+  UpdatePageBlockHandler,
+} from 'src/modules/content/application/commands/page/update-page-block.handler';
+import {
+  AddDatabaseViewToBlockDto,
+  CreatePageBlockDto,
+} from 'src/modules/content/application/dto/page/create-page-block.dto';
+import { MovePageBlockDto } from 'src/modules/content/application/dto/page/move-page-block.dto';
+import { ReorderPageBlockDto } from 'src/modules/content/application/dto/page/reorder-page-block.dto';
+import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/response/page-block.response.dto';
+import { UpdatePageBlockDto } from 'src/modules/content/application/dto/page/update-page-block.dto';
+import {
   FindDeletedPageBlocksQuery,
+  FindPageBlockByIdQuery,
+  FindPageBlockByPageQuery,
   FindPageBlockHandler,
 } from 'src/modules/content/application/queries/page/find-page-block.handler';
+import { CONTENT_TYPES } from 'src/modules/content/content.types';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
+import { type IAuth } from 'src/types/auth';
 
 @Controller('pageBlock')
 @ReadRateLimit()
@@ -96,6 +96,7 @@ export class PageBlockController {
       new CreatePageBlockCommand({
         pageId: createPageBlockDto.page_id,
         parentBlockId: createPageBlockDto.parent_block_id,
+        afterBlockId: createPageBlockDto.after_block_id,
         type: createPageBlockDto.type,
         title: createPageBlockDto.title,
         positionX: createPageBlockDto.position_x,
@@ -187,6 +188,7 @@ export class PageBlockController {
   ) {
     return this.updatePageBlockHandler.execute(
       new UpdatePageBlockCommand(id, {
+        type: updatePageBlockDto.type,
         title: updatePageBlockDto.title,
         positionX: updatePageBlockDto.position_x,
         positionY: updatePageBlockDto.position_y,

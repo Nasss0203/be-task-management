@@ -1,18 +1,26 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+
 import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/response/page-block.response.dto';
+
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
-import type {
-  PageBlockJson,
-  PageBlockStyleConfig,
+
+import {
+  PageBlockType,
+  type PageBlockJson,
+  type PageBlockStyleConfig,
 } from 'src/modules/content/domain/entities/page-block.entity';
+
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
+
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
+
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 
 export class UpdatePageBlockCommand {
   constructor(
     public readonly blockId: string,
     public readonly updates: {
+      type?: PageBlockType;
       title?: string | null;
       positionX?: number | null;
       positionY?: number | null;
@@ -31,6 +39,7 @@ export class UpdatePageBlockHandler {
   constructor(
     @Inject(CONTENT_TYPES.repositories.PageBlockRepository)
     private readonly pageBlockRepo: PageBlockRepository,
+
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
   ) {}
@@ -40,8 +49,13 @@ export class UpdatePageBlockHandler {
   ): Promise<PageBlockResponseDto> {
     return this.uow.runInTransaction(async (context) => {
       const block = await this.pageBlockRepo.findById(command.blockId, context);
+
       if (!block) {
         throw new NotFoundException('Page block not found');
+      }
+
+      if (command.updates.type !== undefined) {
+        block.changeType(command.updates.type);
       }
 
       block.update({
@@ -57,6 +71,7 @@ export class UpdatePageBlockHandler {
       });
 
       const updatedBlock = await this.pageBlockRepo.save(block, context);
+
       return PageBlockResponseDto.fromDomain(updatedBlock);
     });
   }

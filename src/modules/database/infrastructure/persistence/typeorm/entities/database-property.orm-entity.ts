@@ -36,6 +36,19 @@ export class DatabasePropertyOrmEntity {
   type: PropertyType;
 
   @Column({
+    name: 'is_default',
+    type: 'boolean',
+    default: false,
+  })
+  isDefault: boolean;
+
+  @Column({
+    name: 'is_hideable',
+    type: 'boolean',
+    default: true,
+  })
+  isHideable: boolean;
+  @Column({
     type: 'varchar',
     length: 255,
   })

@@ -21,6 +21,10 @@ export class CreatePageBlockDto {
   @IsUUID()
   parent_block_id?: string | null;
 
+  @IsOptional()
+  @IsUUID()
+  after_block_id?: string | null;
+
   @IsEnum(PageBlockType)
   type: PageBlockType;
 

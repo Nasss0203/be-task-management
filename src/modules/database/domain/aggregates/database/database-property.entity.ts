@@ -12,6 +12,8 @@ export class DatabaseProperty {
     readonly databaseId: string,
     name: string,
     readonly type: PropertyType,
+    private readonly isDefault: boolean,
+    private readonly isHideable: boolean,
     private position: string,
     options: PropertyOption[] = [],
   ) {
@@ -37,6 +39,14 @@ export class DatabaseProperty {
 
   getType(): PropertyType {
     return this.type;
+  }
+
+  getIsDefault(): boolean {
+    return this.isDefault;
+  }
+
+  getIsHideable(): boolean {
+    return this.isHideable;
   }
 
   getPosition(): string {

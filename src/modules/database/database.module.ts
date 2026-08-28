@@ -13,7 +13,9 @@ import { DeletePropertyHandler } from './application/commands/delete-property/de
 import { RenameDatabaseViewHandler } from './application/commands/rename-database-view/rename-database-view.handler';
 import { RenamePropertyHandler } from './application/commands/rename-property/rename-property.handler';
 import { SetRowValueHandler } from './application/commands/set-row-value/set-row-value.handler';
+import { SetViewPropertyVisibilityHandler } from './application/commands/set-view-property-visibility/set-view-property-visibility.handler';
 import { UpdatePropertyOptionHandler } from './application/commands/update-property-option/update-property-option.handler';
+import { GetDatabaseViewHandler } from './application/queries/get-database-view/get-database-view.handler';
 import { GetDatabaseRowsHandler } from './application/queries/get-database-rows/get-database-rows.handler';
 import { GetDatabaseViewsHandler } from './application/queries/get-database-views/get-database-views.handler';
 import { GetDatabaseHandler } from './application/queries/get-database/get-database.handler';
@@ -76,6 +78,8 @@ import { DatabaseController } from './presentation/http/controllers/database.con
     GetDatabaseViewsHandler,
     RenameDatabaseViewHandler,
     DeleteDatabaseViewHandler,
+    GetDatabaseViewHandler,
+    SetViewPropertyVisibilityHandler,
     {
       provide: DATABASE_TYPES.repositories.DatabaseRepository,
       useClass: TypeOrmDatabaseRepository,

@@ -47,6 +47,8 @@ export class DatabaseMapper {
     orm.databaseId = domain.getDatabaseId();
     orm.name = domain.getName();
     orm.type = domain.getType();
+    orm.isDefault = domain.getIsDefault();
+    orm.isHideable = domain.getIsHideable();
     orm.position = domain.getPosition();
 
     orm.options = domain.getOptions().map((option) => {
@@ -72,6 +74,8 @@ export class DatabaseMapper {
       orm.databaseId,
       orm.name,
       orm.type,
+      orm.isDefault,
+      orm.isHideable,
       orm.position,
       options,
     );

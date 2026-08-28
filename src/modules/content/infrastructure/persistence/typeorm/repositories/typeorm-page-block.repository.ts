@@ -1,12 +1,12 @@
-import { EntityManager } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { Repository } from 'typeorm';
 import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity';
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
+import type { Repository } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { PageBlockOrmEntity } from '../entities/page-block.orm-entity';
 import { PageBlockMapper } from '../mappers/page-block.mapper';
-import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 @Injectable()
 export class TypeOrmPageBlockRepository implements PageBlockRepository {
@@ -174,5 +174,58 @@ export class TypeOrmPageBlockRepository implements PageBlockRepository {
     );
     const saved = await this.resolveRepo(context).save(orms);
     return saved.map((orm) => PageBlockMapper.toDomain(orm));
+  }
+  async shiftSiblingOrderIndexes(
+    pageId: string,
+    parentBlockId: string | null,
+    fromOrderIndex: number,
+    context?: PersistenceContext,
+  ): Promise<void> {
+    const repo = this.resolveRepo(context);
+
+    const qb = repo
+      .createQueryBuilder('block')
+      .where('block.page_id = :pageId', {
+        pageId,
+      })
+      .andWhere('block.deleted_at IS NULL')
+      .andWhere('block.order_index >= :fromOrderIndex', {
+        fromOrderIndex,
+      });
+
+    if (parentBlockId === null) {
+      qb.andWhere('block.parent_block_id IS NULL');
+    } else {
+      qb.andWhere('block.parent_block_id = :parentBlockId', {
+        parentBlockId,
+      });
+    }
+
+    /**
+     * Quan trọng:
+     * lấy từ order_index lớn -> nhỏ.
+     *
+     * Ví dụ:
+     * 2, 3, 4
+     *
+     * Update:
+     * 4 -> 5
+     * 3 -> 4
+     * 2 -> 3
+     *
+     * Như vậy không đụng unique constraint.
+     */
+    const siblings = await qb.orderBy('block.order_index', 'DESC').getMany();
+
+    for (const sibling of siblings) {
+      await repo.update(
+        {
+          id: sibling.id,
+        },
+        {
+          order_index: sibling.order_index + 1,
+        },
+      );
+    }
   }
 }

@@ -41,6 +41,7 @@ export class PageBlock {
     private readonly id: string,
     private pageId: string,
     private parentBlockId: string | null,
+
     private type: PageBlockType,
     private title: string | null,
     private positionX: number | null,
@@ -218,6 +219,11 @@ export class PageBlock {
     if (params.styleConfig !== undefined) this.styleConfig = params.styleConfig;
     if (params.dataConfig !== undefined) this.dataConfig = params.dataConfig;
     if (params.isOpen !== undefined) this.isOpen = params.isOpen;
+    this.updatedAt = new Date();
+  }
+
+  changeType(type: PageBlockType) {
+    this.type = type;
     this.updatedAt = new Date();
   }
 

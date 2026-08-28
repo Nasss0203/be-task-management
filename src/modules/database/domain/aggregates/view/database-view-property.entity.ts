@@ -70,6 +70,10 @@ export class DatabaseViewProperty {
     return this.visible;
   }
 
+  setVisible(visible: boolean): void {
+    this.visible = visible;
+  }
+
   getWidth(): number | null {
     return this.width;
   }
@@ -80,14 +84,6 @@ export class DatabaseViewProperty {
     }
 
     this.position = position.trim();
-  }
-
-  show(): void {
-    this.visible = true;
-  }
-
-  hide(): void {
-    this.visible = false;
   }
 
   changeWidth(width: number | null): void {
