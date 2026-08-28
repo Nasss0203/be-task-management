@@ -37,4 +37,5 @@ export const CONTENT_TYPES = {
     PageTemplateRepository: Symbol.for('PageTemplateRepository'),
     PageTemplateBlockRepository: Symbol.for('PageTemplateBlockRepository'),
   },
+  bookmarkMetadataFetcher: Symbol('BookmarkMetadataFetcher'),
 };

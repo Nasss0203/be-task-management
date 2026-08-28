@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 
 import { Activity } from 'src/modules/activity/domain/entities/activity.entity';
-import { Attachment } from 'src/modules/attachment/domain/entities/attachment.entity';
+import { AttachmentOrmEntity } from 'src/modules/attachment/infrastructure/persistence/typeorm/entities/attachment.orm-entity';
 import { Mention } from 'src/modules/mentions/domain/entities/mention.entity';
 import { Notification } from 'src/modules/notifications/domain/entities/notification.entity';
 import { PageOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page.orm-entity';
@@ -47,7 +47,7 @@ export default new DataSource({
     PageOrmEntity,
     PageBlockOrmEntity,
     WorkspaceInviteOrmEntity,
-    Attachment,
+    AttachmentOrmEntity,
     Activity,
     Mention,
     Notification,

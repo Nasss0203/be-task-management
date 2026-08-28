@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Activity } from 'src/modules/activity/domain/entities/activity.entity';
-import { Attachment } from 'src/modules/attachment/domain/entities/attachment.entity';
+import { AttachmentOrmEntity } from 'src/modules/attachment/infrastructure/persistence/typeorm/entities/attachment.orm-entity';
 import { DatabasePropertyOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-property.orm-entity';
 import { DatabaseRowOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-row.orm-entity';
 import { DatabaseViewPropertyOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-view-property.orm-entity';
@@ -54,7 +54,7 @@ import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
           PageOrmEntity,
           PageBlockOrmEntity,
           WorkspaceInviteOrmEntity,
-          Attachment,
+          AttachmentOrmEntity,
           Activity,
           Mention,
           Notification,

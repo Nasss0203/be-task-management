@@ -1,44 +1,44 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
+import { DatabaseModule } from 'src/database/database.module';
+
+import { CreatePageBlockHandler } from './application/commands/page/create-page-block.handler';
+import { CreatePageHandler } from './application/commands/page/create-page.handler';
+import { DeletePageBlockHandler } from './application/commands/page/delete-page-block.handler';
+import { DeletePageHandler } from './application/commands/page/delete-page.handler';
+import { MovePageBlockHandler } from './application/commands/page/move-page-block.handler';
+import { ReorderPageBlockHandler } from './application/commands/page/reorder-page-block.handler';
+import { UpdatePageBlockHandler } from './application/commands/page/update-page-block.handler';
+import { UpdatePageHandler } from './application/commands/page/update-page.handler';
+
+import { FindPageTemplateBlockHandler } from './application/queries/page-template/find-page-template-block.handler';
+import { FindPageTemplateHandler } from './application/queries/page-template/find-page-template.handler';
+import { FindPageBlockHandler } from './application/queries/page/find-page-block.handler';
+import { FindPageHandler } from './application/queries/page/find-page.handler';
+import { ResolveBookmarkMetadataHandler } from './application/queries/resolve-bookmark-metadata/resolve-bookmark-metadata.handler';
+
+import { ContentPageProvisioningService } from './application/services/content-page-provisioning.service';
+import { PageBlockOrderingService } from './application/services/page-block-ordering.service';
+
 import { CONTENT_TYPES } from './content.types';
 
-// ORM Entities
-import { PageOrmEntity } from './infrastructure/persistence/typeorm/entities/page.orm-entity';
+import { HtmlBookmarkMetadataFetcherAdapter } from './infrastructure/metadata/html-bookmark-metadata-fetcher.adapter';
+
 import { PageBlockOrmEntity } from './infrastructure/persistence/typeorm/entities/page-block.orm-entity';
-import { PageTemplateOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 import { PageTemplateBlockOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-block.orm-entity';
+import { PageTemplateOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template.orm-entity';
+import { PageOrmEntity } from './infrastructure/persistence/typeorm/entities/page.orm-entity';
 
-// Repositories
-import { TypeOrmPageRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page.repository';
 import { TypeOrmPageBlockRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-block.repository';
-import { TypeOrmPageTemplateRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template.repository';
 import { TypeOrmPageTemplateBlockRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template-block.repository';
+import { TypeOrmPageTemplateRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template.repository';
+import { TypeOrmPageRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page.repository';
 
-// Page Handlers
-import { CreatePageHandler } from './application/commands/page/create-page.handler';
-import { UpdatePageHandler } from './application/commands/page/update-page.handler';
-import { DeletePageHandler } from './application/commands/page/delete-page.handler';
-import { FindPageHandler } from './application/queries/page/find-page.handler';
-
-// PageBlock Handlers
-import { CreatePageBlockHandler } from './application/commands/page/create-page-block.handler';
-import { UpdatePageBlockHandler } from './application/commands/page/update-page-block.handler';
-import { ReorderPageBlockHandler } from './application/commands/page/reorder-page-block.handler';
-import { MovePageBlockHandler } from './application/commands/page/move-page-block.handler';
-import { DeletePageBlockHandler } from './application/commands/page/delete-page-block.handler';
-import { FindPageBlockHandler } from './application/queries/page/find-page-block.handler';
-
-// PageTemplate Handlers
-import { FindPageTemplateHandler } from './application/queries/page-template/find-page-template.handler';
-
-// PageTemplateBlock Handlers
-import { FindPageTemplateBlockHandler } from './application/queries/page-template/find-page-template-block.handler';
-
-// Controllers
-import { PageController } from './presentation/http/controllers/page.controller';
 import { PageBlockController } from './presentation/http/controllers/page-block.controller';
-import { PageTemplatesController } from './presentation/http/controllers/page-templates.controller';
 import { PageTemplateBlocksController } from './presentation/http/controllers/page-template-blocks.controller';
+import { PageTemplatesController } from './presentation/http/controllers/page-templates.controller';
+import { PageController } from './presentation/http/controllers/page.controller';
 
 const repositories = [
   {
@@ -58,9 +58,6 @@ const repositories = [
     useClass: TypeOrmPageTemplateBlockRepository,
   },
 ];
-
-import { ContentPageProvisioningService } from './application/services/content-page-provisioning.service';
-import { PageBlockOrderingService } from './application/services/page-block-ordering.service';
 
 const pageHandlers = [
   {
@@ -119,16 +116,20 @@ const pageTemplateHandlers = [
   },
 ];
 
+const bookmarkHandlers = [ResolveBookmarkMetadataHandler];
+
+const applicationServices = [PageBlockOrderingService];
+
 const ports = [
   {
     provide: CONTENT_TYPES.ports.PageProvisioning,
     useClass: ContentPageProvisioningService,
   },
+  {
+    provide: CONTENT_TYPES.bookmarkMetadataFetcher,
+    useClass: HtmlBookmarkMetadataFetcherAdapter,
+  },
 ];
-
-const applicationServices = [PageBlockOrderingService];
-
-import { DatabaseModule } from 'src/database/database.module';
 
 @Module({
   imports: [
@@ -140,20 +141,24 @@ import { DatabaseModule } from 'src/database/database.module';
     ]),
     DatabaseModule,
   ],
+
   controllers: [
     PageController,
     PageBlockController,
     PageTemplatesController,
     PageTemplateBlocksController,
   ],
+
   providers: [
     ...repositories,
     ...pageHandlers,
     ...pageBlockHandlers,
     ...pageTemplateHandlers,
+    ...bookmarkHandlers,
     ...applicationServices,
     ...ports,
   ],
+
   exports: [
     CONTENT_TYPES.ports.PageProvisioning,
     CONTENT_TYPES.repositories.PageRepository,

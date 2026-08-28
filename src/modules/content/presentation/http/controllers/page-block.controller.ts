@@ -56,9 +56,12 @@ import {
   FindPageBlockByPageQuery,
   FindPageBlockHandler,
 } from 'src/modules/content/application/queries/page/find-page-block.handler';
+import { ResolveBookmarkMetadataHandler } from 'src/modules/content/application/queries/resolve-bookmark-metadata/resolve-bookmark-metadata.handler';
+import { ResolveBookmarkMetadataQuery } from 'src/modules/content/application/queries/resolve-bookmark-metadata/resolve-bookmark-metadata.query';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
+import { ResolveBookmarkMetadataRequest } from '../requests/resolve-bookmark-metadata.request';
 
 @Controller('pageBlock')
 @ReadRateLimit()
@@ -81,6 +84,8 @@ export class PageBlockController {
 
     @Inject(CONTENT_TYPES.applications.DeletePageBlockHandler)
     private readonly deletePageBlockHandler: DeletePageBlockHandler,
+
+    private readonly resolveBookmarkMetadataHandler: ResolveBookmarkMetadataHandler,
   ) {}
 
   @Post()
@@ -239,5 +244,14 @@ export class PageBlockController {
       new RestorePageBlockCommand(blockId),
     );
     return { success: true };
+  }
+
+  @Post('bookmark/metadata')
+  @ReadRateLimit()
+  @ResponseMessage('Resolve bookmark metadata')
+  resolveBookmarkMetadata(@Body() body: ResolveBookmarkMetadataRequest) {
+    return this.resolveBookmarkMetadataHandler.execute(
+      new ResolveBookmarkMetadataQuery(body.url),
+    );
   }
 }
