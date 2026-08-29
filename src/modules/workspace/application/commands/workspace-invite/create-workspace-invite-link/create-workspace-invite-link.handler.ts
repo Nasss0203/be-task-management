@@ -87,7 +87,7 @@ export class CreateWorkspaceInviteLinkHandler {
     invitedBy: string,
     roleName: WorkspaceRole,
   ): Promise<void> {
-    if (![WorkspaceRole.OWNER, WorkspaceRole.ADMIN].includes(roleName)) return;
+    if (![WorkspaceRole.OWNER].includes(roleName)) return;
 
     const inviterMember =
       await this.workspaceMemberRepository.findByWorkspaceAndUser(

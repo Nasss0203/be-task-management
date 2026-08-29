@@ -5,13 +5,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { RevokeWorkspaceInviteCommand } from './revoke-workspace-invite.command';
 import { WorkspaceInviteResponseDto } from 'src/modules/workspace/application/dto/workspace-invite/response/workspace-invite.response.dto';
 import { WorkspaceInviteStatus } from 'src/modules/workspace/domain/enums/workspace-invite-status.enum';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
-import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import type { WorkspaceInviteRepository } from 'src/modules/workspace/domain/repositories/workspace-invite.repository';
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
+import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
+import { RevokeWorkspaceInviteCommand } from './revoke-workspace-invite.command';
 
 @Injectable()
 export class RevokeWorkspaceInviteHandler {
@@ -39,11 +39,7 @@ export class RevokeWorkspaceInviteHandler {
         command.workspaceId,
         command.revokedBy,
       );
-    if (
-      !inviterMember ||
-      (inviterMember.getRole() !== WorkspaceRole.OWNER &&
-        inviterMember.getRole() !== WorkspaceRole.ADMIN)
-    ) {
+    if (!inviterMember || inviterMember.getRole() !== WorkspaceRole.OWNER) {
       throw new ForbiddenException('Only owner or admin can revoke an invite');
     }
 

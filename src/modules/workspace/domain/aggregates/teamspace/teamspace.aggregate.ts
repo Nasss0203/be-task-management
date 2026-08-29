@@ -1,15 +1,16 @@
-export class Page {
+import { TeamspaceVisibility } from '../../enums/teamspace-visibility.enum';
+
+export class Teamspace {
   constructor(
     private readonly id: string,
-    private workspaceId: string,
-    private title: string,
-    private slug: string | null,
+    private readonly workspaceId: string,
+    private name: string,
+    private slug: string,
+    private description: string | null,
     private icon: string | null,
-    private coverUrl: string | null,
-    private isTemplate: boolean,
-    private teamspaceId: string | null,
-    private createdBy: string,
-    private createdAt: Date,
+    private visibility: TeamspaceVisibility,
+    private readonly createdBy: string,
+    private readonly createdAt: Date,
     private updatedAt: Date,
     private deletedAt: Date | null = null,
     private deletedBy: string | null = null,
@@ -17,55 +18,51 @@ export class Page {
 
   static create(params: {
     workspaceId: string;
-    title: string;
+    name: string;
+    slug: string;
     createdBy: string;
-
-    slug?: string | null;
+    description?: string | null;
     icon?: string | null;
-    coverUrl?: string | null;
-    isTemplate?: boolean;
-
-    teamspaceId?: string | null;
-  }): Page {
-    return new Page(
+    visibility?: TeamspaceVisibility;
+  }): Teamspace {
+    return new Teamspace(
       crypto.randomUUID(),
       params.workspaceId,
-      params.title,
-      params.slug ?? null,
+      params.name,
+      params.slug,
+      params.description ?? null,
       params.icon ?? null,
-      params.coverUrl ?? null,
-      params.isTemplate ?? false,
-      params.teamspaceId ?? null,
+      params.visibility ?? TeamspaceVisibility.OPEN,
       params.createdBy,
       new Date(),
       new Date(),
+      null,
+      null,
     );
   }
 
   static restore(params: {
     id: string;
     workspaceId: string;
-    title: string;
-    slug: string | null;
+    name: string;
+    slug: string;
+    description: string | null;
     icon: string | null;
-    coverUrl: string | null;
-    isTemplate: boolean;
-    teamspaceId: string | null;
+    visibility: TeamspaceVisibility;
     createdBy: string;
     createdAt: Date;
     updatedAt: Date;
     deletedAt: Date | null;
     deletedBy: string | null;
-  }): Page {
-    return new Page(
+  }): Teamspace {
+    return new Teamspace(
       params.id,
       params.workspaceId,
-      params.title,
+      params.name,
       params.slug,
+      params.description,
       params.icon,
-      params.coverUrl,
-      params.isTemplate,
-      params.teamspaceId,
+      params.visibility,
       params.createdBy,
       params.createdAt,
       params.updatedAt,
@@ -82,28 +79,24 @@ export class Page {
     return this.workspaceId;
   }
 
-  getTeamspaceId(): string | null {
-    return this.teamspaceId;
+  getName(): string {
+    return this.name;
   }
 
-  getTitle(): string {
-    return this.title;
-  }
-
-  getSlug(): string | null {
+  getSlug(): string {
     return this.slug;
+  }
+
+  getDescription(): string | null {
+    return this.description;
   }
 
   getIcon(): string | null {
     return this.icon;
   }
 
-  getCoverUrl(): string | null {
-    return this.coverUrl;
-  }
-
-  getIsTemplate(): boolean {
-    return this.isTemplate;
+  getVisibility(): TeamspaceVisibility {
+    return this.visibility;
   }
 
   getCreatedBy(): string {
@@ -127,25 +120,30 @@ export class Page {
   }
 
   update(params: {
-    title?: string;
-    slug?: string | null;
+    name?: string;
+    slug?: string;
+    description?: string | null;
     icon?: string | null;
-    coverUrl?: string | null;
+    visibility?: TeamspaceVisibility;
   }): void {
-    if (params.title !== undefined) {
-      this.title = params.title;
+    if (params.name !== undefined) {
+      this.name = params.name;
     }
 
     if (params.slug !== undefined) {
       this.slug = params.slug;
     }
 
+    if (params.description !== undefined) {
+      this.description = params.description;
+    }
+
     if (params.icon !== undefined) {
       this.icon = params.icon;
     }
 
-    if (params.coverUrl !== undefined) {
-      this.coverUrl = params.coverUrl;
+    if (params.visibility !== undefined) {
+      this.visibility = params.visibility;
     }
 
     this.updatedAt = new Date();

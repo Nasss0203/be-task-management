@@ -18,32 +18,32 @@ import {
 } from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
-import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
-import { type IAuth } from 'src/types/auth';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
-import { CONTENT_TYPES } from 'src/modules/content/content.types';
-import { CreatePageDto } from 'src/modules/content/application/dto/page/create-page.dto';
-import { UpdatePageDto } from 'src/modules/content/application/dto/page/update-page.dto';
 import {
   CreatePageCommand,
   CreatePageHandler,
 } from 'src/modules/content/application/commands/page/create-page.handler';
 import {
+  DeletePageCommand,
+  DeletePageHandler,
+  PermanentlyDeletePageCommand,
+  RestorePageCommand,
+} from 'src/modules/content/application/commands/page/delete-page.handler';
+import {
   UpdatePageCommand,
   UpdatePageHandler,
 } from 'src/modules/content/application/commands/page/update-page.handler';
+import { CreatePageDto } from 'src/modules/content/application/dto/page/create-page.dto';
+import { UpdatePageDto } from 'src/modules/content/application/dto/page/update-page.dto';
 import {
-  DeletePageCommand,
-  PermanentlyDeletePageCommand,
-  RestorePageCommand,
-  DeletePageHandler,
-} from 'src/modules/content/application/commands/page/delete-page.handler';
-import {
-  FindPageByWorkspaceQuery,
   FindDeletedPagesQuery,
   FindPageByIdQuery,
+  FindPageByWorkspaceQuery,
   FindPageHandler,
 } from 'src/modules/content/application/queries/page/find-page.handler';
+import { CONTENT_TYPES } from 'src/modules/content/content.types';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
+import { type IAuth } from 'src/types/auth';
 
 @Controller('page')
 @ReadRateLimit()
@@ -73,6 +73,7 @@ export class PageController {
         auth.id,
         createPageDto.workspace_id,
         createPageDto.title,
+        createPageDto.teamspace_id ?? null,
         createPageDto.icon,
         createPageDto.cover_url,
       ),

@@ -9,17 +9,16 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { type FindUserService } from 'src/modules/identity/application/ports/find-user.service.interface';
+import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
 import { MailService } from 'src/modules/mail/mail.service';
 import {
   NotificationSenderType,
   NotificationSourceType,
   NotificationType,
 } from 'src/modules/notifications/domain/entities/notification.entity';
-import { WorkspaceInviteStatus } from 'src/modules/workspace/domain/enums/workspace-invite-status.enum';
 import { type CreateNotificationService } from 'src/modules/notifications/interfaces/services/create.notifications.service.interface';
 import { NOTIFICATION_TYPES } from 'src/modules/notifications/interfaces/types';
-import { type FindUserService } from 'src/modules/identity/application/ports/find-user.service.interface';
-import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
 import {
   CreateWorkspaceInviteDto,
   InviteRecipientDto,
@@ -27,6 +26,7 @@ import {
 } from 'src/modules/workspace/application/dto/workspace-invite/create-workspace-invite.dto';
 import { WorkspaceInviteResponseDto } from 'src/modules/workspace/application/dto/workspace-invite/response/workspace-invite.response.dto';
 import { WorkspaceInvite } from 'src/modules/workspace/domain/aggregates/workspace-invite/workspace-invite.aggregate';
+import { WorkspaceInviteStatus } from 'src/modules/workspace/domain/enums/workspace-invite-status.enum';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import type { WorkspaceInviteRepository } from 'src/modules/workspace/domain/repositories/workspace-invite.repository';
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
@@ -314,7 +314,7 @@ export class InviteWorkspaceMemberHandler {
     invitedBy: string,
     roleName: WorkspaceRole,
   ): Promise<void> {
-    if (![WorkspaceRole.OWNER, WorkspaceRole.ADMIN].includes(roleName)) return;
+    if (![WorkspaceRole.OWNER].includes(roleName)) return;
 
     const inviterMember =
       await this.workspaceMemberRepository.findByWorkspaceAndUser(

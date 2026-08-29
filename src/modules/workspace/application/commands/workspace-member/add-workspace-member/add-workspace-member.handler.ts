@@ -4,7 +4,6 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common';
-import { type UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import {
   ActivityAction,
   ActivityEntityType,
@@ -17,6 +16,7 @@ import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
+import { type UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 
 import { AddWorkspaceMemberCommand } from './add-workspace-member.command';
 
@@ -39,7 +39,7 @@ export class AddWorkspaceMemberHandler {
     return this.uow.runInTransaction(async (manager) => {
       const roleName = command.roleName ?? WorkspaceRole.MEMBER;
 
-      if ([WorkspaceRole.OWNER, WorkspaceRole.ADMIN].includes(roleName)) {
+      if ([WorkspaceRole.OWNER].includes(roleName)) {
         const actorMember =
           command.addedBy &&
           (await this.workspaceMemberRepository.findByWorkspaceAndUser(

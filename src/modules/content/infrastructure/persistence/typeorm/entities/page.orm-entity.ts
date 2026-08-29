@@ -1,4 +1,3 @@
-import { PageBlockOrmEntity } from './page-block.orm-entity';
 import { User } from 'src/modules/identity/identity.types';
 import { WorkspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace.orm-entity';
 import {
@@ -13,6 +12,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { PageBlockOrmEntity } from './page-block.orm-entity';
 
 @Entity('pages')
 @Index('IDX_PAGES_WORKSPACE_ID', ['workspace_id'])
@@ -46,6 +46,13 @@ export class PageOrmEntity {
 
   @Column({ default: false })
   is_template: boolean;
+
+  @Column({
+    name: 'teamspace_id',
+    type: 'uuid',
+    nullable: true,
+  })
+  teamspace_id: string | null;
 
   @Column('uuid', { name: 'created_by' })
   created_by: string;

@@ -5,7 +5,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { type UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import {
   ActivityAction,
   ActivityEntityType,
@@ -16,6 +15,7 @@ import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
+import { type UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 
 import { DeleteWorkspaceMemberCommand } from './delete-workspace-member.command';
 
@@ -59,22 +59,13 @@ export class DeleteWorkspaceMemberHandler {
           throw new ForbiddenException('Actor is not in the workspace');
         }
 
-        if (
-          ![WorkspaceRole.OWNER, WorkspaceRole.ADMIN].includes(
-            actorMember.getRole(),
-          )
-        ) {
+        if (![WorkspaceRole.OWNER].includes(actorMember.getRole())) {
           throw new ForbiddenException(
             'Only admin or owner can remove members',
           );
         }
 
-        if (
-          actorMember.getRole() === WorkspaceRole.ADMIN &&
-          [WorkspaceRole.OWNER, WorkspaceRole.ADMIN].includes(
-            targetMember.getRole(),
-          )
-        ) {
+        if ([WorkspaceRole.OWNER].includes(targetMember.getRole())) {
           throw new ForbiddenException(
             'Admins cannot remove Owners or other Admins',
           );

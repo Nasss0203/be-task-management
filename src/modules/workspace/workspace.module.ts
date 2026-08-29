@@ -40,7 +40,14 @@ import { WorkspacesController } from './presentation/http/controllers/workspace.
 import { WORKSPACE_TYPES } from './workspace.types';
 
 import { DatabaseModule } from 'src/database/database.module';
+import { CreateTeamspaceHandler } from './application/commands/teamspace/create-teamspace/create-teamspace.handler';
 import { SelectWorkspaceHandler } from './application/commands/workspace/select-workspace/select-workspace.handler';
+import { GetTeamspacesHandler } from './application/queries/teamspace/get-teamspaces/get-teamspaces.handler';
+import { TeamspaceMemberOrmEntity } from './infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
+import { TeamspaceOrmEntity } from './infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
+import { TypeOrmTeamspaceMemberRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-teamspace-member.repository';
+import { TypeOrmTeamspaceRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-teamspace.repository';
+import { TeamspaceController } from './presentation/http/controllers/teamspace.controller';
 
 @Module({
   imports: [
@@ -48,6 +55,8 @@ import { SelectWorkspaceHandler } from './application/commands/workspace/select-
       WorkspaceOrmEntity,
       WorkspaceMemberOrmEntity,
       WorkspaceInviteOrmEntity,
+      TeamspaceOrmEntity,
+      TeamspaceMemberOrmEntity,
     ]),
     ContentModule,
     forwardRef(() => ActivityModule),
@@ -60,6 +69,7 @@ import { SelectWorkspaceHandler } from './application/commands/workspace/select-
     WorkspacesController,
     WorkspaceMemberController,
     WorkspaceInviteController,
+    TeamspaceController,
   ],
   providers: [
     CreateDefaultWorkspaceHandler,
@@ -86,6 +96,8 @@ import { SelectWorkspaceHandler } from './application/commands/workspace/select-
     UpdateWorkspaceMemberRoleHandler,
     DeleteWorkspaceMemberHandler,
     ListWorkspaceMembersHandler,
+    CreateTeamspaceHandler,
+    GetTeamspacesHandler,
     {
       provide: WORKSPACE_TYPES.repositories.WorkspaceRepository,
       useClass: TypeOrmWorkspaceRepository,
@@ -97,6 +109,14 @@ import { SelectWorkspaceHandler } from './application/commands/workspace/select-
     {
       provide: WORKSPACE_TYPES.repositories.WorkspaceInviteRepository,
       useClass: TypeOrmWorkspaceInviteRepository,
+    },
+    {
+      provide: WORKSPACE_TYPES.repositories.TeamspaceRepository,
+      useClass: TypeOrmTeamspaceRepository,
+    },
+    {
+      provide: WORKSPACE_TYPES.repositories.TeamspaceMemberRepository,
+      useClass: TypeOrmTeamspaceMemberRepository,
     },
   ],
   exports: [CreateDefaultWorkspaceHandler],

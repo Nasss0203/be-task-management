@@ -8,6 +8,10 @@ export class CreatePageDto {
   title: string;
 
   @IsOptional()
+  @IsUUID()
+  teamspace_id?: string | null;
+
+  @IsOptional()
   @IsString()
   icon?: string | null;
 

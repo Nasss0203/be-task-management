@@ -8,18 +8,18 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { ResendWorkspaceInviteCommand } from './resend-workspace-invite.command';
+import { type FindUserService } from 'src/modules/identity/application/ports/find-user.service.interface';
+import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
+import { MailService } from 'src/modules/mail/mail.service';
 import { WorkspaceInviteResponseDto } from 'src/modules/workspace/application/dto/workspace-invite/response/workspace-invite.response.dto';
 import { WorkspaceInviteStatus } from 'src/modules/workspace/domain/enums/workspace-invite-status.enum';
 import { WorkspaceInviteType } from 'src/modules/workspace/domain/enums/workspace-invite-type.enum';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
-import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import type { WorkspaceInviteRepository } from 'src/modules/workspace/domain/repositories/workspace-invite.repository';
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 import type { WorkspaceRepository } from 'src/modules/workspace/domain/repositories/workspace.repository';
-import { MailService } from 'src/modules/mail/mail.service';
-import { type FindUserService } from 'src/modules/identity/application/ports/find-user.service.interface';
-import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
+import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
+import { ResendWorkspaceInviteCommand } from './resend-workspace-invite.command';
 
 @Injectable()
 export class ResendWorkspaceInviteHandler {
@@ -70,11 +70,7 @@ export class ResendWorkspaceInviteHandler {
         command.workspaceId,
         command.resentBy,
       );
-    if (
-      !inviterMember ||
-      (inviterMember.getRole() !== WorkspaceRole.OWNER &&
-        inviterMember.getRole() !== WorkspaceRole.ADMIN)
-    ) {
+    if (!inviterMember || inviterMember.getRole() !== WorkspaceRole.OWNER) {
       throw new ForbiddenException('Only owner or admin can resend an invite');
     }
 

@@ -1,8 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { CONTENT_TYPES } from 'src/modules/content/content.types';
-import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
-import { Page } from 'src/modules/content/domain/aggregates/page/page.aggregate';
+
 import { PageResponseDto } from 'src/modules/content/application/dto/page/response/page.response.dto';
+import { CONTENT_TYPES } from 'src/modules/content/content.types';
+import { Page } from 'src/modules/content/domain/aggregates/page/page.aggregate';
+import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import { generateSlug } from 'src/utils';
 
 export class CreatePageCommand {
@@ -10,6 +11,7 @@ export class CreatePageCommand {
     public readonly userId: string,
     public readonly workspaceId: string,
     public readonly title: string,
+    public readonly teamspaceId?: string | null,
     public readonly icon?: string | null,
     public readonly coverUrl?: string | null,
   ) {}
@@ -24,20 +26,26 @@ export class CreatePageHandler {
 
   async execute(command: CreatePageCommand): Promise<PageResponseDto> {
     const baseSlug = generateSlug(command.title).toLowerCase();
+
     let slug = baseSlug;
 
     if (await this.pageRepo.existsBySlug(command.workspaceId, slug)) {
       const uniqueSuffix = Date.now().toString(36);
+
       slug = `${baseSlug}-${uniqueSuffix}`;
     }
 
     const page = Page.create({
       workspaceId: command.workspaceId,
+      teamspaceId: command.teamspaceId ?? null,
+
       title: command.title,
       createdBy: command.userId,
+
       slug,
-      icon: command.icon || null,
-      coverUrl: command.coverUrl || null,
+      icon: command.icon ?? null,
+      coverUrl: command.coverUrl ?? null,
+
       isTemplate: false,
     });
 
