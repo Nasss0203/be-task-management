@@ -4,15 +4,15 @@ import {
   WorkspaceMember,
   WorkspaceMemberDetail,
 } from 'src/modules/workspace/domain/aggregates/workspace-member/workspace-member.aggregate';
-import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { DataSource, EntityManager, IsNull, Not, Repository } from 'typeorm';
+import { WorkspaceMemberOrmEntity } from '../entities/workspace-member.orm-entity';
 import {
   WorkspaceMemberDetailMapper,
   WorkspaceMemberDetailRaw,
 } from '../mappers/workspace-member-detail.mapper';
 import { WorkspaceMemberMapper } from '../mappers/workspace-member.mapper';
-import { WorkspaceMemberOrmEntity } from '../entities/workspace-member.orm-entity';
 
 @Injectable()
 export class TypeOrmWorkspaceMemberRepository implements WorkspaceMemberRepository {
@@ -107,43 +107,45 @@ export class TypeOrmWorkspaceMemberRepository implements WorkspaceMemberReposito
     return WorkspaceMemberDetailMapper.toDomain(raw);
   }
 
+  async findById(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<WorkspaceMember | null> {
+    const orm = await this.getRepo(context).findOne({
+      where: { id },
+    });
+
+    return orm ? WorkspaceMemberMapper.toDomain(orm) : null;
+  }
+
   async findDetailsByWorkspace(
     workspaceId: string,
     context?: PersistenceContext,
   ): Promise<WorkspaceMemberDetail[]> {
     const executor = this.resolveManager(context) ?? this.dataSource.manager;
+
     const raws = await executor.query<WorkspaceMemberDetailRaw[]>(
       `
-        SELECT
-          uw.id AS id,
-          uw.workspace_id AS workspace_id,
-          uw.user_id AS user_id,
-          u.username AS full_name,
-          u.email AS email,
-          u.avatar_url AS avatar_url,
-          uw.role_name AS role_name,
-          uw.last_opened_at AS "lastOpenedAt",
-          uw.joined_at AS "joinedAt"
-        FROM workspace_members uw
-        INNER JOIN users u
-          ON u.id = uw.user_id
-        WHERE uw.workspace_id = $1
-        GROUP BY
-          uw.id,
-          uw.workspace_id,
-          uw.user_id,
-          u.username,
-          u.email,
-          uw.role_name,
-          uw.last_opened_at,
-          uw.joined_at
-      `,
+      SELECT
+        uw.id AS id,
+        uw.workspace_id AS workspace_id,
+        uw.user_id AS user_id,
+        u.username AS full_name,
+        u.email AS email,
+        u.avatar_url AS avatar_url,
+        uw.role_name AS role_name,
+        uw.last_opened_at AS "lastOpenedAt",
+        uw.joined_at AS "joinedAt"
+      FROM workspace_members uw
+      INNER JOIN users u
+        ON u.id = uw.user_id
+      WHERE uw.workspace_id = $1
+    `,
       [workspaceId],
     );
 
     return raws.map((raw) => WorkspaceMemberDetailMapper.toDomain(raw));
   }
-
   async deleteByWorkspaceAndUser(
     workspaceId: string,
     userId: string,

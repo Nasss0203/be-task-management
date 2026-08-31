@@ -5,6 +5,7 @@ export interface PageRepository {
   findById(id: string, context?: PersistenceContext): Promise<Page | null>;
   findByWorkspace(
     workspaceId: string,
+    userId: string,
     context?: PersistenceContext,
   ): Promise<Page[]>;
   findDeletedByWorkspace(
@@ -23,4 +24,15 @@ export interface PageRepository {
     id: string,
     context?: PersistenceContext,
   ): Promise<Page | null>;
+
+  findAccessibleByWorkspace(
+    workspaceId: string,
+    userId: string,
+    context?: PersistenceContext,
+  ): Promise<Page[]>;
+  findAccessibleDeletedByWorkspace(
+    workspaceId: string,
+    userId: string,
+    context?: PersistenceContext,
+  ): Promise<Page[]>;
 }

@@ -1,8 +1,8 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
-import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
+import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 
 export class DeletePageCommand {
   constructor(
@@ -34,8 +34,9 @@ export class DeletePageHandler {
   ) {}
 
   async delete(command: DeletePageCommand): Promise<void> {
-    await this.uow.runInTransaction(async (manager) => {
-      const page = await this.pageRepo.findById(command.pageId, { manager });
+    console.log('🚀 ~ command~', command);
+    await this.uow.runInTransaction(async (context) => {
+      const page = await this.pageRepo.findById(command.pageId, context);
       if (!page) {
         throw new NotFoundException('Page not found');
       }
@@ -46,7 +47,7 @@ export class DeletePageHandler {
       }
 
       page.markAsDeleted(command.userId);
-      await this.pageRepo.save(page, { manager });
+      await this.pageRepo.save(page, context);
     });
   }
 

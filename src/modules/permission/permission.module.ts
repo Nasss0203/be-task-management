@@ -1,31 +1,41 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PageBlockOrmEntity } from '../content/infrastructure/persistence/typeorm/entities/page-block.orm-entity';
+import { PageOrmEntity } from '../content/infrastructure/persistence/typeorm/entities/page.orm-entity';
+import { TeamspaceMemberOrmEntity } from '../workspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
+import { TeamspaceOrmEntity } from '../workspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
 import { WorkspaceMemberOrmEntity } from '../workspace/infrastructure/persistence/typeorm/entities/workspace-member.orm-entity';
-import { PermissionController } from './controller/permission.controller';
-import { Permission } from './domain/entities/permission.entity';
-import { PERMISSION_TYPES } from './interfaces/types';
-import { PermissionService } from './permission.service';
-import { FindPermissionRepositoryImpl } from './repositories/find-all-permission.repository';
-import { FindPermissionServiceImpl } from './services/find-all-permission.service';
+import { AuthorizationService } from './application/services/authorization.service';
+import { TypeOrmResourceAuthorizationReader } from './infrastructure/persistence/typeorm/adapters/resource-authorization-reader.adapter';
+import { TypeOrmTeamspacePermissionReader } from './infrastructure/persistence/typeorm/adapters/teamspace-permission-reader.adapter';
+import { TypeOrmWorkspacePermissionReader } from './infrastructure/persistence/typeorm/adapters/workspace-permission-reader.adapter';
+import { PERMISSION_TYPES } from './permission.types';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Permission, WorkspaceMemberOrmEntity])],
-  controllers: [PermissionController],
+  imports: [
+    TypeOrmModule.forFeature([
+      WorkspaceMemberOrmEntity,
+      TeamspaceOrmEntity,
+      TeamspaceMemberOrmEntity,
+      PageOrmEntity,
+      PageBlockOrmEntity,
+    ]),
+  ],
   providers: [
-    PermissionService,
+    AuthorizationService,
     {
-      provide: PERMISSION_TYPES.repositories.FindPermissionRepository,
-      useClass: FindPermissionRepositoryImpl,
+      provide: PERMISSION_TYPES.ports.WorkspacePermissionReader,
+      useClass: TypeOrmWorkspacePermissionReader,
     },
-
     {
-      provide: PERMISSION_TYPES.services.FindPermissionService,
-      useClass: FindPermissionServiceImpl,
+      provide: PERMISSION_TYPES.ports.TeamspacePermissionReader,
+      useClass: TypeOrmTeamspacePermissionReader,
+    },
+    {
+      provide: PERMISSION_TYPES.ports.ResourceAuthorizationReader,
+      useClass: TypeOrmResourceAuthorizationReader,
     },
   ],
-  exports: [
-    PERMISSION_TYPES.repositories.FindPermissionRepository,
-    PERMISSION_TYPES.services.FindPermissionService,
-  ],
+  exports: [AuthorizationService],
 })
 export class PermissionModule {}

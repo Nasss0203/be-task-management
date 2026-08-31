@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { DatabaseModule } from 'src/database/database.module';
+import { PermissionModule } from 'src/modules/permission/permission.module';
 
 import { CreatePageBlockHandler } from './application/commands/page/create-page-block.handler';
 import { CreatePageHandler } from './application/commands/page/create-page.handler';
@@ -140,6 +141,7 @@ const ports = [
       PageTemplateBlockOrmEntity,
     ]),
     DatabaseModule,
+    PermissionModule,
   ],
 
   controllers: [

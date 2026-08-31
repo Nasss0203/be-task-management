@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ROLE_PERMISSION_MAP } from 'src/modules/permission/constants/role-permission-map.constant';
+import { WorkspacePermissionPolicy } from 'src/modules/permission/domain/policies/workspace-permission.policy';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import {
@@ -146,7 +146,11 @@ export class TypeOrmWorkspaceRepository implements WorkspaceRepository {
     );
 
     const permissions: string[] = Array.from(
-      new Set(roleRows.flatMap((role) => ROLE_PERMISSION_MAP[role.roleName])),
+      new Set(
+        roleRows.flatMap((role) =>
+          WorkspacePermissionPolicy.getPermissions(role.roleName),
+        ),
+      ),
     );
 
     return {

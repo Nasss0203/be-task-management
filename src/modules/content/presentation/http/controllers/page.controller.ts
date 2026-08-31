@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Query,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import {
@@ -64,8 +65,6 @@ export class PageController {
 
   @Post()
   @WriteRateLimit()
-  @WorkspaceContext({ source: 'body', key: 'workspace_id' })
-  @RequirePermissions(PERMISSIONS.PAGE_CREATE)
   @ResponseMessage('Create page')
   create(@Body() createPageDto: CreatePageDto, @Auth() auth: IAuth) {
     return this.createPageHandler.execute(
@@ -83,12 +82,20 @@ export class PageController {
   @Get('trash')
   @WorkspaceContext({ source: 'query', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.PAGE_READ)
-  async findDeletedPages(@Query('workspaceId') workspaceId: string) {
+  async findDeletedPages(
+    @Query('workspaceId') workspaceId: string,
+    @Auth() auth: IAuth,
+  ) {
     if (!workspaceId) {
       throw new BadRequestException('workspaceId is required');
     }
+
+    if (!auth?.id) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
     return this.findPageHandler.findDeletedPages(
-      new FindDeletedPagesQuery(workspaceId),
+      new FindDeletedPagesQuery(workspaceId, auth.id),
     );
   }
 
@@ -107,9 +114,12 @@ export class PageController {
   @Get('workspace/:workspaceId')
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.PAGE_READ)
-  async findAll(@Param('workspaceId') workspaceId: string) {
-    return await this.findPageHandler.findPageByWorkspaceId(
-      new FindPageByWorkspaceQuery(workspaceId),
+  async findAll(
+    @Param('workspaceId') workspaceId: string,
+    @Auth() auth: IAuth,
+  ) {
+    return this.findPageHandler.findPageByWorkspaceId(
+      new FindPageByWorkspaceQuery(workspaceId, auth.id),
     );
   }
 
@@ -131,7 +141,7 @@ export class PageController {
 
   @Delete(':pageId')
   @StrictWriteRateLimit()
-  @WorkspaceContext({ source: 'query', key: 'workspaceId' })
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
   @RequirePermissions(PERMISSIONS.PAGE_DELETE)
   async deletePage(
     @Param('pageId') pageId: string,

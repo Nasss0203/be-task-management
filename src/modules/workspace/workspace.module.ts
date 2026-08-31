@@ -40,8 +40,11 @@ import { WorkspacesController } from './presentation/http/controllers/workspace.
 import { WORKSPACE_TYPES } from './workspace.types';
 
 import { DatabaseModule } from 'src/database/database.module';
+import { PermissionModule } from '../permission/permission.module';
+import { AddTeamspaceMemberHandler } from './application/commands/teamspace/add-teamspace-member/add-teamspace-member.handler';
 import { CreateTeamspaceHandler } from './application/commands/teamspace/create-teamspace/create-teamspace.handler';
 import { SelectWorkspaceHandler } from './application/commands/workspace/select-workspace/select-workspace.handler';
+import { GetTeamspaceMembersHandler } from './application/queries/teamspace/get-teamspace-members/get-teamspace-members.handler';
 import { GetTeamspacesHandler } from './application/queries/teamspace/get-teamspaces/get-teamspaces.handler';
 import { TeamspaceMemberOrmEntity } from './infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
 import { TeamspaceOrmEntity } from './infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
@@ -64,6 +67,7 @@ import { TeamspaceController } from './presentation/http/controllers/teamspace.c
     MailModule,
     NotificationsModule,
     DatabaseModule,
+    PermissionModule,
   ],
   controllers: [
     WorkspacesController,
@@ -98,6 +102,8 @@ import { TeamspaceController } from './presentation/http/controllers/teamspace.c
     ListWorkspaceMembersHandler,
     CreateTeamspaceHandler,
     GetTeamspacesHandler,
+    AddTeamspaceMemberHandler,
+    GetTeamspaceMembersHandler,
     {
       provide: WORKSPACE_TYPES.repositories.WorkspaceRepository,
       useClass: TypeOrmWorkspaceRepository,

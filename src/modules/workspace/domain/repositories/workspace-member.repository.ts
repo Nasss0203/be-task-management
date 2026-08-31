@@ -1,14 +1,19 @@
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import {
   WorkspaceMember,
   WorkspaceMemberDetail,
 } from '../aggregates/workspace-member/workspace-member.aggregate';
-import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 export interface WorkspaceMemberRepository {
   save(
     member: WorkspaceMember,
     context?: PersistenceContext,
   ): Promise<WorkspaceMember>;
+
+  findById(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<WorkspaceMember | null>;
 
   findByWorkspaceAndUser(
     workspaceId: string,

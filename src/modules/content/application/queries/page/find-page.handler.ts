@@ -1,16 +1,21 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { PageResponseDto } from 'src/modules/content/application/dto/page/response/page.response.dto';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
-import { PageResponseDto } from 'src/modules/content/application/dto/page/response/page.response.dto';
 
 export class FindPageByWorkspaceQuery {
-  constructor(public readonly workspaceId: string) {}
+  constructor(
+    public readonly workspaceId: string,
+    public readonly userId: string,
+  ) {}
 }
 
 export class FindDeletedPagesQuery {
-  constructor(public readonly workspaceId: string) {}
+  constructor(
+    public readonly workspaceId: string,
+    public readonly userId: string,
+  ) {}
 }
-
 export class FindPageByIdQuery {
   constructor(public readonly pageId: string) {}
 }
@@ -25,14 +30,21 @@ export class FindPageHandler {
   async findPageByWorkspaceId(
     query: FindPageByWorkspaceQuery,
   ): Promise<PageResponseDto[]> {
-    const pages = await this.pageRepo.findByWorkspace(query.workspaceId);
+    const pages = await this.pageRepo.findAccessibleByWorkspace(
+      query.workspaceId,
+      query.userId,
+    );
     return pages.map((page) => PageResponseDto.fromDomain(page));
   }
 
   async findDeletedPages(
     query: FindDeletedPagesQuery,
   ): Promise<PageResponseDto[]> {
-    const pages = await this.pageRepo.findDeletedByWorkspace(query.workspaceId);
+    const pages = await this.pageRepo.findAccessibleDeletedByWorkspace(
+      query.workspaceId,
+      query.userId,
+    );
+
     return pages.map((page) => PageResponseDto.fromDomain(page));
   }
 

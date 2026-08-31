@@ -1,11 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
-  Post,
   Patch,
-  Delete,
+  Post,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import {
@@ -14,22 +14,22 @@ import {
 } from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
-import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
-import { type IAuth } from 'src/types/auth';
-import {
-  AddWorkspaceMemberDto,
-  UpdateWorkspaceMemberRoleDto,
-} from 'src/modules/workspace/application/dto/workspace-member/workspace-member.dto';
-import { WorkspaceMemberDetailResponseDto } from 'src/modules/workspace/application/dto/workspace-member/response/workspace-member.response.dto';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { AddWorkspaceMemberCommand } from 'src/modules/workspace/application/commands/workspace-member/add-workspace-member/add-workspace-member.command';
 import { AddWorkspaceMemberHandler } from 'src/modules/workspace/application/commands/workspace-member/add-workspace-member/add-workspace-member.handler';
 import { DeleteWorkspaceMemberCommand } from 'src/modules/workspace/application/commands/workspace-member/delete-workspace-member/delete-workspace-member.command';
 import { DeleteWorkspaceMemberHandler } from 'src/modules/workspace/application/commands/workspace-member/delete-workspace-member/delete-workspace-member.handler';
 import { UpdateWorkspaceMemberRoleCommand } from 'src/modules/workspace/application/commands/workspace-member/update-workspace-member-role/update-workspace-member-role.command';
 import { UpdateWorkspaceMemberRoleHandler } from 'src/modules/workspace/application/commands/workspace-member/update-workspace-member-role/update-workspace-member-role.handler';
+import { WorkspaceMemberDetailResponseDto } from 'src/modules/workspace/application/dto/workspace-member/response/workspace-member.response.dto';
+import {
+  AddWorkspaceMemberDto,
+  UpdateWorkspaceMemberRoleDto,
+} from 'src/modules/workspace/application/dto/workspace-member/workspace-member.dto';
 import { ListWorkspaceMembersHandler } from 'src/modules/workspace/application/queries/workspace-member/list-workspace-members/list-workspace-members.handler';
 import { ListWorkspaceMembersQuery } from 'src/modules/workspace/application/queries/workspace-member/list-workspace-members/list-workspace-members.query';
+import { type IAuth } from 'src/types/auth';
 
 @Controller('workspace-members')
 @ReadRateLimit()
