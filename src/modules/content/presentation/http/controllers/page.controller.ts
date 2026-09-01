@@ -73,12 +73,12 @@ export class PageController {
         createPageDto.workspace_id,
         createPageDto.title,
         createPageDto.teamspace_id ?? null,
+        createPageDto.parent_page_id ?? null,
         createPageDto.icon,
         createPageDto.cover_url,
       ),
     );
   }
-
   @Get('trash')
   @WorkspaceContext({ source: 'query', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.PAGE_READ)

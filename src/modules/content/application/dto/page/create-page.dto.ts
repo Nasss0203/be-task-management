@@ -12,6 +12,10 @@ export class CreatePageDto {
   teamspace_id?: string | null;
 
   @IsOptional()
+  @IsUUID()
+  parent_page_id?: string | null;
+
+  @IsOptional()
   @IsString()
   icon?: string | null;
 

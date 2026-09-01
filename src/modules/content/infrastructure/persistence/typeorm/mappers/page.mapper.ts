@@ -9,12 +9,13 @@ export class PageMapper {
       workspaceId: orm.workspace_id,
       teamspaceId: orm.teamspace_id,
 
+      parentPageId: orm.parent_page_id,
+
       title: orm.title,
       slug: orm.slug,
       icon: orm.icon,
       coverUrl: orm.cover_url,
       isTemplate: orm.is_template,
-
       createdBy: orm.created_by,
       createdAt: orm.createdAt,
       updatedAt: orm.updatedAt,
@@ -27,18 +28,17 @@ export class PageMapper {
     const orm = new PageOrmEntity();
 
     orm.id = domain.getId();
-
     orm.workspace_id = domain.getWorkspaceId();
     orm.teamspace_id = domain.getTeamspaceId();
+
+    orm.parent_page_id = domain.getParentPageId();
 
     orm.title = domain.getTitle();
     orm.slug = domain.getSlug();
     orm.icon = domain.getIcon();
     orm.cover_url = domain.getCoverUrl();
     orm.is_template = domain.getIsTemplate();
-
     orm.created_by = domain.getCreatedBy();
-
     orm.createdAt = domain.getCreatedAt();
     orm.updatedAt = domain.getUpdatedAt();
     orm.deletedAt = domain.getDeletedAt();

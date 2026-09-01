@@ -8,6 +8,8 @@ export class PageResponseDto {
 
   teamspace_id: string | null;
 
+  parent_page_id: string | null;
+
   title: string;
 
   slug: string | null;
@@ -38,6 +40,8 @@ export class PageResponseDto {
     dto.workspace_id = page.getWorkspaceId();
 
     dto.teamspace_id = page.getTeamspaceId();
+
+    dto.parent_page_id = page.getParentPageId();
 
     dto.title = page.getTitle();
 

@@ -1,11 +1,17 @@
-import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { PageResponseDto } from 'src/modules/content/application/dto/page/response/page.response.dto';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import { Page } from 'src/modules/content/domain/aggregates/page/page.aggregate';
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
-import { AuthorizationTarget } from 'src/modules/permission/application/types/authorization-target';
+import type { AuthorizationTarget } from 'src/modules/permission/application/types/authorization-target';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { generateSlug } from 'src/utils';
 
@@ -15,6 +21,7 @@ export class CreatePageCommand {
     public readonly workspaceId: string,
     public readonly title: string,
     public readonly teamspaceId?: string | null,
+    public readonly parentPageId?: string | null,
     public readonly icon?: string | null,
     public readonly coverUrl?: string | null,
   ) {}
@@ -30,10 +37,64 @@ export class CreatePageHandler {
   ) {}
 
   async execute(command: CreatePageCommand): Promise<PageResponseDto> {
-    const target: AuthorizationTarget = command.teamspaceId
+    /**
+     * Scope thực tế mà Page mới sẽ thuộc vào.
+     *
+     * Nếu là Page root:
+     * → lấy teamspaceId từ request.
+     *
+     * Nếu là Page child:
+     * → inherit teamspaceId từ Page cha.
+     */
+    let effectiveTeamspaceId = command.teamspaceId ?? null;
+
+    if (command.parentPageId) {
+      const parentPage = await this.pageRepo.findById(command.parentPageId);
+
+      if (!parentPage) {
+        throw new NotFoundException('Parent page not found');
+      }
+
+      /**
+       * Không cho tạo Page con từ Page
+       * thuộc Workspace khác.
+       */
+      if (parentPage.getWorkspaceId() !== command.workspaceId) {
+        throw new BadRequestException(
+          'Parent page does not belong to workspace',
+        );
+      }
+
+      const parentTeamspaceId = parentPage.getTeamspaceId();
+
+      /**
+       * Nếu frontend có gửi teamspaceId,
+       * nó phải giống scope của Page cha.
+       */
+      if (
+        command.teamspaceId !== undefined &&
+        command.teamspaceId !== null &&
+        command.teamspaceId !== parentTeamspaceId
+      ) {
+        throw new BadRequestException(
+          'Child page must belong to the same teamspace as parent page',
+        );
+      }
+
+      /**
+       * Page con luôn inherit Teamspace
+       * của Page cha.
+       */
+      effectiveTeamspaceId = parentTeamspaceId;
+    }
+
+    /**
+     * Authorization theo scope thực tế.
+     */
+    const target: AuthorizationTarget = effectiveTeamspaceId
       ? {
           type: 'teamspace',
-          id: command.teamspaceId,
+          id: effectiveTeamspaceId,
           workspaceId: command.workspaceId,
         }
       : {
@@ -53,6 +114,9 @@ export class CreatePageHandler {
       );
     }
 
+    /**
+     * Generate slug.
+     */
     const baseSlug = generateSlug(command.title).toLowerCase();
 
     let slug = baseSlug;
@@ -63,14 +127,23 @@ export class CreatePageHandler {
       slug = `${baseSlug}-${uniqueSuffix}`;
     }
 
+    /**
+     * Create Page aggregate.
+     */
     const page = Page.create({
       workspaceId: command.workspaceId,
-      teamspaceId: command.teamspaceId ?? null,
+
+      teamspaceId: effectiveTeamspaceId,
+
+      parentPageId: command.parentPageId ?? null,
+
       title: command.title,
       createdBy: command.userId,
       slug,
+
       icon: command.icon ?? null,
       coverUrl: command.coverUrl ?? null,
+
       isTemplate: false,
     });
 

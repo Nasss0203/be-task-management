@@ -8,6 +8,9 @@ export class Page {
     private coverUrl: string | null,
     private isTemplate: boolean,
     private teamspaceId: string | null,
+
+    private parentPageId: string | null,
+
     private createdBy: string,
     private createdAt: Date,
     private updatedAt: Date,
@@ -19,13 +22,13 @@ export class Page {
     workspaceId: string;
     title: string;
     createdBy: string;
-
     slug?: string | null;
     icon?: string | null;
     coverUrl?: string | null;
     isTemplate?: boolean;
-
     teamspaceId?: string | null;
+
+    parentPageId?: string | null;
   }): Page {
     return new Page(
       crypto.randomUUID(),
@@ -36,6 +39,9 @@ export class Page {
       params.coverUrl ?? null,
       params.isTemplate ?? false,
       params.teamspaceId ?? null,
+
+      params.parentPageId ?? null,
+
       params.createdBy,
       new Date(),
       new Date(),
@@ -51,6 +57,9 @@ export class Page {
     coverUrl: string | null;
     isTemplate: boolean;
     teamspaceId: string | null;
+
+    parentPageId: string | null;
+
     createdBy: string;
     createdAt: Date;
     updatedAt: Date;
@@ -66,6 +75,9 @@ export class Page {
       params.coverUrl,
       params.isTemplate,
       params.teamspaceId,
+
+      params.parentPageId,
+
       params.createdBy,
       params.createdAt,
       params.updatedAt,
@@ -84,6 +96,10 @@ export class Page {
 
   getTeamspaceId(): string | null {
     return this.teamspaceId;
+  }
+
+  getParentPageId(): string | null {
+    return this.parentPageId;
   }
 
   getTitle(): string {
