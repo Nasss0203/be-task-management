@@ -1,11 +1,8 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { PageTemplateResponseDto } from 'src/modules/content/application/dto/page-template/response/page-template.response.dto';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageTemplateRepository } from 'src/modules/content/domain/repositories/page-template.repository';
-import { PageTemplateResponseDto } from 'src/modules/content/application/dto/page-template/response/page-template.response.dto';
-
-export class FindPageTemplateQuery {
-  constructor(public readonly id: string) {}
-}
+import { FindPageTemplateQuery } from './find-page-template.query';
 
 @Injectable()
 export class FindPageTemplateHandler {

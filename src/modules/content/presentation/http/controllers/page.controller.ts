@@ -20,28 +20,24 @@ import {
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
-import {
-  CreatePageCommand,
-  CreatePageHandler,
-} from 'src/modules/content/application/commands/page/create-page.handler';
-import {
-  DeletePageCommand,
-  DeletePageHandler,
-  PermanentlyDeletePageCommand,
-  RestorePageCommand,
-} from 'src/modules/content/application/commands/page/delete-page.handler';
-import {
-  UpdatePageCommand,
-  UpdatePageHandler,
-} from 'src/modules/content/application/commands/page/update-page.handler';
+import { CreatePageCommand } from 'src/modules/content/application/commands/page/create-page/create-page.command';
+import { CreatePageHandler } from 'src/modules/content/application/commands/page/create-page/create-page.handler';
+import { DeletePageCommand } from 'src/modules/content/application/commands/page/delete-page/delete-page.command';
+import { DeletePageHandler } from 'src/modules/content/application/commands/page/delete-page/delete-page.handler';
+import { PermanentlyDeletePageCommand } from 'src/modules/content/application/commands/page/permanently-delete-page/permanently-delete-page.command';
+import { PermanentlyDeletePageHandler } from 'src/modules/content/application/commands/page/permanently-delete-page/permanently-delete-page.handler';
+import { RestorePageCommand } from 'src/modules/content/application/commands/page/restore-page/restore-page.command';
+import { RestorePageHandler } from 'src/modules/content/application/commands/page/restore-page/restore-page.handler';
+import { UpdatePageCommand } from 'src/modules/content/application/commands/page/update-page/update-page.command';
+import { UpdatePageHandler } from 'src/modules/content/application/commands/page/update-page/update-page.handler';
 import { CreatePageDto } from 'src/modules/content/application/dto/page/create-page.dto';
 import { UpdatePageDto } from 'src/modules/content/application/dto/page/update-page.dto';
-import {
-  FindDeletedPagesQuery,
-  FindPageByIdQuery,
-  FindPageByWorkspaceQuery,
-  FindPageHandler,
-} from 'src/modules/content/application/queries/page/find-page.handler';
+import { FindDeletedPagesHandler } from 'src/modules/content/application/queries/page/find-deleted-pages/find-deleted-pages.handler';
+import { FindDeletedPagesQuery } from 'src/modules/content/application/queries/page/find-deleted-pages/find-deleted-pages.query';
+import { FindPageByIdHandler } from 'src/modules/content/application/queries/page/find-page-by-id/find-page-by-id.handler';
+import { FindPageByIdQuery } from 'src/modules/content/application/queries/page/find-page-by-id/find-page-by-id.query';
+import { FindPageByWorkspaceHandler } from 'src/modules/content/application/queries/page/find-page-by-workspace/find-page-by-workspace.handler';
+import { FindPageByWorkspaceQuery } from 'src/modules/content/application/queries/page/find-page-by-workspace/find-page-by-workspace.query';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
@@ -53,11 +49,23 @@ export class PageController {
     @Inject(CONTENT_TYPES.applications.CreatePageHandler)
     private readonly createPageHandler: CreatePageHandler,
 
-    @Inject(CONTENT_TYPES.applications.FindPageHandler)
-    private readonly findPageHandler: FindPageHandler,
+    @Inject(CONTENT_TYPES.applications.FindPageByWorkspaceHandler)
+    private readonly findPageByWorkspaceHandler: FindPageByWorkspaceHandler,
+
+    @Inject(CONTENT_TYPES.applications.FindDeletedPagesHandler)
+    private readonly findDeletedPagesHandler: FindDeletedPagesHandler,
+
+    @Inject(CONTENT_TYPES.applications.FindPageByIdHandler)
+    private readonly findPageByIdHandler: FindPageByIdHandler,
 
     @Inject(CONTENT_TYPES.applications.DeletePageHandler)
     private readonly deletePageHandler: DeletePageHandler,
+
+    @Inject(CONTENT_TYPES.applications.RestorePageHandler)
+    private readonly restorePageHandler: RestorePageHandler,
+
+    @Inject(CONTENT_TYPES.applications.PermanentlyDeletePageHandler)
+    private readonly permanentlyDeletePageHandler: PermanentlyDeletePageHandler,
 
     @Inject(CONTENT_TYPES.applications.UpdatePageHandler)
     private readonly updatePageHandler: UpdatePageHandler,
@@ -94,7 +102,7 @@ export class PageController {
       throw new UnauthorizedException('User not authenticated');
     }
 
-    return this.findPageHandler.findDeletedPages(
+    return this.findDeletedPagesHandler.execute(
       new FindDeletedPagesQuery(workspaceId, auth.id),
     );
   }
@@ -114,7 +122,7 @@ export class PageController {
       throw new BadRequestException('workspaceId is required');
     }
 
-    await this.deletePageHandler.permanentlyDelete(
+    await this.permanentlyDeletePageHandler.execute(
       new PermanentlyDeletePageCommand(workspaceId, pageId),
     );
 
@@ -132,7 +140,7 @@ export class PageController {
     @Param('workspaceId') workspaceId: string,
     @Auth() auth: IAuth,
   ) {
-    return this.findPageHandler.findPageByWorkspaceId(
+    return this.findPageByWorkspaceHandler.execute(
       new FindPageByWorkspaceQuery(workspaceId, auth.id),
     );
   }
@@ -141,7 +149,7 @@ export class PageController {
   @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
   @RequirePermissions(PERMISSIONS.PAGE_READ)
   async findPageById(@Param('pageId') pageId: string) {
-    return this.findPageHandler.findPageById(new FindPageByIdQuery(pageId));
+    return this.findPageByIdHandler.execute(new FindPageByIdQuery(pageId));
   }
 
   @Patch(':pageId')
@@ -165,7 +173,7 @@ export class PageController {
     if (!workspaceId) {
       throw new BadRequestException('workspaceId is required');
     }
-    await this.deletePageHandler.delete(
+    await this.deletePageHandler.execute(
       new DeletePageCommand(workspaceId, pageId, auth.id),
     );
     return { success: true };
@@ -183,7 +191,7 @@ export class PageController {
     if (!workspaceId) {
       throw new BadRequestException('workspaceId is required');
     }
-    await this.deletePageHandler.restore(
+    await this.restorePageHandler.execute(
       new RestorePageCommand(workspaceId, pageId, auth.id),
     );
     return { success: true };

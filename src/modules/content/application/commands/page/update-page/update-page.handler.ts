@@ -1,19 +1,12 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
 import { PageResponseDto } from 'src/modules/content/application/dto/page/response/page.response.dto';
-import { UpdatePageDto } from 'src/modules/content/application/dto/page/update-page.dto';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
-
-export class UpdatePageCommand {
-  constructor(
-    public readonly pageId: string,
-    public readonly dto: UpdatePageDto,
-  ) {}
-}
+import { UpdatePageCommand } from './update-page.command';
 
 @Injectable()
 export class UpdatePageHandler {

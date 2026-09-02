@@ -14,18 +14,7 @@ import { AuthorizationService } from 'src/modules/permission/application/service
 import type { AuthorizationTarget } from 'src/modules/permission/application/types/authorization-target';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { generateSlug } from 'src/utils';
-
-export class CreatePageCommand {
-  constructor(
-    public readonly userId: string,
-    public readonly workspaceId: string,
-    public readonly title: string,
-    public readonly teamspaceId?: string | null,
-    public readonly parentPageId?: string | null,
-    public readonly icon?: string | null,
-    public readonly coverUrl?: string | null,
-  ) {}
-}
+import { CreatePageCommand } from './create-page.command';
 
 @Injectable()
 export class CreatePageHandler {
@@ -38,13 +27,8 @@ export class CreatePageHandler {
 
   async execute(command: CreatePageCommand): Promise<PageResponseDto> {
     /**
-     * Scope thực tế mà Page mới sẽ thuộc vào.
-     *
-     * Nếu là Page root:
-     * → lấy teamspaceId từ request.
-     *
-     * Nếu là Page child:
-     * → inherit teamspaceId từ Page cha.
+     * Resolve the scope that the new page belongs to.
+     * Root pages use the requested teamspace; child pages inherit it.
      */
     let effectiveTeamspaceId = command.teamspaceId ?? null;
 
@@ -55,10 +39,7 @@ export class CreatePageHandler {
         throw new NotFoundException('Parent page not found');
       }
 
-      /**
-       * Không cho tạo Page con từ Page
-       * thuộc Workspace khác.
-       */
+      /** A child page cannot belong to a different workspace. */
       if (parentPage.getWorkspaceId() !== command.workspaceId) {
         throw new BadRequestException(
           'Parent page does not belong to workspace',
@@ -67,10 +48,7 @@ export class CreatePageHandler {
 
       const parentTeamspaceId = parentPage.getTeamspaceId();
 
-      /**
-       * Nếu frontend có gửi teamspaceId,
-       * nó phải giống scope của Page cha.
-       */
+      /** A requested teamspace must match the parent page scope. */
       if (
         command.teamspaceId !== undefined &&
         command.teamspaceId !== null &&
@@ -81,16 +59,11 @@ export class CreatePageHandler {
         );
       }
 
-      /**
-       * Page con luôn inherit Teamspace
-       * của Page cha.
-       */
+      /** Child pages always inherit their parent's teamspace. */
       effectiveTeamspaceId = parentTeamspaceId;
     }
 
-    /**
-     * Authorization theo scope thực tế.
-     */
+    /** Authorize against the resolved page scope. */
     const target: AuthorizationTarget = effectiveTeamspaceId
       ? {
           type: 'teamspace',
@@ -114,9 +87,7 @@ export class CreatePageHandler {
       );
     }
 
-    /**
-     * Generate slug.
-     */
+    /** Generate slug. */
     const baseSlug = generateSlug(command.title).toLowerCase();
 
     let slug = baseSlug;
@@ -127,9 +98,7 @@ export class CreatePageHandler {
       slug = `${baseSlug}-${uniqueSuffix}`;
     }
 
-    /**
-     * Create Page aggregate.
-     */
+    /** Create Page aggregate. */
     const page = Page.create({
       workspaceId: command.workspaceId,
 

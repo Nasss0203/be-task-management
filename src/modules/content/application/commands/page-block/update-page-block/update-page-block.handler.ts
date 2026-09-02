@@ -4,35 +4,12 @@ import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/r
 
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 
-import {
-  PageBlockType,
-  type PageBlockJson,
-  type PageBlockStyleConfig,
-} from 'src/modules/content/domain/entities/page-block.entity';
-
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
 
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
-
-export class UpdatePageBlockCommand {
-  constructor(
-    public readonly blockId: string,
-    public readonly updates: {
-      type?: PageBlockType;
-      title?: string | null;
-      positionX?: number | null;
-      positionY?: number | null;
-      width?: number | null;
-      height?: number | null;
-      content?: PageBlockJson;
-      styleConfig?: PageBlockStyleConfig;
-      dataConfig?: PageBlockJson;
-      isOpen?: boolean;
-    },
-  ) {}
-}
+import { UpdatePageBlockCommand } from './update-page-block.command';
 
 @Injectable()
 export class UpdatePageBlockHandler {

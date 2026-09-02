@@ -14,10 +14,7 @@ import type { PageBlockRepository } from 'src/modules/content/domain/repositorie
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
-
-export class ReorderPageBlockCommand {
-  constructor(public readonly dto: ReorderPageBlockDto) {}
-}
+import { ReorderPageBlockCommand } from './reorder-page-block.command';
 
 @Injectable()
 export class ReorderPageBlockHandler {

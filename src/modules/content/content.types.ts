@@ -4,16 +4,24 @@ export const CONTENT_TYPES = {
   },
   applications: {
     CreatePageHandler: Symbol.for('CreatePageHandler'),
-    FindPageHandler: Symbol.for('FindPageHandler'),
+    FindPageByWorkspaceHandler: Symbol.for('FindPageByWorkspaceHandler'),
+    FindDeletedPagesHandler: Symbol.for('FindDeletedPagesHandler'),
+    FindPageByIdHandler: Symbol.for('FindPageByIdHandler'),
     UpdatePageHandler: Symbol.for('UpdatePageHandler'),
     DeletePageHandler: Symbol.for('DeletePageHandler'),
+    RestorePageHandler: Symbol.for('RestorePageHandler'),
+    PermanentlyDeletePageHandler: Symbol.for('PermanentlyDeletePageHandler'),
 
     CreatePageBlockHandler: Symbol.for('CreatePageBlockHandler'),
-    FindPageBlockHandler: Symbol.for('FindPageBlockHandler'),
+    AddDatabaseViewToBlockHandler: Symbol.for('AddDatabaseViewToBlockHandler'),
+    FindPageBlockByPageHandler: Symbol.for('FindPageBlockByPageHandler'),
+    FindPageBlockByIdHandler: Symbol.for('FindPageBlockByIdHandler'),
+    FindDeletedPageBlocksHandler: Symbol.for('FindDeletedPageBlocksHandler'),
     UpdatePageBlockHandler: Symbol.for('UpdatePageBlockHandler'),
     ReorderPageBlockHandler: Symbol.for('ReorderPageBlockHandler'),
     MovePageBlockHandler: Symbol.for('MovePageBlockHandler'),
     DeletePageBlockHandler: Symbol.for('DeletePageBlockHandler'),
+    RestorePageBlockHandler: Symbol.for('RestorePageBlockHandler'),
 
     CreatePageTemplateHandler: Symbol.for('CreatePageTemplateHandler'),
     FindPageTemplateHandler: Symbol.for('FindPageTemplateHandler'),
@@ -23,7 +31,9 @@ export const CONTENT_TYPES = {
     CreatePageTemplateBlockHandler: Symbol.for(
       'CreatePageTemplateBlockHandler',
     ),
-    FindPageTemplateBlockHandler: Symbol.for('FindPageTemplateBlockHandler'),
+    FindPageTemplateBlockByTemplateHandler: Symbol.for(
+      'FindPageTemplateBlockByTemplateHandler',
+    ),
     UpdatePageTemplateBlockHandler: Symbol.for(
       'UpdatePageTemplateBlockHandler',
     ),

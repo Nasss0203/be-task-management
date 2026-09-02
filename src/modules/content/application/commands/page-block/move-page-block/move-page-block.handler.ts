@@ -4,7 +4,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { MovePageBlockDto } from 'src/modules/content/application/dto/page/move-page-block.dto';
 import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/response/page-block.response.dto';
 import { PageBlockOrderingService } from 'src/modules/content/application/services/page-block-ordering.service';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
@@ -14,15 +13,9 @@ import type { PageBlockRepository } from 'src/modules/content/domain/repositorie
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
+import { MovePageBlockCommand } from './move-page-block.command';
 
 const PAGE_BLOCK_HIERARCHY_GUARD_LIMIT = 1000;
-
-export class MovePageBlockCommand {
-  constructor(
-    public readonly blockId: string,
-    public readonly dto: MovePageBlockDto,
-  ) {}
-}
 
 @Injectable()
 export class MovePageBlockHandler {

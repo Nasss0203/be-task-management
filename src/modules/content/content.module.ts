@@ -4,19 +4,27 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseModule } from 'src/database/database.module';
 import { PermissionModule } from 'src/modules/permission/permission.module';
 
-import { CreatePageBlockHandler } from './application/commands/page/create-page-block.handler';
-import { CreatePageHandler } from './application/commands/page/create-page.handler';
-import { DeletePageBlockHandler } from './application/commands/page/delete-page-block.handler';
-import { DeletePageHandler } from './application/commands/page/delete-page.handler';
-import { MovePageBlockHandler } from './application/commands/page/move-page-block.handler';
-import { ReorderPageBlockHandler } from './application/commands/page/reorder-page-block.handler';
-import { UpdatePageBlockHandler } from './application/commands/page/update-page-block.handler';
-import { UpdatePageHandler } from './application/commands/page/update-page.handler';
+import { AddDatabaseViewToBlockHandler } from './application/commands/page-block/add-database-view-to-block/add-database-view-to-block.handler';
+import { CreatePageBlockHandler } from './application/commands/page-block/create-page-block/create-page-block.handler';
+import { CreatePageHandler } from './application/commands/page/create-page/create-page.handler';
+import { DeletePageBlockHandler } from './application/commands/page-block/delete-page-block/delete-page-block.handler';
+import { DeletePageHandler } from './application/commands/page/delete-page/delete-page.handler';
+import { MovePageBlockHandler } from './application/commands/page-block/move-page-block/move-page-block.handler';
+import { PermanentlyDeletePageHandler } from './application/commands/page/permanently-delete-page/permanently-delete-page.handler';
+import { ReorderPageBlockHandler } from './application/commands/page-block/reorder-page-block/reorder-page-block.handler';
+import { RestorePageBlockHandler } from './application/commands/page-block/restore-page-block/restore-page-block.handler';
+import { RestorePageHandler } from './application/commands/page/restore-page/restore-page.handler';
+import { UpdatePageBlockHandler } from './application/commands/page-block/update-page-block/update-page-block.handler';
+import { UpdatePageHandler } from './application/commands/page/update-page/update-page.handler';
 
-import { FindPageTemplateBlockHandler } from './application/queries/page-template/find-page-template-block.handler';
-import { FindPageTemplateHandler } from './application/queries/page-template/find-page-template.handler';
-import { FindPageBlockHandler } from './application/queries/page/find-page-block.handler';
-import { FindPageHandler } from './application/queries/page/find-page.handler';
+import { FindDeletedPageBlocksHandler } from './application/queries/page-block/find-deleted-page-blocks/find-deleted-page-blocks.handler';
+import { FindPageBlockByIdHandler } from './application/queries/page-block/find-page-block-by-id/find-page-block-by-id.handler';
+import { FindPageBlockByPageHandler } from './application/queries/page-block/find-page-block-by-page/find-page-block-by-page.handler';
+import { FindPageTemplateBlockByTemplateHandler } from './application/queries/page-template/find-page-template-block-by-template/find-page-template-block-by-template.handler';
+import { FindPageTemplateHandler } from './application/queries/page-template/find-page-template/find-page-template.handler';
+import { FindDeletedPagesHandler } from './application/queries/page/find-deleted-pages/find-deleted-pages.handler';
+import { FindPageByIdHandler } from './application/queries/page/find-page-by-id/find-page-by-id.handler';
+import { FindPageByWorkspaceHandler } from './application/queries/page/find-page-by-workspace/find-page-by-workspace.handler';
 import { ResolveBookmarkMetadataHandler } from './application/queries/resolve-bookmark-metadata/resolve-bookmark-metadata.handler';
 
 import { ContentPageProvisioningService } from './application/services/content-page-provisioning.service';
@@ -74,8 +82,24 @@ const pageHandlers = [
     useClass: DeletePageHandler,
   },
   {
-    provide: CONTENT_TYPES.applications.FindPageHandler,
-    useClass: FindPageHandler,
+    provide: CONTENT_TYPES.applications.RestorePageHandler,
+    useClass: RestorePageHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.PermanentlyDeletePageHandler,
+    useClass: PermanentlyDeletePageHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.FindPageByWorkspaceHandler,
+    useClass: FindPageByWorkspaceHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.FindDeletedPagesHandler,
+    useClass: FindDeletedPagesHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.FindPageByIdHandler,
+    useClass: FindPageByIdHandler,
   },
 ];
 
@@ -83,6 +107,10 @@ const pageBlockHandlers = [
   {
     provide: CONTENT_TYPES.applications.CreatePageBlockHandler,
     useClass: CreatePageBlockHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.AddDatabaseViewToBlockHandler,
+    useClass: AddDatabaseViewToBlockHandler,
   },
   {
     provide: CONTENT_TYPES.applications.UpdatePageBlockHandler,
@@ -101,8 +129,20 @@ const pageBlockHandlers = [
     useClass: DeletePageBlockHandler,
   },
   {
-    provide: CONTENT_TYPES.applications.FindPageBlockHandler,
-    useClass: FindPageBlockHandler,
+    provide: CONTENT_TYPES.applications.RestorePageBlockHandler,
+    useClass: RestorePageBlockHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.FindPageBlockByPageHandler,
+    useClass: FindPageBlockByPageHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.FindPageBlockByIdHandler,
+    useClass: FindPageBlockByIdHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.FindDeletedPageBlocksHandler,
+    useClass: FindDeletedPageBlocksHandler,
   },
 ];
 
@@ -112,8 +152,8 @@ const pageTemplateHandlers = [
     useClass: FindPageTemplateHandler,
   },
   {
-    provide: CONTENT_TYPES.applications.FindPageTemplateBlockHandler,
-    useClass: FindPageTemplateBlockHandler,
+    provide: CONTENT_TYPES.applications.FindPageTemplateBlockByTemplateHandler,
+    useClass: FindPageTemplateBlockByTemplateHandler,
   },
 ];
 

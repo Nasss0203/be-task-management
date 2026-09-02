@@ -20,28 +20,20 @@ import {
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
-import {
-  AddDatabaseViewToBlockCommand,
-  CreatePageBlockCommand,
-  CreatePageBlockHandler,
-} from 'src/modules/content/application/commands/page/create-page-block.handler';
-import {
-  DeletePageBlockCommand,
-  DeletePageBlockHandler,
-  RestorePageBlockCommand,
-} from 'src/modules/content/application/commands/page/delete-page-block.handler';
-import {
-  MovePageBlockCommand,
-  MovePageBlockHandler,
-} from 'src/modules/content/application/commands/page/move-page-block.handler';
-import {
-  ReorderPageBlockCommand,
-  ReorderPageBlockHandler,
-} from 'src/modules/content/application/commands/page/reorder-page-block.handler';
-import {
-  UpdatePageBlockCommand,
-  UpdatePageBlockHandler,
-} from 'src/modules/content/application/commands/page/update-page-block.handler';
+import { AddDatabaseViewToBlockCommand } from 'src/modules/content/application/commands/page-block/add-database-view-to-block/add-database-view-to-block.command';
+import { AddDatabaseViewToBlockHandler } from 'src/modules/content/application/commands/page-block/add-database-view-to-block/add-database-view-to-block.handler';
+import { CreatePageBlockCommand } from 'src/modules/content/application/commands/page-block/create-page-block/create-page-block.command';
+import { CreatePageBlockHandler } from 'src/modules/content/application/commands/page-block/create-page-block/create-page-block.handler';
+import { DeletePageBlockCommand } from 'src/modules/content/application/commands/page-block/delete-page-block/delete-page-block.command';
+import { DeletePageBlockHandler } from 'src/modules/content/application/commands/page-block/delete-page-block/delete-page-block.handler';
+import { MovePageBlockCommand } from 'src/modules/content/application/commands/page-block/move-page-block/move-page-block.command';
+import { MovePageBlockHandler } from 'src/modules/content/application/commands/page-block/move-page-block/move-page-block.handler';
+import { ReorderPageBlockCommand } from 'src/modules/content/application/commands/page-block/reorder-page-block/reorder-page-block.command';
+import { ReorderPageBlockHandler } from 'src/modules/content/application/commands/page-block/reorder-page-block/reorder-page-block.handler';
+import { RestorePageBlockCommand } from 'src/modules/content/application/commands/page-block/restore-page-block/restore-page-block.command';
+import { RestorePageBlockHandler } from 'src/modules/content/application/commands/page-block/restore-page-block/restore-page-block.handler';
+import { UpdatePageBlockCommand } from 'src/modules/content/application/commands/page-block/update-page-block/update-page-block.command';
+import { UpdatePageBlockHandler } from 'src/modules/content/application/commands/page-block/update-page-block/update-page-block.handler';
 import {
   AddDatabaseViewToBlockDto,
   CreatePageBlockDto,
@@ -50,12 +42,12 @@ import { MovePageBlockDto } from 'src/modules/content/application/dto/page/move-
 import { ReorderPageBlockDto } from 'src/modules/content/application/dto/page/reorder-page-block.dto';
 import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/response/page-block.response.dto';
 import { UpdatePageBlockDto } from 'src/modules/content/application/dto/page/update-page-block.dto';
-import {
-  FindDeletedPageBlocksQuery,
-  FindPageBlockByIdQuery,
-  FindPageBlockByPageQuery,
-  FindPageBlockHandler,
-} from 'src/modules/content/application/queries/page/find-page-block.handler';
+import { FindDeletedPageBlocksHandler } from 'src/modules/content/application/queries/page-block/find-deleted-page-blocks/find-deleted-page-blocks.handler';
+import { FindDeletedPageBlocksQuery } from 'src/modules/content/application/queries/page-block/find-deleted-page-blocks/find-deleted-page-blocks.query';
+import { FindPageBlockByIdHandler } from 'src/modules/content/application/queries/page-block/find-page-block-by-id/find-page-block-by-id.handler';
+import { FindPageBlockByIdQuery } from 'src/modules/content/application/queries/page-block/find-page-block-by-id/find-page-block-by-id.query';
+import { FindPageBlockByPageHandler } from 'src/modules/content/application/queries/page-block/find-page-block-by-page/find-page-block-by-page.handler';
+import { FindPageBlockByPageQuery } from 'src/modules/content/application/queries/page-block/find-page-block-by-page/find-page-block-by-page.query';
 import { ResolveBookmarkMetadataHandler } from 'src/modules/content/application/queries/resolve-bookmark-metadata/resolve-bookmark-metadata.handler';
 import { ResolveBookmarkMetadataQuery } from 'src/modules/content/application/queries/resolve-bookmark-metadata/resolve-bookmark-metadata.query';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
@@ -79,11 +71,23 @@ export class PageBlockController {
     @Inject(CONTENT_TYPES.applications.CreatePageBlockHandler)
     private readonly createPageBlockHandler: CreatePageBlockHandler,
 
-    @Inject(CONTENT_TYPES.applications.FindPageBlockHandler)
-    private readonly findPageBlockHandler: FindPageBlockHandler,
+    @Inject(CONTENT_TYPES.applications.AddDatabaseViewToBlockHandler)
+    private readonly addDatabaseViewToBlockHandler: AddDatabaseViewToBlockHandler,
+
+    @Inject(CONTENT_TYPES.applications.FindPageBlockByPageHandler)
+    private readonly findPageBlockByPageHandler: FindPageBlockByPageHandler,
+
+    @Inject(CONTENT_TYPES.applications.FindPageBlockByIdHandler)
+    private readonly findPageBlockByIdHandler: FindPageBlockByIdHandler,
+
+    @Inject(CONTENT_TYPES.applications.FindDeletedPageBlocksHandler)
+    private readonly findDeletedPageBlocksHandler: FindDeletedPageBlocksHandler,
 
     @Inject(CONTENT_TYPES.applications.DeletePageBlockHandler)
     private readonly deletePageBlockHandler: DeletePageBlockHandler,
+
+    @Inject(CONTENT_TYPES.applications.RestorePageBlockHandler)
+    private readonly restorePageBlockHandler: RestorePageBlockHandler,
 
     private readonly resolveBookmarkMetadataHandler: ResolveBookmarkMetadataHandler,
   ) {}
@@ -124,7 +128,7 @@ export class PageBlockController {
   findAllByPageId(
     @Param('pageId', ParseUUIDPipe) pageId: string,
   ): Promise<PageBlockResponseDto[]> {
-    return this.findPageBlockHandler.findAllByPageId(
+    return this.findPageBlockByPageHandler.execute(
       new FindPageBlockByPageQuery(pageId),
     );
   }
@@ -139,7 +143,7 @@ export class PageBlockController {
     if (!workspaceId) {
       throw new BadRequestException('workspaceId is required');
     }
-    return this.findPageBlockHandler.findDeletedPageBlocks(
+    return this.findDeletedPageBlocksHandler.execute(
       new FindDeletedPageBlocksQuery(workspaceId, pageId),
     );
   }
@@ -151,7 +155,7 @@ export class PageBlockController {
   findById(
     @Param('blockId', ParseUUIDPipe) blockId: string,
   ): Promise<PageBlockResponseDto> {
-    return this.findPageBlockHandler.findById(
+    return this.findPageBlockByIdHandler.execute(
       new FindPageBlockByIdQuery(blockId),
     );
   }
@@ -216,7 +220,7 @@ export class PageBlockController {
     @Param('blockId', ParseUUIDPipe) blockId: string,
     @Body() dto: AddDatabaseViewToBlockDto,
   ): Promise<PageBlockResponseDto> {
-    return await this.createPageBlockHandler.addDatabaseViewToBlock(
+    return await this.addDatabaseViewToBlockHandler.execute(
       new AddDatabaseViewToBlockCommand(blockId, dto),
     );
   }
@@ -229,7 +233,7 @@ export class PageBlockController {
     @Param('blockId', ParseUUIDPipe) blockId: string,
     @Auth() auth: IAuth,
   ) {
-    await this.deletePageBlockHandler.delete(
+    await this.deletePageBlockHandler.execute(
       new DeletePageBlockCommand(blockId, auth.id),
     );
     return { success: true };
@@ -240,7 +244,7 @@ export class PageBlockController {
   @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'blockId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async restorePageBlock(@Param('blockId', ParseUUIDPipe) blockId: string) {
-    await this.deletePageBlockHandler.restore(
+    await this.restorePageBlockHandler.execute(
       new RestorePageBlockCommand(blockId),
     );
     return { success: true };

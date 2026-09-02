@@ -5,17 +5,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { AddDatabaseViewToBlockDto } from 'src/modules/content/application/dto/page/create-page-block.dto';
 import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/response/page-block.response.dto';
 
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 
-import {
-  PageBlock,
-  PageBlockType,
-  type PageBlockJson,
-  type PageBlockStyleConfig,
-} from 'src/modules/content/domain/entities/page-block.entity';
+import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity';
 
 import { canContainChildren } from 'src/modules/content/domain/policies/page-block-container.policy';
 
@@ -24,48 +18,7 @@ import type { PageBlockRepository } from 'src/modules/content/domain/repositorie
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
-
-export class CreatePageBlockCommand {
-  constructor(
-    public readonly input: {
-      pageId: string;
-
-      parentBlockId?: string | null;
-
-      afterBlockId?: string | null;
-
-      type: PageBlockType;
-
-      createdBy: string;
-
-      title?: string | null;
-
-      positionX?: number | null;
-
-      positionY?: number | null;
-
-      width?: number | null;
-
-      height?: number | null;
-
-      content?: PageBlockJson;
-
-      styleConfig?: PageBlockStyleConfig;
-
-      dataConfig?: PageBlockJson;
-
-      isOpen?: boolean;
-    },
-  ) {}
-}
-
-export class AddDatabaseViewToBlockCommand {
-  constructor(
-    public readonly blockId: string,
-
-    public readonly dto: AddDatabaseViewToBlockDto,
-  ) {}
-}
+import { CreatePageBlockCommand } from './create-page-block.command';
 
 @Injectable()
 export class CreatePageBlockHandler {
@@ -196,36 +149,6 @@ export class CreatePageBlockHandler {
       const savedBlock = await this.pageBlockRepo.save(block, context);
 
       return PageBlockResponseDto.fromDomain(savedBlock);
-    });
-  }
-
-  async addDatabaseViewToBlock(
-    command: AddDatabaseViewToBlockCommand,
-  ): Promise<PageBlockResponseDto> {
-    return this.uow.runInTransaction(async (context) => {
-      const block = await this.pageBlockRepo.findById(command.blockId, context);
-
-      if (!block) {
-        throw new NotFoundException('Page block not found');
-      }
-
-      if (block.getType() !== PageBlockType.DATABASE_VIEW) {
-        throw new BadRequestException(
-          'Only DATABASE_VIEW blocks can reference a database view',
-        );
-      }
-
-      block.update({
-        dataConfig: {
-          database_id: command.dto.database_id,
-
-          view_id: command.dto.view_id,
-        },
-      });
-
-      const updatedBlock = await this.pageBlockRepo.save(block, context);
-
-      return PageBlockResponseDto.fromDomain(updatedBlock);
     });
   }
 }

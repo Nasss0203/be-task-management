@@ -10,19 +10,9 @@ import type { PageBlockRepository } from 'src/modules/content/domain/repositorie
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
+import { DeletePageBlockCommand } from './delete-page-block.command';
 
 const PAGE_BLOCK_SUBTREE_GUARD_LIMIT = 10000;
-
-export class DeletePageBlockCommand {
-  constructor(
-    public readonly blockId: string,
-    public readonly userId: string,
-  ) {}
-}
-
-export class RestorePageBlockCommand {
-  constructor(public readonly blockId: string) {}
-}
 
 @Injectable()
 export class DeletePageBlockHandler {
@@ -33,7 +23,7 @@ export class DeletePageBlockHandler {
     private readonly uow: UnitOfWork,
   ) {}
 
-  async delete(command: DeletePageBlockCommand): Promise<void> {
+  async execute(command: DeletePageBlockCommand): Promise<void> {
     await this.uow.runInTransaction(async (context) => {
       const block = await this.pageBlockRepo.findById(command.blockId, context);
       if (!block) {
@@ -46,37 +36,6 @@ export class DeletePageBlockHandler {
       });
 
       await this.pageBlockRepo.saveMany(subtree, context);
-    });
-  }
-
-  async restore(command: RestorePageBlockCommand): Promise<void> {
-    await this.uow.runInTransaction(async (context) => {
-      const block = await this.pageBlockRepo.findDeletedById(
-        command.blockId,
-        context,
-      );
-
-      if (!block) {
-        throw new NotFoundException('Deleted page block not found');
-      }
-
-      const parentBlockId = block.getParentBlockId();
-
-      if (parentBlockId) {
-        const parent = await this.pageBlockRepo.findById(
-          parentBlockId,
-          context,
-        );
-
-        if (!parent) {
-          throw new BadRequestException(
-            'Cannot restore page block while parent is deleted or missing',
-          );
-        }
-      }
-
-      block.restoreDeleted();
-      await this.pageBlockRepo.save(block, context);
     });
   }
 
