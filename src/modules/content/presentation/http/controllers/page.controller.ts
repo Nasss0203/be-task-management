@@ -98,17 +98,31 @@ export class PageController {
       new FindDeletedPagesQuery(workspaceId, auth.id),
     );
   }
-
   @Delete('trash/:pageId')
   @StrictWriteRateLimit()
-  @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
+  @WorkspaceContext({
+    source: 'query',
+    key: 'workspaceId',
+  })
   @RequirePermissions(PERMISSIONS.PAGE_DELETE)
-  async permanentlyDeletePage(@Param('pageId') pageId: string) {
+  async permanentlyDeletePage(
+    @Param('pageId') pageId: string,
+    @Query('workspaceId')
+    workspaceId: string,
+  ) {
+    if (!workspaceId) {
+      throw new BadRequestException('workspaceId is required');
+    }
+
     await this.deletePageHandler.permanentlyDelete(
-      new PermanentlyDeletePageCommand(pageId),
+      new PermanentlyDeletePageCommand(workspaceId, pageId),
     );
-    return { success: true };
+
+    return {
+      success: true,
+    };
   }
+  c;
 
   @ResponseMessage('Find page by workspace')
   @Get('workspace/:workspaceId')

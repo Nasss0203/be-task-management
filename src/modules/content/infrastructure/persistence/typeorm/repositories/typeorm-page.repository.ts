@@ -68,12 +68,34 @@ export class TypeOrmPageRepository implements PageRepository {
   async delete(id: string, context?: PersistenceContext): Promise<void> {
     await this.resolveRepo(context).softDelete(id);
   }
-
   async deletePermanently(
     id: string,
     context?: PersistenceContext,
   ): Promise<void> {
-    await this.resolveRepo(context).delete({ id });
+    const repo = this.resolveRepo(context);
+    const manager = repo.manager;
+
+    /**
+     * Tách direct children khỏi Parent
+     * để tránh ON DELETE CASCADE xóa luôn children.
+     */
+    await manager
+      .createQueryBuilder()
+      .update(PageOrmEntity)
+      .set({
+        parent_page_id: null,
+      })
+      .where('parent_page_id = :id', {
+        id,
+      })
+      .execute();
+
+    /**
+     * Sau đó mới hard delete Parent.
+     */
+    await repo.delete({
+      id,
+    });
   }
 
   async existsBySlug(
@@ -210,5 +232,121 @@ export class TypeOrmPageRepository implements PageRepository {
     const orms = await qb.getMany();
 
     return orms.map((orm) => PageMapper.toDomain(orm));
+  }
+
+  async softDeleteHierarchy(
+    pageId: string,
+    deletedBy: string,
+    context?: PersistenceContext,
+  ): Promise<void> {
+    const manager = context as EntityManager;
+
+    await manager.query(
+      `
+    WITH RECURSIVE page_tree AS (
+      SELECT id
+      FROM pages
+      WHERE id = $1
+        AND deleted_at IS NULL
+
+      UNION ALL
+
+      SELECT child.id
+      FROM pages child
+      INNER JOIN page_tree parent
+        ON child.parent_page_id = parent.id
+      WHERE child.deleted_at IS NULL
+    )
+    UPDATE pages
+    SET
+      deleted_at = NOW(),
+      deleted_by = $2
+    WHERE id IN (
+      SELECT id
+      FROM page_tree
+    )
+    `,
+      [pageId, deletedBy],
+    );
+  }
+
+  async restoreHierarchy(
+    pageId: string,
+    context?: PersistenceContext,
+  ): Promise<void> {
+    const manager = context as EntityManager;
+
+    await manager.query(
+      `
+    WITH RECURSIVE
+
+    target_page AS (
+      SELECT
+        id,
+        parent_page_id,
+        deleted_at
+      FROM pages
+      WHERE id = $1
+        AND deleted_at IS NOT NULL
+    ),
+
+    -- Đi ngược lên để restore các Parent cần thiết
+    ancestors AS (
+      SELECT
+        p.id,
+        p.parent_page_id
+      FROM pages p
+      INNER JOIN target_page target
+        ON p.id = target.parent_page_id
+      WHERE p.deleted_at IS NOT NULL
+
+      UNION ALL
+
+      SELECT
+        parent.id,
+        parent.parent_page_id
+      FROM pages parent
+      INNER JOIN ancestors child
+        ON parent.id = child.parent_page_id
+      WHERE parent.deleted_at IS NOT NULL
+    ),
+
+    -- Restore target + descendants bị xóa cùng đợt với target
+    descendants AS (
+      SELECT
+        target.id
+      FROM target_page target
+
+      UNION ALL
+
+      SELECT
+        child.id
+      FROM pages child
+      INNER JOIN descendants parent
+        ON child.parent_page_id = parent.id
+      INNER JOIN target_page target
+        ON child.deleted_at = target.deleted_at
+      WHERE child.deleted_at IS NOT NULL
+    ),
+
+    restore_ids AS (
+      SELECT id FROM ancestors
+
+      UNION
+
+      SELECT id FROM descendants
+    )
+
+    UPDATE pages
+    SET
+      deleted_at = NULL,
+      deleted_by = NULL
+    WHERE id IN (
+      SELECT id
+      FROM restore_ids
+    )
+    `,
+      [pageId],
+    );
   }
 }

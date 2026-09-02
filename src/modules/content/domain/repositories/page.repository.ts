@@ -15,6 +15,11 @@ export interface PageRepository {
   save(page: Page, context?: PersistenceContext): Promise<Page>;
   delete(id: string, context?: PersistenceContext): Promise<void>;
   deletePermanently(id: string, context?: PersistenceContext): Promise<void>;
+  softDeleteHierarchy(
+    pageId: string,
+    deletedBy: string,
+    context?: PersistenceContext,
+  ): Promise<void>;
   existsBySlug(
     workspaceId: string,
     slug: string,
@@ -35,4 +40,5 @@ export interface PageRepository {
     userId: string,
     context?: PersistenceContext,
   ): Promise<Page[]>;
+  restoreHierarchy(pageId: string, context?: PersistenceContext): Promise<void>;
 }
