@@ -349,4 +349,46 @@ export class TypeOrmPageRepository implements PageRepository {
       [pageId],
     );
   }
+
+  async moveHierarchy(
+    pageId: string,
+    parentPageId: string | null,
+    teamspaceId: string | null,
+    context?: PersistenceContext,
+  ): Promise<void> {
+    const manager = context as EntityManager;
+
+    await manager.query(
+      `
+    WITH RECURSIVE page_tree AS (
+      SELECT id
+      FROM pages
+      WHERE id = $1
+        AND deleted_at IS NULL
+
+      UNION ALL
+
+      SELECT child.id
+      FROM pages child
+      INNER JOIN page_tree parent
+        ON child.parent_page_id = parent.id
+      WHERE child.deleted_at IS NULL
+    )
+
+    UPDATE pages
+    SET
+      teamspace_id = $3,
+      parent_page_id = CASE
+        WHEN id = $1 THEN $2
+        ELSE parent_page_id
+      END,
+      updated_at = NOW()
+    WHERE id IN (
+      SELECT id
+      FROM page_tree
+    )
+    `,
+      [pageId, parentPageId, teamspaceId],
+    );
+  }
 }

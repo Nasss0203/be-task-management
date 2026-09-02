@@ -11,6 +11,7 @@ export const CONTENT_TYPES = {
     DeletePageHandler: Symbol.for('DeletePageHandler'),
     RestorePageHandler: Symbol.for('RestorePageHandler'),
     PermanentlyDeletePageHandler: Symbol.for('PermanentlyDeletePageHandler'),
+    MovePageHandler: Symbol.for('MovePageHandler'),
 
     CreatePageBlockHandler: Symbol.for('CreatePageBlockHandler'),
     AddDatabaseViewToBlockHandler: Symbol.for('AddDatabaseViewToBlockHandler'),

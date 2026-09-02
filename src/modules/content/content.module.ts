@@ -6,15 +6,15 @@ import { PermissionModule } from 'src/modules/permission/permission.module';
 
 import { AddDatabaseViewToBlockHandler } from './application/commands/page-block/add-database-view-to-block/add-database-view-to-block.handler';
 import { CreatePageBlockHandler } from './application/commands/page-block/create-page-block/create-page-block.handler';
-import { CreatePageHandler } from './application/commands/page/create-page/create-page.handler';
 import { DeletePageBlockHandler } from './application/commands/page-block/delete-page-block/delete-page-block.handler';
-import { DeletePageHandler } from './application/commands/page/delete-page/delete-page.handler';
 import { MovePageBlockHandler } from './application/commands/page-block/move-page-block/move-page-block.handler';
-import { PermanentlyDeletePageHandler } from './application/commands/page/permanently-delete-page/permanently-delete-page.handler';
 import { ReorderPageBlockHandler } from './application/commands/page-block/reorder-page-block/reorder-page-block.handler';
 import { RestorePageBlockHandler } from './application/commands/page-block/restore-page-block/restore-page-block.handler';
-import { RestorePageHandler } from './application/commands/page/restore-page/restore-page.handler';
 import { UpdatePageBlockHandler } from './application/commands/page-block/update-page-block/update-page-block.handler';
+import { CreatePageHandler } from './application/commands/page/create-page/create-page.handler';
+import { DeletePageHandler } from './application/commands/page/delete-page/delete-page.handler';
+import { PermanentlyDeletePageHandler } from './application/commands/page/permanently-delete-page/permanently-delete-page.handler';
+import { RestorePageHandler } from './application/commands/page/restore-page/restore-page.handler';
 import { UpdatePageHandler } from './application/commands/page/update-page/update-page.handler';
 
 import { FindDeletedPageBlocksHandler } from './application/queries/page-block/find-deleted-page-blocks/find-deleted-page-blocks.handler';
@@ -44,6 +44,7 @@ import { TypeOrmPageTemplateBlockRepository } from './infrastructure/persistence
 import { TypeOrmPageTemplateRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template.repository';
 import { TypeOrmPageRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page.repository';
 
+import { MovePageHandler } from './application/commands/page/move-page/move-page.handler';
 import { PageBlockController } from './presentation/http/controllers/page-block.controller';
 import { PageTemplateBlocksController } from './presentation/http/controllers/page-template-blocks.controller';
 import { PageTemplatesController } from './presentation/http/controllers/page-templates.controller';
@@ -100,6 +101,10 @@ const pageHandlers = [
   {
     provide: CONTENT_TYPES.applications.FindPageByIdHandler,
     useClass: FindPageByIdHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.MovePageHandler,
+    useClass: MovePageHandler,
   },
 ];
 

@@ -24,6 +24,8 @@ import { CreatePageCommand } from 'src/modules/content/application/commands/page
 import { CreatePageHandler } from 'src/modules/content/application/commands/page/create-page/create-page.handler';
 import { DeletePageCommand } from 'src/modules/content/application/commands/page/delete-page/delete-page.command';
 import { DeletePageHandler } from 'src/modules/content/application/commands/page/delete-page/delete-page.handler';
+import { MovePageCommand } from 'src/modules/content/application/commands/page/move-page/move-page.command';
+import { MovePageHandler } from 'src/modules/content/application/commands/page/move-page/move-page.handler';
 import { PermanentlyDeletePageCommand } from 'src/modules/content/application/commands/page/permanently-delete-page/permanently-delete-page.command';
 import { PermanentlyDeletePageHandler } from 'src/modules/content/application/commands/page/permanently-delete-page/permanently-delete-page.handler';
 import { RestorePageCommand } from 'src/modules/content/application/commands/page/restore-page/restore-page.command';
@@ -31,6 +33,7 @@ import { RestorePageHandler } from 'src/modules/content/application/commands/pag
 import { UpdatePageCommand } from 'src/modules/content/application/commands/page/update-page/update-page.command';
 import { UpdatePageHandler } from 'src/modules/content/application/commands/page/update-page/update-page.handler';
 import { CreatePageDto } from 'src/modules/content/application/dto/page/create-page.dto';
+import { MovePageDto } from 'src/modules/content/application/dto/page/move-page.dto';
 import { UpdatePageDto } from 'src/modules/content/application/dto/page/update-page.dto';
 import { FindDeletedPagesHandler } from 'src/modules/content/application/queries/page/find-deleted-pages/find-deleted-pages.handler';
 import { FindDeletedPagesQuery } from 'src/modules/content/application/queries/page/find-deleted-pages/find-deleted-pages.query';
@@ -69,6 +72,9 @@ export class PageController {
 
     @Inject(CONTENT_TYPES.applications.UpdatePageHandler)
     private readonly updatePageHandler: UpdatePageHandler,
+
+    @Inject(CONTENT_TYPES.applications.MovePageHandler)
+    private readonly movePageHandler: MovePageHandler,
   ) {}
 
   @Post()
@@ -195,5 +201,37 @@ export class PageController {
       new RestorePageCommand(workspaceId, pageId, auth.id),
     );
     return { success: true };
+  }
+
+  @Patch(':pageId/move')
+  @StrictWriteRateLimit()
+  @WorkspaceContext({
+    source: 'query',
+    key: 'workspaceId',
+  })
+  @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
+  async movePage(
+    @Param('pageId') pageId: string,
+    @Query('workspaceId') workspaceId: string,
+    @Body() dto: MovePageDto,
+    @Auth() user: IAuth,
+  ) {
+    if (!workspaceId) {
+      throw new BadRequestException('workspaceId is required');
+    }
+
+    await this.movePageHandler.execute(
+      new MovePageCommand(
+        user.id,
+        workspaceId,
+        pageId,
+        dto.parent_page_id ?? null,
+        dto.teamspace_id ?? null,
+      ),
+    );
+
+    return {
+      success: true,
+    };
   }
 }

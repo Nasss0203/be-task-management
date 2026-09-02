@@ -41,4 +41,11 @@ export interface PageRepository {
     context?: PersistenceContext,
   ): Promise<Page[]>;
   restoreHierarchy(pageId: string, context?: PersistenceContext): Promise<void>;
+
+  moveHierarchy(
+    pageId: string,
+    parentPageId: string | null,
+    teamspaceId: string | null,
+    context?: PersistenceContext,
+  ): Promise<void>;
 }
