@@ -22,6 +22,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { ContentModule } from './modules/content/content.module';
 import { PermissionModule } from './modules/permission/permission.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { WorkspaceModule } from './modules/workspace/workspace.module';
     NotificationsModule,
     //V2
     DatabaseModules,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [
