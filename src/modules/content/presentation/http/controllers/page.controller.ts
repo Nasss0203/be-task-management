@@ -24,6 +24,8 @@ import { CreatePageCommand } from 'src/modules/content/application/commands/page
 import { CreatePageHandler } from 'src/modules/content/application/commands/page/create-page/create-page.handler';
 import { DeletePageCommand } from 'src/modules/content/application/commands/page/delete-page/delete-page.command';
 import { DeletePageHandler } from 'src/modules/content/application/commands/page/delete-page/delete-page.handler';
+import { DuplicatePageCommand } from 'src/modules/content/application/commands/page/duplicate-page/duplicate-page.command';
+import { DuplicatePageHandler } from 'src/modules/content/application/commands/page/duplicate-page/duplicate-page.handler';
 import { MovePageCommand } from 'src/modules/content/application/commands/page/move-page/move-page.command';
 import { MovePageHandler } from 'src/modules/content/application/commands/page/move-page/move-page.handler';
 import { PermanentlyDeletePageCommand } from 'src/modules/content/application/commands/page/permanently-delete-page/permanently-delete-page.command';
@@ -34,6 +36,7 @@ import { UpdatePageCommand } from 'src/modules/content/application/commands/page
 import { UpdatePageHandler } from 'src/modules/content/application/commands/page/update-page/update-page.handler';
 import { CreatePageDto } from 'src/modules/content/application/dto/page/create-page.dto';
 import { MovePageDto } from 'src/modules/content/application/dto/page/move-page.dto';
+import { PageResponseDto } from 'src/modules/content/application/dto/page/response/page.response.dto';
 import { UpdatePageDto } from 'src/modules/content/application/dto/page/update-page.dto';
 import { FindDeletedPagesHandler } from 'src/modules/content/application/queries/page/find-deleted-pages/find-deleted-pages.handler';
 import { FindDeletedPagesQuery } from 'src/modules/content/application/queries/page/find-deleted-pages/find-deleted-pages.query';
@@ -75,6 +78,9 @@ export class PageController {
 
     @Inject(CONTENT_TYPES.applications.MovePageHandler)
     private readonly movePageHandler: MovePageHandler,
+
+    @Inject(CONTENT_TYPES.applications.DuplicatePageHandler)
+    private readonly duplicatePageHandler: DuplicatePageHandler,
   ) {}
 
   @Post()
@@ -233,5 +239,26 @@ export class PageController {
     return {
       success: true,
     };
+  }
+
+  @Post(':pageId/duplicate')
+  @StrictWriteRateLimit()
+  @WorkspaceContext({
+    source: 'query',
+    key: 'workspaceId',
+  })
+  @RequirePermissions(PERMISSIONS.PAGE_CREATE)
+  async duplicatePage(
+    @Param('pageId') pageId: string,
+    @Query('workspaceId') workspaceId: string,
+    @Auth() user: IAuth,
+  ): Promise<PageResponseDto> {
+    if (!workspaceId) {
+      throw new BadRequestException('workspaceId is required');
+    }
+
+    return this.duplicatePageHandler.execute(
+      new DuplicatePageCommand(user.id, workspaceId, pageId),
+    );
   }
 }

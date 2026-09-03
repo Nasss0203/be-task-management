@@ -44,6 +44,7 @@ import { TypeOrmPageTemplateBlockRepository } from './infrastructure/persistence
 import { TypeOrmPageTemplateRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template.repository';
 import { TypeOrmPageRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page.repository';
 
+import { DuplicatePageHandler } from './application/commands/page/duplicate-page/duplicate-page.handler';
 import { MovePageHandler } from './application/commands/page/move-page/move-page.handler';
 import { PageBlockController } from './presentation/http/controllers/page-block.controller';
 import { PageTemplateBlocksController } from './presentation/http/controllers/page-template-blocks.controller';
@@ -105,6 +106,10 @@ const pageHandlers = [
   {
     provide: CONTENT_TYPES.applications.MovePageHandler,
     useClass: MovePageHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.DuplicatePageHandler,
+    useClass: DuplicatePageHandler,
   },
 ];
 
