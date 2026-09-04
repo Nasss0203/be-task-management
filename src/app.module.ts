@@ -14,6 +14,7 @@ import { WorkspaceResolverService } from './common/services/workspace-resolver.s
 import { DatabaseModule } from './database/database.module';
 import { ActivityModule } from './modules/activity/activity.module';
 import { AttachmentModule } from './modules/attachment/attachment.module';
+import { BillingModule } from './modules/billing/billing.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { DatabaseModule as DatabaseModules } from './modules/database/database.module';
 import { MailModule } from './modules/mail/mail.module';
@@ -58,6 +59,7 @@ import { WorkspaceModule } from './modules/workspace/workspace.module';
     MentionsModule,
     NotificationsModule,
     //V2
+    BillingModule,
     DatabaseModules,
   ],
   controllers: [AppController],

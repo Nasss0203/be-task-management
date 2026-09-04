@@ -26,6 +26,15 @@ import { WorkspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/p
 import { WorkspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace.orm-entity';
 
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
+import { BillingFeatureOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/billing-feature.orm-entity';
+import { BillingPlanFeatureOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/billing-plan-feature.orm-entity';
+import { BillingPlanPriceOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/billing-plan-price.orm-entity';
+import { BillingPlanOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/billing-plan.orm-entity';
+import { BillingUsageOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/billing-usage.orm-entity';
+import { BillingWebhookEventOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/billing-webhook-event.orm-entity';
+import { PaymentOrderOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/payment-order.orm-entity';
+import { PaymentTransactionOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/payment-transaction.orm-entity';
+import { WorkspaceSubscriptionOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/workspace-subscription.orm-entity';
 import { PageFavoriteOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-favorite.orm-entity';
 import { TeamspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
 import { TeamspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
@@ -75,6 +84,16 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
           TeamspaceOrmEntity,
           TeamspaceMemberOrmEntity,
           PageFavoriteOrmEntity,
+          // Billing
+          BillingFeatureOrmEntity,
+          BillingPlanFeatureOrmEntity,
+          BillingPlanPriceOrmEntity,
+          BillingPlanOrmEntity,
+          BillingUsageOrmEntity,
+          BillingWebhookEventOrmEntity,
+          PaymentOrderOrmEntity,
+          PaymentTransactionOrmEntity,
+          WorkspaceSubscriptionOrmEntity,
         ],
       }),
     }),
