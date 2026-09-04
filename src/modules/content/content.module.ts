@@ -46,13 +46,20 @@ import { TypeOrmPageRepository } from './infrastructure/persistence/typeorm/repo
 
 import { AddPageFavoriteHandler } from './application/commands/page-favorite/add-page-favorite/add-page-favorite.handler';
 import { RemovePageFavoriteHandler } from './application/commands/page-favorite/remove-page-favorite/remove-page-favorite.handler';
+import { AcceptPageShareLinkHandler } from './application/commands/page-share/accept-page-share-link/accept-page-share-link.handler';
+import { CreatePageShareLinkHandler } from './application/commands/page-share/create-page-share-link/create-page-share-link.handler';
 import { DuplicatePageHandler } from './application/commands/page/duplicate-page/duplicate-page.handler';
 import { MovePageHandler } from './application/commands/page/move-page/move-page.handler';
 import { ListPageFavoritesHandler } from './application/queries/page-favorite/list-page-favorites/list-page-favorites.handler';
 import { PageFavoriteOrmEntity } from './infrastructure/persistence/typeorm/entities/page-favorite.orm-entity';
+import { PageShareLinkOrmEntity } from './infrastructure/persistence/typeorm/entities/page-share-link.orm-entity';
+import { PageShareOrmEntity } from './infrastructure/persistence/typeorm/entities/page-share.orm-entity';
 import { TypeOrmPageFavoriteRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-favorite.repository';
+import { TypeOrmPageShareLinkRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-share-link.repository';
+import { TypeOrmPageShareRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-share.repository';
 import { PageBlockController } from './presentation/http/controllers/page-block.controller';
 import { PageFavoriteController } from './presentation/http/controllers/page-favorite.controller';
+import { PageShareController } from './presentation/http/controllers/page-share.controller';
 import { PageTemplateBlocksController } from './presentation/http/controllers/page-template-blocks.controller';
 import { PageTemplatesController } from './presentation/http/controllers/page-templates.controller';
 import { PageController } from './presentation/http/controllers/page.controller';
@@ -77,6 +84,14 @@ const repositories = [
   {
     provide: CONTENT_TYPES.repositories.PageFavoriteRepository,
     useClass: TypeOrmPageFavoriteRepository,
+  },
+  {
+    provide: CONTENT_TYPES.repositories.PageShareRepository,
+    useClass: TypeOrmPageShareRepository,
+  },
+  {
+    provide: CONTENT_TYPES.repositories.PageShareLinkRepository,
+    useClass: TypeOrmPageShareLinkRepository,
   },
 ];
 
@@ -189,6 +204,17 @@ const pageTemplateHandlers = [
   },
 ];
 
+const pageShareHandlers = [
+  {
+    provide: CONTENT_TYPES.applications.CreatePageShareLinkHandler,
+    useClass: CreatePageShareLinkHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.AcceptPageShareLinkHandler,
+    useClass: AcceptPageShareLinkHandler,
+  },
+];
+
 const bookmarkHandlers = [ResolveBookmarkMetadataHandler];
 
 const applicationServices = [PageBlockOrderingService];
@@ -212,6 +238,8 @@ const ports = [
       PageTemplateOrmEntity,
       PageTemplateBlockOrmEntity,
       PageFavoriteOrmEntity,
+      PageShareOrmEntity,
+      PageShareLinkOrmEntity,
     ]),
     DatabaseModule,
     PermissionModule,
@@ -223,6 +251,7 @@ const ports = [
     PageBlockController,
     PageTemplatesController,
     PageTemplateBlocksController,
+    PageShareController,
   ],
 
   providers: [
@@ -230,6 +259,7 @@ const ports = [
     ...pageHandlers,
     ...pageBlockHandlers,
     ...pageTemplateHandlers,
+    ...pageShareHandlers,
     ...bookmarkHandlers,
     ...applicationServices,
     ...ports,

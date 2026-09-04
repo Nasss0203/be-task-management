@@ -45,6 +45,9 @@ export const CONTENT_TYPES = {
     AddPageFavoriteHandler: Symbol.for('AddPageFavoriteHandler'),
     RemovePageFavoriteHandler: Symbol.for('RemovePageFavoriteHandler'),
     ListPageFavoritesHandler: Symbol.for('ListPageFavoritesHandler'),
+    SharePageHandler: Symbol.for('SharePageHandler'),
+    CreatePageShareLinkHandler: Symbol.for('CreatePageShareLinkHandler'),
+    AcceptPageShareLinkHandler: Symbol('AcceptPageShareLinkHandler'),
   },
   repositories: {
     PageRepository: Symbol.for('PageRepository'),
@@ -52,6 +55,8 @@ export const CONTENT_TYPES = {
     PageTemplateRepository: Symbol.for('PageTemplateRepository'),
     PageTemplateBlockRepository: Symbol.for('PageTemplateBlockRepository'),
     PageFavoriteRepository: Symbol.for('PageFavoriteRepository'),
+    PageShareRepository: Symbol.for('PageShareRepository'),
+    PageShareLinkRepository: Symbol.for('PageShareLinkRepository'),
   },
   bookmarkMetadataFetcher: Symbol('BookmarkMetadataFetcher'),
 };

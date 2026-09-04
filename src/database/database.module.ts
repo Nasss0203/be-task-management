@@ -36,6 +36,8 @@ import { PaymentOrderOrmEntity } from 'src/modules/billing/infrastructure/persis
 import { PaymentTransactionOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/payment-transaction.orm-entity';
 import { WorkspaceSubscriptionOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/workspace-subscription.orm-entity';
 import { PageFavoriteOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-favorite.orm-entity';
+import { PageShareLinkOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-share-link.orm-entity';
+import { PageShareOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-share.orm-entity';
 import { TeamspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
 import { TeamspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
@@ -94,6 +96,10 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
           PaymentOrderOrmEntity,
           PaymentTransactionOrmEntity,
           WorkspaceSubscriptionOrmEntity,
+
+          //
+          PageShareOrmEntity,
+          PageShareLinkOrmEntity,
         ],
       }),
     }),

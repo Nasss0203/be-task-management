@@ -26,6 +26,12 @@ export const PERMISSIONS = {
   PAGE_BLOCK_UPDATE: 'page_block.update',
   PAGE_BLOCK_DELETE: 'page_block.delete',
 
+  // Page Share
+  PAGE_SHARE_READ: 'page.share.read',
+  PAGE_SHARE_ADD: 'page.share.add',
+  PAGE_SHARE_UPDATE: 'page.share.update',
+  PAGE_SHARE_REMOVE: 'page.share.remove',
+
   DATABASE_CREATE: 'database.create',
   DATABASE_READ: 'database.read',
   DATABASE_UPDATE: 'database.update',

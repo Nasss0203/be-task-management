@@ -23,6 +23,8 @@ import { PaymentOrderOrmEntity } from 'src/modules/billing/infrastructure/persis
 import { PaymentTransactionOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/payment-transaction.orm-entity';
 import { WorkspaceSubscriptionOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/workspace-subscription.orm-entity';
 import { PageFavoriteOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-favorite.orm-entity';
+import { PageShareLinkOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-share-link.orm-entity';
+import { PageShareOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-share.orm-entity';
 import { DatabasePropertyOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-property.orm-entity';
 import { DatabaseRowOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-row.orm-entity';
 import { DatabaseViewPropertyOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-view-property.orm-entity';
@@ -86,6 +88,9 @@ export default new DataSource({
     PaymentOrderOrmEntity,
     PaymentTransactionOrmEntity,
     WorkspaceSubscriptionOrmEntity,
+    //
+    PageShareOrmEntity,
+    PageShareLinkOrmEntity,
   ],
   migrations: ['src/database/migrations/*{.ts,.js}'],
 });
