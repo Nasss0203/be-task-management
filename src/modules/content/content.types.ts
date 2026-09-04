@@ -42,12 +42,16 @@ export const CONTENT_TYPES = {
     DeletePageTemplateBlockHandler: Symbol.for(
       'DeletePageTemplateBlockHandler',
     ),
+    AddPageFavoriteHandler: Symbol.for('AddPageFavoriteHandler'),
+    RemovePageFavoriteHandler: Symbol.for('RemovePageFavoriteHandler'),
+    ListPageFavoritesHandler: Symbol.for('ListPageFavoritesHandler'),
   },
   repositories: {
     PageRepository: Symbol.for('PageRepository'),
     PageBlockRepository: Symbol.for('PageBlockRepository'),
     PageTemplateRepository: Symbol.for('PageTemplateRepository'),
     PageTemplateBlockRepository: Symbol.for('PageTemplateBlockRepository'),
+    PageFavoriteRepository: Symbol.for('PageFavoriteRepository'),
   },
   bookmarkMetadataFetcher: Symbol('BookmarkMetadataFetcher'),
 };

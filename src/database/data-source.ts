@@ -13,6 +13,7 @@ import { Mention } from 'src/modules/mentions/domain/entities/mention.entity';
 import { Notification } from 'src/modules/notifications/domain/entities/notification.entity';
 import { Permission } from 'src/modules/permission/infrastructure/persistence/typeorm/entities/legacy-permission.orm-entity';
 
+import { PageFavoriteOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-favorite.orm-entity';
 import { DatabasePropertyOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-property.orm-entity';
 import { DatabaseRowOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-row.orm-entity';
 import { DatabaseViewPropertyOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-view-property.orm-entity';
@@ -65,6 +66,7 @@ export default new DataSource({
     DatabaseViewPropertyOrmEntity,
     TeamspaceOrmEntity,
     TeamspaceMemberOrmEntity,
+    PageFavoriteOrmEntity,
   ],
   migrations: ['src/database/migrations/*{.ts,.js}'],
 });

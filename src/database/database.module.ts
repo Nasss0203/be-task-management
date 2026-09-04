@@ -26,6 +26,7 @@ import { WorkspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/p
 import { WorkspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace.orm-entity';
 
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
+import { PageFavoriteOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-favorite.orm-entity';
 import { TeamspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
 import { TeamspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
@@ -73,6 +74,7 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
           DatabaseViewPropertyOrmEntity,
           TeamspaceOrmEntity,
           TeamspaceMemberOrmEntity,
+          PageFavoriteOrmEntity,
         ],
       }),
     }),

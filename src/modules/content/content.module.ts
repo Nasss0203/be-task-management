@@ -44,9 +44,15 @@ import { TypeOrmPageTemplateBlockRepository } from './infrastructure/persistence
 import { TypeOrmPageTemplateRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template.repository';
 import { TypeOrmPageRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page.repository';
 
+import { AddPageFavoriteHandler } from './application/commands/page-favorite/add-page-favorite/add-page-favorite.handler';
+import { RemovePageFavoriteHandler } from './application/commands/page-favorite/remove-page-favorite/remove-page-favorite.handler';
 import { DuplicatePageHandler } from './application/commands/page/duplicate-page/duplicate-page.handler';
 import { MovePageHandler } from './application/commands/page/move-page/move-page.handler';
+import { ListPageFavoritesHandler } from './application/queries/page-favorite/list-page-favorites/list-page-favorites.handler';
+import { PageFavoriteOrmEntity } from './infrastructure/persistence/typeorm/entities/page-favorite.orm-entity';
+import { TypeOrmPageFavoriteRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-favorite.repository';
 import { PageBlockController } from './presentation/http/controllers/page-block.controller';
+import { PageFavoriteController } from './presentation/http/controllers/page-favorite.controller';
 import { PageTemplateBlocksController } from './presentation/http/controllers/page-template-blocks.controller';
 import { PageTemplatesController } from './presentation/http/controllers/page-templates.controller';
 import { PageController } from './presentation/http/controllers/page.controller';
@@ -67,6 +73,10 @@ const repositories = [
   {
     provide: CONTENT_TYPES.repositories.PageTemplateBlockRepository,
     useClass: TypeOrmPageTemplateBlockRepository,
+  },
+  {
+    provide: CONTENT_TYPES.repositories.PageFavoriteRepository,
+    useClass: TypeOrmPageFavoriteRepository,
   },
 ];
 
@@ -165,6 +175,18 @@ const pageTemplateHandlers = [
     provide: CONTENT_TYPES.applications.FindPageTemplateBlockByTemplateHandler,
     useClass: FindPageTemplateBlockByTemplateHandler,
   },
+  {
+    provide: CONTENT_TYPES.applications.AddPageFavoriteHandler,
+    useClass: AddPageFavoriteHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.RemovePageFavoriteHandler,
+    useClass: RemovePageFavoriteHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.ListPageFavoritesHandler,
+    useClass: ListPageFavoritesHandler,
+  },
 ];
 
 const bookmarkHandlers = [ResolveBookmarkMetadataHandler];
@@ -189,12 +211,14 @@ const ports = [
       PageBlockOrmEntity,
       PageTemplateOrmEntity,
       PageTemplateBlockOrmEntity,
+      PageFavoriteOrmEntity,
     ]),
     DatabaseModule,
     PermissionModule,
   ],
 
   controllers: [
+    PageFavoriteController,
     PageController,
     PageBlockController,
     PageTemplatesController,
