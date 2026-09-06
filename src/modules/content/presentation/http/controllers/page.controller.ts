@@ -158,10 +158,10 @@ export class PageController {
   }
 
   @Get(':pageId')
-  @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
-  @RequirePermissions(PERMISSIONS.PAGE_READ)
-  async findPageById(@Param('pageId') pageId: string) {
-    return this.findPageByIdHandler.execute(new FindPageByIdQuery(pageId));
+  async findOne(@Param('pageId') pageId: string, @Auth() auth: IAuth) {
+    return this.findPageByIdHandler.execute(
+      new FindPageByIdQuery(auth.id, pageId),
+    );
   }
 
   @Patch(':pageId')

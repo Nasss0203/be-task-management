@@ -5,16 +5,25 @@ import { ResourceAccessLevel } from '../constants/resource-access-level.constant
 interface CreatePageShareProps {
   pageId: string;
   userId: string;
-  accessLevel: ResourceAccessLevel;
+
+  // Link đã tạo ra quyền này
+  shareLinkId?: string | null;
+
   createdBy: string;
 }
 
 interface RestorePageShareProps {
   id: string;
+
   pageId: string;
   userId: string;
+
+  shareLinkId: string | null;
+
   accessLevel: ResourceAccessLevel;
+
   createdBy: string;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,12 +31,20 @@ interface RestorePageShareProps {
 export class PageShare {
   private constructor(
     private readonly id: string,
+
     private readonly pageId: string,
+
     private readonly userId: string,
-    private readonly accessLevel: ResourceAccessLevel,
+
+    private readonly shareLinkId: string | null,
+
+    private accessLevel: ResourceAccessLevel,
+
     private readonly createdBy: string,
+
     private readonly createdAt: Date,
-    private readonly updatedAt: Date,
+
+    private updatedAt: Date,
   ) {}
 
   static create(props: CreatePageShareProps): PageShare {
@@ -35,11 +52,20 @@ export class PageShare {
 
     return new PageShare(
       randomUUID(),
+
       props.pageId,
+
       props.userId,
-      props.accessLevel,
+
+      props.shareLinkId ?? null,
+
+      // User mới vào bằng link luôn là VIEWER
+      ResourceAccessLevel.VIEWER,
+
       props.createdBy,
+
       now,
+
       now,
     );
   }
@@ -47,13 +73,30 @@ export class PageShare {
   static restore(props: RestorePageShareProps): PageShare {
     return new PageShare(
       props.id,
+
       props.pageId,
+
       props.userId,
+
+      props.shareLinkId,
+
       props.accessLevel,
+
       props.createdBy,
+
       props.createdAt,
+
       props.updatedAt,
     );
+  }
+
+  changeAccessLevel(accessLevel: ResourceAccessLevel): void {
+    if (this.accessLevel === accessLevel) {
+      return;
+    }
+
+    this.accessLevel = accessLevel;
+    this.updatedAt = new Date();
   }
 
   getId(): string {
@@ -66,6 +109,10 @@ export class PageShare {
 
   getUserId(): string {
     return this.userId;
+  }
+
+  getShareLinkId(): string | null {
+    return this.shareLinkId;
   }
 
   getAccessLevel(): ResourceAccessLevel {

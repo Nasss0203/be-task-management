@@ -89,12 +89,10 @@ export class AcceptPageShareLinkHandler {
         const pageShare = PageShare.create({
           pageId,
 
-          // User đang đăng nhập
           userId: command.userId,
 
-          accessLevel: shareLink.getAccessLevel(),
+          shareLinkId: shareLink.getId(),
 
-          // Người đã tạo share link
           createdBy: shareLink.getCreatedBy(),
         });
 

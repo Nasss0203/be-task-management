@@ -90,6 +90,25 @@ export class TypeOrmPageShareRepository implements PageShareRepository {
     return rows.map(PageShareMapper.toDomain);
   }
 
+  async findByUserId(
+    userId: string,
+    context?: PersistenceContext,
+  ): Promise<PageShare[]> {
+    const repository = this.resolveRepository(context);
+
+    const entities = await repository.find({
+      where: {
+        user_id: userId,
+      },
+
+      order: {
+        created_at: 'DESC',
+      },
+    });
+
+    return entities.map(PageShareMapper.toDomain);
+  }
+
   async deleteByPageAndUser(
     pageId: string,
     userId: string,

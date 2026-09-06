@@ -40,6 +40,7 @@ export class TypeOrmResourceAuthorizationReader implements ResourceAuthorization
     }
 
     return {
+      pageId: page.id,
       workspaceId: page.workspace_id,
       teamspaceId: page.teamspace_id,
     };

@@ -1,4 +1,5 @@
 export interface ResourceAuthorizationContext {
+  pageId: string;
   workspaceId: string;
   teamspaceId: string | null;
 }

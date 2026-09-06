@@ -1,3 +1,6 @@
 export class FindPageByIdQuery {
-  constructor(public readonly pageId: string) {}
+  constructor(
+    public readonly userId: string,
+    public readonly pageId: string,
+  ) {}
 }

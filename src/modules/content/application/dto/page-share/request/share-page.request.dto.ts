@@ -1,6 +1,6 @@
 import { IsEnum, IsUUID } from 'class-validator';
 
-import { ResourceAccessLevel } from '../../../domain/constants/resource-access-level.constant';
+import { ResourceAccessLevel } from '../../../../domain/constants/resource-access-level.constant';
 
 export class SharePageRequestDto {
   @IsUUID()

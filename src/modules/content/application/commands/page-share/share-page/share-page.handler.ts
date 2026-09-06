@@ -91,11 +91,7 @@ export class SharePageHandler {
 
       const pageShare = PageShare.create({
         pageId: command.pageId,
-
         userId: command.targetUserId,
-
-        accessLevel: command.accessLevel,
-
         createdBy: command.userId,
       });
 

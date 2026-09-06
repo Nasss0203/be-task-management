@@ -18,6 +18,11 @@ export interface PageShareRepository {
     context?: PersistenceContext,
   ): Promise<PageShare[]>;
 
+  findByUserId(
+    userId: string,
+    context?: PersistenceContext,
+  ): Promise<PageShare[]>;
+
   deleteByPageAndUser(
     pageId: string,
     userId: string,

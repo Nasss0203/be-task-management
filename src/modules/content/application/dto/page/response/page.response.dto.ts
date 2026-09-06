@@ -20,6 +20,8 @@ export class PageResponseDto {
 
   is_template: boolean;
 
+  canEdit: boolean;
+
   created_by: string;
 
   blocks?: PageBlock[];
@@ -32,7 +34,12 @@ export class PageResponseDto {
 
   deletedBy: string | null;
 
-  static fromDomain(page: Page): PageResponseDto {
+  static fromDomain(
+    page: Page,
+    options?: {
+      canEdit?: boolean;
+    },
+  ): PageResponseDto {
     const dto = new PageResponseDto();
 
     dto.id = page.getId();
@@ -52,6 +59,8 @@ export class PageResponseDto {
     dto.cover_url = page.getCoverUrl();
 
     dto.is_template = page.getIsTemplate();
+
+    dto.canEdit = options?.canEdit ?? false;
 
     dto.created_by = page.getCreatedBy();
 

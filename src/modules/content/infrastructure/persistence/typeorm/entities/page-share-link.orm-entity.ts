@@ -7,8 +7,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { ResourceAccessLevel } from '../../../../domain/constants/resource-access-level.constant';
-
 @Entity('page_share_links')
 @Index('UQ_page_share_links_token_hash', ['token_hash'], {
   unique: true,
@@ -28,20 +26,13 @@ export class PageShareLinkOrmEntity {
 
   /**
    * Không lưu raw token.
-   * Chỉ lưu SHA-256 hash của token.
+   * Chỉ lưu SHA-256 hash.
    */
   @Column({
     type: 'varchar',
     length: 64,
   })
   token_hash: string;
-
-  @Column({
-    type: 'enum',
-    enum: ResourceAccessLevel,
-    enumName: 'resource_access_level_enum',
-  })
-  access_level: ResourceAccessLevel;
 
   @Column({
     type: 'uuid',

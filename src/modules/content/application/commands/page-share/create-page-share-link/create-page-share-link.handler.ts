@@ -84,8 +84,6 @@ export class CreatePageShareLinkHandler {
 
         tokenHash,
 
-        accessLevel: command.accessLevel,
-
         createdBy: command.userId,
 
         expiresAt: command.expiresAt ?? null,
