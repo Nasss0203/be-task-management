@@ -38,10 +38,12 @@ import { PERMISSION_TYPES } from './permission.types';
     },
     {
       provide: PERMISSION_TYPES.ports.PageSharePermissionReader,
-
       useClass: TypeOrmPageSharePermissionReader,
     },
   ],
-  exports: [AuthorizationService],
+  exports: [
+    AuthorizationService,
+    PERMISSION_TYPES.ports.PageSharePermissionReader,
+  ],
 })
 export class PermissionModule {}

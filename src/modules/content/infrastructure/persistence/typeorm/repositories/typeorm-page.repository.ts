@@ -5,7 +5,7 @@ import type { PageRepository } from 'src/modules/content/domain/repositories/pag
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import type { Repository } from 'typeorm';
-import { EntityManager } from 'typeorm';
+import { EntityManager, In } from 'typeorm';
 import { PageOrmEntity } from '../entities/page.orm-entity';
 import { PageMapper } from '../mappers/page.mapper';
 
@@ -360,35 +360,91 @@ export class TypeOrmPageRepository implements PageRepository {
 
     await manager.query(
       `
-    WITH RECURSIVE page_tree AS (
-      SELECT id
-      FROM pages
-      WHERE id = $1
-        AND deleted_at IS NULL
+      WITH RECURSIVE page_tree AS (
+        SELECT id
+        FROM pages
+        WHERE id = $1
+          AND deleted_at IS NULL
 
-      UNION ALL
+        UNION ALL
 
-      SELECT child.id
-      FROM pages child
-      INNER JOIN page_tree parent
-        ON child.parent_page_id = parent.id
-      WHERE child.deleted_at IS NULL
-    )
+        SELECT child.id
+        FROM pages child
+        INNER JOIN page_tree parent
+          ON child.parent_page_id = parent.id
+        WHERE child.deleted_at IS NULL
+      )
 
-    UPDATE pages
-    SET
-      teamspace_id = $3,
-      parent_page_id = CASE
-        WHEN id = $1 THEN $2
-        ELSE parent_page_id
-      END,
-      updated_at = NOW()
-    WHERE id IN (
-      SELECT id
-      FROM page_tree
-    )
+      UPDATE pages
+      SET
+        teamspace_id = $3,
+        parent_page_id = CASE
+          WHEN id = $1 THEN $2
+          ELSE parent_page_id
+        END,
+        updated_at = NOW()
+      WHERE id IN (
+        SELECT id
+        FROM page_tree
+      )
     `,
       [pageId, parentPageId, teamspaceId],
     );
+  }
+
+  async findDescendants(
+    pageId: string,
+    context?: PersistenceContext,
+  ): Promise<Page[]> {
+    const repo = this.resolveRepo(context);
+    const manager = repo.manager;
+
+    const rows = await manager.query<
+      Array<{
+        id: string;
+      }>
+    >(
+      `
+      WITH RECURSIVE page_tree AS (
+        SELECT
+          id,
+          parent_page_id
+        FROM pages
+        WHERE parent_page_id = $1
+          AND deleted_at IS NULL
+
+        UNION ALL
+
+        SELECT
+          child.id,
+          child.parent_page_id
+        FROM pages child
+        INNER JOIN page_tree parent
+          ON child.parent_page_id = parent.id
+        WHERE child.deleted_at IS NULL
+      )
+
+      SELECT id
+      FROM page_tree
+    `,
+      [pageId],
+    );
+
+    if (rows.length === 0) {
+      return [];
+    }
+
+    const ids = rows.map((row) => row.id);
+
+    const orms = await repo.find({
+      where: {
+        id: In(ids),
+      },
+      order: {
+        createdAt: 'ASC',
+      },
+    });
+
+    return orms.map((orm) => PageMapper.toDomain(orm));
   }
 }

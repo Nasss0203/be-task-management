@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
+import { ResourceAccessLevel } from 'src/modules/content/domain/constants/resource-access-level.constant';
 
 import type { PageShareRepository } from '../../../../domain/repositories/page-share.repository';
 import type { PageRepository } from '../../../../domain/repositories/page.repository';
@@ -25,36 +26,64 @@ export class GetPagesSharedWithMeHandler {
       return [];
     }
 
-    const results = await Promise.all(
+    const groups = await Promise.all(
       shares.map(async (share) => {
-        const page = await this.pageRepository.findById(share.getPageId());
+        const rootPage = await this.pageRepository.findById(share.getPageId());
 
-        if (!page) {
-          return null;
+        if (!rootPage) {
+          return [];
         }
 
-        return {
-          id: page.getId(),
+        const descendants = await this.pageRepository.findDescendants(
+          rootPage.getId(),
+        );
 
-          workspace_id: page.getWorkspaceId(),
+        const pages = [rootPage, ...descendants];
 
-          teamspace_id: page.getTeamspaceId(),
+        return pages.map(
+          (page): SharedPageDto => ({
+            id: page.getId(),
 
-          parent_page_id: page.getParentPageId(),
+            workspace_id: page.getWorkspaceId(),
 
-          title: page.getTitle(),
+            teamspace_id: page.getTeamspaceId(),
 
-          slug: page.getSlug(),
+            parent_page_id: page.getParentPageId(),
 
-          icon: page.getIcon(),
+            title: page.getTitle(),
 
-          cover_url: page.getCoverUrl(),
+            slug: page.getSlug(),
 
-          accessLevel: share.getAccessLevel(),
-        } satisfies SharedPageDto;
+            icon: page.getIcon(),
+
+            cover_url: page.getCoverUrl(),
+
+            accessLevel: share.getAccessLevel(),
+          }),
+        );
       }),
     );
 
-    return results.filter((result): result is SharedPageDto => result !== null);
+    const pageMap = new Map<string, SharedPageDto>();
+
+    for (const group of groups) {
+      for (const page of group) {
+        const existing = pageMap.get(page.id);
+
+        if (!existing) {
+          pageMap.set(page.id, page);
+          continue;
+        }
+
+        if (
+          existing.accessLevel === ResourceAccessLevel.VIEWER &&
+          page.accessLevel === ResourceAccessLevel.EDITOR
+        ) {
+          pageMap.set(page.id, page);
+        }
+      }
+    }
+
+    return Array.from(pageMap.values());
   }
 }

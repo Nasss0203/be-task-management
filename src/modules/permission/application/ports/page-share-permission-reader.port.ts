@@ -1,8 +1,14 @@
-import type { PageShareAccessLevel } from '../../domain/policies/page-share-permission.policy';
+import { PageShareAccessLevel } from '../../domain/policies/page-share-permission.policy';
+
+export interface EffectivePageShare {
+  shareId: string;
+  sharedPageId: string;
+  accessLevel: PageShareAccessLevel;
+}
 
 export interface PageSharePermissionReader {
-  findAccessLevel(
+  findEffectiveShare(
     pageId: string,
     userId: string,
-  ): Promise<PageShareAccessLevel | null>;
+  ): Promise<EffectivePageShare | null>;
 }

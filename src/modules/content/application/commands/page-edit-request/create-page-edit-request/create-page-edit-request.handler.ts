@@ -7,13 +7,16 @@ import {
 
 import { CONTENT_TYPES } from '../../../../content.types';
 
+import { ResourceAccessLevel } from '../../../../domain/constants/resource-access-level.constant';
+
 import { PageEditRequest } from '../../../../domain/entities/page-edit-request.entity';
 
 import type { PageEditRequestRepository } from '../../../../domain/repositories/page-edit-request.repository';
-import type { PageShareRepository } from '../../../../domain/repositories/page-share.repository';
 
-import { ResourceAccessLevel } from 'src/modules/content/domain/constants/resource-access-level.constant';
 import { PageEditRequestDto } from '../../../dto/page-edit-request/page-edit-request.dto';
+
+import { type PageSharePermissionReader } from 'src/modules/permission/application/ports/page-share-permission-reader.port';
+import { PERMISSION_TYPES } from 'src/modules/permission/permission.types';
 import { CreatePageEditRequestCommand } from './create-page-edit-request.command';
 
 @Injectable()
@@ -22,52 +25,38 @@ export class CreatePageEditRequestHandler {
     @Inject(CONTENT_TYPES.repositories.PageEditRequestRepository)
     private readonly pageEditRequestRepository: PageEditRequestRepository,
 
-    @Inject(CONTENT_TYPES.repositories.PageShareRepository)
-    private readonly pageShareRepository: PageShareRepository,
+    @Inject(PERMISSION_TYPES.ports.PageSharePermissionReader)
+    private readonly pageSharePermissionReader: PageSharePermissionReader,
   ) {}
 
   async execute(
     command: CreatePageEditRequestCommand,
   ): Promise<PageEditRequestDto> {
-    /**
-     * User phải thực sự có PageShare.
-     *
-     * Workspace/Teamspace owner không cần request edit,
-     * vì họ đã có quyền thông qua membership.
-     */
-    const pageShare = await this.pageShareRepository.findByPageAndUser(
-      command.pageId,
-      command.userId,
-    );
+    const effectiveShare =
+      await this.pageSharePermissionReader.findEffectiveShare(
+        command.pageId,
+        command.userId,
+      );
 
-    if (!pageShare) {
+    if (!effectiveShare) {
       throw new ForbiddenException(
         'You do not have shared access to this page',
       );
     }
 
-    /**
-     * User đã là EDITOR thì không cần request nữa.
-     */
-    if (pageShare.getAccessLevel() === ResourceAccessLevel.EDITOR) {
+    if (effectiveShare.accessLevel === ResourceAccessLevel.EDITOR) {
       throw new ConflictException('You already have edit access to this page');
     }
 
-    /**
-     * Chỉ VIEWER mới được request edit.
-     */
-    if (pageShare.getAccessLevel() !== ResourceAccessLevel.VIEWER) {
+    if (effectiveShare.accessLevel !== ResourceAccessLevel.VIEWER) {
       throw new ForbiddenException(
         'You cannot request edit access to this page',
       );
     }
 
-    /**
-     * Không tạo nhiều PENDING request.
-     */
     const existingPending =
       await this.pageEditRequestRepository.findPendingByPageShareId(
-        pageShare.getId(),
+        effectiveShare.shareId,
       );
 
     if (existingPending) {
@@ -75,9 +64,9 @@ export class CreatePageEditRequestHandler {
     }
 
     const editRequest = PageEditRequest.create({
-      pageId: command.pageId,
+      pageId: effectiveShare.sharedPageId,
 
-      pageShareId: pageShare.getId(),
+      pageShareId: effectiveShare.shareId,
 
       userId: command.userId,
     });

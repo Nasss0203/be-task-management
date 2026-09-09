@@ -48,4 +48,9 @@ export interface PageRepository {
     teamspaceId: string | null,
     context?: PersistenceContext,
   ): Promise<void>;
+
+  findDescendants(
+    pageId: string,
+    context?: PersistenceContext,
+  ): Promise<Page[]>;
 }

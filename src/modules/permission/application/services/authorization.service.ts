@@ -154,17 +154,15 @@ export class AuthorizationService {
     pageId: string,
     permissions: readonly PermissionCode[],
   ): Promise<boolean> {
-    const accessLevel = await this.pageSharePermissionReader.findAccessLevel(
-      pageId,
-      userId,
-    );
+    const effectiveShare =
+      await this.pageSharePermissionReader.findEffectiveShare(pageId, userId);
 
-    if (!accessLevel) {
+    if (!effectiveShare) {
       return false;
     }
 
     return PageSharePermissionPolicy.hasAllPermissions(
-      accessLevel,
+      effectiveShare.accessLevel,
       permissions,
     );
   }
