@@ -57,6 +57,8 @@ export const CONTENT_TYPES = {
     ApprovePageEditRequestHandler: Symbol('ApprovePageEditRequestHandler'),
     RejectPageEditRequestHandler: Symbol('RejectPageEditRequestHandler'),
     GetMyPageEditRequestsHandler: Symbol('GetMyPageEditRequestsHandler'),
+    GetPageShareSettingHandler: Symbol('GetPageShareSettingHandler'),
+    UpdatePageShareSettingHandler: Symbol('UpdatePageShareSettingHandler'),
   },
   repositories: {
     PageRepository: Symbol.for('PageRepository'),
@@ -67,6 +69,7 @@ export const CONTENT_TYPES = {
     PageShareRepository: Symbol.for('PageShareRepository'),
     PageShareLinkRepository: Symbol.for('PageShareLinkRepository'),
     PageEditRequestRepository: Symbol('PageEditRequestRepository'),
+    PageShareSettingRepository: Symbol('PageShareSettingRepository'),
   },
   bookmarkMetadataFetcher: Symbol('BookmarkMetadataFetcher'),
 };

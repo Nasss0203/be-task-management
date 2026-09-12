@@ -7,7 +7,9 @@ import { AuthorizationService } from 'src/modules/permission/application/service
 import { PERMISSIONS } from 'src/modules/permission/domain/permissions/permission-code';
 
 import type { PageShareRepository } from '../../../../domain/repositories/page-share.repository';
-import { PageShareDto } from '../../../dto/page-share/page-share.dto';
+
+import type { PageShareWithUserDto } from '../../../dto/page-share/page-share-with-user.dto';
+
 import { GetPageSharesQuery } from './get-page-shares.query';
 
 @Injectable()
@@ -19,12 +21,10 @@ export class GetPageSharesHandler {
     private readonly authorizationService: AuthorizationService,
   ) {}
 
-  async execute(query: GetPageSharesQuery): Promise<PageShareDto[]> {
+  async execute(query: GetPageSharesQuery): Promise<PageShareWithUserDto[]> {
     const allowed = await this.authorizationService.authorize({
       userId: query.userId,
-
       permissions: [PERMISSIONS.PAGE_SHARE_READ],
-
       target: {
         type: 'page',
         id: query.pageId,
@@ -37,20 +37,6 @@ export class GetPageSharesHandler {
       );
     }
 
-    const shares = await this.pageShareRepository.findByPageId(query.pageId);
-
-    return shares.map((share) => ({
-      id: share.getId(),
-
-      userId: share.getUserId(),
-
-      accessLevel: share.getAccessLevel(),
-
-      createdBy: share.getCreatedBy(),
-
-      createdAt: share.getCreatedAt(),
-
-      updatedAt: share.getUpdatedAt(),
-    }));
+    return this.pageShareRepository.findDetailsByPageId(query.pageId);
   }
 }

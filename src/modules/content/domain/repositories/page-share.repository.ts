@@ -2,6 +2,25 @@ import type { PersistenceContext } from 'src/shared/infrastructure/persistence/p
 
 import type { PageShare } from '../entities/page-share.entity';
 
+export interface PageShareUserDetails {
+  id: string;
+  username: string;
+  displayName: string;
+  email: string;
+  avatarUrl: string | null;
+}
+
+export interface PageShareDetails {
+  id: string;
+  userId: string;
+  accessLevel: ReturnType<PageShare['getAccessLevel']>;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+
+  user: PageShareUserDetails;
+}
+
 export interface PageShareRepository {
   save(pageShare: PageShare, context?: PersistenceContext): Promise<PageShare>;
 
@@ -17,6 +36,11 @@ export interface PageShareRepository {
     pageId: string,
     context?: PersistenceContext,
   ): Promise<PageShare[]>;
+
+  findDetailsByPageId(
+    pageId: string,
+    context?: PersistenceContext,
+  ): Promise<PageShareDetails[]>;
 
   findByUserId(
     userId: string,

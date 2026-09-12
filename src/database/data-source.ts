@@ -25,6 +25,7 @@ import { WorkspaceSubscriptionOrmEntity } from 'src/modules/billing/infrastructu
 import { PageEditRequestOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-edit-request.orm-entity';
 import { PageFavoriteOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-favorite.orm-entity';
 import { PageShareLinkOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-share-link.orm-entity';
+import { PageShareSettingOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-share-setting.orm-entity';
 import { PageShareOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-share.orm-entity';
 import { DatabasePropertyOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-property.orm-entity';
 import { DatabaseRowOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-row.orm-entity';
@@ -93,6 +94,7 @@ export default new DataSource({
     PageShareOrmEntity,
     PageShareLinkOrmEntity,
     PageEditRequestOrmEntity,
+    PageShareSettingOrmEntity,
   ],
   migrations: ['src/database/migrations/*{.ts,.js}'],
 });

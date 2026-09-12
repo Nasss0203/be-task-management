@@ -9,6 +9,7 @@ import { AuthorizationService } from './application/services/authorization.servi
 import { TypeOrmResourceAuthorizationReader } from './infrastructure/persistence/typeorm/adapters/resource-authorization-reader.adapter';
 import { TypeOrmTeamspacePermissionReader } from './infrastructure/persistence/typeorm/adapters/teamspace-permission-reader.adapter';
 import { TypeOrmWorkspacePermissionReader } from './infrastructure/persistence/typeorm/adapters/workspace-permission-reader.adapter';
+import { TypeOrmPageGeneralAccessReader } from './infrastructure/persistence/typeorm/readers/typeorm-page-general-access.reader';
 import { TypeOrmPageSharePermissionReader } from './infrastructure/persistence/typeorm/readers/typeorm-page-share-permission.reader';
 import { PERMISSION_TYPES } from './permission.types';
 
@@ -39,6 +40,11 @@ import { PERMISSION_TYPES } from './permission.types';
     {
       provide: PERMISSION_TYPES.ports.PageSharePermissionReader,
       useClass: TypeOrmPageSharePermissionReader,
+    },
+    {
+      provide: PERMISSION_TYPES.ports.PageGeneralAccessReader,
+
+      useClass: TypeOrmPageGeneralAccessReader,
     },
   ],
   exports: [

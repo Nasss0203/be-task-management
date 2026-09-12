@@ -9,6 +9,8 @@ interface CreatePageShareProps {
   // Link đã tạo ra quyền này
   shareLinkId?: string | null;
 
+  accessLevel?: ResourceAccessLevel;
+
   createdBy: string;
 }
 
@@ -46,26 +48,17 @@ export class PageShare {
 
     private updatedAt: Date,
   ) {}
-
   static create(props: CreatePageShareProps): PageShare {
     const now = new Date();
 
     return new PageShare(
       randomUUID(),
-
       props.pageId,
-
       props.userId,
-
       props.shareLinkId ?? null,
-
-      // User mới vào bằng link luôn là VIEWER
-      ResourceAccessLevel.VIEWER,
-
+      props.accessLevel ?? ResourceAccessLevel.VIEWER,
       props.createdBy,
-
       now,
-
       now,
     );
   }

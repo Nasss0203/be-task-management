@@ -19,6 +19,7 @@ import { AuthorizationService } from 'src/modules/permission/application/service
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 
 import { type UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
+import { PageShareDto } from '../../../dto/page-share/page-share.dto';
 import { SharePageCommand } from './share-page.command';
 
 @Injectable()
@@ -36,20 +37,11 @@ export class SharePageHandler {
     private readonly authorizationService: AuthorizationService,
   ) {}
 
-  async execute(command: SharePageCommand): Promise<void> {
-    /**
-     * Không cho share Page cho chính mình.
-     */
+  async execute(command: SharePageCommand): Promise<PageShareDto> {
     if (command.userId === command.targetUserId) {
       throw new ConflictException('You cannot share a page with yourself');
     }
 
-    /**
-     * Người thực hiện phải có quyền quản lý/share Page.
-     *
-     * Nếu project chưa có PAGE_SHARE thì dùng permission
-     * quản lý Page tương ứng hiện tại, ví dụ PAGE_UPDATE.
-     */
     const allowed = await this.authorizationService.authorize({
       userId: command.userId,
       permissions: [PERMISSIONS.PAGE_SHARE_READ],
@@ -65,20 +57,13 @@ export class SharePageHandler {
       );
     }
 
-    await this.uow.runInTransaction(async (manager) => {
-      /**
-       * Page phải tồn tại và đang active.
-       */
+    return this.uow.runInTransaction(async (manager) => {
       const page = await this.pageRepo.findById(command.pageId, manager);
 
       if (!page) {
         throw new NotFoundException('Page not found');
       }
 
-      /**
-       * Một user chỉ có một PageShare
-       * trên cùng một Page.
-       */
       const existing = await this.pageShareRepo.findByPageAndUser(
         command.pageId,
         command.targetUserId,
@@ -92,10 +77,20 @@ export class SharePageHandler {
       const pageShare = PageShare.create({
         pageId: command.pageId,
         userId: command.targetUserId,
+        accessLevel: command.accessLevel,
         createdBy: command.userId,
       });
 
-      await this.pageShareRepo.save(pageShare, manager);
+      const saved = await this.pageShareRepo.save(pageShare, manager);
+
+      return {
+        id: saved.getId(),
+        userId: saved.getUserId(),
+        accessLevel: saved.getAccessLevel(),
+        createdBy: saved.getCreatedBy(),
+        createdAt: saved.getCreatedAt(),
+        updatedAt: saved.getUpdatedAt(),
+      };
     });
   }
 }

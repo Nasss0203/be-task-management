@@ -4,5 +4,6 @@ export const PERMISSION_TYPES = {
     TeamspacePermissionReader: Symbol('TeamspacePermissionReader'),
     ResourceAuthorizationReader: Symbol('ResourceAuthorizationReader'),
     PageSharePermissionReader: Symbol('PageSharePermissionReader'),
+    PageGeneralAccessReader: Symbol('PageGeneralAccessReader'),
   },
 } as const;

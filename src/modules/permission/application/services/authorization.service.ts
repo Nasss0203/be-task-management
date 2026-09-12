@@ -15,6 +15,8 @@ import { WorkspacePermissionPolicy } from '../../domain/policies/workspace-permi
 
 import { PERMISSION_TYPES } from '../../permission.types';
 
+import type { PageGeneralAccessReader } from '../ports/page-general-access-reader.port';
+
 import type { PageSharePermissionReader } from '../ports/page-share-permission-reader.port';
 
 import type {
@@ -23,6 +25,7 @@ import type {
 } from '../ports/resource-authorization-reader.port';
 
 import type { TeamspacePermissionReader } from '../ports/teamspace-permission-reader.port';
+
 import type { WorkspacePermissionReader } from '../ports/workspace-permission-reader.port';
 
 import type { AuthorizationTarget } from '../types/authorization-target';
@@ -49,6 +52,9 @@ export class AuthorizationService {
 
     @Inject(PERMISSION_TYPES.ports.PageSharePermissionReader)
     private readonly pageSharePermissionReader: PageSharePermissionReader,
+
+    @Inject(PERMISSION_TYPES.ports.PageGeneralAccessReader)
+    private readonly pageGeneralAccessReader: PageGeneralAccessReader,
   ) {}
 
   async authorize({
@@ -85,9 +91,11 @@ export class AuthorizationService {
   /**
    * Authorize Page.
    *
-   * Ưu tiên:
+   * Thứ tự:
+   *
    * 1. Workspace / Teamspace membership
-   * 2. PageShare
+   * 2. Direct / inherited PageShare
+   * 3. General Access
    */
   private async authorizePage(
     userId: string,
@@ -101,6 +109,9 @@ export class AuthorizationService {
       return false;
     }
 
+    /**
+     * Quyền từ Workspace / Teamspace.
+     */
     const allowedByMembership = await this.authorizeByContext(
       userId,
       context,
@@ -111,13 +122,26 @@ export class AuthorizationService {
       return true;
     }
 
-    return this.authorizePageShare(userId, context.pageId, permissions);
+    /**
+     * Không có membership phù hợp.
+     *
+     * Tiếp tục kiểm tra:
+     *
+     * - PageShare
+     * - General Access
+     */
+    return this.authorizePageExternalAccess(
+      userId,
+      context.pageId,
+      permissions,
+    );
   }
 
   /**
    * Authorize PageBlock.
    *
-   * PageBlock kế thừa quyền từ Page chứa nó.
+   * PageBlock không có permission độc lập.
+   * Nó kế thừa quyền từ Page chứa nó.
    */
   private async authorizePageBlock(
     userId: string,
@@ -131,6 +155,9 @@ export class AuthorizationService {
       return false;
     }
 
+    /**
+     * Workspace / Teamspace membership.
+     */
     const allowedByMembership = await this.authorizeByContext(
       userId,
       context,
@@ -141,13 +168,62 @@ export class AuthorizationService {
       return true;
     }
 
-    return this.authorizePageShare(userId, context.pageId, permissions);
+    /**
+     * PageBlock kế thừa PageShare
+     * và General Access từ Page.
+     */
+    return this.authorizePageExternalAccess(
+      userId,
+      context.pageId,
+      permissions,
+    );
   }
 
   /**
-   * Kiểm tra quyền theo PageShare.
+   * Các quyền truy cập Page nằm ngoài membership.
    *
-   * VIEWER / COMMENTER / EDITOR
+   * Dùng chung cho:
+   *
+   * - Page
+   * - PageBlock
+   *
+   * Thứ tự:
+   *
+   * 1. PageShare
+   * 2. General Access
+   */
+  private async authorizePageExternalAccess(
+    userId: string,
+    pageId: string,
+    permissions: readonly PermissionCode[],
+  ): Promise<boolean> {
+    const allowedByPageShare = await this.authorizePageShare(
+      userId,
+      pageId,
+      permissions,
+    );
+
+    if (allowedByPageShare) {
+      return true;
+    }
+
+    return this.authorizePageGeneralAccess(pageId, permissions);
+  }
+
+  /**
+   * Kiểm tra quyền từ PageShare.
+   *
+   * PageSharePermissionReader chịu trách nhiệm
+   * resolve direct / inherited share.
+   *
+   * Ví dụ:
+   *
+   * A → EDITOR
+   * └── B
+   *     └── C
+   *
+   * authorize C
+   * → effective share = A / EDITOR
    */
   private async authorizePageShare(
     userId: string,
@@ -168,20 +244,54 @@ export class AuthorizationService {
   }
 
   /**
-   * Resource nằm trong Teamspace
-   * → check Teamspace.
+   * General Access.
    *
-   * Resource không nằm trong Teamspace
-   * → check Workspace.
+   * RESTRICTED:
+   * → không cấp thêm quyền.
+   *
+   * LINK:
+   * → cấp quyền theo linkAccessLevel.
+   *
+   * V1 hiện tại:
+   * linkAccessLevel = VIEWER.
+   */
+  private async authorizePageGeneralAccess(
+    pageId: string,
+    permissions: readonly PermissionCode[],
+  ): Promise<boolean> {
+    const setting = await this.pageGeneralAccessReader.findByPageId(pageId);
+
+    if (!setting) {
+      return false;
+    }
+
+    if (setting.generalAccess !== 'LINK') {
+      return false;
+    }
+
+    return PageSharePermissionPolicy.hasAllPermissions(
+      setting.linkAccessLevel,
+      permissions,
+    );
+  }
+
+  /**
+   * Resource có Teamspace:
+   * → kiểm tra Teamspace.
+   *
+   * Resource không có Teamspace:
+   * → kiểm tra Workspace.
    */
   private async authorizeByContext(
     userId: string,
     context: ResourceAuthorizationContext,
     permissions: readonly PermissionCode[],
   ): Promise<boolean> {
-    return context.teamspaceId
-      ? this.authorizeTeamspace(userId, context.teamspaceId, permissions)
-      : this.authorizeWorkspace(userId, context.workspaceId, permissions);
+    if (context.teamspaceId) {
+      return this.authorizeTeamspace(userId, context.teamspaceId, permissions);
+    }
+
+    return this.authorizeWorkspace(userId, context.workspaceId, permissions);
   }
 
   private async authorizeWorkspace(
@@ -194,12 +304,14 @@ export class AuthorizationService {
       userId,
     );
 
-    return membership
-      ? WorkspacePermissionPolicy.hasAllPermissions(
-          membership.role,
-          permissions,
-        )
-      : false;
+    if (!membership) {
+      return false;
+    }
+
+    return WorkspacePermissionPolicy.hasAllPermissions(
+      membership.role,
+      permissions,
+    );
   }
 
   private async authorizeTeamspace(
@@ -215,6 +327,10 @@ export class AuthorizationService {
       return false;
     }
 
+    /**
+     * Nếu caller biết Workspace mong đợi
+     * thì Teamspace phải thuộc đúng Workspace đó.
+     */
     if (expectedWorkspaceId && teamspace.workspaceId !== expectedWorkspaceId) {
       return false;
     }
@@ -228,15 +344,19 @@ export class AuthorizationService {
     /**
      * Không thuộc Workspace.
      *
-     * PageShare sẽ được check ở authorizePage()
-     * hoặc authorizePageBlock().
+     * authorizePage / authorizePageBlock
+     * vẫn có thể tiếp tục kiểm tra:
+     *
+     * - PageShare
+     * - General Access
      */
     if (!workspaceMembership) {
       return false;
     }
 
     /**
-     * Workspace OWNER được xem như Teamspace OWNER.
+     * Workspace OWNER được xem như
+     * Teamspace OWNER.
      */
     if (workspaceMembership.role === WorkspaceRole.OWNER) {
       return TeamspacePermissionPolicy.hasAllPermissions(
@@ -256,10 +376,10 @@ export class AuthorizationService {
     }
 
     /**
-     * Workspace member không thuộc Teamspace
+     * Workspace member không thuộc Teamspace,
      * nhưng Teamspace OPEN.
      *
-     * Hiện tại chỉ cho TEAMSPACE_READ.
+     * Hiện tại chỉ cho đọc Teamspace.
      */
     if (teamspace.visibility === TeamspaceVisibility.OPEN) {
       return permissions.every(

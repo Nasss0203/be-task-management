@@ -38,6 +38,7 @@ import { WorkspaceSubscriptionOrmEntity } from 'src/modules/billing/infrastructu
 import { PageEditRequestOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-edit-request.orm-entity';
 import { PageFavoriteOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-favorite.orm-entity';
 import { PageShareLinkOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-share-link.orm-entity';
+import { PageShareSettingOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-share-setting.orm-entity';
 import { PageShareOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-share.orm-entity';
 import { TeamspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
 import { TeamspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
@@ -102,6 +103,7 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
           PageShareOrmEntity,
           PageShareLinkOrmEntity,
           PageEditRequestOrmEntity,
+          PageShareSettingOrmEntity,
         ],
       }),
     }),
