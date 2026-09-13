@@ -7,6 +7,7 @@ import {
   CreateLocalUserInput,
   SearchInviteUsersInput,
   SearchInviteUsersOutput,
+  SearchUsersOutput,
   UserRecord,
   UserRepository,
 } from 'src/modules/identity/domain/repositories/user.repository';
@@ -142,22 +143,60 @@ export class TypeOrmUserRepository implements UserRepository {
   async searchUsers(
     keyword: string,
     context?: PersistenceContext,
-  ): Promise<UserModel[]> {
+  ): Promise<SearchUsersOutput[]> {
     const trimmedKeyword = keyword.trim();
-    if (!trimmedKeyword) return [];
 
-    const users = await this.getRepo(context)
+    if (trimmedKeyword.length < 2) {
+      return [];
+    }
+
+    const searchPattern = `%${trimmedKeyword}%`;
+
+    const rows = await this.getRepo(context)
       .createQueryBuilder('u')
-      .where('u.username ILIKE :keyword', {
-        keyword: `%${trimmedKeyword}%`,
-      })
-      .orWhere('u.email ILIKE :keyword', {
-        keyword: `%${trimmedKeyword}%`,
-      })
+      .leftJoin('user_profiles', 'up', 'up.user_id = u.id')
+      .where('u.is_active = true')
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('u.username ILIKE :searchPattern', {
+            searchPattern,
+          })
+            .orWhere('u.email ILIKE :searchPattern', {
+              searchPattern,
+            })
+            .orWhere('up.display_name ILIKE :searchPattern', {
+              searchPattern,
+            })
+            .orWhere('up.full_name ILIKE :searchPattern', {
+              searchPattern,
+            });
+        }),
+      )
+      .select('u.id', 'id')
+      .addSelect('u.username', 'username')
+      .addSelect('u.email', 'email')
+      .addSelect('u.avatar_url', 'avatarUrl')
+      .addSelect('up.display_name', 'profileDisplayName')
+      .addSelect('up.full_name', 'profileFullName')
+      .orderBy('u.username', 'ASC')
       .limit(10)
-      .getMany();
+      .getRawMany<{
+        id: string;
+        username: string;
+        email: string;
+        avatarUrl: string | null;
+        profileDisplayName: string | null;
+        profileFullName: string | null;
+      }>();
 
-    return users.map((user) => UserMapper.toModel(user));
+    return rows.map((row) => ({
+      id: row.id,
+      username: row.username,
+      email: row.email,
+      displayName:
+        row.profileDisplayName ?? row.profileFullName ?? row.username,
+      avatarUrl: row.avatarUrl,
+    }));
   }
 
   async searchInviteUsers(

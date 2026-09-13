@@ -1,11 +1,9 @@
-export type PageGeneralAccess = 'RESTRICTED' | 'LINK';
-
-export type PageLinkAccessLevel = 'VIEWER' | 'EDITOR';
+import { ResourceAccessLevel } from 'src/modules/content/domain/constants/resource-access-level.constant';
 
 export interface PageGeneralAccessContext {
-  generalAccess: PageGeneralAccess;
+  workspaceAccessLevel: ResourceAccessLevel | null;
 
-  linkAccessLevel: PageLinkAccessLevel;
+  linkAccessLevel: ResourceAccessLevel | null;
 }
 
 export interface PageGeneralAccessReader {

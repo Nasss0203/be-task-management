@@ -16,6 +16,7 @@ import { PageShare } from '../../../../domain/entities/page-share.entity';
 import type { PageShareLinkRepository } from '../../../../domain/repositories/page-share-link.repository';
 import type { PageShareRepository } from '../../../../domain/repositories/page-share.repository';
 
+import { ResourceAccessLevel } from 'src/modules/content/domain/constants/resource-access-level.constant';
 import { AcceptPageShareLinkCommand } from './accept-page-share-link.command';
 
 export interface AcceptPageShareLinkResult {
@@ -88,11 +89,9 @@ export class AcceptPageShareLinkHandler {
       if (!existingShare) {
         const pageShare = PageShare.create({
           pageId,
-
           userId: command.userId,
-
           shareLinkId: shareLink.getId(),
-
+          accessLevel: ResourceAccessLevel.VIEWER,
           createdBy: shareLink.getCreatedBy(),
         });
 

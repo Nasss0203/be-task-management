@@ -1,12 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
-import { ResourceAccessLevel } from 'src/modules/content/domain/constants/resource-access-level.constant';
 
 import type { PageShareRepository } from '../../../../domain/repositories/page-share.repository';
 import type { PageRepository } from '../../../../domain/repositories/page.repository';
 import type { SharedPageDto } from '../../../dto/page-share/shared-page.dto';
 
+import { getHigherAccessLevel } from 'src/modules/content/domain/constants/resource-access-level.util';
 import { GetPagesSharedWithMeQuery } from './get-pages-shared-with-me.query';
 
 @Injectable()
@@ -75,12 +75,15 @@ export class GetPagesSharedWithMeHandler {
           continue;
         }
 
-        if (
-          existing.accessLevel === ResourceAccessLevel.VIEWER &&
-          page.accessLevel === ResourceAccessLevel.EDITOR
-        ) {
-          pageMap.set(page.id, page);
-        }
+        const higherAccessLevel = getHigherAccessLevel(
+          existing.accessLevel,
+          page.accessLevel,
+        );
+
+        pageMap.set(page.id, {
+          ...existing,
+          accessLevel: higherAccessLevel ?? existing.accessLevel,
+        });
       }
     }
 

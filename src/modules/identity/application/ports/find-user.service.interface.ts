@@ -1,5 +1,7 @@
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
-import { UserModel } from '../..//domain/aggregates/user/user.model';
+
+import { UserModel } from '../../domain/aggregates/user/user.model';
+import { SearchUsersOutput } from '../../domain/repositories/user.repository';
 
 export type InviteUserSuggestionStatus =
   | 'CAN_INVITE'
@@ -20,14 +22,18 @@ export interface SearchInviteUsersServiceOutput {
   avatar_url: string | null;
   status: InviteUserSuggestionStatus;
 }
+
 export interface FindUserService {
   findUserByUsername(username: string): Promise<UserModel | null>;
+
   findUserByEmail(email: string): Promise<UserModel | null>;
+
   findUserById(id: string): Promise<UserModel | null>;
+
   searchUsers(
     keyword: string,
     context?: PersistenceContext,
-  ): Promise<UserModel[]>;
+  ): Promise<SearchUsersOutput[]>;
 
   searchInviteUsers(
     input: SearchInviteUsersServiceInput,

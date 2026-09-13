@@ -16,6 +16,7 @@ import { RefreshAuthHandler } from './application/commands/refresh-auth/refresh-
 import { RegisterAuthHandler } from './application/commands/register-auth/register-auth.handler';
 import { GetProfileAuthHandler } from './application/queries/get-profile-auth/get-profile-auth.handler';
 import { GetUserProfileHandler } from './application/queries/get-user-profile/get-user-profile.handler';
+import { SearchUsersHandler } from './application/queries/user/search-users/search-users.handler';
 import { AuthService } from './application/services/auth.service';
 import { FindUserServiceImpl } from './application/services/find-user.service';
 import { IssueAuthTokenServiceImpl } from './application/services/issue-auth-token.service';
@@ -93,6 +94,11 @@ import { UsersController } from './presentation/http/controllers/users.controlle
     {
       provide: IDENTITY_TYPES.services.UserProfilePreferenceService,
       useClass: UserProfilePreferenceServiceImpl,
+    },
+
+    {
+      provide: IDENTITY_TYPES.applications.SearchUsersHandler,
+      useClass: SearchUsersHandler,
     },
   ],
   exports: [

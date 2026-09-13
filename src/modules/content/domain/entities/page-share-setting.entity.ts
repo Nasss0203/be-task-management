@@ -1,19 +1,26 @@
 import { randomUUID } from 'crypto';
 
-import { PageGeneralAccess } from '../constants/page-general-access.constant';
 import { ResourceAccessLevel } from '../constants/resource-access-level.constant';
 
 interface PageShareSettingProps {
   id: string;
-
   pageId: string;
 
-  generalAccess: PageGeneralAccess;
+  /**
+   * Quyền mặc định dành cho user thuộc Workspace.
+   *
+   * null = không cấp quyền từ Workspace general access.
+   */
+  workspaceAccessLevel: ResourceAccessLevel | null;
 
-  linkAccessLevel: ResourceAccessLevel;
+  /**
+   * Quyền dành cho user truy cập thông qua link.
+   *
+   * null = link access đang tắt.
+   */
+  linkAccessLevel: ResourceAccessLevel | null;
 
   createdAt: Date;
-
   updatedAt: Date;
 }
 
@@ -29,19 +36,13 @@ export class PageShareSetting {
 
     return new PageShareSetting({
       id: randomUUID(),
-
       pageId: props.pageId,
 
-      generalAccess: PageGeneralAccess.RESTRICTED,
-
-      /**
-       * V1:
-       * Anyone with the link chỉ được VIEWER.
-       */
-      linkAccessLevel: ResourceAccessLevel.VIEWER,
+      // Mặc định Page là restricted.
+      workspaceAccessLevel: null,
+      linkAccessLevel: null,
 
       createdAt: now,
-
       updatedAt: now,
     });
   }
@@ -50,18 +51,36 @@ export class PageShareSetting {
     return new PageShareSetting(props);
   }
 
-  enableLinkAccess(): void {
-    this.props.generalAccess = PageGeneralAccess.LINK;
+  setWorkspaceAccessLevel(accessLevel: ResourceAccessLevel | null): void {
+    if (this.props.workspaceAccessLevel === accessLevel) {
+      return;
+    }
 
-    this.props.linkAccessLevel = ResourceAccessLevel.VIEWER;
+    this.props.workspaceAccessLevel = accessLevel;
 
     this.touch();
   }
 
-  restrict(): void {
-    this.props.generalAccess = PageGeneralAccess.RESTRICTED;
+  setLinkAccessLevel(accessLevel: ResourceAccessLevel | null): void {
+    if (accessLevel === ResourceAccessLevel.FULL_ACCESS) {
+      throw new Error('Link access cannot grant full access');
+    }
+
+    if (this.props.linkAccessLevel === accessLevel) {
+      return;
+    }
+
+    this.props.linkAccessLevel = accessLevel;
 
     this.touch();
+  }
+
+  disableWorkspaceAccess(): void {
+    this.setWorkspaceAccessLevel(null);
+  }
+
+  disableLinkAccess(): void {
+    this.setLinkAccessLevel(null);
   }
 
   private touch(): void {
@@ -76,11 +95,11 @@ export class PageShareSetting {
     return this.props.pageId;
   }
 
-  getGeneralAccess(): PageGeneralAccess {
-    return this.props.generalAccess;
+  getWorkspaceAccessLevel(): ResourceAccessLevel | null {
+    return this.props.workspaceAccessLevel;
   }
 
-  getLinkAccessLevel(): ResourceAccessLevel {
+  getLinkAccessLevel(): ResourceAccessLevel | null {
     return this.props.linkAccessLevel;
   }
 

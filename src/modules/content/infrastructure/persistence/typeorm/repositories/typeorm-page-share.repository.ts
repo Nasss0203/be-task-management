@@ -7,6 +7,7 @@ import type { PersistenceContext } from 'src/shared/infrastructure/persistence/p
 import type {
   PageShareDetails,
   PageShareRepository,
+  PageShareUserDetails,
 } from '../../../../domain/repositories/page-share.repository';
 
 import type { PageShare } from '../../../../domain/entities/page-share.entity';
@@ -205,5 +206,104 @@ export class TypeOrmPageShareRepository implements PageShareRepository {
         user_id: userId,
       },
     });
+  }
+
+  async searchCandidates(
+    pageId: string,
+    currentUserId: string,
+    pageCreatorId: string,
+    keyword: string,
+    limit = 10,
+    context?: PersistenceContext,
+  ): Promise<PageShareUserDetails[]> {
+    const normalizedKeyword = keyword.trim();
+
+    if (!normalizedKeyword) {
+      return [];
+    }
+
+    const repository = this.resolveRepository(context);
+
+    const safeLimit = Math.min(Math.max(limit, 1), 20);
+
+    const searchPattern = `%${normalizedKeyword}%`;
+
+    const rows = await repository.manager
+      .createQueryBuilder()
+      .select('candidate.id', 'id')
+      .addSelect('candidate.username', 'username')
+      .addSelect('candidate.email', 'email')
+      .addSelect('candidate.avatar_url', 'avatarUrl')
+      .addSelect('profile.display_name', 'profileDisplayName')
+      .addSelect('profile.full_name', 'profileFullName')
+      .from('users', 'candidate')
+      .leftJoin('user_profiles', 'profile', 'profile.user_id = candidate.id')
+
+      // Không trả chính user đang thao tác
+      .where('candidate.id <> :currentUserId', {
+        currentUserId,
+      })
+
+      // Không trả người tạo page
+      .andWhere('candidate.id <> :pageCreatorId', {
+        pageCreatorId,
+      })
+
+      // Chỉ user active
+      .andWhere('candidate.is_active = true')
+
+      // Không lấy user đã soft delete
+      .andWhere('candidate.deleted_at IS NULL')
+
+      // Search theo email / username / profile
+      .andWhere(
+        `
+      (
+        candidate.email ILIKE :searchPattern
+        OR candidate.username ILIKE :searchPattern
+        OR profile.display_name ILIKE :searchPattern
+        OR profile.full_name ILIKE :searchPattern
+      )
+      `,
+        {
+          searchPattern,
+        },
+      )
+
+      // Không trả user đã được share page này
+      .andWhere(
+        `
+      NOT EXISTS (
+        SELECT 1
+        FROM page_shares existing_share
+        WHERE existing_share.page_id = :pageId
+          AND existing_share.user_id = candidate.id
+      )
+      `,
+        {
+          pageId,
+        },
+      )
+
+      .orderBy('candidate.username', 'ASC')
+      .limit(safeLimit)
+
+      .getRawMany<{
+        id: string;
+        username: string;
+        email: string;
+        avatarUrl: string | null;
+        profileDisplayName: string | null;
+        profileFullName: string | null;
+      }>();
+
+    return rows.map((row) => ({
+      id: row.id,
+      username: row.username,
+      displayName:
+        row.profileDisplayName ?? row.profileFullName ?? row.username,
+      email: row.email,
+      avatarUrl: row.avatarUrl,
+    }));
   }
 }

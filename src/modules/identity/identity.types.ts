@@ -8,6 +8,9 @@ export const IDENTITY_TYPES = {
     FindUserService: Symbol('IdentityFindUserService'),
     UserProfilePreferenceService: Symbol('UserProfilePreferenceService'),
   },
+  applications: {
+    SearchUsersHandler: Symbol('SearchUsersHandler'),
+  },
 };
 
 // Public identity contracts used by shared guards and other bounded contexts.

@@ -38,6 +38,8 @@ import { CreatePageDto } from 'src/modules/content/application/dto/page/create-p
 import { MovePageDto } from 'src/modules/content/application/dto/page/move-page.dto';
 import { PageResponseDto } from 'src/modules/content/application/dto/page/response/page.response.dto';
 import { UpdatePageDto } from 'src/modules/content/application/dto/page/update-page.dto';
+import { GetPageAccessHandler } from 'src/modules/content/application/queries/page-access/get-page-access/get-page-access.handler';
+import { GetPageAccessQuery } from 'src/modules/content/application/queries/page-access/get-page-access/get-page-access.query';
 import { FindDeletedPagesHandler } from 'src/modules/content/application/queries/page/find-deleted-pages/find-deleted-pages.handler';
 import { FindDeletedPagesQuery } from 'src/modules/content/application/queries/page/find-deleted-pages/find-deleted-pages.query';
 import { FindPageByIdHandler } from 'src/modules/content/application/queries/page/find-page-by-id/find-page-by-id.handler';
@@ -81,6 +83,9 @@ export class PageController {
 
     @Inject(CONTENT_TYPES.applications.DuplicatePageHandler)
     private readonly duplicatePageHandler: DuplicatePageHandler,
+
+    @Inject(CONTENT_TYPES.applications.GetPageAccessHandler)
+    private readonly getPageAccessHandler: GetPageAccessHandler,
   ) {}
 
   @Post()
@@ -259,6 +264,13 @@ export class PageController {
 
     return this.duplicatePageHandler.execute(
       new DuplicatePageCommand(user.id, workspaceId, pageId),
+    );
+  }
+
+  @Get(':pageId/access')
+  async getPageAccess(@Param('pageId') pageId: string, @Auth() auth: IAuth) {
+    return this.getPageAccessHandler.execute(
+      new GetPageAccessQuery(auth.id, pageId),
     );
   }
 }

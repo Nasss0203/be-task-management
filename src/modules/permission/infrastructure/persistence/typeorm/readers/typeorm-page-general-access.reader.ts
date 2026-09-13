@@ -7,7 +7,7 @@ import type {
 } from '../../../../application/ports/page-general-access-reader.port';
 
 interface PageGeneralAccessRow {
-  generalAccess: PageGeneralAccessContext['generalAccess'];
+  workspaceAccessLevel: PageGeneralAccessContext['workspaceAccessLevel'];
 
   linkAccessLevel: PageGeneralAccessContext['linkAccessLevel'];
 }
@@ -20,7 +20,6 @@ export class TypeOrmPageGeneralAccessReader implements PageGeneralAccessReader {
     const rows = await this.dataSource.query<PageGeneralAccessRow[]>(
       `
         WITH RECURSIVE page_ancestors AS (
-       
           SELECT
             id,
             parent_page_id,
@@ -31,29 +30,30 @@ export class TypeOrmPageGeneralAccessReader implements PageGeneralAccessReader {
 
           UNION ALL
 
-          /**
-           * Đi ngược lên toàn bộ parent.
-           */
           SELECT
             parent.id,
             parent.parent_page_id,
             child.depth + 1
           FROM pages parent
+
           INNER JOIN page_ancestors child
             ON parent.id = child.parent_page_id
+
           WHERE parent.deleted_at IS NULL
         )
 
         SELECT
-          setting.general_access AS "generalAccess",
-          setting.link_access_level AS "linkAccessLevel"
+          setting.workspace_access_level
+            AS "workspaceAccessLevel",
+
+          setting.link_access_level
+            AS "linkAccessLevel"
 
         FROM page_ancestors ancestor
 
         INNER JOIN page_share_settings setting
           ON setting.page_id = ancestor.id
 
-      
         ORDER BY ancestor.depth ASC
 
         LIMIT 1

@@ -50,6 +50,7 @@ import { ApprovePageEditRequestHandler } from './application/commands/page-edit-
 import { RejectPageEditRequestHandler } from './application/commands/page-edit-request/reject-page-edit-request/reject-page-edit-request.handler';
 import { AddPageFavoriteHandler } from './application/commands/page-favorite/add-page-favorite/add-page-favorite.handler';
 import { RemovePageFavoriteHandler } from './application/commands/page-favorite/remove-page-favorite/remove-page-favorite.handler';
+import { UpdatePageShareSettingHandler } from './application/commands/page-share-setting/update-page-share-setting/update-page-share-setting.handler';
 import { AcceptPageShareLinkHandler } from './application/commands/page-share/accept-page-share-link/accept-page-share-link.handler';
 import { CreatePageShareLinkHandler } from './application/commands/page-share/create-page-share-link/create-page-share-link.handler';
 import { RemovePageShareHandler } from './application/commands/page-share/remove-page-share/remove-page-share.handler';
@@ -57,13 +58,14 @@ import { SharePageHandler } from './application/commands/page-share/share-page/s
 import { UpdatePageShareHandler } from './application/commands/page-share/update-page-share/update-page-share.handler';
 import { DuplicatePageHandler } from './application/commands/page/duplicate-page/duplicate-page.handler';
 import { MovePageHandler } from './application/commands/page/move-page/move-page.handler';
-import { UpdatePageShareSettingHandler } from './application/commands/update-page-share-setting/update-page-share-setting.handler';
+import { GetPageAccessHandler } from './application/queries/page-access/get-page-access/get-page-access.handler';
 import { GetMyPageEditRequestsHandler } from './application/queries/page-edit-request/get-my-page-edit-requests/get-my-page-edit-requests.handler';
 import { GetPageEditRequestsHandler } from './application/queries/page-edit-request/get-page-edit-requests/get-page-edit-requests.handler';
 import { ListPageFavoritesHandler } from './application/queries/page-favorite/list-page-favorites/list-page-favorites.handler';
 import { GetPageShareSettingHandler } from './application/queries/page-share-setting/get-page-share-setting/get-page-share-setting.handler';
 import { GetPageSharesHandler } from './application/queries/page-share/get-page-shares/get-page-shares.handler';
 import { GetPagesSharedWithMeHandler } from './application/queries/page-share/get-pages-shared-with-me/get-pages-shared-with-me.handler';
+import { SearchPageShareCandidatesHandler } from './application/queries/page-share/search-page-share-candidates/search-page-share-candidates.handler';
 import { PageEditRequestOrmEntity } from './infrastructure/persistence/typeorm/entities/page-edit-request.orm-entity';
 import { PageFavoriteOrmEntity } from './infrastructure/persistence/typeorm/entities/page-favorite.orm-entity';
 import { PageShareLinkOrmEntity } from './infrastructure/persistence/typeorm/entities/page-share-link.orm-entity';
@@ -164,6 +166,11 @@ const pageHandlers = [
     provide: CONTENT_TYPES.applications.DuplicatePageHandler,
     useClass: DuplicatePageHandler,
   },
+
+  {
+    provide: CONTENT_TYPES.applications.GetPageAccessHandler,
+    useClass: GetPageAccessHandler,
+  },
 ];
 
 const pageBlockHandlers = [
@@ -261,6 +268,10 @@ const pageShareHandlers = [
     provide: CONTENT_TYPES.applications.SharePageHandler,
     useClass: SharePageHandler,
   },
+  {
+    provide: CONTENT_TYPES.applications.SearchPageShareCandidatesHandler,
+    useClass: SearchPageShareCandidatesHandler,
+  },
 ];
 
 const pageEditRequestHandlers = [
@@ -285,6 +296,7 @@ const pageEditRequestHandlers = [
     useClass: GetMyPageEditRequestsHandler,
   },
 ];
+
 const pageShareSettingsHandlers = [
   {
     provide: CONTENT_TYPES.applications.GetPageShareSettingHandler,

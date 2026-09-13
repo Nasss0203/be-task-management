@@ -1,9 +1,12 @@
 import { Body, Controller, Get, Inject, Param, Patch } from '@nestjs/common';
 
 import { Auth } from 'src/common/decorator/auth.decorator';
-import { UpdatePageShareSettingCommand } from 'src/modules/content/application/commands/update-page-share-setting/update-page-share-setting.command';
-import { UpdatePageShareSettingHandler } from 'src/modules/content/application/commands/update-page-share-setting/update-page-share-setting.handler';
+
+import { UpdatePageShareSettingCommand } from 'src/modules/content/application/commands/page-share-setting/update-page-share-setting/update-page-share-setting.command';
+import { UpdatePageShareSettingHandler } from 'src/modules/content/application/commands/page-share-setting/update-page-share-setting/update-page-share-setting.handler';
+
 import { UpdatePageShareSettingRequestDto } from 'src/modules/content/application/dto/page-share-setting/request/update-page-share-setting.request.dto';
+
 import { GetPageShareSettingHandler } from 'src/modules/content/application/queries/page-share-setting/get-page-share-setting/get-page-share-setting.handler';
 import { GetPageShareSettingQuery } from 'src/modules/content/application/queries/page-share-setting/get-page-share-setting/get-page-share-setting.query';
 
@@ -38,7 +41,12 @@ export class PageShareSettingsController {
     @Auth() auth: IAuth,
   ) {
     return this.updatePageShareSettingHandler.execute(
-      new UpdatePageShareSettingCommand(auth.id, pageId, request.generalAccess),
+      new UpdatePageShareSettingCommand(
+        auth.id,
+        pageId,
+        request.workspace_access_level,
+        request.link_access_level,
+      ),
     );
   }
 }

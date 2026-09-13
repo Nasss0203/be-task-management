@@ -1,20 +1,17 @@
 import { PageShareSetting } from '../../../../domain/entities/page-share-setting.entity';
-
 import { PageShareSettingOrmEntity } from '../entities/page-share-setting.orm-entity';
 
 export class PageShareSettingMapper {
   static toDomain(orm: PageShareSettingOrmEntity): PageShareSetting {
     return PageShareSetting.restore({
       id: orm.id,
-
       pageId: orm.page_id,
 
-      generalAccess: orm.general_access,
+      workspaceAccessLevel: orm.workspace_access_level,
 
       linkAccessLevel: orm.link_access_level,
 
       createdAt: orm.createdAt,
-
       updatedAt: orm.updatedAt,
     });
   }
@@ -26,7 +23,7 @@ export class PageShareSettingMapper {
 
     orm.page_id = domain.getPageId();
 
-    orm.general_access = domain.getGeneralAccess();
+    orm.workspace_access_level = domain.getWorkspaceAccessLevel();
 
     orm.link_access_level = domain.getLinkAccessLevel();
 

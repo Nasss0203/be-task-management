@@ -21,6 +21,14 @@ export interface PageShareDetails {
   user: PageShareUserDetails;
 }
 
+export interface PageShareCandidate {
+  id: string;
+  username: string;
+  displayName: string;
+  email: string;
+  avatarUrl: string | null;
+}
+
 export interface PageShareRepository {
   save(pageShare: PageShare, context?: PersistenceContext): Promise<PageShare>;
 
@@ -58,4 +66,13 @@ export interface PageShareRepository {
     userId: string,
     context?: PersistenceContext,
   ): Promise<boolean>;
+
+  searchCandidates(
+    pageId: string,
+    currentUserId: string,
+    pageCreatorId: string,
+    keyword: string,
+    limit?: number,
+    context?: PersistenceContext,
+  ): Promise<PageShareUserDetails[]>;
 }

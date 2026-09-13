@@ -29,6 +29,14 @@ export interface CreateLocalUserInput {
   emailVerificationExpires: Date;
 }
 
+export interface SearchUsersOutput {
+  id: string;
+  username: string;
+  email: string;
+  displayName: string;
+  avatarUrl: string | null;
+}
+
 export interface CreateGoogleUserInput {
   email: string;
   username: string;
@@ -86,7 +94,7 @@ export interface UserRepository {
   searchUsers(
     keyword: string,
     context?: PersistenceContext,
-  ): Promise<UserModel[]>;
+  ): Promise<SearchUsersOutput[]>;
   searchInviteUsers(
     input: SearchInviteUsersInput,
     context?: PersistenceContext,

@@ -29,7 +29,6 @@ export class TypeOrmWorkspacePermissionReader implements WorkspacePermissionRead
         userId,
       },
     });
-
     return membership
       ? {
           workspaceId: membership.workspaceId,

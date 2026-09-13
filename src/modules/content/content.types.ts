@@ -59,6 +59,10 @@ export const CONTENT_TYPES = {
     GetMyPageEditRequestsHandler: Symbol('GetMyPageEditRequestsHandler'),
     GetPageShareSettingHandler: Symbol('GetPageShareSettingHandler'),
     UpdatePageShareSettingHandler: Symbol('UpdatePageShareSettingHandler'),
+    SearchPageShareCandidatesHandler: Symbol(
+      'SearchPageShareCandidatesHandler',
+    ),
+    GetPageAccessHandler: Symbol.for('GetPageAccessHandler'),
   },
   repositories: {
     PageRepository: Symbol.for('PageRepository'),

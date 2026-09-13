@@ -19,6 +19,7 @@ import { PERMISSIONS } from 'src/modules/permission/constants/permission.constan
 
 // dùng đúng path PERSISTENCE_TYPES + UnitOfWork hiện tại
 import { ResourceAccessLevel } from 'src/modules/content/domain/constants/resource-access-level.constant';
+import { isAccessLevelAtLeast } from 'src/modules/content/domain/constants/resource-access-level.util';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { type UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { PageEditRequestDto } from '../../../dto/page-edit-request/page-edit-request.dto';
@@ -110,7 +111,14 @@ export class ApprovePageEditRequestHandler {
       /**
        * 5. Cấp EDITOR cho toàn Page.
        */
-      pageShare.changeAccessLevel(ResourceAccessLevel.EDITOR);
+      if (
+        !isAccessLevelAtLeast(
+          pageShare.getAccessLevel(),
+          ResourceAccessLevel.EDITOR,
+        )
+      ) {
+        pageShare.changeAccessLevel(ResourceAccessLevel.EDITOR);
+      }
 
       /**
        * 6. Request → APPROVED.

@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 
 import { Auth } from 'src/common/decorator/auth.decorator';
@@ -31,6 +32,7 @@ import { SharePageHandler } from 'src/modules/content/application/commands/page-
 import { UpdatePageShareCommand } from 'src/modules/content/application/commands/page-share/update-page-share/update-page-share.command';
 
 import { UpdatePageShareHandler } from 'src/modules/content/application/commands/page-share/update-page-share/update-page-share.handler';
+import { PageShareUserDto } from 'src/modules/content/application/dto/page-share/page-share-with-user.dto';
 
 import { PageShareDto } from 'src/modules/content/application/dto/page-share/page-share.dto';
 
@@ -51,6 +53,8 @@ import { GetPageSharesQuery } from 'src/modules/content/application/queries/page
 import { GetPagesSharedWithMeHandler } from 'src/modules/content/application/queries/page-share/get-pages-shared-with-me/get-pages-shared-with-me.handler';
 
 import { GetPagesSharedWithMeQuery } from 'src/modules/content/application/queries/page-share/get-pages-shared-with-me/get-pages-shared-with-me.query';
+import { SearchPageShareCandidatesHandler } from 'src/modules/content/application/queries/page-share/search-page-share-candidates/search-page-share-candidates.handler';
+import { SearchPageShareCandidatesQuery } from 'src/modules/content/application/queries/page-share/search-page-share-candidates/search-page-share-candidates.query';
 
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 
@@ -76,6 +80,9 @@ export class PageShareController {
 
     @Inject(CONTENT_TYPES.applications.UpdatePageShareHandler)
     private readonly updatePageShareHandler: UpdatePageShareHandler,
+
+    @Inject(CONTENT_TYPES.applications.SearchPageShareCandidatesHandler)
+    private readonly searchPageShareCandidatesHandler: SearchPageShareCandidatesHandler,
   ) {}
 
   /**
@@ -190,6 +197,22 @@ export class PageShareController {
   ): Promise<PageShareDto> {
     return this.updatePageShareHandler.execute(
       new UpdatePageShareCommand(user.id, shareId, body.access_level),
+    );
+  }
+
+  @Get('page-shares/page/:pageId/candidates')
+  async searchPageShareCandidates(
+    @Param('pageId')
+    pageId: string,
+
+    @Query('query')
+    keyword: string,
+
+    @Auth()
+    user: IAuth,
+  ): Promise<PageShareUserDto[]> {
+    return this.searchPageShareCandidatesHandler.execute(
+      new SearchPageShareCandidatesQuery(user.id, pageId, keyword ?? ''),
     );
   }
 }

@@ -6,6 +6,7 @@ import { TeamspaceMemberOrmEntity } from '../workspace/infrastructure/persistenc
 import { TeamspaceOrmEntity } from '../workspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
 import { WorkspaceMemberOrmEntity } from '../workspace/infrastructure/persistence/typeorm/entities/workspace-member.orm-entity';
 import { AuthorizationService } from './application/services/authorization.service';
+import { EffectivePageAccessService } from './application/services/effective-page-access.service';
 import { TypeOrmResourceAuthorizationReader } from './infrastructure/persistence/typeorm/adapters/resource-authorization-reader.adapter';
 import { TypeOrmTeamspacePermissionReader } from './infrastructure/persistence/typeorm/adapters/teamspace-permission-reader.adapter';
 import { TypeOrmWorkspacePermissionReader } from './infrastructure/persistence/typeorm/adapters/workspace-permission-reader.adapter';
@@ -25,6 +26,7 @@ import { PERMISSION_TYPES } from './permission.types';
   ],
   providers: [
     AuthorizationService,
+    EffectivePageAccessService,
     {
       provide: PERMISSION_TYPES.ports.WorkspacePermissionReader,
       useClass: TypeOrmWorkspacePermissionReader,
@@ -49,6 +51,7 @@ import { PERMISSION_TYPES } from './permission.types';
   ],
   exports: [
     AuthorizationService,
+    EffectivePageAccessService,
     PERMISSION_TYPES.ports.PageSharePermissionReader,
   ],
 })

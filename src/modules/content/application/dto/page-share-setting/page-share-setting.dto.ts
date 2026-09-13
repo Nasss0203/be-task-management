@@ -1,15 +1,14 @@
-import { PageGeneralAccess } from '../../../domain/constants/page-general-access.constant';
 import { ResourceAccessLevel } from '../../../domain/constants/resource-access-level.constant';
 import { PageShareSetting } from '../../../domain/entities/page-share-setting.entity';
 
 export class PageShareSettingDto {
-  generalAccess: PageGeneralAccess;
+  workspaceAccessLevel: ResourceAccessLevel | null;
 
-  linkAccessLevel: ResourceAccessLevel;
+  linkAccessLevel: ResourceAccessLevel | null;
 
   static fromDomain(setting: PageShareSetting): PageShareSettingDto {
     return {
-      generalAccess: setting.getGeneralAccess(),
+      workspaceAccessLevel: setting.getWorkspaceAccessLevel(),
 
       linkAccessLevel: setting.getLinkAccessLevel(),
     };
@@ -17,9 +16,8 @@ export class PageShareSettingDto {
 
   static restricted(): PageShareSettingDto {
     return {
-      generalAccess: PageGeneralAccess.RESTRICTED,
-
-      linkAccessLevel: ResourceAccessLevel.VIEWER,
+      workspaceAccessLevel: null,
+      linkAccessLevel: null,
     };
   }
 }

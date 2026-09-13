@@ -5,12 +5,8 @@ import { ResourceAccessLevel } from '../constants/resource-access-level.constant
 interface CreatePageShareProps {
   pageId: string;
   userId: string;
-
-  // Link đã tạo ra quyền này
   shareLinkId?: string | null;
-
-  accessLevel?: ResourceAccessLevel;
-
+  accessLevel: ResourceAccessLevel;
   createdBy: string;
 }
 
@@ -48,6 +44,7 @@ export class PageShare {
 
     private updatedAt: Date,
   ) {}
+
   static create(props: CreatePageShareProps): PageShare {
     const now = new Date();
 
@@ -56,7 +53,7 @@ export class PageShare {
       props.pageId,
       props.userId,
       props.shareLinkId ?? null,
-      props.accessLevel ?? ResourceAccessLevel.VIEWER,
+      props.accessLevel,
       props.createdBy,
       now,
       now,

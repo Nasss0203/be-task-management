@@ -8,6 +8,7 @@ import {
 import { CONTENT_TYPES } from '../../../../content.types';
 
 import { ResourceAccessLevel } from '../../../../domain/constants/resource-access-level.constant';
+import { isAccessLevelAtLeast } from '../../../../domain/constants/resource-access-level.util';
 
 import { PageEditRequest } from '../../../../domain/entities/page-edit-request.entity';
 
@@ -15,8 +16,10 @@ import type { PageEditRequestRepository } from '../../../../domain/repositories/
 
 import { PageEditRequestDto } from '../../../dto/page-edit-request/page-edit-request.dto';
 
-import { type PageSharePermissionReader } from 'src/modules/permission/application/ports/page-share-permission-reader.port';
+import type { PageSharePermissionReader } from 'src/modules/permission/application/ports/page-share-permission-reader.port';
+
 import { PERMISSION_TYPES } from 'src/modules/permission/permission.types';
+
 import { CreatePageEditRequestCommand } from './create-page-edit-request.command';
 
 @Injectable()
@@ -44,15 +47,28 @@ export class CreatePageEditRequestHandler {
       );
     }
 
-    if (effectiveShare.accessLevel === ResourceAccessLevel.EDITOR) {
+    /**
+     * EDITOR hoặc FULL_ACCESS
+     * đã có quyền edit trở lên
+     * nên không cần tạo edit request.
+     */
+    if (
+      isAccessLevelAtLeast(
+        effectiveShare.accessLevel,
+        ResourceAccessLevel.EDITOR,
+      )
+    ) {
       throw new ConflictException('You already have edit access to this page');
     }
 
-    if (effectiveShare.accessLevel !== ResourceAccessLevel.VIEWER) {
-      throw new ForbiddenException(
-        'You cannot request edit access to this page',
-      );
-    }
+    /**
+     * Tới đây chỉ còn:
+     *
+     * - VIEWER
+     * - COMMENTER
+     *
+     * Hai level này đều có thể request EDITOR.
+     */
 
     const existingPending =
       await this.pageEditRequestRepository.findPendingByPageShareId(

@@ -8,7 +8,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { PageGeneralAccess } from '../../../../domain/constants/page-general-access.constant';
 import { ResourceAccessLevel } from '../../../../domain/constants/resource-access-level.constant';
 
 import { PageOrmEntity } from './page.orm-entity';
@@ -34,17 +33,19 @@ export class PageShareSettingOrmEntity {
 
   @Column({
     type: 'enum',
-    enum: PageGeneralAccess,
-    default: PageGeneralAccess.RESTRICTED,
+    enum: ResourceAccessLevel,
+    enumName: 'resource_access_level_enum',
+    nullable: true,
   })
-  general_access: PageGeneralAccess;
+  workspace_access_level: ResourceAccessLevel | null;
 
   @Column({
     type: 'enum',
     enum: ResourceAccessLevel,
-    default: ResourceAccessLevel.VIEWER,
+    enumName: 'resource_access_level_enum',
+    nullable: true,
   })
-  link_access_level: ResourceAccessLevel;
+  link_access_level: ResourceAccessLevel | null;
 
   @CreateDateColumn({
     name: 'created_at',
