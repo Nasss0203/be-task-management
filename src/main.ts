@@ -50,10 +50,13 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
-  const clientUrl =
-    configService.get<string>('CLIENT_URL') || 'http://localhost:3000';
+  const allowedOrigins = [
+    configService.get<string>('CLIENT_URL') || 'http://localhost:3000',
+    configService.get<string>('ADMIN_CLIENT_URL') || 'http://localhost:5173',
+  ];
+
   app.enableCors({
-    origin: clientUrl,
+    origin: allowedOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     preflightContinue: false,
     optionsSuccessStatus: 204,

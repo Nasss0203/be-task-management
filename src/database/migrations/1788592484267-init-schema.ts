@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitSchema1788514253326 implements MigrationInterface {
-    name = 'InitSchema1788514253326'
+export class InitSchema1788592484267 implements MigrationInterface {
+    name = 'InitSchema1788592484267'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TYPE "public"."billing_features_value_type_enum" AS ENUM('BOOLEAN', 'NUMBER', 'STRING')`);
@@ -40,6 +40,9 @@ export class InitSchema1788514253326 implements MigrationInterface {
         await queryRunner.query(`CREATE INDEX "IDX_workspace_subscriptions_status" ON "workspace_subscriptions" ("status") `);
         await queryRunner.query(`CREATE INDEX "IDX_workspace_subscriptions_plan_id" ON "workspace_subscriptions" ("plan_id") `);
         await queryRunner.query(`CREATE INDEX "IDX_workspace_subscriptions_workspace_id" ON "workspace_subscriptions" ("workspace_id") `);
+        await queryRunner.query(`CREATE TABLE "page_favorites" ("id" uuid NOT NULL, "user_id" uuid NOT NULL, "page_id" uuid NOT NULL, "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "UQ_page_favorites_user_page" UNIQUE ("user_id", "page_id"), CONSTRAINT "PK_cf022ded67eda3abe9a5c20a14f" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_page_favorites_page_id" ON "page_favorites" ("page_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_page_favorites_user_id" ON "page_favorites" ("user_id") `);
         await queryRunner.query(`ALTER TYPE "public"."teamspace_members_role_name_enum" RENAME TO "teamspace_members_role_name_enum_old"`);
         await queryRunner.query(`CREATE TYPE "public"."teamspace_members_role_name_enum" AS ENUM('OWNER', 'MEMBER')`);
         await queryRunner.query(`ALTER TABLE "teamspace_members" ALTER COLUMN "role_name" DROP DEFAULT`);
@@ -91,6 +94,9 @@ export class InitSchema1788514253326 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "teamspace_members" ALTER COLUMN "role_name" SET DEFAULT 'MEMBER'`);
         await queryRunner.query(`DROP TYPE "public"."teamspace_members_role_name_enum"`);
         await queryRunner.query(`ALTER TYPE "public"."teamspace_members_role_name_enum_old" RENAME TO "teamspace_members_role_name_enum"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_page_favorites_user_id"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_page_favorites_page_id"`);
+        await queryRunner.query(`DROP TABLE "page_favorites"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_workspace_subscriptions_workspace_id"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_workspace_subscriptions_plan_id"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_workspace_subscriptions_status"`);

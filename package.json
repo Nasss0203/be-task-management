@@ -24,7 +24,8 @@
     "migration:generate": "npm run typeorm -- migration:generate src/database/migrations/init-schema -d src/database/data-source.ts",
     "migration:run": "npm run typeorm -- migration:run -d src/database/data-source.ts",
     "migration:run:prod": "npm run typeorm:prod -- migration:run -d dist/database/data-source.js",
-    "migration:revert": "npm run typeorm -- migration:revert -d src/database/data-source.ts"
+    "migration:revert": "npm run typeorm -- migration:revert -d src/database/data-source.ts",
+    "seed:billing": "ts-node -r tsconfig-paths/register src/database/seeds/billing-catalog.seed.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1037.0",
@@ -69,10 +70,11 @@
     "pg": "^8.17.2",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "sepay-pg-node": "^1.0.0",
     "slugify": "^1.6.6",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
-    "stripe": "^22.2.1",
+    "stripe": "^22.6.1",
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.28",
     "uuid": "^13.0.0",

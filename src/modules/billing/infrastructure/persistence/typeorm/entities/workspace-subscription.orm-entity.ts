@@ -10,7 +10,9 @@ import {
 } from 'typeorm';
 
 @Entity('workspace_subscriptions')
-@Index('IDX_workspace_subscriptions_workspace_id', ['workspace_id'])
+@Index('UQ_workspace_subscriptions_workspace_id', ['workspace_id'], {
+  unique: true,
+})
 @Index('IDX_workspace_subscriptions_plan_id', ['plan_id'])
 @Index('IDX_workspace_subscriptions_status', ['status'])
 export class WorkspaceSubscriptionOrmEntity {

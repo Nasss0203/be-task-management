@@ -1,1 +1,3 @@
-export class GetWorkspaceSubscriptionQuery {}
+export class GetWorkspaceSubscriptionQuery {
+  constructor(public readonly workspaceId: string) {}
+}

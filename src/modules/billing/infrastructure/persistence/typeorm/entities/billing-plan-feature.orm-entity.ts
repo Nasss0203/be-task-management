@@ -40,7 +40,7 @@ export class BillingPlanFeatureOrmEntity {
   @Column({
     type: 'jsonb',
   })
-  value: boolean | number | string | null;
+  value: boolean | number | string;
 
   @CreateDateColumn({
     type: 'timestamptz',
