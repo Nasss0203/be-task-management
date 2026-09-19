@@ -1,1 +1,1 @@
-export type PersistenceContext = unknown;
+export type { PersistenceContext } from 'src/shared/domain/persistence-context';

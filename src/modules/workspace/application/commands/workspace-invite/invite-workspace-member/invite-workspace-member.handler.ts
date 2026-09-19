@@ -12,13 +12,9 @@ import {
 import { type FindUserService } from 'src/modules/identity/application/ports/find-user.service.interface';
 import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
 import { MailService } from 'src/modules/mail/mail.service';
-import {
-  NotificationSenderType,
-  NotificationSourceType,
-  NotificationType,
-} from 'src/modules/notifications/domain/entities/notification.entity';
-import { type CreateNotificationService } from 'src/modules/notifications/interfaces/services/create.notifications.service.interface';
-import { NOTIFICATION_TYPES } from 'src/modules/notifications/interfaces/types';
+import { NotificationSenderType, NotificationSourceType, NotificationType } from 'src/modules/notifications/domain/entities/notification.entity';
+import { type CreateNotificationService } from 'src/modules/notifications/application/ports/create-notification.service.port';
+import { NOTIFICATION_TYPES } from 'src/modules/notifications/notifications.types';
 import {
   CreateWorkspaceInviteDto,
   InviteRecipientDto,

@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CreateNotificationApplicationImpl } from './applications/create.notifications.application';
-import { FindNotificationApplicationImpl } from './applications/find-notification.application';
-import { NotificationsController } from './controller/notifications.controller';
-import { Notification } from './domain/entities/notification.entity';
-import { NOTIFICATION_TYPES } from './interfaces/types';
-import { CreateNotificationRepositoryImpl } from './repositories/create.notifications.repository';
-import { FindNotificationRepositoryImpl } from './repositories/find-notification.repository';
-import { UpdateNotificationRepositoryImpl } from './repositories/update-notification.repository';
-import { CreateNotificationServiceImpl } from './services/create.notifications.service';
-import { FindNotificationServiceImpl } from './services/find-notification.service';
-import { UpdateNotificationServiceImpl } from './services/update-notification.service';
+import { CreateNotificationApplicationImpl } from './application/commands/create-notification/create-notification.handler';
+import { FindNotificationApplicationImpl } from './application/queries/get-notifications/get-notifications.handler';
+import { NotificationsController } from './presentation/http/controllers/notification.controller';
+import { Notification } from './infrastructure/persistence/typeorm/entities/notification.orm-entity';
+import { NOTIFICATION_TYPES } from './notifications.types';
+import { CreateNotificationRepositoryImpl } from './infrastructure/persistence/typeorm/repositories/typeorm-create-notification.repository';
+import { FindNotificationRepositoryImpl } from './infrastructure/persistence/typeorm/repositories/typeorm-find-notification.repository';
+import { UpdateNotificationRepositoryImpl } from './infrastructure/persistence/typeorm/repositories/typeorm-update-notification.repository';
+import { CreateNotificationServiceImpl } from './application/services/create-notification.service';
+import { FindNotificationServiceImpl } from './application/services/find-notification.service';
+import { UpdateNotificationServiceImpl } from './application/services/update-notification.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Notification])],

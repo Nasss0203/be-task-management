@@ -6,8 +6,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
-import { type UpdateNotificationService } from 'src/modules/notifications/interfaces/services/update-notification.service.interface';
-import { NOTIFICATION_TYPES } from 'src/modules/notifications/interfaces/types';
+import { type UpdateNotificationService } from 'src/modules/notifications/application/ports/update-notification.service.port';
+import { NOTIFICATION_TYPES } from 'src/modules/notifications/notifications.types';
 import { type FindUserService } from 'src/modules/identity/application/ports/find-user.service.interface';
 import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
 import { WorkspaceInviteResponseDto } from 'src/modules/workspace/application/dto/workspace-invite/response/workspace-invite.response.dto';

@@ -10,7 +10,7 @@ import { PageTemplateOrmEntity } from 'src/modules/content/infrastructure/persis
 import { PageOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page.orm-entity';
 import { RefreshToken } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/refresh-token.orm-entity';
 import { Mention } from 'src/modules/mentions/domain/entities/mention.entity';
-import { Notification } from 'src/modules/notifications/domain/entities/notification.entity';
+import { Notification } from 'src/modules/notifications/infrastructure/persistence/typeorm/entities/notification.orm-entity';
 import { Permission } from 'src/modules/permission/infrastructure/persistence/typeorm/entities/legacy-permission.orm-entity';
 
 import { BillingFeatureOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/billing-feature.orm-entity';
