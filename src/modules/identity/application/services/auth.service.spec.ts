@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
-import { MailService } from 'src/modules/mail/mail.service';
+import { MailService } from 'src/modules/mail/application/services/mail.service';
 import { HttpStatus } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { ErrorCode } from 'src/common/constants/error-code.constant';

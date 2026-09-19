@@ -1,5 +1,8 @@
 import { IsBooleanString, IsEnum, IsOptional, IsString } from 'class-validator';
-import { NotificationSourceType, NotificationType } from '../../../domain/entities/notification.entity';
+import {
+  NotificationSourceType,
+  NotificationType,
+} from '../../../domain/entities/notification.entity';
 
 export class QueryNotificationDto {
   @IsOptional()

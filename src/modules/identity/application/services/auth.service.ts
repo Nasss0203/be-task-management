@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { ErrorCode } from 'src/common/constants/error-code.constant';
 import { hashIdentityPassword } from 'src/modules/identity/infrastructure/security/password/password-hasher';
-import { MailService } from 'src/modules/mail/mail.service';
+import { MailService } from 'src/modules/mail/application/services/mail.service';
 import { type UserRepository } from 'src/modules/identity/domain/repositories/user.repository';
 import { IssueAuthTokenServiceImpl } from './issue-auth-token.service';
 import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';

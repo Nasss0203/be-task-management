@@ -1,4 +1,8 @@
-import { NotificationSenderType, NotificationSourceType, NotificationType } from '../../../domain/entities/notification.entity';
+import {
+  NotificationSenderType,
+  NotificationSourceType,
+  NotificationType,
+} from '../../../domain/entities/notification.entity';
 import { NotificationModel } from '../../../domain/entities/notification.entity';
 
 export class NotificationResponseDto {

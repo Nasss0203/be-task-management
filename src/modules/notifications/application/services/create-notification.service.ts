@@ -3,7 +3,10 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
-import { NotificationSenderType, NotificationSourceType } from '../../domain/entities/notification.entity';
+import {
+  NotificationSenderType,
+  NotificationSourceType,
+} from '../../domain/entities/notification.entity';
 import { NotificationModel } from '../../domain/entities/notification.entity';
 import { type CreateNotificationRepository } from '../../domain/repositories/create-notification.repository';
 import {

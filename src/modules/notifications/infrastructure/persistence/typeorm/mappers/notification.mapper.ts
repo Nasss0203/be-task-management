@@ -1,7 +1,10 @@
 // src/modules/notifications/mapper/notification.mapper.ts
 
 import { Notification } from '../entities/notification.orm-entity';
-import { NotificationSenderType, NotificationSourceType } from '../../../../domain/entities/notification.entity';
+import {
+  NotificationSenderType,
+  NotificationSourceType,
+} from '../../../../domain/entities/notification.entity';
 import { NotificationModel } from '../../../../domain/entities/notification.entity';
 import { SaveNotificationInput } from '../../../../domain/repositories/create-notification.repository';
 
@@ -75,5 +78,4 @@ export class NotificationMapper {
 
     return e;
   }
-
 }

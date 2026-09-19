@@ -5,12 +5,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  ActivityAction,
-  ActivityEntityType,
-} from 'src/modules/activity/domain/entities/activity.entity';
-import { type CreateActivityService } from 'src/modules/activity/interfaces/services/create-activity.service.interface';
-import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
+import { ActivityAction, ActivityEntityType } from 'src/modules/activity/domain/entities/activity.entity';
+import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
+import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';

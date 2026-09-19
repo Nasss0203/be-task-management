@@ -1,13 +1,13 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { FindActivityApplicationImpl } from './applications/find-activity.application';
-import { ActivityController } from './controller/activity.controller';
-import { Activity } from './domain/entities/activity.entity';
-import { ACTIVITY_TYPES } from './interfaces/types';
-import { CreateActivityRepositoryImpl } from './repositories/create.activity.repository';
-import { FindActivityRepositoryImpl } from './repositories/find.activity.repository';
-import { CreateActivityServiceImpl } from './services/create.activity.service';
-import { FindActivityServiceImpl } from './services/find.activity.service';
+import { FindActivityApplicationImpl } from './application/queries/get-activities/get-activities.handler';
+import { ActivityController } from './presentation/http/controllers/activity.controller';
+import { Activity } from './infrastructure/persistence/typeorm/entities/activity.orm-entity';
+import { ACTIVITY_TYPES } from './activity.types';
+import { CreateActivityRepositoryImpl } from './infrastructure/persistence/typeorm/repositories/typeorm-create-activity.repository';
+import { FindActivityRepositoryImpl } from './infrastructure/persistence/typeorm/repositories/typeorm-find-activity.repository';
+import { CreateActivityServiceImpl } from './application/services/create-activity.service';
+import { FindActivityServiceImpl } from './application/services/find-activity.service';
 import { IdentityModule } from '../identity/identity.module';
 
 @Module({

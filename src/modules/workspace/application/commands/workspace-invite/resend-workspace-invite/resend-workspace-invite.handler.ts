@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { type FindUserService } from 'src/modules/identity/application/ports/find-user.service.interface';
 import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
-import { MailService } from 'src/modules/mail/mail.service';
+import { MailService } from 'src/modules/mail/application/services/mail.service';
 import { WorkspaceInviteResponseDto } from 'src/modules/workspace/application/dto/workspace-invite/response/workspace-invite.response.dto';
 import { WorkspaceInviteStatus } from 'src/modules/workspace/domain/enums/workspace-invite-status.enum';
 import { WorkspaceInviteType } from 'src/modules/workspace/domain/enums/workspace-invite-type.enum';

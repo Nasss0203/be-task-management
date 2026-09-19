@@ -45,7 +45,7 @@ describe('UpdateNotificationServiceImpl', () => {
     await expect(
       service.updateInviteNotificationStatus({
         inviteId: 'inv-1',
-        inviteStatus: '' as any,
+        inviteStatus: '' as never,
       }),
     ).rejects.toThrow(BadRequestException);
   });

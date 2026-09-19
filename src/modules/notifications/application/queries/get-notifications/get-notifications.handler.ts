@@ -38,7 +38,9 @@ export class FindNotificationApplicationImpl implements FindNotificationApplicat
         limit: input.limit ? Number(input.limit) : 30,
       });
 
-    return notifications.map(NotificationResponseDto.fromModel);
+    return notifications.map((notification) =>
+      NotificationResponseDto.fromModel(notification),
+    );
   }
 
   async countUnread(userId: string): Promise<{ count: number }> {

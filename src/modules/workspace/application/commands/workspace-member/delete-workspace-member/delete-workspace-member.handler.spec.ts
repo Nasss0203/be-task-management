@@ -1,11 +1,8 @@
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
-import {
-  ActivityAction,
-  ActivityEntityType,
-} from 'src/modules/activity/domain/entities/activity.entity';
-import { ACTIVITY_TYPES } from 'src/modules/activity/interfaces/types';
+import { ActivityAction, ActivityEntityType } from 'src/modules/activity/domain/entities/activity.entity';
+import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
 import { WorkspaceMember } from 'src/modules/workspace/domain/aggregates/workspace-member/workspace-member.aggregate';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';

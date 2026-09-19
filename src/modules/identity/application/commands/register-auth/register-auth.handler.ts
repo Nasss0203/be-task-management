@@ -6,7 +6,7 @@ import { type UserProfileRepository } from 'src/modules/identity/domain/reposito
 import { type UserRepository } from 'src/modules/identity/domain/repositories/user.repository';
 import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
 import { hashIdentityPassword } from 'src/modules/identity/infrastructure/security/password/password-hasher';
-import { MailService } from 'src/modules/mail/mail.service';
+import { MailService } from 'src/modules/mail/application/services/mail.service';
 import { CreateDefaultWorkspaceCommand } from 'src/modules/workspace/application/commands/workspace/create-default-workspace/create-default-workspace.command';
 import { CreateDefaultWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/create-default-workspace/create-default-workspace.handler';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';

@@ -1,4 +1,8 @@
-import { NotificationSenderType, NotificationSourceType, NotificationType } from '../../domain/entities/notification.entity';
+import {
+  NotificationSenderType,
+  NotificationSourceType,
+  NotificationType,
+} from '../../domain/entities/notification.entity';
 import { NotificationResponseDto } from '../dto/response/notification.response.dto';
 
 export interface CreateNotificationApplicationInput {

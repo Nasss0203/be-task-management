@@ -1,7 +1,10 @@
 // src/modules/notifications/interfaces/repositories/find-notification.repository.interface.ts
 
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
-import { NotificationSourceType, NotificationType } from '../entities/notification.entity';
+import {
+  NotificationSourceType,
+  NotificationType,
+} from '../entities/notification.entity';
 import { NotificationModel } from '../entities/notification.entity';
 
 export interface FindMyNotificationsRepositoryInput {
