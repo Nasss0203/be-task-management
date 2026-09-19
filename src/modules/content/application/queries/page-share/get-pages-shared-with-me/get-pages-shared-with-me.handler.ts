@@ -21,6 +21,7 @@ export class GetPagesSharedWithMeHandler {
 
   async execute(query: GetPagesSharedWithMeQuery): Promise<SharedPageDto[]> {
     const shares = await this.pageShareRepository.findByUserId(query.userId);
+    console.log('🚀 ~ shares~', shares);
 
     if (shares.length === 0) {
       return [];

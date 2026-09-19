@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, EntityManager, IsNull, Repository } from 'typeorm';
+import {
+  DataSource,
+  EntityManager,
+  IsNull,
+  MoreThan,
+  Repository,
+} from 'typeorm';
 
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
@@ -74,11 +80,22 @@ export class TypeOrmPageShareLinkRepository implements PageShareLinkRepository {
   ): Promise<PageShareLink | null> {
     const repository = this.resolveRepository(context);
 
+    const now = new Date();
+
     const orm = await repository.findOne({
-      where: {
-        page_id: pageId,
-        revoked_at: IsNull(),
-      },
+      where: [
+        {
+          page_id: pageId,
+          revoked_at: IsNull(),
+          expires_at: IsNull(),
+        },
+        {
+          page_id: pageId,
+          revoked_at: IsNull(),
+          expires_at: MoreThan(now),
+        },
+      ],
+
       order: {
         created_at: 'DESC',
       },

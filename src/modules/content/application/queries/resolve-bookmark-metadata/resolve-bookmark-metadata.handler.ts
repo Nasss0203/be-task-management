@@ -1,11 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-
+import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type {
   BookmarkMetadata,
   BookmarkMetadataFetcherPort,
 } from '../../../../attachment/application/ports/bookmark-metadata-fetcher.port';
-
-import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import { ResolveBookmarkMetadataQuery } from './resolve-bookmark-metadata.query';
 
 @Injectable()

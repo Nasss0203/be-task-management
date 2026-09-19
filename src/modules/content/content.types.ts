@@ -63,6 +63,12 @@ export const CONTENT_TYPES = {
       'SearchPageShareCandidatesHandler',
     ),
     GetPageAccessHandler: Symbol.for('GetPageAccessHandler'),
+    ResolvePageShareLinkHandler: Symbol('ResolvePageShareLinkHandler'),
+    RejectPageShareLinkHandler: Symbol('RejectPageShareLinkHandler'),
+    CreatePageAccessRequestHandler: Symbol('CreatePageAccessRequestHandler'),
+    ApprovePageAccessRequestHandler: Symbol('ApprovePageAccessRequestHandler'),
+    RejectPageAccessRequestHandler: Symbol('RejectPageAccessRequestHandler'),
+    GetPageAccessRequestsHandler: Symbol('GetPageAccessRequestsHandler'),
   },
   repositories: {
     PageRepository: Symbol.for('PageRepository'),
@@ -74,6 +80,7 @@ export const CONTENT_TYPES = {
     PageShareLinkRepository: Symbol.for('PageShareLinkRepository'),
     PageEditRequestRepository: Symbol('PageEditRequestRepository'),
     PageShareSettingRepository: Symbol('PageShareSettingRepository'),
+    PageAccessRequestRepository: Symbol('PageAccessRequestRepository'),
   },
   bookmarkMetadataFetcher: Symbol('BookmarkMetadataFetcher'),
 };

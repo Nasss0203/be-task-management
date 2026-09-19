@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+import { PageShareStatus } from '../../../../domain/constants/page-share-status.constant';
 import { ResourceAccessLevel } from '../../../../domain/constants/resource-access-level.constant';
 
 @Entity('page_shares')
@@ -16,6 +17,7 @@ import { ResourceAccessLevel } from '../../../../domain/constants/resource-acces
 @Index('IDX_page_shares_user_id', ['user_id'])
 @Index('IDX_page_shares_share_link_id', ['share_link_id'])
 @Index('IDX_page_shares_created_by', ['created_by'])
+@Index('IDX_page_shares_status', ['status'])
 export class PageShareOrmEntity {
   @PrimaryColumn({
     type: 'uuid',
@@ -33,11 +35,13 @@ export class PageShareOrmEntity {
   user_id: string;
 
   /**
-   * Share link đã tạo ra PageShare này.
+   * Legacy reference.
    *
-   * Nullable để:
-   * - tương thích dữ liệu cũ
-   * - sau này có thể hỗ trợ direct share
+   * Với flow hiện tại:
+   * - Anyone with the link không tạo PageShare.
+   * - Direct invitation sử dụng PageShare.
+   *
+   * Giữ nullable để tương thích dữ liệu cũ.
    */
   @Column({
     type: 'uuid',
@@ -46,13 +50,10 @@ export class PageShareOrmEntity {
   share_link_id: string | null;
 
   /**
-   * Quyền thực tế của user trên Page.
+   * Quyền mà owner đã chọn cho user.
    *
-   * VIEWER:
-   * - default khi accept link
-   *
-   * EDITOR:
-   * - chỉ sau khi owner approve edit request
+   * Quyền này chỉ có hiệu lực khi:
+   * status = ACCEPTED.
    */
   @Column({
     type: 'enum',
@@ -60,6 +61,29 @@ export class PageShareOrmEntity {
     enumName: 'resource_access_level_enum',
   })
   access_level: ResourceAccessLevel;
+
+  /**
+   * Trạng thái invitation:
+   *
+   * PENDING:
+   * - Owner đã invite.
+   * - User chưa accept/reject.
+   *
+   * ACCEPTED:
+   * - User đã accept.
+   * - PageShare bắt đầu cấp quyền.
+   *
+   * REJECTED:
+   * - User đã reject.
+   * - PageShare không cấp quyền.
+   */
+  @Column({
+    type: 'enum',
+    enum: PageShareStatus,
+    enumName: 'page_share_status_enum',
+    default: PageShareStatus.PENDING,
+  })
+  status: PageShareStatus;
 
   @Column({
     type: 'uuid',

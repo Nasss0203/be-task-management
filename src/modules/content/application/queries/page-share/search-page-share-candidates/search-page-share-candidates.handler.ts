@@ -59,17 +59,9 @@ export class SearchPageShareCandidatesHandler {
       throw new NotFoundException('Page not found');
     }
 
-    const pageCreatorId = page.getCreatedBy();
-
-    console.log({
-      currentUserId: query.userId,
-      pageCreatorId,
-    });
-
     const candidates = await this.pageShareRepository.searchCandidates(
       query.pageId,
       query.userId,
-      pageCreatorId,
       keyword,
       10,
     );

@@ -1,9 +1,14 @@
 import { randomUUID } from 'crypto';
 
 interface CreatePageShareLinkProps {
+  id?: string;
+
   pageId: string;
+
   tokenHash: string;
+
   createdBy: string;
+
   expiresAt?: Date | null;
 }
 
@@ -48,20 +53,13 @@ export class PageShareLink {
     const now = new Date();
 
     return new PageShareLink(
-      randomUUID(),
-
+      props.id ?? randomUUID(),
       props.pageId,
-
       props.tokenHash,
-
       props.createdBy,
-
       props.expiresAt ?? null,
-
       null,
-
       now,
-
       now,
     );
   }
@@ -69,19 +67,12 @@ export class PageShareLink {
   static restore(props: RestorePageShareLinkProps): PageShareLink {
     return new PageShareLink(
       props.id,
-
       props.pageId,
-
       props.tokenHash,
-
       props.createdBy,
-
       props.expiresAt,
-
       props.revokedAt,
-
       props.createdAt,
-
       props.updatedAt,
     );
   }

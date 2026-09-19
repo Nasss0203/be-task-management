@@ -70,7 +70,6 @@ export interface PageShareRepository {
   searchCandidates(
     pageId: string,
     currentUserId: string,
-    pageCreatorId: string,
     keyword: string,
     limit?: number,
     context?: PersistenceContext,

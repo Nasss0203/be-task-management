@@ -35,6 +35,7 @@ import { BillingWebhookEventOrmEntity } from 'src/modules/billing/infrastructure
 import { PaymentOrderOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/payment-order.orm-entity';
 import { PaymentTransactionOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/payment-transaction.orm-entity';
 import { WorkspaceSubscriptionOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/workspace-subscription.orm-entity';
+import { PageAccessRequestOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-access-request.orm-entity';
 import { PageEditRequestOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-edit-request.orm-entity';
 import { PageFavoriteOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-favorite.orm-entity';
 import { PageShareLinkOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-share-link.orm-entity';
@@ -104,6 +105,7 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
           PageShareLinkOrmEntity,
           PageEditRequestOrmEntity,
           PageShareSettingOrmEntity,
+          PageAccessRequestOrmEntity,
         ],
       }),
     }),

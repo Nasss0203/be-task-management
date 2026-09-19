@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  Headers,
   Inject,
   Param,
   Patch,
@@ -163,9 +164,13 @@ export class PageController {
   }
 
   @Get(':pageId')
-  async findOne(@Param('pageId') pageId: string, @Auth() auth: IAuth) {
+  async findOne(
+    @Param('pageId') pageId: string,
+    @Headers('x-page-share-token') shareToken: string | undefined,
+    @Auth() auth: IAuth,
+  ) {
     return this.findPageByIdHandler.execute(
-      new FindPageByIdQuery(auth.id, pageId),
+      new FindPageByIdQuery(auth.id, pageId, shareToken),
     );
   }
 

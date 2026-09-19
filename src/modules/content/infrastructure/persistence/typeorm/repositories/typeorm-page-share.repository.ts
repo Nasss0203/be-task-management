@@ -12,6 +12,7 @@ import type {
 
 import type { PageShare } from '../../../../domain/entities/page-share.entity';
 
+import { PageShareStatus } from 'src/modules/content/domain/constants/page-share-status.constant';
 import { PageShareOrmEntity } from '../entities/page-share.orm-entity';
 import { PageShareMapper } from '../mappers/page-share.mapper';
 
@@ -103,6 +104,7 @@ export class TypeOrmPageShareRepository implements PageShareRepository {
     const entities = await repository.find({
       where: {
         user_id: userId,
+        status: PageShareStatus.ACCEPTED,
       },
 
       order: {
@@ -126,18 +128,16 @@ export class TypeOrmPageShareRepository implements PageShareRepository {
       .select('share.id', 'id')
       .addSelect('share.user_id', 'userId')
       .addSelect('share.access_level', 'accessLevel')
+      .addSelect('share.status', 'status')
       .addSelect('share.created_by', 'createdBy')
       .addSelect('share.created_at', 'createdAt')
       .addSelect('share.updated_at', 'updatedAt')
-
       .addSelect('user.id', 'userInfoId')
       .addSelect('user.username', 'username')
       .addSelect('user.email', 'email')
       .addSelect('user.avatar_url', 'avatarUrl')
-
       .addSelect('profile.display_name', 'profileDisplayName')
       .addSelect('profile.full_name', 'profileFullName')
-
       .where('share.page_id = :pageId', {
         pageId,
       })
@@ -146,15 +146,14 @@ export class TypeOrmPageShareRepository implements PageShareRepository {
         id: string;
         userId: string;
         accessLevel: PageShareDetails['accessLevel'];
+        status: PageShareStatus;
         createdBy: string;
         createdAt: Date;
         updatedAt: Date;
-
         userInfoId: string;
         username: string;
         email: string;
         avatarUrl: string | null;
-
         profileDisplayName: string | null;
         profileFullName: string | null;
       }>();
@@ -163,17 +162,15 @@ export class TypeOrmPageShareRepository implements PageShareRepository {
       id: row.id,
       userId: row.userId,
       accessLevel: row.accessLevel,
+      status: row.status,
       createdBy: row.createdBy,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
-
       user: {
         id: row.userInfoId,
         username: row.username,
-
         displayName:
           row.profileDisplayName ?? row.profileFullName ?? row.username,
-
         email: row.email,
         avatarUrl: row.avatarUrl,
       },
@@ -211,7 +208,6 @@ export class TypeOrmPageShareRepository implements PageShareRepository {
   async searchCandidates(
     pageId: string,
     currentUserId: string,
-    pageCreatorId: string,
     keyword: string,
     limit = 10,
     context?: PersistenceContext,
@@ -230,62 +226,89 @@ export class TypeOrmPageShareRepository implements PageShareRepository {
 
     const rows = await repository.manager
       .createQueryBuilder()
+
       .select('candidate.id', 'id')
+
       .addSelect('candidate.username', 'username')
+
       .addSelect('candidate.email', 'email')
+
       .addSelect('candidate.avatar_url', 'avatarUrl')
+
       .addSelect('profile.display_name', 'profileDisplayName')
+
       .addSelect('profile.full_name', 'profileFullName')
+
       .from('users', 'candidate')
+
       .leftJoin('user_profiles', 'profile', 'profile.user_id = candidate.id')
 
-      // Không trả chính user đang thao tác
+      /**
+       * Không trả chính user
+       * đang thao tác.
+       */
       .where('candidate.id <> :currentUserId', {
         currentUserId,
       })
 
-      // Không trả người tạo page
-      .andWhere('candidate.id <> :pageCreatorId', {
-        pageCreatorId,
-      })
-
-      // Chỉ user active
+      /**
+       * Chỉ user active.
+       */
       .andWhere('candidate.is_active = true')
 
-      // Không lấy user đã soft delete
+      /**
+       * Không lấy user đã
+       * soft delete.
+       */
       .andWhere('candidate.deleted_at IS NULL')
 
-      // Search theo email / username / profile
+      /**
+       * Search theo:
+       * - email
+       * - username
+       * - display name
+       * - full name
+       */
       .andWhere(
         `
-      (
-        candidate.email ILIKE :searchPattern
-        OR candidate.username ILIKE :searchPattern
-        OR profile.display_name ILIKE :searchPattern
-        OR profile.full_name ILIKE :searchPattern
-      )
-      `,
+				(
+					candidate.email ILIKE :searchPattern
+					OR candidate.username ILIKE :searchPattern
+					OR profile.display_name ILIKE :searchPattern
+					OR profile.full_name ILIKE :searchPattern
+				)
+				`,
         {
           searchPattern,
         },
       )
 
-      // Không trả user đã được share page này
+      /**
+       * Không trả user đã có
+       * DIRECT PageShare
+       * trên chính Page này.
+       *
+       * Không kiểm tra:
+       * - WorkspaceMember
+       * - TeamspaceMember
+       * - ancestor PageShare
+       */
       .andWhere(
         `
-      NOT EXISTS (
-        SELECT 1
-        FROM page_shares existing_share
-        WHERE existing_share.page_id = :pageId
-          AND existing_share.user_id = candidate.id
-      )
-      `,
+				NOT EXISTS (
+					SELECT 1
+					FROM page_shares existing_share
+					WHERE existing_share.page_id = :pageId
+						AND existing_share.user_id = candidate.id
+				)
+				`,
         {
           pageId,
         },
       )
 
       .orderBy('candidate.username', 'ASC')
+
       .limit(safeLimit)
 
       .getRawMany<{
@@ -293,16 +316,22 @@ export class TypeOrmPageShareRepository implements PageShareRepository {
         username: string;
         email: string;
         avatarUrl: string | null;
+
         profileDisplayName: string | null;
+
         profileFullName: string | null;
       }>();
 
     return rows.map((row) => ({
       id: row.id,
+
       username: row.username,
+
       displayName:
         row.profileDisplayName ?? row.profileFullName ?? row.username,
+
       email: row.email,
+
       avatarUrl: row.avatarUrl,
     }));
   }

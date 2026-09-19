@@ -12,52 +12,55 @@ import {
 import { Auth } from 'src/common/decorator/auth.decorator';
 
 import { AcceptPageShareLinkCommand } from 'src/modules/content/application/commands/page-share/accept-page-share-link/accept-page-share-link.command';
-
 import {
   AcceptPageShareLinkHandler,
   AcceptPageShareLinkResult,
 } from 'src/modules/content/application/commands/page-share/accept-page-share-link/accept-page-share-link.handler';
 
-import { CreatePageShareLinkCommand } from 'src/modules/content/application/commands/page-share/create-page-share-link/create-page-share-link.command';
+import { RejectPageShareLinkCommand } from 'src/modules/content/application/commands/page-share/reject-page-share-link/reject-page-share-link.command';
+import {
+  RejectPageShareLinkHandler,
+  RejectPageShareLinkResult,
+} from 'src/modules/content/application/commands/page-share/reject-page-share-link/reject-page-share-link.handler';
 
+import { CreatePageShareLinkCommand } from 'src/modules/content/application/commands/page-share/create-page-share-link/create-page-share-link.command';
 import {
   CreatePageShareLinkHandler,
   CreatePageShareLinkResult,
 } from 'src/modules/content/application/commands/page-share/create-page-share-link/create-page-share-link.handler';
 
 import { SharePageCommand } from 'src/modules/content/application/commands/page-share/share-page/share-page.command';
-
 import { SharePageHandler } from 'src/modules/content/application/commands/page-share/share-page/share-page.handler';
 
 import { UpdatePageShareCommand } from 'src/modules/content/application/commands/page-share/update-page-share/update-page-share.command';
-
 import { UpdatePageShareHandler } from 'src/modules/content/application/commands/page-share/update-page-share/update-page-share.handler';
-import { PageShareUserDto } from 'src/modules/content/application/dto/page-share/page-share-with-user.dto';
 
+import { PageShareUserDto } from 'src/modules/content/application/dto/page-share/page-share-with-user.dto';
 import { PageShareDto } from 'src/modules/content/application/dto/page-share/page-share.dto';
 
 import { AcceptPageShareLinkRequestDto } from 'src/modules/content/application/dto/page-share/request/accept-page-share-link.request.dto';
-
 import { CreatePageShareLinkRequestDto } from 'src/modules/content/application/dto/page-share/request/create-page-share-link.request.dto';
-
 import { SharePageRequestDto } from 'src/modules/content/application/dto/page-share/request/share-page.request.dto';
-
 import { UpdatePageShareRequestDto } from 'src/modules/content/application/dto/page-share/request/update-page-share.request.dto';
 
 import { SharedPageDto } from 'src/modules/content/application/dto/page-share/shared-page.dto';
 
 import { GetPageSharesHandler } from 'src/modules/content/application/queries/page-share/get-page-shares/get-page-shares.handler';
-
 import { GetPageSharesQuery } from 'src/modules/content/application/queries/page-share/get-page-shares/get-page-shares.query';
 
 import { GetPagesSharedWithMeHandler } from 'src/modules/content/application/queries/page-share/get-pages-shared-with-me/get-pages-shared-with-me.handler';
-
 import { GetPagesSharedWithMeQuery } from 'src/modules/content/application/queries/page-share/get-pages-shared-with-me/get-pages-shared-with-me.query';
+
+import {
+  ResolvePageShareLinkHandler,
+  ResolvePageShareLinkResult,
+} from 'src/modules/content/application/queries/page-share/resolve-page-share-link/resolve-page-share-link.handler';
+import { ResolvePageShareLinkQuery } from 'src/modules/content/application/queries/page-share/resolve-page-share-link/resolve-page-share-link.query';
+
 import { SearchPageShareCandidatesHandler } from 'src/modules/content/application/queries/page-share/search-page-share-candidates/search-page-share-candidates.handler';
 import { SearchPageShareCandidatesQuery } from 'src/modules/content/application/queries/page-share/search-page-share-candidates/search-page-share-candidates.query';
 
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
-
 import { type IAuth } from 'src/types/auth';
 
 @Controller()
@@ -68,6 +71,9 @@ export class PageShareController {
 
     @Inject(CONTENT_TYPES.applications.AcceptPageShareLinkHandler)
     private readonly acceptPageShareLinkHandler: AcceptPageShareLinkHandler,
+
+    @Inject(CONTENT_TYPES.applications.RejectPageShareLinkHandler)
+    private readonly rejectPageShareLinkHandler: RejectPageShareLinkHandler,
 
     @Inject(CONTENT_TYPES.applications.SharePageHandler)
     private readonly sharePageHandler: SharePageHandler,
@@ -83,10 +89,13 @@ export class PageShareController {
 
     @Inject(CONTENT_TYPES.applications.SearchPageShareCandidatesHandler)
     private readonly searchPageShareCandidatesHandler: SearchPageShareCandidatesHandler,
+
+    @Inject(CONTENT_TYPES.applications.ResolvePageShareLinkHandler)
+    private readonly resolvePageShareLinkHandler: ResolvePageShareLinkHandler,
   ) {}
 
   /**
-   * Direct share Page cho một user.
+   * Invite một user vào Page.
    *
    * POST /api/v1/page-shares/page/:pageId
    *
@@ -95,8 +104,10 @@ export class PageShareController {
    *   "user_id": "...",
    *   "access_level": "EDITOR"
    * }
+   *
+   * Sau khi invite:
+   * PageShare.status = PENDING
    */
-
   @Post('page-shares/page/:pageId')
   async sharePage(
     @Param('pageId')
@@ -114,7 +125,7 @@ export class PageShareController {
   }
 
   /**
-   * Tạo share link.
+   * Tạo / lấy stable Page share link.
    */
   @Post('page/:pageId/share-links')
   async createShareLink(
@@ -137,7 +148,10 @@ export class PageShareController {
   }
 
   /**
-   * Accept share link.
+   * Accept invitation.
+   *
+   * Chỉ PageShare PENDING của chính user
+   * mới được chuyển thành ACCEPTED.
    */
   @Post('page/share-links/accept')
   async acceptShareLink(
@@ -153,7 +167,26 @@ export class PageShareController {
   }
 
   /**
-   * Các Page được share cho current user.
+   * Reject invitation.
+   *
+   * Chỉ PageShare PENDING của chính user
+   * mới được chuyển thành REJECTED.
+   */
+  @Post('page/share-links/reject')
+  async rejectShareLink(
+    @Body()
+    body: AcceptPageShareLinkRequestDto,
+
+    @Auth()
+    user: IAuth,
+  ): Promise<RejectPageShareLinkResult> {
+    return this.rejectPageShareLinkHandler.execute(
+      new RejectPageShareLinkCommand(user.id, body.token),
+    );
+  }
+
+  /**
+   * Các Page đã được share cho current user.
    */
   @Get('page-shares/shared-with-me')
   async getSharedWithMe(
@@ -166,7 +199,7 @@ export class PageShareController {
   }
 
   /**
-   * People with access.
+   * People with access / invitation list.
    */
   @Get('page-shares/page/:pageId')
   async getPageShares(
@@ -182,7 +215,7 @@ export class PageShareController {
   }
 
   /**
-   * Update direct PageShare access.
+   * Update PageShare access level.
    */
   @Patch('page-shares/:shareId')
   async updatePageShare(
@@ -200,6 +233,9 @@ export class PageShareController {
     );
   }
 
+  /**
+   * Search user để invite.
+   */
   @Get('page-shares/page/:pageId/candidates')
   async searchPageShareCandidates(
     @Param('pageId')
@@ -213,6 +249,24 @@ export class PageShareController {
   ): Promise<PageShareUserDto[]> {
     return this.searchPageShareCandidatesHandler.execute(
       new SearchPageShareCandidatesQuery(user.id, pageId, keyword ?? ''),
+    );
+  }
+
+  /**
+   * Resolve share link.
+   *
+   * Token -> Page + current link access.
+   */
+  @Get('page/share/:token')
+  async resolveShareLink(
+    @Param('token')
+    token: string,
+
+    @Auth()
+    user: IAuth,
+  ): Promise<ResolvePageShareLinkResult> {
+    return this.resolvePageShareLinkHandler.execute(
+      new ResolvePageShareLinkQuery(user.id, token),
     );
   }
 }

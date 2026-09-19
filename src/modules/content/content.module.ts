@@ -46,6 +46,10 @@ import { TypeOrmPageRepository } from './infrastructure/persistence/typeorm/repo
 
 import { CreatePageEditRequestHandler } from './application/commands/page-edit-request/create-page-edit-request/create-page-edit-request.handler';
 
+import { PageShareLinkTokenService } from '../../shared/security/page-share-link-token.service';
+import { ApprovePageAccessRequestHandler } from './application/commands/page-access-request/approve-page-access-request/approve-page-access-request.handler';
+import { CreatePageAccessRequestHandler } from './application/commands/page-access-request/create-page-access-request/create-page-access-request.handler';
+import { RejectPageAccessRequestHandler } from './application/commands/page-access-request/reject-page-access-request/reject-page-access-request.handler';
 import { ApprovePageEditRequestHandler } from './application/commands/page-edit-request/approve-page-edit-request/approve-page-edit-request.handler';
 import { RejectPageEditRequestHandler } from './application/commands/page-edit-request/reject-page-edit-request/reject-page-edit-request.handler';
 import { AddPageFavoriteHandler } from './application/commands/page-favorite/add-page-favorite/add-page-favorite.handler';
@@ -53,11 +57,13 @@ import { RemovePageFavoriteHandler } from './application/commands/page-favorite/
 import { UpdatePageShareSettingHandler } from './application/commands/page-share-setting/update-page-share-setting/update-page-share-setting.handler';
 import { AcceptPageShareLinkHandler } from './application/commands/page-share/accept-page-share-link/accept-page-share-link.handler';
 import { CreatePageShareLinkHandler } from './application/commands/page-share/create-page-share-link/create-page-share-link.handler';
+import { RejectPageShareLinkHandler } from './application/commands/page-share/reject-page-share-link/reject-page-share-link.handler';
 import { RemovePageShareHandler } from './application/commands/page-share/remove-page-share/remove-page-share.handler';
 import { SharePageHandler } from './application/commands/page-share/share-page/share-page.handler';
 import { UpdatePageShareHandler } from './application/commands/page-share/update-page-share/update-page-share.handler';
 import { DuplicatePageHandler } from './application/commands/page/duplicate-page/duplicate-page.handler';
 import { MovePageHandler } from './application/commands/page/move-page/move-page.handler';
+import { GetPageAccessRequestsHandler } from './application/queries/page-access-request/get-page-access-requests/get-page-access-requests.handler';
 import { GetPageAccessHandler } from './application/queries/page-access/get-page-access/get-page-access.handler';
 import { GetMyPageEditRequestsHandler } from './application/queries/page-edit-request/get-my-page-edit-requests/get-my-page-edit-requests.handler';
 import { GetPageEditRequestsHandler } from './application/queries/page-edit-request/get-page-edit-requests/get-page-edit-requests.handler';
@@ -65,17 +71,21 @@ import { ListPageFavoritesHandler } from './application/queries/page-favorite/li
 import { GetPageShareSettingHandler } from './application/queries/page-share-setting/get-page-share-setting/get-page-share-setting.handler';
 import { GetPageSharesHandler } from './application/queries/page-share/get-page-shares/get-page-shares.handler';
 import { GetPagesSharedWithMeHandler } from './application/queries/page-share/get-pages-shared-with-me/get-pages-shared-with-me.handler';
+import { ResolvePageShareLinkHandler } from './application/queries/page-share/resolve-page-share-link/resolve-page-share-link.handler';
 import { SearchPageShareCandidatesHandler } from './application/queries/page-share/search-page-share-candidates/search-page-share-candidates.handler';
+import { PageAccessRequestOrmEntity } from './infrastructure/persistence/typeorm/entities/page-access-request.orm-entity';
 import { PageEditRequestOrmEntity } from './infrastructure/persistence/typeorm/entities/page-edit-request.orm-entity';
 import { PageFavoriteOrmEntity } from './infrastructure/persistence/typeorm/entities/page-favorite.orm-entity';
 import { PageShareLinkOrmEntity } from './infrastructure/persistence/typeorm/entities/page-share-link.orm-entity';
 import { PageShareSettingOrmEntity } from './infrastructure/persistence/typeorm/entities/page-share-setting.orm-entity';
 import { PageShareOrmEntity } from './infrastructure/persistence/typeorm/entities/page-share.orm-entity';
+import { TypeOrmPageAccessRequestRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-access-request.repository';
 import { TypeOrmPageEditRequestRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-edit-request.repository';
 import { TypeOrmPageFavoriteRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-favorite.repository';
 import { TypeOrmPageShareLinkRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-share-link.repository';
 import { TypeOrmPageShareSettingRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-share-setting.repository';
 import { TypeOrmPageShareRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-share.repository';
+import { PageAccessRequestController } from './presentation/http/controllers/page-access-request.controller';
 import { PageBlockController } from './presentation/http/controllers/page-block.controller';
 import { PageEditRequestController } from './presentation/http/controllers/page-edit-request.controller';
 import { PageFavoriteController } from './presentation/http/controllers/page-favorite.controller';
@@ -122,6 +132,11 @@ const repositories = [
     provide: CONTENT_TYPES.repositories.PageShareSettingRepository,
 
     useClass: TypeOrmPageShareSettingRepository,
+  },
+  {
+    provide: CONTENT_TYPES.repositories.PageAccessRequestRepository,
+
+    useClass: TypeOrmPageAccessRequestRepository,
   },
 ];
 
@@ -272,6 +287,14 @@ const pageShareHandlers = [
     provide: CONTENT_TYPES.applications.SearchPageShareCandidatesHandler,
     useClass: SearchPageShareCandidatesHandler,
   },
+  {
+    provide: CONTENT_TYPES.applications.ResolvePageShareLinkHandler,
+    useClass: ResolvePageShareLinkHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.RejectPageShareLinkHandler,
+    useClass: RejectPageShareLinkHandler,
+  },
 ];
 
 const pageEditRequestHandlers = [
@@ -308,9 +331,31 @@ const pageShareSettingsHandlers = [
     useClass: UpdatePageShareSettingHandler,
   },
 ];
+
+const pageAccessRequestHandler = [
+  {
+    provide: CONTENT_TYPES.applications.CreatePageAccessRequestHandler,
+    useClass: CreatePageAccessRequestHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.ApprovePageAccessRequestHandler,
+    useClass: ApprovePageAccessRequestHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.RejectPageAccessRequestHandler,
+    useClass: RejectPageAccessRequestHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.GetPageAccessRequestsHandler,
+    useClass: GetPageAccessRequestsHandler,
+  },
+];
 const bookmarkHandlers = [ResolveBookmarkMetadataHandler];
 
-const applicationServices = [PageBlockOrderingService];
+const applicationServices = [
+  PageBlockOrderingService,
+  PageShareLinkTokenService,
+];
 
 const ports = [
   {
@@ -335,6 +380,7 @@ const ports = [
       PageShareLinkOrmEntity,
       PageEditRequestOrmEntity,
       PageShareSettingOrmEntity,
+      PageAccessRequestOrmEntity,
     ]),
     DatabaseModule,
     PermissionModule,
@@ -349,6 +395,7 @@ const ports = [
     PageShareController,
     PageEditRequestController,
     PageShareSettingsController,
+    PageAccessRequestController,
   ],
 
   providers: [
@@ -359,6 +406,7 @@ const ports = [
     ...pageEditRequestHandlers,
     ...pageShareHandlers,
     ...pageShareSettingsHandlers,
+    ...pageAccessRequestHandler,
     ...bookmarkHandlers,
     ...applicationServices,
     ...ports,

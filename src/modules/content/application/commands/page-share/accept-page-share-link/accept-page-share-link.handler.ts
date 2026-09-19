@@ -1,26 +1,28 @@
 import {
+  ConflictException,
   GoneException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { createHash } from 'crypto';
 
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 
-import { PageShare } from '../../../../domain/entities/page-share.entity';
+import { PageShareLinkTokenService } from 'src/shared/security/page-share-link-token.service';
 
 import type { PageShareLinkRepository } from '../../../../domain/repositories/page-share-link.repository';
 import type { PageShareRepository } from '../../../../domain/repositories/page-share.repository';
 
-import { ResourceAccessLevel } from 'src/modules/content/domain/constants/resource-access-level.constant';
+import type { PageGeneralAccessReader } from 'src/modules/permission/application/ports/page-general-access-reader.port';
+import { PERMISSION_TYPES } from 'src/modules/permission/permission.types';
 import { AcceptPageShareLinkCommand } from './accept-page-share-link.command';
 
 export interface AcceptPageShareLinkResult {
   pageId: string;
+  shareId: string;
 }
 
 @Injectable()
@@ -34,16 +36,35 @@ export class AcceptPageShareLinkHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly unitOfWork: UnitOfWork,
+
+    @Inject(PERMISSION_TYPES.ports.PageGeneralAccessReader)
+    private readonly pageGeneralAccessReader: PageGeneralAccessReader,
+
+    private readonly pageShareLinkTokenService: PageShareLinkTokenService,
   ) {}
 
   async execute(
     command: AcceptPageShareLinkCommand,
   ): Promise<AcceptPageShareLinkResult> {
-    const tokenHash = createHash('sha256').update(command.token).digest('hex');
+    /**
+     * Verify token.
+     *
+     * Token hiện tại là token signed được sinh từ
+     * PageShareLinkTokenService, không hash raw token
+     * bằng SHA256 như flow legacy nữa.
+     */
+    const verified = this.pageShareLinkTokenService.verify(command.token);
+
+    if (!verified) {
+      throw new NotFoundException('Share link not found');
+    }
 
     return this.unitOfWork.runInTransaction(async (manager) => {
-      const shareLink = await this.pageShareLinkRepository.findByTokenHash(
-        tokenHash,
+      /**
+       * Lấy PageShareLink từ linkId đã verify.
+       */
+      const shareLink = await this.pageShareLinkRepository.findById(
+        verified.linkId,
         manager,
       );
 
@@ -51,10 +72,16 @@ export class AcceptPageShareLinkHandler {
         throw new NotFoundException('Share link not found');
       }
 
+      /**
+       * Link đã bị revoke.
+       */
       if (shareLink.getRevokedAt()) {
         throw new GoneException('Share link has been revoked');
       }
 
+      /**
+       * Link đã hết hạn.
+       */
       const expiresAt = shareLink.getExpiresAt();
 
       if (expiresAt && expiresAt.getTime() <= Date.now()) {
@@ -63,43 +90,51 @@ export class AcceptPageShareLinkHandler {
 
       const pageId = shareLink.getPageId();
 
-      /**
-       * Người tạo link mở chính link của mình.
-       *
-       * Không cần tạo PageShare cho owner.
-       */
-      if (command.userId === shareLink.getCreatedBy()) {
-        return {
-          pageId,
-        };
+      const setting = await this.pageGeneralAccessReader.findByPageId(pageId);
+
+      const linkAccessLevel = setting?.linkAccessLevel ?? null;
+
+      if (linkAccessLevel !== null) {
+        throw new ConflictException(
+          'Invitation cannot be processed while link access is enabled',
+        );
       }
 
       /**
-       * Kiểm tra user này đã được share page chưa.
+       * Tìm invitation của chính user đang đăng nhập.
+       *
+       * Ví dụ:
+       *
+       * Page A
+       * User B
+       * EDITOR
+       * PENDING
        */
-      const existingShare = await this.pageShareRepository.findByPageAndUser(
+      const pageShare = await this.pageShareRepository.findByPageAndUser(
         pageId,
         command.userId,
         manager,
       );
 
-      /**
-       * Chưa có quyền thì tạo PageShare.
-       */
-      if (!existingShare) {
-        const pageShare = PageShare.create({
-          pageId,
-          userId: command.userId,
-          shareLinkId: shareLink.getId(),
-          accessLevel: ResourceAccessLevel.VIEWER,
-          createdBy: shareLink.getCreatedBy(),
-        });
-
-        await this.pageShareRepository.save(pageShare, manager);
+      if (!pageShare) {
+        throw new NotFoundException('Page invitation not found');
       }
 
+      /**
+       * Domain tự đảm bảo:
+       *
+       * PENDING  -> ACCEPTED
+       *
+       * ACCEPTED -> ConflictException
+       * REJECTED -> ConflictException
+       */
+      pageShare.accept();
+
+      const saved = await this.pageShareRepository.save(pageShare, manager);
+
       return {
-        pageId,
+        pageId: saved.getPageId(),
+        shareId: saved.getId(),
       };
     });
   }
