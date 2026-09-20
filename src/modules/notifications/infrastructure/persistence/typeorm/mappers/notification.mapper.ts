@@ -1,12 +1,10 @@
-// src/modules/notifications/mapper/notification.mapper.ts
-
 import { Notification } from '../entities/notification.orm-entity';
 import {
   NotificationSenderType,
   NotificationSourceType,
 } from '../../../../domain/entities/notification.entity';
 import { NotificationModel } from '../../../../domain/entities/notification.entity';
-import { SaveNotificationInput } from '../../../../domain/repositories/create-notification.repository';
+import { SaveNotificationInput } from '../../../../domain/repositories/notification.repository';
 
 export class NotificationMapper {
   static toModel(entity: Notification): NotificationModel {
@@ -19,12 +17,9 @@ export class NotificationMapper {
       entity.actorId ?? null,
 
       entity.sourceType,
+      entity.sourceId ?? null,
 
       entity.workspaceId ?? null,
-      entity.projectId ?? null,
-      entity.taskId ?? null,
-      entity.sprintId ?? null,
-      entity.commentId ?? null,
 
       entity.type,
 
@@ -55,12 +50,9 @@ export class NotificationMapper {
     e.actorId = model.actorId ?? null;
 
     e.sourceType = model.sourceType ?? NotificationSourceType.SYSTEM;
+    e.sourceId = model.sourceId ?? null;
 
     e.workspaceId = model.workspaceId ?? null;
-    e.projectId = model.projectId ?? null;
-    e.taskId = model.taskId ?? null;
-    e.sprintId = model.sprintId ?? null;
-    e.commentId = model.commentId ?? null;
 
     e.type = model.type;
 

@@ -3,56 +3,54 @@ export enum NotificationSenderType {
   USER = 'USER',
 }
 
-export enum NotificationSourceType {
-  SYSTEM = 'SYSTEM',
-  ACCOUNT = 'ACCOUNT',
-  WORKSPACE = 'WORKSPACE',
-  PROJECT = 'PROJECT',
-  TASK = 'TASK',
-  SPRINT = 'SPRINT',
-  COMMENT = 'COMMENT',
-}
+export const NotificationSourceType = {
+  SYSTEM: 'system',
+  ACCOUNT: 'account',
+  WORKSPACE: 'workspace',
+  PAGE: 'page',
+  PAGE_BLOCK: 'page_block',
+  COMMENT: 'comment',
+} as const;
 
-export enum NotificationType {
-  SYSTEM_ANNOUNCEMENT = 'SYSTEM_ANNOUNCEMENT',
-  SYSTEM_MAINTENANCE = 'SYSTEM_MAINTENANCE',
-  ACCOUNT_SECURITY = 'ACCOUNT_SECURITY',
-  PASSWORD_CHANGED = 'PASSWORD_CHANGED',
-  EMAIL_VERIFIED = 'EMAIL_VERIFIED',
-  WORKSPACE_INVITE = 'WORKSPACE_INVITE',
-  WORKSPACE_INVITE_ACCEPTED = 'WORKSPACE_INVITE_ACCEPTED',
-  WORKSPACE_MEMBER_JOINED = 'WORKSPACE_MEMBER_JOINED',
-  WORKSPACE_MEMBER_REMOVED = 'WORKSPACE_MEMBER_REMOVED',
-  PROJECT_CREATED = 'PROJECT_CREATED',
-  PROJECT_UPDATED = 'PROJECT_UPDATED',
-  TASK_ASSIGNED = 'TASK_ASSIGNED',
-  TASK_UPDATED = 'TASK_UPDATED',
-  TASK_DUE_SOON = 'TASK_DUE_SOON',
-  TASK_OVERDUE = 'TASK_OVERDUE',
-  SPRINT_STARTED = 'SPRINT_STARTED',
-  SPRINT_COMPLETED = 'SPRINT_COMPLETED',
-  SPRINT_DUE_SOON = 'SPRINT_DUE_SOON',
-  SPRINT_OVERDUE = 'SPRINT_OVERDUE',
-  COMMENT_MENTION = 'COMMENT_MENTION',
-  COMMENT_REPLY = 'COMMENT_REPLY',
-}
+export type NotificationSourceType =
+  (typeof NotificationSourceType)[keyof typeof NotificationSourceType];
+
+export const NotificationType = {
+  SYSTEM_ANNOUNCEMENT: 'system.announcement',
+  SYSTEM_MAINTENANCE: 'system.maintenance',
+
+  ACCOUNT_SECURITY: 'account.security',
+  PASSWORD_CHANGED: 'account.password_changed',
+  EMAIL_VERIFIED: 'account.email_verified',
+
+  WORKSPACE_INVITE: 'workspace.invite',
+  WORKSPACE_INVITE_ACCEPTED: 'workspace.invite_accepted',
+  WORKSPACE_MEMBER_JOINED: 'workspace.member_joined',
+  WORKSPACE_MEMBER_REMOVED: 'workspace.member_removed',
+
+  PAGE_ACCESS_REQUESTED: 'page.access.requested',
+  PAGE_ACCESS_APPROVED: 'page.access.approved',
+  PAGE_ACCESS_REJECTED: 'page.access.rejected',
+
+  COMMENT_MENTIONED: 'comment.mentioned',
+  COMMENT_REPLIED: 'comment.replied',
+} as const;
+
+export type NotificationType =
+  (typeof NotificationType)[keyof typeof NotificationType];
 
 export class NotificationModel {
   constructor(
     public readonly id: string,
-
     public readonly receiverId: string,
 
     public readonly senderType: NotificationSenderType,
     public readonly actorId: string | null,
 
     public readonly sourceType: NotificationSourceType,
+    public readonly sourceId: string | null,
 
     public readonly workspaceId: string | null,
-    public readonly projectId: string | null,
-    public readonly taskId: string | null,
-    public readonly sprintId: string | null,
-    public readonly commentId: string | null,
 
     public readonly type: NotificationType,
 
@@ -60,7 +58,7 @@ export class NotificationModel {
     public readonly message: string | null,
     public readonly actionUrl: string | null,
 
-    public readonly metadata: Record<string, any> | null,
+    public readonly metadata: Record<string, unknown> | null,
 
     public readonly readAt: Date | null,
     public readonly archivedAt: Date | null,

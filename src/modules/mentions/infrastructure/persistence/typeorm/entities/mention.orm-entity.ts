@@ -1,5 +1,3 @@
-// src/modules/mentions/domain/entities/mention.entity.ts
-
 import {
   Column,
   CreateDateColumn,
@@ -7,10 +5,8 @@ import {
   Index,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import {
-  MentionEntityType,
-  MentionSourceType,
-} from '../../../../domain/entities/mention.entity';
+import { MentionEntityType } from '../../../../domain/enums/mention-entity-type.enum';
+import { MentionSourceType } from '../../../../domain/enums/mention-source-type.enum';
 
 @Entity('mentions')
 @Index(['workspaceId', 'mentionedUserId'])

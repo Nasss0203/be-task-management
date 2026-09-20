@@ -1,20 +1,42 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Activity } from '../entities/activity.orm-entity';
+import { EntityManager, Repository } from 'typeorm';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
+import { ActivityModel } from '../../../../domain/entities/activity.entity';
 import {
+  ActivityRepository,
   FindActivityFilters,
-  FindActivityRepository,
   FindActivityResult,
-} from '../../../../domain/repositories/find-activity.repository';
+  SaveActivityInput,
+} from '../../../../domain/repositories/activity.repository';
+import { Activity } from '../entities/activity.orm-entity';
 import { ActivityMapper } from '../mappers/activity.mapper';
 
 @Injectable()
-export class FindActivityRepositoryImpl implements FindActivityRepository {
+export class TypeOrmActivityRepository implements ActivityRepository {
   constructor(
     @InjectRepository(Activity)
     private readonly repo: Repository<Activity>,
   ) {}
+
+  private getRepo(context?: PersistenceContext): Repository<Activity> {
+    return context
+      ? (context as EntityManager).getRepository(Activity)
+      : this.repo;
+  }
+
+  async save(
+    activity: SaveActivityInput,
+    context?: PersistenceContext,
+  ): Promise<ActivityModel> {
+    const repo = this.getRepo(context);
+
+    const entity = ActivityMapper.toEntity(activity);
+
+    const saved = await repo.save(entity);
+
+    return ActivityMapper.toModel(saved);
+  }
 
   async findMany(filters: FindActivityFilters): Promise<FindActivityResult> {
     const limit = this.normalizeLimit(filters.limit);

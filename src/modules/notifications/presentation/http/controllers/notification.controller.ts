@@ -7,7 +7,10 @@ import {
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { type IAuth } from 'src/types/auth';
 import { QueryNotificationDto } from '../../../application/dto/request/query-notification.dto';
-import { type FindNotificationApplication } from '../../../application/ports/find-notification.application.port';
+import { GetNotificationsHandler } from '../../../application/queries/get-notifications/get-notifications.handler';
+import { GetNotificationsQuery } from '../../../application/queries/get-notifications/get-notifications.query';
+import { GetUnreadCountHandler } from '../../../application/queries/get-unread-count/get-unread-count.handler';
+import { GetUnreadCountQuery } from '../../../application/queries/get-unread-count/get-unread-count.query';
 import { type UpdateNotificationService } from '../../../application/ports/update-notification.service.port';
 import { NOTIFICATION_TYPES } from '../../../notifications.types';
 
@@ -15,8 +18,8 @@ import { NOTIFICATION_TYPES } from '../../../notifications.types';
 @ReadRateLimit()
 export class NotificationsController {
   constructor(
-    @Inject(NOTIFICATION_TYPES.applications.FindNotificationApplication)
-    private readonly findNotificationApplication: FindNotificationApplication,
+    private readonly getNotificationsHandler: GetNotificationsHandler,
+    private readonly getUnreadCountHandler: GetUnreadCountHandler,
 
     @Inject(NOTIFICATION_TYPES.services.UpdateNotificationService)
     private readonly updateNotificationService: UpdateNotificationService,
@@ -28,29 +31,18 @@ export class NotificationsController {
     @Auth() auth: IAuth,
     @Query() query: QueryNotificationDto,
   ) {
-    return this.findNotificationApplication.findMyNotifications({
-      userId: auth.id,
-
-      category: query.category,
-
-      unreadOnly: query.unreadOnly === 'true',
-
-      sourceType: query.sourceType,
-      type: query.type,
-
-      workspaceId: query.workspaceId,
-      projectId: query.projectId,
-      taskId: query.taskId,
-
-      cursor: query.cursor,
-      limit: query.limit,
-    });
+    return this.getNotificationsHandler.execute(
+      new GetNotificationsQuery(auth.id, {
+        ...query,
+        unreadOnly: query.unreadOnly === 'true',
+      }),
+    );
   }
 
   @Get('unread-count')
   @ResponseMessage('Count unread notifications successfully')
   async countUnread(@Auth() auth: IAuth) {
-    return this.findNotificationApplication.countUnread(auth.id);
+    return this.getUnreadCountHandler.execute(new GetUnreadCountQuery(auth.id));
   }
 
   @Patch('read-all')

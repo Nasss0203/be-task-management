@@ -2,7 +2,7 @@
 
 import { Activity } from '../entities/activity.orm-entity';
 import { ActivityModel } from '../../../../domain/entities/activity.entity';
-import { SaveActivityInput } from '../../../../domain/repositories/create-activity.repository';
+import { SaveActivityInput } from '../../../../domain/repositories/activity.repository';
 
 export class ActivityMapper {
   static toModel(entity: Activity): ActivityModel {

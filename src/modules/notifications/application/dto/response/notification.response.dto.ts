@@ -13,11 +13,8 @@ export class NotificationResponseDto {
       senderType: model.senderType,
       actorId: model.actorId,
       sourceType: model.sourceType,
+      sourceId: model.sourceId,
       workspaceId: model.workspaceId,
-      projectId: model.projectId,
-      taskId: model.taskId,
-      sprintId: model.sprintId,
-      commentId: model.commentId,
       type: model.type,
       title: model.title,
       message: model.message,
@@ -37,12 +34,9 @@ export class NotificationResponseDto {
   actorId: string | null;
 
   sourceType: NotificationSourceType;
+  sourceId: string | null;
 
   workspaceId: string | null;
-  projectId: string | null;
-  taskId: string | null;
-  sprintId: string | null;
-  commentId: string | null;
 
   type: NotificationType;
 
@@ -50,7 +44,7 @@ export class NotificationResponseDto {
   message: string | null;
   actionUrl: string | null;
 
-  metadata: Record<string, any> | null;
+  metadata: Record<string, unknown> | null;
 
   readAt: Date | null;
   archivedAt: Date | null;

@@ -1,51 +1,41 @@
-// src/modules/notifications/applications/find-notification.application.impl.ts
-
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { NotificationResponseDto } from '../../dto/response/notification.response.dto';
-import {
-  FindMyNotificationsApplicationInput,
-  FindNotificationApplication,
-} from '../../ports/find-notification.application.port';
-import { type FindNotificationService } from '../../ports/find-notification.service.port';
+import { type NotificationRepository } from '../../../domain/repositories/notification.repository';
 import { NOTIFICATION_TYPES } from '../../../notifications.types';
+import { GetNotificationsQuery } from './get-notifications.query';
 
 @Injectable()
-export class FindNotificationApplicationImpl implements FindNotificationApplication {
+export class GetNotificationsHandler {
   constructor(
-    @Inject(NOTIFICATION_TYPES.services.FindNotificationService)
-    private readonly findNotificationService: FindNotificationService,
+    @Inject(NOTIFICATION_TYPES.repositories.NotificationRepository)
+    private readonly notificationRepository: NotificationRepository,
   ) {}
 
-  async findMyNotifications(
-    input: FindMyNotificationsApplicationInput,
+  async execute(
+    query: GetNotificationsQuery,
   ): Promise<NotificationResponseDto[]> {
-    const notifications =
-      await this.findNotificationService.findMyNotifications({
-        userId: input.userId,
+    if (!query.userId) {
+      throw new BadRequestException('userId is required');
+    }
 
-        category: input.category,
-
-        unreadOnly: input.unreadOnly ?? false,
-
-        sourceType: input.sourceType,
-        type: input.type,
-
-        workspaceId: input.workspaceId,
-        projectId: input.projectId,
-        taskId: input.taskId,
-
-        cursor: input.cursor ? new Date(input.cursor) : undefined,
-        limit: input.limit ? Number(input.limit) : 30,
-      });
+    const notifications = await this.notificationRepository.findMyNotifications(
+      {
+        receiverId: query.userId,
+        category: query.filters.category,
+        unreadOnly: query.filters.unreadOnly ?? false,
+        sourceType: query.filters.sourceType,
+        sourceId: query.filters.sourceId,
+        type: query.filters.type,
+        workspaceId: query.filters.workspaceId,
+        cursor: query.filters.cursor
+          ? new Date(query.filters.cursor)
+          : undefined,
+        limit: query.filters.limit ? Number(query.filters.limit) : 30,
+      },
+    );
 
     return notifications.map((notification) =>
       NotificationResponseDto.fromModel(notification),
     );
-  }
-
-  async countUnread(userId: string): Promise<{ count: number }> {
-    const count = await this.findNotificationService.countUnread(userId);
-
-    return { count };
   }
 }

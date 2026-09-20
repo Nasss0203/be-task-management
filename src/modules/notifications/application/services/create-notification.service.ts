@@ -1,5 +1,3 @@
-// src/modules/notifications/services/create-notification.service.impl.ts
-
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
@@ -8,7 +6,7 @@ import {
   NotificationSourceType,
 } from '../../domain/entities/notification.entity';
 import { NotificationModel } from '../../domain/entities/notification.entity';
-import { type CreateNotificationRepository } from '../../domain/repositories/create-notification.repository';
+import { type NotificationRepository } from '../../domain/repositories/notification.repository';
 import {
   CreateNotificationService,
   CreateNotificationServiceInput,
@@ -20,8 +18,8 @@ const NOTIFICATION_CREATED_EVENT = 'notification.created';
 @Injectable()
 export class CreateNotificationServiceImpl implements CreateNotificationService {
   constructor(
-    @Inject(NOTIFICATION_TYPES.repositories.CreateNotificationRepository)
-    private readonly createNotificationRepository: CreateNotificationRepository,
+    @Inject(NOTIFICATION_TYPES.repositories.NotificationRepository)
+    private readonly notificationRepository: NotificationRepository,
 
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -38,35 +36,31 @@ export class CreateNotificationServiceImpl implements CreateNotificationService 
       throw new BadRequestException('Notification title is required');
     }
 
-    const notification =
-      await this.createNotificationRepository.saveNotification(
-        {
-          receiverId: input.receiverId,
+    const notification = await this.notificationRepository.saveNotification(
+      {
+        receiverId: input.receiverId,
 
-          senderType: input.senderType ?? NotificationSenderType.SYSTEM,
-          actorId: input.actorId ?? null,
+        senderType: input.senderType ?? NotificationSenderType.SYSTEM,
+        actorId: input.actorId ?? null,
 
-          sourceType: input.sourceType ?? NotificationSourceType.SYSTEM,
+        sourceType: input.sourceType ?? NotificationSourceType.SYSTEM,
+        sourceId: input.sourceId ?? null,
 
-          workspaceId: input.workspaceId ?? null,
-          projectId: input.projectId ?? null,
-          taskId: input.taskId ?? null,
-          sprintId: input.sprintId ?? null,
-          commentId: input.commentId ?? null,
+        workspaceId: input.workspaceId ?? null,
 
-          type: input.type,
+        type: input.type,
 
-          title: input.title.trim(),
-          message: input.message ?? null,
-          actionUrl: input.actionUrl ?? null,
+        title: input.title.trim(),
+        message: input.message ?? null,
+        actionUrl: input.actionUrl ?? null,
 
-          metadata: input.metadata ?? null,
+        metadata: input.metadata ?? null,
 
-          readAt: null,
-          archivedAt: null,
-        },
-        context,
-      );
+        readAt: null,
+        archivedAt: null,
+      },
+      context,
+    );
 
     this.eventEmitter.emit(NOTIFICATION_CREATED_EVENT, {
       recipientUserId: notification.receiverId,
@@ -81,12 +75,9 @@ export class CreateNotificationServiceImpl implements CreateNotificationService 
         actorId: notification.actorId,
 
         sourceType: notification.sourceType,
+        sourceId: notification.sourceId,
 
         workspaceId: notification.workspaceId,
-        projectId: notification.projectId,
-        taskId: notification.taskId,
-        sprintId: notification.sprintId,
-        commentId: notification.commentId,
 
         metadata: notification.metadata,
 

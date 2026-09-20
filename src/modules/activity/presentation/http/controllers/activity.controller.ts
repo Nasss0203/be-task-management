@@ -1,21 +1,18 @@
-import { Controller, Get, Inject, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ReadRateLimit } from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { ActivityEntityType } from '../../../domain/entities/activity.entity';
 import { FindActivityQueryDto } from '../../../application/dto/request/find-activity-query.dto';
-import { type FindActivityApplication } from '../../../application/ports/find-activity.application.port';
-import { ACTIVITY_TYPES } from '../../../activity.types';
+import { GetActivitiesHandler } from '../../../application/queries/get-activities/get-activities.handler';
+import { GetActivitiesQuery } from '../../../application/queries/get-activities/get-activities.query';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 
 @Controller('activity')
 @ReadRateLimit()
 export class ActivityController {
-  constructor(
-    @Inject(ACTIVITY_TYPES.applications.FindActivityApplication)
-    private readonly findActivityApplication: FindActivityApplication,
-  ) {}
+  constructor(private readonly getActivitiesHandler: GetActivitiesHandler) {}
 
   @Get('workspaces/:workspaceId')
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
@@ -25,7 +22,9 @@ export class ActivityController {
     @Param('workspaceId') workspaceId: string,
     @Query() query: FindActivityQueryDto,
   ) {
-    return this.findActivityApplication.findByWorkspace(workspaceId, query);
+    return this.getActivitiesHandler.execute(
+      new GetActivitiesQuery(workspaceId, query),
+    );
   }
 
   @Get('workspaces/:workspaceId/projects/:projectId')
@@ -37,10 +36,8 @@ export class ActivityController {
     @Param('projectId') projectId: string,
     @Query() query: FindActivityQueryDto,
   ) {
-    return this.findActivityApplication.findByProject(
-      workspaceId,
-      projectId,
-      query,
+    return this.getActivitiesHandler.execute(
+      new GetActivitiesQuery(workspaceId, query, { projectId }),
     );
   }
 
@@ -54,11 +51,8 @@ export class ActivityController {
     @Param('entityId') entityId: string,
     @Query() query: FindActivityQueryDto,
   ) {
-    return this.findActivityApplication.findByEntity(
-      workspaceId,
-      entityType,
-      entityId,
-      query,
+    return this.getActivitiesHandler.execute(
+      new GetActivitiesQuery(workspaceId, query, { entityType, entityId }),
     );
   }
 }

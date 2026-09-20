@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
-import { type UpdateNotificationRepository } from '../../domain/repositories/update-notification.repository';
+import { type NotificationRepository } from '../../domain/repositories/notification.repository';
 import {
   UpdateInviteNotificationStatusServiceInput,
   UpdateNotificationService,
@@ -10,8 +10,8 @@ import { NOTIFICATION_TYPES } from '../../notifications.types';
 @Injectable()
 export class UpdateNotificationServiceImpl implements UpdateNotificationService {
   constructor(
-    @Inject(NOTIFICATION_TYPES.repositories.UpdateNotificationRepository)
-    private readonly updateNotificationRepository: UpdateNotificationRepository,
+    @Inject(NOTIFICATION_TYPES.repositories.NotificationRepository)
+    private readonly notificationRepository: NotificationRepository,
   ) {}
 
   async updateInviteNotificationStatus(
@@ -26,7 +26,7 @@ export class UpdateNotificationServiceImpl implements UpdateNotificationService 
       throw new BadRequestException('inviteStatus is required');
     }
 
-    return this.updateNotificationRepository.updateInviteNotificationStatus(
+    return this.notificationRepository.updateInviteNotificationStatus(
       input,
       context,
     );
@@ -40,7 +40,7 @@ export class UpdateNotificationServiceImpl implements UpdateNotificationService 
       throw new BadRequestException('userId is required');
     }
 
-    return this.updateNotificationRepository.markAllAsRead(userId, context);
+    return this.notificationRepository.markAllAsRead(userId, context);
   }
 
   async markAsRead(
@@ -56,7 +56,7 @@ export class UpdateNotificationServiceImpl implements UpdateNotificationService 
       throw new BadRequestException('userId is required');
     }
 
-    return this.updateNotificationRepository.markAsRead(
+    return this.notificationRepository.markAsRead(
       notificationId,
       userId,
       context,

@@ -1,10 +1,11 @@
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
+
 import {
+  NotificationModel,
   NotificationSenderType,
   NotificationSourceType,
   NotificationType,
 } from '../../domain/entities/notification.entity';
-import { NotificationModel } from '../../domain/entities/notification.entity';
 
 export interface CreateNotificationServiceInput {
   receiverId: string;
@@ -13,12 +14,9 @@ export interface CreateNotificationServiceInput {
   actorId?: string | null;
 
   sourceType?: NotificationSourceType;
+  sourceId?: string | null;
 
   workspaceId?: string | null;
-  projectId?: string | null;
-  taskId?: string | null;
-  sprintId?: string | null;
-  commentId?: string | null;
 
   type: NotificationType;
 
@@ -26,7 +24,7 @@ export interface CreateNotificationServiceInput {
   message?: string | null;
   actionUrl?: string | null;
 
-  metadata?: Record<string, any> | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 export interface CreateNotificationService {

@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
 import { ActivityModel } from '../../domain/entities/activity.entity';
-import { type CreateActivityRepository } from '../../domain/repositories/create-activity.repository';
+import { type ActivityRepository } from '../../domain/repositories/activity.repository';
 import {
   CreateActivityService,
   CreateActivityServiceInput,
@@ -11,15 +11,15 @@ import { ACTIVITY_TYPES } from '../../activity.types';
 @Injectable()
 export class CreateActivityServiceImpl implements CreateActivityService {
   constructor(
-    @Inject(ACTIVITY_TYPES.repositories.CreateActivityRepository)
-    private readonly createActivityRepository: CreateActivityRepository,
+    @Inject(ACTIVITY_TYPES.repositories.ActivityRepository)
+    private readonly activityRepository: ActivityRepository,
   ) {}
 
   async create(
     input: CreateActivityServiceInput,
     context?: PersistenceContext,
   ): Promise<ActivityModel> {
-    return await this.createActivityRepository.save(
+    return await this.activityRepository.save(
       {
         workspaceId: input.workspaceId,
         projectId: input.projectId ?? null,

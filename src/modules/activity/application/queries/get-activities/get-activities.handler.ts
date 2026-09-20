@@ -1,65 +1,32 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { FindActivityQueryDto } from '../../dto/request/find-activity-query.dto';
-import { ActivityEntityType } from '../../../domain/entities/activity.entity';
-import {
-  FindActivityApplication,
-  FindActivityResponse,
-} from '../../ports/find-activity.application.port';
-import { type FindActivityService } from '../../ports/find-activity.service.port';
+import { type ActivityRepository } from '../../../domain/repositories/activity.repository';
 import { ACTIVITY_TYPES } from '../../../activity.types';
 import { ActivityResponseDto } from '../../dto/response/activity.response.dto';
 import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
 import { type FindUserService } from 'src/modules/identity/application/ports/find-user.service.interface';
+import { GetActivitiesQuery } from './get-activities.query';
+
+export type GetActivitiesResult = {
+  items: ActivityResponseDto[];
+  nextCursor: string | null;
+};
 
 @Injectable()
-export class FindActivityApplicationImpl implements FindActivityApplication {
+export class GetActivitiesHandler {
   constructor(
-    @Inject(ACTIVITY_TYPES.services.FindActivityService)
-    private readonly findActivityService: FindActivityService,
+    @Inject(ACTIVITY_TYPES.repositories.ActivityRepository)
+    private readonly activityRepository: ActivityRepository,
     @Inject(IDENTITY_TYPES.services.FindUserService)
     private readonly findUserService: FindUserService,
   ) {}
 
-  async findByWorkspace(
-    workspaceId: string,
-    query: FindActivityQueryDto,
-  ): Promise<FindActivityResponse> {
-    return this.find({
-      ...query,
-      workspaceId,
-    });
-  }
-
-  async findByProject(
-    workspaceId: string,
-    projectId: string,
-    query: FindActivityQueryDto,
-  ): Promise<FindActivityResponse> {
-    return this.find({
-      ...query,
-      workspaceId,
-      projectId,
-    });
-  }
-
-  async findByEntity(
-    workspaceId: string,
-    entityType: ActivityEntityType,
-    entityId: string,
-    query: FindActivityQueryDto,
-  ): Promise<FindActivityResponse> {
-    return this.find({
-      ...query,
-      workspaceId,
-      entityType,
-      entityId,
-    });
-  }
-
-  private async find(
-    filters: FindActivityQueryDto & { workspaceId: string },
-  ): Promise<FindActivityResponse> {
-    const result = await this.findActivityService.findMany({
+  async execute(query: GetActivitiesQuery): Promise<GetActivitiesResult> {
+    const filters = {
+      ...query.filters,
+      workspaceId: query.workspaceId,
+      ...query.scope,
+    };
+    const result = await this.activityRepository.findMany({
       workspaceId: filters.workspaceId,
       projectId: filters.projectId,
       entityType: filters.entityType,

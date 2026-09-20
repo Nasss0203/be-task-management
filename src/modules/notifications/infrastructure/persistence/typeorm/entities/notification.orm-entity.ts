@@ -1,6 +1,5 @@
-// src/modules/notifications/domain/entities/notification.entity.ts
-
 import { User } from 'src/modules/identity/identity.types';
+
 import {
   Column,
   CreateDateColumn,
@@ -11,6 +10,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
 import {
   NotificationSenderType,
   NotificationSourceType,
@@ -21,24 +21,36 @@ import {
 @Index('IDX_notifications_receiver_created_at', ['receiverId', 'createdAt'])
 @Index('IDX_notifications_receiver_read_at', ['receiverId', 'readAt'])
 @Index('IDX_notifications_workspace_id', ['workspaceId'])
-@Index('IDX_notifications_project_id', ['projectId'])
-@Index('IDX_notifications_task_id', ['taskId'])
+@Index('IDX_notifications_source', ['sourceType', 'sourceId'])
 export class Notification {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   /**
-   * Người nhận notification
+   * Người nhận notification.
    */
-  @Column({ name: 'receiver_id', type: 'uuid' })
+  @Column({
+    name: 'receiver_id',
+    type: 'uuid',
+  })
   receiverId: string;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'receiver_id' })
+  @ManyToOne(() => User, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({
+    name: 'receiver_id',
+  })
   receiver: User;
 
   /**
-   * SYSTEM hoặc USER
+   * Nguồn gửi notification.
+   *
+   * SYSTEM:
+   * - notification do hệ thống tạo.
+   *
+   * USER:
+   * - notification phát sinh từ hành động của user khác.
    */
   @Column({
     name: 'sender_type',
@@ -49,86 +61,182 @@ export class Notification {
   senderType: NotificationSenderType;
 
   /**
-   * Người tạo ra notification.
-   * Nếu notification từ system thì actorId = null.
+   * User gây ra notification.
+   *
+   * Nếu senderType = SYSTEM thì actorId thường là null.
    */
-  @Column({ name: 'actor_id', type: 'uuid', nullable: true })
+  @Column({
+    name: 'actor_id',
+    type: 'uuid',
+    nullable: true,
+  })
   actorId: string | null;
 
-  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'actor_id' })
+  @ManyToOne(() => User, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({
+    name: 'actor_id',
+  })
   actor: User | null;
 
   /**
-   * Notification này thuộc nhóm nào.
-   * Ví dụ SYSTEM, WORKSPACE, TASK, COMMENT.
+   * Loại resource tạo ra notification.
+   *
+   * Ví dụ:
+   * - system
+   * - account
+   * - workspace
+   * - page
+   * - page_block
+   * - comment
+   *
+   * Dùng varchar thay vì PostgreSQL enum để có thể
+   * bổ sung source mới mà không phải migration DB.
    */
   @Column({
     name: 'source_type',
-    type: 'enum',
-    enum: NotificationSourceType,
+    type: 'varchar',
+    length: 64,
     default: NotificationSourceType.SYSTEM,
   })
   sourceType: NotificationSourceType;
 
   /**
-   * Context nullable.
-   * Không phải notification nào cũng có workspace/project/task.
+   * ID của resource tương ứng với sourceType.
+   *
+   * Ví dụ:
+   *
+   * sourceType = page
+   * sourceId   = pageId
+   *
+   * sourceType = workspace
+   * sourceId   = workspaceId
+   *
+   * sourceType = system
+   * sourceId   = null
    */
-  @Column({ name: 'workspace_id', type: 'uuid', nullable: true })
+  @Column({
+    name: 'source_id',
+    type: 'uuid',
+    nullable: true,
+  })
+  sourceId: string | null;
+
+  /**
+   * Workspace scope.
+   *
+   * Giữ riêng workspaceId để:
+   * - filter notification theo workspace
+   * - query nhanh hơn
+   * - không cần parse metadata
+   *
+   * Notification không thuộc workspace có thể để null.
+   */
+  @Column({
+    name: 'workspace_id',
+    type: 'uuid',
+    nullable: true,
+  })
   workspaceId: string | null;
 
-  @Column({ name: 'project_id', type: 'uuid', nullable: true })
-  projectId: string | null;
-
-  @Column({ name: 'task_id', type: 'uuid', nullable: true })
-  taskId: string | null;
-
-  @Column({ name: 'sprint_id', type: 'uuid', nullable: true })
-  sprintId: string | null;
-
-  @Column({ name: 'comment_id', type: 'uuid', nullable: true })
-  commentId: string | null;
-
-  @Column({ type: 'enum', enum: NotificationType })
+  /**
+   * Business event của notification.
+   *
+   * Ví dụ:
+   * - page.access.requested
+   * - page.access.approved
+   * - workspace.invite
+   *
+   * Dùng varchar để thêm NotificationType mới
+   * mà không phải migration PostgreSQL enum.
+   */
+  @Column({
+    name: 'type',
+    type: 'varchar',
+    length: 100,
+  })
   type: NotificationType;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({
+    type: 'varchar',
+    length: 255,
+  })
   title: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({
+    type: 'text',
+    nullable: true,
+  })
   message: string | null;
 
   /**
-   * URL frontend dùng để click vào notification.
+   * URL frontend điều hướng khi user click notification.
+   *
    * Ví dụ:
-   * /workspaces/:workspaceId/projects/:projectId/tasks/:taskId
+   * /pages/:pageId
    */
-  @Column({ name: 'action_url', type: 'text', nullable: true })
+  @Column({
+    name: 'action_url',
+    type: 'text',
+    nullable: true,
+  })
   actionUrl: string | null;
 
   /**
-   * Dữ liệu phụ.
-   * Ví dụ:
+   * Dữ liệu phụ dành riêng cho từng notification.
+   *
+   * Không nên dùng metadata để thay thế các field
+   * cần filter/query thường xuyên như:
+   * - receiverId
+   * - workspaceId
+   * - sourceType
+   * - sourceId
+   *
+   * Ví dụ Page Access Request:
+   *
    * {
-   *   workspaceName: "...",
-   *   taskTitle: "...",
-   *   inviteId: "...",
-   *   inviteToken: "..."
+   *   accessRequestId: "...",
+   *   requesterId: "..."
    * }
    */
-  @Column({ type: 'jsonb', nullable: true })
-  metadata: Record<string, any> | null;
+  @Column({
+    type: 'jsonb',
+    nullable: true,
+  })
+  metadata: Record<string, unknown> | null;
 
-  @Column({ name: 'read_at', type: 'timestamp', nullable: true })
+  /**
+   * null = chưa đọc.
+   */
+  @Column({
+    name: 'read_at',
+    type: 'timestamp',
+    nullable: true,
+  })
   readAt: Date | null;
 
-  @Column({ name: 'archived_at', type: 'timestamp', nullable: true })
+  /**
+   * Cho phép ẩn/archive notification
+   * mà không cần xóa dữ liệu.
+   */
+  @Column({
+    name: 'archived_at',
+    type: 'timestamp',
+    nullable: true,
+  })
   archivedAt: Date | null;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
+  @CreateDateColumn({
+    name: 'created_at',
+    type: 'timestamp',
+  })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
+  @UpdateDateColumn({
+    name: 'updated_at',
+    type: 'timestamp',
+  })
   updatedAt: Date;
 }

@@ -1,4 +1,4 @@
-import { IsBooleanString, IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsBooleanString, IsIn, IsOptional, IsString } from 'class-validator';
 import {
   NotificationSourceType,
   NotificationType,
@@ -14,24 +14,20 @@ export class QueryNotificationDto {
   unreadOnly?: string;
 
   @IsOptional()
-  @IsEnum(NotificationSourceType)
+  @IsIn(Object.values(NotificationSourceType))
   sourceType?: NotificationSourceType;
 
   @IsOptional()
-  @IsEnum(NotificationType)
+  @IsIn(Object.values(NotificationType))
   type?: NotificationType;
 
   @IsOptional()
   @IsString()
+  sourceId?: string;
+
+  @IsOptional()
+  @IsString()
   workspaceId?: string;
-
-  @IsOptional()
-  @IsString()
-  projectId?: string;
-
-  @IsOptional()
-  @IsString()
-  taskId?: string;
 
   @IsOptional()
   @IsString()
