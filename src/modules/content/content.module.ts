@@ -47,6 +47,7 @@ import { TypeOrmPageRepository } from './infrastructure/persistence/typeorm/repo
 import { CreatePageEditRequestHandler } from './application/commands/page-edit-request/create-page-edit-request/create-page-edit-request.handler';
 
 import { PageShareLinkTokenService } from '../../shared/security/page-share-link-token.service';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { ApprovePageAccessRequestHandler } from './application/commands/page-access-request/approve-page-access-request/approve-page-access-request.handler';
 import { CreatePageAccessRequestHandler } from './application/commands/page-access-request/create-page-access-request/create-page-access-request.handler';
 import { RejectPageAccessRequestHandler } from './application/commands/page-access-request/reject-page-access-request/reject-page-access-request.handler';
@@ -384,6 +385,7 @@ const ports = [
     ]),
     DatabaseModule,
     PermissionModule,
+    NotificationsModule,
   ],
 
   controllers: [

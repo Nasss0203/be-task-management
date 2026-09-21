@@ -8,5 +8,6 @@ export const PERMISSION_TYPES = {
     PageShareLinkAuthorizationReader: Symbol(
       'PageShareLinkAuthorizationReader',
     ),
+    PageAccessReviewerReader: Symbol('PageAccessReviewerReader'),
   },
 } as const;

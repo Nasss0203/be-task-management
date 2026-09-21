@@ -12,6 +12,7 @@ import { EffectivePageAccessService } from './application/services/effective-pag
 import { TypeOrmResourceAuthorizationReader } from './infrastructure/persistence/typeorm/adapters/resource-authorization-reader.adapter';
 import { TypeOrmTeamspacePermissionReader } from './infrastructure/persistence/typeorm/adapters/teamspace-permission-reader.adapter';
 import { TypeOrmWorkspacePermissionReader } from './infrastructure/persistence/typeorm/adapters/workspace-permission-reader.adapter';
+import { TypeOrmPageAccessReviewerReader } from './infrastructure/persistence/typeorm/readers/typeorm-page-access-reviewer.reader';
 import { TypeOrmPageGeneralAccessReader } from './infrastructure/persistence/typeorm/readers/typeorm-page-general-access.reader';
 import { TypeOrmPageShareLinkAuthorizationReader } from './infrastructure/persistence/typeorm/readers/typeorm-page-share-link-authorization.reader';
 import { TypeOrmPageSharePermissionReader } from './infrastructure/persistence/typeorm/readers/typeorm-page-share-permission.reader';
@@ -57,6 +58,10 @@ import { PERMISSION_TYPES } from './permission.types';
       provide: PERMISSION_TYPES.ports.PageShareLinkAuthorizationReader,
       useClass: TypeOrmPageShareLinkAuthorizationReader,
     },
+    {
+      provide: PERMISSION_TYPES.ports.PageAccessReviewerReader,
+      useClass: TypeOrmPageAccessReviewerReader,
+    },
   ],
   exports: [
     AuthorizationService,
@@ -64,6 +69,7 @@ import { PERMISSION_TYPES } from './permission.types';
 
     PERMISSION_TYPES.ports.PageSharePermissionReader,
     PERMISSION_TYPES.ports.PageGeneralAccessReader,
+    PERMISSION_TYPES.ports.PageAccessReviewerReader,
   ],
 })
 export class PermissionModule {}
