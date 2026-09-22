@@ -50,19 +50,15 @@ export class ProcessStripeWebhookHandler {
         context,
       );
 
-      // Stripe có thể gửi lại cùng một event nhiều lần.
+      
       if (!inserted) {
         return;
       }
 
-      // Mặc định là IGNORED. Chỉ đổi sang PROCESSED khi xử lý thành công.
+      
       webhookEvent.markIgnored(processedAt);
 
-      /*
-       * checkout.session.expired
-       * Chỉ chuyển đơn PENDING thành EXPIRED.
-       * Không thay đổi subscription.
-       */
+     
       if (event.type === 'checkout.session.expired') {
         const session = event.data.object;
         const metadata = session.metadata;
@@ -114,10 +110,7 @@ export class ProcessStripeWebhookHandler {
           return;
         }
 
-        /*
-         * Nếu đơn đã PAID, FAILED, CANCELED hoặc EXPIRED thì bỏ qua.
-         * Đặc biệt không được đổi ngược PAID thành EXPIRED.
-         */
+       
         if (!paymentOrder.isPending()) {
           await this.webhookEventRepository.save(webhookEvent, context);
           return;
@@ -136,17 +129,13 @@ export class ProcessStripeWebhookHandler {
         return;
       }
 
-      /*
-       * Những event chưa được hỗ trợ sẽ được lưu là IGNORED.
-       */
+     
       if (event.type !== 'checkout.session.completed') {
         await this.webhookEventRepository.save(webhookEvent, context);
         return;
       }
 
-      /*
-       * checkout.session.completed
-       */
+     
       const session = event.data.object;
       const metadata = session.metadata;
 

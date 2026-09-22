@@ -5,6 +5,8 @@ export const ADMIN_PERMISSIONS = {
   USERS_ROLE_UPDATE: 'admin.users.role.update',
   WORKSPACES_READ: 'admin.workspaces.read',
   DASHBOARD_READ: 'admin.dashboard.read',
+  BILLING_READ: 'admin.billing.read',
+  BILLING_UPDATE: 'admin.billing.update',
 } as const;
 
 export type AdminPermissionCode =

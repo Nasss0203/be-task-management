@@ -1,4 +1,5 @@
 import { SystemRole } from 'src/modules/identity/domain/enums/system-role.enum';
+
 import {
   ADMIN_PERMISSIONS,
   type AdminPermissionCode,
@@ -10,6 +11,7 @@ const SYSTEM_ADMIN_PERMISSIONS: readonly AdminPermissionCode[] = [
   ADMIN_PERMISSIONS.USERS_READ,
   ADMIN_PERMISSIONS.WORKSPACES_READ,
   ADMIN_PERMISSIONS.DASHBOARD_READ,
+  ADMIN_PERMISSIONS.BILLING_READ,
 ];
 
 const SUPER_ADMIN_PERMISSIONS: readonly AdminPermissionCode[] =
