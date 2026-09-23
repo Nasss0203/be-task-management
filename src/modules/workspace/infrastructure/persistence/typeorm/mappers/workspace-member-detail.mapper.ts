@@ -1,4 +1,5 @@
 import { WorkspaceMemberDetail } from 'src/modules/workspace/domain/aggregates/workspace-member/workspace-member.aggregate';
+import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 
 export type WorkspaceMemberDetailRaw = {
@@ -8,7 +9,8 @@ export type WorkspaceMemberDetailRaw = {
   full_name: string;
   email: string;
   avatar_url?: string | null;
-  role_name: WorkspaceRole;
+  membership_type: WorkspaceMembershipType;
+  role_name: WorkspaceRole | null;
   lastOpenedAt: Date | null;
   joinedAt: Date;
 };
@@ -21,6 +23,7 @@ export class WorkspaceMemberDetailMapper {
       userId: raw.user_id,
       fullName: raw.full_name,
       email: raw.email,
+      membershipType: raw.membership_type,
       role: raw.role_name,
       avatarUrl: raw.avatar_url ?? null,
       lastOpenedAt: raw.lastOpenedAt ?? null,

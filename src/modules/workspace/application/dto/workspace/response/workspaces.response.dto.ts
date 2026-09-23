@@ -1,5 +1,6 @@
 import { Workspace } from 'src/modules/workspace/domain/aggregates/workspace/workspace.aggregate';
 import { WorkspaceLayoutMode } from 'src/modules/workspace/domain/enums/workspace-layout-mode.enum';
+import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 
 export class WorkspaceResponseDto {
   id: string;
@@ -38,6 +39,7 @@ export class WorkspaceResponseDto {
 export type WorkspaceAccessResponseDto = {
   user_id: string;
   workspace_id: string;
+  membership_type: WorkspaceMembershipType;
   roles: string[];
   permissions: string[];
 };

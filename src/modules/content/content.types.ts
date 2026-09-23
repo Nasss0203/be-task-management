@@ -69,6 +69,7 @@ export const CONTENT_TYPES = {
     ApprovePageAccessRequestHandler: Symbol('ApprovePageAccessRequestHandler'),
     RejectPageAccessRequestHandler: Symbol('RejectPageAccessRequestHandler'),
     GetPageAccessRequestsHandler: Symbol('GetPageAccessRequestsHandler'),
+    GetMyPageAccessRequestHandler: Symbol('GetMyPageAccessRequestHandler'),
   },
   repositories: {
     PageRepository: Symbol.for('PageRepository'),

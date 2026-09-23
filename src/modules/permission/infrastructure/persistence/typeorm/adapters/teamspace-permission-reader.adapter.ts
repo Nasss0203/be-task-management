@@ -10,6 +10,7 @@ import {
 
 import { TeamspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
 import { TeamspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
+import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 
 @Injectable()
 export class TypeOrmTeamspacePermissionReader implements TeamspacePermissionReader {
@@ -63,6 +64,9 @@ export class TypeOrmTeamspacePermissionReader implements TeamspacePermissionRead
       })
       .andWhere('workspaceMember.userId = :userId', {
         userId,
+      })
+      .andWhere('workspaceMember.membershipType = :membershipType', {
+        membershipType: WorkspaceMembershipType.MEMBER,
       })
       .getRawOne<TeamspacePermissionSubject>();
 

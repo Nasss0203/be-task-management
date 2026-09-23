@@ -29,6 +29,11 @@ import {
 import { ApprovePageAccessRequestRequestDto } from 'src/modules/content/application/dto/page-access-request/request/approve-page-access-request.request.dto';
 import { CreatePageAccessRequestRequestDto } from 'src/modules/content/application/dto/page-access-request/request/create-page-access-request.request.dto';
 import {
+  GetMyPageAccessRequestHandler,
+  GetMyPageAccessRequestResult,
+} from 'src/modules/content/application/queries/page-access-request/get-my-page-access-request/get-my-page-access-request.handler';
+import { GetMyPageAccessRequestQuery } from 'src/modules/content/application/queries/page-access-request/get-my-page-access-request/get-my-page-access-request.query';
+import {
   GetPageAccessRequestItem,
   GetPageAccessRequestsHandler,
 } from 'src/modules/content/application/queries/page-access-request/get-page-access-requests/get-page-access-requests.handler';
@@ -49,6 +54,9 @@ export class PageAccessRequestController {
 
     @Inject(CONTENT_TYPES.applications.GetPageAccessRequestsHandler)
     private readonly getPageAccessRequestsHandler: GetPageAccessRequestsHandler,
+
+    @Inject(CONTENT_TYPES.applications.GetMyPageAccessRequestHandler)
+    private readonly getMyPageAccessRequestHandler: GetMyPageAccessRequestHandler,
   ) {}
 
   @Post('page/:pageId/access-requests')
@@ -108,6 +116,19 @@ export class PageAccessRequestController {
   ): Promise<GetPageAccessRequestItem[]> {
     return this.getPageAccessRequestsHandler.execute(
       new GetPageAccessRequestsQuery(user.id, pageId),
+    );
+  }
+
+  @Get('page/:pageId/access-requests/me')
+  async getMyRequest(
+    @Param('pageId')
+    pageId: string,
+
+    @Auth()
+    user: IAuth,
+  ): Promise<GetMyPageAccessRequestResult | null> {
+    return this.getMyPageAccessRequestHandler.execute(
+      new GetMyPageAccessRequestQuery(user.id, pageId),
     );
   }
 }

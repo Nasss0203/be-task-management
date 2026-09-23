@@ -26,6 +26,7 @@ export class GetWorkspaceAccessHandler {
     return {
       user_id: access.userId,
       workspace_id: access.workspaceId,
+      membership_type: access.membershipType,
       roles: access.roles,
       permissions: access.permissions,
     };

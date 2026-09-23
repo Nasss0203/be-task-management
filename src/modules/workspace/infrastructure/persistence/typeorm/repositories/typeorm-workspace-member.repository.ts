@@ -5,6 +5,7 @@ import {
   WorkspaceMemberDetail,
 } from 'src/modules/workspace/domain/aggregates/workspace-member/workspace-member.aggregate';
 import { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
+import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { DataSource, EntityManager, IsNull, Not, Repository } from 'typeorm';
 import { WorkspaceMemberOrmEntity } from '../entities/workspace-member.orm-entity';
@@ -71,6 +72,7 @@ export class TypeOrmWorkspaceMemberRepository implements WorkspaceMemberReposito
     const rows = await this.getRepo(context).find({
       where: {
         workspaceId,
+        membershipType: WorkspaceMembershipType.MEMBER,
       },
     });
 
@@ -94,12 +96,16 @@ export class TypeOrmWorkspaceMemberRepository implements WorkspaceMemberReposito
         'u.username as full_name',
         'u.email as email',
         'u.avatar_url as avatar_url',
+        'uw.membership_type as membership_type',
         'uw.role_name as role_name',
         'uw.last_opened_at as "lastOpenedAt"',
         'uw.joined_at as "joinedAt"',
       ])
       .where('uw.workspace_id = :workspaceId', { workspaceId })
       .andWhere('uw.user_id = :userId', { userId })
+      .andWhere('uw.membership_type = :membershipType', {
+        membershipType: WorkspaceMembershipType.MEMBER,
+      })
       .getRawOne<WorkspaceMemberDetailRaw>();
 
     if (!raw) return null;
@@ -133,6 +139,7 @@ export class TypeOrmWorkspaceMemberRepository implements WorkspaceMemberReposito
         u.username AS full_name,
         u.email AS email,
         u.avatar_url AS avatar_url,
+        uw.membership_type AS membership_type,
         uw.role_name AS role_name,
         uw.last_opened_at AS "lastOpenedAt",
         uw.joined_at AS "joinedAt"
@@ -140,6 +147,7 @@ export class TypeOrmWorkspaceMemberRepository implements WorkspaceMemberReposito
       INNER JOIN users u
         ON u.id = uw.user_id
       WHERE uw.workspace_id = $1
+        AND uw.membership_type = 'MEMBER'
     `,
       [workspaceId],
     );

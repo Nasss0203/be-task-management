@@ -29,7 +29,7 @@ export class TypeOrmPageAccessReviewerReader implements PageAccessReviewerReader
     /**
      * 1. Lấy context của Page.
      */
-    const pageRows = (await this.dataSource.query(
+    const pageRows = await this.dataSource.query<PageContextRow[]>(
       `
         SELECT
           id,
@@ -41,7 +41,7 @@ export class TypeOrmPageAccessReviewerReader implements PageAccessReviewerReader
         LIMIT 1
       `,
       [pageId],
-    )) as PageContextRow[];
+    );
 
     const page = pageRows[0];
 
@@ -56,15 +56,16 @@ export class TypeOrmPageAccessReviewerReader implements PageAccessReviewerReader
      *
      * Workspace OWNER có PAGE_SHARE_UPDATE.
      */
-    const workspaceOwners = (await this.dataSource.query(
+    const workspaceOwners = await this.dataSource.query<UserIdRow[]>(
       `
           SELECT user_id
           FROM workspace_members
           WHERE workspace_id = $1
+            AND membership_type = 'MEMBER'
             AND role_name = 'OWNER'
         `,
       [page.workspace_id],
-    )) as UserIdRow[];
+    );
 
     for (const owner of workspaceOwners) {
       reviewerIds.add(owner.user_id);
@@ -76,7 +77,7 @@ export class TypeOrmPageAccessReviewerReader implements PageAccessReviewerReader
      * Chỉ xét khi Page thuộc Teamspace còn tồn tại.
      */
     if (page.teamspace_id) {
-      const teamspaceOwners = (await this.dataSource.query(
+      const teamspaceOwners = await this.dataSource.query<UserIdRow[]>(
         `
             SELECT DISTINCT wm.user_id
             FROM teamspace_members tm
@@ -85,11 +86,12 @@ export class TypeOrmPageAccessReviewerReader implements PageAccessReviewerReader
             INNER JOIN teamspaces t
               ON t.id = tm.teamspace_id
             WHERE tm.teamspace_id = $1
+              AND wm.membership_type = 'MEMBER'
               AND tm.role_name = 'OWNER'
               AND t.deleted_at IS NULL
           `,
         [page.teamspace_id],
-      )) as UserIdRow[];
+      );
 
       for (const owner of teamspaceOwners) {
         reviewerIds.add(owner.user_id);
@@ -118,7 +120,7 @@ export class TypeOrmPageAccessReviewerReader implements PageAccessReviewerReader
      * Effective của B phải là EDITOR,
      * nên B không phải reviewer.
      */
-    const fullAccessShares = (await this.dataSource.query(
+    const fullAccessShares = await this.dataSource.query<UserIdRow[]>(
       `
           WITH RECURSIVE page_chain AS (
             SELECT
@@ -160,7 +162,7 @@ export class TypeOrmPageAccessReviewerReader implements PageAccessReviewerReader
           WHERE access_level = 'FULL_ACCESS'
         `,
       [pageId],
-    )) as UserIdRow[];
+    );
 
     for (const share of fullAccessShares) {
       reviewerIds.add(share.user_id);
@@ -178,14 +180,15 @@ export class TypeOrmPageAccessReviewerReader implements PageAccessReviewerReader
     if (
       generalAccess?.workspaceAccessLevel === ResourceAccessLevel.FULL_ACCESS
     ) {
-      const workspaceMembers = (await this.dataSource.query(
+      const workspaceMembers = await this.dataSource.query<UserIdRow[]>(
         `
             SELECT user_id
             FROM workspace_members
             WHERE workspace_id = $1
+              AND membership_type = 'MEMBER'
           `,
         [page.workspace_id],
-      )) as UserIdRow[];
+      );
 
       for (const member of workspaceMembers) {
         reviewerIds.add(member.user_id);

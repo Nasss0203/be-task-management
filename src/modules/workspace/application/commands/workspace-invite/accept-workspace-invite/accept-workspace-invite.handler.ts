@@ -72,7 +72,7 @@ export class AcceptWorkspaceInviteHandler {
         invite.getWorkspaceId(),
         user.id,
       );
-    if (existingMember) {
+    if (existingMember?.isMember()) {
       throw new BadRequestException(
         'You are already a member of this workspace',
       );
@@ -90,14 +90,37 @@ export class AcceptWorkspaceInviteHandler {
 
       this.ensureInviteCanBeAccepted(transactionalInvite, command, user.id);
 
-      await this.workspaceMemberRepository.save(
-        WorkspaceMember.create({
-          workspaceId: transactionalInvite.getWorkspaceId(),
-          userId: user.id,
-          role: transactionalInvite.getRoleName(),
-        }),
-        manager,
-      );
+      const transactionalMembership =
+        await this.workspaceMemberRepository.findByWorkspaceAndUser(
+          transactionalInvite.getWorkspaceId(),
+          user.id,
+          manager,
+        );
+
+      if (transactionalMembership?.isMember()) {
+        throw new BadRequestException(
+          'You are already a member of this workspace',
+        );
+      }
+
+      if (transactionalMembership) {
+        transactionalMembership.promoteToMember(
+          transactionalInvite.getRoleName(),
+        );
+        await this.workspaceMemberRepository.save(
+          transactionalMembership,
+          manager,
+        );
+      } else {
+        await this.workspaceMemberRepository.save(
+          WorkspaceMember.createMember({
+            workspaceId: transactionalInvite.getWorkspaceId(),
+            userId: user.id,
+            role: transactionalInvite.getRoleName(),
+          }),
+          manager,
+        );
+      }
 
       transactionalInvite.accept(user.id, new Date());
 

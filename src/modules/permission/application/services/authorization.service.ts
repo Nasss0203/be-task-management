@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { TeamspaceRole } from 'src/modules/workspace/domain/enums/teamspace-role.enum';
 import { TeamspaceVisibility } from 'src/modules/workspace/domain/enums/teamspace-visibility.enum';
+import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import {
   PERMISSIONS,
@@ -344,7 +345,11 @@ export class AuthorizationService {
         userId,
       );
 
-    if (!workspaceMembership) {
+    if (
+      !workspaceMembership ||
+      workspaceMembership.membershipType !== WorkspaceMembershipType.MEMBER ||
+      !workspaceMembership.role
+    ) {
       return false;
     }
 
@@ -386,7 +391,11 @@ export class AuthorizationService {
       userId,
     );
 
-    if (!membership) {
+    if (
+      !membership ||
+      membership.membershipType !== WorkspaceMembershipType.MEMBER ||
+      !membership.role
+    ) {
       return false;
     }
 
@@ -440,7 +449,11 @@ export class AuthorizationService {
      * Share Link sẽ được xử lý riêng
      * sau khi Share Token được verify.
      */
-    if (!workspaceMembership) {
+    if (
+      !workspaceMembership ||
+      workspaceMembership.membershipType !== WorkspaceMembershipType.MEMBER ||
+      !workspaceMembership.role
+    ) {
       return false;
     }
 

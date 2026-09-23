@@ -15,6 +15,11 @@ import { PageShareLinkTokenService } from 'src/shared/security/page-share-link-t
 
 import type { PageShareLinkRepository } from '../../../../domain/repositories/page-share-link.repository';
 import type { PageShareRepository } from '../../../../domain/repositories/page-share.repository';
+import type { PageRepository } from '../../../../domain/repositories/page.repository';
+
+import { WorkspaceMember } from 'src/modules/workspace/domain/aggregates/workspace-member/workspace-member.aggregate';
+import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
+import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 
 import type { PageGeneralAccessReader } from 'src/modules/permission/application/ports/page-general-access-reader.port';
 import { PERMISSION_TYPES } from 'src/modules/permission/permission.types';
@@ -33,6 +38,12 @@ export class AcceptPageShareLinkHandler {
 
     @Inject(CONTENT_TYPES.repositories.PageShareRepository)
     private readonly pageShareRepository: PageShareRepository,
+
+    @Inject(CONTENT_TYPES.repositories.PageRepository)
+    private readonly pageRepository: PageRepository,
+
+    @Inject(WORKSPACE_TYPES.repositories.WorkspaceMemberRepository)
+    private readonly workspaceMemberRepository: WorkspaceMemberRepository,
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly unitOfWork: UnitOfWork,
@@ -90,6 +101,12 @@ export class AcceptPageShareLinkHandler {
 
       const pageId = shareLink.getPageId();
 
+      const page = await this.pageRepository.findById(pageId, manager);
+
+      if (!page) {
+        throw new NotFoundException('Page not found');
+      }
+
       const setting = await this.pageGeneralAccessReader.findByPageId(pageId);
 
       const linkAccessLevel = setting?.linkAccessLevel ?? null;
@@ -118,6 +135,23 @@ export class AcceptPageShareLinkHandler {
 
       if (!pageShare) {
         throw new NotFoundException('Page invitation not found');
+      }
+
+      const existingMembership =
+        await this.workspaceMemberRepository.findByWorkspaceAndUser(
+          page.getWorkspaceId(),
+          command.userId,
+          manager,
+        );
+
+      if (!existingMembership) {
+        await this.workspaceMemberRepository.save(
+          WorkspaceMember.createGuest({
+            workspaceId: page.getWorkspaceId(),
+            userId: command.userId,
+          }),
+          manager,
+        );
       }
 
       /**

@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { DatabaseModule } from 'src/database/database.module';
 import { PermissionModule } from 'src/modules/permission/permission.module';
+import { WorkspaceModule } from 'src/modules/workspace/workspace.module';
 
 import { AddDatabaseViewToBlockHandler } from './application/commands/page-block/add-database-view-to-block/add-database-view-to-block.handler';
 import { CreatePageBlockHandler } from './application/commands/page-block/create-page-block/create-page-block.handler';
@@ -64,6 +65,7 @@ import { SharePageHandler } from './application/commands/page-share/share-page/s
 import { UpdatePageShareHandler } from './application/commands/page-share/update-page-share/update-page-share.handler';
 import { DuplicatePageHandler } from './application/commands/page/duplicate-page/duplicate-page.handler';
 import { MovePageHandler } from './application/commands/page/move-page/move-page.handler';
+import { GetMyPageAccessRequestHandler } from './application/queries/page-access-request/get-my-page-access-request/get-my-page-access-request.handler';
 import { GetPageAccessRequestsHandler } from './application/queries/page-access-request/get-page-access-requests/get-page-access-requests.handler';
 import { GetPageAccessHandler } from './application/queries/page-access/get-page-access/get-page-access.handler';
 import { GetMyPageEditRequestsHandler } from './application/queries/page-edit-request/get-my-page-edit-requests/get-my-page-edit-requests.handler';
@@ -350,6 +352,10 @@ const pageAccessRequestHandler = [
     provide: CONTENT_TYPES.applications.GetPageAccessRequestsHandler,
     useClass: GetPageAccessRequestsHandler,
   },
+  {
+    provide: CONTENT_TYPES.applications.GetMyPageAccessRequestHandler,
+    useClass: GetMyPageAccessRequestHandler,
+  },
 ];
 const bookmarkHandlers = [ResolveBookmarkMetadataHandler];
 
@@ -386,6 +392,7 @@ const ports = [
     DatabaseModule,
     PermissionModule,
     NotificationsModule,
+    forwardRef(() => WorkspaceModule),
   ],
 
   controllers: [

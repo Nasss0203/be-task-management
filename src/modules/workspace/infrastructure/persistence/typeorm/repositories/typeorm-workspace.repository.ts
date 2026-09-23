@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WorkspacePermissionPolicy } from 'src/modules/permission/domain/policies/workspace-permission.policy';
+import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import {
@@ -14,8 +15,9 @@ import { WorkspaceMapper } from '../mappers/workspace.mapper';
 import { WorkspaceMemberOrmEntity } from '../entities/workspace-member.orm-entity';
 import { WorkspaceOrmEntity } from '../entities/workspace.orm-entity';
 
-type RoleRow = {
-  roleName: WorkspaceRole;
+type AccessRow = {
+  membershipType: WorkspaceMembershipType;
+  roleName: WorkspaceRole | null;
 };
 
 type MetricsRaw = {
@@ -126,9 +128,11 @@ export class TypeOrmWorkspaceRepository implements WorkspaceRepository {
     const entityManager =
       this.resolveManager(context) ?? this.dataSource.manager;
 
-    const roleRows = await entityManager.query<RoleRow[]>(
+    const accessRows = await entityManager.query<AccessRow[]>(
       `
-      SELECT role_name AS "roleName"
+      SELECT
+        membership_type AS "membershipType",
+        role_name AS "roleName"
       FROM workspace_members
       WHERE user_id = $1
         AND workspace_id = $2
@@ -137,25 +141,27 @@ export class TypeOrmWorkspaceRepository implements WorkspaceRepository {
       [userId, workspaceId],
     );
 
-    if (!roleRows.length) {
+    const accessRow = accessRows[0];
+
+    if (!accessRow) {
       return null;
     }
 
-    const roles: string[] = Array.from(
-      new Set(roleRows.map((role) => role.roleName)),
-    );
+    const roles: string[] =
+      accessRow.membershipType === WorkspaceMembershipType.MEMBER &&
+      accessRow.roleName
+        ? [accessRow.roleName]
+        : [];
 
-    const permissions: string[] = Array.from(
-      new Set(
-        roleRows.flatMap((role) =>
-          WorkspacePermissionPolicy.getPermissions(role.roleName),
-        ),
-      ),
-    );
+    const permissions: string[] =
+      accessRow.membershipType === WorkspaceMembershipType.MEMBER
+        ? [...WorkspacePermissionPolicy.getPermissions(accessRow.roleName)]
+        : [];
 
     return {
       userId,
       workspaceId,
+      membershipType: accessRow.membershipType,
       roles,
       permissions,
     };
@@ -172,6 +178,7 @@ export class TypeOrmWorkspaceRepository implements WorkspaceRepository {
         SELECT COUNT(*)::int AS "members"
         FROM workspace_members
         WHERE workspace_id = $1
+          AND membership_type = 'MEMBER'
       `,
       [workspaceId],
     );

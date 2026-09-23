@@ -5,6 +5,7 @@ import { SearchUsersOutput } from '../../domain/repositories/user.repository';
 
 export type InviteUserSuggestionStatus =
   | 'CAN_INVITE'
+  | 'GUEST'
   | 'MEMBER'
   | 'PENDING_INVITE';
 

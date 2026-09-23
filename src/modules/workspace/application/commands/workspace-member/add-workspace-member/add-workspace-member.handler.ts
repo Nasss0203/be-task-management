@@ -4,7 +4,10 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common';
-import { ActivityAction, ActivityEntityType } from 'src/modules/activity/domain/entities/activity.entity';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
 import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
 import { WorkspaceMemberResponseDto } from 'src/modules/workspace/application/dto/workspace-member/response/workspace-member.response.dto';
@@ -59,18 +62,25 @@ export class AddWorkspaceMemberHandler {
           manager,
         );
 
-      if (existed) {
+      if (existed?.isMember()) {
         throw new ConflictException('User already belongs to this workspace');
       }
 
-      const member = await this.workspaceMemberRepository.save(
-        WorkspaceMember.create({
-          workspaceId: command.workspaceId,
-          userId: command.userId,
-          role: roleName,
-        }),
-        manager,
-      );
+      let member: WorkspaceMember;
+
+      if (existed) {
+        existed.promoteToMember(roleName);
+        member = await this.workspaceMemberRepository.save(existed, manager);
+      } else {
+        member = await this.workspaceMemberRepository.save(
+          WorkspaceMember.createMember({
+            workspaceId: command.workspaceId,
+            userId: command.userId,
+            role: roleName,
+          }),
+          manager,
+        );
+      }
 
       await this.createActivityService.create(
         {

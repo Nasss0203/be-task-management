@@ -5,6 +5,7 @@ export enum InviteSuggestionType {
 
 export enum InviteSuggestionStatus {
   CAN_INVITE = 'CAN_INVITE',
+  GUEST = 'GUEST',
   MEMBER = 'MEMBER',
   PENDING_INVITE = 'PENDING_INVITE',
 }

@@ -1,3 +1,4 @@
+import { PageAccessRequestStatus } from 'src/modules/content/domain/constants/page-access-request-status.constant';
 import { WorkspaceInviteStatus } from 'src/modules/workspace/domain/enums/workspace-invite-status.enum';
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
 import {
@@ -43,6 +44,13 @@ export type UpdateInviteNotificationStatusRepositoryInput = {
   inviteStatus: WorkspaceInviteStatus;
 };
 
+export type UpdatePageAccessRequestNotificationStatusRepositoryInput = {
+  accessRequestId: string;
+  status: PageAccessRequestStatus;
+  reviewerId: string;
+  accessLevel?: string;
+};
+
 export interface NotificationRepository {
   saveNotification(
     input: SaveNotificationInput,
@@ -61,6 +69,11 @@ export interface NotificationRepository {
 
   updateInviteNotificationStatus(
     input: UpdateInviteNotificationStatusRepositoryInput,
+    context?: PersistenceContext,
+  ): Promise<number>;
+
+  updatePageAccessRequestNotificationStatus(
+    input: UpdatePageAccessRequestNotificationStatusRepositoryInput,
     context?: PersistenceContext,
   ): Promise<number>;
 

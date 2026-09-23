@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Page } from 'src/modules/content/domain/aggregates/page/page.aggregate';
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
+import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import type { Repository } from 'typeorm';
 import { EntityManager, In } from 'typeorm';
@@ -138,10 +139,11 @@ export class TypeOrmPageRepository implements PageRepository {
         'workspace_members',
         'workspace_member',
         `
-        workspace_member.workspace_id = page.workspace_id
-        AND workspace_member.user_id = :userId
-      `,
-        { userId },
+          workspace_member.workspace_id = page.workspace_id
+          AND workspace_member.user_id = :userId
+          AND workspace_member.membership_type = :membershipType
+        `,
+        { userId, membershipType: WorkspaceMembershipType.MEMBER },
       )
 
       /**
@@ -194,10 +196,11 @@ export class TypeOrmPageRepository implements PageRepository {
         'workspace_members',
         'workspace_member',
         `
-        workspace_member.workspace_id = page.workspace_id
-        AND workspace_member.user_id = :userId
-      `,
-        { userId },
+          workspace_member.workspace_id = page.workspace_id
+          AND workspace_member.user_id = :userId
+          AND workspace_member.membership_type = :membershipType
+        `,
+        { userId, membershipType: WorkspaceMembershipType.MEMBER },
       )
 
       .leftJoin(

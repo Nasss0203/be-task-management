@@ -12,7 +12,6 @@ import type {
   ListAdminWorkspacesResult,
   ListAdminWorkspaceTeamspacesInput,
   ListAdminWorkspaceTeamspacesResult,
-  AdminWorkspacePageSummary,
   ListAdminWorkspacePagesInput,
   ListAdminWorkspacePagesResult,
 } from '../../../../application/ports/admin-workspace-reader.port';
@@ -28,7 +27,7 @@ interface AdminWorkspaceRawRow {
   memberCount: number | string;
   createdAt: Date | string;
   updatedAt: Date | string;
-}  
+}
 
 interface AdminWorkspaceMemberRawRow {
   userId: string;
@@ -44,7 +43,7 @@ interface AdminWorkspaceMemberRawRow {
 interface AdminWorkspaceDetailRawRow extends AdminWorkspaceRawRow {
   createdBy: string | null;
   teamspaceCount: number | string;
-} 
+}
 
 interface AdminWorkspaceTeamspaceRawRow {
   id: string;
@@ -56,7 +55,7 @@ interface AdminWorkspaceTeamspaceRawRow {
   pageCount: number | string;
   createdAt: Date | string;
   updatedAt: Date | string;
-} 
+}
 
 interface AdminWorkspacePageRawRow {
   id: string;
@@ -105,6 +104,7 @@ export class TypeOrmAdminWorkspaceReader implements AdminWorkspaceReader {
         INNER JOIN users u
           ON u.id = owner_member.user_id
         WHERE owner_member.workspace_id = w.id
+          AND owner_member.membership_type = 'MEMBER'
           AND owner_member.role_name = 'OWNER'
           AND u.deleted_at IS NULL
         ORDER BY owner_member.joined_at ASC
@@ -114,6 +114,7 @@ export class TypeOrmAdminWorkspaceReader implements AdminWorkspaceReader {
         SELECT COUNT(*)::int AS member_count
         FROM workspace_members member
         WHERE member.workspace_id = w.id
+          AND member.membership_type = 'MEMBER'
       ) member_counts ON TRUE
       LEFT JOIN LATERAL (
         SELECT COUNT(*)::int AS teamspace_count
@@ -191,6 +192,7 @@ export class TypeOrmAdminWorkspaceReader implements AdminWorkspaceReader {
           INNER JOIN users u
             ON u.id = owner_member.user_id
           WHERE owner_member.workspace_id = w.id
+            AND owner_member.membership_type = 'MEMBER'
             AND owner_member.role_name = 'OWNER'
             AND u.deleted_at IS NULL
           ORDER BY owner_member.joined_at ASC
@@ -200,6 +202,7 @@ export class TypeOrmAdminWorkspaceReader implements AdminWorkspaceReader {
           SELECT COUNT(*)::int AS member_count
           FROM workspace_members member
           WHERE member.workspace_id = w.id
+            AND member.membership_type = 'MEMBER'
         ) member_counts ON TRUE
         WHERE w.deleted_at IS NULL
           AND (
@@ -280,6 +283,7 @@ export class TypeOrmAdminWorkspaceReader implements AdminWorkspaceReader {
         INNER JOIN users u
           ON u.id = member.user_id
         WHERE member.workspace_id = $1
+          AND member.membership_type = 'MEMBER'
           AND u.deleted_at IS NULL
           AND (
             $2::text IS NULL
@@ -302,6 +306,7 @@ export class TypeOrmAdminWorkspaceReader implements AdminWorkspaceReader {
       INNER JOIN users u
         ON u.id = member.user_id
       WHERE member.workspace_id = $1
+        AND member.membership_type = 'MEMBER'
         AND u.deleted_at IS NULL
         AND (
           $2::text IS NULL
@@ -363,6 +368,7 @@ export class TypeOrmAdminWorkspaceReader implements AdminWorkspaceReader {
             ON workspace_member.id =
               teamspace_member.workspace_member_id
           WHERE teamspace_member.teamspace_id = teamspace.id
+            AND workspace_member.membership_type = 'MEMBER'
         ) member_counts ON TRUE
         LEFT JOIN LATERAL (
           SELECT COUNT(*)::int AS page_count

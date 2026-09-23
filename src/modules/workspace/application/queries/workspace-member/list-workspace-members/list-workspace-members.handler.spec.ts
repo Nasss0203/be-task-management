@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 
 import { WorkspaceMemberDetail } from 'src/modules/workspace/domain/aggregates/workspace-member/workspace-member.aggregate';
@@ -39,6 +40,7 @@ describe('ListWorkspaceMembersHandler', () => {
       userId: 'user-1',
       fullName: 'Ada Lovelace',
       email: 'ada@example.com',
+      membershipType: WorkspaceMembershipType.MEMBER,
       role: WorkspaceRole.MEMBER,
       avatarUrl: null,
       lastOpenedAt: null,
@@ -59,6 +61,7 @@ describe('ListWorkspaceMembersHandler', () => {
         id: 'member-1',
         workspace_id: 'ws-1',
         user_id: 'user-1',
+        membership_type: WorkspaceMembershipType.MEMBER,
         role_name: WorkspaceRole.MEMBER,
       }),
     );

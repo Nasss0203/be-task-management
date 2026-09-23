@@ -246,6 +246,7 @@ export class TypeOrmUserRepository implements UserRepository {
         'up.full_name AS full_name',
         'u.avatar_url AS avatar_url',
         'uw.id AS member_id',
+        'uw.membership_type AS membership_type',
         'wi.id AS invite_id',
       ])
       .limit(10)
@@ -256,6 +257,7 @@ export class TypeOrmUserRepository implements UserRepository {
         full_name: string | null;
         avatar_url: string | null;
         member_id: string | null;
+        membership_type: 'MEMBER' | 'GUEST' | null;
         invite_id: string | null;
       }>();
 
@@ -265,11 +267,14 @@ export class TypeOrmUserRepository implements UserRepository {
       email: row.email,
       full_name: row.full_name,
       avatar_url: row.avatar_url,
-      status: row.member_id
-        ? 'MEMBER'
-        : row.invite_id
-          ? 'PENDING_INVITE'
-          : 'CAN_INVITE',
+      status:
+        row.membership_type === 'MEMBER'
+          ? 'MEMBER'
+          : row.invite_id
+            ? 'PENDING_INVITE'
+            : row.membership_type === 'GUEST'
+              ? 'GUEST'
+              : 'CAN_INVITE',
     }));
   }
 }

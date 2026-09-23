@@ -301,6 +301,8 @@ export class CreatePageAccessRequestHandler {
               accessRequestId: result.id,
 
               requesterId: result.userId,
+
+              status: result.status,
             },
           }),
         ),

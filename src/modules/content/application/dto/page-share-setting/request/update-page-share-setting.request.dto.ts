@@ -4,6 +4,7 @@ import { ResourceAccessLevel } from '../../../../domain/constants/resource-acces
 
 const WORKSPACE_ACCESS_LEVELS = [
   ResourceAccessLevel.VIEWER,
+  ResourceAccessLevel.COMMENTER,
   ResourceAccessLevel.EDITOR,
   ResourceAccessLevel.FULL_ACCESS,
 ] as const;

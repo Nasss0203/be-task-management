@@ -1,6 +1,8 @@
 import { User } from 'src/modules/identity/identity.types';
+import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import {
+  Check,
   Column,
   CreateDateColumn,
   Entity,
@@ -17,6 +19,10 @@ import { WorkspaceOrmEntity } from './workspace.orm-entity';
 })
 @Index('IDX_workspace_members_user_id', ['userId'])
 @Index('IDX_workspace_members_workspace_id', ['workspaceId'])
+@Check(
+  'CHK_workspace_members_membership_type_role',
+  `("membership_type" = 'GUEST' AND "role_name" IS NULL) OR ("membership_type" = 'MEMBER' AND "role_name" IS NOT NULL)`,
+)
 export class WorkspaceMemberOrmEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -36,13 +42,23 @@ export class WorkspaceMemberOrmEntity {
   user: User;
 
   @Column({
+    name: 'membership_type',
+    type: 'enum',
+    enum: WorkspaceMembershipType,
+    enumName: 'workspace_members_membership_type_enum',
+    default: WorkspaceMembershipType.MEMBER,
+  })
+  membershipType: WorkspaceMembershipType;
+
+  @Column({
     name: 'role_name',
     type: 'enum',
     enum: WorkspaceRole,
     enumName: 'workspace_members_role_name_enum',
     default: WorkspaceRole.MEMBER,
+    nullable: true,
   })
-  roleName: WorkspaceRole;
+  roleName: WorkspaceRole | null;
 
   @CreateDateColumn({ type: 'timestamptz', name: 'joined_at' })
   joinedAt: Date;

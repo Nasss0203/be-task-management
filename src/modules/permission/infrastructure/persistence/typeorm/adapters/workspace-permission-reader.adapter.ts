@@ -22,6 +22,7 @@ export class TypeOrmWorkspacePermissionReader implements WorkspacePermissionRead
       select: {
         workspaceId: true,
         userId: true,
+        membershipType: true,
         roleName: true,
       },
       where: {
@@ -33,6 +34,7 @@ export class TypeOrmWorkspacePermissionReader implements WorkspacePermissionRead
       ? {
           workspaceId: membership.workspaceId,
           userId: membership.userId,
+          membershipType: membership.membershipType,
           role: membership.roleName,
         }
       : null;

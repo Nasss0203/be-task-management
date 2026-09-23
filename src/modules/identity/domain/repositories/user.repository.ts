@@ -46,6 +46,7 @@ export interface CreateGoogleUserInput {
 
 export type InviteUserSuggestionStatus =
   | 'CAN_INVITE'
+  | 'GUEST'
   | 'MEMBER'
   | 'PENDING_INVITE';
 

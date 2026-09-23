@@ -1,9 +1,11 @@
 import { Workspace } from '../aggregates/workspace/workspace.aggregate';
+import { WorkspaceMembershipType } from '../enums/workspace-membership-type.enum';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 export type WorkspaceAccess = {
   userId: string;
   workspaceId: string;
+  membershipType: WorkspaceMembershipType;
   roles: string[];
   permissions: string[];
 };

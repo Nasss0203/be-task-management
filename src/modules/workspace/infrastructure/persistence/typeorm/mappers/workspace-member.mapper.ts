@@ -7,6 +7,7 @@ export class WorkspaceMemberMapper {
       id: entity.id,
       workspaceId: entity.workspaceId,
       userId: entity.userId,
+      membershipType: entity.membershipType,
       role: entity.roleName,
       joinedAt: entity.joinedAt,
       lastOpenedAt: entity.lastOpenedAt ?? null,
@@ -19,6 +20,7 @@ export class WorkspaceMemberMapper {
     e.id = model.getId();
     e.userId = model.getUserId();
     e.workspaceId = model.getWorkspaceId();
+    e.membershipType = model.getMembershipType();
     e.roleName = model.getRole();
     e.joinedAt = model.getJoinedAt();
     e.lastOpenedAt = model.getLastOpenedAt();

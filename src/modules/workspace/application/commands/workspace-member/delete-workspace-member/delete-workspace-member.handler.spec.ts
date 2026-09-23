@@ -1,11 +1,16 @@
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
-import { ActivityAction, ActivityEntityType } from 'src/modules/activity/domain/entities/activity.entity';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
 import { WorkspaceMember } from 'src/modules/workspace/domain/aggregates/workspace-member/workspace-member.aggregate';
+import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
+import type { EntityManager } from 'typeorm';
 import { DeleteWorkspaceMemberCommand } from './delete-workspace-member.command';
 import { DeleteWorkspaceMemberHandler } from './delete-workspace-member.handler';
 describe('DeleteWorkspaceMemberHandler', () => {
@@ -63,6 +68,7 @@ describe('DeleteWorkspaceMemberHandler', () => {
           id: 'member-1',
           workspaceId: 'ws-1',
           userId: 'user-1',
+          membershipType: WorkspaceMembershipType.MEMBER,
           role: WorkspaceRole.MEMBER,
           joinedAt: new Date(),
           lastOpenedAt: null,
@@ -73,6 +79,7 @@ describe('DeleteWorkspaceMemberHandler', () => {
           id: 'actor-member-1',
           workspaceId: 'ws-1',
           userId: 'actor-1',
+          membershipType: WorkspaceMembershipType.MEMBER,
           role: WorkspaceRole.OWNER,
           joinedAt: new Date(),
           lastOpenedAt: null,

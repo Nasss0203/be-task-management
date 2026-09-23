@@ -54,14 +54,14 @@ const WORKSPACE_ROLE_PERMISSIONS: Record<
 
 export class WorkspacePermissionPolicy {
   static hasPermission(
-    role: WorkspaceRole,
+    role: WorkspaceRole | null,
     permission: PermissionCode,
   ): boolean {
     return this.getPermissions(role).includes(permission);
   }
 
   static hasAllPermissions(
-    role: WorkspaceRole,
+    role: WorkspaceRole | null,
     permissions: readonly PermissionCode[],
   ): boolean {
     return permissions.every((permission) =>
@@ -69,7 +69,11 @@ export class WorkspacePermissionPolicy {
     );
   }
 
-  static getPermissions(role: WorkspaceRole): readonly PermissionCode[] {
+  static getPermissions(role: WorkspaceRole | null): readonly PermissionCode[] {
+    if (!role) {
+      return [];
+    }
+
     return WORKSPACE_ROLE_PERMISSIONS[role] ?? [];
   }
 }

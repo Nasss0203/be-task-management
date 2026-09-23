@@ -5,7 +5,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ActivityAction, ActivityEntityType } from 'src/modules/activity/domain/entities/activity.entity';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
 import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
@@ -56,13 +59,13 @@ export class DeleteWorkspaceMemberHandler {
           throw new ForbiddenException('Actor is not in the workspace');
         }
 
-        if (![WorkspaceRole.OWNER].includes(actorMember.getRole())) {
+        if (actorMember.getRole() !== WorkspaceRole.OWNER) {
           throw new ForbiddenException(
             'Only admin or owner can remove members',
           );
         }
 
-        if ([WorkspaceRole.OWNER].includes(targetMember.getRole())) {
+        if (targetMember.getRole() === WorkspaceRole.OWNER) {
           throw new ForbiddenException(
             'Admins cannot remove Owners or other Admins',
           );

@@ -45,7 +45,7 @@ export class CreateTeamspaceHandler {
           context,
         );
 
-      if (!workspaceMember) {
+      if (!workspaceMember || workspaceMember.isGuest()) {
         throw new ForbiddenException('User is not a member of this workspace');
       }
 

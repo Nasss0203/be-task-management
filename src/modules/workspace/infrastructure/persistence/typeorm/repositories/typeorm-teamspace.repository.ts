@@ -8,6 +8,7 @@ import { Teamspace } from 'src/modules/workspace/domain/aggregates/teamspace/tea
 import type { TeamspaceRepository } from 'src/modules/workspace/domain/repositories/teamspace.repository';
 
 import { TeamspaceVisibility } from 'src/modules/workspace/domain/enums/teamspace-visibility.enum';
+import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 
 import { TeamspaceOrmEntity } from '../entities/teamspace.orm-entity';
@@ -100,9 +101,11 @@ export class TypeOrmTeamspaceRepository implements TeamspaceRepository {
         `
           workspace_member.workspace_id = teamspace.workspace_id
           AND workspace_member.user_id = :userId
+          AND workspace_member.membership_type = :membershipType
         `,
         {
           userId,
+          membershipType: WorkspaceMembershipType.MEMBER,
         },
       )
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, IsNull, Repository } from 'typeorm';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
+import { EntityManager, IsNull, Repository } from 'typeorm';
 import {
   NotificationModel,
   NotificationType,
@@ -11,6 +11,7 @@ import {
   NotificationRepository,
   SaveNotificationInput,
   UpdateInviteNotificationStatusRepositoryInput,
+  UpdatePageAccessRequestNotificationStatusRepositoryInput,
 } from '../../../../domain/repositories/notification.repository';
 import { Notification } from '../entities/notification.orm-entity';
 import { NotificationMapper } from '../mappers/notification.mapper';
@@ -164,6 +165,49 @@ export class TypeOrmNotificationRepository implements NotificationRepository {
       notification.metadata = {
         ...(notification.metadata ?? {}),
         inviteStatus: input.inviteStatus,
+      };
+
+      return notification;
+    });
+
+    const savedNotifications = await repo.save(updatedNotifications);
+
+    return savedNotifications.length;
+  }
+
+  async updatePageAccessRequestNotificationStatus(
+    input: UpdatePageAccessRequestNotificationStatusRepositoryInput,
+    context?: PersistenceContext,
+  ): Promise<number> {
+    const repo = this.getRepo(context);
+
+    const notifications = await repo
+      .createQueryBuilder('notification')
+      .where('notification.type = :type', {
+        type: NotificationType.PAGE_ACCESS_REQUESTED,
+      })
+      .andWhere(
+        "notification.metadata ->> 'accessRequestId' = :accessRequestId",
+        {
+          accessRequestId: input.accessRequestId,
+        },
+      )
+      .getMany();
+
+    if (notifications.length === 0) {
+      return 0;
+    }
+
+    const updatedNotifications = notifications.map((notification) => {
+      notification.metadata = {
+        ...(notification.metadata ?? {}),
+        status: input.status,
+        reviewerId: input.reviewerId,
+        ...(input.accessLevel
+          ? {
+              accessLevel: input.accessLevel,
+            }
+          : {}),
       };
 
       return notification;

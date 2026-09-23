@@ -61,7 +61,7 @@ import { TeamspaceController } from './presentation/http/controllers/teamspace.c
       TeamspaceOrmEntity,
       TeamspaceMemberOrmEntity,
     ]),
-    ContentModule,
+    forwardRef(() => ContentModule),
     forwardRef(() => ActivityModule),
     forwardRef(() => IdentityModule),
     MailModule,
@@ -125,6 +125,9 @@ import { TeamspaceController } from './presentation/http/controllers/teamspace.c
       useClass: TypeOrmTeamspaceMemberRepository,
     },
   ],
-  exports: [CreateDefaultWorkspaceHandler],
+  exports: [
+    CreateDefaultWorkspaceHandler,
+    WORKSPACE_TYPES.repositories.WorkspaceMemberRepository,
+  ],
 })
 export class WorkspaceModule {}

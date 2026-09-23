@@ -80,6 +80,16 @@ export class AddTeamspaceMemberHandler {
       }
 
       /**
+       * Guest không tham gia Workspace Teamspace.
+       * Guest chỉ truy cập content được share trực tiếp qua PageShare.
+       */
+      if (workspaceMember.isGuest()) {
+        throw new ForbiddenException(
+          'Guest memberships cannot be added to a teamspace',
+        );
+      }
+
+      /**
        * 3. WorkspaceMember phải thuộc cùng Workspace
        * với Teamspace.
        */

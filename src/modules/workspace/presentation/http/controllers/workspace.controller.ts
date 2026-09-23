@@ -117,8 +117,6 @@ export class WorkspacesController {
   }
 
   @Get(':workspaceId/access')
-  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
-  @RequirePermissions(PERMISSIONS.WORKSPACE_READ)
   @ResponseMessage('Get access workspace')
   async getWorkspaceAccess(
     @Param('workspaceId') workspaceId: string,
