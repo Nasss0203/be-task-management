@@ -23,6 +23,7 @@ import { UpdateWorkspaceLayoutModeHandler } from './application/commands/workspa
 import { UpdateWorkspaceHandler } from './application/commands/workspace/update-workspace/update-workspace.handler';
 import { SearchInviteUsersHandler } from './application/queries/workspace-invite/search-invite-users/search-invite-users.handler';
 import { ListWorkspaceMembersHandler } from './application/queries/workspace-member/list-workspace-members/list-workspace-members.handler';
+import { ListWorkspacePeopleHandler } from './application/queries/workspace-member/list-workspace-people/list-workspace-people.handler';
 import { GetWorkspaceAccessHandler } from './application/queries/workspace/get-workspace-access/get-workspace-access.handler';
 import { GetWorkspaceOverviewHandler } from './application/queries/workspace/get-workspace-overview/get-workspace-overview.handler';
 import { GetWorkspaceHandler } from './application/queries/workspace/get-workspace/get-workspace.handler';
@@ -46,6 +47,7 @@ import { CreateTeamspaceHandler } from './application/commands/teamspace/create-
 import { SelectWorkspaceHandler } from './application/commands/workspace/select-workspace/select-workspace.handler';
 import { GetTeamspaceMembersHandler } from './application/queries/teamspace/get-teamspace-members/get-teamspace-members.handler';
 import { GetTeamspacesHandler } from './application/queries/teamspace/get-teamspaces/get-teamspaces.handler';
+import { GetPendingWorkspaceInvitesHandler } from './application/queries/workspace-invite/get-pending-workspace-invites/get-pending-workspace-invites.handler';
 import { TeamspaceMemberOrmEntity } from './infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
 import { TeamspaceOrmEntity } from './infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
 import { TypeOrmTeamspaceMemberRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-teamspace-member.repository';
@@ -100,10 +102,12 @@ import { TeamspaceController } from './presentation/http/controllers/teamspace.c
     UpdateWorkspaceMemberRoleHandler,
     DeleteWorkspaceMemberHandler,
     ListWorkspaceMembersHandler,
+    ListWorkspacePeopleHandler,
     CreateTeamspaceHandler,
     GetTeamspacesHandler,
     AddTeamspaceMemberHandler,
     GetTeamspaceMembersHandler,
+    GetPendingWorkspaceInvitesHandler,
     {
       provide: WORKSPACE_TYPES.repositories.WorkspaceRepository,
       useClass: TypeOrmWorkspaceRepository,

@@ -1,5 +1,5 @@
-import { WorkspaceInvite } from '../aggregates/workspace-invite/workspace-invite.aggregate';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
+import { WorkspaceInvite } from '../aggregates/workspace-invite/workspace-invite.aggregate';
 
 export interface WorkspaceInviteRepository {
   save(
@@ -22,4 +22,9 @@ export interface WorkspaceInviteRepository {
     email: string,
     context?: PersistenceContext,
   ): Promise<WorkspaceInvite | null>;
+
+  findPendingByWorkspaceId(
+    workspaceId: string,
+    context?: PersistenceContext,
+  ): Promise<WorkspaceInvite[]>;
 }

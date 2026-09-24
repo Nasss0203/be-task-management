@@ -4,8 +4,8 @@ import {
   WorkspaceMember,
   WorkspaceMemberDetail,
 } from 'src/modules/workspace/domain/aggregates/workspace-member/workspace-member.aggregate';
-import { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
+import { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { DataSource, EntityManager, IsNull, Not, Repository } from 'typeorm';
 import { WorkspaceMemberOrmEntity } from '../entities/workspace-member.orm-entity';
@@ -154,6 +154,38 @@ export class TypeOrmWorkspaceMemberRepository implements WorkspaceMemberReposito
 
     return raws.map((raw) => WorkspaceMemberDetailMapper.toDomain(raw));
   }
+
+  async findPeopleByWorkspace(
+    workspaceId: string,
+    context?: PersistenceContext,
+  ): Promise<WorkspaceMemberDetail[]> {
+    const executor = this.resolveManager(context) ?? this.dataSource.manager;
+
+    const raws = await executor.query<WorkspaceMemberDetailRaw[]>(
+      `
+      SELECT
+        uw.id AS id,
+        uw.workspace_id AS workspace_id,
+        uw.user_id AS user_id,
+        u.username AS full_name,
+        u.email AS email,
+        u.avatar_url AS avatar_url,
+        uw.membership_type AS membership_type,
+        uw.role_name AS role_name,
+        uw.last_opened_at AS "lastOpenedAt",
+        uw.joined_at AS "joinedAt"
+      FROM workspace_members uw
+      INNER JOIN users u
+        ON u.id = uw.user_id
+      WHERE uw.workspace_id = $1
+      ORDER BY uw.joined_at ASC, uw.id ASC
+    `,
+      [workspaceId],
+    );
+
+    return raws.map((raw) => WorkspaceMemberDetailMapper.toDomain(raw));
+  }
+
   async deleteByWorkspaceAndUser(
     workspaceId: string,
     userId: string,

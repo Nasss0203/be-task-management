@@ -8,22 +8,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
-import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 import {
   InviteRateLimit,
   SearchRateLimit,
 } from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
-import { type IAuth } from 'src/types/auth';
-import {
-  CreateWorkspaceInviteDto,
-  CreateWorkspaceInviteLinkDto,
-} from 'src/modules/workspace/application/dto/workspace-invite/create-workspace-invite.dto';
-import { WorkspaceInviteLinkResponseDto } from 'src/modules/workspace/application/dto/workspace-invite/response/workspace-invite-link-response.dto';
-import { WorkspaceInviteResponseDto } from 'src/modules/workspace/application/dto/workspace-invite/response/workspace-invite.response.dto';
-import { SearchInviteUserResponseDto } from 'src/modules/workspace/application/dto/workspace-invite/search-invite-user.response.dto';
 import { AcceptWorkspaceInviteCommand } from 'src/modules/workspace/application/commands/workspace-invite/accept-workspace-invite/accept-workspace-invite.command';
 import { AcceptWorkspaceInviteHandler } from 'src/modules/workspace/application/commands/workspace-invite/accept-workspace-invite/accept-workspace-invite.handler';
 import { CreateWorkspaceInviteLinkCommand } from 'src/modules/workspace/application/commands/workspace-invite/create-workspace-invite-link/create-workspace-invite-link.command';
@@ -32,12 +24,23 @@ import { DeclineWorkspaceInviteCommand } from 'src/modules/workspace/application
 import { DeclineWorkspaceInviteHandler } from 'src/modules/workspace/application/commands/workspace-invite/decline-workspace-invite/decline-workspace-invite.handler';
 import { InviteWorkspaceMemberCommand } from 'src/modules/workspace/application/commands/workspace-invite/invite-workspace-member/invite-workspace-member.command';
 import { InviteWorkspaceMemberHandler } from 'src/modules/workspace/application/commands/workspace-invite/invite-workspace-member/invite-workspace-member.handler';
-import { SearchInviteUsersHandler } from 'src/modules/workspace/application/queries/workspace-invite/search-invite-users/search-invite-users.handler';
-import { SearchInviteUsersQuery } from 'src/modules/workspace/application/queries/workspace-invite/search-invite-users/search-invite-users.query';
-import { RevokeWorkspaceInviteCommand } from 'src/modules/workspace/application/commands/workspace-invite/revoke-workspace-invite/revoke-workspace-invite.command';
-import { RevokeWorkspaceInviteHandler } from 'src/modules/workspace/application/commands/workspace-invite/revoke-workspace-invite/revoke-workspace-invite.handler';
 import { ResendWorkspaceInviteCommand } from 'src/modules/workspace/application/commands/workspace-invite/resend-workspace-invite/resend-workspace-invite.command';
 import { ResendWorkspaceInviteHandler } from 'src/modules/workspace/application/commands/workspace-invite/resend-workspace-invite/resend-workspace-invite.handler';
+import { RevokeWorkspaceInviteCommand } from 'src/modules/workspace/application/commands/workspace-invite/revoke-workspace-invite/revoke-workspace-invite.command';
+import { RevokeWorkspaceInviteHandler } from 'src/modules/workspace/application/commands/workspace-invite/revoke-workspace-invite/revoke-workspace-invite.handler';
+import {
+  CreateWorkspaceInviteDto,
+  CreateWorkspaceInviteLinkDto,
+} from 'src/modules/workspace/application/dto/workspace-invite/create-workspace-invite.dto';
+import { PendingWorkspaceInviteResponseDto } from 'src/modules/workspace/application/dto/workspace-invite/response/pending-workspace-invite.response.dto';
+import { WorkspaceInviteLinkResponseDto } from 'src/modules/workspace/application/dto/workspace-invite/response/workspace-invite-link-response.dto';
+import { WorkspaceInviteResponseDto } from 'src/modules/workspace/application/dto/workspace-invite/response/workspace-invite.response.dto';
+import { SearchInviteUserResponseDto } from 'src/modules/workspace/application/dto/workspace-invite/search-invite-user.response.dto';
+import { GetPendingWorkspaceInvitesHandler } from 'src/modules/workspace/application/queries/workspace-invite/get-pending-workspace-invites/get-pending-workspace-invites.handler';
+import { GetPendingWorkspaceInvitesQuery } from 'src/modules/workspace/application/queries/workspace-invite/get-pending-workspace-invites/get-pending-workspace-invites.query';
+import { SearchInviteUsersHandler } from 'src/modules/workspace/application/queries/workspace-invite/search-invite-users/search-invite-users.handler';
+import { SearchInviteUsersQuery } from 'src/modules/workspace/application/queries/workspace-invite/search-invite-users/search-invite-users.query';
+import { type IAuth } from 'src/types/auth';
 @Controller('workspace-invites')
 export class WorkspaceInviteController {
   constructor(
@@ -48,6 +51,7 @@ export class WorkspaceInviteController {
     private readonly searchInviteUsersHandler: SearchInviteUsersHandler,
     private readonly revokeWorkspaceInviteHandler: RevokeWorkspaceInviteHandler,
     private readonly resendWorkspaceInviteHandler: ResendWorkspaceInviteHandler,
+    private readonly getPendingWorkspaceInvitesHandler: GetPendingWorkspaceInvitesHandler,
   ) {}
 
   @Post(':workspaceId/members')
@@ -186,6 +190,18 @@ export class WorkspaceInviteController {
 
     return this.resendWorkspaceInviteHandler.execute(
       new ResendWorkspaceInviteCommand(inviteId, auth.id, workspaceId),
+    );
+  }
+
+  @Get(':workspaceId/invites/pending')
+  @ResponseMessage('Get pending workspace invites successfully')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
+  @RequirePermissions(PERMISSIONS.WORKSPACE_MEMBER_ADD)
+  async getPendingInvites(
+    @Param('workspaceId') workspaceId: string,
+  ): Promise<PendingWorkspaceInviteResponseDto[]> {
+    return this.getPendingWorkspaceInvitesHandler.execute(
+      new GetPendingWorkspaceInvitesQuery(workspaceId),
     );
   }
 }

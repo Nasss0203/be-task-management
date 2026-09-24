@@ -29,6 +29,8 @@ import {
 } from 'src/modules/workspace/application/dto/workspace-member/workspace-member.dto';
 import { ListWorkspaceMembersHandler } from 'src/modules/workspace/application/queries/workspace-member/list-workspace-members/list-workspace-members.handler';
 import { ListWorkspaceMembersQuery } from 'src/modules/workspace/application/queries/workspace-member/list-workspace-members/list-workspace-members.query';
+import { ListWorkspacePeopleHandler } from 'src/modules/workspace/application/queries/workspace-member/list-workspace-people/list-workspace-people.handler';
+import { ListWorkspacePeopleQuery } from 'src/modules/workspace/application/queries/workspace-member/list-workspace-people/list-workspace-people.query';
 import { type IAuth } from 'src/types/auth';
 
 @Controller('workspace-members')
@@ -39,6 +41,7 @@ export class WorkspaceMemberController {
     private readonly updateWorkspaceMemberRoleHandler: UpdateWorkspaceMemberRoleHandler,
     private readonly deleteWorkspaceMemberHandler: DeleteWorkspaceMemberHandler,
     private readonly listWorkspaceMembersHandler: ListWorkspaceMembersHandler,
+    private readonly listWorkspacePeopleHandler: ListWorkspacePeopleHandler,
   ) {}
 
   @Post(':workspaceId/members')
@@ -70,6 +73,18 @@ export class WorkspaceMemberController {
   ): Promise<WorkspaceMemberDetailResponseDto[]> {
     return this.listWorkspaceMembersHandler.execute(
       new ListWorkspaceMembersQuery(workspaceId),
+    );
+  }
+
+  @Get(':workspaceId/people')
+  @ResponseMessage('Find workspace people')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
+  @RequirePermissions(PERMISSIONS.WORKSPACE_MEMBER_READ)
+  async findAllPeople(
+    @Param('workspaceId') workspaceId: string,
+  ): Promise<WorkspaceMemberDetailResponseDto[]> {
+    return this.listWorkspacePeopleHandler.execute(
+      new ListWorkspacePeopleQuery(workspaceId),
     );
   }
 

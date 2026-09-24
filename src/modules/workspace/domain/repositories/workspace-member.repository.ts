@@ -31,6 +31,11 @@ export interface WorkspaceMemberRepository {
     context?: PersistenceContext,
   ): Promise<WorkspaceMemberDetail[]>;
 
+  findPeopleByWorkspace(
+    workspaceId: string,
+    context?: PersistenceContext,
+  ): Promise<WorkspaceMemberDetail[]>;
+
   findDetailByWorkspaceAndUser(
     workspaceId: string,
     userId: string,

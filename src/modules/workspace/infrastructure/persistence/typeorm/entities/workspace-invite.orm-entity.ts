@@ -1,7 +1,7 @@
 import { User } from 'src/modules/identity/identity.types';
-import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import { WorkspaceInviteStatus } from 'src/modules/workspace/domain/enums/workspace-invite-status.enum';
 import { WorkspaceInviteType } from 'src/modules/workspace/domain/enums/workspace-invite-type.enum';
+import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import {
   Column,
   CreateDateColumn,
