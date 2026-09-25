@@ -4,6 +4,11 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GoogleStrategy } from 'src/common/strategy/google.strategy';
+import { GoogleAuthCallbackGuard } from 'src/common/guard/google-auth-callback.guard';
+import { GoogleAuthInitiationGuard } from 'src/common/guard/google-auth-initiation.guard';
+import { GoogleOAuthStateService } from 'src/common/services/google-oauth-state.service';
+import { RefreshTokenOriginGuard } from 'src/common/guard/refresh-token-origin.guard';
+import { GoogleAuthCallbackExceptionFilter } from 'src/common/filter/google-auth-callback-exception.filter';
 import { JwtStrategy } from 'src/common/strategy/jwt.strategy';
 import { LocalStrategy } from 'src/common/strategy/local.strategy';
 import { DatabaseModule } from 'src/database/database.module';
@@ -24,9 +29,11 @@ import { UserProfilePreferenceServiceImpl } from './application/services/user-pr
 import { ValidateUserAuthServiceImpl } from './application/services/validate-user-auth.service';
 import { IDENTITY_TYPES } from './identity.types';
 import { RefreshToken } from './infrastructure/persistence/typeorm/entities/refresh-token.orm-entity';
+import { UserAuthIdentityOrmEntity } from './infrastructure/persistence/typeorm/entities/user-auth-identity.orm-entity';
 import { UserProfile } from './infrastructure/persistence/typeorm/entities/user-profile.orm-entity';
 import { User } from './infrastructure/persistence/typeorm/entities/user.orm-entity';
 import { TypeOrmRefreshTokenRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-refresh-token.repository';
+import { TypeOrmUserAuthIdentityRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-user-auth-identity.repository';
 import { TypeOrmUserProfileRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-user-profile.repository';
 import { TypeOrmUserRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-user.repository';
 import { AuthController } from './presentation/http/controllers/auth.controller';
@@ -36,7 +43,12 @@ import { UsersController } from './presentation/http/controllers/users.controlle
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, UserProfile, RefreshToken]),
+    TypeOrmModule.forFeature([
+      User,
+      UserProfile,
+      RefreshToken,
+      UserAuthIdentityOrmEntity,
+    ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -73,6 +85,11 @@ import { UsersController } from './presentation/http/controllers/users.controlle
     LocalStrategy,
     JwtStrategy,
     GoogleStrategy,
+    GoogleOAuthStateService,
+    GoogleAuthInitiationGuard,
+    GoogleAuthCallbackGuard,
+    RefreshTokenOriginGuard,
+    GoogleAuthCallbackExceptionFilter,
     // Repository
     {
       provide: IDENTITY_TYPES.repositories.UserRepository,
@@ -85,6 +102,10 @@ import { UsersController } from './presentation/http/controllers/users.controlle
     {
       provide: IDENTITY_TYPES.repositories.UserProfileRepository,
       useClass: TypeOrmUserProfileRepository,
+    },
+    {
+      provide: IDENTITY_TYPES.repositories.UserAuthIdentityRepository,
+      useClass: TypeOrmUserAuthIdentityRepository,
     },
     //Service
     {

@@ -6,9 +6,17 @@ import {
   Query,
   Req,
   Res,
+  UseFilters,
   UseGuards,
 } from '@nestjs/common';
-import { type CookieOptions, type Request, type Response } from 'express';
+import { ConfigService } from '@nestjs/config';
+import { type Request, type Response } from 'express';
+import { createFrontendCallbackUrl } from 'src/common/config/frontend-origin.config';
+import {
+  clearRefreshTokenCookie,
+  REFRESH_TOKEN_COOKIE_NAME,
+  setRefreshTokenCookie,
+} from 'src/common/constants/refresh-token-cookie.constant';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { Public } from 'src/common/decorator/public.decorator';
 import {
@@ -19,8 +27,11 @@ import {
 } from 'src/common/decorator/rate-limit.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { SkipTransform } from 'src/common/decorator/skip.transform';
-import { GoogleAuthGuard } from 'src/common/guard/google-auth.guard';
+import { GoogleAuthCallbackGuard } from 'src/common/guard/google-auth-callback.guard';
+import { GoogleAuthInitiationGuard } from 'src/common/guard/google-auth-initiation.guard';
 import { LocalAuthGuard } from 'src/common/guard/local-auth.guard';
+import { RefreshTokenOriginGuard } from 'src/common/guard/refresh-token-origin.guard';
+import { GoogleAuthCallbackExceptionFilter } from 'src/common/filter/google-auth-callback-exception.filter';
 import { type IAuth } from 'src/types/auth';
 import { type GoogleUserPayload } from 'src/types/google-user-payload.interface';
 import {
@@ -40,7 +51,6 @@ import {
   LogoutAuthHandler,
 } from 'src/modules/identity/application/commands/logout-auth/logout-auth.handler';
 import { LogoutAuthCommand } from 'src/modules/identity/application/commands/logout-auth/logout-auth.command';
-import { AuthTokenPair } from 'src/modules/identity/application/services/issue-auth-token.service';
 import { RefreshAuthCommand } from 'src/modules/identity/application/commands/refresh-auth/refresh-auth.command';
 import { RefreshAuthHandler } from 'src/modules/identity/application/commands/refresh-auth/refresh-auth.handler';
 import { RegisterAuthCommand } from 'src/modules/identity/application/commands/register-auth/register-auth.command';
@@ -64,21 +74,6 @@ type RefreshTokenBody = {
   refresh_token?: string;
 };
 
-const REFRESH_TOKEN_COOKIE_OPTIONS: CookieOptions = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict',
-  path: '/api/v1/auth',
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-};
-
-const REFRESH_TOKEN_COOKIE_CLEAR_OPTIONS: CookieOptions = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict',
-  path: '/api/v1/auth',
-};
-
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -89,6 +84,7 @@ export class AuthController {
     private readonly getProfileAuthHandler: GetProfileAuthHandler,
     private readonly googleAuthHandler: GoogleAuthHandler,
     private readonly authService: AuthService,
+    private readonly configService: ConfigService,
   ) {}
 
   @Post('register')
@@ -115,57 +111,63 @@ export class AuthController {
       new LoginAuthCommand(auth),
     );
 
-    res.cookie('refresh_token', refresh_token, REFRESH_TOKEN_COOKIE_OPTIONS);
+    setRefreshTokenCookie(res, refresh_token, this.configService);
 
-    return { access_token, refresh_token };
+    return { access_token };
   }
 
   @Public()
   @Post('refresh')
   @TokenRateLimit()
+  @UseGuards(RefreshTokenOriginGuard)
   @ResponseMessage('Refresh token successfully!!')
   async refresh(
     @Req() req: RefreshTokenRequest,
     @Body() body: RefreshTokenBody,
     @Res({ passthrough: true }) res: Response,
   ) {
+    // Body fallback remains temporarily for non-browser API clients such as Bruno.
     const currentRefreshToken =
-      body?.refresh_token || req.cookies?.refresh_token;
-    const { access_token, refresh_token }: AuthTokenPair =
+      req.cookies?.[REFRESH_TOKEN_COOKIE_NAME] || body?.refresh_token;
+    const { access_token, refresh_token } =
       await this.refreshAuthHandler.execute(
         new RefreshAuthCommand(currentRefreshToken),
       );
 
-    res.cookie('refresh_token', refresh_token, REFRESH_TOKEN_COOKIE_OPTIONS);
+    setRefreshTokenCookie(res, refresh_token, this.configService);
 
-    return { access_token, refresh_token };
+    return { access_token };
   }
 
   @Public()
   @Post('logout')
   @TokenRateLimit()
+  @UseGuards(RefreshTokenOriginGuard)
   @ResponseMessage('Logout successfully!!')
   async logout(
     @Req() req: RefreshTokenRequest,
     @Body() body: RefreshTokenBody,
     @Res({ passthrough: true }) res: Response,
   ) {
+    // Body fallback remains temporarily for non-browser API clients such as Bruno.
     const currentRefreshToken =
-      body?.refresh_token || req.cookies?.refresh_token;
+      req.cookies?.[REFRESH_TOKEN_COOKIE_NAME] || body?.refresh_token;
 
-    const result: LogoutAuthResult = await this.logoutAuthHandler.execute(
-      new LogoutAuthCommand(currentRefreshToken),
-    );
+    try {
+      const result: LogoutAuthResult = await this.logoutAuthHandler.execute(
+        new LogoutAuthCommand(currentRefreshToken),
+      );
 
-    res.clearCookie('refresh_token', REFRESH_TOKEN_COOKIE_CLEAR_OPTIONS);
-
-    return result;
+      return result;
+    } finally {
+      clearRefreshTokenCookie(res, this.configService);
+    }
   }
 
   @Public()
   @Get('google')
   @PublicReadRateLimit()
-  @UseGuards(GoogleAuthGuard)
+  @UseGuards(GoogleAuthInitiationGuard)
   googleAuth() {
     return;
   }
@@ -174,22 +176,19 @@ export class AuthController {
   @SkipTransform()
   @Get('google/callback')
   @AuthRateLimit()
-  @UseGuards(GoogleAuthGuard)
+  @UseGuards(GoogleAuthCallbackGuard)
+  @UseFilters(GoogleAuthCallbackExceptionFilter)
   async googleAuthCallback(
     @Auth() googleUser: GoogleUserPayload,
     @Res() res: Response,
   ): Promise<void> {
-    const { access_token, refresh_token } =
-      await this.googleAuthHandler.execute(new GoogleAuthCommand(googleUser));
-
-    res.cookie('refresh_token', refresh_token, {
-      ...REFRESH_TOKEN_COOKIE_OPTIONS,
-      sameSite: 'lax',
-    });
-
-    res.redirect(
-      `${process.env.FRONTEND_URL || 'http://localhost:3000'}/callback?access_token=${access_token}&refresh_token=${refresh_token}`,
+    const { refresh_token } = await this.googleAuthHandler.execute(
+      new GoogleAuthCommand(googleUser),
     );
+
+    setRefreshTokenCookie(res, refresh_token, this.configService);
+
+    res.redirect(createFrontendCallbackUrl(this.configService));
   }
 
   @Get('me')
@@ -221,17 +220,12 @@ export class AuthController {
     @Body() dto: VerifyEmailDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.authService.verifyEmail(dto.token);
+    const { success, access_token, refresh_token } =
+      await this.authService.verifyEmail(dto.token);
 
-    if (result.refresh_token) {
-      res.cookie(
-        'refresh_token',
-        result.refresh_token,
-        REFRESH_TOKEN_COOKIE_OPTIONS,
-      );
-    }
+    setRefreshTokenCookie(res, refresh_token, this.configService);
 
-    return result;
+    return { success, access_token };
   }
 
   @Public()
@@ -269,19 +263,11 @@ export class AuthController {
     @Body() dto: ActivateAdminDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.authService.activateAdmin(
-      dto.token,
-      dto.password,
-    );
+    const { success, access_token, refresh_token } =
+      await this.authService.activateAdmin(dto.token, dto.password);
 
-    if (result.refresh_token) {
-      res.cookie(
-        'refresh_token',
-        result.refresh_token,
-        REFRESH_TOKEN_COOKIE_OPTIONS,
-      );
-    }
+    setRefreshTokenCookie(res, refresh_token, this.configService);
 
-    return result;
+    return { success, access_token };
   }
 }

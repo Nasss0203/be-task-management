@@ -1,6 +1,7 @@
 export interface GoogleUserPayload {
-  googleId: string;
-  email: string;
+  subject: string;
+  email: string | null;
+  emailVerified: boolean;
   fullName?: string;
   avatarUrl?: string;
 }

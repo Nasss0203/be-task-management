@@ -18,6 +18,7 @@ describe('JwtStrategy', () => {
 
     userRepository = {
       findByEmail: jest.fn(),
+      findById: jest.fn(),
       findByGoogleId: jest.fn(),
       findByEmailOrUsername: jest.fn(),
       findByEmailAndUsername: jest.fn(),

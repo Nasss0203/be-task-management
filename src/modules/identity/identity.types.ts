@@ -3,6 +3,7 @@ export const IDENTITY_TYPES = {
     UserRepository: Symbol('IdentityUserRepository'),
     RefreshTokenRepository: Symbol('IdentityRefreshTokenRepository'),
     UserProfileRepository: Symbol('UserProfileRepository'),
+    UserAuthIdentityRepository: Symbol('IdentityUserAuthIdentityRepository'),
   },
   services: {
     FindUserService: Symbol('IdentityFindUserService'),

@@ -13,6 +13,7 @@ import { ErrorCode } from './common/constants/error-code.constant';
 import { HttpExceptionFilter } from './common/filter/http-exception';
 import { TransformInterceptor } from './common/interceptor/transform.interceptor';
 import { MyLogger } from './log/my.logger';
+import { resolveAllowedFrontendOrigins } from './common/config/frontend-origin.config';
 
 function formatValidationErrors(errors: ValidationError[]): string[] {
   return errors.flatMap((error) => [
@@ -50,10 +51,7 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
-  const allowedOrigins = [
-    configService.get<string>('CLIENT_URL') || 'http://localhost:3000',
-    configService.get<string>('ADMIN_CLIENT_URL') || 'http://localhost:5173',
-  ];
+  const allowedOrigins = resolveAllowedFrontendOrigins(configService);
 
   app.enableCors({
     origin: allowedOrigins,

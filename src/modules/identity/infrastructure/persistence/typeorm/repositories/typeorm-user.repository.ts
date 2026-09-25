@@ -29,8 +29,18 @@ export class TypeOrmUserRepository implements UserRepository {
       : this.userRepo;
   }
 
-  findByEmail(email: string): Promise<UserRecord | null> {
-    return this.userRepo.findOne({ where: { email } });
+  findByEmail(
+    email: string,
+    context?: PersistenceContext,
+  ): Promise<UserRecord | null> {
+    return this.getRepo(context).findOne({ where: { email } });
+  }
+
+  findById(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<UserRecord | null> {
+    return this.getRepo(context).findOne({ where: { id } });
   }
 
   findByGoogleId(googleId: string): Promise<UserRecord | null> {

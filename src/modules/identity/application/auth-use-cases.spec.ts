@@ -1,7 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/unbound-method */
-import { HttpException, HttpStatus } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ErrorCode } from 'src/common/constants/error-code.constant';
+import { UserAuthIdentityModel } from 'src/modules/identity/domain/aggregates/user-auth-identity/user-auth-identity.model';
+import { UserAuthProvider } from 'src/modules/identity/domain/enums/user-auth-provider.enum';
 import { RefreshToken } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/refresh-token.orm-entity';
 import {
   SystemRole,
@@ -10,6 +18,8 @@ import {
 import { RegisterUserDto } from 'src/modules/identity/application/dto/user/create-user.dto';
 import { hashToken } from 'src/utils';
 import { RefreshTokenRepository } from 'src/modules/identity/domain/repositories/refresh-token.repository';
+import { UserAuthIdentityRepository } from 'src/modules/identity/domain/repositories/user-auth-identity.repository';
+import { UserProfileRepository } from 'src/modules/identity/domain/repositories/user-profile.repository';
 import { UserRepository } from 'src/modules/identity/domain/repositories/user.repository';
 import { GetProfileAuthHandler } from './queries/get-profile-auth/get-profile-auth.handler';
 import { GetProfileAuthQuery } from './queries/get-profile-auth/get-profile-auth.query';
@@ -57,8 +67,26 @@ const createRefreshToken = (
     ...overrides,
   }) as RefreshToken;
 
+const createUserAuthIdentity = (
+  overrides: Partial<UserAuthIdentityModel> = {},
+): UserAuthIdentityModel =>
+  new UserAuthIdentityModel(
+    overrides.id ?? 'identity-1',
+    overrides.userId ?? 'user-1',
+    overrides.provider ?? UserAuthProvider.GOOGLE,
+    overrides.issuer ?? 'https://accounts.google.com',
+    overrides.providerSubject ?? 'google-subject-1',
+    overrides.providerEmail ?? 'user@example.com',
+    overrides.emailVerified ?? true,
+    overrides.tenantId ?? null,
+    overrides.lastLoginAt ?? null,
+    overrides.createdAt ?? new Date('2026-01-01T00:00:00.000Z'),
+    overrides.updatedAt ?? new Date('2026-01-01T00:00:00.000Z'),
+  );
+
 const createUserRepositoryMock = (): jest.Mocked<UserRepository> => ({
   findByEmail: jest.fn(),
+  findById: jest.fn(),
   findByGoogleId: jest.fn(),
   findByEmailOrUsername: jest.fn(),
   findByEmailAndUsername: jest.fn(),
@@ -74,6 +102,21 @@ const createUserRepositoryMock = (): jest.Mocked<UserRepository> => ({
   createGoogleUser: jest.fn(),
   save: jest.fn(),
 });
+
+const createUserProfileRepositoryMock =
+  (): jest.Mocked<UserProfileRepository> => ({
+    findById: jest.fn(),
+    findByUserId: jest.fn(),
+    save: jest.fn(),
+  });
+
+const createUserAuthIdentityRepositoryMock =
+  (): jest.Mocked<UserAuthIdentityRepository> => ({
+    findByProviderIdentity: jest.fn(),
+    findByUserId: jest.fn(),
+    create: jest.fn(),
+    updateLoginMetadata: jest.fn(),
+  });
 
 const createRefreshTokenRepositoryMock =
   (): jest.Mocked<RefreshTokenRepository> => ({
@@ -96,6 +139,7 @@ describe('Auth services', () => {
   describe('RegisterAuthHandler', () => {
     it('throws when email or username already exists', async () => {
       const userRepository = createUserRepositoryMock();
+      const userProfileRepository = createUserProfileRepositoryMock();
       const createWorkspaceHandler = createWorkspaceHandlerMock();
       const mailService = {
         sendVerificationEmail: jest.fn().mockResolvedValue({}),
@@ -103,6 +147,7 @@ describe('Auth services', () => {
       const uow = { runInTransaction: jest.fn((cb) => cb({})) } as any;
       const service = new RegisterAuthHandler(
         userRepository,
+        userProfileRepository,
         createWorkspaceHandler,
         mailService,
         uow,
@@ -128,6 +173,7 @@ describe('Auth services', () => {
 
     it('creates user and default workspace', async () => {
       const userRepository = createUserRepositoryMock();
+      const userProfileRepository = createUserProfileRepositoryMock();
       const createWorkspaceHandler = createWorkspaceHandlerMock();
       const mailService = {
         sendVerificationEmail: jest.fn().mockResolvedValue({}),
@@ -135,6 +181,7 @@ describe('Auth services', () => {
       const uow = { runInTransaction: jest.fn((cb) => cb({})) } as any;
       const service = new RegisterAuthHandler(
         userRepository,
+        userProfileRepository,
         createWorkspaceHandler,
         mailService,
         uow,
@@ -390,10 +437,15 @@ describe('Auth services', () => {
   describe('GetProfileAuthHandler', () => {
     it('returns active user profile', async () => {
       const userRepository = createUserRepositoryMock();
-      const service = new GetProfileAuthHandler(userRepository);
+      const userProfileRepository = createUserProfileRepositoryMock();
+      const service = new GetProfileAuthHandler(
+        userRepository,
+        userProfileRepository,
+      );
       const user = createUser();
 
       userRepository.findProfileById.mockResolvedValue(user);
+      userProfileRepository.findByUserId.mockResolvedValue(null);
 
       await expect(
         service.execute(
@@ -405,12 +457,19 @@ describe('Auth services', () => {
             systemRole: user.systemRole,
           }),
         ),
-      ).resolves.toBe(user);
+      ).resolves.toEqual({
+        ...user,
+        lastActiveWorkspaceId: null,
+      });
     });
 
     it('throws when user is not found', async () => {
       const userRepository = createUserRepositoryMock();
-      const service = new GetProfileAuthHandler(userRepository);
+      const userProfileRepository = createUserProfileRepositoryMock();
+      const service = new GetProfileAuthHandler(
+        userRepository,
+        userProfileRepository,
+      );
 
       userRepository.findProfileById.mockResolvedValue(null);
 
@@ -434,7 +493,11 @@ describe('Auth services', () => {
 
     it('rejects an inactive profile', async () => {
       const userRepository = createUserRepositoryMock();
-      const service = new GetProfileAuthHandler(userRepository);
+      const userProfileRepository = createUserProfileRepositoryMock();
+      const service = new GetProfileAuthHandler(
+        userRepository,
+        userProfileRepository,
+      );
       const user = createUser({ isActive: false });
 
       userRepository.findProfileById.mockResolvedValue(user);
@@ -532,23 +595,56 @@ describe('Auth services', () => {
   });
 
   describe('GoogleAuthHandler', () => {
-    it('creates user and default workspace when google user is new', async () => {
+    const setup = (uowOverride?: { runInTransaction: jest.Mock }) => {
       const userRepository = createUserRepositoryMock();
+      const userProfileRepository = createUserProfileRepositoryMock();
+      const userAuthIdentityRepository = createUserAuthIdentityRepositoryMock();
       const issueTokenService = createIssueTokenServiceMock();
       const createWorkspaceHandler = createWorkspaceHandlerMock();
+      const transactionContext = { transaction: 'context' };
+      const uow =
+        uowOverride ??
+        ({
+          runInTransaction: jest.fn((callback) => callback(transactionContext)),
+        } as any);
       const service = new GoogleAuthHandler(
         userRepository,
+        userProfileRepository,
+        userAuthIdentityRepository,
         issueTokenService,
         createWorkspaceHandler,
+        uow as any,
       );
-      const user = createUser({
-        googleId: 'google-1',
-        avatarUrl: 'https://example.com/avatar.png',
-      });
 
-      userRepository.findByGoogleId.mockResolvedValue(null);
-      userRepository.findByEmail.mockResolvedValue(null);
-      userRepository.createGoogleUser.mockResolvedValue(user);
+      return {
+        service,
+        userRepository,
+        userProfileRepository,
+        userAuthIdentityRepository,
+        issueTokenService,
+        createWorkspaceHandler,
+        transactionContext,
+        uow,
+      };
+    };
+
+    it('loads an active user by identity, updates metadata, and issues tokens', async () => {
+      const {
+        service,
+        userRepository,
+        userAuthIdentityRepository,
+        issueTokenService,
+      } = setup();
+      const identity = createUserAuthIdentity();
+      const user = createUser();
+
+      userAuthIdentityRepository.findByProviderIdentity.mockResolvedValue(
+        identity,
+      );
+      userRepository.findById.mockResolvedValue(user);
+      userAuthIdentityRepository.updateLoginMetadata.mockResolvedValue(
+        identity,
+      );
       issueTokenService.issueTokens.mockResolvedValue({
         access_token: 'access-token',
         refresh_token: 'refresh-token',
@@ -557,8 +653,151 @@ describe('Auth services', () => {
       await expect(
         service.execute(
           new GoogleAuthCommand({
-            googleId: 'google-1',
+            subject: identity.providerSubject,
+            email: ' Updated@Example.COM ',
+            emailVerified: false,
+          }),
+        ),
+      ).resolves.toEqual({
+        access_token: 'access-token',
+        refresh_token: 'refresh-token',
+        user,
+      });
+
+      expect(
+        userAuthIdentityRepository.findByProviderIdentity,
+      ).toHaveBeenCalledWith(
+        {
+          provider: UserAuthProvider.GOOGLE,
+          issuer: 'https://accounts.google.com',
+          providerSubject: identity.providerSubject,
+          tenantId: null,
+        },
+        undefined,
+      );
+      expect(userRepository.findById).toHaveBeenCalledWith(identity.userId);
+      expect(
+        userAuthIdentityRepository.updateLoginMetadata,
+      ).toHaveBeenCalledWith(identity.id, {
+        providerEmail: 'updated@example.com',
+        emailVerified: false,
+        tenantId: null,
+        lastLoginAt: expect.any(Date),
+      });
+      expect(issueTokenService.issueTokens).toHaveBeenCalledWith(user);
+      expect(userRepository.findByGoogleId).not.toHaveBeenCalled();
+      expect(userRepository.findByEmail).not.toHaveBeenCalled();
+    });
+
+    it('rejects an inactive identity user without updating metadata or issuing tokens', async () => {
+      const {
+        service,
+        userRepository,
+        userAuthIdentityRepository,
+        issueTokenService,
+      } = setup();
+      const identity = createUserAuthIdentity();
+
+      userAuthIdentityRepository.findByProviderIdentity.mockResolvedValue(
+        identity,
+      );
+      userRepository.findById.mockResolvedValue(
+        createUser({ isActive: false }),
+      );
+
+      await expect(
+        service.execute(
+          new GoogleAuthCommand({
+            subject: identity.providerSubject,
+            email: null,
+            emailVerified: false,
+          }),
+        ),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+
+      expect(
+        userAuthIdentityRepository.updateLoginMetadata,
+      ).not.toHaveBeenCalled();
+      expect(issueTokenService.issueTokens).not.toHaveBeenCalled();
+      expect(userRepository.findByEmail).not.toHaveBeenCalled();
+    });
+
+    it('rejects when the identity disappears during metadata update', async () => {
+      const {
+        service,
+        userRepository,
+        userAuthIdentityRepository,
+        issueTokenService,
+      } = setup();
+      const identity = createUserAuthIdentity();
+      const user = createUser();
+
+      userAuthIdentityRepository.findByProviderIdentity.mockResolvedValue(
+        identity,
+      );
+      userRepository.findById.mockResolvedValue(user);
+      userAuthIdentityRepository.updateLoginMetadata.mockResolvedValue(null);
+
+      await expect(
+        service.execute(
+          new GoogleAuthCommand({
+            subject: identity.providerSubject,
             email: user.email,
+            emailVerified: true,
+          }),
+        ),
+      ).rejects.toMatchObject({
+        constructor: UnauthorizedException,
+        message: 'Unable to authenticate with Google',
+      });
+
+      expect(issueTokenService.issueTokens).not.toHaveBeenCalled();
+      expect(userRepository.findByEmail).not.toHaveBeenCalled();
+      expect(userRepository.findByGoogleId).not.toHaveBeenCalled();
+      expect(userAuthIdentityRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('provisions user, profile, workspace, and identity in the same transaction context', async () => {
+      const events: string[] = [];
+      const transactionContext = { transaction: 'google-provisioning' };
+      const uow = {
+        runInTransaction: jest.fn(async (callback) => {
+          events.push('transaction:start');
+          const result = await callback(transactionContext);
+          events.push('transaction:complete');
+          return result;
+        }),
+      };
+      const {
+        service,
+        userRepository,
+        userProfileRepository,
+        userAuthIdentityRepository,
+        issueTokenService,
+        createWorkspaceHandler,
+      } = setup(uow);
+      const user = createUser({
+        googleId: 'google-subject-1',
+        avatarUrl: 'https://example.com/avatar.png',
+      });
+
+      userAuthIdentityRepository.findByProviderIdentity.mockResolvedValue(null);
+      userRepository.findByEmail.mockResolvedValue(null);
+      userRepository.createGoogleUser.mockResolvedValue(user);
+      issueTokenService.issueTokens.mockImplementation(async () => {
+        events.push('tokens:issued');
+        return {
+          access_token: 'access-token',
+          refresh_token: 'refresh-token',
+        };
+      });
+
+      await expect(
+        service.execute(
+          new GoogleAuthCommand({
+            subject: 'google-subject-1',
+            email: ' USER@EXAMPLE.COM ',
+            emailVerified: true,
             avatarUrl: user.avatarUrl ?? undefined,
           }),
         ),
@@ -567,59 +806,229 @@ describe('Auth services', () => {
         refresh_token: 'refresh-token',
         user,
       });
-      expect(userRepository.createGoogleUser).toHaveBeenCalledWith({
-        email: user.email,
-        username: expect.stringMatching(/^user_/),
-        googleId: 'google-1',
-        avatarUrl: user.avatarUrl,
-      });
+      expect(userRepository.createGoogleUser).toHaveBeenCalledWith(
+        {
+          email: user.email,
+          username: expect.stringMatching(/^user_/),
+          googleId: 'google-subject-1',
+          avatarUrl: user.avatarUrl,
+        },
+        transactionContext,
+      );
+      expect(userProfileRepository.save).toHaveBeenCalledWith(
+        expect.anything(),
+        transactionContext,
+      );
       expect(createWorkspaceHandler.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: user.id,
         }),
       );
+      expect(userAuthIdentityRepository.create).toHaveBeenCalledWith(
+        {
+          userId: user.id,
+          provider: UserAuthProvider.GOOGLE,
+          issuer: 'https://accounts.google.com',
+          providerSubject: 'google-subject-1',
+          providerEmail: user.email,
+          emailVerified: true,
+          tenantId: null,
+          lastLoginAt: expect.any(Date),
+        },
+        transactionContext,
+      );
+      expect(
+        userAuthIdentityRepository.findByProviderIdentity,
+      ).toHaveBeenNthCalledWith(
+        2,
+        {
+          provider: UserAuthProvider.GOOGLE,
+          issuer: 'https://accounts.google.com',
+          providerSubject: 'google-subject-1',
+          tenantId: null,
+        },
+        transactionContext,
+      );
+      expect(events).toEqual([
+        'transaction:start',
+        'transaction:complete',
+        'tokens:issued',
+      ]);
+      expect(userRepository.findByGoogleId).not.toHaveBeenCalled();
     });
 
-    it('links an existing email account without creating a workspace', async () => {
-      const userRepository = createUserRepositoryMock();
-      const issueTokenService = createIssueTokenServiceMock();
-      const createWorkspaceHandler = createWorkspaceHandlerMock();
-      const service = new GoogleAuthHandler(
+    it('returns conflict for an existing email without linking the user', async () => {
+      const {
+        service,
         userRepository,
+        userAuthIdentityRepository,
         issueTokenService,
-        createWorkspaceHandler,
-      );
+      } = setup();
       const existingUser = createUser({ googleId: null, avatarUrl: null });
-      const linkedUser = createUser({
-        googleId: 'google-1',
-        avatarUrl: 'https://example.com/avatar.png',
-      });
 
-      userRepository.findByGoogleId.mockResolvedValue(null);
+      userAuthIdentityRepository.findByProviderIdentity.mockResolvedValue(null);
       userRepository.findByEmail.mockResolvedValue(existingUser);
-      userRepository.save.mockResolvedValue(linkedUser);
+
+      await expect(
+        service.execute(
+          new GoogleAuthCommand({
+            subject: 'google-subject-1',
+            email: existingUser.email,
+            emailVerified: true,
+            avatarUrl: 'https://example.com/avatar.png',
+          }),
+        ),
+      ).rejects.toBeInstanceOf(ConflictException);
+
+      expect(existingUser.googleId).toBeNull();
+      expect(existingUser.avatarUrl).toBeNull();
+      expect(userRepository.save).not.toHaveBeenCalled();
+      expect(userRepository.createGoogleUser).not.toHaveBeenCalled();
+      expect(userAuthIdentityRepository.create).not.toHaveBeenCalled();
+      expect(issueTokenService.issueTokens).not.toHaveBeenCalled();
+      expect(userRepository.findByGoogleId).not.toHaveBeenCalled();
+    });
+
+    it('rejects a new identity when Google does not provide an email', async () => {
+      const {
+        service,
+        userRepository,
+        userAuthIdentityRepository,
+        issueTokenService,
+      } = setup();
+      userAuthIdentityRepository.findByProviderIdentity.mockResolvedValue(null);
+
+      await expect(
+        service.execute(
+          new GoogleAuthCommand({
+            subject: 'google-subject-1',
+            email: null,
+            emailVerified: true,
+          }),
+        ),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+
+      expect(userRepository.findByEmail).not.toHaveBeenCalled();
+      expect(userRepository.createGoogleUser).not.toHaveBeenCalled();
+      expect(userAuthIdentityRepository.create).not.toHaveBeenCalled();
+      expect(issueTokenService.issueTokens).not.toHaveBeenCalled();
+    });
+
+    it('rejects a new identity when the Google email is not verified', async () => {
+      const {
+        service,
+        userRepository,
+        userAuthIdentityRepository,
+        issueTokenService,
+      } = setup();
+      userAuthIdentityRepository.findByProviderIdentity.mockResolvedValue(null);
+
+      await expect(
+        service.execute(
+          new GoogleAuthCommand({
+            subject: 'google-subject-1',
+            email: 'user@example.com',
+            emailVerified: false,
+          }),
+        ),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+
+      expect(userRepository.findByEmail).not.toHaveBeenCalled();
+      expect(userRepository.createGoogleUser).not.toHaveBeenCalled();
+      expect(userAuthIdentityRepository.create).not.toHaveBeenCalled();
+      expect(issueTokenService.issueTokens).not.toHaveBeenCalled();
+    });
+
+    it('recovers a provisioning race by re-reading the stable identity key', async () => {
+      const provisioningError = new Error('unique constraint conflict');
+      const uow = {
+        runInTransaction: jest.fn().mockRejectedValue(provisioningError),
+      };
+      const {
+        service,
+        userRepository,
+        userAuthIdentityRepository,
+        issueTokenService,
+      } = setup(uow);
+      const racedIdentity = createUserAuthIdentity({ userId: 'race-user' });
+      const racedUser = createUser({ id: 'race-user' });
+
+      userAuthIdentityRepository.findByProviderIdentity
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(racedIdentity);
+      userRepository.findByEmail.mockResolvedValueOnce(null);
+      userRepository.findById.mockResolvedValue(racedUser);
+      userAuthIdentityRepository.updateLoginMetadata.mockResolvedValue(
+        racedIdentity,
+      );
       issueTokenService.issueTokens.mockResolvedValue({
         access_token: 'access-token',
         refresh_token: 'refresh-token',
       });
 
-      await service.execute(
-        new GoogleAuthCommand({
-          googleId: 'google-1',
-          email: existingUser.email,
-          avatarUrl: 'https://example.com/avatar.png',
-        }),
-      );
+      await expect(
+        service.execute(
+          new GoogleAuthCommand({
+            subject: racedIdentity.providerSubject,
+            email: racedUser.email,
+            emailVerified: true,
+          }),
+        ),
+      ).resolves.toMatchObject({ user: racedUser });
 
-      expect(userRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          googleId: 'google-1',
-          avatarUrl: 'https://example.com/avatar.png',
-        }),
+      expect(
+        userAuthIdentityRepository.findByProviderIdentity,
+      ).toHaveBeenNthCalledWith(
+        2,
+        {
+          provider: UserAuthProvider.GOOGLE,
+          issuer: 'https://accounts.google.com',
+          providerSubject: racedIdentity.providerSubject,
+          tenantId: null,
+        },
+        undefined,
       );
+      expect(userRepository.findById).toHaveBeenCalledWith('race-user');
+      expect(userRepository.save).not.toHaveBeenCalled();
       expect(userRepository.createGoogleUser).not.toHaveBeenCalled();
-      expect(createWorkspaceHandler.execute).not.toHaveBeenCalled();
-      expect(issueTokenService.issueTokens).toHaveBeenCalledWith(linkedUser);
+      expect(userRepository.findByGoogleId).not.toHaveBeenCalled();
+    });
+
+    it('returns conflict when provisioning fails and only an email collision appears', async () => {
+      const provisioningError = new Error('provisioning failed');
+      const uow = {
+        runInTransaction: jest.fn().mockRejectedValue(provisioningError),
+      };
+      const {
+        service,
+        userRepository,
+        userAuthIdentityRepository,
+        issueTokenService,
+      } = setup(uow);
+      const emailOwner = createUser({ googleId: null });
+
+      userAuthIdentityRepository.findByProviderIdentity
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
+      userRepository.findByEmail
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(emailOwner);
+
+      await expect(
+        service.execute(
+          new GoogleAuthCommand({
+            subject: 'google-subject-1',
+            email: emailOwner.email,
+            emailVerified: true,
+          }),
+        ),
+      ).rejects.toBeInstanceOf(ConflictException);
+
+      expect(emailOwner.googleId).toBeNull();
+      expect(userRepository.save).not.toHaveBeenCalled();
+      expect(userAuthIdentityRepository.create).not.toHaveBeenCalled();
+      expect(issueTokenService.issueTokens).not.toHaveBeenCalled();
+      expect(userRepository.findByGoogleId).not.toHaveBeenCalled();
     });
   });
 });

@@ -45,6 +45,7 @@ describe('UploadAttachmentHandler', () => {
           workspaceId: attachment.getWorkspaceId(),
           taskId: attachment.getTaskId(),
           commentId: attachment.getCommentId(),
+          pageBlockId: attachment.getPageBlockId(),
           uploadedBy: attachment.getUploadedBy(),
           fileName: attachment.getFileName(),
           mimeType: attachment.getMimeType(),
@@ -62,10 +63,10 @@ describe('UploadAttachmentHandler', () => {
     );
   });
 
-  it('rejects upload without a task or comment target', async () => {
+  it('rejects upload without a task, comment or page block target', async () => {
     await expect(
       handler.execute(
-        new UploadAttachmentCommand(file, 'ws-1', null, null, 'user-1'),
+        new UploadAttachmentCommand(file, 'ws-1', null, null, null, 'user-1'),
       ),
     ).rejects.toThrow(BadRequestException);
     expect(upload).not.toHaveBeenCalled();
@@ -73,7 +74,7 @@ describe('UploadAttachmentHandler', () => {
 
   it('preserves validation, storage, persistence and activity ordering data', async () => {
     const result = await handler.execute(
-      new UploadAttachmentCommand(file, 'ws-1', 'task-1', null, 'user-1'),
+      new UploadAttachmentCommand(file, 'ws-1', 'task-1', null, null, 'user-1'),
     );
 
     expect(validateExtension).toHaveBeenCalledWith('test.png');
@@ -83,6 +84,7 @@ describe('UploadAttachmentHandler', () => {
       workspaceId: 'ws-1',
       taskId: 'task-1',
       commentId: null,
+      pageBlockId: null,
       fileName: 'test.png',
       mimeType: 'image/png',
       uploadedBy: 'user-1',
@@ -97,6 +99,7 @@ describe('UploadAttachmentHandler', () => {
       metadata: {
         taskId: 'task-1',
         commentId: null,
+        pageBlockId: null,
         fileName: 'test.png',
         mimeType: 'image/png',
         size: 1024,
@@ -113,7 +116,14 @@ describe('UploadAttachmentHandler', () => {
 
   it('preserves comment-only targets', async () => {
     const result = await handler.execute(
-      new UploadAttachmentCommand(file, 'ws-1', null, 'comment-1', 'user-1'),
+      new UploadAttachmentCommand(
+        file,
+        'ws-1',
+        null,
+        'comment-1',
+        null,
+        'user-1',
+      ),
     );
 
     expect(result.taskId).toBeNull();
@@ -136,6 +146,7 @@ describe('UploadAttachmentHandler', () => {
         { ...file, originalName: 'test.pdf' },
         'ws-1',
         'task-1',
+        null,
         null,
         'user-1',
       ),

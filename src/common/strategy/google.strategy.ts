@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Profile, Strategy, VerifyCallback } from 'passport-google-oauth20';
@@ -21,14 +21,21 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     profile: Profile,
     done: VerifyCallback,
   ): Promise<void> {
+    const subject = profile.id?.trim();
+    if (!subject) {
+      throw new UnauthorizedException('Invalid Google identity');
+    }
+
+    const rawEmail = profile.emails?.[0]?.value;
+    const normalizedEmail = rawEmail?.trim().toLowerCase() || null;
+
     const user: GoogleUserPayload = {
-      googleId: profile.id,
-      email: profile.emails?.[0]?.value ?? '',
+      subject,
+      email: normalizedEmail,
+      emailVerified: profile.emails?.[0]?.verified === true,
       fullName: profile.displayName,
       avatarUrl: profile.photos?.[0]?.value,
     };
-
-    console.log('Google user payload:', user);
 
     done(null, user);
   }

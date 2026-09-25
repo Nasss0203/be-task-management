@@ -66,7 +66,14 @@ export interface SearchInviteUsersOutput {
 }
 
 export interface UserRepository {
-  findByEmail(email: string): Promise<UserRecord | null>;
+  findByEmail(
+    email: string,
+    context?: PersistenceContext,
+  ): Promise<UserRecord | null>;
+  findById(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<UserRecord | null>;
   findByGoogleId(googleId: string): Promise<UserRecord | null>;
   findByEmailOrUsername(
     email: string,

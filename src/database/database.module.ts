@@ -21,6 +21,7 @@ import { DatabaseOrmEntity } from 'src/modules/database/infrastructure/persisten
 import { PropertyOptionOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/property-option.orm-entity';
 import { RowValueOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/row-value.orm-entity';
 import { RefreshToken } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/refresh-token.orm-entity';
+import { UserAuthIdentityOrmEntity } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user-auth-identity.orm-entity';
 import { UserProfile } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user-profile.orm-entity';
 import { User } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user.orm-entity';
 import { Mention } from 'src/modules/mentions/infrastructure/persistence/typeorm/entities/mention.orm-entity';
@@ -72,6 +73,7 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
           Permission,
           UserProfile,
           RefreshToken,
+          UserAuthIdentityOrmEntity,
           WorkspaceMemberOrmEntity,
           PageOrmEntity,
           PageBlockOrmEntity,
