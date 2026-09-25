@@ -3,6 +3,11 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Activity } from 'src/modules/activity/infrastructure/persistence/typeorm/entities/activity.orm-entity';
+import { AiConversationOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-conversation.orm-entity';
+import { AiGenerationOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-generation.orm-entity';
+import { AiMessageOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-message.orm-entity';
+import { AiToolCallOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-tool-call.orm-entity';
+import { AiUsageOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-usage.orm-entity';
 import { AttachmentOrmEntity } from 'src/modules/attachment/infrastructure/persistence/typeorm/entities/attachment.orm-entity';
 import { PageBlockOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-block.orm-entity';
 import { PageTemplateBlockOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-template-block.orm-entity';
@@ -106,6 +111,11 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
           PageEditRequestOrmEntity,
           PageShareSettingOrmEntity,
           PageAccessRequestOrmEntity,
+          AiConversationOrmEntity,
+          AiMessageOrmEntity,
+          AiGenerationOrmEntity,
+          AiUsageOrmEntity,
+          AiToolCallOrmEntity,
         ],
       }),
     }),

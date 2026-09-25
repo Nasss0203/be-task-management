@@ -13,6 +13,7 @@ import { SystemRoleGuard } from './common/guard/system-role.guard';
 import { WorkspaceResolverService } from './common/services/workspace-resolver.service';
 import { DatabaseModule } from './database/database.module';
 import { ActivityModule } from './modules/activity/activity.module';
+import { AiAssistantModule } from './modules/ai_assistant/ai-assistant.module';
 import { AttachmentModule } from './modules/attachment/attachment.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { IdentityModule } from './modules/identity/identity.module';
@@ -57,6 +58,7 @@ import { AdminModule } from './modules/admin/admin.module';
     MailModule,
     AttachmentModule,
     ActivityModule,
+    AiAssistantModule,
     MentionsModule,
     NotificationsModule,
     //V2

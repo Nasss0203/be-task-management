@@ -1,0 +1,7 @@
+export enum AiGenerationStatus {
+  PROCESSING = 'PROCESSING',
+  COMPLETED = 'COMPLETED',
+  APPLIED = 'APPLIED',
+  DISCARDED = 'DISCARDED',
+  FAILED = 'FAILED',
+}
