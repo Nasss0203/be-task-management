@@ -1,3 +1,4 @@
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseModule } from 'src/database/database.module';
@@ -31,11 +32,12 @@ import { TypeOrmAiGenerationRepository } from './infrastructure/persistence/type
 import { TypeOrmAiMessageRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-ai-message.repository';
 import { TypeOrmAiToolCallRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-ai-tool-call.repository';
 import { TypeOrmAiUsageRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-ai-usage.repository';
-import { NoOpAiRuntimeAdapter } from './infrastructure/runtime/no-op-ai-runtime.adapter';
+import { FastApiAiRuntimeAdapter } from './infrastructure/runtime/fast-api-ai-runtime.adapter';
 import { AiAssistantController } from './presentation/http/controllers/ai-assistant.controller';
 
 @Module({
   imports: [
+    HttpModule,
     TypeOrmModule.forFeature([
       AiConversationOrmEntity,
       AiMessageOrmEntity,
@@ -88,7 +90,7 @@ import { AiAssistantController } from './presentation/http/controllers/ai-assist
     },
     {
       provide: AI_ASSISTANT_TYPES.runtime.AiRuntime,
-      useClass: NoOpAiRuntimeAdapter,
+      useClass: FastApiAiRuntimeAdapter,
     },
   ],
 })

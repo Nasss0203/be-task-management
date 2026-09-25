@@ -150,10 +150,7 @@ export class AiAssistantService {
           AiMessage.create({
             conversationId: params.conversationId,
             role: AiMessageRole.ASSISTANT,
-            content:
-              typeof result.output === 'string'
-                ? result.output
-                : JSON.stringify(result.output),
+            content: this.getAssistantMessageContent(result.output),
             metadata: {
               requestId: params.requestId,
               ...(result.provider ? { provider: result.provider } : {}),
@@ -213,5 +210,19 @@ export class AiAssistantService {
 
       throw error;
     }
+  }
+
+  private getAssistantMessageContent(
+    output: Record<string, unknown> | string,
+  ): string {
+    if (typeof output === 'string') {
+      return output;
+    }
+
+    if (typeof output.text === 'string' && output.text.trim()) {
+      return output.text;
+    }
+
+    return JSON.stringify(output);
   }
 }
