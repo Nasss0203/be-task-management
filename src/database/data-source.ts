@@ -98,12 +98,13 @@ export default new DataSource({
     PaymentOrderOrmEntity,
     PaymentTransactionOrmEntity,
     WorkspaceSubscriptionOrmEntity,
-    //
+    // Page
     PageShareOrmEntity,
     PageShareLinkOrmEntity,
     PageEditRequestOrmEntity,
     PageShareSettingOrmEntity,
     PageAccessRequestOrmEntity,
+    // AI assistant
     AiConversationOrmEntity,
     AiMessageOrmEntity,
     AiGenerationOrmEntity,

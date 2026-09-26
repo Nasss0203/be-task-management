@@ -131,11 +131,14 @@ export class TypeOrmWorkspaceRepository implements WorkspaceRepository {
     const accessRows = await entityManager.query<AccessRow[]>(
       `
       SELECT
-        membership_type AS "membershipType",
-        role_name AS "roleName"
-      FROM workspace_members
-      WHERE user_id = $1
-        AND workspace_id = $2
+        wm.membership_type AS "membershipType",
+        wm.role_name AS "roleName"
+      FROM workspace_members wm
+      INNER JOIN workspaces w
+        ON w.id = wm.workspace_id
+      WHERE wm.user_id = $1
+        AND wm.workspace_id = $2
+        AND w.deleted_at IS NULL
       LIMIT 1
       `,
       [userId, workspaceId],
