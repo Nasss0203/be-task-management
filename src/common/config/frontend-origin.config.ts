@@ -2,6 +2,31 @@ import { ConfigService } from '@nestjs/config';
 
 const DEVELOPMENT_CLIENT_ORIGIN = 'http://localhost:3000';
 const DEVELOPMENT_ADMIN_ORIGIN = 'http://localhost:5173';
+const DEVELOPMENT_PUBLIC_SITE_ORIGIN = /^http:\/\/[a-z0-9-]+\.localhost:3000$/i;
+
+export const isAllowedFrontendOrigin = (
+  configService: ConfigService,
+  origin: string | undefined,
+): boolean => {
+  if (!origin) {
+    return true;
+  }
+
+  const allowedOrigins = resolveAllowedFrontendOrigins(configService);
+
+  if (allowedOrigins.includes(origin)) {
+    return true;
+  }
+
+  if (
+    !isProduction(configService) &&
+    DEVELOPMENT_PUBLIC_SITE_ORIGIN.test(origin)
+  ) {
+    return true;
+  }
+
+  return false;
+};
 
 const isProduction = (configService: ConfigService): boolean =>
   configService.get<string>('NODE_ENV') === 'production';

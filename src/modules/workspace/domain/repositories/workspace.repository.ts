@@ -1,6 +1,6 @@
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { Workspace } from '../aggregates/workspace/workspace.aggregate';
 import { WorkspaceMembershipType } from '../enums/workspace-membership-type.enum';
-import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 export type WorkspaceAccess = {
   userId: string;
@@ -26,6 +26,11 @@ export interface WorkspaceRepository {
     userId: string,
     context?: PersistenceContext,
   ): Promise<Workspace[]>;
+
+  findById(
+    workspaceId: string,
+    context?: PersistenceContext,
+  ): Promise<Workspace | null>;
 
   findByUserIdAndWorkspaceId(
     userId: string,

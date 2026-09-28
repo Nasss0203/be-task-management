@@ -13,6 +13,8 @@ import { PageBlockOrmEntity } from 'src/modules/content/infrastructure/persisten
 import { PageTemplateBlockOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-template-block.orm-entity';
 import { PageTemplateOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 import { PageOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page.orm-entity';
+import { PublishedSiteOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/published-site.orm-entity';
+import { PagePublicationOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-publication.orm-entity';
 import { RefreshToken } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/refresh-token.orm-entity';
 import { Mention } from 'src/modules/mentions/infrastructure/persistence/typeorm/entities/mention.orm-entity';
 import { Notification } from 'src/modules/notifications/infrastructure/persistence/typeorm/entities/notification.orm-entity';
@@ -104,6 +106,8 @@ export default new DataSource({
     PageEditRequestOrmEntity,
     PageShareSettingOrmEntity,
     PageAccessRequestOrmEntity,
+    PublishedSiteOrmEntity,
+    PagePublicationOrmEntity,
     // AI assistant
     AiConversationOrmEntity,
     AiMessageOrmEntity,

@@ -70,6 +70,11 @@ export const CONTENT_TYPES = {
     RejectPageAccessRequestHandler: Symbol('RejectPageAccessRequestHandler'),
     GetPageAccessRequestsHandler: Symbol('GetPageAccessRequestsHandler'),
     GetMyPageAccessRequestHandler: Symbol('GetMyPageAccessRequestHandler'),
+    PublishSiteHandler: Symbol('PublishSiteHandler'),
+    GetPagePublicationHandler: Symbol('GetPagePublicationHandler'),
+    UnpublishSiteHandler: Symbol('UnpublishSiteHandler'),
+    RepublishSiteHandler: Symbol.for('RepublishSiteHandler'),
+    GetPublicPageHandler: Symbol('GetPublicPageHandler'),
   },
   repositories: {
     PageRepository: Symbol.for('PageRepository'),
@@ -82,6 +87,8 @@ export const CONTENT_TYPES = {
     PageEditRequestRepository: Symbol('PageEditRequestRepository'),
     PageShareSettingRepository: Symbol('PageShareSettingRepository'),
     PageAccessRequestRepository: Symbol('PageAccessRequestRepository'),
+    PublishedSiteRepository: Symbol('PublishedSiteRepository'),
+    PagePublicationRepository: Symbol('PagePublicationRepository'),
   },
   bookmarkMetadataFetcher: Symbol('BookmarkMetadataFetcher'),
 };

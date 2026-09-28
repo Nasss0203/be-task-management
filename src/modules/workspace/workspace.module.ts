@@ -134,6 +134,7 @@ import { TeamspaceController } from './presentation/http/controllers/teamspace.c
   exports: [
     CreateDefaultWorkspaceHandler,
     WORKSPACE_TYPES.repositories.WorkspaceMemberRepository,
+    WORKSPACE_TYPES.repositories.WorkspaceRepository,
   ],
 })
 export class WorkspaceModule {}

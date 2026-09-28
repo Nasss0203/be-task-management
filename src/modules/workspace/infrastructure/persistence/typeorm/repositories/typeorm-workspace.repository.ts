@@ -3,17 +3,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { WorkspacePermissionPolicy } from 'src/modules/permission/domain/policies/workspace-permission.policy';
 import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
-import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import {
   WorkspaceAccess,
   WorkspaceOverview,
   WorkspaceRepository,
 } from 'src/modules/workspace/domain/repositories/workspace.repository';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { DataSource, EntityManager, IsNull, Not, Repository } from 'typeorm';
 import { Workspace } from '../../../../domain/aggregates/workspace/workspace.aggregate';
-import { WorkspaceMapper } from '../mappers/workspace.mapper';
 import { WorkspaceMemberOrmEntity } from '../entities/workspace-member.orm-entity';
 import { WorkspaceOrmEntity } from '../entities/workspace.orm-entity';
+import { WorkspaceMapper } from '../mappers/workspace.mapper';
 
 type AccessRow = {
   membershipType: WorkspaceMembershipType;
@@ -65,6 +65,20 @@ export class TypeOrmWorkspaceRepository implements WorkspaceRepository {
     context?: PersistenceContext,
   ): Promise<boolean> {
     return this.getWorkspaceRepo(context).exists({ where: { slug } });
+  }
+
+  async findById(
+    workspaceId: string,
+    context?: PersistenceContext,
+  ): Promise<Workspace | null> {
+    const entity = await this.getWorkspaceRepo(context).findOne({
+      where: {
+        id: workspaceId,
+        deletedAt: IsNull(),
+      },
+    });
+
+    return entity ? WorkspaceMapper.toDomain(entity) : null;
   }
 
   async save(
