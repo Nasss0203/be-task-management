@@ -61,6 +61,11 @@ import { RejectPageEditRequestHandler } from './application/commands/page-edit-r
 import { AddPageFavoriteHandler } from './application/commands/page-favorite/add-page-favorite/add-page-favorite.handler';
 import { RemovePageFavoriteHandler } from './application/commands/page-favorite/remove-page-favorite/remove-page-favorite.handler';
 import { PublishSiteHandler } from './application/commands/page-publication/publish-site/publish-site.handler';
+import { PublishPageToSiteHandler } from './application/commands/page-publication/publish-page-to-site/publish-page-to-site.handler';
+import { ListSitePublicationsHandler } from './application/queries/page-publication/list-site-publications/list-site-publications.handler';
+import { PublishedSitesController } from './presentation/http/controllers/published-sites.controller';
+import { WorkspacePublishedSitesController } from './presentation/http/controllers/workspace-published-sites.controller';
+import { ListWorkspacePublishedSitesHandler } from './application/queries/page-publication/list-workspace-published-sites/list-workspace-published-sites.handler';
 import { RepublishSiteHandler } from './application/commands/page-publication/republish-site/republish-site.handler';
 import { UnpublishSiteHandler } from './application/commands/page-publication/unpublish-site/unpublish-site.handler';
 import { UpdatePageShareSettingHandler } from './application/commands/page-share-setting/update-page-share-setting/update-page-share-setting.handler';
@@ -450,10 +455,15 @@ const ports = [
     PageShareSettingsController,
     PageAccessRequestController,
     PagePublicationController,
+    PublishedSitesController,
+    WorkspacePublishedSitesController,
     PublicPageController,
   ],
 
   providers: [
+    ListWorkspacePublishedSitesHandler,
+    PublishPageToSiteHandler,
+    ListSitePublicationsHandler,
     ...repositories,
     ...pageHandlers,
     ...pageBlockHandlers,

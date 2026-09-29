@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { resolvePagePublication } from '../../../services/resolve-page-publication';
 
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 
@@ -31,16 +32,15 @@ export class UnpublishSiteHandler {
 
   async execute(command: UnpublishSiteCommand) {
     return this.uow.runInTransaction(async (manager) => {
-      const publications = await this.pagePublicationRepository.findByPageId(
+      const publication = await resolvePagePublication(
+        this.pagePublicationRepository,
         command.pageId,
+        command.siteId,
         manager,
       );
-
-      if (publications.length === 0) {
+      if (!publication) {
         throw new NotFoundException('Page publication not found');
       }
-
-      const publication = publications[0];
 
       const site = await this.publishedSiteRepository.findById(
         publication.getSiteId(),
@@ -58,14 +58,21 @@ export class UnpublishSiteHandler {
       const now = new Date();
 
       publication.unpublish(now);
-      site.disable(now);
+      if (
+        publication.getPath() === '/' &&
+        publication.getPageId() === site.getRootPageId()
+      )
+        site.disable(now);
 
       const savedPublication = await this.pagePublicationRepository.save(
         publication,
         manager,
       );
 
-      const savedSite = await this.publishedSiteRepository.save(site, manager);
+      const savedSite =
+        publication.getPath() === '/'
+          ? await this.publishedSiteRepository.save(site, manager)
+          : site;
 
       return UnpublishSiteResponseDto.fromDomain(savedSite, savedPublication);
     });

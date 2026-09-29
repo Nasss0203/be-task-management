@@ -2,6 +2,11 @@ import type { PersistenceContext } from 'src/shared/infrastructure/persistence/p
 import { PagePublication } from '../entities/page-publication.entity';
 
 export interface PagePublicationRepository {
+  findBySiteAndPath(
+    siteId: string,
+    path: string,
+    context?: PersistenceContext,
+  ): Promise<PagePublication | null>;
   findById(
     id: string,
     context?: PersistenceContext,

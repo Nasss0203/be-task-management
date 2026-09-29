@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { resolvePagePublication } from '../../../services/resolve-page-publication';
 
 import { PublishSiteResponseDto } from 'src/modules/content/application/dto/page-publication/response/publish-site.response.dto';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
@@ -33,16 +34,15 @@ export class RepublishSiteHandler {
     command: RepublishSiteCommand,
   ): Promise<PublishSiteResponseDto> {
     return this.uow.runInTransaction(async (manager) => {
-      const publications = await this.pagePublicationRepository.findByPageId(
+      const publication = await resolvePagePublication(
+        this.pagePublicationRepository,
         command.pageId,
+        command.siteId,
         manager,
       );
-
-      if (publications.length === 0) {
+      if (!publication) {
         throw new NotFoundException('Page publication not found');
       }
-
-      const publication = publications[0];
 
       const site = await this.publishedSiteRepository.findById(
         publication.getSiteId(),
@@ -55,20 +55,27 @@ export class RepublishSiteHandler {
 
       if (
         publication.getUnpublishedAt() === null &&
-        site.getDisabledAt() === null
+        (publication.getPath() !== '/' || site.getDisabledAt() === null)
       ) {
         throw new BadRequestException('Page is already published');
       }
 
       publication.republish(command.userId);
-      site.enable();
+      if (
+        publication.getPath() === '/' &&
+        publication.getPageId() === site.getRootPageId()
+      )
+        site.enable();
 
       const savedPublication = await this.pagePublicationRepository.save(
         publication,
         manager,
       );
 
-      const savedSite = await this.publishedSiteRepository.save(site, manager);
+      const savedSite =
+        publication.getPath() === '/'
+          ? await this.publishedSiteRepository.save(site, manager)
+          : site;
 
       return PublishSiteResponseDto.fromDomain(savedSite, savedPublication);
     });

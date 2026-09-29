@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { resolvePagePublication } from '../../../services/resolve-page-publication';
 
 import { GetPagePublicationResponseDto } from 'src/modules/content/application/dto/page-publication/response/get-page-publication.response.dto';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
@@ -21,17 +22,16 @@ export class GetPagePublicationHandler {
   async execute(
     query: GetPagePublicationQuery,
   ): Promise<GetPagePublicationResponseDto> {
-    const publications = await this.pagePublicationRepository.findByPageId(
+    const publication = await resolvePagePublication(
+      this.pagePublicationRepository,
       query.pageId,
+      query.siteId,
     );
-
-    if (publications.length === 0) {
+    if (!publication) {
       return {
         published: false,
       };
     }
-
-    const publication = publications[0];
 
     const site = await this.publishedSiteRepository.findById(
       publication.getSiteId(),

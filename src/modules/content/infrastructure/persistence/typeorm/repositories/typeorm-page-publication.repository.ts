@@ -31,6 +31,18 @@ export class TypeOrmPagePublicationRepository implements PagePublicationReposito
     return orm ? PagePublicationMapper.toDomain(orm) : null;
   }
 
+  async findBySiteAndPath(
+    siteId: string,
+    path: string,
+    context?: PersistenceContext,
+  ): Promise<PagePublication | null> {
+    const normalized = PagePublicationPath.create(path).getValue();
+    const orm = await this.resolveRepo(context).findOne({
+      where: { site_id: siteId, path: normalized },
+    });
+    return orm ? PagePublicationMapper.toDomain(orm) : null;
+  }
+
   async findByPageId(
     pageId: string,
     context?: PersistenceContext,
@@ -39,7 +51,7 @@ export class TypeOrmPagePublicationRepository implements PagePublicationReposito
       where: { page_id: pageId },
       order: { published_at: 'ASC' },
     });
-    return orms.map(PagePublicationMapper.toDomain);
+    return orms.map((orm) => PagePublicationMapper.toDomain(orm));
   }
 
   async findBySiteAndPage(
@@ -77,7 +89,7 @@ export class TypeOrmPagePublicationRepository implements PagePublicationReposito
       where: { site_id: siteId },
       order: { published_at: 'ASC' },
     });
-    return orms.map(PagePublicationMapper.toDomain);
+    return orms.map((orm) => PagePublicationMapper.toDomain(orm));
   }
 
   async save(

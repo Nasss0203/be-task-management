@@ -6,6 +6,7 @@ import {
   Inject,
   Param,
   Post,
+  Query,
 } from '@nestjs/common';
 
 import { Auth } from 'src/common/decorator/auth.decorator';
@@ -71,9 +72,12 @@ export class PagePublicationController {
   })
   @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
   @ResponseMessage('Get page publication')
-  getPublication(@Param('pageId') pageId: string) {
+  getPublication(
+    @Param('pageId') pageId: string,
+    @Query('site_id') siteId?: string,
+  ) {
     return this.getPagePublicationHandler.execute(
-      new GetPagePublicationQuery(pageId),
+      new GetPagePublicationQuery(pageId, siteId),
     );
   }
 
@@ -86,9 +90,13 @@ export class PagePublicationController {
   })
   @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
   @ResponseMessage('Unpublish page')
-  unpublish(@Param('pageId') pageId: string, @Auth() auth: IAuth) {
+  unpublish(
+    @Param('pageId') pageId: string,
+    @Auth() auth: IAuth,
+    @Query('site_id') siteId?: string,
+  ) {
     return this.unpublishSiteHandler.execute(
-      new UnpublishSiteCommand(auth.id, pageId),
+      new UnpublishSiteCommand(auth.id, pageId, siteId),
     );
   }
 
@@ -101,9 +109,13 @@ export class PagePublicationController {
   })
   @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
   @ResponseMessage('Republish page')
-  republish(@Param('pageId') pageId: string, @Auth() auth: IAuth) {
+  republish(
+    @Param('pageId') pageId: string,
+    @Auth() auth: IAuth,
+    @Query('site_id') siteId?: string,
+  ) {
     return this.republishSiteHandler.execute(
-      new RepublishSiteCommand(auth.id, pageId),
+      new RepublishSiteCommand(auth.id, pageId, siteId),
     );
   }
 }
