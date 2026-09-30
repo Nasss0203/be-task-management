@@ -50,15 +50,12 @@ export class ProcessStripeWebhookHandler {
         context,
       );
 
-      
       if (!inserted) {
         return;
       }
 
-      
       webhookEvent.markIgnored(processedAt);
 
-     
       if (event.type === 'checkout.session.expired') {
         const session = event.data.object;
         const metadata = session.metadata;
@@ -110,7 +107,6 @@ export class ProcessStripeWebhookHandler {
           return;
         }
 
-       
         if (!paymentOrder.isPending()) {
           await this.webhookEventRepository.save(webhookEvent, context);
           return;
@@ -129,13 +125,11 @@ export class ProcessStripeWebhookHandler {
         return;
       }
 
-     
       if (event.type !== 'checkout.session.completed') {
         await this.webhookEventRepository.save(webhookEvent, context);
         return;
       }
 
-     
       const session = event.data.object;
       const metadata = session.metadata;
 

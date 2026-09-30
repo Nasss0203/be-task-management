@@ -32,7 +32,7 @@ import { ListAdminUsersHandler } from '../../../application/queries/list-admin-u
 import { ListAdminUsersQuery } from '../../../application/queries/list-admin-users/list-admin-users.query';
 import { ADMIN_PERMISSIONS } from '../../../domain/permissions/admin-permission-code';
 import { RequireAdminPermissions } from '../decorators/require-admin-permissions.decorator';
-import { AdminPermissionGuard } from '../guards/admin-permission.guard'; 
+import { AdminPermissionGuard } from '../guards/admin-permission.guard';
 import { UpdateAdminUserRoleCommand } from '../../../application/commands/update-admin-user-role/update-admin-user-role.command';
 import { UpdateAdminUserRoleHandler } from '../../../application/commands/update-admin-user-role/update-admin-user-role.handler';
 import { UpdateAdminUserRoleRequestDto } from '../../../application/dto/request/update-admin-user-role.request.dto';

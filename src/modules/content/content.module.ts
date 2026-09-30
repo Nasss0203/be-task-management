@@ -53,6 +53,7 @@ import { TypeOrmPageTemplateBlockRepository } from './infrastructure/persistence
 import { TypeOrmPageTemplateRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template.repository';
 import { TypeOrmPageRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page.repository';
 import { TypeOrmPublishedSiteRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-published-site.repository';
+import { TypeOrmPublicSiteNavigationReader } from './infrastructure/persistence/typeorm/readers/typeorm-public-site-navigation.reader';
 
 import { CreatePageEditRequestHandler } from './application/commands/page-edit-request/create-page-edit-request/create-page-edit-request.handler';
 
@@ -92,6 +93,7 @@ import { GetPageEditRequestsHandler } from './application/queries/page-edit-requ
 import { ListPageFavoritesHandler } from './application/queries/page-favorite/list-page-favorites/list-page-favorites.handler';
 import { GetPagePublicationHandler } from './application/queries/page-publication/get-page-publication/get-page-publication.handler';
 import { GetPublicPageHandler } from './application/queries/page-publication/get-public-page/get-public-page.handler';
+import { GetPublicSiteNavigationHandler } from './application/queries/page-publication/get-public-site-navigation/get-public-site-navigation.handler';
 import { GetPageShareSettingHandler } from './application/queries/page-share-setting/get-page-share-setting/get-page-share-setting.handler';
 import { GetPageSharesHandler } from './application/queries/page-share/get-page-shares/get-page-shares.handler';
 import { GetPagesSharedWithMeHandler } from './application/queries/page-share/get-pages-shared-with-me/get-pages-shared-with-me.handler';
@@ -428,6 +430,10 @@ const ports = [
     useClass: ContentPageProvisioningService,
   },
   {
+    provide: CONTENT_TYPES.ports.PublicSiteNavigationReader,
+    useClass: TypeOrmPublicSiteNavigationReader,
+  },
+  {
     provide: CONTENT_TYPES.bookmarkMetadataFetcher,
     useClass: HtmlBookmarkMetadataFetcherAdapter,
   },
@@ -478,6 +484,10 @@ const ports = [
     ListWorkspacePublishedSitesHandler,
     PublishPageToSiteHandler,
     ListSitePublicationsHandler,
+    {
+      provide: CONTENT_TYPES.applications.GetPublicSiteNavigationHandler,
+      useClass: GetPublicSiteNavigationHandler,
+    },
     ...repositories,
     ...pageHandlers,
     ...pageBlockHandlers,

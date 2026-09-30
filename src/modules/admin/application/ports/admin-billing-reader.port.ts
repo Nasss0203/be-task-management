@@ -73,7 +73,7 @@ export interface ListAdminBillingSubscriptionsResult {
   total: number;
   page: number;
   limit: number;
-} 
+}
 
 export interface ListAdminBillingPaymentOrdersInput {
   page: number;

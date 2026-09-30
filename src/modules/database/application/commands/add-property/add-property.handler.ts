@@ -33,7 +33,10 @@ export class AddPropertyHandler {
     command: AddPropertyCommand,
     context?: PersistenceContext,
   ): Promise<DatabasePropertyDto> {
-    const database = await this.databaseRepository.findById(command.databaseId, context,);
+    const database = await this.databaseRepository.findById(
+      command.databaseId,
+      context,
+    );
 
     if (!database) {
       throw new NotFoundException('Database not found');
@@ -67,7 +70,8 @@ export class AddPropertyHandler {
     await this.databaseRepository.save(database, context);
 
     const views = await this.databaseViewRepository.findByDatabaseId(
-      command.databaseId, context,
+      command.databaseId,
+      context,
     );
 
     for (const view of views) {

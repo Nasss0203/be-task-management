@@ -19,7 +19,10 @@ export class AddPropertyOptionHandler {
     command: AddPropertyOptionCommand,
     context?: PersistenceContext,
   ): Promise<PropertyOption> {
-    const database = await this.databaseRepository.findById(command.databaseId, context,);
+    const database = await this.databaseRepository.findById(
+      command.databaseId,
+      context,
+    );
 
     if (!database) {
       throw new NotFoundException('Database not found');

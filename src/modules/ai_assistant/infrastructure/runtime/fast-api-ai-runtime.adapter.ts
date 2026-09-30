@@ -117,12 +117,20 @@ export class FastApiAiRuntimeAdapter implements AiRuntimePort {
         (!usage ||
           typeof usage !== 'object' ||
           Array.isArray(usage) ||
-          ![usage.prompt_tokens, usage.completion_tokens, usage.total_tokens].every(
+          ![
+            usage.prompt_tokens,
+            usage.completion_tokens,
+            usage.total_tokens,
+          ].every(
             (value) =>
-              typeof value === 'number' && Number.isInteger(value) && value >= 0,
+              typeof value === 'number' &&
+              Number.isInteger(value) &&
+              value >= 0,
           ))
       ) {
-        throw new BadGatewayException('AI service returned an invalid response');
+        throw new BadGatewayException(
+          'AI service returned an invalid response',
+        );
       }
 
       return {

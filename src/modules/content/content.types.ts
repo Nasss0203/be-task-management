@@ -1,6 +1,7 @@
 export const CONTENT_TYPES = {
   ports: {
     PageProvisioning: Symbol.for('PageProvisioning'),
+    PublicSiteNavigationReader: Symbol.for('PublicSiteNavigationReader'),
   },
   applications: {
     CreatePageHandler: Symbol.for('CreatePageHandler'),
@@ -75,6 +76,7 @@ export const CONTENT_TYPES = {
     UnpublishSiteHandler: Symbol('UnpublishSiteHandler'),
     RepublishSiteHandler: Symbol.for('RepublishSiteHandler'),
     GetPublicPageHandler: Symbol('GetPublicPageHandler'),
+    GetPublicSiteNavigationHandler: Symbol('GetPublicSiteNavigationHandler'),
   },
   repositories: {
     PageRepository: Symbol.for('PageRepository'),
