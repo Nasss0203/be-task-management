@@ -10,6 +10,7 @@ export class PagePublicationMapper {
       parentPublicationId: orm.parent_publication_id,
       publicationType: orm.publication_type,
       includeDescendants: orm.include_descendants,
+      visibilityOverride: orm.visibility_override,
       path: orm.path,
       publishedBy: orm.published_by,
       publishedAt: orm.published_at,
@@ -26,6 +27,7 @@ export class PagePublicationMapper {
     orm.parent_publication_id = domain.getParentPublicationId();
     orm.publication_type = domain.getPublicationType();
     orm.include_descendants = domain.getIncludeDescendants();
+    orm.visibility_override = domain.getVisibilityOverride();
     orm.path = domain.getPath();
     orm.published_by = domain.getPublishedBy();
     orm.published_at = domain.getPublishedAt();

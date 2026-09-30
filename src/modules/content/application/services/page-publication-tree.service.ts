@@ -104,10 +104,7 @@ export class PagePublicationTreeService {
     return path;
   }
 
-  private revived(
-    publication: PagePublication,
-    userId: string,
-  ): PagePublication {
+  private copy(publication: PagePublication): PagePublication {
     // Do not mutate repository-owned entities until the complete plan is valid.
     const restored = PagePublication.restore({
       id: publication.getId(),
@@ -117,11 +114,20 @@ export class PagePublicationTreeService {
       parentPublicationId: publication.getParentPublicationId(),
       publicationType: publication.getPublicationType(),
       includeDescendants: publication.getIncludeDescendants(),
+      visibilityOverride: publication.getVisibilityOverride(),
       publishedBy: publication.getPublishedBy(),
       publishedAt: publication.getPublishedAt(),
       unpublishedAt: publication.getUnpublishedAt(),
       updatedAt: publication.getUpdatedAt(),
     });
+    return restored;
+  }
+
+  private revived(
+    publication: PagePublication,
+    userId: string,
+  ): PagePublication {
+    const restored = this.copy(publication);
     restored.republish(userId);
     return restored;
   }
@@ -178,7 +184,6 @@ export class PagePublicationTreeService {
     }
     const plan = [direct];
     paths.add(direct.getPath());
-    if (!direct.inheritsToChildren()) return plan;
     const descendants = await this.pages.findDescendants(page.getId(), context);
     const pageIds = new Set([page.getId()]);
     const children = new Map<string, Page[]>();
@@ -216,11 +221,7 @@ export class PagePublicationTreeService {
         let publication = byPage.get(child.getId());
         if (publication?.getPublicationType() === PagePublicationType.DIRECT) {
           // Independent DIRECT records keep both their lifecycle and persisted path.
-          if (
-            publication.getUnpublishedAt() === null &&
-            publication.getIncludeDescendants()
-          )
-            pending.push(publication);
+          pending.push(publication);
           continue;
         }
         if (
@@ -230,10 +231,7 @@ export class PagePublicationTreeService {
           // Reparent/public-path synchronization is deliberately deferred.
           continue;
         }
-        if (publication) {
-          if (publication.getUnpublishedAt() !== null)
-            publication = this.revived(publication, userId);
-        } else {
+        if (!publication) {
           publication = PagePublication.create({
             siteId: site.getId(),
             pageId: child.getId(),
@@ -242,6 +240,18 @@ export class PagePublicationTreeService {
             publicationType: PagePublicationType.INHERITED,
             publishedBy: userId,
           });
+        }
+        // A child override survives root settings changes and site republish.
+        const visible =
+          (publication.getVisibilityOverride() === 'PUBLISHED' ||
+            (publication.getVisibilityOverride() === null &&
+              direct.getIncludeDescendants())) &&
+          publication.getVisibilityOverride() !== 'UNPUBLISHED';
+        if (visible && publication.getUnpublishedAt() !== null)
+          publication = this.revived(publication, userId);
+        if (!visible && publication.getUnpublishedAt() === null) {
+          publication = this.copy(publication);
+          publication.unpublish();
         }
         paths.add(publication.getPath());
         plan.push(publication);
@@ -314,64 +324,37 @@ export class PagePublicationTreeService {
   ): Promise<void> {
     const parentPageId = page.getParentPageId();
     if (!parentPageId) return;
-    const parents = (
-      await this.publications.findByPageId(parentPageId, context)
+    let root = await this.pages.findById(parentPageId, context);
+    while (root?.getParentPageId())
+      root = await this.pages.findById(root.getParentPageId()!, context);
+    if (!root?.getPublicSubdomain()) return;
+    const candidate = await this.sites.findBySubdomain(
+      root.getPublicSubdomain()!,
+      context,
+    );
+    if (!candidate) return;
+    const site = await this.sites.findByIdForUpdate(candidate.getId(), context);
+    if (
+      !site ||
+      site.getDisabledAt() !== null ||
+      site.getRootPageId() !== root.getId()
     )
-      .filter(
-        (entry) =>
-          entry.getUnpublishedAt() === null && entry.inheritsToChildren(),
-      )
-      .sort((a, b) => a.getSiteId().localeCompare(b.getSiteId()));
-    const plans: PagePublication[] = [];
-    for (const candidate of parents) {
-      // Serialize path allocation with publish/republish/unpublish in the same site.
-      const site = await this.sites.findByIdForUpdate(
-        candidate.getSiteId(),
-        context,
-      );
-      if (!site || site.getDisabledAt() !== null) continue;
-      const parent = await this.publications.findById(
-        candidate.getId(),
-        context,
-      );
-      if (
-        !parent ||
-        parent.getUnpublishedAt() !== null ||
-        !parent.inheritsToChildren()
-      )
-        continue;
-      this.validatePage(page, site);
-      await this.validateParentChain(
+      return;
+    const publication = await this.publications.findBySiteAndPage(
+      site.getId(),
+      root.getId(),
+      context,
+    );
+    if (!publication || publication.getUnpublishedAt() !== null) return;
+    await this.executePlan(
+      await this.buildSiteReconciliationPlan(
         site,
-        parent,
-        await this.publications.findBySiteId(site.getId(), context),
+        publication,
+        userId,
         context,
-      );
-      if (
-        await this.publications.findBySiteAndPage(
-          site.getId(),
-          page.getId(),
-          context,
-        )
-      )
-        continue;
-      const paths = new Set(
-        (await this.publications.findBySiteId(site.getId(), context)).map(
-          (entry) => entry.getPath(),
-        ),
-      );
-      plans.push(
-        PagePublication.create({
-          siteId: site.getId(),
-          pageId: page.getId(),
-          path: this.availablePath(parent, page, paths),
-          parentPublicationId: parent.getId(),
-          publicationType: PagePublicationType.INHERITED,
-          publishedBy: userId,
-        }),
-      );
-    }
-    await this.executePlan(plans, context);
+      ),
+      context,
+    );
   }
 
   async unpublishBranch(

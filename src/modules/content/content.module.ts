@@ -74,6 +74,7 @@ import { ListWorkspacePublishedSitesHandler } from './application/queries/page-p
 import { RepublishSiteHandler } from './application/commands/page-publication/republish-site/republish-site.handler';
 import { UnpublishSiteHandler } from './application/commands/page-publication/unpublish-site/unpublish-site.handler';
 import { UpdatePagePublicationSettingsHandler } from './application/commands/page-publication/update-page-publication-settings/update-page-publication-settings.handler';
+import { UpdatePageVisibilityHandler } from './application/commands/page-publication/update-page-visibility.handler';
 import { UpdatePageShareSettingHandler } from './application/commands/page-share-setting/update-page-share-setting/update-page-share-setting.handler';
 import { AcceptPageShareLinkHandler } from './application/commands/page-share/accept-page-share-link/accept-page-share-link.handler';
 import { CreatePageShareLinkHandler } from './application/commands/page-share/create-page-share-link/create-page-share-link.handler';
@@ -473,6 +474,7 @@ const ports = [
   providers: [
     ListPagePublicationsHandler,
     UpdatePagePublicationSettingsHandler,
+    UpdatePageVisibilityHandler,
     ListWorkspacePublishedSitesHandler,
     PublishPageToSiteHandler,
     ListSitePublicationsHandler,

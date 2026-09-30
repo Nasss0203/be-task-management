@@ -40,7 +40,9 @@ export class PublicationAvailabilityService {
       if (
         seen.has(cursor.getId()) ||
         cursor.getSiteId() !== site.getId() ||
-        cursor.getUnpublishedAt() !== null
+        (cursor.getUnpublishedAt() !== null &&
+          (cursor.getId() === publication.getId() ||
+            cursor.getParentPublicationId() === null))
       )
         return null;
       seen.add(cursor.getId());
@@ -52,11 +54,13 @@ export class PublicationAvailabilityService {
       )
         return null;
       currentPage ??= page;
-      breadcrumbs.push({
-        page_id: page.getId(),
-        title: page.getTitle(),
-        path: cursor.getPath(),
-      });
+      // Hidden ancestors establish the URL hierarchy without exposing metadata.
+      if (cursor.getUnpublishedAt() === null)
+        breadcrumbs.push({
+          page_id: page.getId(),
+          title: page.getTitle(),
+          path: cursor.getPath(),
+        });
       const parentId = cursor.getParentPublicationId();
       if (parentId === null) {
         if (

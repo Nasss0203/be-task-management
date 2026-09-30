@@ -14,6 +14,7 @@ export class PagePublicationResponseDto {
   published: boolean;
   published_at: Date;
   unpublished_at: Date | null;
+  visibility_override: 'PUBLISHED' | 'UNPUBLISHED' | null;
 
   static fromDomain(
     publication: PagePublication,
@@ -32,6 +33,7 @@ export class PagePublicationResponseDto {
       published,
       published_at: publication.getPublishedAt(),
       unpublished_at: publication.getUnpublishedAt(),
+      visibility_override: publication.getVisibilityOverride(),
     });
   }
 }

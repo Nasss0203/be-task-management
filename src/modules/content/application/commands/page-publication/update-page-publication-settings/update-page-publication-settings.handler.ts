@@ -93,6 +93,7 @@ export class UpdatePagePublicationSettingsHandler {
           parentPublicationId: publication.getParentPublicationId(),
           publicationType: publication.getPublicationType(),
           includeDescendants: publication.getIncludeDescendants(),
+          visibilityOverride: publication.getVisibilityOverride(),
           publishedBy: publication.getPublishedBy(),
           publishedAt: publication.getPublishedAt(),
           unpublishedAt: publication.getUnpublishedAt(),
@@ -100,20 +101,13 @@ export class UpdatePagePublicationSettingsHandler {
         });
         updated.updateIncludeDescendants(command.includeDescendants);
 
-        if (command.includeDescendants) {
-          const plan = await this.tree.buildPlan(
-            site,
-            updated,
-            command.actorId,
-            manager,
-          );
-          await this.tree.executePlan(plan, manager);
-        } else {
-          // Traverse while the old setting still enables inheritance.
-          if (publication.getIncludeDescendants())
-            await this.tree.unpublishBranch(publication, manager, new Date());
-          await this.publications.save(updated, manager);
-        }
+        const plan = await this.tree.buildSiteReconciliationPlan(
+          site,
+          updated,
+          command.actorId,
+          manager,
+        );
+        await this.tree.executePlan(plan, manager);
 
         return { site, publication: updated };
       },

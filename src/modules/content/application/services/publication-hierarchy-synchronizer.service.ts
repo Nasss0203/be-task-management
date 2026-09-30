@@ -41,6 +41,7 @@ export class PublicationHierarchySynchronizerService {
       parentPublicationId: publication.getParentPublicationId(),
       publicationType: publication.getPublicationType(),
       includeDescendants: publication.getIncludeDescendants(),
+      visibilityOverride: publication.getVisibilityOverride(),
       publishedBy: publication.getPublishedBy(),
       publishedAt: publication.getPublishedAt(),
       unpublishedAt: publication.getUnpublishedAt(),
@@ -70,9 +71,7 @@ export class PublicationHierarchySynchronizerService {
     const sourcePublications: PagePublication[] = [];
     for (const item of subtree)
       sourcePublications.push(
-        ...(await this.publications.findByPageId(item.getId(), context)).filter(
-          (entry) => entry.getUnpublishedAt() === null,
-        ),
+        ...(await this.publications.findByPageId(item.getId(), context)),
       );
     const sourceSiteIds = new Set(
       sourcePublications.map((entry) => entry.getSiteId()),
@@ -115,8 +114,9 @@ export class PublicationHierarchySynchronizerService {
           );
           if (
             !parentPublication ||
-            parentPublication.getUnpublishedAt() !== null ||
-            !parentPublication.inheritsToChildren()
+            (parentPublication.getPublicationType() !==
+              PagePublicationType.INHERITED &&
+              parentPublication.getPath() !== '/')
           )
             parentPublication = null;
         }
@@ -138,6 +138,11 @@ export class PublicationHierarchySynchronizerService {
       locked.set(id, site);
     }
     if (destinationSite) destinationSite = locked.get(destinationSite.getId())!;
+    const sourceByPage = new Map<string, PagePublication>();
+    for (const entry of sourcePublications) {
+      if (locked.get(entry.getSiteId())?.getDisabledAt() === null)
+        sourceByPage.set(entry.getPageId(), entry);
+    }
 
     const disableSites: PublishedSite[] = [];
     if (page.getParentPageId() === null) {
@@ -149,8 +154,9 @@ export class PublicationHierarchySynchronizerService {
       destinationSite && parentPublication ? destinationSite.getId() : null;
     const unpublish = sourcePublications.filter(
       (entry) =>
-        entry.getSiteId() !== destinationId ||
-        disableSites.some((site) => site.getId() === entry.getSiteId()),
+        entry.getUnpublishedAt() === null &&
+        (entry.getSiteId() !== destinationId ||
+          disableSites.some((site) => site.getId() === entry.getSiteId())),
     );
     const unpublishedIds = new Set(unpublish.map((entry) => entry.getId()));
     for (const site of disableSites) {
@@ -169,6 +175,15 @@ export class PublicationHierarchySynchronizerService {
     }
     const upsert: PagePublication[] = [];
     if (destinationId && parentPublication && destinationSite) {
+      const rootPublication = await this.publications.findBySiteAndPage(
+        destinationId,
+        destinationSite.getRootPageId(),
+        context,
+      );
+      if (!rootPublication)
+        throw new ConflictException(
+          'Destination root publication is unavailable',
+        );
       const existing = await this.publications.findBySiteId(
         destinationId,
         context,
@@ -194,6 +209,7 @@ export class PublicationHierarchySynchronizerService {
           throw new BadRequestException('Cyclic Page move subtree');
         visited.add(current.getId());
         const old = byPage.get(current.getId());
+        const source = sourceByPage.get(current.getId());
         if (old?.getPublicationType() === PagePublicationType.DIRECT)
           throw new ConflictException(
             'Historical DIRECT child publication cannot be moved automatically',
@@ -224,11 +240,20 @@ export class PublicationHierarchySynchronizerService {
               parentPublicationId: parent.getId(),
               publicationType: PagePublicationType.INHERITED,
               publishedBy: actorId,
+              visibilityOverride: source?.getVisibilityOverride() ?? null,
             });
         if (old) {
           next.rebase(path, parent.getId());
-          if (next.getUnpublishedAt() !== null) next.republish(actorId);
+          if (source?.getVisibilityOverride())
+            next.updateVisibilityOverride(source.getVisibilityOverride()!);
         }
+        const visible =
+          next.getVisibilityOverride() !== 'UNPUBLISHED' &&
+          (next.getVisibilityOverride() === 'PUBLISHED' ||
+            rootPublication.getIncludeDescendants());
+        if (visible && next.getUnpublishedAt() !== null)
+          next.republish(actorId);
+        if (!visible && next.getUnpublishedAt() === null) next.unpublish();
         upsert.push(next);
         for (const child of [...(children.get(current.getId()) ?? [])].sort(
           (a, b) =>

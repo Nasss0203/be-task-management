@@ -3,6 +3,8 @@ import { BadRequestException, ConflictException } from '@nestjs/common';
 import { PagePublicationType } from '../enums/page-publication-type.enum';
 import { PagePublicationPath } from '../value-objects/page-publication-path.vo';
 
+export type PageVisibilityOverride = 'PUBLISHED' | 'UNPUBLISHED' | null;
+
 type CreatePagePublicationProps = {
   id?: string;
   siteId: string;
@@ -12,6 +14,7 @@ type CreatePagePublicationProps = {
   parentPublicationId?: string | null;
   publicationType?: PagePublicationType;
   includeDescendants?: boolean;
+  visibilityOverride?: PageVisibilityOverride;
 };
 
 type RestorePagePublicationProps = {
@@ -26,6 +29,7 @@ type RestorePagePublicationProps = {
   parentPublicationId?: string | null;
   publicationType?: PagePublicationType;
   includeDescendants?: boolean;
+  visibilityOverride?: PageVisibilityOverride;
 };
 
 export class PagePublication {
@@ -54,6 +58,7 @@ export class PagePublication {
     private parentPublicationId: string | null,
     private readonly publicationType: PagePublicationType,
     private includeDescendants: boolean,
+    private visibilityOverride: PageVisibilityOverride,
   ) {}
 
   static create(props: CreatePagePublicationProps): PagePublication {
@@ -72,6 +77,7 @@ export class PagePublication {
       props.parentPublicationId ?? null,
       props.publicationType ?? PagePublicationType.DIRECT,
       props.includeDescendants ?? false,
+      props.visibilityOverride ?? null,
     );
   }
 
@@ -89,6 +95,7 @@ export class PagePublication {
       props.parentPublicationId ?? null,
       props.publicationType ?? PagePublicationType.DIRECT,
       props.includeDescendants ?? false,
+      props.visibilityOverride ?? null,
     );
   }
 
@@ -115,6 +122,21 @@ export class PagePublication {
     if (this.includeDescendants === value) return;
     this.includeDescendants = value;
     this.updatedAt = new Date();
+  }
+
+  updateVisibilityOverride(value: Exclude<PageVisibilityOverride, null>): void {
+    if (this.publicationType !== PagePublicationType.INHERITED)
+      throw new ConflictException(
+        'Only child publications can override visibility',
+      );
+    if (value !== 'PUBLISHED' && value !== 'UNPUBLISHED')
+      throw new BadRequestException('Invalid visibility override');
+    this.visibilityOverride = value;
+    this.updatedAt = new Date();
+  }
+
+  getVisibilityOverride(): PageVisibilityOverride {
+    return this.visibilityOverride;
   }
 
   rebase(path: string, parentPublicationId: string): void {

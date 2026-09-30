@@ -1,6 +1,10 @@
 /* Repository doubles intentionally do not perform I/O. */
 /* eslint-disable @typescript-eslint/require-await */
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Page } from '../domain/aggregates/page/page.aggregate';
 import { PagePublication } from '../domain/entities/page-publication.entity';
 import { PageBlock } from '../domain/entities/page-block.entity';
@@ -32,6 +36,11 @@ import { UnpublishSiteCommand } from './commands/page-publication/unpublish-site
 import { RepublishSiteHandler } from './commands/page-publication/republish-site/republish-site.handler';
 import { RepublishSiteCommand } from './commands/page-publication/republish-site/republish-site.command';
 import { PublicationAvailabilityService } from './services/publication-availability.service';
+import { UpdatePageVisibilityHandler } from './commands/page-publication/update-page-visibility.handler';
+import { GetPagePublicationHandler } from './queries/page-publication/get-page-publication/get-page-publication.handler';
+import { GetPagePublicationQuery } from './queries/page-publication/get-page-publication/get-page-publication.query';
+import { GetPublicPageHandler } from './queries/page-publication/get-public-page/get-public-page.handler';
+import { GetPublicPageQuery } from './queries/page-publication/get-public-page/get-public-page.query';
 import type { WorkspaceRepository } from 'src/modules/workspace/domain/repositories/workspace.repository';
 
 describe('root-owned public sites', () => {
@@ -51,6 +60,7 @@ describe('root-owned public sites', () => {
   let publish: PublishSiteHandler;
   let legacyAttach: PublishPageToSiteHandler;
   let availability: PublicationAvailabilityService;
+  let visibility: UpdatePageVisibilityHandler;
   const authorize = jest.fn().mockResolvedValue(true);
   const auth = { authorize } as unknown as AuthorizationService;
   const uow: UnitOfWork = { runInTransaction: (fn) => fn(context) };
@@ -147,6 +157,10 @@ describe('root-owned public sites', () => {
       findByIdForUpdate: async (id: string) => sites.get(id) ?? null,
       findBySubdomain: async (name: string) =>
         [...sites.values()].find((s) => s.getSubdomain() === name) ?? null,
+      findActiveBySubdomain: async (name: string) =>
+        [...sites.values()].find(
+          (s) => s.getSubdomain() === name && s.getDisabledAt() === null,
+        ) ?? null,
       existsBySubdomain: async (name: string) =>
         [...sites.values()].some((s) => s.getSubdomain() === name),
       save: async (site: PublishedSite) => {
@@ -166,6 +180,13 @@ describe('root-owned public sites', () => {
         [...publications.values()].find(
           (p) => p.getSiteId() === siteId && p.getPath() === path,
         ) ?? null,
+      findActiveBySiteAndPath: async (siteId: string, path: string) =>
+        [...publications.values()].find(
+          (p) =>
+            p.getSiteId() === siteId &&
+            p.getPath() === path &&
+            p.getUnpublishedAt() === null,
+        ) ?? null,
       save: async (p: PagePublication) => {
         publications.set(p.getId(), p);
         return p;
@@ -179,6 +200,14 @@ describe('root-owned public sites', () => {
       {
         findById: async () => ({}),
       } as unknown as WorkspaceRepository,
+    );
+    visibility = new UpdatePageVisibilityHandler(
+      pageRepo,
+      publicationRepo,
+      siteRepo,
+      uow,
+      tree,
+      availability,
     );
     const hierarchy = new PublicationHierarchySynchronizerService(
       pageRepo,
@@ -364,8 +393,249 @@ describe('root-owned public sites', () => {
     const home = await createPage('Home');
     const siteId = (await publishRoot(home, false)).site_id;
     const about = await createPage('About', home.getId());
-    expect(publication(siteId, about.getId())).toBeUndefined();
+    expect(
+      publication(siteId, about.getId())?.getUnpublishedAt(),
+    ).not.toBeNull();
+    expect(
+      publication(siteId, about.getId())?.getVisibilityOverride(),
+    ).toBeNull();
     expect(about.getPublicSubdomain()).toBeNull();
+  });
+
+  it('toggles one child without changing siblings, root policy, or its subdomain', async () => {
+    const home = await createPage('Home');
+    const about = await createPage('About', home.getId());
+    const docs = await createPage('Docs', home.getId());
+    const siteId = (await publishRoot(home)).site_id;
+    await visibility.execute(about.getId(), false, 'user');
+    expect(publication(siteId, about.getId())?.getVisibilityOverride()).toBe(
+      'UNPUBLISHED',
+    );
+    expect(
+      publication(siteId, about.getId())?.getUnpublishedAt(),
+    ).not.toBeNull();
+    expect(publication(siteId, home.getId())?.getUnpublishedAt()).toBeNull();
+    expect(publication(siteId, docs.getId())?.getUnpublishedAt()).toBeNull();
+    expect(
+      await availability.isAvailable(
+        sites.get(siteId)!,
+        publication(siteId, about.getId())!,
+      ),
+    ).toBe(false);
+    await visibility.execute(about.getId(), true, 'user');
+    expect(publication(siteId, about.getId())?.getUnpublishedAt()).toBeNull();
+    expect(about.getPublicSubdomain()).toBeNull();
+  });
+
+  it('returns 404 from the public API for a private child or disabled root site', async () => {
+    const home = await createPage('Home');
+    const about = await createPage('About', home.getId());
+    const siteId = (await publishRoot(home)).site_id;
+    const publicPage = new GetPublicPageHandler(
+      siteRepo,
+      publicationRepo,
+      { findByPageId: async () => [] } as unknown as PageBlockRepository,
+      availability,
+    );
+    expect(
+      (await publicPage.execute(new GetPublicPageQuery('home', '/about'))).page
+        .id,
+    ).toBe(about.getId());
+    await visibility.execute(about.getId(), false, 'user');
+    await expect(
+      publicPage.execute(new GetPublicPageQuery('home', '/about')),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    expect(
+      (await publicPage.execute(new GetPublicPageQuery('home', '/'))).page.id,
+    ).toBe(home.getId());
+    const unpublish = new UnpublishSiteHandler(
+      publicationRepo,
+      siteRepo,
+      uow,
+      tree,
+    );
+    await unpublish.execute(
+      new UnpublishSiteCommand('user', home.getId(), siteId),
+    );
+    await expect(
+      publicPage.execute(new GetPublicPageQuery('home', '/')),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('preserves manual child visibility through root default changes and republish', async () => {
+    const home = await createPage('Home');
+    const about = await createPage('About', home.getId());
+    const docs = await createPage('Docs', home.getId());
+    const siteId = (await publishRoot(home)).site_id;
+    await visibility.execute(about.getId(), false, 'user');
+    const settings = new UpdatePagePublicationSettingsHandler(
+      publicationRepo,
+      siteRepo,
+      uow,
+      tree,
+      availability,
+    );
+    await settings.execute(
+      new UpdatePagePublicationSettingsCommand(
+        'user',
+        home.getId(),
+        siteId,
+        false,
+      ),
+    );
+    expect(
+      publication(siteId, about.getId())?.getUnpublishedAt(),
+    ).not.toBeNull();
+    expect(
+      publication(siteId, docs.getId())?.getUnpublishedAt(),
+    ).not.toBeNull();
+    await visibility.execute(docs.getId(), true, 'user');
+    expect(publication(siteId, docs.getId())?.getUnpublishedAt()).toBeNull();
+    await settings.execute(
+      new UpdatePagePublicationSettingsCommand(
+        'user',
+        home.getId(),
+        siteId,
+        true,
+      ),
+    );
+    expect(
+      publication(siteId, about.getId())?.getUnpublishedAt(),
+    ).not.toBeNull();
+    const unpublish = new UnpublishSiteHandler(
+      publicationRepo,
+      siteRepo,
+      uow,
+      tree,
+    );
+    await unpublish.execute(
+      new UnpublishSiteCommand('user', home.getId(), siteId),
+    );
+    expect(
+      await availability.isAvailable(
+        sites.get(siteId)!,
+        publication(siteId, docs.getId())!,
+      ),
+    ).toBe(false);
+    const republish = new RepublishSiteHandler(
+      publicationRepo,
+      siteRepo,
+      uow,
+      tree,
+    );
+    await republish.execute(
+      new RepublishSiteCommand('user', home.getId(), siteId),
+    );
+    expect(
+      publication(siteId, about.getId())?.getUnpublishedAt(),
+    ).not.toBeNull();
+    expect(publication(siteId, docs.getId())?.getUnpublishedAt()).toBeNull();
+  });
+
+  it('moves a manually unpublished child without making the new path public', async () => {
+    const home = await createPage('Home');
+    const about = await createPage('About', home.getId());
+    const docs = await createPage('Docs', home.getId());
+    const siteId = (await publishRoot(home)).site_id;
+    await visibility.execute(about.getId(), false, 'user');
+    await movePage(about, docs);
+    expect(publication(siteId, about.getId())?.getPath()).toBe('/docs/about');
+    expect(
+      publication(siteId, about.getId())?.getUnpublishedAt(),
+    ).not.toBeNull();
+    expect(publication(siteId, about.getId())?.getVisibilityOverride()).toBe(
+      'UNPUBLISHED',
+    );
+  });
+
+  it('publishes a child explicitly when the root default is off', async () => {
+    const home = await createPage('Home');
+    const about = await createPage('About', home.getId());
+    const docs = await createPage('Docs', home.getId());
+    const siteId = (await publishRoot(home, false)).site_id;
+    expect(
+      publication(siteId, about.getId())?.getUnpublishedAt(),
+    ).not.toBeNull();
+    await visibility.execute(about.getId(), true, 'user');
+    expect(publication(siteId, about.getId())?.getUnpublishedAt()).toBeNull();
+    expect(
+      publication(siteId, docs.getId())?.getUnpublishedAt(),
+    ).not.toBeNull();
+    expect(about.getPublicSubdomain()).toBeNull();
+  });
+
+  it('provides root site context and allocates a path for a legacy child without a row', async () => {
+    const home = await createPage('Home');
+    const about = await createPage('About', home.getId());
+    const siteId = (await publishRoot(home, false)).site_id;
+    publications.delete(publication(siteId, about.getId())!.getId());
+    const detail = new GetPagePublicationHandler(
+      publicationRepo,
+      siteRepo,
+      pageRepo,
+      availability,
+    );
+    expect(
+      await detail.execute(new GetPagePublicationQuery(about.getId())),
+    ).toMatchObject({
+      published: false,
+      site_id: siteId,
+      subdomain: 'home',
+      site_active: true,
+    });
+    await visibility.execute(about.getId(), true, 'user');
+    expect(publication(siteId, about.getId())?.getPath()).toBe('/about');
+    expect(publication(siteId, about.getId())?.getUnpublishedAt()).toBeNull();
+  });
+
+  it('preserves a private override when moving between root sites', async () => {
+    const homeA = await createPage('Home A');
+    const about = await createPage('About', homeA.getId());
+    const homeB = await createPage('Home B');
+    const docs = await createPage('Docs', homeB.getId());
+    const siteA = (await publishRoot(homeA)).site_id;
+    const siteB = (await publishRoot(homeB)).site_id;
+    await visibility.execute(about.getId(), false, 'user');
+    await movePage(about, docs);
+    expect(
+      publication(siteA, about.getId())?.getUnpublishedAt(),
+    ).not.toBeNull();
+    expect(publication(siteB, about.getId())?.getPath()).toBe('/docs/about');
+    expect(publication(siteB, about.getId())?.getVisibilityOverride()).toBe(
+      'UNPUBLISHED',
+    );
+    expect(
+      publication(siteB, about.getId())?.getUnpublishedAt(),
+    ).not.toBeNull();
+  });
+
+  it('publishes a nested child below a private parent without leaking the parent breadcrumb', async () => {
+    const home = await createPage('Home');
+    const docs = await createPage('Docs', home.getId());
+    const api = await createPage('API', docs.getId());
+    const siteId = (await publishRoot(home, false)).site_id;
+    await visibility.execute(api.getId(), true, 'user');
+    expect(
+      publication(siteId, docs.getId())?.getUnpublishedAt(),
+    ).not.toBeNull();
+    expect(publication(siteId, api.getId())?.getUnpublishedAt()).toBeNull();
+    const publicPage = new GetPublicPageHandler(
+      siteRepo,
+      publicationRepo,
+      { findByPageId: async () => [] } as unknown as PageBlockRepository,
+      availability,
+    );
+    await expect(
+      publicPage.execute(new GetPublicPageQuery('home', '/docs')),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    const result = await publicPage.execute(
+      new GetPublicPageQuery('home', '/docs/api'),
+    );
+    expect(result.page.id).toBe(api.getId());
+    expect(result.breadcrumbs.map((crumb) => crumb.title)).toEqual([
+      'Home',
+      'API',
+    ]);
   });
 
   it('rejects attaching a child to a different root site', async () => {
