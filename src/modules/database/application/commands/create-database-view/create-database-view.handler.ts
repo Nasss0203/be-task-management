@@ -7,6 +7,7 @@ import { type DatabaseViewRepository } from '../../../domain/repositories/databa
 import { type DatabaseRepository } from '../../../domain/repositories/database.repository';
 import { DatabaseViewDto } from '../../dto/database-view.dto';
 import { CreateDatabaseViewCommand } from './create-database-view.command';
+import { PersistenceContext } from 'src/shared/domain/persistence-context';
 
 @Injectable()
 export class CreateDatabaseViewHandler {
@@ -18,8 +19,11 @@ export class CreateDatabaseViewHandler {
     private readonly databaseViewRepository: DatabaseViewRepository,
   ) {}
 
-  async execute(command: CreateDatabaseViewCommand): Promise<DatabaseViewDto> {
-    const database = await this.databaseRepository.findById(command.databaseId);
+  async execute(
+    command: CreateDatabaseViewCommand,
+    context?: PersistenceContext,
+  ): Promise<DatabaseViewDto> {
+    const database = await this.databaseRepository.findById(command.databaseId, context,);
 
     if (!database) {
       throw new NotFoundException('Database not found');
@@ -27,6 +31,7 @@ export class CreateDatabaseViewHandler {
 
     const views = await this.databaseViewRepository.findByDatabaseId(
       command.databaseId,
+      context,
     );
 
     const view = DatabaseView.create({
@@ -49,7 +54,7 @@ export class CreateDatabaseViewHandler {
       });
     });
 
-    await this.databaseViewRepository.save(view);
+    await this.databaseViewRepository.save(view, context);
 
     return DatabaseViewDto.fromDomain(view);
   }

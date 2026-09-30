@@ -13,6 +13,7 @@ import type { PageRepository } from 'src/modules/content/domain/repositories/pag
 import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
 import type { AuthorizationTarget } from 'src/modules/permission/application/types/authorization-target';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
+import { PersistenceContext } from 'src/shared/domain/persistence-context';
 import { generateSlug } from 'src/utils';
 import { CreatePageCommand } from './create-page.command';
 
@@ -25,7 +26,10 @@ export class CreatePageHandler {
     private readonly authorizationService: AuthorizationService,
   ) {}
 
-  async execute(command: CreatePageCommand): Promise<PageResponseDto> {
+  async execute(
+    command: CreatePageCommand,
+    context?: PersistenceContext,
+  ): Promise<PageResponseDto> {
     /**
      * Resolve the scope that the new page belongs to.
      * Root pages use the requested teamspace; child pages inherit it.
@@ -33,7 +37,10 @@ export class CreatePageHandler {
     let effectiveTeamspaceId = command.teamspaceId ?? null;
 
     if (command.parentPageId) {
-      const parentPage = await this.pageRepo.findById(command.parentPageId);
+      const parentPage = await this.pageRepo.findById(
+        command.parentPageId,
+        context,
+      );
 
       if (!parentPage) {
         throw new NotFoundException('Parent page not found');
@@ -92,7 +99,7 @@ export class CreatePageHandler {
 
     let slug = baseSlug;
 
-    if (await this.pageRepo.existsBySlug(command.workspaceId, slug)) {
+    if (await this.pageRepo.existsBySlug(command.workspaceId, slug, context)) {
       const uniqueSuffix = Date.now().toString(36);
 
       slug = `${baseSlug}-${uniqueSuffix}`;
@@ -116,7 +123,7 @@ export class CreatePageHandler {
       isTemplate: false,
     });
 
-    const savedPage = await this.pageRepo.save(page);
+    const savedPage = await this.pageRepo.save(page, context);
 
     return PageResponseDto.fromDomain(savedPage);
   }

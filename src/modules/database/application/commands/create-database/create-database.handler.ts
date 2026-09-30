@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
+import { PersistenceContext } from 'src/shared/domain/persistence-context';
 import { DATABASE_TYPES } from '../../../database.types';
 import { Database } from '../../../domain/aggregates/database/database.aggregate';
 import { type DatabaseRepository } from '../../../domain/repositories/database.repository';
@@ -13,7 +14,10 @@ export class CreateDatabaseHandler {
     private readonly databaseRepository: DatabaseRepository,
   ) {}
 
-  async execute(command: CreateDatabaseCommand): Promise<Database> {
+  async execute(
+    command: CreateDatabaseCommand,
+    context?: PersistenceContext,
+  ): Promise<Database> {
     const database = Database.create({
       id: randomUUID(),
       pageId: command.pageId,
@@ -24,7 +28,7 @@ export class CreateDatabaseHandler {
       dueDatePropertyId: randomUUID(),
     });
 
-    await this.databaseRepository.save(database);
+    await this.databaseRepository.save(database, context);
 
     return database;
   }

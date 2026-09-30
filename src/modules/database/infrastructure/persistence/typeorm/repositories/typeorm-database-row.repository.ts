@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
+
+import { PersistenceContext } from 'src/shared/domain/persistence-context';
 
 import { DatabaseRow } from '../../../../domain/aggregates/row/database-row.aggregate';
 
@@ -19,8 +21,13 @@ export class TypeOrmDatabaseRowRepository implements DatabaseRowRepository {
     private readonly rowValueRepository: Repository<RowValueOrmEntity>,
   ) {}
 
-  async findById(id: string): Promise<DatabaseRow | null> {
-    const entity = await this.repository.findOne({
+  async findById(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<DatabaseRow | null> {
+    const repository = this.getRowRepository(context);
+
+    const entity = await repository.findOne({
       where: { id },
       relations: {
         values: true,
@@ -34,8 +41,13 @@ export class TypeOrmDatabaseRowRepository implements DatabaseRowRepository {
     return DatabaseRowMapper.toDomain(entity);
   }
 
-  async findByDatabaseId(databaseId: string): Promise<DatabaseRow[]> {
-    const entities = await this.repository.find({
+  async findByDatabaseId(
+    databaseId: string,
+    context?: PersistenceContext,
+  ): Promise<DatabaseRow[]> {
+    const repository = this.getRowRepository(context);
+
+    const entities = await repository.find({
       where: { databaseId },
       relations: {
         values: true,
@@ -45,17 +57,27 @@ export class TypeOrmDatabaseRowRepository implements DatabaseRowRepository {
     return entities.map((entity) => DatabaseRowMapper.toDomain(entity));
   }
 
-  async save(row: DatabaseRow): Promise<void> {
+  async save(row: DatabaseRow, context?: PersistenceContext): Promise<void> {
+    const repository = this.getRowRepository(context);
     const entity = DatabaseRowMapper.toOrm(row);
-    await this.repository.save(entity);
+
+    await repository.save(entity);
   }
 
-  async delete(id: string): Promise<void> {
-    await this.repository.delete(id);
+  async delete(id: string, context?: PersistenceContext): Promise<void> {
+    const repository = this.getRowRepository(context);
+
+    await repository.delete(id);
   }
 
-  async deleteValue(rowId: string, propertyId: string): Promise<void> {
-    await this.rowValueRepository.delete({
+  async deleteValue(
+    rowId: string,
+    propertyId: string,
+    context?: PersistenceContext,
+  ): Promise<void> {
+    const repository = this.getRowValueRepository(context);
+
+    await repository.delete({
       rowId,
       propertyId,
     });
@@ -64,18 +86,21 @@ export class TypeOrmDatabaseRowRepository implements DatabaseRowRepository {
   async isPropertyOptionInUse(
     propertyId: string,
     optionId: string,
+    context?: PersistenceContext,
   ): Promise<boolean> {
-    const count = await this.rowValueRepository
+    const repository = this.getRowValueRepository(context);
+
+    const count = await repository
       .createQueryBuilder('rowValue')
       .where('rowValue.propertyId = :propertyId', {
         propertyId,
       })
       .andWhere(
         `(
-        rowValue.value = CAST(:scalarValue AS jsonb)
-        OR
-        rowValue.value @> CAST(:arrayValue AS jsonb)
-      )`,
+          rowValue.value = CAST(:scalarValue AS jsonb)
+          OR
+          rowValue.value @> CAST(:arrayValue AS jsonb)
+        )`,
         {
           scalarValue: JSON.stringify(optionId),
           arrayValue: JSON.stringify([optionId]),
@@ -84,5 +109,25 @@ export class TypeOrmDatabaseRowRepository implements DatabaseRowRepository {
       .getCount();
 
     return count > 0;
+  }
+
+  private getRowRepository(
+    context?: PersistenceContext,
+  ): Repository<DatabaseRowOrmEntity> {
+    if (!context) {
+      return this.repository;
+    }
+
+    return (context as EntityManager).getRepository(DatabaseRowOrmEntity);
+  }
+
+  private getRowValueRepository(
+    context?: PersistenceContext,
+  ): Repository<RowValueOrmEntity> {
+    if (!context) {
+      return this.rowValueRepository;
+    }
+
+    return (context as EntityManager).getRepository(RowValueOrmEntity);
   }
 }

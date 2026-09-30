@@ -13,6 +13,7 @@ import { InvalidPropertyNameException } from '../../../domain/exceptions/invalid
 import { type DatabaseRepository } from '../../../domain/repositories/database.repository';
 import { DatabasePropertyDto } from '../../dto/database-property.dto';
 import { RenamePropertyCommand } from './rename-property.command';
+import { PersistenceContext } from 'src/shared/domain/persistence-context';
 
 @Injectable()
 export class RenamePropertyHandler {
@@ -21,8 +22,11 @@ export class RenamePropertyHandler {
     private readonly databaseRepository: DatabaseRepository,
   ) {}
 
-  async execute(command: RenamePropertyCommand): Promise<DatabasePropertyDto> {
-    const database = await this.databaseRepository.findById(command.databaseId);
+  async execute(
+    command: RenamePropertyCommand,
+    context?: PersistenceContext,
+  ): Promise<DatabasePropertyDto> {
+    const database = await this.databaseRepository.findById(command.databaseId, context,);
 
     if (!database) {
       throw new NotFoundException('Database not found');
@@ -34,7 +38,7 @@ export class RenamePropertyHandler {
         command.name,
       );
 
-      await this.databaseRepository.save(database);
+      await this.databaseRepository.save(database, context);
 
       return {
         id: property.getId(),

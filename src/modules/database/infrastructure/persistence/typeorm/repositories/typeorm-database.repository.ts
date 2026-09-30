@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
+
+import { PersistenceContext } from 'src/shared/domain/persistence-context';
 
 import { Database } from '../../../../domain/aggregates/database/database.aggregate';
 import { DatabaseRepository } from '../../../../domain/repositories/database.repository';
@@ -23,8 +25,13 @@ export class TypeOrmDatabaseRepository implements DatabaseRepository {
     private readonly propertyOptionRepository: Repository<PropertyOptionOrmEntity>,
   ) {}
 
-  async findById(id: string): Promise<Database | null> {
-    const entity = await this.repository.findOne({
+  async findById(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<Database | null> {
+    const repository = this.getDatabaseRepository(context);
+
+    const entity = await repository.findOne({
       where: {
         id,
       },
@@ -42,8 +49,13 @@ export class TypeOrmDatabaseRepository implements DatabaseRepository {
     return DatabaseMapper.toDomain(entity);
   }
 
-  async findByPageId(pageId: string): Promise<Database[]> {
-    const entities = await this.repository.find({
+  async findByPageId(
+    pageId: string,
+    context?: PersistenceContext,
+  ): Promise<Database[]> {
+    const repository = this.getDatabaseRepository(context);
+
+    const entities = await repository.find({
       where: {
         pageId,
       },
@@ -57,17 +69,58 @@ export class TypeOrmDatabaseRepository implements DatabaseRepository {
     return entities.map((entity) => DatabaseMapper.toDomain(entity));
   }
 
-  async save(database: Database): Promise<void> {
+  async save(database: Database, context?: PersistenceContext): Promise<void> {
+    const repository = this.getDatabaseRepository(context);
     const entity = DatabaseMapper.toOrm(database);
 
-    await this.repository.save(entity);
+    await repository.save(entity);
   }
 
-  async deleteProperty(propertyId: string): Promise<void> {
-    await this.propertyRepository.delete(propertyId);
+  async deleteProperty(
+    propertyId: string,
+    context?: PersistenceContext,
+  ): Promise<void> {
+    const repository = this.getPropertyRepository(context);
+
+    await repository.delete(propertyId);
   }
 
-  async deletePropertyOption(optionId: string): Promise<void> {
-    await this.propertyOptionRepository.delete(optionId);
+  async deletePropertyOption(
+    optionId: string,
+    context?: PersistenceContext,
+  ): Promise<void> {
+    const repository = this.getPropertyOptionRepository(context);
+
+    await repository.delete(optionId);
+  }
+
+  private getDatabaseRepository(
+    context?: PersistenceContext,
+  ): Repository<DatabaseOrmEntity> {
+    if (!context) {
+      return this.repository;
+    }
+
+    return (context as EntityManager).getRepository(DatabaseOrmEntity);
+  }
+
+  private getPropertyRepository(
+    context?: PersistenceContext,
+  ): Repository<DatabasePropertyOrmEntity> {
+    if (!context) {
+      return this.propertyRepository;
+    }
+
+    return (context as EntityManager).getRepository(DatabasePropertyOrmEntity);
+  }
+
+  private getPropertyOptionRepository(
+    context?: PersistenceContext,
+  ): Repository<PropertyOptionOrmEntity> {
+    if (!context) {
+      return this.propertyOptionRepository;
+    }
+
+    return (context as EntityManager).getRepository(PropertyOptionOrmEntity);
   }
 }

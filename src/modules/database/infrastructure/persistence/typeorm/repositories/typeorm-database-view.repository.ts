@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
+
+import { PersistenceContext } from 'src/shared/domain/persistence-context';
 
 import { DatabaseView } from '../../../../domain/aggregates/view/database-view.aggregate';
 import { DatabaseViewRepository } from '../../../../domain/repositories/database-view.repository';
@@ -14,8 +16,13 @@ export class TypeOrmDatabaseViewRepository implements DatabaseViewRepository {
     private readonly repository: Repository<DatabaseViewOrmEntity>,
   ) {}
 
-  async findById(id: string): Promise<DatabaseView | null> {
-    const orm = await this.repository.findOne({
+  async findById(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<DatabaseView | null> {
+    const repository = this.getRepository(context);
+
+    const orm = await repository.findOne({
       where: { id },
       relations: {
         properties: true,
@@ -25,8 +32,13 @@ export class TypeOrmDatabaseViewRepository implements DatabaseViewRepository {
     return orm ? DatabaseViewMapper.toDomain(orm) : null;
   }
 
-  async findByDatabaseId(databaseId: string): Promise<DatabaseView[]> {
-    const views = await this.repository.find({
+  async findByDatabaseId(
+    databaseId: string,
+    context?: PersistenceContext,
+  ): Promise<DatabaseView[]> {
+    const repository = this.getRepository(context);
+
+    const views = await repository.find({
       where: {
         databaseId,
       },
@@ -41,13 +53,26 @@ export class TypeOrmDatabaseViewRepository implements DatabaseViewRepository {
     return views.map(DatabaseViewMapper.toDomain);
   }
 
-  async save(view: DatabaseView): Promise<void> {
+  async save(view: DatabaseView, context?: PersistenceContext): Promise<void> {
+    const repository = this.getRepository(context);
     const orm = DatabaseViewMapper.toOrm(view);
 
-    await this.repository.save(orm);
+    await repository.save(orm);
   }
 
-  async delete(id: string): Promise<void> {
-    await this.repository.delete(id);
+  async delete(id: string, context?: PersistenceContext): Promise<void> {
+    const repository = this.getRepository(context);
+
+    await repository.delete(id);
+  }
+
+  private getRepository(
+    context?: PersistenceContext,
+  ): Repository<DatabaseViewOrmEntity> {
+    if (!context) {
+      return this.repository;
+    }
+
+    return (context as EntityManager).getRepository(DatabaseViewOrmEntity);
   }
 }

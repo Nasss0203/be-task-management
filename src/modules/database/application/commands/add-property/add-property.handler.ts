@@ -17,6 +17,7 @@ import { DatabasePropertyDto } from '../../dto/database-property.dto';
 
 import { DEFAULT_STATUS_OPTIONS } from 'src/modules/database/domain/constants/default-property-options.constant';
 import { AddPropertyCommand } from './add-property.command';
+import { PersistenceContext } from 'src/shared/domain/persistence-context';
 
 @Injectable()
 export class AddPropertyHandler {
@@ -28,8 +29,11 @@ export class AddPropertyHandler {
     private readonly databaseViewRepository: DatabaseViewRepository,
   ) {}
 
-  async execute(command: AddPropertyCommand): Promise<DatabasePropertyDto> {
-    const database = await this.databaseRepository.findById(command.databaseId);
+  async execute(
+    command: AddPropertyCommand,
+    context?: PersistenceContext,
+  ): Promise<DatabasePropertyDto> {
+    const database = await this.databaseRepository.findById(command.databaseId, context,);
 
     if (!database) {
       throw new NotFoundException('Database not found');
@@ -60,10 +64,10 @@ export class AddPropertyHandler {
 
     database.addProperty(property);
 
-    await this.databaseRepository.save(database);
+    await this.databaseRepository.save(database, context);
 
     const views = await this.databaseViewRepository.findByDatabaseId(
-      command.databaseId,
+      command.databaseId, context,
     );
 
     for (const view of views) {
@@ -75,7 +79,7 @@ export class AddPropertyHandler {
         width: null,
       });
 
-      await this.databaseViewRepository.save(view);
+      await this.databaseViewRepository.save(view, context);
     }
 
     return {

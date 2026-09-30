@@ -6,6 +6,7 @@ import { PropertyOption } from '../../../domain/aggregates/database/property-opt
 import { type DatabaseRepository } from '../../../domain/repositories/database.repository';
 
 import { AddPropertyOptionCommand } from './add-property-option.command';
+import { PersistenceContext } from 'src/shared/domain/persistence-context';
 
 @Injectable()
 export class AddPropertyOptionHandler {
@@ -14,8 +15,11 @@ export class AddPropertyOptionHandler {
     private readonly databaseRepository: DatabaseRepository,
   ) {}
 
-  async execute(command: AddPropertyOptionCommand): Promise<PropertyOption> {
-    const database = await this.databaseRepository.findById(command.databaseId);
+  async execute(
+    command: AddPropertyOptionCommand,
+    context?: PersistenceContext,
+  ): Promise<PropertyOption> {
+    const database = await this.databaseRepository.findById(command.databaseId, context,);
 
     if (!database) {
       throw new NotFoundException('Database not found');
@@ -38,7 +42,7 @@ export class AddPropertyOptionHandler {
 
     property.addOption(option);
 
-    await this.databaseRepository.save(database);
+    await this.databaseRepository.save(database, context);
 
     return option;
   }

@@ -76,35 +76,74 @@ function createFixture(runtimeExecute: jest.Mock) {
 }
 
 describe('AiAssistantService', () => {
-  it('persists request, completes generation, response, and usage', async () => {
-    const runtimeExecute = jest.fn().mockResolvedValue({
-      output: { text: 'Hi' },
-      provider: 'TEST',
-      model: 'test-model',
-      usage: {
-        promptTokens: 2,
-        completionTokens: 3,
-        totalTokens: 5,
-      },
-    });
-    const fixture = createFixture(runtimeExecute);
+  it.each(['qwen3:1.7b', 'qwen3:4b-instruct'])(
+    'persists request, completes generation, response, and usage for %s',
+    async (model) => {
+      const runtimeExecute = jest.fn().mockResolvedValue({
+        output: { text: 'Hi' },
+        provider: 'ollama',
+        model,
+        usage: {
+          promptTokens: 314,
+          completionTokens: 38,
+          totalTokens: 352,
+        },
+      });
+      const fixture = createFixture(runtimeExecute);
+
+      const result = await fixture.service.submit(request);
+
+      expect(runtimeExecute).toHaveBeenCalledWith({
+        requestId: 'request-1',
+        capability: 'CHAT',
+        input: { message: 'Hello' },
+        context: undefined,
+      });
+      expect(fixture.runInTransaction).toHaveBeenCalledTimes(2);
+      expect(fixture.saveMessage).toHaveBeenCalledTimes(2);
+      expect(fixture.savedMessageRoles).toEqual([
+        AiMessageRole.USER,
+        AiMessageRole.ASSISTANT,
+      ]);
+      expect(fixture.saveUsage).toHaveBeenCalledTimes(1);
+      const savedUsage = fixture.saveUsage.mock.calls[0][0];
+      expect(savedUsage.getPromptTokens()).toBe(314);
+      expect(savedUsage.getCompletionTokens()).toBe(38);
+      expect(savedUsage.getTotalTokens()).toBe(352);
+      expect(savedUsage.getProvider()).toBe('ollama');
+      expect(savedUsage.getModel()).toBe(model);
+      expect(savedUsage.getGenerationId()).toBe(
+        fixture.getGeneration()?.getId(),
+      );
+      expect(savedUsage.getUserId()).toBe(request.userId);
+      expect(savedUsage.getEstimatedCost()).toBeNull();
+      expect(savedUsage.getCurrency()).toBeNull();
+      expect(result.status).toBe(AiGenerationStatus.COMPLETED);
+    },
+  );
+
+  it('completes generation and saves the assistant response without usage', async () => {
+    const fixture = createFixture(
+      jest.fn().mockResolvedValue({
+        output: { text: 'Hi' },
+        provider: 'ollama',
+        model: 'qwen3:1.7b',
+      }),
+    );
 
     const result = await fixture.service.submit(request);
 
-    expect(runtimeExecute).toHaveBeenCalledWith({
-      requestId: 'request-1',
-      capability: 'CHAT',
-      input: { message: 'Hello' },
-      context: undefined,
-    });
+    expect(result.status).toBe(AiGenerationStatus.COMPLETED);
+    expect(fixture.getGeneration()?.getStatus()).toBe(
+      AiGenerationStatus.COMPLETED,
+    );
     expect(fixture.runInTransaction).toHaveBeenCalledTimes(2);
-    expect(fixture.saveMessage).toHaveBeenCalledTimes(2);
     expect(fixture.savedMessageRoles).toEqual([
       AiMessageRole.USER,
       AiMessageRole.ASSISTANT,
     ]);
-    expect(fixture.saveUsage).toHaveBeenCalledTimes(1);
-    expect(result.status).toBe(AiGenerationStatus.COMPLETED);
+    expect(fixture.saveMessage.mock.calls[1][0].getContent()).toBe('Hi');
+    expect(fixture.saveUsage).not.toHaveBeenCalled();
   });
 
   it('does not fail a generation that already left PROCESSING', async () => {

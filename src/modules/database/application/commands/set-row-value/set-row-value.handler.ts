@@ -13,6 +13,7 @@ import { type DatabaseRowRepository } from '../../../domain/repositories/databas
 import { type DatabaseRepository } from '../../../domain/repositories/database.repository';
 
 import { SetRowValueCommand } from './set-row-value.command';
+import { PersistenceContext } from 'src/shared/domain/persistence-context';
 
 @Injectable()
 export class SetRowValueHandler {
@@ -24,8 +25,11 @@ export class SetRowValueHandler {
     private readonly databaseRowRepository: DatabaseRowRepository,
   ) {}
 
-  async execute(command: SetRowValueCommand): Promise<RowValue> {
-    const row = await this.databaseRowRepository.findById(command.rowId);
+  async execute(
+    command: SetRowValueCommand,
+    context?: PersistenceContext,
+  ): Promise<RowValue> {
+    const row = await this.databaseRowRepository.findById(command.rowId, context,);
 
     if (!row) {
       throw new NotFoundException('Database row not found');
@@ -33,6 +37,7 @@ export class SetRowValueHandler {
 
     const database = await this.databaseRepository.findById(
       row.getDatabaseId(),
+      context,
     );
 
     if (!database) {
@@ -57,7 +62,7 @@ export class SetRowValueHandler {
     try {
       const savedValue = row.setValue(property, rowValue);
 
-      await this.databaseRowRepository.save(row);
+      await this.databaseRowRepository.save(row, context);
 
       return savedValue;
     } catch (error) {

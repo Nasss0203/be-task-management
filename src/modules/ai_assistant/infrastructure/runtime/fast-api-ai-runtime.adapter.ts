@@ -34,6 +34,11 @@ interface FastApiWritingResponse {
   result: string;
   provider: string;
   model: string;
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
 }
 
 const WRITING_CAPABILITIES: Record<string, WritingAction> = {
@@ -106,12 +111,35 @@ export class FastApiAiRuntimeAdapter implements AiRuntimePort {
         );
       }
 
+      const usage = response.data.usage;
+      if (
+        Object.prototype.hasOwnProperty.call(response.data, 'usage') &&
+        (!usage ||
+          typeof usage !== 'object' ||
+          Array.isArray(usage) ||
+          ![usage.prompt_tokens, usage.completion_tokens, usage.total_tokens].every(
+            (value) =>
+              typeof value === 'number' && Number.isInteger(value) && value >= 0,
+          ))
+      ) {
+        throw new BadGatewayException('AI service returned an invalid response');
+      }
+
       return {
         output: {
           text: response.data.result,
         },
         provider: response.data.provider,
         model: response.data.model,
+        ...(usage
+          ? {
+              usage: {
+                promptTokens: usage.prompt_tokens,
+                completionTokens: usage.completion_tokens,
+                totalTokens: usage.total_tokens,
+              },
+            }
+          : {}),
       };
     } catch (error) {
       if (

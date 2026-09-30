@@ -7,6 +7,7 @@ import { DatabaseRow } from '../../../domain/aggregates/row/database-row.aggrega
 import { type DatabaseRowRepository } from '../../../domain/repositories/database-row.repository';
 import { type DatabaseRepository } from '../../../domain/repositories/database.repository';
 
+import { PersistenceContext } from 'src/shared/domain/persistence-context';
 import { CreateDatabaseRowCommand } from './create-database-row.command';
 
 @Injectable()
@@ -19,8 +20,14 @@ export class CreateDatabaseRowHandler {
     private readonly databaseRowRepository: DatabaseRowRepository,
   ) {}
 
-  async execute(command: CreateDatabaseRowCommand): Promise<DatabaseRow> {
-    const database = await this.databaseRepository.findById(command.databaseId);
+  async execute(
+    command: CreateDatabaseRowCommand,
+    context?: PersistenceContext,
+  ): Promise<DatabaseRow> {
+    const database = await this.databaseRepository.findById(
+      command.databaseId,
+      context,
+    );
 
     if (!database) {
       throw new NotFoundException('Database not found');
@@ -31,7 +38,7 @@ export class CreateDatabaseRowHandler {
       databaseId: database.getId(),
     });
 
-    await this.databaseRowRepository.save(row);
+    await this.databaseRowRepository.save(row, context);
 
     return row;
   }
