@@ -62,6 +62,23 @@ export class PublishPageToSiteHandler {
           throw new BadRequestException(
             'Page and site must belong to the same workspace',
           );
+        if (!page.getParentPageId())
+          throw new ConflictException(
+            'Root pages cannot be attached to another public site',
+          );
+        const parentPublication = await this.publications.findBySiteAndPage(
+          site.getId(),
+          page.getParentPageId()!,
+          context,
+        );
+        if (
+          !parentPublication ||
+          parentPublication.getUnpublishedAt() !== null ||
+          !parentPublication.inheritsToChildren()
+        )
+          throw new ConflictException(
+            'Page does not inherit from this public site',
+          );
         for (const pageId of new Set([page.getId(), site.getRootPageId()])) {
           if (
             !(await this.authorization.authorize({
@@ -76,6 +93,14 @@ export class PublishPageToSiteHandler {
           }
         }
         const path = PagePublicationPath.create(command.path).getValue();
+        const prefix =
+          parentPublication.getPath() === '/'
+            ? '/'
+            : `${parentPublication.getPath()}/`;
+        if (!path.startsWith(prefix) || path.slice(prefix.length).includes('/'))
+          throw new ConflictException(
+            'Publication path must be a direct child of the parent publication',
+          );
         if (path === '/')
           throw new BadRequestException(
             'Root path is reserved for the root publication',
@@ -94,22 +119,11 @@ export class PublishPageToSiteHandler {
           await this.publications.findBySiteAndPath(site.getId(), path, context)
         )
           throw new ConflictException('Publication path is already in use');
-        const root = await this.publications.findBySiteAndPath(
-          site.getId(),
-          '/',
-          context,
-        );
-        if (
-          !root ||
-          root.getPageId() !== site.getRootPageId() ||
-          root.getUnpublishedAt() !== null
-        )
-          throw new BadRequestException('Root publication is unavailable');
         const publication = PagePublication.create({
           siteId: site.getId(),
           pageId: page.getId(),
           path,
-          parentPublicationId: root.getId(),
+          parentPublicationId: parentPublication.getId(),
           includeDescendants: command.includeDescendants,
           publishedBy: command.userId,
         });

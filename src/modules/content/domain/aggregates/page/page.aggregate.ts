@@ -10,6 +10,7 @@ export class Page {
     private teamspaceId: string | null,
 
     private parentPageId: string | null,
+    private publicSubdomain: string | null,
 
     private createdBy: string,
     private createdAt: Date,
@@ -29,6 +30,7 @@ export class Page {
     teamspaceId?: string | null;
 
     parentPageId?: string | null;
+    publicSubdomain?: string | null;
   }): Page {
     return new Page(
       crypto.randomUUID(),
@@ -41,6 +43,7 @@ export class Page {
       params.teamspaceId ?? null,
 
       params.parentPageId ?? null,
+      params.publicSubdomain ?? null,
 
       params.createdBy,
       new Date(),
@@ -59,6 +62,7 @@ export class Page {
     teamspaceId: string | null;
 
     parentPageId: string | null;
+    publicSubdomain?: string | null;
 
     createdBy: string;
     createdAt: Date;
@@ -77,6 +81,7 @@ export class Page {
       params.teamspaceId,
 
       params.parentPageId,
+      params.publicSubdomain ?? null,
 
       params.createdBy,
       params.createdAt,
@@ -100,6 +105,15 @@ export class Page {
 
   getParentPageId(): string | null {
     return this.parentPageId;
+  }
+
+  getPublicSubdomain(): string | null {
+    return this.publicSubdomain;
+  }
+
+  setPublicSubdomain(subdomain: string | null): void {
+    this.publicSubdomain = subdomain;
+    this.updatedAt = new Date();
   }
 
   getTitle(): string {

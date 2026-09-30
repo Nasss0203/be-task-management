@@ -5,6 +5,7 @@ import type { WorkspaceRepository } from 'src/modules/workspace/domain/repositor
 import type { PageRepository } from '../../domain/repositories/page.repository';
 import type { PagePublicationRepository } from '../../domain/repositories/page-publication.repository';
 import { PagePublication } from '../../domain/entities/page-publication.entity';
+import { PagePublicationType } from '../../domain/enums/page-publication-type.enum';
 import { PublishedSite } from '../../domain/entities/published-site.entity';
 import { Page } from '../../domain/aggregates/page/page.aggregate';
 
@@ -60,13 +61,20 @@ export class PublicationAvailabilityService {
       if (parentId === null) {
         if (
           cursor.getPath() !== '/' ||
-          cursor.getPageId() !== site.getRootPageId()
+          cursor.getPageId() !== site.getRootPageId() ||
+          page.getParentPageId() !== null ||
+          page.getPublicSubdomain() !== site.getSubdomain()
         )
           return null;
         return { page: currentPage, breadcrumbs: breadcrumbs.reverse() };
       }
       const parent = await this.publications.findById(parentId);
       if (!parent) return null;
+      if (
+        cursor.getPublicationType() === PagePublicationType.INHERITED &&
+        page.getParentPageId() !== parent.getPageId()
+      )
+        return null;
       cursor = parent;
     }
   }

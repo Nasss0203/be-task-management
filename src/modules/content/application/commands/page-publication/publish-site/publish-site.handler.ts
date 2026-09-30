@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
@@ -53,20 +54,67 @@ export class PublishSiteHandler {
         throw new NotFoundException('Page not found');
       }
 
-      const subdomainExists =
-        await this.publishedSiteRepository.existsBySubdomain(
-          command.subdomain,
-          manager,
+      if (page.getParentPageId() !== null)
+        throw new ConflictException(
+          'Child pages inherit the public site from their root page',
+        );
+      const subdomain = page.getPublicSubdomain();
+      if (!subdomain)
+        throw new ConflictException(
+          'Root page has no reserved public subdomain',
+        );
+      if (
+        command.subdomain !== undefined &&
+        command.subdomain.trim().toLowerCase() !== subdomain
+      )
+        throw new BadRequestException(
+          'Requested subdomain differs from the reserved page subdomain',
         );
 
-      if (subdomainExists) {
-        throw new BadRequestException('Subdomain is already in use');
+      const existingSite = await this.publishedSiteRepository.findBySubdomain(
+        subdomain,
+        manager,
+      );
+      if (existingSite) {
+        if (existingSite.getRootPageId() !== page.getId())
+          throw new ConflictException(
+            'Reserved subdomain belongs to another site',
+          );
+        const site = await this.publishedSiteRepository.findByIdForUpdate(
+          existingSite.getId(),
+          manager,
+        );
+        if (!site) throw new NotFoundException('Published site not found');
+        const root = await this.pagePublicationRepository.findBySiteAndPage(
+          site.getId(),
+          page.getId(),
+          manager,
+        );
+        if (!root || root.getPath() !== '/')
+          throw new ConflictException('Published site has no root publication');
+        if (site.getDisabledAt() === null && root.getUnpublishedAt() === null)
+          throw new BadRequestException('Page is already published');
+        root.republish(command.userId);
+        root.updateIncludeDescendants(command.includeDescendants);
+        site.enable();
+        const plan = await this.publicationTree.buildSiteReconciliationPlan(
+          site,
+          root,
+          command.userId,
+          manager,
+        );
+        await this.publicationTree.executePlan(plan, manager);
+        const savedSite = await this.publishedSiteRepository.save(
+          site,
+          manager,
+        );
+        return PublishSiteResponseDto.fromDomain(savedSite, root);
       }
 
       const site = PublishedSite.create({
         workspaceId: page.getWorkspaceId(),
         rootPageId: page.getId(),
-        subdomain: command.subdomain,
+        subdomain,
         createdBy: command.userId,
       });
 

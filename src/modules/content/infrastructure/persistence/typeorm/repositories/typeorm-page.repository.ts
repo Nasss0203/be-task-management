@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Page } from 'src/modules/content/domain/aggregates/page/page.aggregate';
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
@@ -12,6 +12,22 @@ import { PageMapper } from '../mappers/page.mapper';
 
 @Injectable()
 export class TypeOrmPageRepository implements PageRepository {
+  async lockGlobalSubdomainAllocation(
+    context: PersistenceContext,
+  ): Promise<void> {
+    await this.resolveRepo(context).query(
+      "SELECT pg_advisory_xact_lock(hashtextextended('content-public-subdomain-allocation', 0))",
+    );
+  }
+
+  async existsByPublicSubdomain(
+    subdomain: string,
+    context: PersistenceContext,
+  ): Promise<boolean> {
+    return this.resolveRepo(context).exists({
+      where: { public_subdomain: subdomain },
+    });
+  }
   async lockWorkspaceHierarchy(
     workspaceId: string,
     context: PersistenceContext,
@@ -86,24 +102,18 @@ export class TypeOrmPageRepository implements PageRepository {
     const repo = this.resolveRepo(context);
     const manager = repo.manager;
 
-    /**
-     * Tách direct children khỏi Parent
-     * để tránh ON DELETE CASCADE xóa luôn children.
-     */
-    await manager
-      .createQueryBuilder()
-      .update(PageOrmEntity)
-      .set({
-        parent_page_id: null,
-      })
-      .where('parent_page_id = :id', {
-        id,
-      })
-      .execute();
+    // Detaching children would make them roots without public reservations.
+    const children = await manager
+      .getRepository(PageOrmEntity)
+      .createQueryBuilder('page')
+      .withDeleted()
+      .where('page.parent_page_id = :id', { id })
+      .getCount();
+    if (children > 0)
+      throw new ConflictException(
+        'Move or permanently delete child Pages before deleting their parent',
+      );
 
-    /**
-     * Sau đó mới hard delete Parent.
-     */
     await repo.delete({
       id,
     });
@@ -368,6 +378,7 @@ export class TypeOrmPageRepository implements PageRepository {
     parentPageId: string | null,
     teamspaceId: string | null,
     context?: PersistenceContext,
+    publicSubdomain?: string | null,
   ): Promise<void> {
     const manager = context as EntityManager;
 
@@ -395,13 +406,14 @@ export class TypeOrmPageRepository implements PageRepository {
           WHEN id = $1 THEN $2
           ELSE parent_page_id
         END,
+        public_subdomain = CASE WHEN id = $1 THEN $4 ELSE public_subdomain END,
         updated_at = NOW()
       WHERE id IN (
         SELECT id
         FROM page_tree
       )
     `,
-      [pageId, parentPageId, teamspaceId],
+      [pageId, parentPageId, teamspaceId, publicSubdomain ?? null],
     );
   }
 

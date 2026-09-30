@@ -18,6 +18,7 @@ import { PageResponseDto } from '../../../dto/page/response/page.response.dto';
 
 import { DuplicatePageCommand } from './duplicate-page.command';
 import { PagePublicationTreeService } from '../../../services/page-publication-tree.service';
+import { PublicSubdomainAllocatorService } from '../../../services/public-subdomain-allocator.service';
 
 @Injectable()
 export class DuplicatePageHandler {
@@ -31,6 +32,7 @@ export class DuplicatePageHandler {
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
     private readonly publicationTree: PagePublicationTreeService,
+    private readonly subdomains: PublicSubdomainAllocatorService,
   ) {}
 
   async execute(command: DuplicatePageCommand): Promise<PageResponseDto> {
@@ -61,6 +63,12 @@ export class DuplicatePageHandler {
         teamspaceId: sourcePage.getTeamspaceId(),
 
         parentPageId: sourcePage.getParentPageId(),
+        publicSubdomain: sourcePage.getParentPageId()
+          ? null
+          : await this.subdomains.allocate(
+              `${sourcePage.getSlug() ?? sourcePage.getTitle()}-copy`,
+              manager,
+            ),
 
         title: `${sourcePage.getTitle()} copy`,
 

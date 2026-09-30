@@ -10,6 +10,8 @@ export class PageResponseDto {
 
   parent_page_id: string | null;
 
+  public_subdomain: string | null;
+
   title: string;
 
   slug: string | null;
@@ -49,6 +51,7 @@ export class PageResponseDto {
     dto.teamspace_id = page.getTeamspaceId();
 
     dto.parent_page_id = page.getParentPageId();
+    dto.public_subdomain = page.getPublicSubdomain();
 
     dto.title = page.getTitle();
 

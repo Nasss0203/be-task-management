@@ -31,6 +31,8 @@ import { ResolveBookmarkMetadataHandler } from './application/queries/resolve-bo
 import { ContentPageProvisioningService } from './application/services/content-page-provisioning.service';
 import { PageBlockOrderingService } from './application/services/page-block-ordering.service';
 import { PagePublicationTreeService } from './application/services/page-publication-tree.service';
+import { PublicSubdomainAllocatorService } from './application/services/public-subdomain-allocator.service';
+import { PublicationHierarchySynchronizerService } from './application/services/publication-hierarchy-synchronizer.service';
 import { PublicationAvailabilityService } from './application/services/publication-availability.service';
 import { ListPagePublicationsHandler } from './application/queries/page-publication/list-page-publications/list-page-publications.handler';
 
@@ -413,6 +415,8 @@ const bookmarkHandlers = [ResolveBookmarkMetadataHandler];
 const applicationServices = [
   PublicationAvailabilityService,
   PagePublicationTreeService,
+  PublicSubdomainAllocatorService,
+  PublicationHierarchySynchronizerService,
   PageBlockOrderingService,
   PageShareLinkTokenService,
 ];

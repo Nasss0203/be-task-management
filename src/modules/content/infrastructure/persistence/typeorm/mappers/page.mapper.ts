@@ -10,6 +10,7 @@ export class PageMapper {
       teamspaceId: orm.teamspace_id,
 
       parentPageId: orm.parent_page_id,
+      publicSubdomain: orm.public_subdomain,
 
       title: orm.title,
       slug: orm.slug,
@@ -32,6 +33,7 @@ export class PageMapper {
     orm.teamspace_id = domain.getTeamspaceId();
 
     orm.parent_page_id = domain.getParentPageId();
+    orm.public_subdomain = domain.getPublicSubdomain();
 
     orm.title = domain.getTitle();
     orm.slug = domain.getSlug();

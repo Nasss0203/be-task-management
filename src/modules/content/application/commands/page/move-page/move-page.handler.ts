@@ -17,6 +17,8 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 
 import { MovePageCommand } from './move-page.command';
+import { PublicSubdomainAllocatorService } from '../../../services/public-subdomain-allocator.service';
+import { PublicationHierarchySynchronizerService } from '../../../services/publication-hierarchy-synchronizer.service';
 
 @Injectable()
 export class MovePageHandler {
@@ -28,6 +30,8 @@ export class MovePageHandler {
     private readonly uow: UnitOfWork,
 
     private readonly authorizationService: AuthorizationService,
+    private readonly subdomains: PublicSubdomainAllocatorService,
+    private readonly publicationHierarchy: PublicationHierarchySynchronizerService,
   ) {}
 
   async execute(command: MovePageCommand): Promise<void> {
@@ -91,7 +95,7 @@ export class MovePageHandler {
           manager,
         );
 
-        if (!parent) {
+        if (!parent || parent.getDeletedAt() !== null) {
           throw new NotFoundException('Target parent page not found');
         }
 
@@ -134,9 +138,10 @@ export class MovePageHandler {
 
           const nextParent = await this.pageRepo.findById(parentId, manager);
 
-          if (!nextParent) {
-            break;
-          }
+          if (!nextParent || nextParent.getDeletedAt() !== null)
+            throw new BadRequestException(
+              'Destination Page ancestor is unavailable',
+            );
 
           cursor = nextParent;
         }
@@ -211,6 +216,24 @@ export class MovePageHandler {
         );
       }
 
+      const destinationParent = targetParentPageId
+        ? await this.pageRepo.findById(targetParentPageId, manager)
+        : null;
+      const publicSubdomain = targetParentPageId
+        ? null
+        : page.getParentPageId() === null
+          ? page.getPublicSubdomain()
+          : await this.subdomains.allocate(
+              page.getSlug() ?? page.getTitle(),
+              manager,
+            );
+      const plan = await this.publicationHierarchy.plan(
+        page,
+        destinationParent,
+        command.userId,
+        manager,
+      );
+
       /**
        * 8. Move Page + toàn bộ descendants.
        */
@@ -219,7 +242,9 @@ export class MovePageHandler {
         targetParentPageId,
         targetTeamspaceId,
         manager,
+        publicSubdomain,
       );
+      await this.publicationHierarchy.execute(plan, manager);
     });
   }
 }

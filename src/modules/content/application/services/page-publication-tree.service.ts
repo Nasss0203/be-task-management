@@ -68,6 +68,13 @@ export class PagePublicationTreeService {
       const parent = byId.get(parentId);
       if (!parent)
         throw new BadRequestException('Publication parent not found');
+      if (cursor.getPublicationType() === PagePublicationType.INHERITED) {
+        const page = await this.pages.findById(cursor.getPageId(), context);
+        if (page?.getParentPageId() !== parent.getPageId())
+          throw new BadRequestException(
+            'Publication tree does not match Page hierarchy',
+          );
+      }
       cursor = parent;
     }
   }
@@ -152,7 +159,9 @@ export class PagePublicationTreeService {
     if (direct.getPath() === '/') {
       if (
         direct.getPageId() !== site.getRootPageId() ||
-        direct.getParentPublicationId() !== null
+        direct.getParentPublicationId() !== null ||
+        page.getParentPageId() !== null ||
+        page.getPublicSubdomain() !== site.getSubdomain()
       )
         throw new BadRequestException('Invalid root publication');
     } else {
@@ -161,6 +170,10 @@ export class PagePublicationTreeService {
       );
       if (!parent || parent.getSiteId() !== site.getId())
         throw new BadRequestException('Publication parent not found');
+      if (page.getParentPageId() !== parent.getPageId())
+        throw new BadRequestException(
+          'Publication tree does not match Page hierarchy',
+        );
       await this.validateParentChain(site, parent, existing, context);
     }
     const plan = [direct];
