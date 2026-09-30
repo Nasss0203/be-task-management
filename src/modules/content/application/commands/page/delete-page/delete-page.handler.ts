@@ -19,6 +19,7 @@ export class DeletePageHandler {
 
   async execute(command: DeletePageCommand): Promise<void> {
     await this.uow.runInTransaction(async (manager) => {
+      await this.pageRepo.lockWorkspaceHierarchy(command.workspaceId, manager);
       /** 1. Find the current page. */
       const page = await this.pageRepo.findById(command.pageId, manager);
 

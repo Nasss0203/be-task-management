@@ -9,6 +9,7 @@ import type { PublishedSiteRepository } from '../../../../domain/repositories/pu
 import type { PagePublicationRepository } from '../../../../domain/repositories/page-publication.repository';
 import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
+import { PublicationAvailabilityService } from '../../../services/publication-availability.service';
 
 @Injectable()
 export class ListSitePublicationsHandler {
@@ -18,6 +19,7 @@ export class ListSitePublicationsHandler {
     @Inject(CONTENT_TYPES.repositories.PagePublicationRepository)
     private readonly publications: PagePublicationRepository,
     private readonly authorization: AuthorizationService,
+    private readonly availability: PublicationAvailabilityService,
   ) {}
   async execute(siteId: string, userId: string) {
     const site = await this.sites.findById(siteId);
@@ -30,15 +32,15 @@ export class ListSitePublicationsHandler {
       }))
     )
       throw new ForbiddenException('You do not have required permissions');
-    return (await this.publications.findBySiteId(siteId)).map(
-      (publication) => ({
-        id: publication.getId(),
-        page_id: publication.getPageId(),
-        path: publication.getPath(),
-        published:
-          publication.getUnpublishedAt() === null &&
-          site.getDisabledAt() === null,
-      }),
+    return Promise.all(
+      (await this.publications.findBySiteId(siteId)).map(
+        async (publication) => ({
+          id: publication.getId(),
+          page_id: publication.getPageId(),
+          path: publication.getPath(),
+          published: await this.availability.isAvailable(site, publication),
+        }),
+      ),
     );
   }
 }

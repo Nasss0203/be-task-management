@@ -1,5 +1,15 @@
-import { IsNotEmpty, IsString, IsUUID, MaxLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsOptional,
+  IsNotEmpty,
+  IsString,
+  IsUUID,
+  MaxLength,
+} from 'class-validator';
 export class PublishPageToSiteDto {
+  @IsOptional()
+  @IsBoolean()
+  include_descendants?: boolean;
   @IsUUID()
   page_id: string;
   @IsString()

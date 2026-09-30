@@ -15,6 +15,9 @@ import type { AuthorizationTarget } from 'src/modules/permission/application/typ
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { generateSlug } from 'src/utils';
 import { CreatePageCommand } from './create-page.command';
+import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
+import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
+import { PagePublicationTreeService } from '../../../services/page-publication-tree.service';
 
 @Injectable()
 export class CreatePageHandler {
@@ -23,101 +26,118 @@ export class CreatePageHandler {
     private readonly pageRepo: PageRepository,
 
     private readonly authorizationService: AuthorizationService,
+    @Inject(PERSISTENCE_TYPES.UnitOfWork) private readonly uow: UnitOfWork,
+    private readonly publicationTree: PagePublicationTreeService,
   ) {}
 
   async execute(command: CreatePageCommand): Promise<PageResponseDto> {
-    /**
-     * Resolve the scope that the new page belongs to.
-     * Root pages use the requested teamspace; child pages inherit it.
-     */
-    let effectiveTeamspaceId = command.teamspaceId ?? null;
+    return this.uow.runInTransaction(async (context) => {
+      await this.pageRepo.lockWorkspaceHierarchy(command.workspaceId, context);
+      /**
+       * Resolve the scope that the new page belongs to.
+       * Root pages use the requested teamspace; child pages inherit it.
+       */
+      let effectiveTeamspaceId = command.teamspaceId ?? null;
 
-    if (command.parentPageId) {
-      const parentPage = await this.pageRepo.findById(command.parentPageId);
-
-      if (!parentPage) {
-        throw new NotFoundException('Parent page not found');
-      }
-
-      /** A child page cannot belong to a different workspace. */
-      if (parentPage.getWorkspaceId() !== command.workspaceId) {
-        throw new BadRequestException(
-          'Parent page does not belong to workspace',
+      if (command.parentPageId) {
+        const parentPage = await this.pageRepo.findById(
+          command.parentPageId,
+          context,
         );
-      }
 
-      const parentTeamspaceId = parentPage.getTeamspaceId();
-
-      /** A requested teamspace must match the parent page scope. */
-      if (
-        command.teamspaceId !== undefined &&
-        command.teamspaceId !== null &&
-        command.teamspaceId !== parentTeamspaceId
-      ) {
-        throw new BadRequestException(
-          'Child page must belong to the same teamspace as parent page',
-        );
-      }
-
-      /** Child pages always inherit their parent's teamspace. */
-      effectiveTeamspaceId = parentTeamspaceId;
-    }
-
-    /** Authorize against the resolved page scope. */
-    const target: AuthorizationTarget = effectiveTeamspaceId
-      ? {
-          type: 'teamspace',
-          id: effectiveTeamspaceId,
-          workspaceId: command.workspaceId,
+        if (!parentPage || parentPage.getDeletedAt() !== null) {
+          throw new NotFoundException('Parent page not found');
         }
-      : {
-          type: 'workspace',
-          id: command.workspaceId,
-        };
 
-    const allowed = await this.authorizationService.authorize({
-      userId: command.userId,
-      permissions: [PERMISSIONS.PAGE_CREATE],
-      target,
-    });
+        /** A child page cannot belong to a different workspace. */
+        if (parentPage.getWorkspaceId() !== command.workspaceId) {
+          throw new BadRequestException(
+            'Parent page does not belong to workspace',
+          );
+        }
 
-    if (!allowed) {
-      throw new ForbiddenException(
-        'You do not have permission to create page in this scope',
+        const parentTeamspaceId = parentPage.getTeamspaceId();
+
+        /** A requested teamspace must match the parent page scope. */
+        if (
+          command.teamspaceId !== undefined &&
+          command.teamspaceId !== null &&
+          command.teamspaceId !== parentTeamspaceId
+        ) {
+          throw new BadRequestException(
+            'Child page must belong to the same teamspace as parent page',
+          );
+        }
+
+        /** Child pages always inherit their parent's teamspace. */
+        effectiveTeamspaceId = parentTeamspaceId;
+      }
+
+      /** Authorize against the resolved page scope. */
+      const target: AuthorizationTarget = effectiveTeamspaceId
+        ? {
+            type: 'teamspace',
+            id: effectiveTeamspaceId,
+            workspaceId: command.workspaceId,
+          }
+        : {
+            type: 'workspace',
+            id: command.workspaceId,
+          };
+
+      const allowed = await this.authorizationService.authorize({
+        userId: command.userId,
+        permissions: [PERMISSIONS.PAGE_CREATE],
+        target,
+      });
+
+      if (!allowed) {
+        throw new ForbiddenException(
+          'You do not have permission to create page in this scope',
+        );
+      }
+
+      /** Generate slug. */
+      const baseSlug =
+        generateSlug(command.title).toLowerCase().slice(0, 249) || 'page';
+
+      let slug = baseSlug;
+
+      let suffix = 2;
+      while (
+        await this.pageRepo.existsBySlug(command.workspaceId, slug, context)
+      ) {
+        if (suffix > 10000)
+          throw new BadRequestException('Page slug allocation limit exceeded');
+        slug = `${baseSlug.slice(0, 249)}-${suffix++}`;
+      }
+
+      /** Create Page aggregate. */
+      const page = Page.create({
+        workspaceId: command.workspaceId,
+
+        teamspaceId: effectiveTeamspaceId,
+
+        parentPageId: command.parentPageId ?? null,
+
+        title: command.title,
+        createdBy: command.userId,
+        slug,
+
+        icon: command.icon ?? null,
+        coverUrl: command.coverUrl ?? null,
+
+        isTemplate: false,
+      });
+
+      const savedPage = await this.pageRepo.save(page, context);
+      await this.publicationTree.inheritNewPage(
+        savedPage,
+        command.userId,
+        context,
       );
-    }
 
-    /** Generate slug. */
-    const baseSlug = generateSlug(command.title).toLowerCase();
-
-    let slug = baseSlug;
-
-    if (await this.pageRepo.existsBySlug(command.workspaceId, slug)) {
-      const uniqueSuffix = Date.now().toString(36);
-
-      slug = `${baseSlug}-${uniqueSuffix}`;
-    }
-
-    /** Create Page aggregate. */
-    const page = Page.create({
-      workspaceId: command.workspaceId,
-
-      teamspaceId: effectiveTeamspaceId,
-
-      parentPageId: command.parentPageId ?? null,
-
-      title: command.title,
-      createdBy: command.userId,
-      slug,
-
-      icon: command.icon ?? null,
-      coverUrl: command.coverUrl ?? null,
-
-      isTemplate: false,
+      return PageResponseDto.fromDomain(savedPage);
     });
-
-    const savedPage = await this.pageRepo.save(page);
-
-    return PageResponseDto.fromDomain(savedPage);
   }
 }

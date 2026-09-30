@@ -8,6 +8,7 @@ import type { PagePublicationRepository } from 'src/modules/content/domain/repos
 import type { PublishedSiteRepository } from 'src/modules/content/domain/repositories/published-site.repository';
 
 import { GetPagePublicationQuery } from './get-page-publication.query';
+import { PublicationAvailabilityService } from '../../../services/publication-availability.service';
 
 @Injectable()
 export class GetPagePublicationHandler {
@@ -17,6 +18,7 @@ export class GetPagePublicationHandler {
 
     @Inject(CONTENT_TYPES.repositories.PublishedSiteRepository)
     private readonly publishedSiteRepository: PublishedSiteRepository,
+    private readonly availability: PublicationAvailabilityService,
   ) {}
 
   async execute(
@@ -44,9 +46,7 @@ export class GetPagePublicationHandler {
     }
 
     return {
-      published:
-        publication.getUnpublishedAt() === null &&
-        site.getDisabledAt() === null,
+      published: await this.availability.isAvailable(site, publication),
 
       site_id: site.getId(),
       page_id: publication.getPageId(),

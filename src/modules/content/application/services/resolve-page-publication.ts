@@ -10,10 +10,6 @@ export async function resolvePagePublication(
 ) {
   if (siteId) return repository.findBySiteAndPage(siteId, pageId, context);
   const publications = await repository.findByPageId(pageId, context);
-  const roots = publications.filter(
-    (publication) => publication.getPath() === '/',
-  );
-  if (roots.length === 1) return roots.pop()!;
   if (publications.length > 1)
     throw new ConflictException('Multiple publications found; specify site_id');
   return publications.pop() ?? null;

@@ -39,7 +39,13 @@ export class PublishedSitesController {
     @Auth() auth: IAuth,
   ) {
     return this.publishHandler.execute(
-      new PublishPageToSiteCommand(auth.id, siteId, dto.page_id, dto.path),
+      new PublishPageToSiteCommand(
+        auth.id,
+        siteId,
+        dto.page_id,
+        dto.path,
+        dto.include_descendants,
+      ),
     );
   }
   @Get(':siteId/publications')

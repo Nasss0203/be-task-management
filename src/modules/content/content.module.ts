@@ -30,6 +30,9 @@ import { ResolveBookmarkMetadataHandler } from './application/queries/resolve-bo
 
 import { ContentPageProvisioningService } from './application/services/content-page-provisioning.service';
 import { PageBlockOrderingService } from './application/services/page-block-ordering.service';
+import { PagePublicationTreeService } from './application/services/page-publication-tree.service';
+import { PublicationAvailabilityService } from './application/services/publication-availability.service';
+import { ListPagePublicationsHandler } from './application/queries/page-publication/list-page-publications/list-page-publications.handler';
 
 import { CONTENT_TYPES } from './content.types';
 
@@ -68,6 +71,7 @@ import { WorkspacePublishedSitesController } from './presentation/http/controlle
 import { ListWorkspacePublishedSitesHandler } from './application/queries/page-publication/list-workspace-published-sites/list-workspace-published-sites.handler';
 import { RepublishSiteHandler } from './application/commands/page-publication/republish-site/republish-site.handler';
 import { UnpublishSiteHandler } from './application/commands/page-publication/unpublish-site/unpublish-site.handler';
+import { UpdatePagePublicationSettingsHandler } from './application/commands/page-publication/update-page-publication-settings/update-page-publication-settings.handler';
 import { UpdatePageShareSettingHandler } from './application/commands/page-share-setting/update-page-share-setting/update-page-share-setting.handler';
 import { AcceptPageShareLinkHandler } from './application/commands/page-share/accept-page-share-link/accept-page-share-link.handler';
 import { CreatePageShareLinkHandler } from './application/commands/page-share/create-page-share-link/create-page-share-link.handler';
@@ -407,6 +411,8 @@ const publishSitePageHandler = [
 const bookmarkHandlers = [ResolveBookmarkMetadataHandler];
 
 const applicationServices = [
+  PublicationAvailabilityService,
+  PagePublicationTreeService,
   PageBlockOrderingService,
   PageShareLinkTokenService,
 ];
@@ -461,6 +467,8 @@ const ports = [
   ],
 
   providers: [
+    ListPagePublicationsHandler,
+    UpdatePagePublicationSettingsHandler,
     ListWorkspacePublishedSitesHandler,
     PublishPageToSiteHandler,
     ListSitePublicationsHandler,

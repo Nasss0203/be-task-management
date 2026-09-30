@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
@@ -16,6 +17,8 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
 
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { RepublishSiteCommand } from './republish-site.command';
+import { PagePublicationTreeService } from '../../../services/page-publication-tree.service';
+import { PagePublicationType } from '../../../../domain/enums/page-publication-type.enum';
 
 @Injectable()
 export class RepublishSiteHandler {
@@ -28,13 +31,14 @@ export class RepublishSiteHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+    private readonly publicationTree: PagePublicationTreeService,
   ) {}
 
   async execute(
     command: RepublishSiteCommand,
   ): Promise<PublishSiteResponseDto> {
     return this.uow.runInTransaction(async (manager) => {
-      const publication = await resolvePagePublication(
+      let publication = await resolvePagePublication(
         this.pagePublicationRepository,
         command.pageId,
         command.siteId,
@@ -44,13 +48,45 @@ export class RepublishSiteHandler {
         throw new NotFoundException('Page publication not found');
       }
 
-      const site = await this.publishedSiteRepository.findById(
+      const candidateSite = await this.publishedSiteRepository.findById(
+        publication.getSiteId(),
+        manager,
+      );
+      if (!candidateSite)
+        throw new NotFoundException('Published site not found');
+      await this.publicationTree.lockWorkspace(
+        candidateSite.getWorkspaceId(),
+        manager,
+      );
+      // A new site may have been published while this request waited for the workspace lock.
+      publication = await resolvePagePublication(
+        this.pagePublicationRepository,
+        command.pageId,
+        command.siteId,
+        manager,
+      );
+      if (!publication)
+        throw new NotFoundException('Page publication not found');
+      const site = await this.publishedSiteRepository.findByIdForUpdate(
         publication.getSiteId(),
         manager,
       );
 
       if (!site) {
         throw new NotFoundException('Published site not found');
+      }
+
+      publication = await this.pagePublicationRepository.findBySiteAndPage(
+        site.getId(),
+        command.pageId,
+        manager,
+      );
+      if (!publication)
+        throw new NotFoundException('Page publication not found');
+      if (publication.getPublicationType() === PagePublicationType.INHERITED) {
+        throw new ConflictException(
+          'Inherited publication cannot be republished independently; republish its publishing ancestor',
+        );
       }
 
       if (
@@ -60,6 +96,11 @@ export class RepublishSiteHandler {
         throw new BadRequestException('Page is already published');
       }
 
+      if (publication.getPath() !== '/' && site.getDisabledAt() !== null) {
+        throw new BadRequestException(
+          'Published site is disabled; republish the root first',
+        );
+      }
       publication.republish(command.userId);
       if (
         publication.getPath() === '/' &&
@@ -67,17 +108,28 @@ export class RepublishSiteHandler {
       )
         site.enable();
 
-      const savedPublication = await this.pagePublicationRepository.save(
-        publication,
-        manager,
-      );
+      const plan =
+        publication.getPath() === '/'
+          ? await this.publicationTree.buildSiteReconciliationPlan(
+              site,
+              publication,
+              command.userId,
+              manager,
+            )
+          : await this.publicationTree.buildPlan(
+              site,
+              publication,
+              command.userId,
+              manager,
+            );
+      await this.publicationTree.executePlan(plan, manager);
 
       const savedSite =
         publication.getPath() === '/'
           ? await this.publishedSiteRepository.save(site, manager)
           : site;
 
-      return PublishSiteResponseDto.fromDomain(savedSite, savedPublication);
+      return PublishSiteResponseDto.fromDomain(savedSite, publication);
     });
   }
 }

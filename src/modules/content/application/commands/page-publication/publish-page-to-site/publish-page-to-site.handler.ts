@@ -18,6 +18,7 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { PublishSiteResponseDto } from '../../../dto/page-publication/response/publish-site.response.dto';
 import { PublishPageToSiteCommand } from './publish-page-to-site.command';
+import { PagePublicationTreeService } from '../../../services/page-publication-tree.service';
 
 @Injectable()
 export class PublishPageToSiteHandler {
@@ -30,13 +31,27 @@ export class PublishPageToSiteHandler {
     private readonly publications: PagePublicationRepository,
     @Inject(PERSISTENCE_TYPES.UnitOfWork) private readonly uow: UnitOfWork,
     private readonly authorization: AuthorizationService,
+    private readonly publicationTree: PagePublicationTreeService,
   ) {}
   async execute(
     command: PublishPageToSiteCommand,
   ): Promise<PublishSiteResponseDto> {
     try {
       return await this.uow.runInTransaction(async (context) => {
-        const site = await this.sites.findById(command.siteId, context);
+        const candidateSite = await this.sites.findById(
+          command.siteId,
+          context,
+        );
+        if (!candidateSite)
+          throw new NotFoundException('Published site not found');
+        await this.pages.lockWorkspaceHierarchy(
+          candidateSite.getWorkspaceId(),
+          context,
+        );
+        const site = await this.sites.findByIdForUpdate(
+          command.siteId,
+          context,
+        );
         if (!site) throw new NotFoundException('Published site not found');
         if (site.getDisabledAt() !== null)
           throw new BadRequestException('Published site is disabled');
@@ -79,16 +94,33 @@ export class PublishPageToSiteHandler {
           await this.publications.findBySiteAndPath(site.getId(), path, context)
         )
           throw new ConflictException('Publication path is already in use');
+        const root = await this.publications.findBySiteAndPath(
+          site.getId(),
+          '/',
+          context,
+        );
+        if (
+          !root ||
+          root.getPageId() !== site.getRootPageId() ||
+          root.getUnpublishedAt() !== null
+        )
+          throw new BadRequestException('Root publication is unavailable');
         const publication = PagePublication.create({
           siteId: site.getId(),
           pageId: page.getId(),
           path,
+          parentPublicationId: root.getId(),
+          includeDescendants: command.includeDescendants,
           publishedBy: command.userId,
         });
-        return PublishSiteResponseDto.fromDomain(
+        const plan = await this.publicationTree.buildPlan(
           site,
-          await this.publications.save(publication, context),
+          publication,
+          command.userId,
+          context,
         );
+        await this.publicationTree.executePlan(plan, context);
+        return PublishSiteResponseDto.fromDomain(site, publication);
       });
     } catch (error) {
       const constraintError = error as {

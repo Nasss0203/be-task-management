@@ -1,0 +1,80 @@
+import { Inject, Injectable } from '@nestjs/common';
+import { CONTENT_TYPES } from '../../content.types';
+import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
+import type { WorkspaceRepository } from 'src/modules/workspace/domain/repositories/workspace.repository';
+import type { PageRepository } from '../../domain/repositories/page.repository';
+import type { PagePublicationRepository } from '../../domain/repositories/page-publication.repository';
+import { PagePublication } from '../../domain/entities/page-publication.entity';
+import { PublishedSite } from '../../domain/entities/published-site.entity';
+import { Page } from '../../domain/aggregates/page/page.aggregate';
+
+@Injectable()
+export class PublicationAvailabilityService {
+  constructor(
+    @Inject(CONTENT_TYPES.repositories.PageRepository)
+    private readonly pages: PageRepository,
+    @Inject(CONTENT_TYPES.repositories.PagePublicationRepository)
+    private readonly publications: PagePublicationRepository,
+    @Inject(WORKSPACE_TYPES.repositories.WorkspaceRepository)
+    private readonly workspaces: WorkspaceRepository,
+  ) {}
+
+  async resolve(
+    site: PublishedSite,
+    publication: PagePublication,
+  ): Promise<{
+    page: Page;
+    breadcrumbs: { page_id: string; title: string; path: string }[];
+  } | null> {
+    if (
+      site.getDisabledAt() !== null ||
+      !(await this.workspaces.findById(site.getWorkspaceId()))
+    )
+      return null;
+    const seen = new Set<string>();
+    const breadcrumbs: { page_id: string; title: string; path: string }[] = [];
+    let cursor = publication;
+    let currentPage: Page | null = null;
+    while (true) {
+      if (
+        seen.has(cursor.getId()) ||
+        cursor.getSiteId() !== site.getId() ||
+        cursor.getUnpublishedAt() !== null
+      )
+        return null;
+      seen.add(cursor.getId());
+      const page = await this.pages.findById(cursor.getPageId());
+      if (
+        !page ||
+        page.getDeletedAt() !== null ||
+        page.getWorkspaceId() !== site.getWorkspaceId()
+      )
+        return null;
+      currentPage ??= page;
+      breadcrumbs.push({
+        page_id: page.getId(),
+        title: page.getTitle(),
+        path: cursor.getPath(),
+      });
+      const parentId = cursor.getParentPublicationId();
+      if (parentId === null) {
+        if (
+          cursor.getPath() !== '/' ||
+          cursor.getPageId() !== site.getRootPageId()
+        )
+          return null;
+        return { page: currentPage, breadcrumbs: breadcrumbs.reverse() };
+      }
+      const parent = await this.publications.findById(parentId);
+      if (!parent) return null;
+      cursor = parent;
+    }
+  }
+
+  async isAvailable(
+    site: PublishedSite,
+    publication: PagePublication,
+  ): Promise<boolean> {
+    return (await this.resolve(site, publication)) !== null;
+  }
+}

@@ -41,9 +41,16 @@ export class PublicPageBlockResponseDto {
 
     dto.order_index = block.getOrderIndex();
 
-    dto.content = block.getContent();
+    // DATABASE_VIEW configuration is workspace-only; public rendering is unsupported.
+    dto.content =
+      block.getType() === PageBlockType.DATABASE_VIEW
+        ? null
+        : block.getContent();
     dto.style_config = block.getStyleConfig();
-    dto.data_config = block.getDataConfig();
+    dto.data_config =
+      block.getType() === PageBlockType.DATABASE_VIEW
+        ? null
+        : block.getDataConfig();
 
     dto.is_open = block.getIsOpen();
 

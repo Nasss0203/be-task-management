@@ -32,6 +32,7 @@ export class MovePageHandler {
 
   async execute(command: MovePageCommand): Promise<void> {
     await this.uow.runInTransaction(async (manager) => {
+      await this.pageRepo.lockWorkspaceHierarchy(command.workspaceId, manager);
       /**
        * 1. Find Page cần move.
        */

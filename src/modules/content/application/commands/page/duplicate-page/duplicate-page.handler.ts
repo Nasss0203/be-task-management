@@ -17,6 +17,7 @@ import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-w
 import { PageResponseDto } from '../../../dto/page/response/page.response.dto';
 
 import { DuplicatePageCommand } from './duplicate-page.command';
+import { PagePublicationTreeService } from '../../../services/page-publication-tree.service';
 
 @Injectable()
 export class DuplicatePageHandler {
@@ -29,10 +30,12 @@ export class DuplicatePageHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+    private readonly publicationTree: PagePublicationTreeService,
   ) {}
 
   async execute(command: DuplicatePageCommand): Promise<PageResponseDto> {
     return this.uow.runInTransaction(async (manager) => {
+      await this.pageRepo.lockWorkspaceHierarchy(command.workspaceId, manager);
       /**
        * 1. Find source Page.
        */
@@ -71,6 +74,11 @@ export class DuplicatePageHandler {
       });
 
       const savedPage = await this.pageRepo.save(duplicatedPage, manager);
+      await this.publicationTree.inheritNewPage(
+        savedPage,
+        command.userId,
+        manager,
+      );
 
       /**
        * 4. Load source PageBlocks.

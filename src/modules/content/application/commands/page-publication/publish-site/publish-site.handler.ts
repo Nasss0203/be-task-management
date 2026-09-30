@@ -19,6 +19,7 @@ import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-w
 
 import { PublishSiteResponseDto } from '../../../dto/page-publication/response/publish-site.response.dto';
 import { PublishSiteCommand } from './publish-site.command';
+import { PagePublicationTreeService } from '../../../services/page-publication-tree.service';
 
 @Injectable()
 export class PublishSiteHandler {
@@ -34,23 +35,22 @@ export class PublishSiteHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+    private readonly publicationTree: PagePublicationTreeService,
   ) {}
 
   async execute(command: PublishSiteCommand) {
     return this.uow.runInTransaction(async (manager) => {
-      const page = await this.pageRepository.findById(command.pageId, manager);
+      let page = await this.pageRepository.findById(command.pageId, manager);
 
-      if (!page) {
-        throw new NotFoundException('Page not found');
-      }
-
-      const existingSite = await this.publishedSiteRepository.findByRootPageId(
-        page.getId(),
+      if (!page) throw new NotFoundException('Page not found');
+      await this.pageRepository.lockWorkspaceHierarchy(
+        page.getWorkspaceId(),
         manager,
       );
+      page = await this.pageRepository.findById(command.pageId, manager);
 
-      if (existingSite) {
-        throw new BadRequestException('Page is already published as a site');
+      if (!page || page.getDeletedAt() !== null) {
+        throw new NotFoundException('Page not found');
       }
 
       const subdomainExists =
@@ -74,17 +74,21 @@ export class PublishSiteHandler {
         siteId: site.getId(),
         pageId: page.getId(),
         path: '/',
+        includeDescendants: command.includeDescendants,
         publishedBy: command.userId,
       });
 
-      const savedSite = await this.publishedSiteRepository.save(site, manager);
-
-      const savedPublication = await this.pagePublicationRepository.save(
+      const plan = await this.publicationTree.buildPlan(
+        site,
         publication,
+        command.userId,
         manager,
       );
+      const savedSite = await this.publishedSiteRepository.save(site, manager);
 
-      return PublishSiteResponseDto.fromDomain(savedSite, savedPublication);
+      await this.publicationTree.executePlan(plan, manager);
+
+      return PublishSiteResponseDto.fromDomain(savedSite, publication);
     });
   }
 }

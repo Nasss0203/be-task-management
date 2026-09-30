@@ -7,6 +7,9 @@ export class PagePublicationMapper {
       id: orm.id,
       siteId: orm.site_id,
       pageId: orm.page_id,
+      parentPublicationId: orm.parent_publication_id,
+      publicationType: orm.publication_type,
+      includeDescendants: orm.include_descendants,
       path: orm.path,
       publishedBy: orm.published_by,
       publishedAt: orm.published_at,
@@ -20,6 +23,9 @@ export class PagePublicationMapper {
     orm.id = domain.getId();
     orm.site_id = domain.getSiteId();
     orm.page_id = domain.getPageId();
+    orm.parent_publication_id = domain.getParentPublicationId();
+    orm.publication_type = domain.getPublicationType();
+    orm.include_descendants = domain.getIncludeDescendants();
     orm.path = domain.getPath();
     orm.published_by = domain.getPublishedBy();
     orm.published_at = domain.getPublishedAt();

@@ -10,6 +10,16 @@ import { PublishedSiteMapper } from '../mappers/published-site.mapper';
 
 @Injectable()
 export class TypeOrmPublishedSiteRepository implements PublishedSiteRepository {
+  async findByIdForUpdate(
+    id: string,
+    context: PersistenceContext,
+  ): Promise<PublishedSite | null> {
+    const orm = await this.resolveRepo(context).findOne({
+      where: { id },
+      lock: { mode: 'pessimistic_write' },
+    });
+    return orm ? PublishedSiteMapper.toDomain(orm) : null;
+  }
   constructor(
     @InjectRepository(PublishedSiteOrmEntity)
     private readonly repo: Repository<PublishedSiteOrmEntity>,
@@ -61,7 +71,7 @@ export class TypeOrmPublishedSiteRepository implements PublishedSiteRepository {
       where: { workspace_id: workspaceId },
       order: { created_at: 'ASC' },
     });
-    return orms.map(PublishedSiteMapper.toDomain);
+    return orms.map((orm) => PublishedSiteMapper.toDomain(orm));
   }
 
   async findByRootPageId(

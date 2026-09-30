@@ -16,6 +16,7 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { UnpublishSiteResponseDto } from '../../../dto/page-publication/response/unpublish-site.response.dto';
 import { UnpublishSiteCommand } from './unpublish-site.command';
+import { PagePublicationTreeService } from '../../../services/page-publication-tree.service';
 
 @Injectable()
 export class UnpublishSiteHandler {
@@ -28,11 +29,12 @@ export class UnpublishSiteHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+    private readonly publicationTree: PagePublicationTreeService,
   ) {}
 
   async execute(command: UnpublishSiteCommand) {
     return this.uow.runInTransaction(async (manager) => {
-      const publication = await resolvePagePublication(
+      let publication = await resolvePagePublication(
         this.pagePublicationRepository,
         command.pageId,
         command.siteId,
@@ -42,7 +44,25 @@ export class UnpublishSiteHandler {
         throw new NotFoundException('Page publication not found');
       }
 
-      const site = await this.publishedSiteRepository.findById(
+      const candidateSite = await this.publishedSiteRepository.findById(
+        publication.getSiteId(),
+        manager,
+      );
+      if (!candidateSite)
+        throw new NotFoundException('Published site not found');
+      await this.publicationTree.lockWorkspace(
+        candidateSite.getWorkspaceId(),
+        manager,
+      );
+      publication = await resolvePagePublication(
+        this.pagePublicationRepository,
+        command.pageId,
+        command.siteId,
+        manager,
+      );
+      if (!publication)
+        throw new NotFoundException('Page publication not found');
+      const site = await this.publishedSiteRepository.findByIdForUpdate(
         publication.getSiteId(),
         manager,
       );
@@ -51,12 +71,21 @@ export class UnpublishSiteHandler {
         throw new NotFoundException('Published site not found');
       }
 
+      publication = await this.pagePublicationRepository.findBySiteAndPage(
+        site.getId(),
+        command.pageId,
+        manager,
+      );
+      if (!publication)
+        throw new NotFoundException('Page publication not found');
+
       if (publication.getUnpublishedAt() !== null) {
         throw new BadRequestException('Page is already unpublished');
       }
 
       const now = new Date();
 
+      await this.publicationTree.unpublishBranch(publication, manager, now);
       publication.unpublish(now);
       if (
         publication.getPath() === '/' &&

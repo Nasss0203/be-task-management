@@ -2,6 +2,10 @@ import type { PersistenceContext } from 'src/shared/infrastructure/persistence/p
 import { PublishedSite } from '../entities/published-site.entity';
 
 export interface PublishedSiteRepository {
+  findByIdForUpdate(
+    id: string,
+    context: PersistenceContext,
+  ): Promise<PublishedSite | null>;
   findById(
     id: string,
     context?: PersistenceContext,

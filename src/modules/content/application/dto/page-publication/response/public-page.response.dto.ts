@@ -4,6 +4,7 @@ import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity
 import { PublicPageBlockResponseDto } from './public-page-block.response.dto';
 
 export class PublicPageResponseDto {
+  breadcrumbs: { page_id: string; title: string; path: string }[];
   subdomain: string;
   path: string;
 
@@ -41,7 +42,7 @@ export class PublicPageResponseDto {
     dto.blocks = blocks
       .filter((block) => block.getDeletedAt() === null)
       .sort((a, b) => a.getOrderIndex() - b.getOrderIndex())
-      .map(PublicPageBlockResponseDto.fromDomain);
+      .map((block) => PublicPageBlockResponseDto.fromDomain(block));
 
     return dto;
   }

@@ -5,6 +5,7 @@ import {
   Get,
   Inject,
   Param,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
@@ -21,13 +22,17 @@ import { RepublishSiteCommand } from 'src/modules/content/application/commands/p
 import { RepublishSiteHandler } from 'src/modules/content/application/commands/page-publication/republish-site/republish-site.handler';
 import { UnpublishSiteCommand } from 'src/modules/content/application/commands/page-publication/unpublish-site/unpublish-site.command';
 import { UnpublishSiteHandler } from 'src/modules/content/application/commands/page-publication/unpublish-site/unpublish-site.handler';
+import { UpdatePagePublicationSettingsCommand } from 'src/modules/content/application/commands/page-publication/update-page-publication-settings/update-page-publication-settings.command';
+import { UpdatePagePublicationSettingsHandler } from 'src/modules/content/application/commands/page-publication/update-page-publication-settings/update-page-publication-settings.handler';
 import { PublishSiteDto } from 'src/modules/content/application/dto/page-publication/publish-site.dto';
+import { UpdatePagePublicationSettingsDto } from 'src/modules/content/application/dto/page-publication/update-page-publication-settings.dto';
 import { GetPagePublicationHandler } from 'src/modules/content/application/queries/page-publication/get-page-publication/get-page-publication.handler';
 import { GetPagePublicationQuery } from 'src/modules/content/application/queries/page-publication/get-page-publication/get-page-publication.query';
 
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import type { IAuth } from 'src/types/auth';
+import { ListPagePublicationsHandler } from '../../../application/queries/page-publication/list-page-publications/list-page-publications.handler';
 
 @Controller('page')
 export class PagePublicationController {
@@ -43,6 +48,8 @@ export class PagePublicationController {
 
     @Inject(CONTENT_TYPES.applications.RepublishSiteHandler)
     private readonly republishSiteHandler: RepublishSiteHandler,
+    private readonly listPagePublicationsHandler: ListPagePublicationsHandler,
+    private readonly updatePagePublicationSettingsHandler: UpdatePagePublicationSettingsHandler,
   ) {}
 
   @Post(':pageId/publication')
@@ -60,8 +67,21 @@ export class PagePublicationController {
     @Auth() auth: IAuth,
   ) {
     return this.publishSiteHandler.execute(
-      new PublishSiteCommand(auth.id, pageId, dto.subdomain),
+      new PublishSiteCommand(
+        auth.id,
+        pageId,
+        dto.subdomain,
+        dto.include_descendants,
+      ),
     );
+  }
+
+  @Get(':pageId/publications')
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
+  @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
+  @ResponseMessage('List page publications')
+  listPublications(@Param('pageId') pageId: string) {
+    return this.listPagePublicationsHandler.execute(pageId);
   }
 
   @Get(':pageId/publication')
@@ -78,6 +98,27 @@ export class PagePublicationController {
   ) {
     return this.getPagePublicationHandler.execute(
       new GetPagePublicationQuery(pageId, siteId),
+    );
+  }
+
+  @Patch(':pageId/publication/settings')
+  @StrictWriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
+  @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
+  @ResponseMessage('Update page publication settings')
+  updateSettings(
+    @Param('pageId') pageId: string,
+    @Body() dto: UpdatePagePublicationSettingsDto,
+    @Auth() auth: IAuth,
+    @Query('site_id') siteId?: string,
+  ) {
+    return this.updatePagePublicationSettingsHandler.execute(
+      new UpdatePagePublicationSettingsCommand(
+        auth.id,
+        pageId,
+        siteId,
+        dto.include_descendants,
+      ),
     );
   }
 
