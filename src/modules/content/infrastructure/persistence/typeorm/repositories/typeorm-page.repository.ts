@@ -12,6 +12,16 @@ import { PageMapper } from '../mappers/page.mapper';
 
 @Injectable()
 export class TypeOrmPageRepository implements PageRepository {
+  async lockWorkspaceHierarchy(
+    workspaceId: string,
+    context: PersistenceContext,
+  ): Promise<void> {
+    // Shared by publication and Page writers. Always acquire before site row locks.
+    await this.resolveRepo(context).query(
+      "SELECT pg_advisory_xact_lock(hashtextextended('content-publication:' || $1::text, 0))",
+      [workspaceId],
+    );
+  }
   constructor(
     @InjectRepository(PageOrmEntity)
     private readonly repo: Repository<PageOrmEntity>,
@@ -411,7 +421,8 @@ export class TypeOrmPageRepository implements PageRepository {
       WITH RECURSIVE page_tree AS (
         SELECT
           id,
-          parent_page_id
+          parent_page_id,
+          ARRAY[$1::uuid, id] AS visited
         FROM pages
         WHERE parent_page_id = $1
           AND deleted_at IS NULL
@@ -420,11 +431,13 @@ export class TypeOrmPageRepository implements PageRepository {
 
         SELECT
           child.id,
-          child.parent_page_id
+          child.parent_page_id,
+          parent.visited || child.id
         FROM pages child
         INNER JOIN page_tree parent
           ON child.parent_page_id = parent.id
         WHERE child.deleted_at IS NULL
+          AND NOT child.id = ANY(parent.visited)
       )
 
       SELECT id

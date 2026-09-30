@@ -3,17 +3,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { WorkspacePermissionPolicy } from 'src/modules/permission/domain/policies/workspace-permission.policy';
 import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
-import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import {
   WorkspaceAccess,
   WorkspaceOverview,
   WorkspaceRepository,
 } from 'src/modules/workspace/domain/repositories/workspace.repository';
+import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { DataSource, EntityManager, IsNull, Not, Repository } from 'typeorm';
 import { Workspace } from '../../../../domain/aggregates/workspace/workspace.aggregate';
-import { WorkspaceMapper } from '../mappers/workspace.mapper';
 import { WorkspaceMemberOrmEntity } from '../entities/workspace-member.orm-entity';
 import { WorkspaceOrmEntity } from '../entities/workspace.orm-entity';
+import { WorkspaceMapper } from '../mappers/workspace.mapper';
 
 type AccessRow = {
   membershipType: WorkspaceMembershipType;
@@ -65,6 +65,20 @@ export class TypeOrmWorkspaceRepository implements WorkspaceRepository {
     context?: PersistenceContext,
   ): Promise<boolean> {
     return this.getWorkspaceRepo(context).exists({ where: { slug } });
+  }
+
+  async findById(
+    workspaceId: string,
+    context?: PersistenceContext,
+  ): Promise<Workspace | null> {
+    const entity = await this.getWorkspaceRepo(context).findOne({
+      where: {
+        id: workspaceId,
+        deletedAt: IsNull(),
+      },
+    });
+
+    return entity ? WorkspaceMapper.toDomain(entity) : null;
   }
 
   async save(
@@ -131,11 +145,14 @@ export class TypeOrmWorkspaceRepository implements WorkspaceRepository {
     const accessRows = await entityManager.query<AccessRow[]>(
       `
       SELECT
-        membership_type AS "membershipType",
-        role_name AS "roleName"
-      FROM workspace_members
-      WHERE user_id = $1
-        AND workspace_id = $2
+        wm.membership_type AS "membershipType",
+        wm.role_name AS "roleName"
+      FROM workspace_members wm
+      INNER JOIN workspaces w
+        ON w.id = wm.workspace_id
+      WHERE wm.user_id = $1
+        AND wm.workspace_id = $2
+        AND w.deleted_at IS NULL
       LIMIT 1
       `,
       [userId, workspaceId],

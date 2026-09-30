@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -11,11 +10,16 @@ import {
 } from 'src/modules/activity/domain/entities/activity.entity';
 import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
 import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import type { UserProfilePreferenceService } from 'src/modules/identity/application/ports/user-profile-preference.service.interface';
+import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
+import type { WorkspaceRepository } from 'src/modules/workspace/domain/repositories/workspace.repository';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
+import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { type UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
+import { WorkspaceSoftDeleteService } from '../../../services/workspace-soft-delete.service';
 
 import { DeleteWorkspaceMemberCommand } from './delete-workspace-member.command';
 
@@ -25,11 +29,19 @@ export class DeleteWorkspaceMemberHandler {
     @Inject(WORKSPACE_TYPES.repositories.WorkspaceMemberRepository)
     private readonly workspaceMemberRepository: WorkspaceMemberRepository,
 
+    @Inject(WORKSPACE_TYPES.repositories.WorkspaceRepository)
+    private readonly workspaceRepository: WorkspaceRepository,
+
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
 
     @Inject(ACTIVITY_TYPES.services.CreateActivityService)
     private readonly createActivityService: CreateActivityService,
+
+    @Inject(IDENTITY_TYPES.services.UserProfilePreferenceService)
+    private readonly userProfilePreferenceService: UserProfilePreferenceService,
+
+    private readonly workspaceSoftDeleteService: WorkspaceSoftDeleteService,
   ) {}
 
   async execute(command: DeleteWorkspaceMemberCommand): Promise<void> {
@@ -72,7 +84,7 @@ export class DeleteWorkspaceMemberHandler {
         }
       }
 
-      if (targetMember.getRole() === WorkspaceRole.OWNER) {
+      if (isSelfLeave && targetMember.getRole() === WorkspaceRole.OWNER) {
         const allMembers = await this.workspaceMemberRepository.findByWorkspace(
           command.workspaceId,
           manager,
@@ -82,15 +94,31 @@ export class DeleteWorkspaceMemberHandler {
         ).length;
 
         if (ownerCount <= 1) {
-          throw new BadRequestException(
-            'Cannot remove the last owner of the workspace. Please transfer ownership first.',
+          await this.workspaceSoftDeleteService.execute(
+            command.actorId,
+            command.workspaceId,
+            manager,
           );
+
+          await this.updateLastActiveWorkspaceAfterLeave(
+            command.userId,
+            command.workspaceId,
+            manager,
+          );
+
+          return;
         }
       }
 
       await this.workspaceMemberRepository.deleteByWorkspaceAndUser(
         command.workspaceId,
         command.userId,
+        manager,
+      );
+
+      await this.updateLastActiveWorkspaceAfterLeave(
+        command.userId,
+        command.workspaceId,
         manager,
       );
 
@@ -108,5 +136,33 @@ export class DeleteWorkspaceMemberHandler {
         manager,
       );
     });
+  }
+
+  private async updateLastActiveWorkspaceAfterLeave(
+    userId: string,
+    workspaceId: string,
+    context?: PersistenceContext,
+  ): Promise<void> {
+    const lastActiveWorkspaceId =
+      await this.userProfilePreferenceService.getLastActiveWorkspace(
+        userId,
+        context,
+      );
+
+    if (lastActiveWorkspaceId !== workspaceId) {
+      return;
+    }
+
+    const activeWorkspaces = await this.workspaceRepository.findByUserId(
+      userId,
+      context,
+    );
+    const fallbackWorkspaceId = activeWorkspaces[0]?.getId() ?? null;
+
+    await this.userProfilePreferenceService.updateLastActiveWorkspace(
+      userId,
+      fallbackWorkspaceId,
+      context,
+    );
   }
 }

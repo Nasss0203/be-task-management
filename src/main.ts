@@ -9,11 +9,11 @@ import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { isAllowedFrontendOrigin } from './common/config/frontend-origin.config';
 import { ErrorCode } from './common/constants/error-code.constant';
 import { HttpExceptionFilter } from './common/filter/http-exception';
 import { TransformInterceptor } from './common/interceptor/transform.interceptor';
 import { MyLogger } from './log/my.logger';
-import { resolveAllowedFrontendOrigins } from './common/config/frontend-origin.config';
 
 function formatValidationErrors(errors: ValidationError[]): string[] {
   return errors.flatMap((error) => [
@@ -51,10 +51,16 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
-  const allowedOrigins = resolveAllowedFrontendOrigins(configService);
-
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (isAllowedFrontendOrigin(configService, origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`Origin ${origin} is not allowed by CORS`));
+    },
+
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     preflightContinue: false,
     optionsSuccessStatus: 204,

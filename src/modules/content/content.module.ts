@@ -30,20 +30,27 @@ import { ResolveBookmarkMetadataHandler } from './application/queries/resolve-bo
 
 import { ContentPageProvisioningService } from './application/services/content-page-provisioning.service';
 import { PageBlockOrderingService } from './application/services/page-block-ordering.service';
+import { PagePublicationTreeService } from './application/services/page-publication-tree.service';
+import { PublicationAvailabilityService } from './application/services/publication-availability.service';
+import { ListPagePublicationsHandler } from './application/queries/page-publication/list-page-publications/list-page-publications.handler';
 
 import { CONTENT_TYPES } from './content.types';
 
 import { HtmlBookmarkMetadataFetcherAdapter } from './infrastructure/metadata/html-bookmark-metadata-fetcher.adapter';
 
 import { PageBlockOrmEntity } from './infrastructure/persistence/typeorm/entities/page-block.orm-entity';
+import { PagePublicationOrmEntity } from './infrastructure/persistence/typeorm/entities/page-publication.orm-entity';
 import { PageTemplateBlockOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-block.orm-entity';
 import { PageTemplateOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 import { PageOrmEntity } from './infrastructure/persistence/typeorm/entities/page.orm-entity';
+import { PublishedSiteOrmEntity } from './infrastructure/persistence/typeorm/entities/published-site.orm-entity';
 
 import { TypeOrmPageBlockRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-block.repository';
+import { TypeOrmPagePublicationRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-publication.repository';
 import { TypeOrmPageTemplateBlockRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template-block.repository';
 import { TypeOrmPageTemplateRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template.repository';
 import { TypeOrmPageRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page.repository';
+import { TypeOrmPublishedSiteRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-published-site.repository';
 
 import { CreatePageEditRequestHandler } from './application/commands/page-edit-request/create-page-edit-request/create-page-edit-request.handler';
 
@@ -56,6 +63,15 @@ import { ApprovePageEditRequestHandler } from './application/commands/page-edit-
 import { RejectPageEditRequestHandler } from './application/commands/page-edit-request/reject-page-edit-request/reject-page-edit-request.handler';
 import { AddPageFavoriteHandler } from './application/commands/page-favorite/add-page-favorite/add-page-favorite.handler';
 import { RemovePageFavoriteHandler } from './application/commands/page-favorite/remove-page-favorite/remove-page-favorite.handler';
+import { PublishSiteHandler } from './application/commands/page-publication/publish-site/publish-site.handler';
+import { PublishPageToSiteHandler } from './application/commands/page-publication/publish-page-to-site/publish-page-to-site.handler';
+import { ListSitePublicationsHandler } from './application/queries/page-publication/list-site-publications/list-site-publications.handler';
+import { PublishedSitesController } from './presentation/http/controllers/published-sites.controller';
+import { WorkspacePublishedSitesController } from './presentation/http/controllers/workspace-published-sites.controller';
+import { ListWorkspacePublishedSitesHandler } from './application/queries/page-publication/list-workspace-published-sites/list-workspace-published-sites.handler';
+import { RepublishSiteHandler } from './application/commands/page-publication/republish-site/republish-site.handler';
+import { UnpublishSiteHandler } from './application/commands/page-publication/unpublish-site/unpublish-site.handler';
+import { UpdatePagePublicationSettingsHandler } from './application/commands/page-publication/update-page-publication-settings/update-page-publication-settings.handler';
 import { UpdatePageShareSettingHandler } from './application/commands/page-share-setting/update-page-share-setting/update-page-share-setting.handler';
 import { AcceptPageShareLinkHandler } from './application/commands/page-share/accept-page-share-link/accept-page-share-link.handler';
 import { CreatePageShareLinkHandler } from './application/commands/page-share/create-page-share-link/create-page-share-link.handler';
@@ -71,6 +87,8 @@ import { GetPageAccessHandler } from './application/queries/page-access/get-page
 import { GetMyPageEditRequestsHandler } from './application/queries/page-edit-request/get-my-page-edit-requests/get-my-page-edit-requests.handler';
 import { GetPageEditRequestsHandler } from './application/queries/page-edit-request/get-page-edit-requests/get-page-edit-requests.handler';
 import { ListPageFavoritesHandler } from './application/queries/page-favorite/list-page-favorites/list-page-favorites.handler';
+import { GetPagePublicationHandler } from './application/queries/page-publication/get-page-publication/get-page-publication.handler';
+import { GetPublicPageHandler } from './application/queries/page-publication/get-public-page/get-public-page.handler';
 import { GetPageShareSettingHandler } from './application/queries/page-share-setting/get-page-share-setting/get-page-share-setting.handler';
 import { GetPageSharesHandler } from './application/queries/page-share/get-page-shares/get-page-shares.handler';
 import { GetPagesSharedWithMeHandler } from './application/queries/page-share/get-pages-shared-with-me/get-pages-shared-with-me.handler';
@@ -92,11 +110,13 @@ import { PageAccessRequestController } from './presentation/http/controllers/pag
 import { PageBlockController } from './presentation/http/controllers/page-block.controller';
 import { PageEditRequestController } from './presentation/http/controllers/page-edit-request.controller';
 import { PageFavoriteController } from './presentation/http/controllers/page-favorite.controller';
+import { PagePublicationController } from './presentation/http/controllers/page-publication.controller';
 import { PageShareSettingsController } from './presentation/http/controllers/page-share-settings.controller';
 import { PageShareController } from './presentation/http/controllers/page-share.controller';
 import { PageTemplateBlocksController } from './presentation/http/controllers/page-template-blocks.controller';
 import { PageTemplatesController } from './presentation/http/controllers/page-templates.controller';
 import { PageController } from './presentation/http/controllers/page.controller';
+import { PublicPageController } from './presentation/http/controllers/public-page.controller';
 
 const repositories = [
   {
@@ -140,6 +160,14 @@ const repositories = [
     provide: CONTENT_TYPES.repositories.PageAccessRequestRepository,
 
     useClass: TypeOrmPageAccessRequestRepository,
+  },
+  {
+    provide: CONTENT_TYPES.repositories.PublishedSiteRepository,
+    useClass: TypeOrmPublishedSiteRepository,
+  },
+  {
+    provide: CONTENT_TYPES.repositories.PagePublicationRepository,
+    useClass: TypeOrmPagePublicationRepository,
   },
 ];
 
@@ -357,9 +385,34 @@ const pageAccessRequestHandler = [
     useClass: GetMyPageAccessRequestHandler,
   },
 ];
+
+const publishSitePageHandler = [
+  {
+    provide: CONTENT_TYPES.applications.PublishSiteHandler,
+    useClass: PublishSiteHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.GetPagePublicationHandler,
+    useClass: GetPagePublicationHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.UnpublishSiteHandler,
+    useClass: UnpublishSiteHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.RepublishSiteHandler,
+    useClass: RepublishSiteHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.GetPublicPageHandler,
+    useClass: GetPublicPageHandler,
+  },
+];
 const bookmarkHandlers = [ResolveBookmarkMetadataHandler];
 
 const applicationServices = [
+  PublicationAvailabilityService,
+  PagePublicationTreeService,
   PageBlockOrderingService,
   PageShareLinkTokenService,
 ];
@@ -388,6 +441,8 @@ const ports = [
       PageEditRequestOrmEntity,
       PageShareSettingOrmEntity,
       PageAccessRequestOrmEntity,
+      PublishedSiteOrmEntity,
+      PagePublicationOrmEntity,
     ]),
     DatabaseModule,
     PermissionModule,
@@ -405,9 +460,18 @@ const ports = [
     PageEditRequestController,
     PageShareSettingsController,
     PageAccessRequestController,
+    PagePublicationController,
+    PublishedSitesController,
+    WorkspacePublishedSitesController,
+    PublicPageController,
   ],
 
   providers: [
+    ListPagePublicationsHandler,
+    UpdatePagePublicationSettingsHandler,
+    ListWorkspacePublishedSitesHandler,
+    PublishPageToSiteHandler,
+    ListSitePublicationsHandler,
     ...repositories,
     ...pageHandlers,
     ...pageBlockHandlers,
@@ -416,6 +480,7 @@ const ports = [
     ...pageShareHandlers,
     ...pageShareSettingsHandlers,
     ...pageAccessRequestHandler,
+    ...publishSitePageHandler,
     ...bookmarkHandlers,
     ...applicationServices,
     ...ports,

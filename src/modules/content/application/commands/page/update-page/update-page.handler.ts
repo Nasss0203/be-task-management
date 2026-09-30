@@ -20,7 +20,14 @@ export class UpdatePageHandler {
 
   async execute(command: UpdatePageCommand): Promise<PageResponseDto> {
     return this.uow.runInTransaction(async (manager) => {
-      const page = await this.pageRepo.findById(command.pageId, manager);
+      let page = await this.pageRepo.findById(command.pageId, manager);
+
+      if (!page) throw new NotFoundException('Page not found');
+      await this.pageRepo.lockWorkspaceHierarchy(
+        page.getWorkspaceId(),
+        manager,
+      );
+      page = await this.pageRepo.findById(command.pageId, manager);
 
       if (!page) {
         throw new NotFoundException('Page not found');

@@ -48,6 +48,7 @@ import { SelectWorkspaceHandler } from './application/commands/workspace/select-
 import { GetTeamspaceMembersHandler } from './application/queries/teamspace/get-teamspace-members/get-teamspace-members.handler';
 import { GetTeamspacesHandler } from './application/queries/teamspace/get-teamspaces/get-teamspaces.handler';
 import { GetPendingWorkspaceInvitesHandler } from './application/queries/workspace-invite/get-pending-workspace-invites/get-pending-workspace-invites.handler';
+import { WorkspaceSoftDeleteService } from './application/services/workspace-soft-delete.service';
 import { TeamspaceMemberOrmEntity } from './infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
 import { TeamspaceOrmEntity } from './infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
 import { TypeOrmTeamspaceMemberRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-teamspace-member.repository';
@@ -101,6 +102,7 @@ import { TeamspaceController } from './presentation/http/controllers/teamspace.c
     AddWorkspaceMemberHandler,
     UpdateWorkspaceMemberRoleHandler,
     DeleteWorkspaceMemberHandler,
+    WorkspaceSoftDeleteService,
     ListWorkspaceMembersHandler,
     ListWorkspacePeopleHandler,
     CreateTeamspaceHandler,
@@ -132,6 +134,7 @@ import { TeamspaceController } from './presentation/http/controllers/teamspace.c
   exports: [
     CreateDefaultWorkspaceHandler,
     WORKSPACE_TYPES.repositories.WorkspaceMemberRepository,
+    WORKSPACE_TYPES.repositories.WorkspaceRepository,
   ],
 })
 export class WorkspaceModule {}

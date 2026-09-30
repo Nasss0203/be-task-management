@@ -17,6 +17,7 @@ export class PermanentlyDeletePageHandler {
 
   async execute(command: PermanentlyDeletePageCommand): Promise<void> {
     await this.uow.runInTransaction(async (manager) => {
+      await this.pageRepo.lockWorkspaceHierarchy(command.workspaceId, manager);
       const page = await this.pageRepo.findDeletedById(command.pageId, manager);
 
       if (!page) {

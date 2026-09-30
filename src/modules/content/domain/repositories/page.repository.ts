@@ -2,6 +2,10 @@ import { Page } from 'src/modules/content/domain/aggregates/page/page.aggregate'
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 export interface PageRepository {
+  lockWorkspaceHierarchy(
+    workspaceId: string,
+    context: PersistenceContext,
+  ): Promise<void>;
   findById(id: string, context?: PersistenceContext): Promise<Page | null>;
   findByWorkspace(
     workspaceId: string,
