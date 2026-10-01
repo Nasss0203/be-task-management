@@ -19,8 +19,10 @@ import type { AiConversationRepository } from '../../domain/repositories/ai-conv
 import type { AiGenerationRepository } from '../../domain/repositories/ai-generation.repository';
 import type { AiMessageRepository } from '../../domain/repositories/ai-message.repository';
 import type { AiUsageRepository } from '../../domain/repositories/ai-usage.repository';
+import { PAGE_COMPOSITION_CAPABILITY } from '../constants/page-composition.constant';
 import { AiGenerationResponseDto } from '../dto/response/ai-generation.response.dto';
 import type { AiRuntimePort } from '../ports/ai-runtime.port';
+import { PageCompositionDraftValidator } from './page-composition-draft-validator.service';
 
 export interface SubmitAiRequestParams {
   requestId: string;
@@ -49,6 +51,7 @@ export class AiAssistantService {
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly unitOfWork: UnitOfWork,
     private readonly authorizationService: AuthorizationService,
+    private readonly pageCompositionDraftValidator: PageCompositionDraftValidator,
   ) {}
 
   async submit(
@@ -64,11 +67,15 @@ export class AiAssistantService {
     }
 
     const workspaceId = conversation.getWorkspaceId();
+
     if (workspaceId) {
       const allowed = await this.authorizationService.authorize({
         userId: params.userId,
         permissions: [PERMISSIONS.WORKSPACE_READ],
-        target: { type: 'workspace', id: workspaceId },
+        target: {
+          type: 'workspace',
+          id: workspaceId,
+        },
       });
 
       if (!allowed) {
@@ -121,9 +128,15 @@ export class AiAssistantService {
       const result = await this.runtime.execute({
         requestId: params.requestId,
         capability: params.capability,
+        content: params.content,
         input: params.input,
         context: params.context,
       });
+
+      const outputData = this.resolveOutputData(
+        params.capability,
+        result.output,
+      );
 
       return await this.unitOfWork.runInTransaction(async (context) => {
         const generation = await this.generationRepository.findByIdAndUserId(
@@ -137,10 +150,11 @@ export class AiAssistantService {
         }
 
         generation.complete({
-          outputData: result.output,
+          outputData,
           provider: result.provider ?? null,
           model: result.model ?? null,
         });
+
         const completed = await this.generationRepository.save(
           generation,
           context,
@@ -150,7 +164,7 @@ export class AiAssistantService {
           AiMessage.create({
             conversationId: params.conversationId,
             role: AiMessageRole.ASSISTANT,
-            content: this.getAssistantMessageContent(result.output),
+            content: this.getAssistantMessageContent(outputData),
             metadata: {
               requestId: params.requestId,
               ...(result.provider ? { provider: result.provider } : {}),
@@ -201,6 +215,7 @@ export class AiAssistantService {
               'AI_RUNTIME_ERROR',
               error instanceof Error ? error.message : 'AI runtime failed',
             );
+
             await this.generationRepository.save(generation, context);
           }
         });
@@ -210,6 +225,19 @@ export class AiAssistantService {
 
       throw error;
     }
+  }
+
+  private resolveOutputData(
+    capability: string,
+    output: Record<string, unknown> | string,
+  ): Record<string, unknown> | string {
+    if (capability !== PAGE_COMPOSITION_CAPABILITY) {
+      return output;
+    }
+
+    const draft = this.pageCompositionDraftValidator.validate(output);
+
+    return { ...draft };
   }
 
   private getAssistantMessageContent(

@@ -490,6 +490,10 @@ const ports = [
     CONTENT_TYPES.ports.PageProvisioning,
     CONTENT_TYPES.repositories.PageRepository,
     CONTENT_TYPES.repositories.PageBlockRepository,
+
+    CONTENT_TYPES.applications.CreatePageHandler,
+    CONTENT_TYPES.applications.CreatePageBlockHandler,
+    CONTENT_TYPES.applications.AddDatabaseViewToBlockHandler,
   ],
 })
 export class ContentModule {}

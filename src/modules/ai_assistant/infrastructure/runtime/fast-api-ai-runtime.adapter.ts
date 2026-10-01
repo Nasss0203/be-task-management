@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { firstValueFrom } from 'rxjs';
 
+import { PAGE_COMPOSITION_CAPABILITY } from '../../application/constants/page-composition.constant';
 import type {
   AiRuntimePort,
   AiRuntimeRequest,
@@ -24,6 +25,12 @@ type WritingAction =
   | 'TRANSLATE'
   | 'CONTINUE';
 
+interface FastApiUsage {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+}
+
 interface FastApiWritingRequest {
   action: WritingAction;
   text: string;
@@ -34,11 +41,19 @@ interface FastApiWritingResponse {
   result: string;
   provider: string;
   model: string;
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
+  usage?: FastApiUsage;
+}
+
+interface FastApiPageCompositionRequest {
+  instruction: string;
+  context?: Record<string, unknown>;
+}
+
+interface FastApiPageCompositionResponse {
+  result: Record<string, unknown>;
+  provider: string;
+  model: string;
+  usage?: FastApiUsage;
 }
 
 const WRITING_CAPABILITIES: Record<string, WritingAction> = {
@@ -58,6 +73,10 @@ export class FastApiAiRuntimeAdapter implements AiRuntimePort {
   ) {}
 
   async execute(request: AiRuntimeRequest): Promise<AiRuntimeResult> {
+    if (request.capability === PAGE_COMPOSITION_CAPABILITY) {
+      return this.executePageComposition(request);
+    }
+
     const action = WRITING_CAPABILITIES[request.capability];
 
     if (!action) {
@@ -66,6 +85,13 @@ export class FastApiAiRuntimeAdapter implements AiRuntimePort {
       );
     }
 
+    return this.executeWriting(request, action);
+  }
+
+  private async executeWriting(
+    request: AiRuntimeRequest,
+    action: WritingAction,
+  ): Promise<AiRuntimeResult> {
     const text = this.getText(request.input);
     const language = this.getOptionalString(request.input, 'language');
 
@@ -75,6 +101,70 @@ export class FastApiAiRuntimeAdapter implements AiRuntimePort {
       language,
     };
 
+    const response = await this.post<FastApiWritingResponse>(
+      '/internal/v1/writing',
+      payload,
+    );
+
+    if (
+      !response.result ||
+      typeof response.result !== 'string' ||
+      !response.result.trim()
+    ) {
+      throw new BadGatewayException('AI service returned an invalid response');
+    }
+
+    return {
+      output: {
+        text: response.result,
+      },
+      provider: response.provider,
+      model: response.model,
+      ...this.mapUsage(response),
+    };
+  }
+
+  private async executePageComposition(
+    request: AiRuntimeRequest,
+  ): Promise<AiRuntimeResult> {
+    if (typeof request.content !== 'string' || !request.content.trim()) {
+      throw new BadRequestException('Page composition instruction is required');
+    }
+
+    const payload: FastApiPageCompositionRequest = {
+      instruction: request.content,
+      ...(request.context
+        ? {
+            context: request.context,
+          }
+        : {}),
+    };
+
+    const response = await this.post<FastApiPageCompositionResponse>(
+      '/internal/v1/page-composition',
+      payload,
+    );
+
+    if (
+      !response.result ||
+      typeof response.result !== 'object' ||
+      Array.isArray(response.result)
+    ) {
+      throw new BadGatewayException('AI service returned an invalid response');
+    }
+
+    return {
+      output: response.result,
+      provider: response.provider,
+      model: response.model,
+      ...this.mapUsage(response),
+    };
+  }
+
+  private async post<TResponse>(
+    path: string,
+    payload: unknown,
+  ): Promise<TResponse> {
     const baseUrl = this.configService.getOrThrow<string>(
       'AI_SERVICE_BASE_URL',
     );
@@ -88,59 +178,22 @@ export class FastApiAiRuntimeAdapter implements AiRuntimePort {
 
     try {
       const response = await firstValueFrom(
-        this.httpService.post<FastApiWritingResponse>(
-          `${baseUrl}/internal/v1/writing`,
-          payload,
-          {
-            timeout,
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Internal-Service-Token': internalToken,
-            },
+        this.httpService.post<TResponse>(`${baseUrl}${path}`, payload, {
+          timeout,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Service-Token': internalToken,
           },
-        ),
+        }),
       );
 
-      if (
-        !response.data ||
-        typeof response.data.result !== 'string' ||
-        !response.data.result.trim()
-      ) {
+      if (!response.data) {
         throw new BadGatewayException(
           'AI service returned an invalid response',
         );
       }
 
-      const usage = response.data.usage;
-      if (
-        Object.prototype.hasOwnProperty.call(response.data, 'usage') &&
-        (!usage ||
-          typeof usage !== 'object' ||
-          Array.isArray(usage) ||
-          ![usage.prompt_tokens, usage.completion_tokens, usage.total_tokens].every(
-            (value) =>
-              typeof value === 'number' && Number.isInteger(value) && value >= 0,
-          ))
-      ) {
-        throw new BadGatewayException('AI service returned an invalid response');
-      }
-
-      return {
-        output: {
-          text: response.data.result,
-        },
-        provider: response.data.provider,
-        model: response.data.model,
-        ...(usage
-          ? {
-              usage: {
-                promptTokens: usage.prompt_tokens,
-                completionTokens: usage.completion_tokens,
-                totalTokens: usage.total_tokens,
-              },
-            }
-          : {}),
-      };
+      return response.data;
     } catch (error) {
       if (
         error instanceof BadRequestException ||
@@ -165,6 +218,41 @@ export class FastApiAiRuntimeAdapter implements AiRuntimePort {
 
       throw error;
     }
+  }
+
+  private mapUsage(response: {
+    usage?: FastApiUsage;
+  }): Pick<AiRuntimeResult, 'usage'> {
+    const usage = response.usage;
+
+    if (
+      Object.prototype.hasOwnProperty.call(response, 'usage') &&
+      (!usage ||
+        typeof usage !== 'object' ||
+        Array.isArray(usage) ||
+        ![
+          usage.prompt_tokens,
+          usage.completion_tokens,
+          usage.total_tokens,
+        ].every(
+          (value) =>
+            typeof value === 'number' && Number.isInteger(value) && value >= 0,
+        ))
+    ) {
+      throw new BadGatewayException('AI service returned an invalid response');
+    }
+
+    if (!usage) {
+      return {};
+    }
+
+    return {
+      usage: {
+        promptTokens: usage.prompt_tokens,
+        completionTokens: usage.completion_tokens,
+        totalTokens: usage.total_tokens,
+      },
+    };
   }
 
   private getText(input: Record<string, unknown>): string {

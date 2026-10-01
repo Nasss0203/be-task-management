@@ -1,6 +1,7 @@
 export interface AiRuntimeRequest {
   requestId: string;
   capability: string;
+  content: string;
   input: Record<string, unknown>;
   context?: Record<string, unknown>;
 }

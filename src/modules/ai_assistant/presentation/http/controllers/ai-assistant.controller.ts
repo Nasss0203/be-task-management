@@ -32,6 +32,11 @@ import { ListConversationMessagesQuery } from '../../../application/queries/list
 import { ListConversationsHandler } from '../../../application/queries/list-conversations/list-conversations.handler';
 import { ListConversationsQuery } from '../../../application/queries/list-conversations/list-conversations.query';
 import { AiAssistantService } from '../../../application/services/ai-assistant.service';
+import { ConfirmPageCompositionCommand } from '../../../application/commands/confirm-page-composition/confirm-page-composition.command';
+import { ConfirmPageCompositionHandler } from '../../../application/commands/confirm-page-composition/confirm-page-composition.handler';
+import { ConfirmPageCompositionRequestDto } from '../../../application/dto/request/confirm-page-composition.request.dto';
+import { DiscardGenerationCommand } from '../../../application/commands/discard-generation/discard-generation.command';
+import { DiscardGenerationHandler } from '../../../application/commands/discard-generation/discard-generation.handler';
 
 @Controller('ai-assistant')
 @ReadRateLimit()
@@ -43,7 +48,9 @@ export class AiAssistantController {
     private readonly getConversationHandler: GetConversationHandler,
     private readonly listConversationMessagesHandler: ListConversationMessagesHandler,
     private readonly getGenerationHandler: GetGenerationHandler,
+    private readonly confirmPageCompositionHandler: ConfirmPageCompositionHandler,
     private readonly aiAssistantService: AiAssistantService,
+    private readonly discardGenerationHandler: DiscardGenerationHandler,
   ) {}
 
   @Post('conversations')
@@ -135,6 +142,36 @@ export class AiAssistantController {
   ) {
     return this.getGenerationHandler.execute(
       new GetGenerationQuery(auth.id, generationId),
+    );
+  }
+
+  @Post('generations/:generationId/confirm')
+  @WriteRateLimit()
+  @ResponseMessage('AI page composition confirmed')
+  confirmPageComposition(
+    @Auth() auth: IAuth,
+    @Param('generationId') generationId: string,
+    @Body() dto: ConfirmPageCompositionRequestDto,
+  ) {
+    return this.confirmPageCompositionHandler.execute(
+      new ConfirmPageCompositionCommand(
+        auth.id,
+        generationId,
+        dto.teamspaceId ?? null,
+        dto.parentPageId ?? null,
+      ),
+    );
+  }
+
+  @Post('generations/:generationId/discard')
+  @WriteRateLimit()
+  @ResponseMessage('AI generation discarded')
+  discardGeneration(
+    @Auth() auth: IAuth,
+    @Param('generationId') generationId: string,
+  ) {
+    return this.discardGenerationHandler.execute(
+      new DiscardGenerationCommand(auth.id, generationId),
     );
   }
 }

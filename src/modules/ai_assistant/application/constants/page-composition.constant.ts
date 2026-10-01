@@ -1,0 +1,3 @@
+export const PAGE_COMPOSITION_CAPABILITY = 'GENERATE_PAGE_COMPOSITION' as const;
+
+export const MAX_PAGE_COMPOSITION_ROWS = 20 as const;
