@@ -16,7 +16,6 @@ export class PageMapper {
       slug: orm.slug,
       icon: orm.icon,
       coverUrl: orm.cover_url,
-      isTemplate: orm.is_template,
       createdBy: orm.created_by,
       createdAt: orm.createdAt,
       updatedAt: orm.updatedAt,
@@ -39,7 +38,6 @@ export class PageMapper {
     orm.slug = domain.getSlug();
     orm.icon = domain.getIcon();
     orm.cover_url = domain.getCoverUrl();
-    orm.is_template = domain.getIsTemplate();
     orm.created_by = domain.getCreatedBy();
     orm.createdAt = domain.getCreatedAt();
     orm.updatedAt = domain.getUpdatedAt();

@@ -64,9 +64,6 @@ export class PageOrmEntity {
   })
   cover_url: string | null;
 
-  @Column({ default: false })
-  is_template: boolean;
-
   @Column({
     name: 'teamspace_id',
     type: 'uuid',

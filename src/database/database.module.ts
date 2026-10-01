@@ -10,8 +10,6 @@ import { AiToolCallOrmEntity } from 'src/modules/ai_assistant/infrastructure/per
 import { AiUsageOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-usage.orm-entity';
 import { AttachmentOrmEntity } from 'src/modules/attachment/infrastructure/persistence/typeorm/entities/attachment.orm-entity';
 import { PageBlockOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-block.orm-entity';
-import { PageTemplateBlockOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-template-block.orm-entity';
-import { PageTemplateOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 import { PageOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page.orm-entity';
 import { PublishedSiteOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/published-site.orm-entity';
 import { PagePublicationOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-publication.orm-entity';
@@ -84,8 +82,6 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
           Activity,
           Mention,
           Notification,
-          PageTemplateBlockOrmEntity,
-          PageTemplateOrmEntity,
 
           // V2
           DatabasePropertyOrmEntity,

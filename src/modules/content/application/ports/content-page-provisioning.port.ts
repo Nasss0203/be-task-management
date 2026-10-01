@@ -5,7 +5,6 @@ export type CreateDefaultPageInput = {
   title: string;
   slug: string;
   createdBy: string;
-  isTemplate: boolean;
 };
 
 export interface ContentPageProvisioningPort {

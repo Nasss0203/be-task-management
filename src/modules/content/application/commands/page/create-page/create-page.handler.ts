@@ -135,8 +135,6 @@ export class CreatePageHandler {
 
         icon: command.icon ?? null,
         coverUrl: command.coverUrl ?? null,
-
-        isTemplate: false,
       });
 
       const savedPage = await this.pageRepo.save(page, context);

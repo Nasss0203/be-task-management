@@ -25,24 +25,6 @@ export const CONTENT_TYPES = {
     MovePageBlockHandler: Symbol.for('MovePageBlockHandler'),
     DeletePageBlockHandler: Symbol.for('DeletePageBlockHandler'),
     RestorePageBlockHandler: Symbol.for('RestorePageBlockHandler'),
-
-    CreatePageTemplateHandler: Symbol.for('CreatePageTemplateHandler'),
-    FindPageTemplateHandler: Symbol.for('FindPageTemplateHandler'),
-    UpdatePageTemplateHandler: Symbol.for('UpdatePageTemplateHandler'),
-    DeletePageTemplateHandler: Symbol.for('DeletePageTemplateHandler'),
-
-    CreatePageTemplateBlockHandler: Symbol.for(
-      'CreatePageTemplateBlockHandler',
-    ),
-    FindPageTemplateBlockByTemplateHandler: Symbol.for(
-      'FindPageTemplateBlockByTemplateHandler',
-    ),
-    UpdatePageTemplateBlockHandler: Symbol.for(
-      'UpdatePageTemplateBlockHandler',
-    ),
-    DeletePageTemplateBlockHandler: Symbol.for(
-      'DeletePageTemplateBlockHandler',
-    ),
     AddPageFavoriteHandler: Symbol.for('AddPageFavoriteHandler'),
     RemovePageFavoriteHandler: Symbol.for('RemovePageFavoriteHandler'),
     ListPageFavoritesHandler: Symbol.for('ListPageFavoritesHandler'),
@@ -81,8 +63,6 @@ export const CONTENT_TYPES = {
   repositories: {
     PageRepository: Symbol.for('PageRepository'),
     PageBlockRepository: Symbol.for('PageBlockRepository'),
-    PageTemplateRepository: Symbol.for('PageTemplateRepository'),
-    PageTemplateBlockRepository: Symbol.for('PageTemplateBlockRepository'),
     PageFavoriteRepository: Symbol.for('PageFavoriteRepository'),
     PageShareRepository: Symbol.for('PageShareRepository'),
     PageShareLinkRepository: Symbol.for('PageShareLinkRepository'),

@@ -20,8 +20,6 @@ export class PageResponseDto {
 
   cover_url: string | null;
 
-  is_template: boolean;
-
   canEdit: boolean;
 
   created_by: string;
@@ -60,8 +58,6 @@ export class PageResponseDto {
     dto.icon = page.getIcon();
 
     dto.cover_url = page.getCoverUrl();
-
-    dto.is_template = page.getIsTemplate();
 
     dto.canEdit = options?.canEdit ?? false;
 

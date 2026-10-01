@@ -21,8 +21,6 @@ import { UpdatePageHandler } from './application/commands/page/update-page/updat
 import { FindDeletedPageBlocksHandler } from './application/queries/page-block/find-deleted-page-blocks/find-deleted-page-blocks.handler';
 import { FindPageBlockByIdHandler } from './application/queries/page-block/find-page-block-by-id/find-page-block-by-id.handler';
 import { FindPageBlockByPageHandler } from './application/queries/page-block/find-page-block-by-page/find-page-block-by-page.handler';
-import { FindPageTemplateBlockByTemplateHandler } from './application/queries/page-template/find-page-template-block-by-template/find-page-template-block-by-template.handler';
-import { FindPageTemplateHandler } from './application/queries/page-template/find-page-template/find-page-template.handler';
 import { FindDeletedPagesHandler } from './application/queries/page/find-deleted-pages/find-deleted-pages.handler';
 import { FindPageByIdHandler } from './application/queries/page/find-page-by-id/find-page-by-id.handler';
 import { FindPageByWorkspaceHandler } from './application/queries/page/find-page-by-workspace/find-page-by-workspace.handler';
@@ -42,15 +40,11 @@ import { HtmlBookmarkMetadataFetcherAdapter } from './infrastructure/metadata/ht
 
 import { PageBlockOrmEntity } from './infrastructure/persistence/typeorm/entities/page-block.orm-entity';
 import { PagePublicationOrmEntity } from './infrastructure/persistence/typeorm/entities/page-publication.orm-entity';
-import { PageTemplateBlockOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-block.orm-entity';
-import { PageTemplateOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 import { PageOrmEntity } from './infrastructure/persistence/typeorm/entities/page.orm-entity';
 import { PublishedSiteOrmEntity } from './infrastructure/persistence/typeorm/entities/published-site.orm-entity';
 
 import { TypeOrmPageBlockRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-block.repository';
 import { TypeOrmPagePublicationRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-publication.repository';
-import { TypeOrmPageTemplateBlockRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template-block.repository';
-import { TypeOrmPageTemplateRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template.repository';
 import { TypeOrmPageRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page.repository';
 import { TypeOrmPublishedSiteRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-published-site.repository';
 import { TypeOrmPublicSiteNavigationReader } from './infrastructure/persistence/typeorm/readers/typeorm-public-site-navigation.reader';
@@ -118,8 +112,6 @@ import { PageFavoriteController } from './presentation/http/controllers/page-fav
 import { PagePublicationController } from './presentation/http/controllers/page-publication.controller';
 import { PageShareSettingsController } from './presentation/http/controllers/page-share-settings.controller';
 import { PageShareController } from './presentation/http/controllers/page-share.controller';
-import { PageTemplateBlocksController } from './presentation/http/controllers/page-template-blocks.controller';
-import { PageTemplatesController } from './presentation/http/controllers/page-templates.controller';
 import { PageController } from './presentation/http/controllers/page.controller';
 import { PublicPageController } from './presentation/http/controllers/public-page.controller';
 
@@ -131,14 +123,6 @@ const repositories = [
   {
     provide: CONTENT_TYPES.repositories.PageBlockRepository,
     useClass: TypeOrmPageBlockRepository,
-  },
-  {
-    provide: CONTENT_TYPES.repositories.PageTemplateRepository,
-    useClass: TypeOrmPageTemplateRepository,
-  },
-  {
-    provide: CONTENT_TYPES.repositories.PageTemplateBlockRepository,
-    useClass: TypeOrmPageTemplateBlockRepository,
   },
   {
     provide: CONTENT_TYPES.repositories.PageFavoriteRepository,
@@ -267,15 +251,7 @@ const pageBlockHandlers = [
   },
 ];
 
-const pageTemplateHandlers = [
-  {
-    provide: CONTENT_TYPES.applications.FindPageTemplateHandler,
-    useClass: FindPageTemplateHandler,
-  },
-  {
-    provide: CONTENT_TYPES.applications.FindPageTemplateBlockByTemplateHandler,
-    useClass: FindPageTemplateBlockByTemplateHandler,
-  },
+const pageFavoriteHandlers = [
   {
     provide: CONTENT_TYPES.applications.AddPageFavoriteHandler,
     useClass: AddPageFavoriteHandler,
@@ -444,8 +420,6 @@ const ports = [
     TypeOrmModule.forFeature([
       PageOrmEntity,
       PageBlockOrmEntity,
-      PageTemplateOrmEntity,
-      PageTemplateBlockOrmEntity,
       PageFavoriteOrmEntity,
       PageShareOrmEntity,
       PageShareLinkOrmEntity,
@@ -465,8 +439,6 @@ const ports = [
     PageFavoriteController,
     PageController,
     PageBlockController,
-    PageTemplatesController,
-    PageTemplateBlocksController,
     PageShareController,
     PageEditRequestController,
     PageShareSettingsController,
@@ -491,7 +463,7 @@ const ports = [
     ...repositories,
     ...pageHandlers,
     ...pageBlockHandlers,
-    ...pageTemplateHandlers,
+    ...pageFavoriteHandlers,
     ...pageEditRequestHandlers,
     ...pageShareHandlers,
     ...pageShareSettingsHandlers,

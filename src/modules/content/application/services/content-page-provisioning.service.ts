@@ -44,7 +44,6 @@ export class ContentPageProvisioningService implements ContentPageProvisioningPo
           input.slug ?? input.title,
           manager,
         ),
-        isTemplate: input.isTemplate,
         icon: null,
         coverUrl: null,
       });

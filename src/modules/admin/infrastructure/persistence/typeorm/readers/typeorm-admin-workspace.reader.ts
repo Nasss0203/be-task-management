@@ -66,7 +66,6 @@ interface AdminWorkspacePageRawRow {
   slug: string | null;
   icon: string | null;
   coverUrl: string | null;
-  isTemplate: boolean;
   createdBy: string;
   createdAt: Date | string;
   updatedAt: Date | string;
@@ -447,7 +446,6 @@ export class TypeOrmAdminWorkspaceReader implements AdminWorkspaceReader {
           page_item.slug AS "slug",
           page_item.icon AS "icon",
           page_item.cover_url AS "coverUrl",
-          page_item.is_template AS "isTemplate",
           page_item.created_by AS "createdBy",
           page_item.created_at AS "createdAt",
           page_item.updated_at AS "updatedAt"
@@ -499,7 +497,6 @@ export class TypeOrmAdminWorkspaceReader implements AdminWorkspaceReader {
         slug: row.slug,
         icon: row.icon,
         coverUrl: row.coverUrl,
-        isTemplate: row.isTemplate,
         createdBy: row.createdBy,
         createdAt: new Date(row.createdAt),
         updatedAt: new Date(row.updatedAt),

@@ -46,7 +46,6 @@ export class CreateWorkspaceHandler {
           title: createdWorkspace.getName(),
           slug: createdWorkspace.getSlug(),
           createdBy: command.userId,
-          isTemplate: false,
         },
         context,
       );
