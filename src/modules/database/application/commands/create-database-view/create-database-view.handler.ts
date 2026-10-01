@@ -23,7 +23,10 @@ export class CreateDatabaseViewHandler {
     command: CreateDatabaseViewCommand,
     context?: PersistenceContext,
   ): Promise<DatabaseViewDto> {
-    const database = await this.databaseRepository.findById(command.databaseId, context,);
+    const database = await this.databaseRepository.findById(
+      command.databaseId,
+      context,
+    );
 
     if (!database) {
       throw new NotFoundException('Database not found');

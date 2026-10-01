@@ -2,6 +2,7 @@ import { User } from 'src/modules/identity/identity.types';
 import { WorkspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace.orm-entity';
 import {
   Column,
+  Check,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
@@ -17,6 +18,11 @@ import { PageBlockOrmEntity } from './page-block.orm-entity';
 @Index('IDX_PAGES_WORKSPACE_ID', ['workspace_id'])
 @Index('IDX_PAGES_PARENT_PAGE_ID', ['parent_page_id'])
 @Index('IDX_PAGES_DELETED_AT', ['deletedAt'])
+@Index('UQ_pages_public_subdomain', ['public_subdomain'], { unique: true })
+@Check(
+  'CK_pages_public_subdomain_root',
+  `(parent_page_id IS NULL) = (public_subdomain IS NOT NULL)`,
+)
 @Index('UQ_PAGES_WORKSPACE_SLUG_ACTIVE', ['workspace_id', 'slug'], {
   unique: true,
   where: '"deleted_at" IS NULL',
@@ -74,6 +80,14 @@ export class PageOrmEntity {
     nullable: true,
   })
   parent_page_id: string | null;
+
+  @Column({
+    name: 'public_subdomain',
+    type: 'varchar',
+    length: 63,
+    nullable: true,
+  })
+  public_subdomain: string | null;
 
   @ManyToOne(() => PageOrmEntity, (page) => page.children, {
     nullable: true,

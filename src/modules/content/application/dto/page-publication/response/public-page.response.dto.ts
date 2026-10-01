@@ -5,6 +5,7 @@ import { PublicPageBlockResponseDto } from './public-page-block.response.dto';
 
 export class PublicPageResponseDto {
   breadcrumbs: { page_id: string; title: string; path: string }[];
+
   subdomain: string;
   path: string;
 
@@ -18,6 +19,12 @@ export class PublicPageResponseDto {
   };
 
   blocks: PublicPageBlockResponseDto[];
+
+  capabilities: {
+    updates_enabled: boolean;
+    authenticated: boolean;
+    can_update: boolean;
+  };
 
   static fromDomain(
     page: Page,

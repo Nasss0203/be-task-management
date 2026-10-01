@@ -12,6 +12,7 @@ export class PublishedSiteMapper {
       createdAt: orm.created_at,
       updatedAt: orm.updated_at,
       disabledAt: orm.disabled_at,
+      allowUpdates: orm.allow_updates,
     });
   }
 
@@ -21,6 +22,7 @@ export class PublishedSiteMapper {
     orm.workspace_id = domain.getWorkspaceId();
     orm.root_page_id = domain.getRootPageId();
     orm.subdomain = domain.getSubdomain();
+    orm.allow_updates = domain.getAllowUpdates();
     orm.created_by = domain.getCreatedBy();
     orm.created_at = domain.getCreatedAt();
     orm.updated_at = domain.getUpdatedAt();

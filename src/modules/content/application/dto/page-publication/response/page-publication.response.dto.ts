@@ -11,9 +11,11 @@ export class PagePublicationResponseDto {
   path: string;
   publication_type: PagePublicationType;
   include_descendants: boolean;
+  allow_updates: boolean;
   published: boolean;
   published_at: Date;
   unpublished_at: Date | null;
+  visibility_override: 'PUBLISHED' | 'UNPUBLISHED' | null;
 
   static fromDomain(
     publication: PagePublication,
@@ -29,9 +31,11 @@ export class PagePublicationResponseDto {
       path: publication.getPath(),
       publication_type: publication.getPublicationType(),
       include_descendants: publication.getIncludeDescendants(),
+      allow_updates: site.getAllowUpdates(),
       published,
       published_at: publication.getPublishedAt(),
       unpublished_at: publication.getUnpublishedAt(),
+      visibility_override: publication.getVisibilityOverride(),
     });
   }
 }

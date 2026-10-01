@@ -29,7 +29,10 @@ export class SetRowValueHandler {
     command: SetRowValueCommand,
     context?: PersistenceContext,
   ): Promise<RowValue> {
-    const row = await this.databaseRowRepository.findById(command.rowId, context,);
+    const row = await this.databaseRowRepository.findById(
+      command.rowId,
+      context,
+    );
 
     if (!row) {
       throw new NotFoundException('Database row not found');

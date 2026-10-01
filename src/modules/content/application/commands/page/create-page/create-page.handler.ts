@@ -18,6 +18,7 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { generateSlug } from 'src/utils';
 import { PagePublicationTreeService } from '../../../services/page-publication-tree.service';
+import { PublicSubdomainAllocatorService } from '../../../services/public-subdomain-allocator.service';
 import { CreatePageCommand } from './create-page.command';
 
 @Injectable()
@@ -29,6 +30,7 @@ export class CreatePageHandler {
     private readonly authorizationService: AuthorizationService,
     @Inject(PERSISTENCE_TYPES.UnitOfWork) private readonly uow: UnitOfWork,
     private readonly publicationTree: PagePublicationTreeService,
+    private readonly subdomains: PublicSubdomainAllocatorService,
   ) {}
 
   async execute(
@@ -123,6 +125,9 @@ export class CreatePageHandler {
         teamspaceId: effectiveTeamspaceId,
 
         parentPageId: command.parentPageId ?? null,
+        publicSubdomain: command.parentPageId
+          ? null
+          : await this.subdomains.allocate(slug, context),
 
         title: command.title,
         createdBy: command.userId,

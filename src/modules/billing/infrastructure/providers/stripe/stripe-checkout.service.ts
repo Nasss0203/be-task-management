@@ -96,7 +96,6 @@ export class StripeCheckoutService implements StripeCheckoutPort {
     url.searchParams.set('workspaceId', input.workspaceId);
     url.searchParams.set('status', status);
 
-    
     return url
       .toString()
       .replace(/%7BCHECKOUT_SESSION_ID%7D/gi, '{CHECKOUT_SESSION_ID}');

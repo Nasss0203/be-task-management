@@ -38,6 +38,9 @@ export class PublishedSiteOrmEntity {
   @Column({ type: 'varchar', length: 63 })
   subdomain: string;
 
+  @Column({ name: 'allow_updates', type: 'boolean', default: false })
+  allow_updates: boolean;
+
   @Column('uuid')
   created_by: string;
 

@@ -1,8 +1,8 @@
 import {
-  ConflictException,
-  ForbiddenException,
-  Inject,
-  Injectable,
+    ConflictException,
+    ForbiddenException,
+    Inject,
+    Injectable,
 } from '@nestjs/common';
 
 import { CONTENT_TYPES } from '../../../../content.types';

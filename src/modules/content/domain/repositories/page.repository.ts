@@ -6,6 +6,11 @@ export interface PageRepository {
     workspaceId: string,
     context: PersistenceContext,
   ): Promise<void>;
+  lockGlobalSubdomainAllocation(context: PersistenceContext): Promise<void>;
+  existsByPublicSubdomain(
+    subdomain: string,
+    context: PersistenceContext,
+  ): Promise<boolean>;
   findById(id: string, context?: PersistenceContext): Promise<Page | null>;
   findByWorkspace(
     workspaceId: string,
@@ -51,6 +56,7 @@ export interface PageRepository {
     parentPageId: string | null,
     teamspaceId: string | null,
     context?: PersistenceContext,
+    publicSubdomain?: string | null,
   ): Promise<void>;
 
   findDescendants(

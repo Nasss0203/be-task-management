@@ -2,7 +2,9 @@ import { ConfigService } from '@nestjs/config';
 
 const DEVELOPMENT_CLIENT_ORIGIN = 'http://localhost:3000';
 const DEVELOPMENT_ADMIN_ORIGIN = 'http://localhost:5173';
-const DEVELOPMENT_PUBLIC_SITE_ORIGIN = /^http:\/\/[a-z0-9-]+\.localhost:3000$/i;
+const PUBLIC_SITE_SUBDOMAIN_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i;
+const DOMAIN_LABEL_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i;
+const RESERVED_PUBLIC_SITE_SUBDOMAINS = new Set(['api', 'www']);
 
 export const isAllowedFrontendOrigin = (
   configService: ConfigService,
@@ -12,20 +14,22 @@ export const isAllowedFrontendOrigin = (
     return true;
   }
 
+  const parsedOrigin = parseRequestOrigin(origin);
+  if (!parsedOrigin) {
+    return false;
+  }
+
   const allowedOrigins = resolveAllowedFrontendOrigins(configService);
 
-  if (allowedOrigins.includes(origin)) {
+  if (allowedOrigins.includes(parsedOrigin.origin)) {
     return true;
   }
 
-  if (
-    !isProduction(configService) &&
-    DEVELOPMENT_PUBLIC_SITE_ORIGIN.test(origin)
-  ) {
-    return true;
+  if (!isProduction(configService)) {
+    return isDevelopmentPublicSiteOrigin(parsedOrigin);
   }
 
-  return false;
+  return isProductionPublicSiteOrigin(configService, parsedOrigin);
 };
 
 const isProduction = (configService: ConfigService): boolean =>
@@ -37,6 +41,84 @@ const parseConfiguredUrl = (value: string, configName: string): URL => {
   } catch {
     throw new Error(`${configName} must be a valid absolute URL`);
   }
+};
+
+const parseRequestOrigin = (origin: string): URL | null => {
+  try {
+    const parsedOrigin = new URL(origin);
+
+    if (
+      parsedOrigin.username ||
+      parsedOrigin.password ||
+      parsedOrigin.pathname !== '/' ||
+      parsedOrigin.search ||
+      parsedOrigin.hash
+    ) {
+      return null;
+    }
+
+    return parsedOrigin;
+  } catch {
+    return null;
+  }
+};
+
+const isValidPublicSiteSubdomain = (value: string): boolean =>
+  PUBLIC_SITE_SUBDOMAIN_PATTERN.test(value) &&
+  !RESERVED_PUBLIC_SITE_SUBDOMAINS.has(value.toLowerCase());
+
+const isDevelopmentPublicSiteOrigin = (origin: URL): boolean => {
+  if (
+    origin.protocol !== 'http:' ||
+    origin.port !== '3000' ||
+    !origin.hostname.toLowerCase().endsWith('.localhost')
+  ) {
+    return false;
+  }
+
+  const subdomain = origin.hostname.slice(0, -'.localhost'.length);
+  return isValidPublicSiteSubdomain(subdomain);
+};
+
+const resolvePublicSiteDomain = (
+  configService: ConfigService,
+): string | null => {
+  const value = configService.get<string>('PUBLIC_SITE_DOMAIN');
+  if (!value) {
+    return null;
+  }
+
+  const domain = value.trim().toLowerCase().replace(/\.$/, '');
+  const labels = domain.split('.');
+
+  if (
+    domain.includes('/') ||
+    domain.includes(':') ||
+    labels.some((label) => !DOMAIN_LABEL_PATTERN.test(label))
+  ) {
+    throw new Error('PUBLIC_SITE_DOMAIN must be a valid hostname');
+  }
+
+  return domain;
+};
+
+const isProductionPublicSiteOrigin = (
+  configService: ConfigService,
+  origin: URL,
+): boolean => {
+  const publicSiteDomain = resolvePublicSiteDomain(configService);
+  if (!publicSiteDomain || origin.protocol !== 'https:' || origin.port) {
+    return false;
+  }
+
+  const suffix = `.${publicSiteDomain}`;
+  const hostname = origin.hostname.toLowerCase();
+  if (!hostname.endsWith(suffix)) {
+    return false;
+  }
+
+  const subdomain = hostname.slice(0, -suffix.length);
+  return isValidPublicSiteSubdomain(subdomain);
 };
 
 const assertProductionHttps = (

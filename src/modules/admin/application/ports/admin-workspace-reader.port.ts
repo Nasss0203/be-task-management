@@ -28,7 +28,7 @@ export interface ListAdminWorkspacesResult {
   total: number;
   page: number;
   limit: number;
-} 
+}
 
 export interface AdminWorkspaceDetail extends AdminWorkspaceSummary {
   createdBy: string | null;
@@ -58,7 +58,7 @@ export interface ListAdminWorkspaceMembersResult {
   total: number;
   page: number;
   limit: number;
-}  
+}
 
 export type AdminTeamspaceVisibility = 'OPEN' | 'CLOSED' | 'PRIVATE';
 
@@ -86,7 +86,7 @@ export interface ListAdminWorkspaceTeamspacesResult {
   total: number;
   page: number;
   limit: number;
-} 
+}
 
 export interface ListAdminWorkspacePagesInput {
   workspaceId: string;
@@ -137,4 +137,3 @@ export interface AdminWorkspaceReader {
     input: ListAdminWorkspacePagesInput,
   ): Promise<ListAdminWorkspacePagesResult>;
 }
-

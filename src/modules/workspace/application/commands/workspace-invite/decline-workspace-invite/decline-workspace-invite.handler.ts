@@ -76,7 +76,7 @@ export class DeclineWorkspaceInviteHandler {
       /**
        * 4. Invite hết hạn không được decline.
        */
-      if (invite.getExpiresAt() && invite.getExpiresAt()! < new Date()) {
+      if (invite.getExpiresAt() && invite.getExpiresAt() < new Date()) {
         throw new BadRequestException('Workspace invite has expired');
       }
 

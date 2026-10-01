@@ -31,6 +31,8 @@ import { ResolveBookmarkMetadataHandler } from './application/queries/resolve-bo
 import { ContentPageProvisioningService } from './application/services/content-page-provisioning.service';
 import { PageBlockOrderingService } from './application/services/page-block-ordering.service';
 import { PagePublicationTreeService } from './application/services/page-publication-tree.service';
+import { PublicSubdomainAllocatorService } from './application/services/public-subdomain-allocator.service';
+import { PublicationHierarchySynchronizerService } from './application/services/publication-hierarchy-synchronizer.service';
 import { PublicationAvailabilityService } from './application/services/publication-availability.service';
 import { ListPagePublicationsHandler } from './application/queries/page-publication/list-page-publications/list-page-publications.handler';
 
@@ -51,6 +53,7 @@ import { TypeOrmPageTemplateBlockRepository } from './infrastructure/persistence
 import { TypeOrmPageTemplateRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template.repository';
 import { TypeOrmPageRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page.repository';
 import { TypeOrmPublishedSiteRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-published-site.repository';
+import { TypeOrmPublicSiteNavigationReader } from './infrastructure/persistence/typeorm/readers/typeorm-public-site-navigation.reader';
 
 import { CreatePageEditRequestHandler } from './application/commands/page-edit-request/create-page-edit-request/create-page-edit-request.handler';
 
@@ -72,6 +75,7 @@ import { ListWorkspacePublishedSitesHandler } from './application/queries/page-p
 import { RepublishSiteHandler } from './application/commands/page-publication/republish-site/republish-site.handler';
 import { UnpublishSiteHandler } from './application/commands/page-publication/unpublish-site/unpublish-site.handler';
 import { UpdatePagePublicationSettingsHandler } from './application/commands/page-publication/update-page-publication-settings/update-page-publication-settings.handler';
+import { UpdatePageVisibilityHandler } from './application/commands/page-publication/update-page-visibility.handler';
 import { UpdatePageShareSettingHandler } from './application/commands/page-share-setting/update-page-share-setting/update-page-share-setting.handler';
 import { AcceptPageShareLinkHandler } from './application/commands/page-share/accept-page-share-link/accept-page-share-link.handler';
 import { CreatePageShareLinkHandler } from './application/commands/page-share/create-page-share-link/create-page-share-link.handler';
@@ -89,6 +93,7 @@ import { GetPageEditRequestsHandler } from './application/queries/page-edit-requ
 import { ListPageFavoritesHandler } from './application/queries/page-favorite/list-page-favorites/list-page-favorites.handler';
 import { GetPagePublicationHandler } from './application/queries/page-publication/get-page-publication/get-page-publication.handler';
 import { GetPublicPageHandler } from './application/queries/page-publication/get-public-page/get-public-page.handler';
+import { GetPublicSiteNavigationHandler } from './application/queries/page-publication/get-public-site-navigation/get-public-site-navigation.handler';
 import { GetPageShareSettingHandler } from './application/queries/page-share-setting/get-page-share-setting/get-page-share-setting.handler';
 import { GetPageSharesHandler } from './application/queries/page-share/get-page-shares/get-page-shares.handler';
 import { GetPagesSharedWithMeHandler } from './application/queries/page-share/get-pages-shared-with-me/get-pages-shared-with-me.handler';
@@ -413,6 +418,8 @@ const bookmarkHandlers = [ResolveBookmarkMetadataHandler];
 const applicationServices = [
   PublicationAvailabilityService,
   PagePublicationTreeService,
+  PublicSubdomainAllocatorService,
+  PublicationHierarchySynchronizerService,
   PageBlockOrderingService,
   PageShareLinkTokenService,
 ];
@@ -421,6 +428,10 @@ const ports = [
   {
     provide: CONTENT_TYPES.ports.PageProvisioning,
     useClass: ContentPageProvisioningService,
+  },
+  {
+    provide: CONTENT_TYPES.ports.PublicSiteNavigationReader,
+    useClass: TypeOrmPublicSiteNavigationReader,
   },
   {
     provide: CONTENT_TYPES.bookmarkMetadataFetcher,
@@ -469,9 +480,14 @@ const ports = [
   providers: [
     ListPagePublicationsHandler,
     UpdatePagePublicationSettingsHandler,
+    UpdatePageVisibilityHandler,
     ListWorkspacePublishedSitesHandler,
     PublishPageToSiteHandler,
     ListSitePublicationsHandler,
+    {
+      provide: CONTENT_TYPES.applications.GetPublicSiteNavigationHandler,
+      useClass: GetPublicSiteNavigationHandler,
+    },
     ...repositories,
     ...pageHandlers,
     ...pageBlockHandlers,

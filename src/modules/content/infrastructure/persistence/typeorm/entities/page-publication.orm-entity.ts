@@ -26,6 +26,10 @@ import { PublishedSiteOrmEntity } from './published-site.orm-entity';
   'CK_page_publications_inherited_options',
   `publication_type <> 'INHERITED' OR include_descendants = false`,
 )
+@Check(
+  'CK_page_publications_visibility_override',
+  `(publication_type = 'INHERITED' OR visibility_override IS NULL) AND (visibility_override IS NULL OR visibility_override IN ('PUBLISHED', 'UNPUBLISHED'))`,
+)
 @Index('IDX_page_publications_site_id', ['site_id'])
 @Index('IDX_page_publications_page_id', ['page_id'])
 @Index('IDX_page_publications_unpublished_at', ['unpublished_at'])
@@ -80,6 +84,9 @@ export class PagePublicationOrmEntity {
 
   @Column({ type: 'boolean', default: false })
   include_descendants: boolean;
+
+  @Column({ type: 'varchar', length: 11, nullable: true })
+  visibility_override: 'PUBLISHED' | 'UNPUBLISHED' | null;
 
   @Column({ type: 'varchar', length: 2048 })
   path: string;
