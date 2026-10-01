@@ -56,6 +56,7 @@ export class GetPagePublicationHandler {
       page_id: query.pageId,
       subdomain: site.getSubdomain(),
       site_active: site.getDisabledAt() === null,
+      allow_updates: site.getAllowUpdates(),
       path: publication?.getPath(),
       published_at: publication?.getPublishedAt(),
       unpublished_at: publication?.getUnpublishedAt(),

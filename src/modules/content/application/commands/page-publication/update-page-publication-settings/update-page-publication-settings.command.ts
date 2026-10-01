@@ -3,6 +3,7 @@ export class UpdatePagePublicationSettingsCommand {
     public readonly actorId: string,
     public readonly pageId: string,
     public readonly siteId: string | undefined,
-    public readonly includeDescendants: boolean,
+    public readonly includeDescendants?: boolean,
+    public readonly allowUpdates?: boolean,
   ) {}
 }

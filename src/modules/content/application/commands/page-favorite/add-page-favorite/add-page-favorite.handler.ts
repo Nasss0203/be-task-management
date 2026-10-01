@@ -1,8 +1,8 @@
 import {
-  ForbiddenException,
-  Inject,
-  Injectable,
-  NotFoundException,
+    ForbiddenException,
+    Inject,
+    Injectable,
+    NotFoundException,
 } from '@nestjs/common';
 
 import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';

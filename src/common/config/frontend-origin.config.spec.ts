@@ -1,6 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import {
   createFrontendCallbackUrl,
+  isAllowedFrontendOrigin,
   resolveAllowedFrontendOrigins,
   resolveFrontendOrigin,
 } from './frontend-origin.config';
@@ -64,5 +65,64 @@ describe('frontend origin config', () => {
       'https://app.example.com',
       'https://admin.example.com',
     ]);
+  });
+
+  it('allows the root frontend and a valid development published subdomain', () => {
+    const configService = new ConfigService({
+      NODE_ENV: 'development',
+      FRONTEND_URL: 'http://localhost:3000',
+    });
+
+    expect(
+      isAllowedFrontendOrigin(configService, 'http://localhost:3000'),
+    ).toBe(true);
+    expect(
+      isAllowedFrontendOrigin(configService, 'http://asss.localhost:3000'),
+    ).toBe(true);
+  });
+
+  it.each([
+    'http://evil-localhost.com:3000',
+    'http://localhost.attacker.com',
+    'http://foo.example.com',
+    'http://foo.bar.localhost:3000',
+    'http://-invalid.localhost:3000',
+    'http://www.localhost:3000',
+  ])('rejects unrelated or invalid development origin %s', (origin) => {
+    const configService = new ConfigService({ NODE_ENV: 'development' });
+    expect(isAllowedFrontendOrigin(configService, origin)).toBe(false);
+  });
+
+  it('allows only one valid subdomain of the configured production public-site domain', () => {
+    const configService = new ConfigService({
+      NODE_ENV: 'production',
+      FRONTEND_URL: 'https://app.example.com',
+      PUBLIC_SITE_DOMAIN: 'published.example.com',
+    });
+
+    expect(
+      isAllowedFrontendOrigin(
+        configService,
+        'https://customer.published.example.com',
+      ),
+    ).toBe(true);
+    expect(
+      isAllowedFrontendOrigin(
+        configService,
+        'https://nested.customer.published.example.com',
+      ),
+    ).toBe(false);
+    expect(
+      isAllowedFrontendOrigin(
+        configService,
+        'https://customer.other.example.com',
+      ),
+    ).toBe(false);
+    expect(
+      isAllowedFrontendOrigin(
+        configService,
+        'http://customer.published.example.com',
+      ),
+    ).toBe(false);
   });
 });

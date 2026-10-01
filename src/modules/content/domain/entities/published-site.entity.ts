@@ -7,6 +7,7 @@ type CreatePublishedSiteProps = {
   rootPageId: string;
   subdomain: string;
   createdBy: string;
+  allowUpdates?: boolean;
 };
 
 type RestorePublishedSiteProps = {
@@ -18,6 +19,7 @@ type RestorePublishedSiteProps = {
   createdAt: Date;
   updatedAt: Date;
   disabledAt: Date | null;
+  allowUpdates?: boolean;
 };
 
 export class PublishedSite {
@@ -30,6 +32,7 @@ export class PublishedSite {
     private readonly createdAt: Date,
     private updatedAt: Date,
     private disabledAt: Date | null,
+    private allowUpdates: boolean,
   ) {}
 
   static create(props: CreatePublishedSiteProps): PublishedSite {
@@ -44,6 +47,7 @@ export class PublishedSite {
       now,
       now,
       null,
+      props.allowUpdates ?? false,
     );
   }
 
@@ -57,6 +61,7 @@ export class PublishedSite {
       props.createdAt,
       props.updatedAt,
       props.disabledAt,
+      props.allowUpdates ?? false,
     );
   }
 
@@ -72,6 +77,11 @@ export class PublishedSite {
 
   enable(): void {
     this.disabledAt = null;
+    this.updatedAt = new Date();
+  }
+
+  setAllowUpdates(allowUpdates: boolean): void {
+    this.allowUpdates = allowUpdates;
     this.updatedAt = new Date();
   }
 
@@ -98,5 +108,8 @@ export class PublishedSite {
   }
   getDisabledAt(): Date | null {
     return this.disabledAt;
+  }
+  getAllowUpdates(): boolean {
+    return this.allowUpdates;
   }
 }

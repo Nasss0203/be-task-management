@@ -1,20 +1,20 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
-import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
-import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import { Page } from 'src/modules/content/domain/aggregates/page/page.aggregate';
-import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
-import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
-import { PublicSubdomainAllocatorService } from './public-subdomain-allocator.service';
 import {
   PageBlock,
   PageBlockType,
 } from 'src/modules/content/domain/entities/page-block.entity';
+import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
+import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
+import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
+import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import {
   ContentPageProvisioningPort,
   CreateDefaultPageInput,
 } from '../ports/content-page-provisioning.port';
+import { PublicSubdomainAllocatorService } from './public-subdomain-allocator.service';
 
 @Injectable()
 export class ContentPageProvisioningService implements ContentPageProvisioningPort {

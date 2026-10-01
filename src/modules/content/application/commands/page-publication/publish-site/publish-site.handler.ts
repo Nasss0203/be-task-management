@@ -1,9 +1,9 @@
 import {
-  BadRequestException,
-  ConflictException,
-  Inject,
-  Injectable,
-  NotFoundException,
+    BadRequestException,
+    ConflictException,
+    Inject,
+    Injectable,
+    NotFoundException,
 } from '@nestjs/common';
 
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
@@ -19,8 +19,8 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 
 import { PublishSiteResponseDto } from '../../../dto/page-publication/response/publish-site.response.dto';
-import { PublishSiteCommand } from './publish-site.command';
 import { PagePublicationTreeService } from '../../../services/page-publication-tree.service';
+import { PublishSiteCommand } from './publish-site.command';
 
 @Injectable()
 export class PublishSiteHandler {

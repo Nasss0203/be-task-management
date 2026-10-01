@@ -1,24 +1,24 @@
 import {
-  BadRequestException,
-  ConflictException,
-  ForbiddenException,
-  Inject,
-  Injectable,
-  NotFoundException,
+    BadRequestException,
+    ConflictException,
+    ForbiddenException,
+    Inject,
+    Injectable,
+    NotFoundException,
 } from '@nestjs/common';
-import { CONTENT_TYPES } from '../../../../content.types';
-import type { PublishedSiteRepository } from '../../../../domain/repositories/published-site.repository';
-import type { PageRepository } from '../../../../domain/repositories/page.repository';
-import type { PagePublicationRepository } from '../../../../domain/repositories/page-publication.repository';
-import { PagePublication } from '../../../../domain/entities/page-publication.entity';
-import { PagePublicationPath } from '../../../../domain/value-objects/page-publication-path.vo';
 import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
+import { CONTENT_TYPES } from '../../../../content.types';
+import { PagePublication } from '../../../../domain/entities/page-publication.entity';
+import type { PagePublicationRepository } from '../../../../domain/repositories/page-publication.repository';
+import type { PageRepository } from '../../../../domain/repositories/page.repository';
+import type { PublishedSiteRepository } from '../../../../domain/repositories/published-site.repository';
+import { PagePublicationPath } from '../../../../domain/value-objects/page-publication-path.vo';
 import { PublishSiteResponseDto } from '../../../dto/page-publication/response/publish-site.response.dto';
-import { PublishPageToSiteCommand } from './publish-page-to-site.command';
 import { PagePublicationTreeService } from '../../../services/page-publication-tree.service';
+import { PublishPageToSiteCommand } from './publish-page-to-site.command';
 
 @Injectable()
 export class PublishPageToSiteHandler {

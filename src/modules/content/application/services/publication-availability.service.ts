@@ -1,13 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { CONTENT_TYPES } from '../../content.types';
-import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import type { WorkspaceRepository } from 'src/modules/workspace/domain/repositories/workspace.repository';
-import type { PageRepository } from '../../domain/repositories/page.repository';
-import type { PagePublicationRepository } from '../../domain/repositories/page-publication.repository';
-import { PagePublication } from '../../domain/entities/page-publication.entity';
-import { PagePublicationType } from '../../domain/enums/page-publication-type.enum';
-import { PublishedSite } from '../../domain/entities/published-site.entity';
+import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
+import { CONTENT_TYPES } from '../../content.types';
 import { Page } from '../../domain/aggregates/page/page.aggregate';
+import { PagePublication } from '../../domain/entities/page-publication.entity';
+import { PublishedSite } from '../../domain/entities/published-site.entity';
+import { PagePublicationType } from '../../domain/enums/page-publication-type.enum';
+import type { PagePublicationRepository } from '../../domain/repositories/page-publication.repository';
+import type { PageRepository } from '../../domain/repositories/page.repository';
 
 @Injectable()
 export class PublicationAvailabilityService {

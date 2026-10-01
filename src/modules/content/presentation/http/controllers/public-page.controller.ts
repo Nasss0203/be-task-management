@@ -7,9 +7,11 @@ import { GetPublicSiteNavigationQuery } from 'src/modules/content/application/qu
 
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 
+import { Auth } from 'src/common/decorator/auth.decorator';
 import { Public } from 'src/common/decorator/public.decorator';
 import { PublicReadRateLimit } from 'src/common/decorator/rate-limit.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import type { IAuth } from 'src/types/auth';
 
 @Controller('public/sites')
 export class PublicPageController {
@@ -34,12 +36,13 @@ export class PublicPageController {
   @Public()
   @PublicReadRateLimit()
   @ResponseMessage('Get public page')
-  getPublicPage(
+  async getPublicPage(
     @Param('subdomain') subdomain: string,
+    @Auth() auth: IAuth | null,
     @Query('path') path?: string,
   ) {
-    return this.getPublicPageHandler.execute(
-      new GetPublicPageQuery(subdomain, path ?? '/'),
+    return await this.getPublicPageHandler.execute(
+      new GetPublicPageQuery(subdomain, path ?? '/', auth?.id),
     );
   }
 }

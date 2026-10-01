@@ -68,4 +68,34 @@ describe('RefreshTokenOriginGuard', () => {
       ),
     ).toThrow(ForbiddenException);
   });
+
+  it('allows a valid development published-subdomain origin', () => {
+    const developmentGuard = new RefreshTokenOriginGuard(
+      new ConfigService({ NODE_ENV: 'development' }),
+    );
+
+    expect(
+      developmentGuard.canActivate(
+        createExecutionContext(cookieRequest('http://asss.localhost:3000')),
+      ),
+    ).toBe(true);
+  });
+
+  it('allows the configured production published-site origin', () => {
+    const productionGuard = new RefreshTokenOriginGuard(
+      new ConfigService({
+        NODE_ENV: 'production',
+        FRONTEND_URL: 'https://app.example.com',
+        PUBLIC_SITE_DOMAIN: 'published.example.com',
+      }),
+    );
+
+    expect(
+      productionGuard.canActivate(
+        createExecutionContext(
+          cookieRequest('https://customer.published.example.com'),
+        ),
+      ),
+    ).toBe(true);
+  });
 });

@@ -121,6 +121,7 @@ export class PagePublicationController {
         pageId,
         siteId,
         dto.include_descendants,
+        dto.allow_updates,
       ),
     );
   }

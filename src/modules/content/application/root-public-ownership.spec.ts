@@ -3,45 +3,46 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
+import type { WorkspaceRepository } from 'src/modules/workspace/domain/repositories/workspace.repository';
+import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { Page } from '../domain/aggregates/page/page.aggregate';
-import { PagePublication } from '../domain/entities/page-publication.entity';
 import { PageBlock } from '../domain/entities/page-block.entity';
+import { PagePublication } from '../domain/entities/page-publication.entity';
 import { PublishedSite } from '../domain/entities/published-site.entity';
 import { PagePublicationType } from '../domain/enums/page-publication-type.enum';
-import type { PageRepository } from '../domain/repositories/page.repository';
-import type { PagePublicationRepository } from '../domain/repositories/page-publication.repository';
-import type { PublishedSiteRepository } from '../domain/repositories/published-site.repository';
 import type { PageBlockRepository } from '../domain/repositories/page-block.repository';
-import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
-import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
-import { PublicSubdomainAllocatorService } from './services/public-subdomain-allocator.service';
-import { PagePublicationTreeService } from './services/page-publication-tree.service';
-import { PublicationHierarchySynchronizerService } from './services/publication-hierarchy-synchronizer.service';
-import { CreatePageHandler } from './commands/page/create-page/create-page.handler';
-import { CreatePageCommand } from './commands/page/create-page/create-page.command';
-import { DuplicatePageHandler } from './commands/page/duplicate-page/duplicate-page.handler';
-import { DuplicatePageCommand } from './commands/page/duplicate-page/duplicate-page.command';
-import { MovePageHandler } from './commands/page/move-page/move-page.handler';
-import { MovePageCommand } from './commands/page/move-page/move-page.command';
-import { PublishSiteHandler } from './commands/page-publication/publish-site/publish-site.handler';
-import { PublishSiteCommand } from './commands/page-publication/publish-site/publish-site.command';
-import { PublishPageToSiteHandler } from './commands/page-publication/publish-page-to-site/publish-page-to-site.handler';
+import type { PagePublicationRepository } from '../domain/repositories/page-publication.repository';
+import type { PageRepository } from '../domain/repositories/page.repository';
+import type { PublishedSiteRepository } from '../domain/repositories/published-site.repository';
 import { PublishPageToSiteCommand } from './commands/page-publication/publish-page-to-site/publish-page-to-site.command';
-import { UpdatePagePublicationSettingsHandler } from './commands/page-publication/update-page-publication-settings/update-page-publication-settings.handler';
-import { UpdatePagePublicationSettingsCommand } from './commands/page-publication/update-page-publication-settings/update-page-publication-settings.command';
-import { UnpublishSiteHandler } from './commands/page-publication/unpublish-site/unpublish-site.handler';
-import { UnpublishSiteCommand } from './commands/page-publication/unpublish-site/unpublish-site.command';
-import { RepublishSiteHandler } from './commands/page-publication/republish-site/republish-site.handler';
+import { PublishPageToSiteHandler } from './commands/page-publication/publish-page-to-site/publish-page-to-site.handler';
+import { PublishSiteCommand } from './commands/page-publication/publish-site/publish-site.command';
+import { PublishSiteHandler } from './commands/page-publication/publish-site/publish-site.handler';
 import { RepublishSiteCommand } from './commands/page-publication/republish-site/republish-site.command';
-import { PublicationAvailabilityService } from './services/publication-availability.service';
+import { RepublishSiteHandler } from './commands/page-publication/republish-site/republish-site.handler';
+import { UnpublishSiteCommand } from './commands/page-publication/unpublish-site/unpublish-site.command';
+import { UnpublishSiteHandler } from './commands/page-publication/unpublish-site/unpublish-site.handler';
+import { UpdatePagePublicationSettingsCommand } from './commands/page-publication/update-page-publication-settings/update-page-publication-settings.command';
+import { UpdatePagePublicationSettingsHandler } from './commands/page-publication/update-page-publication-settings/update-page-publication-settings.handler';
 import { UpdatePageVisibilityHandler } from './commands/page-publication/update-page-visibility.handler';
+import { CreatePageCommand } from './commands/page/create-page/create-page.command';
+import { CreatePageHandler } from './commands/page/create-page/create-page.handler';
+import { DuplicatePageCommand } from './commands/page/duplicate-page/duplicate-page.command';
+import { DuplicatePageHandler } from './commands/page/duplicate-page/duplicate-page.handler';
+import { MovePageCommand } from './commands/page/move-page/move-page.command';
+import { MovePageHandler } from './commands/page/move-page/move-page.handler';
 import { GetPagePublicationHandler } from './queries/page-publication/get-page-publication/get-page-publication.handler';
 import { GetPagePublicationQuery } from './queries/page-publication/get-page-publication/get-page-publication.query';
 import { GetPublicPageHandler } from './queries/page-publication/get-public-page/get-public-page.handler';
 import { GetPublicPageQuery } from './queries/page-publication/get-public-page/get-public-page.query';
-import type { WorkspaceRepository } from 'src/modules/workspace/domain/repositories/workspace.repository';
+import { PagePublicationTreeService } from './services/page-publication-tree.service';
+import { PublicSubdomainAllocatorService } from './services/public-subdomain-allocator.service';
+import { PublicationAvailabilityService } from './services/publication-availability.service';
+import { PublicationHierarchySynchronizerService } from './services/publication-hierarchy-synchronizer.service';
 
 describe('root-owned public sites', () => {
   const workspace = 'workspace-a';
@@ -474,6 +475,7 @@ describe('root-owned public sites', () => {
       uow,
       tree,
       availability,
+      auth,
     );
     await settings.execute(
       new UpdatePagePublicationSettingsCommand(
@@ -660,7 +662,9 @@ describe('root-owned public sites', () => {
       uow,
       tree,
       availability,
+      auth,
     );
+    authorize.mockClear();
     await handler.execute(
       new UpdatePagePublicationSettingsCommand(
         'user',
@@ -692,6 +696,134 @@ describe('root-owned public sites', () => {
       ),
     );
     expect(publication(siteId, about.getId())?.getId()).toBe(inherited.getId());
+    expect(authorize).not.toHaveBeenCalled();
+  });
+
+  it('updates one owning site capability from a child without creating a child site', async () => {
+    const homeA = await createPage('Home A');
+    const childA = await createPage('Child A', homeA.getId());
+    const homeB = await createPage('Home B');
+    const siteAId = (await publishRoot(homeA, false)).site_id;
+    const siteBId = (await publishRoot(homeB)).site_id;
+    const handler = new UpdatePagePublicationSettingsHandler(
+      publicationRepo,
+      siteRepo,
+      uow,
+      tree,
+      availability,
+      auth,
+    );
+
+    expect(sites.get(siteAId)?.getAllowUpdates()).toBe(false);
+    expect(sites.get(siteBId)?.getAllowUpdates()).toBe(false);
+    expect(
+      publication(siteAId, childA.getId())?.getUnpublishedAt(),
+    ).not.toBeNull();
+
+    const enabled = await handler.execute(
+      new UpdatePagePublicationSettingsCommand(
+        'user',
+        childA.getId(),
+        undefined,
+        undefined,
+        true,
+      ),
+    );
+    expect(enabled.allow_updates).toBe(true);
+    expect(authorize).toHaveBeenLastCalledWith({
+      userId: 'user',
+      permissions: ['page.update'],
+      target: { type: 'page', id: homeA.getId() },
+    });
+    expect(sites.size).toBe(2);
+    expect(sites.get(siteAId)?.getAllowUpdates()).toBe(true);
+    expect(sites.get(siteBId)?.getAllowUpdates()).toBe(false);
+
+    const disabled = await handler.execute(
+      new UpdatePagePublicationSettingsCommand(
+        'user',
+        homeA.getId(),
+        siteAId,
+        undefined,
+        false,
+      ),
+    );
+    expect(disabled.allow_updates).toBe(false);
+    expect(authorize).toHaveBeenLastCalledWith({
+      userId: 'user',
+      permissions: ['page.update'],
+      target: { type: 'page', id: homeA.getId() },
+    });
+    expect(sites.get(siteAId)?.getAllowUpdates()).toBe(false);
+  });
+
+  it('rejects child-only editors and managers of a different site', async () => {
+    const homeA = await createPage('Home A');
+    const childA = await createPage('Child A', homeA.getId());
+    const homeB = await createPage('Home B');
+    const siteAId = (await publishRoot(homeA)).site_id;
+    const siteBId = (await publishRoot(homeB)).site_id;
+    const authorizeSiteManagement = jest.fn(
+      ({
+        userId,
+        target,
+      }: {
+        userId: string;
+        target: { type: string; id: string };
+      }) =>
+        Promise.resolve(
+          (userId === 'child-editor' && target.id === childA.getId()) ||
+            (userId === 'site-a-manager' && target.id === homeA.getId()),
+        ),
+    );
+    const handler = new UpdatePagePublicationSettingsHandler(
+      publicationRepo,
+      siteRepo,
+      uow,
+      tree,
+      availability,
+      {
+        authorize: authorizeSiteManagement,
+      } as unknown as AuthorizationService,
+    );
+
+    await expect(
+      authorizeSiteManagement({
+        userId: 'child-editor',
+        target: { type: 'page', id: childA.getId() },
+      }),
+    ).resolves.toBe(true);
+
+    await expect(
+      handler.execute(
+        new UpdatePagePublicationSettingsCommand(
+          'child-editor',
+          childA.getId(),
+          siteAId,
+          undefined,
+          true,
+        ),
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(authorizeSiteManagement).toHaveBeenLastCalledWith({
+      userId: 'child-editor',
+      permissions: ['page.update'],
+      target: { type: 'page', id: homeA.getId() },
+    });
+    expect(sites.get(siteAId)?.getAllowUpdates()).toBe(false);
+
+    await expect(
+      handler.execute(
+        new UpdatePagePublicationSettingsCommand(
+          'site-a-manager',
+          homeB.getId(),
+          siteBId,
+          undefined,
+          true,
+        ),
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(sites.get(siteBId)?.getAllowUpdates()).toBe(false);
   });
 
   it('keeps a root reservation through rename, unpublish and republish', async () => {

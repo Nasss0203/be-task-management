@@ -1,5 +1,5 @@
-import { randomUUID } from 'crypto';
 import { BadRequestException, ConflictException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { PagePublicationType } from '../enums/page-publication-type.enum';
 import { PagePublicationPath } from '../value-objects/page-publication-path.vo';
 
