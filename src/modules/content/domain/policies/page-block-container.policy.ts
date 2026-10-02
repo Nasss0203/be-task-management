@@ -1,4 +1,4 @@
-import { PageBlockType } from '../entities/page-block.entity';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 
 const PAGE_BLOCK_CONTAINER_TYPES = new Set<PageBlockType>([
   PageBlockType.TOGGLE,

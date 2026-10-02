@@ -23,6 +23,7 @@ import { MentionsModule } from './modules/mentions/mentions.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ContentModule } from './modules/content/content.module';
 import { PermissionModule } from './modules/permission/permission.module';
+import { TemplateModule } from './modules/template/template.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
 import { AdminModule } from './modules/admin/admin.module';
 
@@ -55,6 +56,7 @@ import { AdminModule } from './modules/admin/admin.module';
     WorkspaceModule,
     PermissionModule,
     ContentModule,
+    TemplateModule,
     MailModule,
     AttachmentModule,
     ActivityModule,

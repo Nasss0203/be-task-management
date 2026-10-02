@@ -1,6 +1,7 @@
 export const CONTENT_TYPES = {
   ports: {
     PageProvisioning: Symbol.for('PageProvisioning'),
+    PageSnapshotReader: Symbol.for('PageSnapshotReader'),
     PublicSiteNavigationReader: Symbol.for('PublicSiteNavigationReader'),
   },
   applications: {

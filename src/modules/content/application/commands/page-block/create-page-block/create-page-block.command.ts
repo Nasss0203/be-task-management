@@ -1,8 +1,8 @@
 import {
-  PageBlockType,
   type PageBlockJson,
   type PageBlockStyleConfig,
-} from 'src/modules/content/domain/entities/page-block.entity';
+} from 'src/shared/domain/page-block.types';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 
 export class CreatePageBlockCommand {
   constructor(

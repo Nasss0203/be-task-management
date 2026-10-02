@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/response/page-block.response.dto';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
-import { PageBlockType } from 'src/modules/content/domain/entities/page-block.entity';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';

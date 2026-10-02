@@ -8,10 +8,8 @@ import {
   IsUUID,
   Min,
 } from 'class-validator';
-import {
-  PageBlockType,
-  type PageBlockJson,
-} from 'src/modules/content/domain/entities/page-block.entity';
+import type { PageBlockJson } from 'src/shared/domain/page-block.types';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 
 export class CreatePageBlockDto {
   @IsUUID()

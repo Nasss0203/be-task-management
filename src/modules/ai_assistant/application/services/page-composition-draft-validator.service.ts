@@ -1,6 +1,6 @@
 import { BadGatewayException, Injectable } from '@nestjs/common';
 
-import { PageBlockType } from 'src/modules/content/domain/entities/page-block.entity';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 
 import { DatabaseViewType } from 'src/modules/database/domain/enums/database-view-type.enum';
 import { PropertyType } from 'src/modules/database/domain/enums/property-type.enum';
@@ -544,12 +544,12 @@ export class PageCompositionDraftValidator {
     databaseRef: string,
     properties: unknown[],
     rows: unknown[],
-  ): void { 
-     if (rows.length > MAX_PAGE_COMPOSITION_ROWS) {
-       this.invalid(
-         `Database ${databaseRef} exceeds the maximum of ${MAX_PAGE_COMPOSITION_ROWS} rows for page composition`,
-       );
-     }
+  ): void {
+    if (rows.length > MAX_PAGE_COMPOSITION_ROWS) {
+      this.invalid(
+        `Database ${databaseRef} exceeds the maximum of ${MAX_PAGE_COMPOSITION_ROWS} rows for page composition`,
+      );
+    }
     const propertyByRef = new Map<string, Record<string, unknown>>();
 
     for (const value of properties) {

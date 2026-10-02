@@ -10,9 +10,9 @@ import { AiToolCallOrmEntity } from 'src/modules/ai_assistant/infrastructure/per
 import { AiUsageOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-usage.orm-entity';
 import { AttachmentOrmEntity } from 'src/modules/attachment/infrastructure/persistence/typeorm/entities/attachment.orm-entity';
 import { PageBlockOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-block.orm-entity';
+import { PagePublicationOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-publication.orm-entity';
 import { PageOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page.orm-entity';
 import { PublishedSiteOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/published-site.orm-entity';
-import { PagePublicationOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-publication.orm-entity';
 import { RefreshToken } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/refresh-token.orm-entity';
 import { Mention } from 'src/modules/mentions/infrastructure/persistence/typeorm/entities/mention.orm-entity';
 import { Notification } from 'src/modules/notifications/infrastructure/persistence/typeorm/entities/notification.orm-entity';
@@ -43,6 +43,9 @@ import { RowValueOrmEntity } from 'src/modules/database/infrastructure/persisten
 import { UserAuthIdentityOrmEntity } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user-auth-identity.orm-entity';
 import { UserProfile } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user-profile.orm-entity';
 import { User } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user.orm-entity';
+import { PageTemplateBlockOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-block.orm-entity';
+import { PageTemplateVersionOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-version.orm-entity';
+import { PageTemplateOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 import { TeamspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
 import { TeamspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
 import { WorkspaceInviteOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-invite.orm-entity';
@@ -110,6 +113,10 @@ export default new DataSource({
     AiGenerationOrmEntity,
     AiUsageOrmEntity,
     AiToolCallOrmEntity,
+    //Page templates
+    PageTemplateOrmEntity,
+    PageTemplateVersionOrmEntity,
+    PageTemplateBlockOrmEntity,
   ],
   migrations: ['src/database/migrations/*{.ts,.js}'],
 });

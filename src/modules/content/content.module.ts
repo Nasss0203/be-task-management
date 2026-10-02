@@ -27,6 +27,7 @@ import { FindPageByWorkspaceHandler } from './application/queries/page/find-page
 import { ResolveBookmarkMetadataHandler } from './application/queries/resolve-bookmark-metadata/resolve-bookmark-metadata.handler';
 
 import { ContentPageProvisioningService } from './application/services/content-page-provisioning.service';
+import { ContentPageSnapshotReaderService } from './application/services/content-page-snapshot-reader.service';
 import { PageBlockOrderingService } from './application/services/page-block-ordering.service';
 import { PagePublicationTreeService } from './application/services/page-publication-tree.service';
 import { PublicSubdomainAllocatorService } from './application/services/public-subdomain-allocator.service';
@@ -406,6 +407,10 @@ const ports = [
     useClass: ContentPageProvisioningService,
   },
   {
+    provide: CONTENT_TYPES.ports.PageSnapshotReader,
+    useClass: ContentPageSnapshotReaderService,
+  },
+  {
     provide: CONTENT_TYPES.ports.PublicSiteNavigationReader,
     useClass: TypeOrmPublicSiteNavigationReader,
   },
@@ -476,6 +481,7 @@ const ports = [
 
   exports: [
     CONTENT_TYPES.ports.PageProvisioning,
+    CONTENT_TYPES.ports.PageSnapshotReader,
     CONTENT_TYPES.repositories.PageRepository,
     CONTENT_TYPES.repositories.PageBlockRepository,
 

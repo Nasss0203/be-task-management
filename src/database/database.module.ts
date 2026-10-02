@@ -30,6 +30,9 @@ import { Permission } from 'src/modules/permission/infrastructure/persistence/ty
 import { WorkspaceInviteOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-invite.orm-entity';
 import { WorkspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-member.orm-entity';
 import { WorkspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace.orm-entity';
+import { PageTemplateOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template.orm-entity';
+import { PageTemplateVersionOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-version.orm-entity';
+import { PageTemplateBlockOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-block.orm-entity';
 
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { BillingFeatureOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/billing-feature.orm-entity';
@@ -118,6 +121,9 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
           AiGenerationOrmEntity,
           AiUsageOrmEntity,
           AiToolCallOrmEntity,
+          PageTemplateOrmEntity,
+          PageTemplateVersionOrmEntity,
+          PageTemplateBlockOrmEntity,
         ],
       }),
     }),
