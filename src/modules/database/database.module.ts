@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { DatabaseModule as PersistenceDatabaseModule } from 'src/database/database.module';
 import { AddPropertyOptionHandler } from './application/commands/add-property-option/add-property-option.handler';
 import { AddPropertyHandler } from './application/commands/add-property/add-property.handler';
 import { ClearRowValueHandler } from './application/commands/clear-row-value/clear-row-value.handler';
@@ -19,6 +20,8 @@ import { GetDatabaseRowsHandler } from './application/queries/get-database-rows/
 import { GetDatabaseViewHandler } from './application/queries/get-database-view/get-database-view.handler';
 import { GetDatabaseViewsHandler } from './application/queries/get-database-views/get-database-views.handler';
 import { GetDatabaseHandler } from './application/queries/get-database/get-database.handler';
+import { DatabaseProvisioningService } from './application/services/database-provisioning.service';
+import { DatabaseSnapshotReaderService } from './application/services/database-snapshot-reader.service';
 import { DATABASE_TYPES } from './database.types';
 import { DatabasePropertyOrmEntity } from './infrastructure/persistence/typeorm/entities/database-property.orm-entity';
 import { DatabaseRowOrmEntity } from './infrastructure/persistence/typeorm/entities/database-row.orm-entity';
@@ -40,6 +43,7 @@ import { DatabaseController } from './presentation/http/controllers/database.con
 
 @Module({
   imports: [
+    PersistenceDatabaseModule,
     TypeOrmModule.forFeature([
       DatabaseOrmEntity,
       DatabasePropertyOrmEntity,
@@ -92,6 +96,14 @@ import { DatabaseController } from './presentation/http/controllers/database.con
       provide: DATABASE_TYPES.repositories.DatabaseViewRepository,
       useClass: TypeOrmDatabaseViewRepository,
     },
+    {
+      provide: DATABASE_TYPES.ports.DatabaseSnapshotReader,
+      useClass: DatabaseSnapshotReaderService,
+    },
+    {
+      provide: DATABASE_TYPES.ports.DatabaseProvisioning,
+      useClass: DatabaseProvisioningService,
+    },
   ],
   exports: [
     CreateDatabaseHandler,
@@ -101,6 +113,8 @@ import { DatabaseController } from './presentation/http/controllers/database.con
     CreateDatabaseViewHandler,
     CreateDatabaseRowHandler,
     SetRowValueHandler,
+    DATABASE_TYPES.ports.DatabaseProvisioning,
+    DATABASE_TYPES.ports.DatabaseSnapshotReader,
   ],
 })
 export class DatabaseModule {}

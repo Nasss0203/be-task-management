@@ -3,6 +3,9 @@ export const TEMPLATE_TYPES = {
     PageTemplateRepository: Symbol('PageTemplateRepository'),
     TemplateVersionRepository: Symbol('TemplateVersionRepository'),
     PageTemplateBlockRepository: Symbol('PageTemplateBlockRepository'),
+    PageTemplateDatabaseSnapshotRepository: Symbol(
+      'PageTemplateDatabaseSnapshotRepository',
+    ),
   },
 
   applications: {

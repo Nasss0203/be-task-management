@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
+import { DatabaseModule } from 'src/modules/database/database.module';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { ContentModule } from '../content/content.module';
 import { ArchivePageTemplateHandler } from './application/commands/page-template/archive-page-template/archive-page-template.handler';
@@ -17,9 +18,17 @@ import { GetTemplateVersionBlocksHandler } from './application/queries/template-
 import { GetTemplatePreviewHandler } from './application/queries/template-preview/get-template-preview/get-template-preview.handler';
 import { GetTemplateVersionHandler } from './application/queries/template-version/get-template-version/get-template-version.handler';
 import { PageTemplateBlockOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-block.orm-entity';
+import { PageTemplateDatabasePropertyOptionOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database-property-option.orm-entity';
+import { PageTemplateDatabasePropertyOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database-property.orm-entity';
+import { PageTemplateDatabaseRowValueOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database-row-value.orm-entity';
+import { PageTemplateDatabaseRowOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database-row.orm-entity';
+import { PageTemplateDatabaseViewPropertyOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database-view-property.orm-entity';
+import { PageTemplateDatabaseViewOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database-view.orm-entity';
+import { PageTemplateDatabaseOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database.orm-entity';
 import { PageTemplateVersionOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-version.orm-entity';
 import { PageTemplateOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 import { TypeOrmPageTemplateBlockRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template-block.repository';
+import { TypeOrmPageTemplateDatabaseSnapshotRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template-database-snapshot.repository';
 import { TypeOrmPageTemplateRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template.repository';
 import { TypeOrmTemplateVersionRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-version.repository';
 import { TemplateController } from './presentation/http/controllers/template.controller';
@@ -82,8 +91,16 @@ const PageTemplateHandler = [
       PageTemplateOrmEntity,
       PageTemplateVersionOrmEntity,
       PageTemplateBlockOrmEntity,
+      PageTemplateDatabaseOrmEntity,
+      PageTemplateDatabasePropertyOrmEntity,
+      PageTemplateDatabasePropertyOptionOrmEntity,
+      PageTemplateDatabaseRowOrmEntity,
+      PageTemplateDatabaseRowValueOrmEntity,
+      PageTemplateDatabaseViewOrmEntity,
+      PageTemplateDatabaseViewPropertyOrmEntity,
     ]),
     ContentModule,
+    DatabaseModule,
   ],
   providers: [
     {
@@ -101,6 +118,11 @@ const PageTemplateHandler = [
     {
       provide: TEMPLATE_TYPES.repositories.PageTemplateBlockRepository,
       useClass: TypeOrmPageTemplateBlockRepository,
+    },
+    {
+      provide:
+        TEMPLATE_TYPES.repositories.PageTemplateDatabaseSnapshotRepository,
+      useClass: TypeOrmPageTemplateDatabaseSnapshotRepository,
     },
     ...PageTemplateHandler,
   ],

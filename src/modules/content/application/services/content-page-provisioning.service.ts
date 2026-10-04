@@ -12,7 +12,9 @@ import {
   ContentPageProvisioningPort,
   CreateDefaultPageInput,
   CreatePageBlockSnapshotInput,
+  CreatePageBlocksFromSnapshotInput,
   CreatePageFromSnapshotInput,
+  CreatePageShellInput,
   ProvisionedPageResult,
 } from '../ports/content-page-provisioning.port';
 import { PublicSubdomainAllocatorService } from './public-subdomain-allocator.service';
@@ -77,6 +79,44 @@ export class ContentPageProvisioningService implements ContentPageProvisioningPo
     const create = async (
       manager: PersistenceContext,
     ): Promise<ProvisionedPageResult> => {
+      const result = await this.createPageShell(
+        {
+          workspaceId: input.workspaceId,
+          title: input.title,
+          createdBy: input.createdBy,
+          slug: input.slug,
+          icon: input.icon,
+          coverUrl: input.coverUrl,
+        },
+        manager,
+      );
+
+      await this.createBlocksFromSnapshot(
+        {
+          pageId: result.pageId,
+          createdBy: input.createdBy,
+          blocks: input.blocks,
+        },
+        manager,
+      );
+
+      return result;
+    };
+
+    if (context === undefined) {
+      return this.uow.runInTransaction(create);
+    }
+
+    return create(context);
+  }
+
+  async createPageShell(
+    input: CreatePageShellInput,
+    context?: PersistenceContext,
+  ): Promise<ProvisionedPageResult> {
+    const create = async (
+      manager: PersistenceContext,
+    ): Promise<ProvisionedPageResult> => {
       await this.pageRepo.lockWorkspaceHierarchy(input.workspaceId, manager);
 
       const page = Page.create({
@@ -92,8 +132,25 @@ export class ContentPageProvisioningService implements ContentPageProvisioningPo
         coverUrl: input.coverUrl ?? null,
       });
 
-      const savedPage = await this.pageRepo.save(page, manager);
+      await this.pageRepo.save(page, manager);
 
+      return {
+        pageId: page.getId(),
+      };
+    };
+
+    if (context === undefined) {
+      return this.uow.runInTransaction(create);
+    }
+
+    return create(context);
+  }
+
+  async createBlocksFromSnapshot(
+    input: CreatePageBlocksFromSnapshotInput,
+    context?: PersistenceContext,
+  ): Promise<void> {
+    const create = async (manager: PersistenceContext): Promise<void> => {
       const sortedBlocks = this.sortSnapshotBlocks(input.blocks);
 
       const sourceIdToPageBlockId = new Map<string, string>();
@@ -118,7 +175,7 @@ export class ContentPageProvisioningService implements ContentPageProvisioningPo
         }
 
         const pageBlock = PageBlock.create({
-          pageId: savedPage.getId(),
+          pageId: input.pageId,
           parentBlockId,
 
           type: inputBlock.type,
@@ -145,17 +202,14 @@ export class ContentPageProvisioningService implements ContentPageProvisioningPo
       }
 
       await this.pageBlockRepo.saveMany(pageBlocks, manager);
-
-      return {
-        pageId: savedPage.getId(),
-      };
     };
 
     if (context === undefined) {
-      return this.uow.runInTransaction(create);
+      await this.uow.runInTransaction(create);
+      return;
     }
 
-    return create(context);
+    await create(context);
   }
 
   private sortSnapshotBlocks(

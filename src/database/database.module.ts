@@ -30,9 +30,16 @@ import { Permission } from 'src/modules/permission/infrastructure/persistence/ty
 import { WorkspaceInviteOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-invite.orm-entity';
 import { WorkspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-member.orm-entity';
 import { WorkspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace.orm-entity';
-import { PageTemplateOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template.orm-entity';
-import { PageTemplateVersionOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-version.orm-entity';
 import { PageTemplateBlockOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-block.orm-entity';
+import { PageTemplateDatabaseOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database.orm-entity';
+import { PageTemplateDatabasePropertyOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database-property.orm-entity';
+import { PageTemplateDatabasePropertyOptionOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database-property-option.orm-entity';
+import { PageTemplateDatabaseRowOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database-row.orm-entity';
+import { PageTemplateDatabaseRowValueOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database-row-value.orm-entity';
+import { PageTemplateDatabaseViewOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database-view.orm-entity';
+import { PageTemplateDatabaseViewPropertyOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database-view-property.orm-entity';
+import { PageTemplateVersionOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-version.orm-entity';
+import { PageTemplateOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { BillingFeatureOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/billing-feature.orm-entity';
@@ -124,6 +131,13 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
           PageTemplateOrmEntity,
           PageTemplateVersionOrmEntity,
           PageTemplateBlockOrmEntity,
+          PageTemplateDatabaseOrmEntity,
+          PageTemplateDatabasePropertyOrmEntity,
+          PageTemplateDatabasePropertyOptionOrmEntity,
+          PageTemplateDatabaseRowOrmEntity,
+          PageTemplateDatabaseRowValueOrmEntity,
+          PageTemplateDatabaseViewOrmEntity,
+          PageTemplateDatabaseViewPropertyOrmEntity,
         ],
       }),
     }),

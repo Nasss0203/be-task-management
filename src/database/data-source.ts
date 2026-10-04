@@ -44,6 +44,13 @@ import { UserAuthIdentityOrmEntity } from 'src/modules/identity/infrastructure/p
 import { UserProfile } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user-profile.orm-entity';
 import { User } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user.orm-entity';
 import { PageTemplateBlockOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-block.orm-entity';
+import { PageTemplateDatabaseOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database.orm-entity';
+import { PageTemplateDatabasePropertyOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database-property.orm-entity';
+import { PageTemplateDatabasePropertyOptionOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database-property-option.orm-entity';
+import { PageTemplateDatabaseRowOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database-row.orm-entity';
+import { PageTemplateDatabaseRowValueOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database-row-value.orm-entity';
+import { PageTemplateDatabaseViewOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database-view.orm-entity';
+import { PageTemplateDatabaseViewPropertyOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database-view-property.orm-entity';
 import { PageTemplateVersionOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-version.orm-entity';
 import { PageTemplateOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 import { TeamspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
@@ -117,6 +124,13 @@ export default new DataSource({
     PageTemplateOrmEntity,
     PageTemplateVersionOrmEntity,
     PageTemplateBlockOrmEntity,
+    PageTemplateDatabaseOrmEntity,
+    PageTemplateDatabasePropertyOrmEntity,
+    PageTemplateDatabasePropertyOptionOrmEntity,
+    PageTemplateDatabaseRowOrmEntity,
+    PageTemplateDatabaseRowValueOrmEntity,
+    PageTemplateDatabaseViewOrmEntity,
+    PageTemplateDatabaseViewPropertyOrmEntity,
   ],
   migrations: ['src/database/migrations/*{.ts,.js}'],
 });

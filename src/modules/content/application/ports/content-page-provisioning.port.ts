@@ -25,6 +25,24 @@ export interface CreatePageBlockSnapshotInput {
 
   isOpen?: boolean;
 }
+
+export interface CreatePageShellInput {
+  workspaceId: string;
+  title: string;
+  createdBy: string;
+
+  slug?: string;
+
+  icon?: string | null;
+  coverUrl?: string | null;
+}
+
+export interface CreatePageBlocksFromSnapshotInput {
+  pageId: string;
+  createdBy: string;
+  blocks: CreatePageBlockSnapshotInput[];
+}
+
 export interface CreatePageFromSnapshotInput {
   workspaceId: string;
   title: string;
@@ -51,6 +69,16 @@ export type CreateDefaultPageInput = {
 export interface ContentPageProvisioningPort {
   createDefaultPage(
     input: CreateDefaultPageInput,
+    context?: PersistenceContext,
+  ): Promise<void>;
+
+  createPageShell(
+    input: CreatePageShellInput,
+    context?: PersistenceContext,
+  ): Promise<ProvisionedPageResult>;
+
+  createBlocksFromSnapshot(
+    input: CreatePageBlocksFromSnapshotInput,
     context?: PersistenceContext,
   ): Promise<void>;
 

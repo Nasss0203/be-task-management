@@ -13,6 +13,7 @@ import {
 } from 'typeorm';
 import { TemplateVersionStatus } from '../../../../domain/enums/template-version-status.enum';
 import { PageTemplateBlockOrmEntity } from './page-template-block.orm-entity';
+import { PageTemplateDatabaseOrmEntity } from './page-template-database.orm-entity';
 import { PageTemplateOrmEntity } from './page-template.orm-entity';
 
 @Entity('page_template_versions')
@@ -62,6 +63,12 @@ export class PageTemplateVersionOrmEntity {
 
   @OneToMany(() => PageTemplateBlockOrmEntity, (block) => block.version)
   blocks: PageTemplateBlockOrmEntity[];
+
+  @OneToMany(
+    () => PageTemplateDatabaseOrmEntity,
+    (database) => database.version,
+  )
+  databases: PageTemplateDatabaseOrmEntity[];
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
