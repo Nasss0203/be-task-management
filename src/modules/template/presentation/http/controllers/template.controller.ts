@@ -1,7 +1,18 @@
-import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 
 import { Auth } from 'src/common/decorator/auth.decorator';
-import { WriteRateLimit } from 'src/common/decorator/rate-limit.decorator';
+import {
+  ReadRateLimit,
+  WriteRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 
 import { UseTemplateCommand } from '../../../application/commands/page-template/use-template/use-template.command';
@@ -14,9 +25,13 @@ import { CreatePageTemplateCommand } from 'src/modules/template/application/comm
 import { CreatePageTemplateHandler } from 'src/modules/template/application/commands/page-template/create-page-template/create-page-template.handler';
 import { PublishTemplateVersionCommand } from 'src/modules/template/application/commands/template-version/publish-template-version/publish-template-version.command';
 import { PublishTemplateVersionHandler } from 'src/modules/template/application/commands/template-version/publish-template-version/publish-template-version.handler';
+import { ListPageTemplatesHandler } from 'src/modules/template/application/queries/page-template/list-page-templates/list-page-templates.handler';
+import { ListPageTemplatesQuery } from 'src/modules/template/application/queries/page-template/list-page-templates/list-page-templates.query';
 import { GetTemplatePreviewHandler } from 'src/modules/template/application/queries/template-preview/get-template-preview/get-template-preview.handler';
 import { GetTemplatePreviewQuery } from 'src/modules/template/application/queries/template-preview/get-template-preview/get-template-preview.query';
+import type { ListPageTemplatesResponseDto } from '../../../application/dto/page-template/list-page-templates.response.dto';
 import { CreatePageTemplateRequest } from '../requests/create-page-template.request';
+import { ListPageTemplatesRequest } from '../requests/list-page-templates.request';
 import { UseTemplateRequest } from '../requests/use-template.request';
 
 @Controller('templates')
@@ -33,6 +48,9 @@ export class TemplateController {
 
     @Inject(TEMPLATE_TYPES.applications.GetTemplatePreviewHandler)
     private readonly getTemplatePreviewHandler: GetTemplatePreviewHandler,
+
+    @Inject(TEMPLATE_TYPES.applications.ListPageTemplatesHandler)
+    private readonly listPageTemplatesHandler: ListPageTemplatesHandler,
   ) {}
 
   @Post(':templateId/versions/:versionId/use')
@@ -80,6 +98,25 @@ export class TemplateController {
   ) {
     return this.publishTemplateVersionHandler.execute(
       new PublishTemplateVersionCommand(templateId, versionId, auth.id),
+    );
+  }
+
+  @Get()
+  @ReadRateLimit()
+  @ResponseMessage('Templates retrieved successfully')
+  async listTemplates(
+    @Query() request: ListPageTemplatesRequest,
+    @Auth() auth: IAuth,
+  ): Promise<ListPageTemplatesResponseDto> {
+    return this.listPageTemplatesHandler.execute(
+      new ListPageTemplatesQuery(
+        auth.id,
+        request.scope,
+        request.workspaceId,
+        request.search,
+        request.cursor,
+        request.limit,
+      ),
     );
   }
 

@@ -1,5 +1,24 @@
 import type { PersistenceContext } from 'src/shared/domain/persistence-context';
 import { PageTemplate } from '../aggregates/page-template/page-template.aggregate';
+import type { TemplateListScope } from '../../presentation/http/requests/list-page-templates.request';
+
+export type FindPageTemplatesFilters = {
+  scope: TemplateListScope;
+  userId: string;
+  workspaceId?: string;
+  canManageWorkspace?: boolean;
+  search?: string;
+  cursor?: {
+    createdAt: Date;
+    id: string;
+  };
+  limit: number;
+};
+
+export type FindPageTemplatesResult = {
+  items: PageTemplate[];
+  hasNextPage: boolean;
+};
 
 export interface PageTemplateRepository {
   create(
@@ -31,4 +50,9 @@ export interface PageTemplateRepository {
     createdBy: string,
     context?: PersistenceContext,
   ): Promise<PageTemplate[]>;
+
+  findMany(
+    filters: FindPageTemplatesFilters,
+    context?: PersistenceContext,
+  ): Promise<FindPageTemplatesResult>;
 }

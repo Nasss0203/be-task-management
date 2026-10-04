@@ -15,6 +15,7 @@ import { ReplaceTemplateBlocksHandler } from './application/commands/template-bl
 import { CreateTemplateVersionHandler } from './application/commands/template-version/create-template-version/create-template-version.handler';
 import { PublishTemplateVersionHandler } from './application/commands/template-version/publish-template-version/publish-template-version.handler';
 import { GetPageTemplateHandler } from './application/queries/page-template/get-page-template/get-page-template.handler';
+import { ListPageTemplatesHandler } from './application/queries/page-template/list-page-templates/list-page-templates.handler';
 import { GetTemplateVersionBlocksHandler } from './application/queries/template-block/get-template-version-blocks/get-template-version-blocks.handler';
 import { GetTemplatePreviewHandler } from './application/queries/template-preview/get-template-preview/get-template-preview.handler';
 import { GetTemplateVersionHandler } from './application/queries/template-version/get-template-version/get-template-version.handler';
@@ -83,6 +84,10 @@ const PageTemplateHandler = [
   {
     provide: TEMPLATE_TYPES.applications.UseTemplateHandler,
     useClass: UseTemplateHandler,
+  },
+  {
+    provide: TEMPLATE_TYPES.applications.ListPageTemplatesHandler,
+    useClass: ListPageTemplatesHandler,
   },
 ];
 

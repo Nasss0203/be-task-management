@@ -22,5 +22,6 @@ export const TEMPLATE_TYPES = {
     GetTemplateVersionBlocksHandler: Symbol('GetTemplateVersionBlocksHandler'),
     GetTemplatePreviewHandler: Symbol('GetTemplatePreviewHandler'),
     UseTemplateHandler: Symbol('UseTemplateHandler'),
+    ListPageTemplatesHandler: Symbol('ListPageTemplatesHandler'),
   },
 } as const;
