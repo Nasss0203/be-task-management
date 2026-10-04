@@ -27,8 +27,12 @@ import { PublishTemplateVersionCommand } from 'src/modules/template/application/
 import { PublishTemplateVersionHandler } from 'src/modules/template/application/commands/template-version/publish-template-version/publish-template-version.handler';
 import { ListPageTemplatesHandler } from 'src/modules/template/application/queries/page-template/list-page-templates/list-page-templates.handler';
 import { ListPageTemplatesQuery } from 'src/modules/template/application/queries/page-template/list-page-templates/list-page-templates.query';
+import { GetPageTemplateHandler } from 'src/modules/template/application/queries/page-template/get-page-template/get-page-template.handler';
+import { GetPageTemplateQuery } from 'src/modules/template/application/queries/page-template/get-page-template/get-page-template.query';
 import { GetTemplatePreviewHandler } from 'src/modules/template/application/queries/template-preview/get-template-preview/get-template-preview.handler';
 import { GetTemplatePreviewQuery } from 'src/modules/template/application/queries/template-preview/get-template-preview/get-template-preview.query';
+import { ListTemplateVersionsHandler } from 'src/modules/template/application/queries/template-version/list-template-versions/list-template-versions.handler';
+import { ListTemplateVersionsQuery } from 'src/modules/template/application/queries/template-version/list-template-versions/list-template-versions.query';
 import type { ListPageTemplatesResponseDto } from '../../../application/dto/page-template/list-page-templates.response.dto';
 import { CreatePageTemplateRequest } from '../requests/create-page-template.request';
 import { ListPageTemplatesRequest } from '../requests/list-page-templates.request';
@@ -51,6 +55,12 @@ export class TemplateController {
 
     @Inject(TEMPLATE_TYPES.applications.ListPageTemplatesHandler)
     private readonly listPageTemplatesHandler: ListPageTemplatesHandler,
+
+    @Inject(TEMPLATE_TYPES.applications.GetPageTemplateHandler)
+    private readonly getPageTemplateHandler: GetPageTemplateHandler,
+
+    @Inject(TEMPLATE_TYPES.applications.ListTemplateVersionsHandler)
+    private readonly listTemplateVersionsHandler: ListTemplateVersionsHandler,
   ) {}
 
   @Post(':templateId/versions/:versionId/use')
@@ -120,6 +130,18 @@ export class TemplateController {
     );
   }
 
+  @Get(':templateId/versions')
+  @ReadRateLimit()
+  @ResponseMessage('Template versions retrieved successfully')
+  async listVersions(
+    @Param('templateId') templateId: string,
+    @Auth() auth: IAuth,
+  ) {
+    return this.listTemplateVersionsHandler.execute(
+      new ListTemplateVersionsQuery(templateId, auth.id),
+    );
+  }
+
   @Get(':templateId/versions/:versionId/preview')
   @ResponseMessage('Get template preview')
   async getPreview(
@@ -129,6 +151,18 @@ export class TemplateController {
   ) {
     return this.getTemplatePreviewHandler.execute(
       new GetTemplatePreviewQuery(templateId, versionId, auth.id),
+    );
+  }
+
+  @Get(':templateId')
+  @ReadRateLimit()
+  @ResponseMessage('Template retrieved successfully')
+  async getTemplate(
+    @Param('templateId') templateId: string,
+    @Auth() auth: IAuth,
+  ) {
+    return this.getPageTemplateHandler.execute(
+      new GetPageTemplateQuery(templateId, auth.id),
     );
   }
 }

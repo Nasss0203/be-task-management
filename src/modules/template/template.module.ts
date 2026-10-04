@@ -19,6 +19,7 @@ import { ListPageTemplatesHandler } from './application/queries/page-template/li
 import { GetTemplateVersionBlocksHandler } from './application/queries/template-block/get-template-version-blocks/get-template-version-blocks.handler';
 import { GetTemplatePreviewHandler } from './application/queries/template-preview/get-template-preview/get-template-preview.handler';
 import { GetTemplateVersionHandler } from './application/queries/template-version/get-template-version/get-template-version.handler';
+import { ListTemplateVersionsHandler } from './application/queries/template-version/list-template-versions/list-template-versions.handler';
 import { PageTemplateBlockOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-block.orm-entity';
 import { PageTemplateDatabasePropertyOptionOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database-property-option.orm-entity';
 import { PageTemplateDatabasePropertyOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database-property.orm-entity';
@@ -72,6 +73,10 @@ const PageTemplateHandler = [
   {
     provide: TEMPLATE_TYPES.applications.GetTemplateVersionHandler,
     useClass: GetTemplateVersionHandler,
+  },
+  {
+    provide: TEMPLATE_TYPES.applications.ListTemplateVersionsHandler,
+    useClass: ListTemplateVersionsHandler,
   },
   {
     provide: TEMPLATE_TYPES.applications.GetTemplateVersionBlocksHandler,

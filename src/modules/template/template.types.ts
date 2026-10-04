@@ -19,6 +19,7 @@ export const TEMPLATE_TYPES = {
     PublishTemplateVersionHandler: Symbol('PublishTemplateVersionHandler'),
     GetPageTemplateHandler: Symbol('GetPageTemplateHandler'),
     GetTemplateVersionHandler: Symbol('GetTemplateVersionHandler'),
+    ListTemplateVersionsHandler: Symbol('ListTemplateVersionsHandler'),
     GetTemplateVersionBlocksHandler: Symbol('GetTemplateVersionBlocksHandler'),
     GetTemplatePreviewHandler: Symbol('GetTemplatePreviewHandler'),
     UseTemplateHandler: Symbol('UseTemplateHandler'),
