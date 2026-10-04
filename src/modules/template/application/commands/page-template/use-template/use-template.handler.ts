@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -16,10 +17,14 @@ import type {
   ProvisionDatabaseSnapshot,
 } from 'src/modules/database/application/ports/database-provisioning.port';
 import { DATABASE_TYPES } from 'src/modules/database/database.types';
+import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import type { PageBlockJson } from 'src/shared/domain/page-block.types';
 
 import type { PageTemplateDatabase } from '../../../../domain/aggregates/template-database/page-template-database.aggregate';
+import { TemplateStatus } from '../../../../domain/enums/template-status.enum';
+import { TemplateVisibility } from '../../../../domain/enums/template-visibility.enum';
 import type { PageTemplateBlockRepository } from '../../../../domain/repositories/page-template-block.repository';
 import type { PageTemplateDatabaseSnapshotRepository } from '../../../../domain/repositories/page-template-database-snapshot.repository';
 import type { PageTemplateRepository } from '../../../../domain/repositories/page-template.repository';
@@ -58,6 +63,8 @@ export class UseTemplateHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+
+    private readonly authorizationService: AuthorizationService,
   ) {}
 
   async execute(command: UseTemplateCommand): Promise<UseTemplateResult> {
@@ -69,6 +76,37 @@ export class UseTemplateHandler {
 
       if (!template) {
         throw new NotFoundException('Page template not found');
+      }
+
+      if (template.getStatus() === TemplateStatus.ARCHIVED) {
+        throw new BadRequestException('Archived template cannot be used');
+      }
+
+      if (template.getVisibility() === TemplateVisibility.PRIVATE) {
+        const isCreator = template.getCreatedBy() === command.userId;
+        const isOwner = await this.authorizationService.authorize({
+          userId: command.userId,
+          permissions: [PERMISSIONS.WORKSPACE_UPDATE],
+          target: { type: 'workspace', id: template.getWorkspaceId() },
+        });
+
+        if (!isCreator && !isOwner) {
+          throw new ForbiddenException(
+            'You do not have permission to use this private template',
+          );
+        }
+      } else if (template.getVisibility() === TemplateVisibility.WORKSPACE) {
+        const isMember = await this.authorizationService.authorize({
+          userId: command.userId,
+          permissions: [PERMISSIONS.WORKSPACE_READ],
+          target: { type: 'workspace', id: template.getWorkspaceId() },
+        });
+
+        if (!isMember) {
+          throw new ForbiddenException(
+            'You do not have permission to use this template',
+          );
+        }
       }
 
       const version = await this.templateVersionRepository.findById(
@@ -87,6 +125,21 @@ export class UseTemplateHandler {
       }
 
       version.ensureUsable();
+
+      const canCreateInDestination = await this.authorizationService.authorize({
+        userId: command.userId,
+        permissions: [PERMISSIONS.PAGE_CREATE],
+        target: {
+          type: 'workspace',
+          id: command.workspaceId,
+        },
+      });
+
+      if (!canCreateInDestination) {
+        throw new ForbiddenException(
+          'You do not have permission to create page in destination workspace',
+        );
+      }
 
       const templateBlocks =
         await this.pageTemplateBlockRepository.findByVersionId(

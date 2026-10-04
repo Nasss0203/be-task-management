@@ -5,6 +5,7 @@ import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { DatabaseModule } from 'src/modules/database/database.module';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { ContentModule } from '../content/content.module';
+import { PermissionModule } from '../permission/permission.module';
 import { ArchivePageTemplateHandler } from './application/commands/page-template/archive-page-template/archive-page-template.handler';
 import { CreatePageTemplateHandler } from './application/commands/page-template/create-page-template/create-page-template.handler';
 import { RestorePageTemplateHandler } from './application/commands/page-template/restore-page-template/restore-page-template.handler';
@@ -101,6 +102,7 @@ const PageTemplateHandler = [
     ]),
     ContentModule,
     DatabaseModule,
+    PermissionModule,
   ],
   providers: [
     {

@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -7,9 +8,12 @@ import {
 
 import { PageTemplateBlock } from '../../../../domain/entities/page-template-block.entity';
 import type { PageTemplateBlockRepository } from '../../../../domain/repositories/page-template-block.repository';
+import type { PageTemplateRepository } from '../../../../domain/repositories/page-template.repository';
 import type { TemplateVersionRepository } from '../../../../domain/repositories/template-version.repository';
 import { TEMPLATE_TYPES } from '../../../../template.types';
 
+import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 
@@ -21,6 +25,9 @@ import {
 @Injectable()
 export class ReplaceTemplateBlocksHandler {
   constructor(
+    @Inject(TEMPLATE_TYPES.repositories.PageTemplateRepository)
+    private readonly pageTemplateRepository: PageTemplateRepository,
+
     @Inject(TEMPLATE_TYPES.repositories.TemplateVersionRepository)
     private readonly templateVersionRepository: TemplateVersionRepository,
 
@@ -29,6 +36,8 @@ export class ReplaceTemplateBlocksHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly unitOfWork: UnitOfWork,
+
+    private readonly authorizationService: AuthorizationService,
   ) {}
 
   async execute(
@@ -42,6 +51,28 @@ export class ReplaceTemplateBlocksHandler {
 
       if (!version) {
         throw new NotFoundException('Template version not found');
+      }
+
+      const template = await this.pageTemplateRepository.findById(
+        version.getTemplateId(),
+        context,
+      );
+
+      if (!template) {
+        throw new NotFoundException('Page template not found');
+      }
+
+      const isCreator = template.getCreatedBy() === command.userId;
+      const isOwner = await this.authorizationService.authorize({
+        userId: command.userId,
+        permissions: [PERMISSIONS.WORKSPACE_UPDATE],
+        target: { type: 'workspace', id: template.getWorkspaceId() },
+      });
+
+      if (!isCreator && !isOwner) {
+        throw new ForbiddenException(
+          'You do not have permission to modify blocks for this template',
+        );
       }
 
       // PUBLISHED version không được sửa content

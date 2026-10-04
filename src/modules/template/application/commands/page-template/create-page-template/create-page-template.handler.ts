@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -17,6 +18,8 @@ import type {
 import type { RowValueData } from 'src/modules/database/domain/aggregates/row/row-value.type';
 import { PropertyType } from 'src/modules/database/domain/enums/property-type.enum';
 import { DATABASE_TYPES } from 'src/modules/database/database.types';
+import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
@@ -68,6 +71,8 @@ export class CreatePageTemplateHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly unitOfWork: UnitOfWork,
+
+    private readonly authorizationService: AuthorizationService,
   ) {}
 
   async execute(
@@ -81,6 +86,36 @@ export class CreatePageTemplateHandler {
 
       if (!snapshot) {
         throw new NotFoundException('Page not found');
+      }
+
+      const canReadPage = await this.authorizationService.authorize({
+        userId: command.userId,
+        permissions: [PERMISSIONS.PAGE_READ],
+        target: {
+          type: 'page',
+          id: command.pageId,
+        },
+      });
+
+      if (!canReadPage) {
+        throw new ForbiddenException(
+          'You do not have permission to access this page',
+        );
+      }
+
+      const canAccessWorkspace = await this.authorizationService.authorize({
+        userId: command.userId,
+        permissions: [PERMISSIONS.WORKSPACE_READ],
+        target: {
+          type: 'workspace',
+          id: snapshot.page.workspaceId,
+        },
+      });
+
+      if (!canAccessWorkspace) {
+        throw new ForbiddenException(
+          'You do not have permission to create templates in this workspace',
+        );
       }
 
       const template = PageTemplate.create({
