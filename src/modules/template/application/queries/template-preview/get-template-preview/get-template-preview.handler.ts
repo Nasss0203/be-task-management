@@ -8,6 +8,7 @@ import {
 
 import { TemplateVisibility } from '../../../../domain/enums/template-visibility.enum';
 import type { PageTemplateBlockRepository } from '../../../../domain/repositories/page-template-block.repository';
+import type { PageTemplateDatabaseSnapshotRepository } from '../../../../domain/repositories/page-template-database-snapshot.repository';
 import type { PageTemplateRepository } from '../../../../domain/repositories/page-template.repository';
 import type { TemplateVersionRepository } from '../../../../domain/repositories/template-version.repository';
 import { TEMPLATE_TYPES } from '../../../../template.types';
@@ -17,6 +18,7 @@ import { PERMISSIONS } from 'src/modules/permission/constants/permission.constan
 import { PageTemplateResponseDto } from '../../../dto/page-template/page-template.response.dto';
 import { PageTemplateBlockResponseDto } from '../../../dto/template-block/page-template-block.response.dto';
 import { TemplatePreviewResponseDto } from '../../../dto/template-preview/template-preview.response.dto';
+import { PageTemplateDatabaseResponseDto } from '../../../dto/template-preview/page-template-database.response.dto';
 import { TemplateVersionResponseDto } from '../../../dto/template-version/template-version.response.dto';
 
 import { GetTemplatePreviewQuery } from './get-template-preview.query';
@@ -34,6 +36,9 @@ export class GetTemplatePreviewHandler {
     private readonly pageTemplateBlockRepository: PageTemplateBlockRepository,
 
     private readonly authorizationService: AuthorizationService,
+
+    @Inject(TEMPLATE_TYPES.repositories.PageTemplateDatabaseSnapshotRepository)
+    private readonly templateDatabaseSnapshotRepository: PageTemplateDatabaseSnapshotRepository,
   ) {}
 
   async execute(
@@ -115,6 +120,11 @@ export class GetTemplatePreviewHandler {
       version.getId(),
     );
 
+    const databases =
+      await this.templateDatabaseSnapshotRepository.findByVersionId(
+        version.getId(),
+      );
+
     return new TemplatePreviewResponseDto({
       template: PageTemplateResponseDto.fromDomain(template),
 
@@ -122,6 +132,9 @@ export class GetTemplatePreviewHandler {
 
       blocks: blocks.map((block) =>
         PageTemplateBlockResponseDto.fromDomain(block),
+      ),
+      databases: databases.map((database) =>
+        PageTemplateDatabaseResponseDto.fromDomain(database),
       ),
     });
   }

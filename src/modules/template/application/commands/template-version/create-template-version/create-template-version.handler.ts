@@ -1,9 +1,13 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+
+import type { ContentPageSnapshotReaderPort } from 'src/modules/content/application/ports/content-page-snapshot-reader.port';
+import { CONTENT_TYPES } from 'src/modules/content/content.types';
 
 import { TemplateVersion } from '../../../../domain/aggregates/template-version/template-version.aggregate';
 import type { PageTemplateRepository } from '../../../../domain/repositories/page-template.repository';
@@ -15,6 +19,7 @@ import { PERMISSIONS } from 'src/modules/permission/constants/permission.constan
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { TemplateVersionResponseDto } from '../../../dto/template-version/template-version.response.dto';
+import { TemplateVersionContentSnapshotService } from '../../../services/template-version-content-snapshot.service';
 import { CreateTemplateVersionCommand } from './create-template-version.command';
 
 @Injectable()
@@ -30,6 +35,11 @@ export class CreateTemplateVersionHandler {
     private readonly unitOfWork: UnitOfWork,
 
     private readonly authorizationService: AuthorizationService,
+
+    @Inject(CONTENT_TYPES.ports.PageSnapshotReader)
+    private readonly pageSnapshotReader: ContentPageSnapshotReaderPort,
+
+    private readonly contentSnapshotService: TemplateVersionContentSnapshotService,
   ) {}
 
   async execute(
@@ -60,6 +70,47 @@ export class CreateTemplateVersionHandler {
 
       template.ensureCanCreateVersion();
 
+      const sourcePageId = template.getSourcePageId();
+
+      if (!sourcePageId) {
+        throw new BadRequestException(
+          'Template source page is no longer available',
+        );
+      }
+
+      const snapshot = await this.pageSnapshotReader.getPageSnapshot(
+        sourcePageId,
+        context,
+      );
+
+      if (!snapshot) {
+        throw new NotFoundException('Page not found');
+      }
+
+      const canReadPage = await this.authorizationService.authorize({
+        userId: command.userId,
+        permissions: [PERMISSIONS.PAGE_READ],
+        target: { type: 'page', id: sourcePageId },
+      });
+
+      if (!canReadPage) {
+        throw new ForbiddenException(
+          'You do not have permission to access this page',
+        );
+      }
+
+      const canAccessWorkspace = await this.authorizationService.authorize({
+        userId: command.userId,
+        permissions: [PERMISSIONS.WORKSPACE_READ],
+        target: { type: 'workspace', id: snapshot.page.workspaceId },
+      });
+
+      if (!canAccessWorkspace) {
+        throw new ForbiddenException(
+          'You do not have permission to create templates in this workspace',
+        );
+      }
+
       const versionNumber =
         await this.templateVersionRepository.getNextVersionNumber(
           command.templateId,
@@ -76,6 +127,13 @@ export class CreateTemplateVersionHandler {
         version,
         context,
       );
+
+      await this.contentSnapshotService.snapshot({
+        blocks: snapshot.blocks,
+        versionId: created.getId(),
+        userId: command.userId,
+        context,
+      });
 
       return TemplateVersionResponseDto.fromDomain(created);
     });

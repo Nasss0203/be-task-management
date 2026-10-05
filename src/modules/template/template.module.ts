@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { TemplateVersionContentSnapshotService } from './application/services/template-version-content-snapshot.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
@@ -115,6 +116,7 @@ const PageTemplateHandler = [
     PermissionModule,
   ],
   providers: [
+    TemplateVersionContentSnapshotService,
     {
       provide: PERSISTENCE_TYPES.UnitOfWork,
       useClass: TypeOrmUnitOfWork,

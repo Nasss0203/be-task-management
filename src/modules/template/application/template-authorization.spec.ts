@@ -34,6 +34,7 @@ import { UseTemplateHandler } from './commands/page-template/use-template/use-te
 import { PublishTemplateVersionCommand } from './commands/template-version/publish-template-version/publish-template-version.command';
 import { PublishTemplateVersionHandler } from './commands/template-version/publish-template-version/publish-template-version.handler';
 import { GetTemplatePreviewHandler } from './queries/template-preview/get-template-preview/get-template-preview.handler';
+import { TemplateVersionContentSnapshotService } from './services/template-version-content-snapshot.service';
 import { GetTemplatePreviewQuery } from './queries/template-preview/get-template-preview/get-template-preview.query';
 
 describe('Template Module Authorization Integration Tests', () => {
@@ -122,13 +123,15 @@ describe('Template Module Authorization Integration Tests', () => {
 
       handler = new CreatePageTemplateHandler(
         pageSnapshotReader,
-        databaseSnapshotReader,
         pageTemplateRepo,
         templateVersionRepo,
-        pageTemplateBlockRepo,
-        templateDatabaseSnapshotRepo,
         fakeUnitOfWork,
         authorizationService,
+        new TemplateVersionContentSnapshotService(
+          databaseSnapshotReader,
+          pageTemplateBlockRepo,
+          templateDatabaseSnapshotRepo,
+        ),
       );
     });
 
@@ -575,6 +578,9 @@ describe('Template Module Authorization Integration Tests', () => {
         templateVersionRepo,
         pageTemplateBlockRepo,
         authorizationService,
+        {
+          findByVersionId: jest.fn().mockResolvedValue([]),
+        } as unknown as PageTemplateDatabaseSnapshotRepository,
       );
     });
 

@@ -4,6 +4,7 @@ import {
   Get,
   Inject,
   Param,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
@@ -21,14 +22,22 @@ import { TEMPLATE_TYPES } from '../../../template.types';
 
 import { type IAuth } from 'src/types/auth';
 
+import { ArchivePageTemplateCommand } from 'src/modules/template/application/commands/page-template/archive-page-template/archive-page-template.command';
+import { ArchivePageTemplateHandler } from 'src/modules/template/application/commands/page-template/archive-page-template/archive-page-template.handler';
 import { CreatePageTemplateCommand } from 'src/modules/template/application/commands/page-template/create-page-template/create-page-template.command';
 import { CreatePageTemplateHandler } from 'src/modules/template/application/commands/page-template/create-page-template/create-page-template.handler';
+import { RestorePageTemplateCommand } from 'src/modules/template/application/commands/page-template/restore-page-template/restore-page-template.command';
+import { RestorePageTemplateHandler } from 'src/modules/template/application/commands/page-template/restore-page-template/restore-page-template.handler';
+import { UpdatePageTemplateCommand } from 'src/modules/template/application/commands/page-template/update-page-template/update-page-template.command';
+import { UpdatePageTemplateHandler } from 'src/modules/template/application/commands/page-template/update-page-template/update-page-template.handler';
 import { PublishTemplateVersionCommand } from 'src/modules/template/application/commands/template-version/publish-template-version/publish-template-version.command';
+import { CreateTemplateVersionCommand } from 'src/modules/template/application/commands/template-version/create-template-version/create-template-version.command';
+import { CreateTemplateVersionHandler } from 'src/modules/template/application/commands/template-version/create-template-version/create-template-version.handler';
 import { PublishTemplateVersionHandler } from 'src/modules/template/application/commands/template-version/publish-template-version/publish-template-version.handler';
-import { ListPageTemplatesHandler } from 'src/modules/template/application/queries/page-template/list-page-templates/list-page-templates.handler';
-import { ListPageTemplatesQuery } from 'src/modules/template/application/queries/page-template/list-page-templates/list-page-templates.query';
 import { GetPageTemplateHandler } from 'src/modules/template/application/queries/page-template/get-page-template/get-page-template.handler';
 import { GetPageTemplateQuery } from 'src/modules/template/application/queries/page-template/get-page-template/get-page-template.query';
+import { ListPageTemplatesHandler } from 'src/modules/template/application/queries/page-template/list-page-templates/list-page-templates.handler';
+import { ListPageTemplatesQuery } from 'src/modules/template/application/queries/page-template/list-page-templates/list-page-templates.query';
 import { GetTemplatePreviewHandler } from 'src/modules/template/application/queries/template-preview/get-template-preview/get-template-preview.handler';
 import { GetTemplatePreviewQuery } from 'src/modules/template/application/queries/template-preview/get-template-preview/get-template-preview.query';
 import { ListTemplateVersionsHandler } from 'src/modules/template/application/queries/template-version/list-template-versions/list-template-versions.handler';
@@ -36,6 +45,7 @@ import { ListTemplateVersionsQuery } from 'src/modules/template/application/quer
 import type { ListPageTemplatesResponseDto } from '../../../application/dto/page-template/list-page-templates.response.dto';
 import { CreatePageTemplateRequest } from '../requests/create-page-template.request';
 import { ListPageTemplatesRequest } from '../requests/list-page-templates.request';
+import { UpdatePageTemplateRequest } from '../requests/update-page-template.request';
 import { UseTemplateRequest } from '../requests/use-template.request';
 
 @Controller('templates')
@@ -61,7 +71,31 @@ export class TemplateController {
 
     @Inject(TEMPLATE_TYPES.applications.ListTemplateVersionsHandler)
     private readonly listTemplateVersionsHandler: ListTemplateVersionsHandler,
+
+    @Inject(TEMPLATE_TYPES.applications.UpdatePageTemplateHandler)
+    private readonly updatePageTemplateHandler: UpdatePageTemplateHandler,
+
+    @Inject(TEMPLATE_TYPES.applications.ArchivePageTemplateHandler)
+    private readonly archivePageTemplateHandler: ArchivePageTemplateHandler,
+
+    @Inject(TEMPLATE_TYPES.applications.RestorePageTemplateHandler)
+    private readonly restorePageTemplateHandler: RestorePageTemplateHandler,
+
+    @Inject(TEMPLATE_TYPES.applications.CreateTemplateVersionHandler)
+    private readonly createTemplateVersionHandler: CreateTemplateVersionHandler,
   ) {}
+
+  @Post(':templateId/versions')
+  @WriteRateLimit()
+  @ResponseMessage('Template version created successfully')
+  async createVersion(
+    @Param('templateId') templateId: string,
+    @Auth() auth: IAuth,
+  ) {
+    return this.createTemplateVersionHandler.execute(
+      new CreateTemplateVersionCommand(templateId, auth.id),
+    );
+  }
 
   @Post(':templateId/versions/:versionId/use')
   @WriteRateLimit()
@@ -163,6 +197,51 @@ export class TemplateController {
   ) {
     return this.getPageTemplateHandler.execute(
       new GetPageTemplateQuery(templateId, auth.id),
+    );
+  }
+
+  @Patch(':templateId')
+  @WriteRateLimit()
+  @ResponseMessage('Template updated successfully')
+  async updateTemplate(
+    @Param('templateId') templateId: string,
+    @Body() body: UpdatePageTemplateRequest,
+    @Auth() auth: IAuth,
+  ) {
+    return this.updatePageTemplateHandler.execute(
+      new UpdatePageTemplateCommand(
+        templateId,
+        auth.id,
+        body.name,
+        body.description,
+        body.icon,
+        body.cover_url,
+        body.visibility,
+      ),
+    );
+  }
+
+  @Post(':templateId/archive')
+  @WriteRateLimit()
+  @ResponseMessage('Template archived successfully')
+  async archiveTemplate(
+    @Param('templateId') templateId: string,
+    @Auth() auth: IAuth,
+  ) {
+    return this.archivePageTemplateHandler.execute(
+      new ArchivePageTemplateCommand(templateId, auth.id),
+    );
+  }
+
+  @Post(':templateId/restore')
+  @WriteRateLimit()
+  @ResponseMessage('Template restored successfully')
+  async restoreTemplate(
+    @Param('templateId') templateId: string,
+    @Auth() auth: IAuth,
+  ) {
+    return this.restorePageTemplateHandler.execute(
+      new RestorePageTemplateCommand(templateId, auth.id),
     );
   }
 }
