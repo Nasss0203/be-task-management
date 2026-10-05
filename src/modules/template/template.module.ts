@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
-import { TemplateVersionContentSnapshotService } from './application/services/template-version-content-snapshot.service';
-import { TemplateSnapshotFingerprintService } from './application/services/template-snapshot-fingerprint.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { TemplateSnapshotFingerprintService } from './application/services/template-snapshot-fingerprint.service';
+import { TemplateVersionContentSnapshotService } from './application/services/template-version-content-snapshot.service';
 
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { DatabaseModule } from 'src/modules/database/database.module';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
+import { StorageInfrastructureModule } from 'src/shared/infrastructure/storage/storage.module';
 import { ContentModule } from '../content/content.module';
 import { PermissionModule } from '../permission/permission.module';
 import { ArchivePageTemplateHandler } from './application/commands/page-template/archive-page-template/archive-page-template.handler';
@@ -115,6 +116,7 @@ const PageTemplateHandler = [
     ContentModule,
     DatabaseModule,
     PermissionModule,
+    StorageInfrastructureModule,
   ],
   providers: [
     TemplateVersionContentSnapshotService,
