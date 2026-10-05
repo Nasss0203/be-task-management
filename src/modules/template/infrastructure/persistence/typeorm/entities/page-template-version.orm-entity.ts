@@ -58,6 +58,14 @@ export class PageTemplateVersionOrmEntity {
   @JoinColumn({ name: 'created_by' })
   creator: User;
 
+  @Column({
+    name: 'snapshot_hash',
+    type: 'varchar',
+    length: 64,
+    nullable: true,
+  })
+  snapshotHash: string | null;
+
   @Column({ name: 'published_at', type: 'timestamptz', nullable: true })
   publishedAt: Date | null;
 

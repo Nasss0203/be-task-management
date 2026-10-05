@@ -1,0 +1,8 @@
+{
+  "rootDir": "..",
+  "testEnvironment": "node",
+  "testRegex": "template-version.postgres.integration-spec.ts$",
+  "transform": { "^.+\\.ts$": "ts-jest" },
+  "moduleNameMapper": { "^src/(.*)$": "<rootDir>/src/$1" },
+  "maxWorkers": 1
+}

@@ -40,6 +40,14 @@ export class TypeOrmDatabaseRepository implements DatabaseRepository {
           options: true,
         },
       },
+      // Relations have business positions; never depend on SQL join order.
+      order: {
+        properties: {
+          position: 'ASC',
+          id: 'ASC',
+          options: { position: 'ASC', id: 'ASC' },
+        },
+      },
     });
 
     if (!entity) {

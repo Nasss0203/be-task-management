@@ -7,6 +7,7 @@ export type CreateTemplateVersionParams = {
   templateId: string;
   versionNumber: number;
   createdBy: string;
+  snapshotHash?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 };
@@ -17,6 +18,7 @@ export type RestoreTemplateVersionParams = {
   versionNumber: number;
   status: TemplateVersionStatus;
   createdBy: string;
+  snapshotHash: string | null;
   createdAt: Date;
   updatedAt: Date;
   publishedAt: Date | null;
@@ -29,6 +31,7 @@ export class TemplateVersionAggregate {
     private readonly versionNumber: number,
     private status: TemplateVersionStatus,
     private readonly createdBy: string,
+    private readonly snapshotHash: string | null,
     private readonly createdAt: Date,
     private updatedAt: Date,
     private publishedAt: Date | null,
@@ -46,6 +49,7 @@ export class TemplateVersionAggregate {
       params.versionNumber,
       TemplateVersionStatus.DRAFT,
       params.createdBy,
+      params.snapshotHash ?? null,
       params.createdAt ?? now,
       params.updatedAt ?? now,
       null,
@@ -61,6 +65,7 @@ export class TemplateVersionAggregate {
       params.versionNumber,
       params.status,
       params.createdBy,
+      params.snapshotHash,
       params.createdAt,
       params.updatedAt,
       params.publishedAt,
@@ -81,6 +86,9 @@ export class TemplateVersionAggregate {
   }
   getCreatedBy(): string {
     return this.createdBy;
+  }
+  getSnapshotHash(): string | null {
+    return this.snapshotHash;
   }
   getCreatedAt(): Date {
     return this.createdAt;

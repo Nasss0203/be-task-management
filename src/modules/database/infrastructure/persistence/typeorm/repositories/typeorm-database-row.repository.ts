@@ -52,6 +52,9 @@ export class TypeOrmDatabaseRowRepository implements DatabaseRowRepository {
       relations: {
         values: true,
       },
+      // Rows have no business position in this schema. Stable source identity
+      // makes the reader deterministic without reordering fingerprint inputs.
+      order: { id: 'ASC', values: { propertyId: 'ASC', id: 'ASC' } },
     });
 
     return entities.map((entity) => DatabaseRowMapper.toDomain(entity));

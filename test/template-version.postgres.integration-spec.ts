@@ -1,4 +1,4 @@
-import type { INestApplication } from '@nestjs/common';
+import { ConflictException, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import type { NextFunction, Request, Response } from 'express';
@@ -61,6 +61,7 @@ import { GetPageTemplateHandler } from 'src/modules/template/application/queries
 import { ListTemplateVersionsHandler } from 'src/modules/template/application/queries/template-version/list-template-versions/list-template-versions.handler';
 import { GetTemplatePreviewHandler } from 'src/modules/template/application/queries/template-preview/get-template-preview/get-template-preview.handler';
 import { TemplateVersionContentSnapshotService } from 'src/modules/template/application/services/template-version-content-snapshot.service';
+import { TemplateSnapshotFingerprintService } from 'src/modules/template/application/services/template-snapshot-fingerprint.service';
 import type { TemplatePreviewResponseDto } from 'src/modules/template/application/dto/template-preview/template-preview.response.dto';
 import type { TemplateVersionResponseDto } from 'src/modules/template/application/dto/template-version/template-version.response.dto';
 import type { ListTemplateVersionsResponseDto } from 'src/modules/template/application/dto/template-version/list-template-versions.response.dto';
@@ -70,9 +71,14 @@ import { TypeOrmPageTemplateBlockRepository } from 'src/modules/template/infrast
 import { TypeOrmPageTemplateDatabaseSnapshotRepository } from 'src/modules/template/infrastructure/persistence/typeorm/repositories/typeorm-page-template-database-snapshot.repository';
 import { TemplateController } from 'src/modules/template/presentation/http/controllers/template.controller';
 import { TEMPLATE_TYPES } from 'src/modules/template/template.types';
+import { PageTemplate } from 'src/modules/template/domain/aggregates/page-template/page-template.aggregate';
+import { TemplateVersion } from 'src/modules/template/domain/aggregates/template-version/template-version.aggregate';
+import { PageTemplateOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 
 // Opt in against a migrated local database. All test writes stay in one outer
-// transaction and are rolled back. HTTP authentication supplies a fixture user;
+// transaction and are rolled back, except the concurrency test's dedicated
+// template, deleted in finally so two real connections can see it.
+// HTTP authentication supplies a fixture user;
 // application authorization, readers, repositories, and provisioning are real.
 const describePostgres =
   process.env.TEMPLATE_POSTGRES_INTEGRATION === '1' ? describe : describe.skip;
@@ -215,6 +221,7 @@ describePostgres('Template version PostgreSQL and HTTP integration', () => {
       uow,
       authorization,
       snapshotService,
+      new TemplateSnapshotFingerprintService(),
     );
     createVersion = new CreateTemplateVersionHandler(
       templates,
@@ -223,6 +230,7 @@ describePostgres('Template version PostgreSQL and HTTP integration', () => {
       authorization,
       pageReader,
       snapshotService,
+      new TemplateSnapshotFingerprintService(),
     );
     const publish = new PublishTemplateVersionHandler(
       templates,
@@ -424,6 +432,20 @@ describePostgres('Template version PostgreSQL and HTTP integration', () => {
       .expect(201);
     const initial = initialResponse.body as CreatePageTemplateResult;
     templateId = initial.template.id;
+    const initialHash = (await versionRepo.findById(
+      initial.version.id,
+      runner.manager,
+    ))!.getSnapshotHash();
+    expect(initialHash).toMatch(/^[a-f0-9]{64}$/);
+    const duplicate = await request(server)
+      .post(`/templates/${templateId}/versions`)
+      .expect(409);
+    expect(duplicate.body).toMatchObject({
+      message: 'No changes detected since the latest template version',
+    });
+    expect(
+      await versionRepo.findByTemplateId(templateId, runner.manager),
+    ).toHaveLength(1);
     await request(server)
       .post(`/templates/${templateId}/versions/${initial.version.id}/publish`)
       .expect(201);
@@ -439,6 +461,13 @@ describePostgres('Template version PostgreSQL and HTTP integration', () => {
       .expect(201);
     const created = createdResponse.body as TemplateVersionResponseDto;
     expect(created).toMatchObject({ version_number: 2, status: 'DRAFT' });
+    expect(
+      (await versionRepo.findById(
+        created.id,
+        runner.manager,
+      ))!.getSnapshotHash(),
+    ).not.toBe(initialHash);
+    await request(server).post(`/templates/${templateId}/versions`).expect(409);
     const listResponse = await request(server)
       .get(`/templates/${templateId}/versions`)
       .expect(200);
@@ -541,11 +570,96 @@ describePostgres('Template version PostgreSQL and HTTP integration', () => {
     expect(liveDb!.properties).toHaveLength(5);
     expect(liveDb!.rows[0].values).toHaveLength(5);
     expect(liveDb!.views.map((v) => v.id)).toContain(config.view_id);
+    await request(server).post(`/templates/${templateId}/versions`).expect(409);
   }, 30000);
+
+  it.each(['row', 'option', 'view'])(
+    'detects a database-only %s change over HTTP with unchanged Page blocks',
+    async (kind) => {
+      const server = app.getHttpServer() as Server;
+      const pageBefore = await pageReader.getPageSnapshot(
+        sourcePageId,
+        runner.manager,
+      );
+      const latest = (await versionRepo.findLatestByTemplateId(
+        templateId,
+        runner.manager,
+      ))!;
+      const config = pageBefore!.blocks.find(
+        (b) => b.type === PageBlockType.DATABASE_VIEW,
+      )!.dataConfig as { database_id: string };
+      const database = (await databaseReader.getDatabaseSnapshot(
+        config.database_id,
+        runner.manager,
+      ))!;
+      if (kind === 'row') {
+        const person = database.properties.find(
+          (p) => p.type === PropertyType.PERSON,
+        )!;
+        const value = database.rows[0].values.find(
+          (v) => v.propertyId === person.id,
+        )!;
+        await runner.manager
+          .getRepository(RowValueOrmEntity)
+          .update({ id: value.id }, { value: ['changed-person-reference'] });
+      } else if (kind === 'option') {
+        await runner.manager
+          .getRepository(PropertyOptionOrmEntity)
+          .update(
+            { id: database.properties[0].options[0].id },
+            { name: 'Renamed option' },
+          );
+      } else {
+        await runner.manager
+          .getRepository(DatabaseViewOrmEntity)
+          .update({ id: database.views[0].id }, { name: 'Renamed view' });
+      }
+      expect(
+        await pageReader.getPageSnapshot(sourcePageId, runner.manager),
+      ).toEqual(pageBefore);
+      const response = await request(server)
+        .post(`/templates/${templateId}/versions`)
+        .expect(201);
+      const created = response.body as TemplateVersionResponseDto;
+      expect(created).toMatchObject({
+        version_number: latest.getVersionNumber() + 1,
+        status: 'DRAFT',
+      });
+      expect(
+        (await versionRepo.findById(
+          created.id,
+          runner.manager,
+        ))!.getSnapshotHash(),
+      ).not.toBe(latest.getSnapshotHash());
+      const counts = async () =>
+        runner.manager.query<Record<string, number>[]>(
+          `SELECT (SELECT count(*)::int FROM page_template_versions) AS versions,
+        (SELECT count(*)::int FROM page_template_blocks) AS blocks,
+        (SELECT count(*)::int FROM page_template_databases) AS databases,
+        (SELECT count(*)::int FROM page_template_database_properties) AS properties,
+        (SELECT count(*)::int FROM page_template_database_property_options) AS options,
+        (SELECT count(*)::int FROM page_template_database_rows) AS rows,
+        (SELECT count(*)::int FROM page_template_database_row_values) AS values,
+        (SELECT count(*)::int FROM page_template_database_views) AS views,
+        (SELECT count(*)::int FROM page_template_database_view_properties) AS view_properties`,
+        );
+      const before = await counts();
+      await request(server)
+        .post(`/templates/${templateId}/versions`)
+        .expect(409);
+      expect(await counts()).toEqual(before);
+    },
+  );
 
   it.each(['database', 'block'])(
     'rolls back real version and graph writes after a %s save failure',
     async (failure) => {
+      await runner.manager
+        .getRepository(PageBlockOrmEntity)
+        .update(
+          { id: sourceBlockId },
+          { content: { text: `rollback ${failure}` } },
+        );
       const before = await versionRepo.findByTemplateId(
         templateId,
         runner.manager,
@@ -583,10 +697,122 @@ describePostgres('Template version PostgreSQL and HTTP integration', () => {
           'SELECT count(*) FROM page_template_databases d JOIN page_template_versions v ON v.id=d.version_id WHERE v.template_id=$1',
           [templateId],
         );
-        expect(Number(rows[0].count)).toBe(2);
+        expect(Number(rows[0].count)).toBe(before.length);
       } finally {
         spy.mockRestore();
       }
     },
   );
+
+  it('serializes two real PostgreSQL transactions: one creates and the other gets 409', async () => {
+    const page = await dataSource
+      .getRepository(PageOrmEntity)
+      .findOne({ where: {}, order: { id: 'ASC' } });
+    if (!page) throw new Error('A committed local page fixture is required');
+    const templates = new TypeOrmPageTemplateRepository(dataSource);
+    const versions = new TypeOrmTemplateVersionRepository(dataSource);
+    const template = PageTemplate.create({
+      sourcePageId: page.id,
+      workspaceId: page.workspace_id,
+      name: 'Fingerprint concurrency fixture',
+      createdBy: userId,
+    });
+    try {
+      await templates.create(template);
+      await versions.create(
+        TemplateVersion.create({
+          templateId: template.getId(),
+          versionNumber: 1,
+          createdBy: userId,
+          snapshotHash: null,
+        }),
+      );
+      // Immutable source fixture isolates template locking from live Page edits.
+      // Repositories, transactions, locks, hash computation and writes are real.
+      const source = {
+        page: {
+          id: page.id,
+          workspaceId: page.workspace_id,
+          title: page.title,
+          icon: null,
+          coverUrl: null,
+        },
+        blocks: [],
+      };
+      const service = new TemplateVersionContentSnapshotService(
+        { getDatabaseSnapshot: jest.fn() },
+        new TypeOrmPageTemplateBlockRepository(dataSource),
+        new TypeOrmPageTemplateDatabaseSnapshotRepository(dataSource),
+      );
+      const handler = new CreateTemplateVersionHandler(
+        templates,
+        versions,
+        new TypeOrmUnitOfWork(dataSource),
+        {
+          authorize: jest.fn().mockResolvedValue(true),
+        } as unknown as AuthorizationService,
+        { getPageSnapshot: jest.fn().mockResolvedValue(source) },
+        service,
+        new TemplateSnapshotFingerprintService(),
+      );
+      let firstLocked = () => {};
+      let secondAttempted = () => {};
+      let releaseFirst = () => {};
+      const locked = new Promise<void>((resolve) => {
+        firstLocked = resolve;
+      });
+      const attempted = new Promise<void>((resolve) => {
+        secondAttempted = resolve;
+      });
+      const released = new Promise<void>((resolve) => {
+        releaseFirst = resolve;
+      });
+      const originalLock = templates.findByIdForUpdate.bind(
+        templates,
+      ) as TypeOrmPageTemplateRepository['findByIdForUpdate'];
+      let calls = 0;
+      const spy = jest
+        .spyOn(templates, 'findByIdForUpdate')
+        .mockImplementation(async (id, context) => {
+          const call = ++calls;
+          if (call === 2) secondAttempted();
+          const result = await originalLock(id, context);
+          if (call === 1) {
+            firstLocked();
+            await released;
+          }
+          return result;
+        });
+      try {
+        const first = handler.execute(
+          new CreateTemplateVersionCommand(template.getId(), userId),
+        );
+        await locked;
+        const second = handler.execute(
+          new CreateTemplateVersionCommand(template.getId(), userId),
+        );
+        const resultsPromise = Promise.allSettled([first, second]);
+        await attempted;
+        releaseFirst();
+        const results = await resultsPromise;
+        expect(results[0].status).toBe('fulfilled');
+        expect(results[1].status).toBe('rejected');
+        if (results[1].status === 'rejected') {
+          const reason: unknown = results[1].reason;
+          expect(reason).toBeInstanceOf(ConflictException);
+        }
+        const saved = await versions.findByTemplateId(template.getId());
+        expect(saved.map((v) => v.getVersionNumber())).toEqual([1, 2]);
+        expect(saved[1].getSnapshotHash()).toMatch(/^[a-f0-9]{64}$/);
+      } finally {
+        releaseFirst();
+        spy.mockRestore();
+      }
+    } finally {
+      await dataSource
+        .getRepository(PageTemplateOrmEntity)
+        .delete(template.getId());
+      expect(await versions.findByTemplateId(template.getId())).toEqual([]);
+    }
+  }, 30000);
 });

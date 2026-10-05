@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -20,6 +21,7 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { TemplateVersionResponseDto } from '../../../dto/template-version/template-version.response.dto';
 import { TemplateVersionContentSnapshotService } from '../../../services/template-version-content-snapshot.service';
+import { TemplateSnapshotFingerprintService } from '../../../services/template-snapshot-fingerprint.service';
 import { CreateTemplateVersionCommand } from './create-template-version.command';
 
 @Injectable()
@@ -40,6 +42,7 @@ export class CreateTemplateVersionHandler {
     private readonly pageSnapshotReader: ContentPageSnapshotReaderPort,
 
     private readonly contentSnapshotService: TemplateVersionContentSnapshotService,
+    private readonly fingerprintService: TemplateSnapshotFingerprintService,
   ) {}
 
   async execute(
@@ -111,6 +114,23 @@ export class CreateTemplateVersionHandler {
         );
       }
 
+      const prepared = await this.contentSnapshotService.prepare({
+        blocks: snapshot.blocks,
+        context,
+      });
+      const snapshotHash = this.fingerprintService.compute(prepared);
+      const latest =
+        await this.templateVersionRepository.findLatestByTemplateId(
+          command.templateId,
+          context,
+        );
+
+      if (latest?.getSnapshotHash() === snapshotHash) {
+        throw new ConflictException(
+          'No changes detected since the latest template version',
+        );
+      }
+
       const versionNumber =
         await this.templateVersionRepository.getNextVersionNumber(
           command.templateId,
@@ -121,6 +141,7 @@ export class CreateTemplateVersionHandler {
         templateId: command.templateId,
         versionNumber,
         createdBy: command.userId,
+        snapshotHash,
       });
 
       const created = await this.templateVersionRepository.create(
@@ -128,8 +149,8 @@ export class CreateTemplateVersionHandler {
         context,
       );
 
-      await this.contentSnapshotService.snapshot({
-        blocks: snapshot.blocks,
+      await this.contentSnapshotService.persist({
+        snapshot: prepared,
         versionId: created.getId(),
         userId: command.userId,
         context,

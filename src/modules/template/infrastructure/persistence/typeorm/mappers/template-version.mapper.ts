@@ -9,6 +9,7 @@ export class TemplateVersionMapper {
       versionNumber: entity.versionNumber,
       status: entity.status,
       createdBy: entity.createdBy,
+      snapshotHash: entity.snapshotHash,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       publishedAt: entity.publishedAt,
@@ -22,6 +23,7 @@ export class TemplateVersionMapper {
     entity.versionNumber = domain.getVersionNumber();
     entity.status = domain.getStatus();
     entity.createdBy = domain.getCreatedBy();
+    entity.snapshotHash = domain.getSnapshotHash();
     entity.publishedAt = domain.getPublishedAt();
     entity.createdAt = domain.getCreatedAt();
     entity.updatedAt = domain.getUpdatedAt();

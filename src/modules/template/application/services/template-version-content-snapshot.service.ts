@@ -7,6 +7,7 @@ import {
 
 import type { ContentPageBlockSnapshot } from 'src/modules/content/application/ports/content-page-snapshot-reader.port';
 import type {
+  DatabaseSnapshot,
   DatabaseSnapshotProperty,
   DatabaseSnapshotReaderPort,
 } from 'src/modules/database/application/ports/database-snapshot-reader.port';
@@ -28,6 +29,12 @@ import type { PageTemplateDatabaseSnapshotRepository } from '../../domain/reposi
 import type { PageTemplateBlockRepository } from '../../domain/repositories/page-template-block.repository';
 import { TEMPLATE_TYPES } from '../../template.types';
 
+// Source DTOs only; no generated template identities or version metadata.
+export type PreparedTemplateSnapshot = {
+  blocks: ContentPageBlockSnapshot[];
+  databases: DatabaseSnapshot[];
+};
+
 @Injectable()
 export class TemplateVersionContentSnapshotService {
   constructor(
@@ -42,20 +49,17 @@ export class TemplateVersionContentSnapshotService {
   ) {}
 
   // The caller owns source authorization, version creation, and the transaction.
-  async snapshot({
+  async prepare({
     blocks,
-    versionId,
-    userId,
     context,
   }: {
     blocks: ContentPageBlockSnapshot[];
-    versionId: string;
-    userId: string;
     context: PersistenceContext;
-  }): Promise<void> {
+  }): Promise<PreparedTemplateSnapshot> {
+    const preparedBlocks = this.sortBlocks(structuredClone(blocks));
     const databaseViewReferences = new Map<string, Set<string>>();
 
-    for (const block of blocks) {
+    for (const block of preparedBlocks) {
       if (block.type !== PageBlockType.DATABASE_VIEW) {
         continue;
       }
@@ -68,12 +72,7 @@ export class TemplateVersionContentSnapshotService {
       databaseViewReferences.set(databaseId, referencedViewIds);
     }
 
-    const databaseIdMap = new Map<string, string>();
-    const propertyIdMap = new Map<string, string>();
-    const optionIdMap = new Map<string, string>();
-    const rowIdMap = new Map<string, string>();
-    const viewIdMap = new Map<string, string>();
-    const templateDatabases: PageTemplateDatabase[] = [];
+    const databases: DatabaseSnapshot[] = [];
 
     for (const [
       sourceDatabaseId,
@@ -101,6 +100,30 @@ export class TemplateVersionContentSnapshotService {
         }
       }
 
+      databases.push(structuredClone(sourceSnapshot));
+    }
+
+    return { blocks: preparedBlocks, databases };
+  }
+
+  async persist({
+    snapshot,
+    versionId,
+    userId,
+    context,
+  }: {
+    snapshot: PreparedTemplateSnapshot;
+    versionId: string;
+    userId: string;
+    context: PersistenceContext;
+  }): Promise<void> {
+    const databaseIdMap = new Map<string, string>();
+    const propertyIdMap = new Map<string, string>();
+    const optionIdMap = new Map<string, string>();
+    const viewIdMap = new Map<string, string>();
+    const templateDatabases: PageTemplateDatabase[] = [];
+
+    for (const sourceSnapshot of snapshot.databases) {
       const templateDatabase = PageTemplateDatabase.create({
         versionId,
         name: sourceSnapshot.database.name,
@@ -143,8 +166,6 @@ export class TemplateVersionContentSnapshotService {
         const templateRow = PageTemplateDatabaseRow.create({
           templateDatabaseId: templateDatabase.getId(),
         });
-
-        rowIdMap.set(sourceRow.id, templateRow.getId());
 
         for (const sourceValue of sourceRow.values) {
           const templatePropertyId = propertyIdMap.get(sourceValue.propertyId);
@@ -215,11 +236,10 @@ export class TemplateVersionContentSnapshotService {
       context,
     );
 
-    const sortedBlocks = this.sortBlocks(blocks);
     const sourceIdToTemplateBlockId = new Map<string, string>();
     const templateBlocks: PageTemplateBlock[] = [];
 
-    for (const input of sortedBlocks) {
+    for (const input of snapshot.blocks) {
       let parentBlockId: string | null = null;
 
       if (input.parentSourceId) {

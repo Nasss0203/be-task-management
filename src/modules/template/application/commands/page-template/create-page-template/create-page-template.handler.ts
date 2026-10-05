@@ -20,6 +20,7 @@ import { TEMPLATE_TYPES } from '../../../../template.types';
 import { PageTemplateResponseDto } from '../../../dto/page-template/page-template.response.dto';
 import { TemplateVersionResponseDto } from '../../../dto/template-version/template-version.response.dto';
 import { TemplateVersionContentSnapshotService } from '../../../services/template-version-content-snapshot.service';
+import { TemplateSnapshotFingerprintService } from '../../../services/template-snapshot-fingerprint.service';
 import { CreatePageTemplateCommand } from './create-page-template.command';
 
 export type CreatePageTemplateResult = {
@@ -45,6 +46,7 @@ export class CreatePageTemplateHandler {
     private readonly authorizationService: AuthorizationService,
 
     private readonly contentSnapshotService: TemplateVersionContentSnapshotService,
+    private readonly fingerprintService: TemplateSnapshotFingerprintService,
   ) {}
 
   async execute(
@@ -90,6 +92,12 @@ export class CreatePageTemplateHandler {
         );
       }
 
+      const prepared = await this.contentSnapshotService.prepare({
+        blocks: snapshot.blocks,
+        context,
+      });
+      const snapshotHash = this.fingerprintService.compute(prepared);
+
       const template = PageTemplate.create({
         sourcePageId: snapshot.page.id,
         workspaceId: snapshot.page.workspaceId,
@@ -117,6 +125,7 @@ export class CreatePageTemplateHandler {
         templateId: savedTemplate.getId(),
         versionNumber: 1,
         createdBy: command.userId,
+        snapshotHash,
       });
 
       const savedVersion = await this.templateVersionRepository.create(
@@ -124,8 +133,8 @@ export class CreatePageTemplateHandler {
         context,
       );
 
-      await this.contentSnapshotService.snapshot({
-        blocks: snapshot.blocks,
+      await this.contentSnapshotService.persist({
+        snapshot: prepared,
         versionId: savedVersion.getId(),
         userId: command.userId,
         context,

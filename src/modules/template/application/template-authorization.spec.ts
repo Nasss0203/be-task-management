@@ -35,6 +35,7 @@ import { PublishTemplateVersionCommand } from './commands/template-version/publi
 import { PublishTemplateVersionHandler } from './commands/template-version/publish-template-version/publish-template-version.handler';
 import { GetTemplatePreviewHandler } from './queries/template-preview/get-template-preview/get-template-preview.handler';
 import { TemplateVersionContentSnapshotService } from './services/template-version-content-snapshot.service';
+import { TemplateSnapshotFingerprintService } from './services/template-snapshot-fingerprint.service';
 import { GetTemplatePreviewQuery } from './queries/template-preview/get-template-preview/get-template-preview.query';
 
 describe('Template Module Authorization Integration Tests', () => {
@@ -132,6 +133,7 @@ describe('Template Module Authorization Integration Tests', () => {
           pageTemplateBlockRepo,
           templateDatabaseSnapshotRepo,
         ),
+        new TemplateSnapshotFingerprintService(),
       );
     });
 
