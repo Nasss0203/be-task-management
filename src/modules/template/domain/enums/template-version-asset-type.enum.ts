@@ -1,0 +1,6 @@
+export enum TemplateVersionAssetType {
+  THUMBNAIL = 'THUMBNAIL',
+  OPEN_GRAPH = 'OPEN_GRAPH',
+  PREVIEW_IMAGE = 'PREVIEW_IMAGE',
+  EXPORT_IMAGE = 'EXPORT_IMAGE',
+}

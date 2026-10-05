@@ -31,12 +31,14 @@ import { PageTemplateDatabaseRowOrmEntity } from './infrastructure/persistence/t
 import { PageTemplateDatabaseViewPropertyOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database-view-property.orm-entity';
 import { PageTemplateDatabaseViewOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database-view.orm-entity';
 import { PageTemplateDatabaseOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database.orm-entity';
+import { TemplateVersionAssetOrmEntity } from './infrastructure/persistence/typeorm/entities/template-version-asset.orm-entity';
 import { PageTemplateVersionOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-version.orm-entity';
 import { PageTemplateOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 import { TypeOrmPageTemplateBlockRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template-block.repository';
 import { TypeOrmPageTemplateDatabaseSnapshotRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template-database-snapshot.repository';
 import { TypeOrmPageTemplateRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template.repository';
 import { TypeOrmTemplateVersionRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-version.repository';
+import { TypeOrmTemplateVersionAssetRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-version-asset.repository';
 import { TemplateController } from './presentation/http/controllers/template.controller';
 import { TEMPLATE_TYPES } from './template.types';
 
@@ -106,6 +108,7 @@ const PageTemplateHandler = [
       PageTemplateVersionOrmEntity,
       PageTemplateBlockOrmEntity,
       PageTemplateDatabaseOrmEntity,
+      TemplateVersionAssetOrmEntity,
       PageTemplateDatabasePropertyOrmEntity,
       PageTemplateDatabasePropertyOptionOrmEntity,
       PageTemplateDatabaseRowOrmEntity,
@@ -141,6 +144,10 @@ const PageTemplateHandler = [
       provide:
         TEMPLATE_TYPES.repositories.PageTemplateDatabaseSnapshotRepository,
       useClass: TypeOrmPageTemplateDatabaseSnapshotRepository,
+    },
+    {
+      provide: TEMPLATE_TYPES.repositories.TemplateVersionAssetRepository,
+      useClass: TypeOrmTemplateVersionAssetRepository,
     },
     ...PageTemplateHandler,
   ],
