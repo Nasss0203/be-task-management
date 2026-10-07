@@ -10,6 +10,7 @@ import { PERMISSIONS } from 'src/modules/permission/constants/permission.constan
 import type { PageTemplateRepository } from '../../../../domain/repositories/page-template.repository';
 import { TemplateListScope } from '../../../../presentation/http/requests/list-page-templates.request';
 import { TEMPLATE_TYPES } from '../../../../template.types';
+import { TemplateVersionResponseDto } from '../../../dto/template-version/template-version.response.dto';
 import { PageTemplateResponseDto } from '../../../dto/page-template/page-template.response.dto';
 import type { ListPageTemplatesResponseDto } from '../../../dto/page-template/list-page-templates.response.dto';
 import { ListPageTemplatesQuery } from './list-page-templates.query';
@@ -101,9 +102,15 @@ export class ListPageTemplatesHandler {
       limit,
     });
 
-    const items = result.items.map((template) =>
-      PageTemplateResponseDto.fromDomain(template),
-    );
+    const items = result.items.map((template) => {
+      const version = result.versions.get(template.getId());
+      return {
+        ...PageTemplateResponseDto.fromDomain(template),
+        version: version
+          ? TemplateVersionResponseDto.fromDomain(version)
+          : null,
+      };
+    });
 
     const nextCursor =
       result.hasNextPage && result.items.length > 0

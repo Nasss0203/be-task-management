@@ -7,9 +7,11 @@ import {
   Patch,
   Post,
   Query,
+  Req,
 } from '@nestjs/common';
 
 import { Auth } from 'src/common/decorator/auth.decorator';
+import { Public } from 'src/common/decorator/public.decorator';
 import {
   ReadRateLimit,
   WriteRateLimit,
@@ -19,6 +21,8 @@ import { ResponseMessage } from 'src/common/decorator/response-message.decorator
 import { UseTemplateCommand } from '../../../application/commands/page-template/use-template/use-template.command';
 import { UseTemplateHandler } from '../../../application/commands/page-template/use-template/use-template.handler';
 import { TEMPLATE_TYPES } from '../../../template.types';
+import { GetTemplateVersionThumbnailHandler } from '../../../application/queries/template-version/get-template-version-thumbnail/get-template-version-thumbnail.handler';
+import { GetTemplateVersionThumbnailQuery } from '../../../application/queries/template-version/get-template-version-thumbnail/get-template-version-thumbnail.query';
 
 import { type IAuth } from 'src/types/auth';
 
@@ -51,6 +55,9 @@ import { UseTemplateRequest } from '../requests/use-template.request';
 @Controller('templates')
 export class TemplateController {
   constructor(
+    @Inject(TEMPLATE_TYPES.applications.GetTemplateVersionThumbnailHandler)
+    private readonly getTemplateVersionThumbnailHandler: GetTemplateVersionThumbnailHandler,
+
     @Inject(TEMPLATE_TYPES.applications.UseTemplateHandler)
     private readonly useTemplateHandler: UseTemplateHandler,
 
@@ -173,6 +180,29 @@ export class TemplateController {
   ) {
     return this.listTemplateVersionsHandler.execute(
       new ListTemplateVersionsQuery(templateId, auth.id),
+    );
+  }
+
+  @Public()
+  @Get(':templateId/versions/:versionId/thumbnail')
+  @ReadRateLimit()
+  @ResponseMessage('Template thumbnail retrieved successfully')
+  async getVersionThumbnail(
+    @Param('templateId') templateId: string,
+    @Param('versionId') versionId: string,
+    @Req()
+    request: Request & {
+      user?: {
+        id?: string;
+      };
+    },
+  ) {
+    return this.getTemplateVersionThumbnailHandler.execute(
+      new GetTemplateVersionThumbnailQuery(
+        templateId,
+        versionId,
+        request.user?.id,
+      ),
     );
   }
 

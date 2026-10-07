@@ -15,12 +15,9 @@ import { TEMPLATE_TYPES } from '../../../../template.types';
 
 import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
-import { PageTemplateResponseDto } from '../../../dto/page-template/page-template.response.dto';
-import { PageTemplateBlockResponseDto } from '../../../dto/template-block/page-template-block.response.dto';
 import { TemplatePreviewResponseDto } from '../../../dto/template-preview/template-preview.response.dto';
-import { PageTemplateDatabaseResponseDto } from '../../../dto/template-preview/page-template-database.response.dto';
-import { TemplateVersionResponseDto } from '../../../dto/template-version/template-version.response.dto';
 
+import { TemplatePreviewLoader } from '../../../services/template-preview-loader.service';
 import { GetTemplatePreviewQuery } from './get-template-preview.query';
 
 @Injectable()
@@ -39,6 +36,8 @@ export class GetTemplatePreviewHandler {
 
     @Inject(TEMPLATE_TYPES.repositories.PageTemplateDatabaseSnapshotRepository)
     private readonly templateDatabaseSnapshotRepository: PageTemplateDatabaseSnapshotRepository,
+
+    private readonly templatePreviewLoader: TemplatePreviewLoader,
   ) {}
 
   async execute(
@@ -116,26 +115,6 @@ export class GetTemplatePreviewHandler {
       }
     }
 
-    const blocks = await this.pageTemplateBlockRepository.findByVersionId(
-      version.getId(),
-    );
-
-    const databases =
-      await this.templateDatabaseSnapshotRepository.findByVersionId(
-        version.getId(),
-      );
-
-    return new TemplatePreviewResponseDto({
-      template: PageTemplateResponseDto.fromDomain(template),
-
-      version: TemplateVersionResponseDto.fromDomain(version),
-
-      blocks: blocks.map((block) =>
-        PageTemplateBlockResponseDto.fromDomain(block),
-      ),
-      databases: databases.map((database) =>
-        PageTemplateDatabaseResponseDto.fromDomain(database),
-      ),
-    });
+    return this.templatePreviewLoader.loadFrom(template, version);
   }
 }

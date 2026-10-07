@@ -23,7 +23,19 @@ export const TEMPLATE_TYPES = {
     ListTemplateVersionsHandler: Symbol('ListTemplateVersionsHandler'),
     GetTemplateVersionBlocksHandler: Symbol('GetTemplateVersionBlocksHandler'),
     GetTemplatePreviewHandler: Symbol('GetTemplatePreviewHandler'),
+    GetInternalTemplateRenderHandler: Symbol(
+      'GetInternalTemplateRenderHandler',
+    ),
     UseTemplateHandler: Symbol('UseTemplateHandler'),
     ListPageTemplatesHandler: Symbol('ListPageTemplatesHandler'),
+    GenerateTemplateVersionThumbnailHandler: Symbol(
+      'GenerateTemplateVersionThumbnailHandler',
+    ),
+    GetTemplateVersionThumbnailHandler: Symbol(
+      'GetTemplateVersionThumbnailHandler',
+    ),
+  },
+  services: {
+    TemplateThumbnailRenderer: Symbol('TemplateThumbnailRenderer'),
   },
 } as const;

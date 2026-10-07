@@ -179,4 +179,18 @@ export class TemplateVersionAsset {
     this.generatedAt = null;
     this.updatedAt = new Date();
   }
+
+  markPending(): void {
+    if (this.status !== TemplateVersionAssetStatus.FAILED) {
+      throw new Error('Only a failed template version asset can be retried');
+    }
+
+    this.status = TemplateVersionAssetStatus.PENDING;
+    this.mimeType = null;
+    this.fileSize = null;
+    this.width = null;
+    this.height = null;
+    this.generatedAt = null;
+    this.updatedAt = new Date();
+  }
 }

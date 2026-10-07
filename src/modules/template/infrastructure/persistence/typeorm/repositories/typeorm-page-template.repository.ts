@@ -14,6 +14,9 @@ import type {
 import { TemplateListScope } from '../../../../presentation/http/requests/list-page-templates.request';
 import { PageTemplateOrmEntity } from '../entities/page-template.orm-entity';
 import { PageTemplateMapper } from '../mappers/page-template.mapper';
+import { PageTemplateVersionOrmEntity } from '../entities/page-template-version.orm-entity';
+import { TemplateVersionMapper } from '../mappers/template-version.mapper';
+import { TemplateVersionStatus } from '../../../../domain/enums/template-version-status.enum';
 
 @Injectable()
 export class TypeOrmPageTemplateRepository implements PageTemplateRepository {
@@ -197,8 +200,34 @@ export class TypeOrmPageTemplateRepository implements PageTemplateRepository {
     const hasNextPage = rows.length > filters.limit;
     const items = hasNextPage ? rows.slice(0, filters.limit) : rows;
 
+    // One batch query for the page, selecting only the represented version.
+    const versionQb = repository.manager
+      .getRepository(PageTemplateVersionOrmEntity)
+      .createQueryBuilder('version')
+      .distinctOn(['version.templateId'])
+      .where('version.templateId IN (:...templateIds)', {
+        templateIds: items.map((item) => item.id),
+      })
+      .orderBy('version.templateId', 'ASC')
+      .addOrderBy('version.versionNumber', 'DESC')
+      .addOrderBy('version.id', 'DESC');
+
+    if (filters.scope === TemplateListScope.PUBLIC) {
+      versionQb.andWhere('version.status = :versionStatus', {
+        versionStatus: TemplateVersionStatus.PUBLISHED,
+      });
+    }
+
+    const versions = items.length > 0 ? await versionQb.getMany() : [];
+
     return {
       items: items.map((row) => PageTemplateMapper.toDomain(row)),
+      versions: new Map(
+        versions.map((version) => [
+          version.templateId,
+          TemplateVersionMapper.toDomain(version),
+        ]),
+      ),
       hasNextPage,
     };
   }
