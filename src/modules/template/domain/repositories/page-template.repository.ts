@@ -1,7 +1,7 @@
-import type { TemplateVersion } from '../aggregates/template-version/template-version.aggregate';
 import type { PersistenceContext } from 'src/shared/domain/persistence-context';
-import { PageTemplate } from '../aggregates/page-template/page-template.aggregate';
 import type { TemplateListScope } from '../../presentation/http/requests/list-page-templates.request';
+import { PageTemplate } from '../aggregates/page-template/page-template.aggregate';
+import type { TemplateVersion } from '../aggregates/template-version/template-version.aggregate';
 
 export type FindPageTemplatesFilters = {
   scope: TemplateListScope;
@@ -23,6 +23,11 @@ export type FindPageTemplatesResult = {
   versions: Map<string, TemplateVersion>;
   hasNextPage: boolean;
 };
+
+export type FindPublicPageTemplateByIdResult = {
+  template: PageTemplate;
+  version: TemplateVersion;
+} | null;
 
 export interface PageTemplateRepository {
   create(
@@ -59,4 +64,9 @@ export interface PageTemplateRepository {
     filters: FindPageTemplatesFilters,
     context?: PersistenceContext,
   ): Promise<FindPageTemplatesResult>;
+
+  findPublicById(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<FindPublicPageTemplateByIdResult>;
 }

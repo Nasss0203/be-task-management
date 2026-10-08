@@ -22,9 +22,10 @@ import { CreateTemplateVersionHandler } from './application/commands/template-ve
 import { PublishTemplateVersionHandler } from './application/commands/template-version/publish-template-version/publish-template-version.handler';
 import { GetInternalTemplateRenderHandler } from './application/queries/internal-template-render/get-internal-template-render/get-internal-template-render.handler';
 import { GetPageTemplateHandler } from './application/queries/page-template/get-page-template/get-page-template.handler';
-import { ListPublicTemplatesHandler } from './application/queries/page-template/list-public-templates/list-public-templates.handler';
 import { ListPageTemplatesHandler } from './application/queries/page-template/list-page-templates/list-page-templates.handler';
+import { ListPublicTemplatesHandler } from './application/queries/page-template/list-public-templates/list-public-templates.handler';
 import { GetTemplateVersionBlocksHandler } from './application/queries/template-block/get-template-version-blocks/get-template-version-blocks.handler';
+import { GetPublicTemplateDetailHandler } from './application/queries/template-preview/get-public-template-detail/get-public-template-detail.handler';
 import { GetPublicTemplatePreviewHandler } from './application/queries/template-preview/get-public-template-preview/get-public-template-preview.handler';
 import { GetTemplatePreviewHandler } from './application/queries/template-preview/get-template-preview/get-template-preview.handler';
 import { GetTemplateVersionThumbnailHandler } from './application/queries/template-version/get-template-version-thumbnail/get-template-version-thumbnail.handler';
@@ -133,6 +134,10 @@ const PageTemplateHandler = [
   {
     provide: TEMPLATE_TYPES.applications.GetPublicTemplatePreviewHandler,
     useClass: GetPublicTemplatePreviewHandler,
+  },
+  {
+    provide: TEMPLATE_TYPES.applications.GetPublicTemplateDetailHandler,
+    useClass: GetPublicTemplateDetailHandler,
   },
 ];
 

@@ -5,18 +5,19 @@ import type { PersistenceContext } from 'src/shared/domain/persistence-context';
 
 import type { PageTemplate } from '../../../../domain/aggregates/page-template/page-template.aggregate';
 import { TemplateStatus } from '../../../../domain/enums/template-status.enum';
+import { TemplateVersionStatus } from '../../../../domain/enums/template-version-status.enum';
 import { TemplateVisibility } from '../../../../domain/enums/template-visibility.enum';
 import type {
   FindPageTemplatesFilters,
   FindPageTemplatesResult,
+  FindPublicPageTemplateByIdResult,
   PageTemplateRepository,
 } from '../../../../domain/repositories/page-template.repository';
 import { TemplateListScope } from '../../../../presentation/http/requests/list-page-templates.request';
+import { PageTemplateVersionOrmEntity } from '../entities/page-template-version.orm-entity';
 import { PageTemplateOrmEntity } from '../entities/page-template.orm-entity';
 import { PageTemplateMapper } from '../mappers/page-template.mapper';
-import { PageTemplateVersionOrmEntity } from '../entities/page-template-version.orm-entity';
 import { TemplateVersionMapper } from '../mappers/template-version.mapper';
-import { TemplateVersionStatus } from '../../../../domain/enums/template-version-status.enum';
 
 @Injectable()
 export class TypeOrmPageTemplateRepository implements PageTemplateRepository {
@@ -249,6 +250,50 @@ export class TypeOrmPageTemplateRepository implements PageTemplateRepository {
         ]),
       ),
       hasNextPage,
+    };
+  }
+
+  async findPublicById(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<FindPublicPageTemplateByIdResult> {
+    const repository = this.getRepo(context);
+
+    const templateEntity = await repository
+      .createQueryBuilder('template')
+      .where('template.id = :id', { id })
+      .andWhere('template.visibility = :publicVisibility', {
+        publicVisibility: TemplateVisibility.PUBLIC,
+      })
+      .andWhere('template.status != :archivedStatus', {
+        archivedStatus: TemplateStatus.ARCHIVED,
+      })
+      .getOne();
+
+    if (!templateEntity) {
+      return null;
+    }
+
+    const versionEntity = await repository.manager
+      .getRepository(PageTemplateVersionOrmEntity)
+      .createQueryBuilder('version')
+      .where('version.templateId = :templateId', {
+        templateId: templateEntity.id,
+      })
+      .andWhere('version.status = :versionStatus', {
+        versionStatus: TemplateVersionStatus.PUBLISHED,
+      })
+      .orderBy('version.versionNumber', 'DESC')
+      .addOrderBy('version.id', 'DESC')
+      .getOne();
+
+    if (!versionEntity) {
+      return null;
+    }
+
+    return {
+      template: PageTemplateMapper.toDomain(templateEntity),
+      version: TemplateVersionMapper.toDomain(versionEntity),
     };
   }
 

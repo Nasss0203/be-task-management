@@ -36,6 +36,7 @@ export const TEMPLATE_TYPES = {
       'GetTemplateVersionThumbnailHandler',
     ),
     GetPublicTemplatePreviewHandler: Symbol('GetPublicTemplatePreviewHandler'),
+    GetPublicTemplateDetailHandler: Symbol('GetPublicTemplateDetailHandler'),
   },
   services: {
     TemplateThumbnailRenderer: Symbol('TemplateThumbnailRenderer'),

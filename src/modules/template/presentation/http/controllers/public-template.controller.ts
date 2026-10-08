@@ -4,20 +4,26 @@ import { Public } from 'src/common/decorator/public.decorator';
 import { ReadRateLimit } from 'src/common/decorator/rate-limit.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 
-import { GetPublicTemplatePreviewHandler } from '../../../application/queries/template-preview/get-public-template-preview/get-public-template-preview.handler';
-import { GetPublicTemplatePreviewQuery } from '../../../application/queries/template-preview/get-public-template-preview/get-public-template-preview.query';
+import { GetPublicTemplateDetailHandler } from 'src/modules/template/application/queries/template-preview/get-public-template-detail/get-public-template-detail.handler';
+import { GetPublicTemplateDetailQuery } from 'src/modules/template/application/queries/template-preview/get-public-template-detail/get-public-template-detail.query';
 import { ListPublicTemplatesHandler } from '../../../application/queries/page-template/list-public-templates/list-public-templates.handler';
 import { ListPublicTemplatesQuery } from '../../../application/queries/page-template/list-public-templates/list-public-templates.query';
-import { ListPublicTemplatesRequest } from '../requests/list-public-templates.request';
+import { GetPublicTemplatePreviewHandler } from '../../../application/queries/template-preview/get-public-template-preview/get-public-template-preview.handler';
+import { GetPublicTemplatePreviewQuery } from '../../../application/queries/template-preview/get-public-template-preview/get-public-template-preview.query';
 import { TEMPLATE_TYPES } from '../../../template.types';
+import { ListPublicTemplatesRequest } from '../requests/list-public-templates.request';
 
 @Controller('public/templates')
 export class PublicTemplateController {
   constructor(
     @Inject(TEMPLATE_TYPES.applications.ListPublicTemplatesHandler)
     private readonly listPublicTemplatesHandler: ListPublicTemplatesHandler,
+
     @Inject(TEMPLATE_TYPES.applications.GetPublicTemplatePreviewHandler)
     private readonly getPublicTemplatePreviewHandler: GetPublicTemplatePreviewHandler,
+
+    @Inject(TEMPLATE_TYPES.applications.GetPublicTemplateDetailHandler)
+    private readonly getPublicTemplateDetailHandler: GetPublicTemplateDetailHandler,
   ) {}
 
   @Public()
@@ -40,6 +46,14 @@ export class PublicTemplateController {
   ) {
     return this.getPublicTemplatePreviewHandler.execute(
       new GetPublicTemplatePreviewQuery(templateId, versionId),
+    );
+  }
+
+  @Public()
+  @Get(':templateId')
+  async getDetail(@Param('templateId') templateId: string) {
+    return this.getPublicTemplateDetailHandler.execute(
+      new GetPublicTemplateDetailQuery(templateId),
     );
   }
 }
