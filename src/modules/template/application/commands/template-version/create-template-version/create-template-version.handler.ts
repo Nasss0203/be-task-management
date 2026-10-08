@@ -20,8 +20,9 @@ import { PERMISSIONS } from 'src/modules/permission/constants/permission.constan
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { TemplateVersionResponseDto } from '../../../dto/template-version/template-version.response.dto';
-import { TemplateVersionContentSnapshotService } from '../../../services/template-version-content-snapshot.service';
+import type { TemplateThumbnailJobQueue } from '../../../ports/template-thumbnail-job-queue.port';
 import { TemplateSnapshotFingerprintService } from '../../../services/template-snapshot-fingerprint.service';
+import { TemplateVersionContentSnapshotService } from '../../../services/template-version-content-snapshot.service';
 import { CreateTemplateVersionCommand } from './create-template-version.command';
 
 @Injectable()
@@ -36,11 +37,13 @@ export class CreateTemplateVersionHandler {
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly unitOfWork: UnitOfWork,
 
-    private readonly authorizationService: AuthorizationService,
+    @Inject(TEMPLATE_TYPES.services.TemplateThumbnailJobQueue)
+    private readonly templateThumbnailJobQueue: TemplateThumbnailJobQueue,
 
     @Inject(CONTENT_TYPES.ports.PageSnapshotReader)
     private readonly pageSnapshotReader: ContentPageSnapshotReaderPort,
 
+    private readonly authorizationService: AuthorizationService,
     private readonly contentSnapshotService: TemplateVersionContentSnapshotService,
     private readonly fingerprintService: TemplateSnapshotFingerprintService,
   ) {}
@@ -48,7 +51,7 @@ export class CreateTemplateVersionHandler {
   async execute(
     command: CreateTemplateVersionCommand,
   ): Promise<TemplateVersionResponseDto> {
-    return this.unitOfWork.runInTransaction(async (context) => {
+    const result = await this.unitOfWork.runInTransaction(async (context) => {
       const template = await this.pageTemplateRepository.findByIdForUpdate(
         command.templateId,
         context,
@@ -118,7 +121,9 @@ export class CreateTemplateVersionHandler {
         blocks: snapshot.blocks,
         context,
       });
+
       const snapshotHash = this.fingerprintService.compute(prepared);
+
       const latest =
         await this.templateVersionRepository.findLatestByTemplateId(
           command.templateId,
@@ -144,19 +149,24 @@ export class CreateTemplateVersionHandler {
         snapshotHash,
       });
 
-      const created = await this.templateVersionRepository.create(
-        version,
-        context,
-      );
+      const createdTemplateVersion =
+        await this.templateVersionRepository.create(version, context);
 
       await this.contentSnapshotService.persist({
         snapshot: prepared,
-        versionId: created.getId(),
+        versionId: createdTemplateVersion.getId(),
         userId: command.userId,
         context,
       });
 
-      return TemplateVersionResponseDto.fromDomain(created);
+      return TemplateVersionResponseDto.fromDomain(createdTemplateVersion);
     });
+
+    await this.templateThumbnailJobQueue.enqueueGenerateThumbnail({
+      templateId: command.templateId,
+      versionId: result.id,
+    });
+
+    return result;
   }
 }

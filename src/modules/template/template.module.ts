@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TemplateSnapshotFingerprintService } from './application/services/template-snapshot-fingerprint.service';
 import { TemplateVersionContentSnapshotService } from './application/services/template-version-content-snapshot.service';
 
+import { BullModule } from '@nestjs/bullmq';
 import { InternalTemplateRenderGuard } from 'src/common/guard/internal-template-render.guard';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { DatabaseModule } from 'src/modules/database/database.module';
@@ -28,6 +29,7 @@ import { GetTemplateVersionThumbnailHandler } from './application/queries/templa
 import { GetTemplateVersionHandler } from './application/queries/template-version/get-template-version/get-template-version.handler';
 import { ListTemplateVersionsHandler } from './application/queries/template-version/list-template-versions/list-template-versions.handler';
 import { TemplatePreviewLoader } from './application/services/template-preview-loader.service';
+import { BullMqTemplateThumbnailJobQueue } from './infrastructure/queue/bullmq-template-thumbnail-job-queue.service';
 import { PageTemplateBlockOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-block.orm-entity';
 import { PageTemplateDatabasePropertyOptionOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database-property-option.orm-entity';
 import { PageTemplateDatabasePropertyOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database-property.orm-entity';
@@ -44,6 +46,8 @@ import { TypeOrmPageTemplateDatabaseSnapshotRepository } from './infrastructure/
 import { TypeOrmPageTemplateRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template.repository';
 import { TypeOrmTemplateVersionAssetRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-version-asset.repository';
 import { TypeOrmTemplateVersionRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-version.repository';
+import { TEMPLATE_THUMBNAIL_QUEUE } from './infrastructure/queue/template-thumbnail-queue.constants';
+import { TemplateThumbnailProcessor } from './infrastructure/queue/template-thumbnail.processor';
 import { PlaywrightTemplateThumbnailRendererService } from './infrastructure/rendering/playwright-template-thumbnail-renderer.service';
 import { InternalTemplateRenderController } from './presentation/http/controllers/internal-template-render.controller';
 import { TemplateController } from './presentation/http/controllers/template.controller';
@@ -126,9 +130,16 @@ const TemplateService = [
     provide: TEMPLATE_TYPES.services.TemplateThumbnailRenderer,
     useClass: PlaywrightTemplateThumbnailRendererService,
   },
+  {
+    provide: TEMPLATE_TYPES.services.TemplateThumbnailJobQueue,
+    useClass: BullMqTemplateThumbnailJobQueue,
+  },
 ];
 @Module({
   imports: [
+    BullModule.registerQueue({
+      name: TEMPLATE_THUMBNAIL_QUEUE,
+    }),
     TypeOrmModule.forFeature([
       PageTemplateOrmEntity,
       PageTemplateVersionOrmEntity,
@@ -179,6 +190,7 @@ const TemplateService = [
     ...PageTemplateHandler,
     ...TemplateService,
     InternalTemplateRenderGuard,
+    TemplateThumbnailProcessor,
   ],
   controllers: [TemplateController, InternalTemplateRenderController],
   exports: [

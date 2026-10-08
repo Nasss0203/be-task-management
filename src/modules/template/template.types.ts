@@ -37,5 +37,6 @@ export const TEMPLATE_TYPES = {
   },
   services: {
     TemplateThumbnailRenderer: Symbol('TemplateThumbnailRenderer'),
+    TemplateThumbnailJobQueue: Symbol('TemplateThumbnailJobQueue'),
   },
 } as const;

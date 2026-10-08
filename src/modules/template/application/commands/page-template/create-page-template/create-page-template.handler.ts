@@ -19,8 +19,9 @@ import type { TemplateVersionRepository } from '../../../../domain/repositories/
 import { TEMPLATE_TYPES } from '../../../../template.types';
 import { PageTemplateResponseDto } from '../../../dto/page-template/page-template.response.dto';
 import { TemplateVersionResponseDto } from '../../../dto/template-version/template-version.response.dto';
-import { TemplateVersionContentSnapshotService } from '../../../services/template-version-content-snapshot.service';
+import type { TemplateThumbnailJobQueue } from '../../../ports/template-thumbnail-job-queue.port';
 import { TemplateSnapshotFingerprintService } from '../../../services/template-snapshot-fingerprint.service';
+import { TemplateVersionContentSnapshotService } from '../../../services/template-version-content-snapshot.service';
 import { CreatePageTemplateCommand } from './create-page-template.command';
 
 export type CreatePageTemplateResult = {
@@ -43,6 +44,9 @@ export class CreatePageTemplateHandler {
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly unitOfWork: UnitOfWork,
 
+    @Inject(TEMPLATE_TYPES.services.TemplateThumbnailJobQueue)
+    private readonly templateThumbnailJobQueue: TemplateThumbnailJobQueue,
+
     private readonly authorizationService: AuthorizationService,
 
     private readonly contentSnapshotService: TemplateVersionContentSnapshotService,
@@ -52,7 +56,7 @@ export class CreatePageTemplateHandler {
   async execute(
     command: CreatePageTemplateCommand,
   ): Promise<CreatePageTemplateResult> {
-    return this.unitOfWork.runInTransaction(async (context) => {
+    const result = await this.unitOfWork.runInTransaction(async (context) => {
       const snapshot = await this.pageSnapshotReader.getPageSnapshot(
         command.pageId,
         context,
@@ -145,5 +149,12 @@ export class CreatePageTemplateHandler {
         version: TemplateVersionResponseDto.fromDomain(savedVersion),
       };
     });
+
+    await this.templateThumbnailJobQueue.enqueueGenerateThumbnail({
+      templateId: result.template.id,
+      versionId: result.version.id,
+    });
+
+    return result;
   }
 }
