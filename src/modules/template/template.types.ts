@@ -28,12 +28,14 @@ export const TEMPLATE_TYPES = {
     ),
     UseTemplateHandler: Symbol('UseTemplateHandler'),
     ListPageTemplatesHandler: Symbol('ListPageTemplatesHandler'),
+    ListPublicTemplatesHandler: Symbol('ListPublicTemplatesHandler'),
     GenerateTemplateVersionThumbnailHandler: Symbol(
       'GenerateTemplateVersionThumbnailHandler',
     ),
     GetTemplateVersionThumbnailHandler: Symbol(
       'GetTemplateVersionThumbnailHandler',
     ),
+    GetPublicTemplatePreviewHandler: Symbol('GetPublicTemplatePreviewHandler'),
   },
   services: {
     TemplateThumbnailRenderer: Symbol('TemplateThumbnailRenderer'),

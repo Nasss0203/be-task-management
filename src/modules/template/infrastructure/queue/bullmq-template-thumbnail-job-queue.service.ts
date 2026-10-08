@@ -28,13 +28,22 @@ export class BullMqTemplateThumbnailJobQueue implements TemplateThumbnailJobQueu
         versionId: input.versionId,
       },
       {
+        jobId: `template-thumbnail-${input.versionId}`,
+
         attempts: 3,
+
         backoff: {
           type: 'exponential',
           delay: 3000,
         },
-        removeOnComplete: true,
-        removeOnFail: false,
+
+        removeOnComplete: {
+          count: 100,
+        },
+
+        removeOnFail: {
+          count: 100,
+        },
       },
     );
   }

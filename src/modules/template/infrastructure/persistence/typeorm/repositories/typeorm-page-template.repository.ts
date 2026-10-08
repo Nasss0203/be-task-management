@@ -150,9 +150,29 @@ export class TypeOrmPageTemplateRepository implements PageTemplateRepository {
       qb.where('template.visibility = :publicVisibility', {
         publicVisibility: TemplateVisibility.PUBLIC,
       });
-      qb.andWhere('template.status = :publishedStatus', {
-        publishedStatus: TemplateStatus.PUBLISHED,
-      });
+      if (filters.requirePublishedVersion) {
+        qb.andWhere('template.status != :archivedStatus', {
+          archivedStatus: TemplateStatus.ARCHIVED,
+        });
+        // Filter before pagination so draft-only templates cannot consume a slot.
+        qb.andWhere(
+          (subQb) => {
+            const publishedVersion = subQb
+              .subQuery()
+              .select('1')
+              .from(PageTemplateVersionOrmEntity, 'publishedVersion')
+              .where('publishedVersion.templateId = template.id')
+              .andWhere('publishedVersion.status = :publishedVersionStatus')
+              .getQuery();
+            return 'EXISTS ' + publishedVersion;
+          },
+          { publishedVersionStatus: TemplateVersionStatus.PUBLISHED },
+        );
+      } else {
+        qb.andWhere('template.status = :publishedStatus', {
+          publishedStatus: TemplateStatus.PUBLISHED,
+        });
+      }
     }
 
     if (filters.search) {

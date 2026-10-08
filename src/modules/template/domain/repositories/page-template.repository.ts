@@ -5,9 +5,11 @@ import type { TemplateListScope } from '../../presentation/http/requests/list-pa
 
 export type FindPageTemplatesFilters = {
   scope: TemplateListScope;
-  userId: string;
+  userId?: string;
   workspaceId?: string;
   canManageWorkspace?: boolean;
+  // Opt in for the anonymous catalog; dashboard filtering stays unchanged.
+  requirePublishedVersion?: boolean;
   search?: string;
   cursor?: {
     createdAt: Date;

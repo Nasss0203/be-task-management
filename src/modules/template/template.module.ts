@@ -22,14 +22,15 @@ import { CreateTemplateVersionHandler } from './application/commands/template-ve
 import { PublishTemplateVersionHandler } from './application/commands/template-version/publish-template-version/publish-template-version.handler';
 import { GetInternalTemplateRenderHandler } from './application/queries/internal-template-render/get-internal-template-render/get-internal-template-render.handler';
 import { GetPageTemplateHandler } from './application/queries/page-template/get-page-template/get-page-template.handler';
+import { ListPublicTemplatesHandler } from './application/queries/page-template/list-public-templates/list-public-templates.handler';
 import { ListPageTemplatesHandler } from './application/queries/page-template/list-page-templates/list-page-templates.handler';
 import { GetTemplateVersionBlocksHandler } from './application/queries/template-block/get-template-version-blocks/get-template-version-blocks.handler';
+import { GetPublicTemplatePreviewHandler } from './application/queries/template-preview/get-public-template-preview/get-public-template-preview.handler';
 import { GetTemplatePreviewHandler } from './application/queries/template-preview/get-template-preview/get-template-preview.handler';
 import { GetTemplateVersionThumbnailHandler } from './application/queries/template-version/get-template-version-thumbnail/get-template-version-thumbnail.handler';
 import { GetTemplateVersionHandler } from './application/queries/template-version/get-template-version/get-template-version.handler';
 import { ListTemplateVersionsHandler } from './application/queries/template-version/list-template-versions/list-template-versions.handler';
 import { TemplatePreviewLoader } from './application/services/template-preview-loader.service';
-import { BullMqTemplateThumbnailJobQueue } from './infrastructure/queue/bullmq-template-thumbnail-job-queue.service';
 import { PageTemplateBlockOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-block.orm-entity';
 import { PageTemplateDatabasePropertyOptionOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database-property-option.orm-entity';
 import { PageTemplateDatabasePropertyOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database-property.orm-entity';
@@ -46,14 +47,20 @@ import { TypeOrmPageTemplateDatabaseSnapshotRepository } from './infrastructure/
 import { TypeOrmPageTemplateRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template.repository';
 import { TypeOrmTemplateVersionAssetRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-version-asset.repository';
 import { TypeOrmTemplateVersionRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-version.repository';
+import { BullMqTemplateThumbnailJobQueue } from './infrastructure/queue/bullmq-template-thumbnail-job-queue.service';
 import { TEMPLATE_THUMBNAIL_QUEUE } from './infrastructure/queue/template-thumbnail-queue.constants';
 import { TemplateThumbnailProcessor } from './infrastructure/queue/template-thumbnail.processor';
 import { PlaywrightTemplateThumbnailRendererService } from './infrastructure/rendering/playwright-template-thumbnail-renderer.service';
 import { InternalTemplateRenderController } from './presentation/http/controllers/internal-template-render.controller';
+import { PublicTemplateController } from './presentation/http/controllers/public-template.controller';
 import { TemplateController } from './presentation/http/controllers/template.controller';
 import { TEMPLATE_TYPES } from './template.types';
 
 const PageTemplateHandler = [
+  {
+    provide: TEMPLATE_TYPES.applications.ListPublicTemplatesHandler,
+    useClass: ListPublicTemplatesHandler,
+  },
   {
     provide: TEMPLATE_TYPES.applications.CreatePageTemplateHandler,
     useClass: CreatePageTemplateHandler,
@@ -122,6 +129,10 @@ const PageTemplateHandler = [
   {
     provide: TEMPLATE_TYPES.applications.GetTemplateVersionThumbnailHandler,
     useClass: GetTemplateVersionThumbnailHandler,
+  },
+  {
+    provide: TEMPLATE_TYPES.applications.GetPublicTemplatePreviewHandler,
+    useClass: GetPublicTemplatePreviewHandler,
   },
 ];
 
@@ -192,7 +203,11 @@ const TemplateService = [
     InternalTemplateRenderGuard,
     TemplateThumbnailProcessor,
   ],
-  controllers: [TemplateController, InternalTemplateRenderController],
+  controllers: [
+    TemplateController,
+    InternalTemplateRenderController,
+    PublicTemplateController,
+  ],
   exports: [
     TEMPLATE_TYPES.repositories.PageTemplateRepository,
     TEMPLATE_TYPES.repositories.TemplateVersionRepository,
