@@ -18,6 +18,7 @@ import { RestorePageTemplateHandler } from './application/commands/page-template
 import { UpdatePageTemplateHandler } from './application/commands/page-template/update-page-template/update-page-template.handler';
 import { UseTemplateHandler } from './application/commands/page-template/use-template/use-template.handler';
 import { ReplaceTemplateBlocksHandler } from './application/commands/template-block/replace-template-blocks/replace-template-blocks.handler';
+import { CreateTemplateListingHandler } from './application/commands/template-listing/create-template-listing/create-template-listing.handler';
 import { CreateTemplateVersionHandler } from './application/commands/template-version/create-template-version/create-template-version.handler';
 import { PublishTemplateVersionHandler } from './application/commands/template-version/publish-template-version/publish-template-version.handler';
 import { GetInternalTemplateRenderHandler } from './application/queries/internal-template-render/get-internal-template-render/get-internal-template-render.handler';
@@ -60,6 +61,10 @@ import { TemplateController } from './presentation/http/controllers/template.con
 import { TEMPLATE_TYPES } from './template.types';
 
 const PageTemplateHandler = [
+  {
+    provide: TEMPLATE_TYPES.applications.CreateTemplateListingHandler,
+    useClass: CreateTemplateListingHandler,
+  },
   {
     provide: TEMPLATE_TYPES.applications.ListPublicTemplatesHandler,
     useClass: ListPublicTemplatesHandler,

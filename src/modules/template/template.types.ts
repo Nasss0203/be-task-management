@@ -11,6 +11,7 @@ export const TEMPLATE_TYPES = {
   },
 
   applications: {
+    CreateTemplateListingHandler: Symbol('CreateTemplateListingHandler'),
     CreatePageTemplateHandler: Symbol('CreatePageTemplateHandler'),
     UpdatePageTemplateHandler: Symbol('UpdatePageTemplateHandler'),
 
