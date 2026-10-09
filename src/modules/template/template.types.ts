@@ -7,6 +7,7 @@ export const TEMPLATE_TYPES = {
       'PageTemplateDatabaseSnapshotRepository',
     ),
     TemplateVersionAssetRepository: Symbol('TemplateVersionAssetRepository'),
+    TemplateListingRepository: Symbol('TemplateListingRepository'),
   },
 
   applications: {

@@ -42,10 +42,12 @@ import { PageTemplateDatabaseViewOrmEntity } from './infrastructure/persistence/
 import { PageTemplateDatabaseOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database.orm-entity';
 import { PageTemplateVersionOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-version.orm-entity';
 import { PageTemplateOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template.orm-entity';
+import { TemplateListingOrmEntity } from './infrastructure/persistence/typeorm/entities/template-listing.orm-entity';
 import { TemplateVersionAssetOrmEntity } from './infrastructure/persistence/typeorm/entities/template-version-asset.orm-entity';
 import { TypeOrmPageTemplateBlockRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template-block.repository';
 import { TypeOrmPageTemplateDatabaseSnapshotRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template-database-snapshot.repository';
 import { TypeOrmPageTemplateRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template.repository';
+import { TypeOrmTemplateListingRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-listing.repository';
 import { TypeOrmTemplateVersionAssetRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-version-asset.repository';
 import { TypeOrmTemplateVersionRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-version.repository';
 import { BullMqTemplateThumbnailJobQueue } from './infrastructure/queue/bullmq-template-thumbnail-job-queue.service';
@@ -162,6 +164,7 @@ const TemplateService = [
       PageTemplateBlockOrmEntity,
       PageTemplateDatabaseOrmEntity,
       TemplateVersionAssetOrmEntity,
+      TemplateListingOrmEntity,
       PageTemplateDatabasePropertyOrmEntity,
       PageTemplateDatabasePropertyOptionOrmEntity,
       PageTemplateDatabaseRowOrmEntity,
@@ -203,6 +206,10 @@ const TemplateService = [
       provide: TEMPLATE_TYPES.repositories.TemplateVersionAssetRepository,
       useClass: TypeOrmTemplateVersionAssetRepository,
     },
+    {
+      provide: TEMPLATE_TYPES.repositories.TemplateListingRepository,
+      useClass: TypeOrmTemplateListingRepository,
+    },
     ...PageTemplateHandler,
     ...TemplateService,
     InternalTemplateRenderGuard,
@@ -217,6 +224,7 @@ const TemplateService = [
     TEMPLATE_TYPES.repositories.PageTemplateRepository,
     TEMPLATE_TYPES.repositories.TemplateVersionRepository,
     TEMPLATE_TYPES.repositories.PageTemplateBlockRepository,
+    TEMPLATE_TYPES.repositories.TemplateListingRepository,
   ],
 })
 export class TemplateModule {}

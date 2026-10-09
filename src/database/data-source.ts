@@ -52,6 +52,7 @@ import { PageTemplateDatabaseRowValueOrmEntity } from 'src/modules/template/infr
 import { PageTemplateDatabaseViewOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database-view.orm-entity';
 import { PageTemplateDatabaseViewPropertyOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database-view-property.orm-entity';
 import { TemplateVersionAssetOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/template-version-asset.orm-entity';
+import { TemplateListingOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/template-listing.orm-entity';
 import { PageTemplateVersionOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-version.orm-entity';
 import { PageTemplateOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 import { TeamspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
@@ -133,6 +134,7 @@ export default new DataSource({
     PageTemplateDatabaseViewOrmEntity,
     PageTemplateDatabaseViewPropertyOrmEntity,
     TemplateVersionAssetOrmEntity,
+    TemplateListingOrmEntity,
   ],
   migrations: ['src/database/migrations/*{.ts,.js}'],
 });
