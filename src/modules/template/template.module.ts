@@ -18,6 +18,7 @@ import { RestorePageTemplateHandler } from './application/commands/page-template
 import { UpdatePageTemplateHandler } from './application/commands/page-template/update-page-template/update-page-template.handler';
 import { UseTemplateHandler } from './application/commands/page-template/use-template/use-template.handler';
 import { ReplaceTemplateBlocksHandler } from './application/commands/template-block/replace-template-blocks/replace-template-blocks.handler';
+import { ClaimFreeTemplateHandler } from './application/commands/template-entitlement/claim-free-template/claim-free-template.handler';
 import { CreateTemplateListingHandler } from './application/commands/template-listing/create-template-listing/create-template-listing.handler';
 import { PublishTemplateListingHandler } from './application/commands/template-listing/publish-template-listing/publish-template-listing.handler';
 import { UnpublishTemplateListingHandler } from './application/commands/template-listing/unpublish-template-listing/unpublish-template-listing.handler';
@@ -46,11 +47,13 @@ import { PageTemplateDatabaseViewOrmEntity } from './infrastructure/persistence/
 import { PageTemplateDatabaseOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database.orm-entity';
 import { PageTemplateVersionOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-version.orm-entity';
 import { PageTemplateOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template.orm-entity';
+import { TemplateEntitlementOrmEntity } from './infrastructure/persistence/typeorm/entities/template-entitlement.orm-entity';
 import { TemplateListingOrmEntity } from './infrastructure/persistence/typeorm/entities/template-listing.orm-entity';
 import { TemplateVersionAssetOrmEntity } from './infrastructure/persistence/typeorm/entities/template-version-asset.orm-entity';
 import { TypeOrmPageTemplateBlockRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template-block.repository';
 import { TypeOrmPageTemplateDatabaseSnapshotRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template-database-snapshot.repository';
 import { TypeOrmPageTemplateRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template.repository';
+import { TypeOrmTemplateEntitlementRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-entitlement.repository';
 import { TypeOrmTemplateListingRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-listing.repository';
 import { TypeOrmTemplateVersionAssetRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-version-asset.repository';
 import { TypeOrmTemplateVersionRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-version.repository';
@@ -60,11 +63,16 @@ import { TemplateThumbnailProcessor } from './infrastructure/queue/template-thum
 import { PlaywrightTemplateThumbnailRendererService } from './infrastructure/rendering/playwright-template-thumbnail-renderer.service';
 import { InternalTemplateRenderController } from './presentation/http/controllers/internal-template-render.controller';
 import { PublicTemplateController } from './presentation/http/controllers/public-template.controller';
+import { TemplateEntitlementController } from './presentation/http/controllers/template-entitlement.controller';
 import { TemplateListingController } from './presentation/http/controllers/template-listing.controller';
 import { TemplateController } from './presentation/http/controllers/template.controller';
 import { TEMPLATE_TYPES } from './template.types';
 
 const PageTemplateHandler = [
+  {
+    provide: TEMPLATE_TYPES.applications.ClaimFreeTemplateHandler,
+    useClass: ClaimFreeTemplateHandler,
+  },
   {
     provide: TEMPLATE_TYPES.applications.PublishTemplateListingHandler,
     useClass: PublishTemplateListingHandler,
@@ -186,6 +194,7 @@ const TemplateService = [
       PageTemplateDatabaseOrmEntity,
       TemplateVersionAssetOrmEntity,
       TemplateListingOrmEntity,
+      TemplateEntitlementOrmEntity,
       PageTemplateDatabasePropertyOrmEntity,
       PageTemplateDatabasePropertyOptionOrmEntity,
       PageTemplateDatabaseRowOrmEntity,
@@ -231,6 +240,10 @@ const TemplateService = [
       provide: TEMPLATE_TYPES.repositories.TemplateListingRepository,
       useClass: TypeOrmTemplateListingRepository,
     },
+    {
+      provide: TEMPLATE_TYPES.repositories.TemplateEntitlementRepository,
+      useClass: TypeOrmTemplateEntitlementRepository,
+    },
     ...PageTemplateHandler,
     ...TemplateService,
     InternalTemplateRenderGuard,
@@ -241,12 +254,14 @@ const TemplateService = [
     TemplateListingController,
     InternalTemplateRenderController,
     PublicTemplateController,
+    TemplateEntitlementController,
   ],
   exports: [
     TEMPLATE_TYPES.repositories.PageTemplateRepository,
     TEMPLATE_TYPES.repositories.TemplateVersionRepository,
     TEMPLATE_TYPES.repositories.PageTemplateBlockRepository,
     TEMPLATE_TYPES.repositories.TemplateListingRepository,
+    TEMPLATE_TYPES.repositories.TemplateEntitlementRepository,
   ],
 })
 export class TemplateModule {}

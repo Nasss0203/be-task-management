@@ -40,6 +40,7 @@ import { PageTemplateDatabaseViewOrmEntity } from 'src/modules/template/infrastr
 import { PageTemplateDatabaseViewPropertyOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database-view-property.orm-entity';
 import { TemplateVersionAssetOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/template-version-asset.orm-entity';
 import { TemplateListingOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/template-listing.orm-entity';
+import { TemplateEntitlementOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/template-entitlement.orm-entity';
 import { PageTemplateVersionOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-version.orm-entity';
 import { PageTemplateOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 
@@ -142,6 +143,7 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
           PageTemplateDatabaseViewPropertyOrmEntity,
           TemplateVersionAssetOrmEntity,
           TemplateListingOrmEntity,
+          TemplateEntitlementOrmEntity,
         ],
       }),
     }),

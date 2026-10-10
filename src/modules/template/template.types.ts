@@ -8,9 +8,11 @@ export const TEMPLATE_TYPES = {
     ),
     TemplateVersionAssetRepository: Symbol('TemplateVersionAssetRepository'),
     TemplateListingRepository: Symbol('TemplateListingRepository'),
+    TemplateEntitlementRepository: Symbol('TemplateEntitlementRepository'),
   },
 
   applications: {
+    ClaimFreeTemplateHandler: Symbol('ClaimFreeTemplateHandler'),
     CreateTemplateListingHandler: Symbol('CreateTemplateListingHandler'),
     PublishTemplateListingHandler: Symbol('PublishTemplateListingHandler'),
     CreatePageTemplateHandler: Symbol('CreatePageTemplateHandler'),
