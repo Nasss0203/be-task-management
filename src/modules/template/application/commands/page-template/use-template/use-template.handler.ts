@@ -34,6 +34,8 @@ import { TEMPLATE_TYPES } from '../../../../template.types';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 
+import type { TemplateEntitlementRepository } from 'src/modules/template/domain/repositories/template-entitlement.repository';
+import type { TemplateListingRepository } from 'src/modules/template/domain/repositories/template-listing.repository';
 import { UseTemplateCommand } from './use-template.command';
 
 export type UseTemplateResult = {
@@ -54,6 +56,12 @@ export class UseTemplateHandler {
 
     @Inject(TEMPLATE_TYPES.repositories.PageTemplateDatabaseSnapshotRepository)
     private readonly templateDatabaseSnapshotRepository: PageTemplateDatabaseSnapshotRepository,
+
+    @Inject(TEMPLATE_TYPES.repositories.TemplateEntitlementRepository)
+    private readonly templateEntitlementRepository: TemplateEntitlementRepository,
+
+    @Inject(TEMPLATE_TYPES.repositories.TemplateListingRepository)
+    private readonly templateListingRepository: TemplateListingRepository,
 
     @Inject(CONTENT_TYPES.ports.PageProvisioning)
     private readonly pageProvisioningPort: ContentPageProvisioningPort,
@@ -106,6 +114,41 @@ export class UseTemplateHandler {
           throw new ForbiddenException(
             'You do not have permission to use this template',
           );
+        }
+      } else if (template.getVisibility() === TemplateVisibility.PUBLIC) {
+        const listing = await this.templateListingRepository.findByTemplateId(
+          template.getId(),
+          context,
+        );
+
+        if (listing) {
+          const isCreator = template.getCreatedBy() === command.userId;
+
+          const canManageWorkspace = isCreator
+            ? true
+            : await this.authorizationService.authorize({
+                userId: command.userId,
+                permissions: [PERMISSIONS.WORKSPACE_UPDATE],
+                target: {
+                  type: 'workspace',
+                  id: template.getWorkspaceId(),
+                },
+              });
+
+          if (!isCreator && !canManageWorkspace) {
+            const entitlement =
+              await this.templateEntitlementRepository.findByTemplateAndUser(
+                template.getId(),
+                command.userId,
+                context,
+              );
+
+            if (!entitlement) {
+              throw new ForbiddenException(
+                'You must claim this template before using it',
+              );
+            }
+          }
         }
       }
 
