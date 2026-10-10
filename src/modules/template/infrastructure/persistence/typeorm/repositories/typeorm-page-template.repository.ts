@@ -4,6 +4,7 @@ import { Brackets, DataSource, EntityManager, Repository } from 'typeorm';
 import type { PersistenceContext } from 'src/shared/domain/persistence-context';
 
 import type { PageTemplate } from '../../../../domain/aggregates/page-template/page-template.aggregate';
+import { TemplateListingStatus } from '../../../../domain/enums/template-listing-status.enum';
 import { TemplateStatus } from '../../../../domain/enums/template-status.enum';
 import { TemplateVersionStatus } from '../../../../domain/enums/template-version-status.enum';
 import { TemplateVisibility } from '../../../../domain/enums/template-visibility.enum';
@@ -15,6 +16,7 @@ import type {
 } from '../../../../domain/repositories/page-template.repository';
 import { TemplateListScope } from '../../../../presentation/http/requests/list-page-templates.request';
 import { PageTemplateVersionOrmEntity } from '../entities/page-template-version.orm-entity';
+import { TemplateListingOrmEntity } from '../entities/template-listing.orm-entity';
 import { PageTemplateOrmEntity } from '../entities/page-template.orm-entity';
 import { PageTemplateMapper } from '../mappers/page-template.mapper';
 import { TemplateVersionMapper } from '../mappers/template-version.mapper';
@@ -169,6 +171,19 @@ export class TypeOrmPageTemplateRepository implements PageTemplateRepository {
           },
           { publishedVersionStatus: TemplateVersionStatus.PUBLISHED },
         );
+        qb.andWhere(
+          (subQb) => {
+            const publishedListing = subQb
+              .subQuery()
+              .select('1')
+              .from(TemplateListingOrmEntity, 'publishedListing')
+              .where('publishedListing.templateId = template.id')
+              .andWhere('publishedListing.status = :publishedListingStatus')
+              .getQuery();
+            return 'EXISTS ' + publishedListing;
+          },
+          { publishedListingStatus: TemplateListingStatus.PUBLISHED },
+        );
       } else {
         qb.andWhere('template.status = :publishedStatus', {
           publishedStatus: TemplateStatus.PUBLISHED,
@@ -268,6 +283,19 @@ export class TypeOrmPageTemplateRepository implements PageTemplateRepository {
       .andWhere('template.status != :archivedStatus', {
         archivedStatus: TemplateStatus.ARCHIVED,
       })
+      .andWhere(
+        (subQb) => {
+          const publishedListing = subQb
+            .subQuery()
+            .select('1')
+            .from(TemplateListingOrmEntity, 'publishedListing')
+            .where('publishedListing.templateId = template.id')
+            .andWhere('publishedListing.status = :publishedListingStatus')
+            .getQuery();
+          return 'EXISTS ' + publishedListing;
+        },
+        { publishedListingStatus: TemplateListingStatus.PUBLISHED },
+      )
       .getOne();
 
     if (!templateEntity) {

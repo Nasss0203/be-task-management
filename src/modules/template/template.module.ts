@@ -19,6 +19,8 @@ import { UpdatePageTemplateHandler } from './application/commands/page-template/
 import { UseTemplateHandler } from './application/commands/page-template/use-template/use-template.handler';
 import { ReplaceTemplateBlocksHandler } from './application/commands/template-block/replace-template-blocks/replace-template-blocks.handler';
 import { CreateTemplateListingHandler } from './application/commands/template-listing/create-template-listing/create-template-listing.handler';
+import { PublishTemplateListingHandler } from './application/commands/template-listing/publish-template-listing/publish-template-listing.handler';
+import { UnpublishTemplateListingHandler } from './application/commands/template-listing/unpublish-template-listing/unpublish-template-listing.handler';
 import { CreateTemplateVersionHandler } from './application/commands/template-version/create-template-version/create-template-version.handler';
 import { PublishTemplateVersionHandler } from './application/commands/template-version/publish-template-version/publish-template-version.handler';
 import { GetInternalTemplateRenderHandler } from './application/queries/internal-template-render/get-internal-template-render/get-internal-template-render.handler';
@@ -26,6 +28,7 @@ import { GetPageTemplateHandler } from './application/queries/page-template/get-
 import { ListPageTemplatesHandler } from './application/queries/page-template/list-page-templates/list-page-templates.handler';
 import { ListPublicTemplatesHandler } from './application/queries/page-template/list-public-templates/list-public-templates.handler';
 import { GetTemplateVersionBlocksHandler } from './application/queries/template-block/get-template-version-blocks/get-template-version-blocks.handler';
+import { GetTemplateListingHandler } from './application/queries/template-listing/get-template-listing/get-template-listing.handler';
 import { GetPublicTemplateDetailHandler } from './application/queries/template-preview/get-public-template-detail/get-public-template-detail.handler';
 import { GetPublicTemplatePreviewHandler } from './application/queries/template-preview/get-public-template-preview/get-public-template-preview.handler';
 import { GetTemplatePreviewHandler } from './application/queries/template-preview/get-template-preview/get-template-preview.handler';
@@ -57,10 +60,15 @@ import { TemplateThumbnailProcessor } from './infrastructure/queue/template-thum
 import { PlaywrightTemplateThumbnailRendererService } from './infrastructure/rendering/playwright-template-thumbnail-renderer.service';
 import { InternalTemplateRenderController } from './presentation/http/controllers/internal-template-render.controller';
 import { PublicTemplateController } from './presentation/http/controllers/public-template.controller';
+import { TemplateListingController } from './presentation/http/controllers/template-listing.controller';
 import { TemplateController } from './presentation/http/controllers/template.controller';
 import { TEMPLATE_TYPES } from './template.types';
 
 const PageTemplateHandler = [
+  {
+    provide: TEMPLATE_TYPES.applications.PublishTemplateListingHandler,
+    useClass: PublishTemplateListingHandler,
+  },
   {
     provide: TEMPLATE_TYPES.applications.CreateTemplateListingHandler,
     useClass: CreateTemplateListingHandler,
@@ -146,6 +154,14 @@ const PageTemplateHandler = [
     provide: TEMPLATE_TYPES.applications.GetPublicTemplateDetailHandler,
     useClass: GetPublicTemplateDetailHandler,
   },
+  {
+    provide: TEMPLATE_TYPES.applications.GetTemplateListingHandler,
+    useClass: GetTemplateListingHandler,
+  },
+  {
+    provide: TEMPLATE_TYPES.applications.UnpublishTemplateListingHandler,
+    useClass: UnpublishTemplateListingHandler,
+  },
 ];
 
 const TemplateService = [
@@ -222,6 +238,7 @@ const TemplateService = [
   ],
   controllers: [
     TemplateController,
+    TemplateListingController,
     InternalTemplateRenderController,
     PublicTemplateController,
   ],

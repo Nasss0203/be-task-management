@@ -17,6 +17,7 @@ import { TemplateStatus } from '../../../../domain/enums/template-status.enum';
 import type { PageTemplateRepository } from '../../../../domain/repositories/page-template.repository';
 import type { TemplateListingRepository } from '../../../../domain/repositories/template-listing.repository';
 import { TEMPLATE_TYPES } from '../../../../template.types';
+import { TemplateListingResponseDto } from '../../../dto/template-listing/template-listing.response.dto';
 import { CreateTemplateListingCommand } from './create-template-listing.command';
 
 @Injectable()
@@ -36,7 +37,7 @@ export class CreateTemplateListingHandler {
 
   async execute(
     command: CreateTemplateListingCommand,
-  ): Promise<TemplateListing> {
+  ): Promise<TemplateListingResponseDto> {
     try {
       return await this.unitOfWork.runInTransaction(async (context) => {
         const template = await this.pageTemplateRepository.findById(
@@ -82,7 +83,12 @@ export class CreateTemplateListingHandler {
           createdBy: command.userId,
         });
 
-        return this.templateListingRepository.create(listing, context);
+        const savedListing = await this.templateListingRepository.create(
+          listing,
+          context,
+        );
+
+        return TemplateListingResponseDto.fromDomain(savedListing);
       });
     } catch (error) {
       const constraintError = error as {

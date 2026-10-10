@@ -12,6 +12,7 @@ export const TEMPLATE_TYPES = {
 
   applications: {
     CreateTemplateListingHandler: Symbol('CreateTemplateListingHandler'),
+    PublishTemplateListingHandler: Symbol('PublishTemplateListingHandler'),
     CreatePageTemplateHandler: Symbol('CreatePageTemplateHandler'),
     UpdatePageTemplateHandler: Symbol('UpdatePageTemplateHandler'),
 
@@ -39,6 +40,9 @@ export const TEMPLATE_TYPES = {
     ),
     GetPublicTemplatePreviewHandler: Symbol('GetPublicTemplatePreviewHandler'),
     GetPublicTemplateDetailHandler: Symbol('GetPublicTemplateDetailHandler'),
+
+    GetTemplateListingHandler: Symbol('GetTemplateListingHandler'),
+    UnpublishTemplateListingHandler: Symbol('UnpublishTemplateListingHandler'),
   },
   services: {
     TemplateThumbnailRenderer: Symbol('TemplateThumbnailRenderer'),

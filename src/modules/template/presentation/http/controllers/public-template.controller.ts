@@ -51,6 +51,7 @@ export class PublicTemplateController {
 
   @Public()
   @Get(':templateId')
+  @ReadRateLimit()
   async getDetail(@Param('templateId') templateId: string) {
     return this.getPublicTemplateDetailHandler.execute(
       new GetPublicTemplateDetailQuery(templateId),
