@@ -148,6 +148,12 @@ export class UseTemplateHandler {
                 'You must claim this template before using it',
               );
             }
+            const activeVersionId = listing.getPublishedVersionId();
+            if (activeVersionId && command.versionId !== activeVersionId) {
+              throw new BadRequestException(
+                'Use the currently distributed marketplace version',
+              );
+            }
           }
         }
       }

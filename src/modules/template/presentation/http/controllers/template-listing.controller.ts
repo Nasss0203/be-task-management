@@ -1,4 +1,12 @@
-import { Controller, Get, Inject, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Param,
+  ParseUUIDPipe,
+  Post,
+} from '@nestjs/common';
 
 import { Auth } from 'src/common/decorator/auth.decorator';
 import {
@@ -18,9 +26,15 @@ import { CreateTemplateListingCommand } from '../../../application/commands/temp
 import { CreateTemplateListingHandler } from '../../../application/commands/template-listing/create-template-listing/create-template-listing.handler';
 import { TEMPLATE_TYPES } from '../../../template.types';
 
+import { PublishTemplateToMarketplaceHandler } from '../../../application/commands/publish-template-to-marketplace/publish-template-to-marketplace.handler';
+import { PublishTemplateToMarketplaceCommand } from '../../../application/commands/publish-template-to-marketplace/publish-template-to-marketplace.command';
+import { PublishTemplateToMarketplaceRequest } from '../requests/publish-template-to-marketplace.request';
+
 @Controller('templates')
 export class TemplateListingController {
   constructor(
+    @Inject(TEMPLATE_TYPES.applications.PublishTemplateToMarketplaceHandler)
+    private readonly marketplacePublisher: PublishTemplateToMarketplaceHandler,
     @Inject(TEMPLATE_TYPES.applications.CreateTemplateListingHandler)
     private readonly createTemplateListingHandler: CreateTemplateListingHandler,
 
@@ -33,6 +47,24 @@ export class TemplateListingController {
     @Inject(TEMPLATE_TYPES.applications.GetTemplateListingHandler)
     private readonly getTemplateListingHandler: GetTemplateListingHandler,
   ) {}
+
+  @Post(':templateId/marketplace/publish')
+  @WriteRateLimit()
+  @ResponseMessage('Template published to marketplace successfully')
+  async publishToMarketplace(
+    @Param('templateId', ParseUUIDPipe) templateId: string,
+    @Body() request: PublishTemplateToMarketplaceRequest,
+    @Auth() auth: IAuth,
+  ) {
+    return this.marketplacePublisher.execute(
+      new PublishTemplateToMarketplaceCommand(
+        templateId,
+        request.version_id,
+        auth.id,
+        request.offer_type,
+      ),
+    );
+  }
 
   @Post(':templateId/listing')
   @WriteRateLimit()

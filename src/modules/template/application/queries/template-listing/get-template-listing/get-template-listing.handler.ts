@@ -34,16 +34,19 @@ export class GetTemplateListingHandler {
       throw new NotFoundException('Template not found');
     }
 
-    const canManageWorkspace = this.authorizationService.authorize({
-      userId: query.userId,
-      permissions: [PERMISSIONS.WORKSPACE_UPDATE],
-      target: {
-        type: 'workspace',
-        id: template.getWorkspaceId(),
-      },
-    });
-
     const isCreator = template.getCreatedBy() === query.userId;
+
+    const canManageWorkspace = isCreator
+      ? true
+      : await this.authorizationService.authorize({
+          userId: query.userId,
+          permissions: [PERMISSIONS.WORKSPACE_UPDATE],
+          target: {
+            type: 'workspace',
+            id: template.getWorkspaceId(),
+          },
+        });
+
     if (!isCreator && !canManageWorkspace) {
       throw new ForbiddenException(
         'You do not have permission to manage this template',

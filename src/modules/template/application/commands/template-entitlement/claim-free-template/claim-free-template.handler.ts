@@ -85,13 +85,21 @@ export class ClaimFreeTemplateHandler {
           throw new BadRequestException('Template listing is not free');
         }
 
-        const publishedVersion =
-          await this.templateVersionRepository.findPublishedByTemplateId(
-            command.templateId,
-            context,
-          );
+        const publishedVersion = listing.getPublishedVersionId()
+          ? await this.templateVersionRepository.findById(
+              listing.getPublishedVersionId()!,
+              context,
+            )
+          : await this.templateVersionRepository.findPublishedByTemplateId(
+              command.templateId,
+              context,
+            );
 
-        if (!publishedVersion) {
+        if (
+          !publishedVersion ||
+          publishedVersion.isDraft() ||
+          publishedVersion.getTemplateId() !== template.getId()
+        ) {
           throw new NotFoundException('Template not found');
         }
 

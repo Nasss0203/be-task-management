@@ -35,7 +35,7 @@ export class UnpublishTemplateListingHandler {
   ): Promise<TemplateListingResponseDto> {
     return this.unitOfWork.runInTransaction(async (context) => {
       // 1. Load template
-      const template = await this.pageTemplateRepository.findById(
+      const template = await this.pageTemplateRepository.findByIdForUpdate(
         command.templateId,
         context,
       );

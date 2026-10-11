@@ -40,7 +40,7 @@ export class CreateTemplateListingHandler {
   ): Promise<TemplateListingResponseDto> {
     try {
       return await this.unitOfWork.runInTransaction(async (context) => {
-        const template = await this.pageTemplateRepository.findById(
+        const template = await this.pageTemplateRepository.findByIdForUpdate(
           command.templateId,
           context,
         );

@@ -1,3 +1,5 @@
+import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
+import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import {
   ForbiddenException,
   Inject,
@@ -16,6 +18,7 @@ import { UpdatePageTemplateCommand } from './update-page-template.command';
 @Injectable()
 export class UpdatePageTemplateHandler {
   constructor(
+    @Inject(PERSISTENCE_TYPES.UnitOfWork) private readonly uow: UnitOfWork,
     @Inject(TEMPLATE_TYPES.repositories.PageTemplateRepository)
     private readonly pageTemplateRepository: PageTemplateRepository,
 
@@ -25,37 +28,40 @@ export class UpdatePageTemplateHandler {
   async execute(
     command: UpdatePageTemplateCommand,
   ): Promise<PageTemplateResponseDto> {
-    const template = await this.pageTemplateRepository.findById(
-      command.templateId,
-    );
-
-    if (!template) {
-      throw new NotFoundException('Page template not found');
-    }
-
-    const isCreator = template.getCreatedBy() === command.userId;
-    const isOwner = await this.authorizationService.authorize({
-      userId: command.userId,
-      permissions: [PERMISSIONS.WORKSPACE_UPDATE],
-      target: { type: 'workspace', id: template.getWorkspaceId() },
-    });
-
-    if (!isCreator && !isOwner) {
-      throw new ForbiddenException(
-        'You do not have permission to update this template',
+    return this.uow.runInTransaction(async (context) => {
+      const template = await this.pageTemplateRepository.findByIdForUpdate(
+        command.templateId,
+        context,
       );
-    }
 
-    template.updateMetadata({
-      name: command.name,
-      description: command.description,
-      icon: command.icon,
-      coverUrl: command.coverUrl,
-      visibility: command.visibility,
+      if (!template) {
+        throw new NotFoundException('Page template not found');
+      }
+
+      const isCreator = template.getCreatedBy() === command.userId;
+      const isOwner = await this.authorizationService.authorize({
+        userId: command.userId,
+        permissions: [PERMISSIONS.WORKSPACE_UPDATE],
+        target: { type: 'workspace', id: template.getWorkspaceId() },
+      });
+
+      if (!isCreator && !isOwner) {
+        throw new ForbiddenException(
+          'You do not have permission to update this template',
+        );
+      }
+
+      template.updateMetadata({
+        name: command.name,
+        description: command.description,
+        icon: command.icon,
+        coverUrl: command.coverUrl,
+        visibility: command.visibility,
+      });
+
+      const updated = await this.pageTemplateRepository.save(template, context);
+
+      return PageTemplateResponseDto.fromDomain(updated);
     });
-
-    const updated = await this.pageTemplateRepository.save(template);
-
-    return PageTemplateResponseDto.fromDomain(updated);
   }
 }

@@ -26,6 +26,7 @@ describe('TemplateListingResponseDto', () => {
       status: TemplateListingStatus.DRAFT,
       created_by: 'user-1',
       published_at: null,
+      published_version_id: null,
       created_at: createdAt,
       updated_at: updatedAt,
     });

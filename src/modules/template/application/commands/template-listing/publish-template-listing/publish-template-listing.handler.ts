@@ -42,7 +42,7 @@ export class PublishTemplateListingHandler {
     command: PublishTemplateListingCommand,
   ): Promise<TemplateListingResponseDto> {
     return this.unitOfWork.runInTransaction(async (context) => {
-      const template = await this.pageTemplateRepository.findById(
+      const template = await this.pageTemplateRepository.findByIdForUpdate(
         command.templateId,
         context,
       );
@@ -85,18 +85,25 @@ export class PublishTemplateListingHandler {
         );
       }
 
-      const publishedVersion =
-        await this.templateVersionRepository.findPublishedByTemplateId(
-          command.templateId,
-          context,
-        );
+      const selectedId = listing.getPublishedVersionId();
+      const publishedVersion = selectedId
+        ? await this.templateVersionRepository.findById(selectedId, context)
+        : await this.templateVersionRepository.findPublishedByTemplateId(
+            command.templateId,
+            context,
+          );
 
-      if (!publishedVersion) {
+      if (
+        !publishedVersion ||
+        publishedVersion.isDraft() ||
+        publishedVersion.getTemplateId() !== template.getId()
+      ) {
         throw new BadRequestException(
           'Template must have a published version before publishing marketplace listing',
         );
       }
 
+      listing.selectPublishedVersion(publishedVersion);
       listing.publish();
 
       const savedListing = await this.templateListingRepository.save(

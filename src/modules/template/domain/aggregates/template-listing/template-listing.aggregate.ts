@@ -18,6 +18,7 @@ export type RestoreTemplateListingParams = {
   offerType: TemplateOfferType;
   status: TemplateListingStatus;
   createdBy: string;
+  publishedVersionId?: string | null;
   publishedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -33,6 +34,7 @@ export class TemplateListingAggregate {
     private publishedAt: Date | null,
     private readonly createdAt: Date,
     private updatedAt: Date,
+    private publishedVersionId: string | null = null,
   ) {
     if (!templateId.trim()) {
       throw new Error('Template id is required');
@@ -69,7 +71,28 @@ export class TemplateListingAggregate {
       params.publishedAt,
       params.createdAt,
       params.updatedAt,
+      params.publishedVersionId ?? null,
     );
+  }
+
+  getPublishedVersionId(): string | null {
+    return this.publishedVersionId;
+  }
+
+  selectPublishedVersion(version: {
+    getId(): string;
+    getTemplateId(): string;
+    isDraft(): boolean;
+  }): void {
+    if (version.getTemplateId() !== this.templateId || version.isDraft()) {
+      throw new Error(
+        'Listing requires a published version of the same template',
+      );
+    }
+    if (this.publishedVersionId !== version.getId()) {
+      this.publishedVersionId = version.getId();
+      this.updatedAt = new Date();
+    }
   }
 
   getId(): string {

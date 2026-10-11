@@ -17,6 +17,7 @@ import { PageTemplateDatabaseOrmEntity } from './page-template-database.orm-enti
 import { PageTemplateOrmEntity } from './page-template.orm-entity';
 
 @Entity('page_template_versions')
+@Unique('UQ_template_version_id_template', ['id', 'templateId'])
 @Unique('UQ_page_template_versions_template_id_version_number', [
   'templateId',
   'versionNumber',

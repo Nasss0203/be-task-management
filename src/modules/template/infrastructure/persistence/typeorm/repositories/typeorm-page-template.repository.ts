@@ -249,6 +249,15 @@ export class TypeOrmPageTemplateRepository implements PageTemplateRepository {
       .addOrderBy('version.id', 'DESC');
 
     if (filters.scope === TemplateListScope.PUBLIC) {
+      versionQb
+        .innerJoin(
+          TemplateListingOrmEntity,
+          'activeListing',
+          'activeListing.templateId = version.templateId',
+        )
+        .andWhere(
+          '(activeListing.publishedVersionId IS NULL OR version.id = activeListing.publishedVersionId)',
+        );
       versionQb.andWhere('version.status = :versionStatus', {
         versionStatus: TemplateVersionStatus.PUBLISHED,
       });
@@ -305,9 +314,17 @@ export class TypeOrmPageTemplateRepository implements PageTemplateRepository {
     const versionEntity = await repository.manager
       .getRepository(PageTemplateVersionOrmEntity)
       .createQueryBuilder('version')
+      .innerJoin(
+        TemplateListingOrmEntity,
+        'activeListing',
+        'activeListing.templateId = version.templateId',
+      )
       .where('version.templateId = :templateId', {
         templateId: templateEntity.id,
       })
+      .andWhere(
+        '(activeListing.publishedVersionId IS NULL OR version.id = activeListing.publishedVersionId)',
+      )
       .andWhere('version.status = :versionStatus', {
         versionStatus: TemplateVersionStatus.PUBLISHED,
       })

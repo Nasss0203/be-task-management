@@ -9,6 +9,7 @@ export class TemplateListingResponseDto {
   status: TemplateListingStatus;
   created_by: string;
   published_at: Date | null;
+  published_version_id: string | null;
   created_at: Date;
   updated_at: Date;
 
@@ -21,6 +22,7 @@ export class TemplateListingResponseDto {
     dto.status = listing.getStatus();
     dto.created_by = listing.getCreatedBy();
     dto.published_at = listing.getPublishedAt();
+    dto.published_version_id = listing.getPublishedVersionId();
     dto.created_at = listing.getCreatedAt();
     dto.updated_at = listing.getUpdatedAt();
 

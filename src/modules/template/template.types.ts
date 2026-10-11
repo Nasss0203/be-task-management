@@ -12,6 +12,10 @@ export const TEMPLATE_TYPES = {
   },
 
   applications: {
+    GetMyClaimedTemplatesHandler: Symbol('GetMyClaimedTemplatesHandler'),
+    PublishTemplateToMarketplaceHandler: Symbol(
+      'PublishTemplateToMarketplaceHandler',
+    ),
     ClaimFreeTemplateHandler: Symbol('ClaimFreeTemplateHandler'),
     CreateTemplateListingHandler: Symbol('CreateTemplateListingHandler'),
     PublishTemplateListingHandler: Symbol('PublishTemplateListingHandler'),

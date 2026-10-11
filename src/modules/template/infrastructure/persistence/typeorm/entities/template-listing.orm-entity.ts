@@ -15,6 +15,7 @@ import {
 import { TemplateListingStatus } from '../../../../domain/enums/template-listing-status.enum';
 import { TemplateOfferType } from '../../../../domain/enums/template-offer-type.enum';
 import { PageTemplateOrmEntity } from './page-template.orm-entity';
+import { PageTemplateVersionOrmEntity } from './page-template-version.orm-entity';
 
 @Entity('template_listings')
 @Unique('UQ_template_listings_template_id', ['templateId'])
@@ -58,6 +59,27 @@ export class TemplateListingOrmEntity {
   @ManyToOne(() => User, { nullable: false, onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'created_by' })
   creator: User;
+
+  @Column({ name: 'published_version_id', type: 'uuid', nullable: true })
+  publishedVersionId: string | null;
+
+  @ManyToOne(() => PageTemplateVersionOrmEntity, {
+    nullable: true,
+    onDelete: 'NO ACTION',
+  })
+  @JoinColumn([
+    {
+      name: 'published_version_id',
+      referencedColumnName: 'id',
+      foreignKeyConstraintName: 'FK_listing_published_version_template',
+    },
+    {
+      name: 'template_id',
+      referencedColumnName: 'templateId',
+      foreignKeyConstraintName: 'FK_listing_published_version_template',
+    },
+  ])
+  publishedVersion: PageTemplateVersionOrmEntity | null;
 
   @Column({ name: 'published_at', type: 'timestamptz', nullable: true })
   publishedAt: Date | null;

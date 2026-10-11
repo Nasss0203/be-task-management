@@ -68,7 +68,18 @@ import { TemplateListingController } from './presentation/http/controllers/templ
 import { TemplateController } from './presentation/http/controllers/template.controller';
 import { TEMPLATE_TYPES } from './template.types';
 
+import { PublishTemplateToMarketplaceHandler } from './application/commands/publish-template-to-marketplace/publish-template-to-marketplace.handler';
+import { GetMyClaimedTemplatesHandler } from './application/queries/template-entitlement/get-my-claimed-templates/get-my-claimed-templates.handler';
+import { MyClaimedTemplatesController } from './presentation/http/controllers/my-claimed-templates.controller';
 const PageTemplateHandler = [
+  {
+    provide: TEMPLATE_TYPES.applications.GetMyClaimedTemplatesHandler,
+    useClass: GetMyClaimedTemplatesHandler,
+  },
+  {
+    provide: TEMPLATE_TYPES.applications.PublishTemplateToMarketplaceHandler,
+    useClass: PublishTemplateToMarketplaceHandler,
+  },
   {
     provide: TEMPLATE_TYPES.applications.ClaimFreeTemplateHandler,
     useClass: ClaimFreeTemplateHandler,
@@ -250,6 +261,7 @@ const TemplateService = [
     TemplateThumbnailProcessor,
   ],
   controllers: [
+    MyClaimedTemplatesController,
     TemplateController,
     TemplateListingController,
     InternalTemplateRenderController,

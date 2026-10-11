@@ -10,6 +10,7 @@ export class TemplateListingMapper {
       status: entity.status,
       createdBy: entity.createdBy,
       publishedAt: entity.publishedAt,
+      publishedVersionId: entity.publishedVersionId,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     });
@@ -23,6 +24,7 @@ export class TemplateListingMapper {
     entity.status = domain.getStatus();
     entity.createdBy = domain.getCreatedBy();
     entity.publishedAt = domain.getPublishedAt();
+    entity.publishedVersionId = domain.getPublishedVersionId();
     entity.createdAt = domain.getCreatedAt();
     entity.updatedAt = domain.getUpdatedAt();
     return entity;
