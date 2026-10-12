@@ -1,11 +1,15 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 
 import type { PageTemplateRepository } from '../../../../domain/repositories/page-template.repository';
+import type {
+  TemplateListingRepository,
+  TemplateListingCategoryInfo,
+} from '../../../../domain/repositories/template-listing.repository';
 import { TemplateListScope } from '../../../../presentation/http/requests/list-page-templates.request';
 import { TEMPLATE_TYPES } from '../../../../template.types';
 import { TemplateVersionResponseDto } from '../../../dto/template-version/template-version.response.dto';
 import { PageTemplateResponseDto } from '../../../dto/page-template/page-template.response.dto';
-import type { ListPageTemplatesResponseDto } from '../../../dto/page-template/list-page-templates.response.dto';
+import type { ListPublicTemplatesResponseDto } from '../../../dto/page-template/public-template.response.dto';
 import { ListPublicTemplatesQuery } from './list-public-templates.query';
 import {
   decodeTemplateListCursor,
@@ -17,11 +21,13 @@ export class ListPublicTemplatesHandler {
   constructor(
     @Inject(TEMPLATE_TYPES.repositories.PageTemplateRepository)
     private readonly pageTemplateRepository: PageTemplateRepository,
+    @Inject(TEMPLATE_TYPES.repositories.TemplateListingRepository)
+    private readonly templateListingRepository: TemplateListingRepository,
   ) {}
 
   async execute(
     query: ListPublicTemplatesQuery,
-  ): Promise<ListPageTemplatesResponseDto> {
+  ): Promise<ListPublicTemplatesResponseDto> {
     const limit = query.limit ?? 20;
     if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
       throw new BadRequestException(
@@ -40,10 +46,20 @@ export class ListPublicTemplatesHandler {
       limit,
     });
 
+    const categoriesByTemplate =
+      result.items.length > 0
+        ? await this.templateListingRepository.findCategoriesByTemplateIds(
+            result.items.map((template) => template.getId()),
+            { activeOnly: true },
+          )
+        : new Map<string, TemplateListingCategoryInfo[]>();
     const items = result.items.map((template) => {
       const version = result.versions.get(template.getId());
       return {
         ...PageTemplateResponseDto.fromDomain(template),
+        categories: (categoriesByTemplate.get(template.getId()) ?? []).map(
+          ({ id, name, slug }) => ({ id, name, slug }),
+        ),
         version: version
           ? TemplateVersionResponseDto.fromDomain(version)
           : null,
