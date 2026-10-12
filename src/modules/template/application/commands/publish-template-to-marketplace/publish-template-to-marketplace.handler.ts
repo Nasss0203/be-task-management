@@ -123,10 +123,18 @@ export class PublishTemplateToMarketplaceHandler {
           context,
         );
       }
+      const listingCategories = await this.listings.findCategoriesByTemplateIds(
+        [listing.getTemplateId()],
+        { activeOnly: false },
+        context,
+      );
       return {
         template: PageTemplateResponseDto.fromDomain(template),
         version: TemplateVersionResponseDto.fromDomain(version),
-        listing: TemplateListingResponseDto.fromDomain(listing),
+        listing: TemplateListingResponseDto.fromDomain(
+          listing,
+          listingCategories.get(listing.getTemplateId()) ?? [],
+        ),
       };
     });
   }

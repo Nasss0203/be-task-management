@@ -88,7 +88,16 @@ export class CreateTemplateListingHandler {
           context,
         );
 
-        return TemplateListingResponseDto.fromDomain(savedListing);
+        const listingCategories =
+          await this.templateListingRepository.findCategoriesByTemplateIds(
+            [savedListing.getTemplateId()],
+            { activeOnly: false },
+            context,
+          );
+        return TemplateListingResponseDto.fromDomain(
+          savedListing,
+          listingCategories.get(savedListing.getTemplateId()) ?? [],
+        );
       });
     } catch (error) {
       const constraintError = error as {

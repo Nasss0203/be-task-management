@@ -61,6 +61,14 @@ export class GetTemplateListingHandler {
       throw new NotFoundException('Template listing not found');
     }
 
-    return TemplateListingResponseDto.fromDomain(listing);
+    const listingCategories =
+      await this.templateListingRepository.findCategoriesByTemplateIds(
+        [listing.getTemplateId()],
+        { activeOnly: false },
+      );
+    return TemplateListingResponseDto.fromDomain(
+      listing,
+      listingCategories.get(listing.getTemplateId()) ?? [],
+    );
   }
 }

@@ -16,7 +16,7 @@ describe('TemplateListingResponseDto', () => {
       updatedAt,
     });
 
-    const result = TemplateListingResponseDto.fromDomain(listing);
+    const result = TemplateListingResponseDto.fromDomain(listing, []);
 
     expect(result).toBeInstanceOf(TemplateListingResponseDto);
     expect(result).toEqual({
@@ -29,6 +29,8 @@ describe('TemplateListingResponseDto', () => {
       published_version_id: null,
       created_at: createdAt,
       updated_at: updatedAt,
+      category_ids: [],
+      categories: [],
     });
     expect(result.created_at).toBe(createdAt);
     expect(result.updated_at).toBe(updatedAt);
@@ -47,9 +49,27 @@ describe('TemplateListingResponseDto', () => {
       updatedAt,
     });
 
-    const result = TemplateListingResponseDto.fromDomain(listing);
+    const result = TemplateListingResponseDto.fromDomain(listing, []);
 
     expect(result.status).toBe(TemplateListingStatus.PUBLISHED);
     expect(result.published_at).toBe(publishedAt);
+  });
+  it('maps active and inactive category metadata consistently without changing listing fields', () => {
+    const listing = TemplateListing.create({
+      id: 'l1',
+      templateId: 't1',
+      createdBy: 'u1',
+    });
+    const result = TemplateListingResponseDto.fromDomain(listing, [
+      { id: 'a', name: 'Active', slug: 'active', isActive: true },
+      { id: 'b', name: 'Inactive', slug: 'inactive', isActive: false },
+    ]);
+    expect(result.category_ids).toEqual(['a', 'b']);
+    expect(result.categories).toEqual([
+      { id: 'a', name: 'Active', slug: 'active', is_active: true },
+      { id: 'b', name: 'Inactive', slug: 'inactive', is_active: false },
+    ]);
+    expect(result.template_id).toBe('t1');
+    expect(result.created_by).toBe('u1');
   });
 });

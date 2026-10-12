@@ -4,7 +4,10 @@ import { DataSource, EntityManager, In, Repository } from 'typeorm';
 import type { PersistenceContext } from 'src/shared/domain/persistence-context';
 
 import type { TemplateListing } from '../../../../domain/aggregates/template-listing/template-listing.aggregate';
-import type { TemplateListingRepository } from '../../../../domain/repositories/template-listing.repository';
+import type {
+  TemplateListingRepository,
+  TemplateListingCategoryInfo,
+} from '../../../../domain/repositories/template-listing.repository';
 import { TemplateListingOrmEntity } from '../entities/template-listing.orm-entity';
 import { TemplateListingCategoryOrmEntity } from '../entities/template-listing-category.orm-entity';
 import { TemplateListingMapper } from '../mappers/template-listing.mapper';
@@ -12,6 +15,55 @@ import { TemplateListingMapper } from '../mappers/template-listing.mapper';
 @Injectable()
 export class TypeOrmTemplateListingRepository implements TemplateListingRepository {
   constructor(private readonly dataSource: DataSource) {}
+
+  async findCategoriesByTemplateIds(
+    templateIds: string[],
+    options?: { activeOnly?: boolean },
+    context?: PersistenceContext,
+  ): Promise<Map<string, TemplateListingCategoryInfo[]>> {
+    const ids = [...new Set(templateIds)];
+    const result = new Map<string, TemplateListingCategoryInfo[]>(
+      ids.map((id) => [id, []]),
+    );
+    if (ids.length === 0) return result;
+
+    const qb = this.getRepo(context)
+      .manager.getRepository(TemplateListingCategoryOrmEntity)
+      .createQueryBuilder('association')
+      .innerJoin('association.listing', 'listing')
+      .innerJoin('association.category', 'category')
+      .select('listing.templateId', 'templateId')
+      .addSelect('category.id', 'id')
+      .addSelect('category.name', 'name')
+      .addSelect('category.slug', 'slug')
+      .addSelect('category.isActive', 'isActive')
+      .where('listing.templateId IN (:...templateIds)', { templateIds: ids })
+      .orderBy('category.sortOrder', 'ASC')
+      .addOrderBy('category.name', 'ASC')
+      .addOrderBy('category.id', 'ASC');
+    if (options?.activeOnly)
+      qb.andWhere('category.isActive = :isActive', { isActive: true });
+
+    const rows = await qb.getRawMany<
+      TemplateListingCategoryInfo & { templateId: string }
+    >();
+    const seen = new Map<string, Set<string>>();
+    for (const row of rows) {
+      const categories = result.get(row.templateId);
+      if (!categories) continue;
+      const categoryIds = seen.get(row.templateId) ?? new Set<string>();
+      if (categoryIds.has(row.id)) continue;
+      categoryIds.add(row.id);
+      seen.set(row.templateId, categoryIds);
+      categories.push({
+        id: row.id,
+        name: row.name,
+        slug: row.slug,
+        isActive: row.isActive,
+      });
+    }
+    return result;
+  }
 
   async create(
     listing: TemplateListing,

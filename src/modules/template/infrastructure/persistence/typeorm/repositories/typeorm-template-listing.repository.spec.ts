@@ -103,3 +103,88 @@ describe('Marketplace category persistence', () => {
     expect(dataSource.getRepository).not.toHaveBeenCalled();
   });
 });
+
+describe('Listing category batch reads', () => {
+  const rows = [
+    { templateId: 't1', id: 'a', name: 'A', slug: 'a', isActive: true },
+    { templateId: 't1', id: 'a', name: 'A', slug: 'a', isActive: true },
+    { templateId: 't1', id: 'b', name: 'B', slug: 'b', isActive: false },
+    { templateId: 't2', id: 'a', name: 'A', slug: 'a', isActive: true },
+  ];
+  const qb = {
+    innerJoin: jest.fn().mockReturnThis(),
+    select: jest.fn().mockReturnThis(),
+    addSelect: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    andWhere: jest.fn().mockReturnThis(),
+    orderBy: jest.fn().mockReturnThis(),
+    addOrderBy: jest.fn().mockReturnThis(),
+    getRawMany: jest.fn(),
+  };
+  const manager = {
+    getRepository: jest.fn().mockReturnValue({ createQueryBuilder: () => qb }),
+  };
+  const source = { getRepository: jest.fn().mockReturnValue({ manager }) };
+  const repository = new TypeOrmTemplateListingRepository(
+    source as unknown as DataSource,
+  );
+  beforeEach(() => {
+    jest.clearAllMocks();
+    qb.getRawMany.mockResolvedValue(rows);
+  });
+  it('returns an empty map without accessing persistence for empty input', async () => {
+    expect(await repository.findCategoriesByTemplateIds([])).toEqual(new Map());
+    expect(source.getRepository).not.toHaveBeenCalled();
+    expect(qb.getRawMany).not.toHaveBeenCalled();
+  });
+  it('groups one batch, deduplicates template/category IDs, includes inactive and initializes empty memberships', async () => {
+    const result = await repository.findCategoriesByTemplateIds([
+      't1',
+      't2',
+      't1',
+      't3',
+    ]);
+    expect(qb.getRawMany).toHaveBeenCalledTimes(1);
+    expect(qb.where).toHaveBeenCalledWith(
+      'listing.templateId IN (:...templateIds)',
+      { templateIds: ['t1', 't2', 't3'] },
+    );
+    expect(qb.innerJoin).toHaveBeenCalledWith('association.listing', 'listing');
+    expect(qb.innerJoin).toHaveBeenCalledWith(
+      'association.category',
+      'category',
+    );
+    expect(result.get('t1')).toEqual(
+      rows
+        .filter((row, index) => index === 0 || index === 2)
+        .map(({ templateId, ...category }) => category),
+    );
+    expect(result.get('t2')).toHaveLength(1);
+    expect(result.get('t3')).toEqual([]);
+    expect(qb.andWhere).not.toHaveBeenCalled();
+    expect(qb.orderBy).toHaveBeenCalledWith('category.sortOrder', 'ASC');
+    expect(qb.addOrderBy).toHaveBeenCalledWith('category.name', 'ASC');
+    expect(qb.addOrderBy).toHaveBeenCalledWith('category.id', 'ASC');
+  });
+  it('applies activeOnly filtering and uses the supplied context', async () => {
+    qb.getRawMany.mockResolvedValue(rows.filter((row) => row.isActive));
+    const context = { getRepository: jest.fn().mockReturnValue({ manager }) };
+    const result = await repository.findCategoriesByTemplateIds(
+      ['t1'],
+      { activeOnly: true },
+      context,
+    );
+    expect(source.getRepository).not.toHaveBeenCalled();
+    expect(context.getRepository).toHaveBeenCalledWith(
+      TemplateListingOrmEntity,
+    );
+    expect(qb.andWhere).toHaveBeenCalledWith('category.isActive = :isActive', {
+      isActive: true,
+    });
+    expect(result.get('t1')?.every((category) => category.isActive)).toBe(true);
+  });
+  it('does not add an active filter for explicit false', async () => {
+    await repository.findCategoriesByTemplateIds(['t1'], { activeOnly: false });
+    expect(qb.andWhere).not.toHaveBeenCalled();
+  });
+});

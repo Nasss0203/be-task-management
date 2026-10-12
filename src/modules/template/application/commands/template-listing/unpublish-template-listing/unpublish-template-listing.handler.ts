@@ -82,7 +82,16 @@ export class UnpublishTemplateListingHandler {
       );
 
       // 6. Return DTO
-      return TemplateListingResponseDto.fromDomain(savedListing);
+      const listingCategories =
+        await this.templateListingRepository.findCategoriesByTemplateIds(
+          [savedListing.getTemplateId()],
+          { activeOnly: false },
+          context,
+        );
+      return TemplateListingResponseDto.fromDomain(
+        savedListing,
+        listingCategories.get(savedListing.getTemplateId()) ?? [],
+      );
     });
   }
 }

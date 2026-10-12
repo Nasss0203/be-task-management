@@ -32,6 +32,7 @@ describe('PublishTemplateToMarketplaceHandler', () => {
     findByTemplateId: jest.fn(),
     save: jest.fn(),
     replaceCategoryIds: jest.fn(),
+    findCategoriesByTemplateIds: jest.fn(),
   };
   const categories = { findByIdsForShare: jest.fn() };
   let categoryIds: string[];
@@ -76,6 +77,21 @@ describe('PublishTemplateToMarketplaceHandler', () => {
     });
     listing = null;
     categoryIds = [];
+    listings.findCategoriesByTemplateIds.mockImplementation(() =>
+      Promise.resolve(
+        new Map([
+          [
+            't1',
+            categoryIds.map((id) => ({
+              id,
+              name: id,
+              slug: id,
+              isActive: true,
+            })),
+          ],
+        ]),
+      ),
+    );
     categories.findByIdsForShare.mockImplementation((ids: string[]) =>
       Promise.resolve(
         ids.map((id) => TemplateCategory.create({ id, name: id })),
@@ -207,6 +223,12 @@ describe('PublishTemplateToMarketplaceHandler', () => {
     async (...ids: string[]) => {
       const result = await handler.execute(withCategories(ids));
       expect(categoryIds).toEqual(ids);
+      expect(result.listing.category_ids).toEqual(ids);
+      expect(listings.findCategoriesByTemplateIds).toHaveBeenCalledWith(
+        ['t1'],
+        { activeOnly: false },
+        context,
+      );
       expect(categories.findByIdsForShare).toHaveBeenCalledWith(ids, context);
       expect(listings.replaceCategoryIds).toHaveBeenCalledWith(
         result.listing.id,
@@ -249,16 +271,21 @@ describe('PublishTemplateToMarketplaceHandler', () => {
   it('replaces categories on same-version republish without saving the listing again', async () => {
     const first = await handler.execute(withCategories(['a']));
     const second = await handler.execute(withCategories(['b']));
-    expect(second.listing).toEqual(first.listing);
+    expect(second.listing.id).toEqual(first.listing.id);
+    expect(second.listing.published_at).toEqual(first.listing.published_at);
+    expect(second.listing.category_ids).toEqual(['b']);
     expect(listings.save).toHaveBeenCalledTimes(1);
     expect(categoryIds).toEqual(['b']);
   });
   it('keeps previous categories when omitted and clears them for an empty array', async () => {
     await handler.execute(withCategories(['a']));
-    await handler.execute(withCategories());
+    const omitted = await handler.execute(withCategories());
+    expect(omitted.listing.category_ids).toEqual(['a']);
     expect(categoryIds).toEqual(['a']);
     expect(listings.replaceCategoryIds).toHaveBeenCalledTimes(1);
-    await handler.execute(withCategories([]));
+    const cleared = await handler.execute(withCategories([]));
+    expect(cleared.listing.category_ids).toEqual([]);
+    expect(cleared.listing.categories).toEqual([]);
     expect(categoryIds).toEqual([]);
   });
   it('does not access category repositories for omitted input', async () => {
