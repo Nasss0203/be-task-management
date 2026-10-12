@@ -17,6 +17,7 @@ import type {
 import { TemplateListScope } from '../../../../presentation/http/requests/list-page-templates.request';
 import { PageTemplateVersionOrmEntity } from '../entities/page-template-version.orm-entity';
 import { TemplateListingOrmEntity } from '../entities/template-listing.orm-entity';
+import { TemplateListingCategoryOrmEntity } from '../entities/template-listing-category.orm-entity';
 import { PageTemplateOrmEntity } from '../entities/page-template.orm-entity';
 import { PageTemplateMapper } from '../mappers/page-template.mapper';
 import { TemplateVersionMapper } from '../mappers/template-version.mapper';
@@ -189,6 +190,33 @@ export class TypeOrmPageTemplateRepository implements PageTemplateRepository {
           publishedStatus: TemplateStatus.PUBLISHED,
         });
       }
+    }
+
+    if (
+      filters.scope === TemplateListScope.PUBLIC &&
+      filters.categorySlug !== undefined
+    ) {
+      qb.andWhere(
+        (subQb) => {
+          const categoryListing = subQb
+            .subQuery()
+            .select('1')
+            .from(TemplateListingCategoryOrmEntity, 'categoryAssociation')
+            .innerJoin('categoryAssociation.listing', 'categoryListing')
+            .innerJoin('categoryAssociation.category', 'filterCategory')
+            .where('categoryListing.templateId = template.id')
+            .andWhere('categoryListing.status = :categoryListingStatus')
+            .andWhere('filterCategory.slug = :categorySlug')
+            .andWhere('filterCategory.isActive = :categoryActive')
+            .getQuery();
+          return 'EXISTS ' + categoryListing;
+        },
+        {
+          categoryListingStatus: TemplateListingStatus.PUBLISHED,
+          categorySlug: filters.categorySlug,
+          categoryActive: true,
+        },
+      );
     }
 
     if (filters.search) {

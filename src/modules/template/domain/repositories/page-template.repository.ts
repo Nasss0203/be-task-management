@@ -11,6 +11,7 @@ export type FindPageTemplatesFilters = {
   // Opt in for the anonymous catalog; dashboard filtering stays unchanged.
   requirePublishedVersion?: boolean;
   search?: string;
+  categorySlug?: string;
   cursor?: {
     createdAt: Date;
     id: string;

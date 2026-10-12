@@ -32,7 +32,12 @@ export class PublicTemplateController {
   @ResponseMessage('Public templates retrieved successfully')
   async list(@Query() query: ListPublicTemplatesRequest) {
     return this.listPublicTemplatesHandler.execute(
-      new ListPublicTemplatesQuery(query.search, query.cursor, query.limit),
+      new ListPublicTemplatesQuery(
+        query.search,
+        query.cursor,
+        query.limit,
+        query.category,
+      ),
     );
   }
 

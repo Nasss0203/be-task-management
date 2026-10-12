@@ -1,4 +1,5 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { isUUID } from 'class-validator';
 
 import type { PageTemplateRepository } from '../../../../domain/repositories/page-template.repository';
 import type {
@@ -35,6 +36,18 @@ export class ListPublicTemplatesHandler {
       );
     }
     const search = query.search?.trim() || undefined;
+    let categorySlug: string | undefined;
+    if (query.category !== undefined) {
+      if (typeof query.category !== 'string')
+        throw new BadRequestException('category must be a slug string');
+      categorySlug = query.category.trim().toLowerCase();
+      if (
+        categorySlug.length > 100 ||
+        !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(categorySlug) ||
+        isUUID(categorySlug)
+      )
+        throw new BadRequestException('category must be a valid category slug');
+    }
     const cursor = query.cursor
       ? decodeTemplateListCursor(query.cursor)
       : undefined;
@@ -42,6 +55,7 @@ export class ListPublicTemplatesHandler {
       scope: TemplateListScope.PUBLIC,
       requirePublishedVersion: true,
       search,
+      ...(categorySlug !== undefined ? { categorySlug } : {}),
       cursor,
       limit,
     });

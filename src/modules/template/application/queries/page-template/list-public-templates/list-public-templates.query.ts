@@ -3,5 +3,6 @@ export class ListPublicTemplatesQuery {
     public readonly search?: string,
     public readonly cursor?: string,
     public readonly limit?: number,
+    public readonly category?: string,
   ) {}
 }

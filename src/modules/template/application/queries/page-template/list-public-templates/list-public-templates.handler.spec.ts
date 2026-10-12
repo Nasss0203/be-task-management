@@ -1,4 +1,5 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
+import { ListPublicTemplatesRequest } from '../../../../presentation/http/requests/list-public-templates.request';
 import { ListPublicTemplatesHandler } from './list-public-templates.handler';
 import { ListPublicTemplatesQuery } from './list-public-templates.query';
 import { PageTemplate } from '../../../../domain/aggregates/page-template/page-template.aggregate';
@@ -169,5 +170,113 @@ describe('ListPublicTemplatesHandler category enrichment', () => {
       handler.execute(new ListPublicTemplatesQuery(undefined, 'invalid')),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(templates.findMany).not.toHaveBeenCalled();
+  });
+  it('forwards normalized category with search and cursor without filtering the returned page', async () => {
+    const cursor = encodeTemplateListCursor({
+      createdAt: first.getCreatedAt(),
+      id: first.getId(),
+    });
+    const result = await handler.execute(
+      new ListPublicTemplatesQuery(' team ', cursor, 2, ' Esports '),
+    );
+    expect(templates.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        categorySlug: 'esports',
+        search: 'team',
+        limit: 2,
+        cursor: { createdAt: first.getCreatedAt(), id: first.getId() },
+      }),
+    );
+    expect(result.items.map((item) => item.id)).toEqual([
+      first.getId(),
+      second.getId(),
+    ]);
+    expect(decodeTemplateListCursor(result.nextCursor!)).toEqual({
+      createdAt: second.getCreatedAt(),
+      id: second.getId(),
+    });
+  });
+  it.each(['missing-category', 'inactive-category'])(
+    'returns the empty repository result for %s',
+    async (category) => {
+      templates.findMany.mockResolvedValue({
+        items: [],
+        versions: new Map(),
+        hasNextPage: false,
+      });
+      expect(
+        await handler.execute(
+          new ListPublicTemplatesQuery(undefined, undefined, 20, category),
+        ),
+      ).toEqual({ items: [], nextCursor: null });
+      expect(listings.findCategoriesByTemplateIds).not.toHaveBeenCalled();
+    },
+  );
+  it.each(['', ' ', 'bad_slug', 'bad--slug', 'a,b'])(
+    'rejects invalid category %j before persistence',
+    async (category) => {
+      await expect(
+        handler.execute(
+          new ListPublicTemplatesQuery(undefined, undefined, 20, category),
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(templates.findMany).not.toHaveBeenCalled();
+    },
+  );
+});
+
+describe('Public category query validation', () => {
+  const pipe = new ValidationPipe({
+    transform: true,
+    whitelist: true,
+    forbidNonWhitelisted: true,
+  });
+  const validate = (input: Record<string, unknown>) =>
+    pipe.transform(input, {
+      type: 'query',
+      metatype: ListPublicTemplatesRequest,
+    });
+  it('keeps old query fields and normalizes one category slug', async () => {
+    const result = await validate({
+      category: ' Project-Management ',
+      search: 'team',
+      cursor: 'cursor',
+      limit: '10',
+    });
+    expect(result).toMatchObject({
+      category: 'project-management',
+      search: 'team',
+      cursor: 'cursor',
+      limit: 10,
+    });
+  });
+  it('accepts omitted category and numeric slug segments', async () => {
+    await expect(validate({})).resolves.toBeInstanceOf(
+      ListPublicTemplatesRequest,
+    );
+    await expect(validate({ category: 'gaming-2026' })).resolves.toMatchObject({
+      category: 'gaming-2026',
+    });
+  });
+  it.each([
+    '',
+    ' ',
+    'bad_slug',
+    '-bad',
+    'bad-',
+    'bad--slug',
+    'a,b',
+    'a/b',
+    'a b',
+    ['esports', 'gaming'],
+    ['esports'],
+    null,
+    42,
+    '550e8400-e29b-41d4-a716-446655440000',
+    'a'.repeat(101),
+  ])('rejects invalid or multiple category values %j', async (category) => {
+    await expect(validate({ category })).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
   });
 });
