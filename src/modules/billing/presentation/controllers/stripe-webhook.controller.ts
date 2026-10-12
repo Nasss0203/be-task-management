@@ -17,12 +17,13 @@ import { SkipTransform } from 'src/common/decorator/skip.transform';
 import { ProcessStripeWebhookCommand } from '../../application/commands/webhook/process-stripe-webhook/process-stripe-webhook.command';
 import { ProcessStripeWebhookHandler } from '../../application/commands/webhook/process-stripe-webhook/process-stripe-webhook.handler';
 import { BILLING_TYPES } from '../../billing.types';
-import { StripeWebhookService } from '../../infrastructure/providers/stripe/stripe-webhook.service';
+import { PAYMENT_TYPES } from 'src/modules/payment/payment.types';
+import { StripeWebhookService } from 'src/modules/payment/infrastructure/providers/stripe/stripe-webhook.service';
 
 @Controller('billing/webhooks/stripe')
 export class StripeWebhookController {
   constructor(
-    @Inject(BILLING_TYPES.providers.StripeWebhookService)
+    @Inject(PAYMENT_TYPES.providers.StripeWebhookService)
     private readonly stripeWebhookService: StripeWebhookService,
 
     @Inject(BILLING_TYPES.applications.ProcessStripeWebhookHandler)

@@ -6,6 +6,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
+import { PAYMENT_TYPES } from 'src/modules/payment/payment.types';
+import type { SepayPgCheckoutPort } from 'src/modules/payment/application/ports/sepay-pg-checkout.port';
+import type { StripeCheckoutPort } from 'src/modules/payment/application/ports/stripe-checkout.port';
 
 import { BILLING_TYPES } from '../../../../billing.types';
 import { BillingProvider } from '../../../../domain/constants/billing-provider.constant';
@@ -13,8 +16,6 @@ import { PaymentOrder } from '../../../../domain/entities/payment-order.entity';
 import type { BillingPlanPriceRepository } from '../../../../domain/repositories/billing-plan-price.repository';
 import type { PaymentOrderRepository } from '../../../../domain/repositories/payment-order.repository';
 import { CreateBillingCheckoutResponseDto } from '../../../dto/response/create-billing-checkout.response.dto';
-import type { SepayPgCheckoutPort } from '../../../ports/sepay-pg-checkout.port';
-import type { StripeCheckoutPort } from '../../../ports/stripe-checkout.port';
 import { WorkspaceSubscriptionProvisioningService } from '../../../services/workspace-subscription-provisioning.service';
 import { CreateBillingCheckoutCommand } from './create-billing-checkout.command';
 
@@ -32,10 +33,10 @@ export class CreateBillingCheckoutHandler {
     @Inject(BILLING_TYPES.services.WorkspaceSubscriptionProvisioningService)
     private readonly subscriptionProvisioningService: WorkspaceSubscriptionProvisioningService,
 
-    @Inject(BILLING_TYPES.providers.SepayPgCheckoutService)
+    @Inject(PAYMENT_TYPES.providers.SepayPgCheckoutService)
     private readonly sepayPgCheckoutService: SepayPgCheckoutPort,
 
-    @Inject(BILLING_TYPES.providers.StripeCheckoutService)
+    @Inject(PAYMENT_TYPES.providers.StripeCheckoutService)
     private readonly stripeCheckoutService: StripeCheckoutPort,
   ) {}
 

@@ -25,12 +25,4 @@ export const BILLING_TYPES = {
     ),
     BillingPaymentSettlementService: Symbol('BillingPaymentSettlementService'),
   },
-
-  providers: {
-    SepayWebhookService: Symbol('SepayWebhookService'),
-    SepayPgIpnAuthService: Symbol('SepayPgIpnAuthService'),
-    SepayPgCheckoutService: Symbol('SepayPgCheckoutService'),
-    StripeCheckoutService: Symbol('StripeCheckoutService'),
-    StripeWebhookService: Symbol('StripeWebhookService'),
-  },
 } as const;
