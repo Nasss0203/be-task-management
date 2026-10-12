@@ -18,9 +18,9 @@ import { PageBlockOrmEntity } from './page-block.orm-entity';
 @Index('IDX_PAGES_WORKSPACE_ID', ['workspace_id'])
 @Index('IDX_PAGES_PARENT_PAGE_ID', ['parent_page_id'])
 @Index('IDX_PAGES_DELETED_AT', ['deletedAt'])
-@Index('UQ_pages_public_subdomain', ['public_subdomain'], { unique: true })
+@Index('uq_pages_public_subdomain', ['public_subdomain'], { unique: true })
 @Check(
-  'CK_pages_public_subdomain_root',
+  'ck_pages_public_subdomain_root',
   `(parent_page_id IS NULL) = (public_subdomain IS NOT NULL)`,
 )
 @Index('UQ_PAGES_WORKSPACE_SLUG_ACTIVE', ['workspace_id', 'slug'], {

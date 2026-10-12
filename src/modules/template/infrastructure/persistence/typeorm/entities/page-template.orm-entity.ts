@@ -29,14 +29,20 @@ export class PageTemplateOrmEntity {
   sourcePageId: string | null;
 
   @ManyToOne(() => PageOrmEntity, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'source_page_id' })
+  @JoinColumn({
+    name: 'source_page_id',
+    foreignKeyConstraintName: 'FK_page_templates_source_page',
+  })
   sourcePage: PageOrmEntity | null;
 
   @Column({ name: 'workspace_id', type: 'uuid' })
   workspaceId: string;
 
   @ManyToOne(() => WorkspaceOrmEntity, { nullable: false, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'workspace_id' })
+  @JoinColumn({
+    name: 'workspace_id',
+    foreignKeyConstraintName: 'FK_page_templates_workspace',
+  })
   workspace: WorkspaceOrmEntity;
 
   @Column({ type: 'varchar', length: 255 })
@@ -55,13 +61,15 @@ export class PageTemplateOrmEntity {
   createdBy: string;
 
   @ManyToOne(() => User, { nullable: false, onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'created_by' })
+  @JoinColumn({
+    name: 'created_by',
+    foreignKeyConstraintName: 'FK_page_templates_created_by',
+  })
   creator: User;
 
   @Column({
     type: 'enum',
     enum: TemplateStatus,
-    enumName: 'page_templates_status_enum',
     default: TemplateStatus.DRAFT,
   })
   status: TemplateStatus;
@@ -69,7 +77,6 @@ export class PageTemplateOrmEntity {
   @Column({
     type: 'enum',
     enum: TemplateVisibility,
-    enumName: 'page_templates_visibility_enum',
     default: TemplateVisibility.PRIVATE,
   })
   visibility: TemplateVisibility;

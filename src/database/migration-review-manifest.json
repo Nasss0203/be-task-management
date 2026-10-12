@@ -1,0 +1,77 @@
+{
+  "purpose": "Review snapshot only; not proof of historical executed SQL",
+  "files": [
+    {
+      "file": "1790409430359-add-published-sites-and-page-publications.ts",
+      "sha256": "b7d80418c4179b73419551ce92da74ecd336bb8cbbe500d4985cdd20adee2663"
+    },
+    {
+      "file": "1790411960687-init-schema.ts",
+      "sha256": "2fcec1dad2adbfcb56b28774874cd00b375b09b5ec0bd6e2221b55eba555857d"
+    },
+    {
+      "file": "1790640000000-add-publication-tree.ts",
+      "sha256": "82f00eb1646e65076784193cf6930c7030cc5161aa61e7c154f7e4ddf31fe9ed"
+    },
+    {
+      "file": "1790720000000-root-public-site-ownership.ts",
+      "sha256": "1e2dfd5afc0a0704d763e562d02341a635dab451be16b6fc518987e9bd4e00f0"
+    },
+    {
+      "file": "1790800000000-child-publication-visibility-override.ts",
+      "sha256": "be44fb6e01896788a2d8bb5359ca0ca573218628b5d42c49a731963efb821f07"
+    },
+    {
+      "file": "1790812800000-add-allow-updates-to-published-sites.ts",
+      "sha256": "5ddfd723e5c796c58ecd90b43f3d7079f0a7c8ee6aeb2732ad250edab749f3eb"
+    },
+    {
+      "file": "1790900000000-drop-legacy-templates-and-page-is-template.ts",
+      "sha256": "114d711ce3b1d85538769a1e37d1b442fc76a5c7bb6cc0c1f1fe246126252f39"
+    },
+    {
+      "file": "1791000000000-create-core-template-v2.ts",
+      "sha256": "5d0bcc6f40be911a409ca6aa005eacfdac0ccb07fe7ea809c31e1bb82b2496d1"
+    },
+    {
+      "file": "1791100000000-add-source-page-to-page-templates.ts",
+      "sha256": "2af5c26697f0306fa81cb5e07b3501aa1303c92f4b864605d7b81e3c1851c521"
+    },
+    {
+      "file": "1791200000000-create-template-database-snapshot.ts",
+      "sha256": "a3988e62962666b18b522d9fe9dced683fed323ac2e0f328726b745305cdfc3d"
+    },
+    {
+      "file": "1791300000000-add-snapshot-hash-to-template-versions.ts",
+      "sha256": "cf988bda113c836724faa937c8a24cf0789115ed7a59f4d8cbed9842775d3ea0"
+    },
+    {
+      "file": "1791400000000-create-template-version-assets.ts",
+      "sha256": "954109337deb3629013a9054c49922420f9c0cffb2712e1700d0a1bce35884f8"
+    },
+    {
+      "file": "1791500000000-create-template-listings.ts",
+      "sha256": "69366b2b85661a3cce4285ac01ce1b350a73bd7a7d50daf97973e96987bf9272"
+    },
+    {
+      "file": "1791651159000-create-template-entitlements.ts",
+      "sha256": "ef096ae19f88b7dcd372510751f39f2decda4cd229db66ec98989aa6cd3aa243"
+    },
+    {
+      "file": "1791676800000-pin-marketplace-version.ts",
+      "sha256": "6f812abd563e6f931821ce22b8be4e2f394e2a51f515a775a14a71671d0b490d"
+    },
+    {
+      "file": "1791700000000-create-template-categories.ts",
+      "sha256": "d742d15dd83c81e11634b580f937f4edae8b97b8986afb19bb9207eb6f49de8e"
+    },
+    {
+      "file": "1791810000000-add-paid-template-offer.ts",
+      "sha256": "9add1f7e730fcee8e9ab57705d677844517ea6b739a727b863e276b7d84a0922"
+    },
+    {
+      "file": "1791810001000-add-template-listing-pricing.ts",
+      "sha256": "a70d34882cc8adc36ad5b1b2ce49698b686575c575b87bf9e4f5b2088a62c370"
+    }
+  ]
+}

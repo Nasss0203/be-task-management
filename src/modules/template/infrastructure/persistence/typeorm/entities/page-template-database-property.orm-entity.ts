@@ -28,7 +28,6 @@ export class PageTemplateDatabasePropertyOrmEntity {
   @Column({
     type: 'enum',
     enum: PropertyType,
-    enumName: 'page_template_database_properties_type_enum',
   })
   type: PropertyType;
 
@@ -49,7 +48,10 @@ export class PageTemplateDatabasePropertyOrmEntity {
       onDelete: 'CASCADE',
     },
   )
-  @JoinColumn({ name: 'template_database_id' })
+  @JoinColumn({
+    name: 'template_database_id',
+    foreignKeyConstraintName: 'FK_page_template_database_properties_database',
+  })
   database: PageTemplateDatabaseOrmEntity;
 
   @OneToMany(

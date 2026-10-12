@@ -42,7 +42,6 @@ export class AiToolCallOrmEntity {
   @Column({
     type: 'enum',
     enum: AiToolCallStatus,
-    enumName: 'ai_tool_calls_status_enum',
     default: AiToolCallStatus.PENDING,
   })
   status: AiToolCallStatus;

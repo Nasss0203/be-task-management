@@ -52,7 +52,6 @@ export class AiConversationOrmEntity {
   @Column({
     type: 'enum',
     enum: AiConversationStatus,
-    enumName: 'ai_conversations_status_enum',
     default: AiConversationStatus.ACTIVE,
   })
   status: AiConversationStatus;

@@ -32,21 +32,22 @@ export class TemplateVersionAssetOrmEntity {
     nullable: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'template_version_id' })
+  @JoinColumn({
+    name: 'template_version_id',
+    foreignKeyConstraintName: 'FK_template_version_assets_template_version',
+  })
   templateVersion: PageTemplateVersionOrmEntity;
 
   @Column({
     name: 'asset_type',
     type: 'enum',
     enum: TemplateVersionAssetType,
-    enumName: 'template_version_assets_asset_type_enum',
   })
   assetType: TemplateVersionAssetType;
 
   @Column({
     type: 'enum',
     enum: TemplateVersionAssetProvider,
-    enumName: 'template_version_assets_provider_enum',
   })
   provider: TemplateVersionAssetProvider;
 
@@ -76,7 +77,6 @@ export class TemplateVersionAssetOrmEntity {
   @Column({
     type: 'enum',
     enum: TemplateVersionAssetStatus,
-    enumName: 'template_version_assets_status_enum',
     default: TemplateVersionAssetStatus.PENDING,
   })
   status: TemplateVersionAssetStatus;

@@ -2,11 +2,13 @@ import { randomUUID } from 'crypto';
 
 import { TemplateListingStatus } from '../../enums/template-listing-status.enum';
 import { TemplateOfferType } from '../../enums/template-offer-type.enum';
+import { TemplatePrice } from '../../value-objects/template-price.vo';
 
 export type CreateTemplateListingParams = {
   id?: string;
   templateId: string;
   offerType?: TemplateOfferType;
+  price?: TemplatePrice;
   createdBy: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -17,6 +19,7 @@ export type RestoreTemplateListingParams = {
   templateId: string;
   offerType: TemplateOfferType;
   status: TemplateListingStatus;
+  price?: TemplatePrice;
   createdBy: string;
   publishedVersionId?: string | null;
   publishedAt: Date | null;
@@ -28,20 +31,24 @@ export class TemplateListingAggregate {
   private constructor(
     private readonly id: string,
     private readonly templateId: string,
-    private readonly offerType: TemplateOfferType,
+    private offerType: TemplateOfferType,
     private status: TemplateListingStatus,
     private readonly createdBy: string,
     private publishedAt: Date | null,
     private readonly createdAt: Date,
     private updatedAt: Date,
     private publishedVersionId: string | null = null,
+    private price: TemplatePrice = TemplatePrice.free(),
   ) {
     if (!templateId.trim()) {
       throw new Error('Template id is required');
     }
+
     if (!createdBy.trim()) {
       throw new Error('Created by is required');
     }
+
+    TemplateListingAggregate.validateOfferPrice(this.offerType, this.price);
   }
 
   static create(params: CreateTemplateListingParams): TemplateListingAggregate {
@@ -56,6 +63,8 @@ export class TemplateListingAggregate {
       null,
       params.createdAt ?? now,
       params.updatedAt ?? now,
+      null,
+      params.price ?? TemplatePrice.free(),
     );
   }
 
@@ -72,27 +81,31 @@ export class TemplateListingAggregate {
       params.createdAt,
       params.updatedAt,
       params.publishedVersionId ?? null,
+      params.price ?? TemplatePrice.free(),
     );
   }
 
-  getPublishedVersionId(): string | null {
-    return this.publishedVersionId;
-  }
+  private static validateOfferPrice(
+    offerType: TemplateOfferType,
+    price: TemplatePrice,
+  ): void {
+    if (offerType === TemplateOfferType.FREE) {
+      if (!price.isZero()) {
+        throw new Error('Free template must have zero price');
+      }
 
-  selectPublishedVersion(version: {
-    getId(): string;
-    getTemplateId(): string;
-    isDraft(): boolean;
-  }): void {
-    if (version.getTemplateId() !== this.templateId || version.isDraft()) {
-      throw new Error(
-        'Listing requires a published version of the same template',
-      );
+      return;
     }
-    if (this.publishedVersionId !== version.getId()) {
-      this.publishedVersionId = version.getId();
-      this.updatedAt = new Date();
+
+    if (offerType === TemplateOfferType.PAID) {
+      if (price.isZero()) {
+        throw new Error('Paid template must have a positive price');
+      }
+
+      return;
     }
+
+    throw new Error('Unsupported template offer type');
   }
 
   getId(): string {
@@ -105,6 +118,10 @@ export class TemplateListingAggregate {
 
   getOfferType(): TemplateOfferType {
     return this.offerType;
+  }
+
+  getPrice(): TemplatePrice {
+    return this.price;
   }
 
   getStatus(): TemplateListingStatus {
@@ -127,12 +144,50 @@ export class TemplateListingAggregate {
     return this.updatedAt;
   }
 
+  getPublishedVersionId(): string | null {
+    return this.publishedVersionId;
+  }
+
   isDraft(): boolean {
     return this.status === TemplateListingStatus.DRAFT;
   }
 
   isPublished(): boolean {
     return this.status === TemplateListingStatus.PUBLISHED;
+  }
+
+  configureOffer(offerType: TemplateOfferType, price: TemplatePrice): boolean {
+    TemplateListingAggregate.validateOfferPrice(offerType, price);
+
+    const isSameOfferType = this.offerType === offerType;
+    const isSamePrice = this.price.equals(price);
+
+    if (isSameOfferType && isSamePrice) {
+      return false;
+    }
+
+    this.offerType = offerType;
+    this.price = price;
+    this.updatedAt = new Date();
+
+    return true;
+  }
+
+  selectPublishedVersion(version: {
+    getId(): string;
+    getTemplateId(): string;
+    isDraft(): boolean;
+  }): void {
+    if (version.getTemplateId() !== this.templateId || version.isDraft()) {
+      throw new Error(
+        'Listing requires a published version of the same template',
+      );
+    }
+
+    if (this.publishedVersionId !== version.getId()) {
+      this.publishedVersionId = version.getId();
+      this.updatedAt = new Date();
+    }
   }
 
   publish(): void {

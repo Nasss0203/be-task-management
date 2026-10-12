@@ -11,6 +11,7 @@ import { TemplateVersion } from '../../../../domain/aggregates/template-version/
 import { TemplateEntitlementSource } from '../../../../domain/enums/template-entitlement-source.enum';
 import { TemplateListingStatus } from '../../../../domain/enums/template-listing-status.enum';
 import { TemplateOfferType } from '../../../../domain/enums/template-offer-type.enum';
+import { TemplatePrice } from '../../../../domain/value-objects/template-price.vo';
 import { TemplateStatus } from '../../../../domain/enums/template-status.enum';
 import { TemplateVisibility } from '../../../../domain/enums/template-visibility.enum';
 import type { PageTemplateRepository } from '../../../../domain/repositories/page-template.repository';
@@ -58,6 +59,10 @@ describe('ClaimFreeTemplateHandler Regression Tests', () => {
       id: 'listing-uuid-1',
       templateId,
       offerType,
+      price:
+        offerType === TemplateOfferType.PAID
+          ? TemplatePrice.create({ amount: 10000, currency: 'VND' })
+          : TemplatePrice.free(),
       status: TemplateListingStatus.PUBLISHED,
       createdBy: creatorId,
       publishedAt: new Date('2026-01-02T00:00:00.000Z'),

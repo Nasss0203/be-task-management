@@ -23,6 +23,8 @@
 
 ## Description
 
+Database operations: [Taskmanly V2 database baseline and migration runbook](docs/database-baseline.md).
+
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
 ## Project setup

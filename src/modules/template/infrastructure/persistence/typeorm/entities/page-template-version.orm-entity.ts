@@ -38,7 +38,10 @@ export class PageTemplateVersionOrmEntity {
     nullable: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'template_id' })
+  @JoinColumn({
+    name: 'template_id',
+    foreignKeyConstraintName: 'FK_page_template_versions_template',
+  })
   template: PageTemplateOrmEntity;
 
   @Column({ name: 'version_number', type: 'int' })
@@ -47,7 +50,6 @@ export class PageTemplateVersionOrmEntity {
   @Column({
     type: 'enum',
     enum: TemplateVersionStatus,
-    enumName: 'page_template_versions_status_enum',
     default: TemplateVersionStatus.DRAFT,
   })
   status: TemplateVersionStatus;
@@ -56,7 +58,10 @@ export class PageTemplateVersionOrmEntity {
   createdBy: string;
 
   @ManyToOne(() => User, { nullable: false, onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'created_by' })
+  @JoinColumn({
+    name: 'created_by',
+    foreignKeyConstraintName: 'FK_page_template_versions_created_by',
+  })
   creator: User;
 
   @Column({

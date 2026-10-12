@@ -66,7 +66,6 @@ export class AiGenerationOrmEntity {
   @Column({
     type: 'enum',
     enum: AiGenerationStatus,
-    enumName: 'ai_generations_status_enum',
     default: AiGenerationStatus.PROCESSING,
   })
   status: AiGenerationStatus;

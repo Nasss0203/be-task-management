@@ -12,9 +12,10 @@ import { TemplateListingCategoryOrmEntity } from './template-listing-category.or
 
 @Entity('template_categories')
 @Unique('UQ_template_categories_slug', ['slug'])
-@Index('IDX_template_categories_slug', ['slug'])
-@Index('IDX_template_categories_is_active', ['isActive'])
-@Index('IDX_template_categories_sort_order', ['sortOrder'])
+@Index('IDX_template_categories_is_active_sort_order', [
+  'isActive',
+  'sortOrder',
+])
 export class TemplateCategoryOrmEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

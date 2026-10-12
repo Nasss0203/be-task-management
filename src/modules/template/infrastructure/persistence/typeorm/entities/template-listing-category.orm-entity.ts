@@ -1,10 +1,4 @@
-import {
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  PrimaryColumn,
-} from 'typeorm';
+import { Entity, Index, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { TemplateListingOrmEntity } from './template-listing.orm-entity';
 import { TemplateCategoryOrmEntity } from './template-category.orm-entity';
 
@@ -22,7 +16,10 @@ export class TemplateListingCategoryOrmEntity {
     nullable: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'listing_id' })
+  @JoinColumn({
+    name: 'listing_id',
+    foreignKeyConstraintName: 'FK_template_listing_categories_listing',
+  })
   listing: TemplateListingOrmEntity;
 
   @ManyToOne(
@@ -33,6 +30,9 @@ export class TemplateListingCategoryOrmEntity {
       onDelete: 'RESTRICT',
     },
   )
-  @JoinColumn({ name: 'category_id' })
+  @JoinColumn({
+    name: 'category_id',
+    foreignKeyConstraintName: 'FK_template_listing_categories_category',
+  })
   category: TemplateCategoryOrmEntity;
 }

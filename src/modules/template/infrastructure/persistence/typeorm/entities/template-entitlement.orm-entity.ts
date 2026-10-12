@@ -46,7 +46,6 @@ export class TemplateEntitlementOrmEntity {
   @Column({
     type: 'enum',
     enum: TemplateEntitlementSource,
-    enumName: 'template_entitlements_source_enum',
     default: TemplateEntitlementSource.FREE_CLAIM,
   })
   source: TemplateEntitlementSource;

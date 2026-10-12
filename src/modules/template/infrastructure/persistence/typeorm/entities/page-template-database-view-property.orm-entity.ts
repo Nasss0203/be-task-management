@@ -48,13 +48,20 @@ export class PageTemplateDatabaseViewPropertyOrmEntity {
       onDelete: 'CASCADE',
     },
   )
-  @JoinColumn({ name: 'template_view_id' })
+  @JoinColumn({
+    name: 'template_view_id',
+    foreignKeyConstraintName: 'FK_page_template_database_view_properties_view',
+  })
   view: PageTemplateDatabaseViewOrmEntity;
 
   @ManyToOne(() => PageTemplateDatabasePropertyOrmEntity, {
     nullable: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'template_property_id' })
+  @JoinColumn({
+    name: 'template_property_id',
+    foreignKeyConstraintName:
+      'FK_page_template_database_view_properties_property',
+  })
   property: PageTemplateDatabasePropertyOrmEntity;
 }

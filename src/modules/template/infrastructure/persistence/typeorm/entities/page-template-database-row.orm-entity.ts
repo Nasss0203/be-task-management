@@ -25,7 +25,10 @@ export class PageTemplateDatabaseRowOrmEntity {
     nullable: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'template_database_id' })
+  @JoinColumn({
+    name: 'template_database_id',
+    foreignKeyConstraintName: 'FK_page_template_database_rows_database',
+  })
   database: PageTemplateDatabaseOrmEntity;
 
   @OneToMany(

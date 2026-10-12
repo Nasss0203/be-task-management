@@ -34,7 +34,10 @@ export class PageTemplateBlockOrmEntity {
     nullable: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'version_id' })
+  @JoinColumn({
+    name: 'version_id',
+    foreignKeyConstraintName: 'FK_page_template_blocks_version',
+  })
   version: PageTemplateVersionOrmEntity;
 
   @Column({ name: 'parent_block_id', type: 'uuid', nullable: true })
@@ -44,13 +47,15 @@ export class PageTemplateBlockOrmEntity {
     nullable: true,
     onDelete: 'NO ACTION',
   })
-  @JoinColumn({ name: 'parent_block_id' })
+  @JoinColumn({
+    name: 'parent_block_id',
+    foreignKeyConstraintName: 'FK_page_template_blocks_parent',
+  })
   parentBlock: PageTemplateBlockOrmEntity | null;
 
   @Column({
     type: 'enum',
     enum: PageBlockType,
-    enumName: 'page_template_blocks_type_enum',
   })
   type: PageBlockType;
 
@@ -85,7 +90,10 @@ export class PageTemplateBlockOrmEntity {
   createdBy: string;
 
   @ManyToOne(() => User, { nullable: false, onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'created_by' })
+  @JoinColumn({
+    name: 'created_by',
+    foreignKeyConstraintName: 'FK_page_template_blocks_created_by',
+  })
   creator: User;
 
   @Column({ name: 'is_open', type: 'boolean', default: true })

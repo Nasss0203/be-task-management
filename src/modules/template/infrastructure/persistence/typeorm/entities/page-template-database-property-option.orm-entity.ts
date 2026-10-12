@@ -36,6 +36,10 @@ export class PageTemplateDatabasePropertyOptionOrmEntity {
       onDelete: 'CASCADE',
     },
   )
-  @JoinColumn({ name: 'template_property_id' })
+  @JoinColumn({
+    name: 'template_property_id',
+    foreignKeyConstraintName:
+      'FK_page_template_database_property_options_property',
+  })
   property: PageTemplateDatabasePropertyOrmEntity;
 }

@@ -32,7 +32,10 @@ export class PageTemplateDatabaseOrmEntity {
       onDelete: 'CASCADE',
     },
   )
-  @JoinColumn({ name: 'version_id' })
+  @JoinColumn({
+    name: 'version_id',
+    foreignKeyConstraintName: 'FK_page_template_databases_version',
+  })
   version: PageTemplateVersionOrmEntity;
 
   @OneToMany(

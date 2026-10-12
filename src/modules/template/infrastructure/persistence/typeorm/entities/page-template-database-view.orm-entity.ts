@@ -28,7 +28,6 @@ export class PageTemplateDatabaseViewOrmEntity {
   @Column({
     type: 'enum',
     enum: DatabaseViewType,
-    enumName: 'page_template_database_views_type_enum',
   })
   type: DatabaseViewType;
 
@@ -46,7 +45,10 @@ export class PageTemplateDatabaseViewOrmEntity {
       onDelete: 'CASCADE',
     },
   )
-  @JoinColumn({ name: 'template_database_id' })
+  @JoinColumn({
+    name: 'template_database_id',
+    foreignKeyConstraintName: 'FK_page_template_database_views_database',
+  })
   database: PageTemplateDatabaseOrmEntity;
 
   @OneToMany(

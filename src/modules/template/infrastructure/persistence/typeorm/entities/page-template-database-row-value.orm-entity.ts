@@ -37,13 +37,19 @@ export class PageTemplateDatabaseRowValueOrmEntity {
     nullable: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'template_row_id' })
+  @JoinColumn({
+    name: 'template_row_id',
+    foreignKeyConstraintName: 'FK_page_template_database_row_values_row',
+  })
   row: PageTemplateDatabaseRowOrmEntity;
 
   @ManyToOne(() => PageTemplateDatabasePropertyOrmEntity, {
     nullable: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'template_property_id' })
+  @JoinColumn({
+    name: 'template_property_id',
+    foreignKeyConstraintName: 'FK_page_template_database_row_values_property',
+  })
   property: PageTemplateDatabasePropertyOrmEntity;
 }
