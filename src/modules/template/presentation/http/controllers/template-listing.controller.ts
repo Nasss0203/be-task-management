@@ -62,6 +62,7 @@ export class TemplateListingController {
         request.version_id,
         auth.id,
         request.offer_type,
+        request.category_ids,
       ),
     );
   }

@@ -5,5 +5,6 @@ export class PublishTemplateToMarketplaceCommand {
     public readonly versionId: string,
     public readonly userId: string,
     public readonly offerType: TemplateOfferType,
+    public readonly categoryIds?: string[],
   ) {}
 }

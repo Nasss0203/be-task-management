@@ -47,7 +47,9 @@ import { PageTemplateDatabaseViewOrmEntity } from './infrastructure/persistence/
 import { PageTemplateDatabaseOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-database.orm-entity';
 import { PageTemplateVersionOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template-version.orm-entity';
 import { PageTemplateOrmEntity } from './infrastructure/persistence/typeorm/entities/page-template.orm-entity';
+import { TemplateCategoryOrmEntity } from './infrastructure/persistence/typeorm/entities/template-category.orm-entity';
 import { TemplateEntitlementOrmEntity } from './infrastructure/persistence/typeorm/entities/template-entitlement.orm-entity';
+import { TemplateListingCategoryOrmEntity } from './infrastructure/persistence/typeorm/entities/template-listing-category.orm-entity';
 import { TemplateListingOrmEntity } from './infrastructure/persistence/typeorm/entities/template-listing.orm-entity';
 import { TemplateVersionAssetOrmEntity } from './infrastructure/persistence/typeorm/entities/template-version-asset.orm-entity';
 import { TypeOrmPageTemplateBlockRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-template-block.repository';
@@ -69,8 +71,15 @@ import { TemplateController } from './presentation/http/controllers/template.con
 import { TEMPLATE_TYPES } from './template.types';
 
 import { PublishTemplateToMarketplaceHandler } from './application/commands/publish-template-to-marketplace/publish-template-to-marketplace.handler';
+import { CreateTemplateCategoryHandler } from './application/commands/template-category/create-template-category/create-template-category.handler';
+import { UpdateTemplateCategoryHandler } from './application/commands/template-category/update-template-category/update-template-category.handler';
+import { ChangeTemplateCategoryStatusHandler } from './application/queries/template-category/change-template-category-status/change-template-category-status.handler';
+import { ListActiveTemplateCategoriesHandler } from './application/queries/template-category/list-active-template-categories/list-active-template-categories.handler';
+import { ListTemplateCategoriesHandler } from './application/queries/template-category/list-template-categories/list-template-categories.handler';
 import { GetMyClaimedTemplatesHandler } from './application/queries/template-entitlement/get-my-claimed-templates/get-my-claimed-templates.handler';
+import { TypeOrmTemplateCategoryRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-category.repository';
 import { MyClaimedTemplatesController } from './presentation/http/controllers/my-claimed-templates.controller';
+import { PublicTemplateCategoryController } from './presentation/http/controllers/public-template-category.controller';
 const PageTemplateHandler = [
   {
     provide: TEMPLATE_TYPES.applications.GetMyClaimedTemplatesHandler,
@@ -181,6 +190,26 @@ const PageTemplateHandler = [
     provide: TEMPLATE_TYPES.applications.UnpublishTemplateListingHandler,
     useClass: UnpublishTemplateListingHandler,
   },
+  {
+    provide: TEMPLATE_TYPES.applications.CreateTemplateCategoryHandler,
+    useClass: CreateTemplateCategoryHandler,
+  },
+  {
+    provide: TEMPLATE_TYPES.applications.ListTemplateCategoriesHandler,
+    useClass: ListTemplateCategoriesHandler,
+  },
+  {
+    provide: TEMPLATE_TYPES.applications.ListActiveTemplateCategoriesHandler,
+    useClass: ListActiveTemplateCategoriesHandler,
+  },
+  {
+    provide: TEMPLATE_TYPES.applications.UpdateTemplateCategoryHandler,
+    useClass: UpdateTemplateCategoryHandler,
+  },
+  {
+    provide: TEMPLATE_TYPES.applications.ChangeTemplateCategoryStatusHandler,
+    useClass: ChangeTemplateCategoryStatusHandler,
+  },
 ];
 
 const TemplateService = [
@@ -205,6 +234,8 @@ const TemplateService = [
       PageTemplateDatabaseOrmEntity,
       TemplateVersionAssetOrmEntity,
       TemplateListingOrmEntity,
+      TemplateCategoryOrmEntity,
+      TemplateListingCategoryOrmEntity,
       TemplateEntitlementOrmEntity,
       PageTemplateDatabasePropertyOrmEntity,
       PageTemplateDatabasePropertyOptionOrmEntity,
@@ -255,6 +286,10 @@ const TemplateService = [
       provide: TEMPLATE_TYPES.repositories.TemplateEntitlementRepository,
       useClass: TypeOrmTemplateEntitlementRepository,
     },
+    {
+      provide: TEMPLATE_TYPES.repositories.TemplateCategoryRepository,
+      useClass: TypeOrmTemplateCategoryRepository,
+    },
     ...PageTemplateHandler,
     ...TemplateService,
     InternalTemplateRenderGuard,
@@ -267,6 +302,7 @@ const TemplateService = [
     InternalTemplateRenderController,
     PublicTemplateController,
     TemplateEntitlementController,
+    PublicTemplateCategoryController,
   ],
   exports: [
     TEMPLATE_TYPES.repositories.PageTemplateRepository,
@@ -274,6 +310,11 @@ const TemplateService = [
     TEMPLATE_TYPES.repositories.PageTemplateBlockRepository,
     TEMPLATE_TYPES.repositories.TemplateListingRepository,
     TEMPLATE_TYPES.repositories.TemplateEntitlementRepository,
+
+    TEMPLATE_TYPES.applications.CreateTemplateCategoryHandler,
+    TEMPLATE_TYPES.applications.ListTemplateCategoriesHandler,
+    TEMPLATE_TYPES.applications.UpdateTemplateCategoryHandler,
+    TEMPLATE_TYPES.applications.ChangeTemplateCategoryStatusHandler,
   ],
 })
 export class TemplateModule {}

@@ -12,6 +12,7 @@ import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-w
 import type { PageTemplateRepository } from '../../../domain/repositories/page-template.repository';
 import type { TemplateVersionRepository } from '../../../domain/repositories/template-version.repository';
 import type { TemplateListingRepository } from '../../../domain/repositories/template-listing.repository';
+import type { TemplateCategoryRepository } from '../../../domain/repositories/template-category.repository';
 import { TemplateListing } from '../../../domain/aggregates/template-listing/template-listing.aggregate';
 import { TemplateStatus } from '../../../domain/enums/template-status.enum';
 import { TemplateVisibility } from '../../../domain/enums/template-visibility.enum';
@@ -33,6 +34,8 @@ export class PublishTemplateToMarketplaceHandler {
     private readonly listings: TemplateListingRepository,
     @Inject(PERSISTENCE_TYPES.UnitOfWork) private readonly uow: UnitOfWork,
     private readonly authorization: AuthorizationService,
+    @Inject(TEMPLATE_TYPES.repositories.TemplateCategoryRepository)
+    private readonly categories: TemplateCategoryRepository,
   ) {}
   async execute(command: PublishTemplateToMarketplaceCommand) {
     if (command.offerType !== TemplateOfferType.FREE)
@@ -65,6 +68,27 @@ export class PublishTemplateToMarketplaceHandler {
         throw new BadRequestException(
           'Template version does not belong to this template',
         );
+      const normalizedCategoryIds =
+        command.categoryIds === undefined
+          ? undefined
+          : [...new Set(command.categoryIds.map((id) => id.toLowerCase()))];
+      if (normalizedCategoryIds !== undefined) {
+        const categories = await this.categories.findByIdsForShare(
+          normalizedCategoryIds,
+          context,
+        );
+        const foundIds = new Set(
+          categories.map((category) => category.getId()),
+        );
+        if (normalizedCategoryIds.some((id) => !foundIds.has(id)))
+          throw new BadRequestException(
+            'One or more template categories do not exist',
+          );
+        if (categories.some((category) => !category.getIsActive()))
+          throw new BadRequestException(
+            'Only active template categories can be assigned',
+          );
+      }
       if (version.isDraft()) {
         version.publish();
         version = await this.versions.save(version, context);
@@ -92,6 +116,13 @@ export class PublishTemplateToMarketplaceHandler {
       listing.selectPublishedVersion(version);
       listing.publish();
       if (needsSave) listing = await this.listings.save(listing, context);
+      if (normalizedCategoryIds !== undefined) {
+        await this.listings.replaceCategoryIds(
+          listing.getId(),
+          normalizedCategoryIds,
+          context,
+        );
+      }
       return {
         template: PageTemplateResponseDto.fromDomain(template),
         version: TemplateVersionResponseDto.fromDomain(version),

@@ -9,6 +9,7 @@ export const TEMPLATE_TYPES = {
     TemplateVersionAssetRepository: Symbol('TemplateVersionAssetRepository'),
     TemplateListingRepository: Symbol('TemplateListingRepository'),
     TemplateEntitlementRepository: Symbol('TemplateEntitlementRepository'),
+    TemplateCategoryRepository: Symbol('TemplateCategoryRepository'),
   },
 
   applications: {
@@ -49,6 +50,15 @@ export const TEMPLATE_TYPES = {
 
     GetTemplateListingHandler: Symbol('GetTemplateListingHandler'),
     UnpublishTemplateListingHandler: Symbol('UnpublishTemplateListingHandler'),
+    CreateTemplateCategoryHandler: Symbol('CreateTemplateCategoryHandler'),
+    ListTemplateCategoriesHandler: Symbol('ListTemplateCategoriesHandler'),
+    ListActiveTemplateCategoriesHandler: Symbol(
+      'ListActiveTemplateCategoriesHandler',
+    ),
+    UpdateTemplateCategoryHandler: Symbol('UpdateTemplateCategoryHandler'),
+    ChangeTemplateCategoryStatusHandler: Symbol(
+      'ChangeTemplateCategoryStatusHandler',
+    ),
   },
   services: {
     TemplateThumbnailRenderer: Symbol('TemplateThumbnailRenderer'),

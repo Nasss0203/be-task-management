@@ -10,12 +10,16 @@ import { DataSource, EntitySchema, getMetadataArgsStorage } from 'typeorm';
 import type { EntitySchemaColumnOptions } from 'typeorm';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
 import { PinMarketplaceVersion1791676800000 } from 'src/database/migrations/1791676800000-pin-marketplace-version';
+import { CreateTemplateCategories1791700000000 } from 'src/database/migrations/1791700000000-create-template-categories';
+import { TemplateCategoryOrmEntity } from '../../../infrastructure/persistence/typeorm/entities/template-category.orm-entity';
+import { TemplateListingCategoryOrmEntity } from '../../../infrastructure/persistence/typeorm/entities/template-listing-category.orm-entity';
 import { PageTemplateOrmEntity } from '../../../infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 import { PageTemplateVersionOrmEntity } from '../../../infrastructure/persistence/typeorm/entities/page-template-version.orm-entity';
 import { TemplateListingOrmEntity } from '../../../infrastructure/persistence/typeorm/entities/template-listing.orm-entity';
 import { TypeOrmPageTemplateRepository } from '../../../infrastructure/persistence/typeorm/repositories/typeorm-page-template.repository';
 import { TypeOrmTemplateVersionRepository } from '../../../infrastructure/persistence/typeorm/repositories/typeorm-template-version.repository';
 import { TypeOrmTemplateListingRepository } from '../../../infrastructure/persistence/typeorm/repositories/typeorm-template-listing.repository';
+import { TypeOrmTemplateCategoryRepository } from '../../../infrastructure/persistence/typeorm/repositories/typeorm-template-category.repository';
 import { PageTemplate } from '../../../domain/aggregates/page-template/page-template.aggregate';
 import { TemplateVersion } from '../../../domain/aggregates/template-version/template-version.aggregate';
 import { TemplateOfferType } from '../../../domain/enums/template-offer-type.enum';
@@ -49,6 +53,9 @@ suite('Marketplace PostgreSQL atomicity and selection', () => {
       PageTemplateOrmEntity,
       PageTemplateVersionOrmEntity,
       TemplateListingOrmEntity,
+      ...(includePin
+        ? [TemplateCategoryOrmEntity, TemplateListingCategoryOrmEntity]
+        : []),
     ].map((target) => {
       const storage = getMetadataArgsStorage();
       const columns: Record<string, EntitySchemaColumnOptions> = {};
@@ -112,6 +119,7 @@ suite('Marketplace PostgreSQL atomicity and selection', () => {
     await runner.startTransaction();
     try {
       await new PinMarketplaceVersion1791676800000().up(runner);
+      await new CreateTemplateCategories1791700000000().up(runner);
       const migrated = (await runner.query(
         'SELECT published_version_id FROM template_listings WHERE template_id = $1',
         [legacyTemplate.getId()],
@@ -145,7 +153,7 @@ suite('Marketplace PostgreSQL atomicity and selection', () => {
   beforeEach(async () => {
     jest.restoreAllMocks();
     await db.query(
-      'TRUNCATE template_listings, page_template_versions, page_templates',
+      'TRUNCATE template_listing_categories, template_categories, template_listings, page_template_versions, page_templates',
     );
     templates = new TypeOrmPageTemplateRepository(db);
     versions = new TypeOrmTemplateVersionRepository(db);
@@ -156,6 +164,7 @@ suite('Marketplace PostgreSQL atomicity and selection', () => {
       listings,
       new TypeOrmUnitOfWork(db),
       auth,
+      new TypeOrmTemplateCategoryRepository(db),
     );
     template = PageTemplate.create({
       workspaceId: randomUUID(),
@@ -186,6 +195,73 @@ suite('Marketplace PostgreSQL atomicity and selection', () => {
       TemplateOfferType.FREE,
     );
 
+  it('persists, preserves, replaces and clears category associations', async () => {
+    const a = randomUUID();
+    const b = randomUUID();
+    await db.query(
+      'INSERT INTO template_categories (id, name, slug) VALUES ($1, $2, $3), ($4, $5, $6)',
+      [a, 'A', 'a', b, 'B', 'b'],
+    );
+    const publish = (ids?: string[]) =>
+      handler.execute(
+        new PublishTemplateToMarketplaceCommand(
+          template.getId(),
+          v1.getId(),
+          userId,
+          TemplateOfferType.FREE,
+          ids,
+        ),
+      );
+    const readIds = async () =>
+      (
+        await db.query<{ category_id: string }[]>(
+          'SELECT category_id FROM template_listing_categories ORDER BY category_id',
+        )
+      ).map((row) => row.category_id);
+    const first = await publish([a, a.toUpperCase(), b]);
+    expect(await readIds()).toEqual([a, b].sort());
+    await publish();
+    expect(await readIds()).toEqual([a, b].sort());
+    const repeated = await publish([b]);
+    expect(repeated.listing.id).toBe(first.listing.id);
+    expect(repeated.listing.published_at).toEqual(first.listing.published_at);
+    expect(await readIds()).toEqual([b]);
+    await publish([]);
+    expect(await readIds()).toEqual([]);
+  });
+  it('rolls back all publish writes after association persistence fails', async () => {
+    const id = randomUUID();
+    await db.query(
+      'INSERT INTO template_categories (id, name, slug) VALUES ($1, $2, $3)',
+      [id, 'Active', 'active'],
+    );
+    const original = listings.replaceCategoryIds.bind(listings);
+    jest
+      .spyOn(listings, 'replaceCategoryIds')
+      .mockImplementation(async (...args) => {
+        await original(...args);
+        throw new Error('Injected association failure');
+      });
+    await expect(
+      handler.execute(
+        new PublishTemplateToMarketplaceCommand(
+          template.getId(),
+          v1.getId(),
+          userId,
+          TemplateOfferType.FREE,
+          [id],
+        ),
+      ),
+    ).rejects.toThrow('Injected association failure');
+    expect((await versions.findById(v1.getId()))?.isDraft()).toBe(true);
+    expect((await templates.findById(template.getId()))?.getVisibility()).toBe(
+      'PRIVATE',
+    );
+    expect(await listings.findByTemplateId(template.getId())).toBeNull();
+    expect(await db.query('SELECT * FROM template_listing_categories')).toEqual(
+      [],
+    );
+  });
   it('pins v1 in both public list and detail despite published v2', async () => {
     await handler.execute(command());
     const detail = await templates.findPublicById(template.getId());

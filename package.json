@@ -26,7 +26,9 @@
     "migration:show": "npm run typeorm -- migration:show -d src/database/data-source.ts",
     "migration:run:prod": "npm run typeorm:prod -- migration:run -d dist/database/data-source.js",
     "migration:revert": "npm run typeorm -- migration:revert -d src/database/data-source.ts",
-    "seed:billing": "ts-node -r tsconfig-paths/register src/database/seeds/billing-catalog.seed.ts"
+    "seed:billing": "ts-node -r tsconfig-paths/register src/database/seeds/billing-catalog.seed.ts",
+    "seed:super-admin": "ts-node -r tsconfig-paths/register src/database/seeds/super-admin.seed.ts",
+    "seed:template-categories": "ts-node -r tsconfig-paths/register src/database/seeds/template-categories.seed.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1146.0",

@@ -14,6 +14,10 @@ import { TemplateVisibility } from '../../../domain/enums/template-visibility.en
 import type { PageTemplateRepository } from '../../../domain/repositories/page-template.repository';
 import type { TemplateVersionRepository } from '../../../domain/repositories/template-version.repository';
 import type { TemplateListingRepository } from '../../../domain/repositories/template-listing.repository';
+import type { TemplateCategoryRepository } from '../../../domain/repositories/template-category.repository';
+import { TemplateCategory } from '../../../domain/aggregates/template-category/template-category.aggregate';
+import { ValidationPipe } from '@nestjs/common';
+import { PublishTemplateToMarketplaceRequest } from '../../../presentation/http/requests/publish-template-to-marketplace.request';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import type { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
 
@@ -24,7 +28,13 @@ describe('PublishTemplateToMarketplaceHandler', () => {
   let listing: TemplateListing | null;
   const templates = { findByIdForUpdate: jest.fn(), save: jest.fn() };
   const versions = { findByIdForUpdate: jest.fn(), save: jest.fn() };
-  const listings = { findByTemplateId: jest.fn(), save: jest.fn() };
+  const listings = {
+    findByTemplateId: jest.fn(),
+    save: jest.fn(),
+    replaceCategoryIds: jest.fn(),
+  };
+  const categories = { findByIdsForShare: jest.fn() };
+  let categoryIds: string[];
   const auth = { authorize: jest.fn() };
   const uow: UnitOfWork = { runInTransaction: (fn) => fn(context) };
   const handler = new PublishTemplateToMarketplaceHandler(
@@ -33,6 +43,7 @@ describe('PublishTemplateToMarketplaceHandler', () => {
     listings as unknown as TemplateListingRepository,
     uow,
     auth as unknown as AuthorizationService,
+    categories as unknown as TemplateCategoryRepository,
   );
   const command = (user = 'creator', id = 'v1') =>
     new PublishTemplateToMarketplaceCommand(
@@ -64,6 +75,18 @@ describe('PublishTemplateToMarketplaceHandler', () => {
       createdBy: 'creator',
     });
     listing = null;
+    categoryIds = [];
+    categories.findByIdsForShare.mockImplementation((ids: string[]) =>
+      Promise.resolve(
+        ids.map((id) => TemplateCategory.create({ id, name: id })),
+      ),
+    );
+    listings.replaceCategoryIds.mockImplementation(
+      (_id: string, ids: string[]) => {
+        categoryIds = [...ids];
+        return Promise.resolve();
+      },
+    );
     templates.findByIdForUpdate.mockImplementation(() =>
       Promise.resolve(template),
     );
@@ -171,6 +194,98 @@ describe('PublishTemplateToMarketplaceHandler', () => {
     expect(result.listing.published_version_id).toBe('v1');
     expect(versions.save).toHaveBeenCalledTimes(1);
   });
+  const withCategories = (ids?: string[]) =>
+    new PublishTemplateToMarketplaceCommand(
+      't1',
+      'v1',
+      'creator',
+      TemplateOfferType.FREE,
+      ids,
+    );
+  it.each([['a'], ['a', 'b']])(
+    'assigns active categories: %j',
+    async (...ids: string[]) => {
+      const result = await handler.execute(withCategories(ids));
+      expect(categoryIds).toEqual(ids);
+      expect(categories.findByIdsForShare).toHaveBeenCalledWith(ids, context);
+      expect(listings.replaceCategoryIds).toHaveBeenCalledWith(
+        result.listing.id,
+        ids,
+        context,
+      );
+    },
+  );
+  it('rejects missing categories before publish writes', async () => {
+    categories.findByIdsForShare.mockResolvedValue([]);
+    await expect(
+      handler.execute(withCategories(['missing'])),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(versions.save).not.toHaveBeenCalled();
+    expect(templates.save).not.toHaveBeenCalled();
+    expect(listings.save).not.toHaveBeenCalled();
+    expect(listings.replaceCategoryIds).not.toHaveBeenCalled();
+  });
+  it('rejects a request containing an inactive category before writes', async () => {
+    categories.findByIdsForShare.mockResolvedValue([
+      TemplateCategory.create({ id: 'a', name: 'Active' }),
+      TemplateCategory.create({ id: 'b', name: 'Inactive', isActive: false }),
+    ]);
+    await expect(
+      handler.execute(withCategories(['a', 'b'])),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(versions.save).not.toHaveBeenCalled();
+    expect(templates.save).not.toHaveBeenCalled();
+    expect(listings.save).not.toHaveBeenCalled();
+    expect(listings.replaceCategoryIds).not.toHaveBeenCalled();
+  });
+  it('normalizes casing and removes duplicate IDs', async () => {
+    await handler.execute(withCategories(['ABC', 'abc', 'DEF']));
+    expect(categoryIds).toEqual(['abc', 'def']);
+    expect(categories.findByIdsForShare).toHaveBeenCalledWith(
+      ['abc', 'def'],
+      context,
+    );
+  });
+  it('replaces categories on same-version republish without saving the listing again', async () => {
+    const first = await handler.execute(withCategories(['a']));
+    const second = await handler.execute(withCategories(['b']));
+    expect(second.listing).toEqual(first.listing);
+    expect(listings.save).toHaveBeenCalledTimes(1);
+    expect(categoryIds).toEqual(['b']);
+  });
+  it('keeps previous categories when omitted and clears them for an empty array', async () => {
+    await handler.execute(withCategories(['a']));
+    await handler.execute(withCategories());
+    expect(categoryIds).toEqual(['a']);
+    expect(listings.replaceCategoryIds).toHaveBeenCalledTimes(1);
+    await handler.execute(withCategories([]));
+    expect(categoryIds).toEqual([]);
+  });
+  it('does not access category repositories for omitted input', async () => {
+    await handler.execute(command());
+    expect(categories.findByIdsForShare).not.toHaveBeenCalled();
+    expect(listings.replaceCategoryIds).not.toHaveBeenCalled();
+  });
+  it('propagates association failure to the existing transaction boundary', async () => {
+    const error = new Error('association failure');
+    listings.replaceCategoryIds.mockRejectedValueOnce(error);
+    await expect(handler.execute(withCategories(['a']))).rejects.toBe(error);
+    expect(listings.save).toHaveBeenCalled();
+  });
+  it('keeps authorization ahead of category access', async () => {
+    await expect(
+      handler.execute(
+        new PublishTemplateToMarketplaceCommand(
+          't1',
+          'v1',
+          'other',
+          TemplateOfferType.FREE,
+          ['a'],
+        ),
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(categories.findByIdsForShare).not.toHaveBeenCalled();
+  });
   it.each(['version', 'visibility', 'listing'] as const)(
     'propagates %s failure to the transaction boundary',
     async (step) => {
@@ -181,6 +296,40 @@ describe('PublishTemplateToMarketplaceHandler', () => {
         listing: listings.save,
       })[step].mockRejectedValueOnce(error);
       await expect(handler.execute(command())).rejects.toBe(error);
+    },
+  );
+});
+
+describe('Marketplace publish request validation', () => {
+  const pipe = new ValidationPipe({
+    transform: true,
+    whitelist: true,
+    forbidNonWhitelisted: true,
+  });
+  const validate = (input: Record<string, unknown>) =>
+    pipe.transform(
+      {
+        version_id: '550e8400-e29b-41d4-a716-446655440000',
+        offer_type: 'FREE',
+        ...input,
+      },
+      { type: 'body', metatype: PublishTemplateToMarketplaceRequest },
+    );
+  it.each([
+    {},
+    { category_ids: [] },
+    { category_ids: ['550e8400-e29b-41d4-a716-446655440001'] },
+  ])('accepts valid input %j', async (input) => {
+    await expect(validate(input)).resolves.toBeInstanceOf(
+      PublishTemplateToMarketplaceRequest,
+    );
+  });
+  it.each([null, 'text', 42, ['invalid'], [null], [42]])(
+    'rejects invalid category_ids %j',
+    async (category_ids) => {
+      await expect(validate({ category_ids })).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
     },
   );
 });
