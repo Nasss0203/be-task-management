@@ -1,14 +1,14 @@
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
-import { ListPublicTemplatesRequest } from '../../../../presentation/http/requests/list-public-templates.request';
-import { ListPublicTemplatesHandler } from './list-public-templates.handler';
-import { ListPublicTemplatesQuery } from './list-public-templates.query';
+import { ListPublicTemplatesRequest } from '../../../../../marketplace/presentation/http/requests/list-public-templates.request';
+import { ListPublicTemplatesHandler } from '../../../../../marketplace/application/queries/page-template/list-public-templates/list-public-templates.handler';
+import { ListPublicTemplatesQuery } from '../../../../../marketplace/application/queries/page-template/list-public-templates/list-public-templates.query';
 import { PageTemplate } from '../../../../domain/aggregates/page-template/page-template.aggregate';
 import { TemplateVersion } from '../../../../domain/aggregates/template-version/template-version.aggregate';
 import type { PageTemplateRepository } from '../../../../domain/repositories/page-template.repository';
 import type {
   TemplateListingRepository,
   TemplateListingCategoryInfo,
-} from '../../../../domain/repositories/template-listing.repository';
+} from '../../../../../marketplace/domain/repositories/template-listing.repository';
 import { PageTemplateResponseDto } from '../../../dto/page-template/page-template.response.dto';
 import { TemplateVersionResponseDto } from '../../../dto/template-version/template-version.response.dto';
 import { TemplateListScope } from '../../../../presentation/http/requests/list-page-templates.request';

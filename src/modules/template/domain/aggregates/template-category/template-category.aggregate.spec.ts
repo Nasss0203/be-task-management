@@ -1,4 +1,4 @@
-import { TemplateCategory } from './template-category.aggregate';
+import { TemplateCategory } from '../../../../marketplace/domain/aggregates/template-category/template-category.aggregate';
 
 describe('TemplateCategoryAggregate', () => {
   it('should create a valid category aggregate and normalize slug', () => {

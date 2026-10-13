@@ -1,17 +1,17 @@
 import { BadRequestException } from '@nestjs/common';
-import { TemplateEntitlementSource } from '../../../../domain/enums/template-entitlement-source.enum';
-import { TemplateListingStatus } from '../../../../domain/enums/template-listing-status.enum';
+import { TemplateEntitlementSource } from '../../../../../marketplace/domain/enums/template-entitlement-source.enum';
+import { TemplateListingStatus } from '../../../../../marketplace/domain/enums/template-listing-status.enum';
 import { TemplateStatus } from '../../../../domain/enums/template-status.enum';
 import { TemplateVisibility } from '../../../../domain/enums/template-visibility.enum';
 import { TemplateVersionStatus } from '../../../../domain/enums/template-version-status.enum';
-import type { ClaimedTemplateReadModel } from '../../../../domain/repositories/claimed-template.read-model';
-import type { TemplateEntitlementRepository } from '../../../../domain/repositories/template-entitlement.repository';
+import type { ClaimedTemplateReadModel } from '../../../../../marketplace/domain/repositories/claimed-template.read-model';
+import type { TemplateEntitlementRepository } from '../../../../../marketplace/domain/repositories/template-entitlement.repository';
 import {
   decodeTemplateListCursor,
   encodeTemplateListCursor,
 } from '../../page-template/list-page-templates/template-list-cursor.helper';
-import { GetMyClaimedTemplatesHandler } from './get-my-claimed-templates.handler';
-import { GetMyClaimedTemplatesQuery } from './get-my-claimed-templates.query';
+import { GetMyClaimedTemplatesHandler } from '../../../../../marketplace/application/queries/template-entitlement/get-my-claimed-templates/get-my-claimed-templates.handler';
+import { GetMyClaimedTemplatesQuery } from '../../../../../marketplace/application/queries/template-entitlement/get-my-claimed-templates/get-my-claimed-templates.query';
 
 describe('GetMyClaimedTemplatesHandler', () => {
   const id = '00000000-0000-4000-8000-000000000001';

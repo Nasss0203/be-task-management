@@ -1,3 +1,4 @@
+import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
 import {
   INestApplication,
   ValidationPipe,
@@ -12,9 +13,9 @@ import { JwtAuthGuard } from 'src/common/guard/jwt-auth.guard';
 import { TransformInterceptor } from 'src/common/interceptor/transform.interceptor';
 import { JwtStrategy } from 'src/common/strategy/jwt.strategy';
 import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
-import { GetMyClaimedTemplatesHandler } from '../../../application/queries/template-entitlement/get-my-claimed-templates/get-my-claimed-templates.handler';
+import { GetMyClaimedTemplatesHandler } from '../../../../marketplace/application/queries/template-entitlement/get-my-claimed-templates/get-my-claimed-templates.handler';
 import { TEMPLATE_TYPES } from '../../../template.types';
-import { MyClaimedTemplatesController } from './my-claimed-templates.controller';
+import { MyClaimedTemplatesController } from '../../../../marketplace/presentation/http/controllers/my-claimed-templates.controller';
 import { TemplateController } from './template.controller';
 
 describe('MyClaimedTemplatesController HTTP contract', () => {
@@ -47,11 +48,11 @@ describe('MyClaimedTemplatesController HTTP contract', () => {
           },
         },
         {
-          provide: TEMPLATE_TYPES.repositories.TemplateEntitlementRepository,
+          provide: MARKETPLACE_TYPES.repositories.TemplateEntitlementRepository,
           useValue: { findClaimedByUser },
         },
         {
-          provide: TEMPLATE_TYPES.applications.GetMyClaimedTemplatesHandler,
+          provide: MARKETPLACE_TYPES.applications.GetMyClaimedTemplatesHandler,
           useClass: GetMyClaimedTemplatesHandler,
         },
         ...Object.entries(TEMPLATE_TYPES.applications)

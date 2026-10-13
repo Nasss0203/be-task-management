@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 
-import { TemplateModule } from '../template/template.module';
+import { MarketplaceModule } from '../marketplace/marketplace.module';
 import { ADMIN_TYPES } from './admin.types';
 import { CreateAdminBillingPlanPriceVersionHandler } from './application/commands/create-admin-billing-plan-price-version/create-admin-billing-plan-price-version.handler';
 import { UpdateAdminBillingPlanHandler } from './application/commands/update-admin-billing-plan/update-admin-billing-plan.handler';
@@ -39,7 +39,7 @@ import { AdminWorkspacesController } from './presentation/http/controllers/admin
 import { AdminPermissionGuard } from './presentation/http/guards/admin-permission.guard';
 
 @Module({
-  imports: [TemplateModule],
+  imports: [MarketplaceModule],
   controllers: [
     AdminAccessController,
     AdminUsersController,

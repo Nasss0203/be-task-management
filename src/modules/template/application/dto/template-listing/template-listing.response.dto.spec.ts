@@ -1,7 +1,7 @@
-import { TemplateListing } from '../../../domain/aggregates/template-listing/template-listing.aggregate';
-import { TemplateListingStatus } from '../../../domain/enums/template-listing-status.enum';
-import { TemplateOfferType } from '../../../domain/enums/template-offer-type.enum';
-import { TemplateListingResponseDto } from './template-listing.response.dto';
+import { TemplateListing } from '../../../../marketplace/domain/aggregates/template-listing/template-listing.aggregate';
+import { TemplateListingStatus } from '../../../../marketplace/domain/enums/template-listing-status.enum';
+import { TemplateOfferType } from '../../../../marketplace/domain/enums/template-offer-type.enum';
+import { TemplateListingResponseDto } from '../../../../marketplace/application/dto/template-listing/template-listing.response.dto';
 
 describe('TemplateListingResponseDto', () => {
   const createdAt = new Date('2026-10-09T01:00:00.000Z');

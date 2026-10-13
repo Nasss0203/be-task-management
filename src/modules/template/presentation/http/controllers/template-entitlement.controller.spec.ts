@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import type { IAuth } from 'src/types/auth';
 import { SystemRole } from 'src/modules/identity/domain/enums/system-role.enum';
-import { TemplateEntitlementSource } from '../../../domain/enums/template-entitlement-source.enum';
-import { ClaimFreeTemplateCommand } from '../../../application/commands/template-entitlement/claim-free-template/claim-free-template.command';
-import type { ClaimFreeTemplateHandler } from '../../../application/commands/template-entitlement/claim-free-template/claim-free-template.handler';
-import { TemplateEntitlementResponseDto } from '../../../application/dto/template-entitlement/template-entitlement.response.dto';
-import { TemplateEntitlementController } from './template-entitlement.controller';
+import { TemplateEntitlementSource } from '../../../../marketplace/domain/enums/template-entitlement-source.enum';
+import { ClaimFreeTemplateCommand } from '../../../../marketplace/application/commands/template-entitlement/claim-free-template/claim-free-template.command';
+import type { ClaimFreeTemplateHandler } from '../../../../marketplace/application/commands/template-entitlement/claim-free-template/claim-free-template.handler';
+import { TemplateEntitlementResponseDto } from '../../../../marketplace/application/dto/template-entitlement/template-entitlement.response.dto';
+import { TemplateEntitlementController } from '../../../../marketplace/presentation/http/controllers/template-entitlement.controller';
 
 describe('TemplateEntitlementController Regression Tests', () => {
   let controller: TemplateEntitlementController;

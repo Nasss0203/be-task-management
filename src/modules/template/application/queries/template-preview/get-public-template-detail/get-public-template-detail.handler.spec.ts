@@ -1,13 +1,13 @@
 import { NotFoundException } from '@nestjs/common';
-import { GetPublicTemplateDetailHandler } from './get-public-template-detail.handler';
-import { GetPublicTemplateDetailQuery } from './get-public-template-detail.query';
+import { GetPublicTemplateDetailHandler } from '../../../../../marketplace/application/queries/template-preview/get-public-template-detail/get-public-template-detail.handler';
+import { GetPublicTemplateDetailQuery } from '../../../../../marketplace/application/queries/template-preview/get-public-template-detail/get-public-template-detail.query';
 import { PageTemplate } from '../../../../domain/aggregates/page-template/page-template.aggregate';
 import { TemplateVersion } from '../../../../domain/aggregates/template-version/template-version.aggregate';
 import type { PageTemplateRepository } from '../../../../domain/repositories/page-template.repository';
 import type {
   TemplateListingRepository,
   TemplateListingCategoryInfo,
-} from '../../../../domain/repositories/template-listing.repository';
+} from '../../../../../marketplace/domain/repositories/template-listing.repository';
 import { PageTemplateResponseDto } from '../../../dto/page-template/page-template.response.dto';
 import { TemplateVersionResponseDto } from '../../../dto/template-version/template-version.response.dto';
 

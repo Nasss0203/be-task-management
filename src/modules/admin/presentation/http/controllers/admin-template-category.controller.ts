@@ -1,3 +1,4 @@
+import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
 import {
   Body,
   Controller,
@@ -19,11 +20,11 @@ import { ResponseMessage } from 'src/common/decorator/response-message.decorator
 
 import { SystemRole } from 'src/modules/identity/identity.types';
 
-import { CreateTemplateCategoryCommand } from 'src/modules/template/application/commands/template-category/create-template-category/create-template-category.command';
+import { CreateTemplateCategoryCommand } from 'src/modules/marketplace/application/commands/template-category/create-template-category/create-template-category.command';
 
-import { CreateTemplateCategoryHandler } from 'src/modules/template/application/commands/template-category/create-template-category/create-template-category.handler';
+import { CreateTemplateCategoryHandler } from 'src/modules/marketplace/application/commands/template-category/create-template-category/create-template-category.handler';
 
-import { TemplateCategoryResponseDto } from 'src/modules/template/application/dto/template-category/template-category.response.dto';
+import { TemplateCategoryResponseDto } from 'src/modules/marketplace/application/dto/template-category/template-category.response.dto';
 
 import { ADMIN_PERMISSIONS } from '../../../domain/permissions/admin-permission-code';
 
@@ -31,13 +32,12 @@ import { RequireAdminPermissions } from '../decorators/require-admin-permissions
 
 import { ChangeTemplateCategoryStatusRequestDto } from 'src/modules/admin/application/dto/request/change-template-category-status.request.dto';
 import { UpdateTemplateCategoryRequestDto } from 'src/modules/admin/application/dto/request/update-template-category.request.dto';
-import { UpdateTemplateCategoryCommand } from 'src/modules/template/application/commands/template-category/update-template-category/update-template-category.command';
-import { UpdateTemplateCategoryHandler } from 'src/modules/template/application/commands/template-category/update-template-category/update-template-category.handler';
-import { ChangeTemplateCategoryStatusCommand } from 'src/modules/template/application/queries/template-category/change-template-category-status/change-template-category-status.command';
-import { ChangeTemplateCategoryStatusHandler } from 'src/modules/template/application/queries/template-category/change-template-category-status/change-template-category-status.handler';
-import { ListTemplateCategoriesHandler } from 'src/modules/template/application/queries/template-category/list-template-categories/list-template-categories.handler';
-import { ListTemplateCategoriesQuery } from 'src/modules/template/application/queries/template-category/list-template-categories/list-template-categories.query';
-import { TEMPLATE_TYPES } from 'src/modules/template/template.types';
+import { UpdateTemplateCategoryCommand } from 'src/modules/marketplace/application/commands/template-category/update-template-category/update-template-category.command';
+import { UpdateTemplateCategoryHandler } from 'src/modules/marketplace/application/commands/template-category/update-template-category/update-template-category.handler';
+import { ChangeTemplateCategoryStatusCommand } from 'src/modules/marketplace/application/queries/template-category/change-template-category-status/change-template-category-status.command';
+import { ChangeTemplateCategoryStatusHandler } from 'src/modules/marketplace/application/queries/template-category/change-template-category-status/change-template-category-status.handler';
+import { ListTemplateCategoriesHandler } from 'src/modules/marketplace/application/queries/template-category/list-template-categories/list-template-categories.handler';
+import { ListTemplateCategoriesQuery } from 'src/modules/marketplace/application/queries/template-category/list-template-categories/list-template-categories.query';
 import { AdminPermissionGuard } from '../guards/admin-permission.guard';
 import { CreateTemplateCategoryRequest } from '../template-category/create-template-category.request';
 
@@ -45,15 +45,15 @@ import { CreateTemplateCategoryRequest } from '../template-category/create-templ
 @UseGuards(AdminPermissionGuard)
 export class AdminTemplateCategoryController {
   constructor(
-    @Inject(TEMPLATE_TYPES.applications.CreateTemplateCategoryHandler)
+    @Inject(MARKETPLACE_TYPES.applications.CreateTemplateCategoryHandler)
     private readonly createTemplateCategoryHandler: CreateTemplateCategoryHandler,
 
-    @Inject(TEMPLATE_TYPES.applications.ListTemplateCategoriesHandler)
+    @Inject(MARKETPLACE_TYPES.applications.ListTemplateCategoriesHandler)
     private readonly listTemplateCategoriesHandler: ListTemplateCategoriesHandler,
 
-    @Inject(TEMPLATE_TYPES.applications.UpdateTemplateCategoryHandler)
+    @Inject(MARKETPLACE_TYPES.applications.UpdateTemplateCategoryHandler)
     private readonly updateTemplateCategoryHandler: UpdateTemplateCategoryHandler,
-    @Inject(TEMPLATE_TYPES.applications.ChangeTemplateCategoryStatusHandler)
+    @Inject(MARKETPLACE_TYPES.applications.ChangeTemplateCategoryStatusHandler)
     private readonly changeTemplateCategoryStatusHandler: ChangeTemplateCategoryStatusHandler,
   ) {}
 

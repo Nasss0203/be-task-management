@@ -5,22 +5,22 @@ import type { PersistenceContext } from 'src/shared/infrastructure/persistence/p
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 
 import { PageTemplate } from '../../../../domain/aggregates/page-template/page-template.aggregate';
-import { TemplateEntitlement } from '../../../../domain/aggregates/template-entitlement/template-entitlement.aggregate';
-import { TemplateListing } from '../../../../domain/aggregates/template-listing/template-listing.aggregate';
+import { TemplateEntitlement } from '../../../../../marketplace/domain/aggregates/template-entitlement/template-entitlement.aggregate';
+import { TemplateListing } from '../../../../../marketplace/domain/aggregates/template-listing/template-listing.aggregate';
 import { TemplateVersion } from '../../../../domain/aggregates/template-version/template-version.aggregate';
-import { TemplateEntitlementSource } from '../../../../domain/enums/template-entitlement-source.enum';
-import { TemplateListingStatus } from '../../../../domain/enums/template-listing-status.enum';
-import { TemplateOfferType } from '../../../../domain/enums/template-offer-type.enum';
-import { TemplatePrice } from '../../../../domain/value-objects/template-price.vo';
+import { TemplateEntitlementSource } from '../../../../../marketplace/domain/enums/template-entitlement-source.enum';
+import { TemplateListingStatus } from '../../../../../marketplace/domain/enums/template-listing-status.enum';
+import { TemplateOfferType } from '../../../../../marketplace/domain/enums/template-offer-type.enum';
+import { TemplatePrice } from '../../../../../marketplace/domain/value-objects/template-price.vo';
 import { TemplateStatus } from '../../../../domain/enums/template-status.enum';
 import { TemplateVisibility } from '../../../../domain/enums/template-visibility.enum';
 import type { PageTemplateRepository } from '../../../../domain/repositories/page-template.repository';
-import type { TemplateEntitlementRepository } from '../../../../domain/repositories/template-entitlement.repository';
-import type { TemplateListingRepository } from '../../../../domain/repositories/template-listing.repository';
+import type { TemplateEntitlementRepository } from '../../../../../marketplace/domain/repositories/template-entitlement.repository';
+import type { TemplateListingRepository } from '../../../../../marketplace/domain/repositories/template-listing.repository';
 import type { TemplateVersionRepository } from '../../../../domain/repositories/template-version.repository';
-import { TemplateEntitlementResponseDto } from '../../../dto/template-entitlement/template-entitlement.response.dto';
-import { ClaimFreeTemplateCommand } from './claim-free-template.command';
-import { ClaimFreeTemplateHandler } from './claim-free-template.handler';
+import { TemplateEntitlementResponseDto } from '../../../../../marketplace/application/dto/template-entitlement/template-entitlement.response.dto';
+import { ClaimFreeTemplateCommand } from '../../../../../marketplace/application/commands/template-entitlement/claim-free-template/claim-free-template.command';
+import { ClaimFreeTemplateHandler } from '../../../../../marketplace/application/commands/template-entitlement/claim-free-template/claim-free-template.handler';
 
 describe('ClaimFreeTemplateHandler Regression Tests', () => {
   let pageTemplateRepository: jest.Mocked<PageTemplateRepository>;

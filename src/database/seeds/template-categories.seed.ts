@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { DataSource } from 'typeorm';
 
-import { TemplateCategoryOrmEntity } from '../../modules/template/infrastructure/persistence/typeorm/entities/template-category.orm-entity';
+import { TemplateCategoryOrmEntity } from '../../modules/marketplace/infrastructure/persistence/typeorm/entities/template-category.orm-entity';
 import dataSource from '../data-source';
 
 const DEFAULT_CATEGORIES = [

@@ -1,6 +1,6 @@
-import { TemplateCategory } from '../../../../domain/aggregates/template-category/template-category.aggregate';
-import { TemplateCategoryOrmEntity } from '../entities/template-category.orm-entity';
-import { TemplateCategoryMapper } from './template-category.mapper';
+import { TemplateCategory } from '../../../../../marketplace/domain/aggregates/template-category/template-category.aggregate';
+import { TemplateCategoryOrmEntity } from '../../../../../marketplace/infrastructure/persistence/typeorm/entities/template-category.orm-entity';
+import { TemplateCategoryMapper } from '../../../../../marketplace/infrastructure/persistence/typeorm/mappers/template-category.mapper';
 
 describe('TemplateCategoryMapper', () => {
   it('should map domain aggregate to ORM entity correctly', () => {

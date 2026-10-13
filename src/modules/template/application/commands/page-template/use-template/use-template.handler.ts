@@ -1,3 +1,4 @@
+import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
 import {
   BadRequestException,
   ForbiddenException,
@@ -34,8 +35,8 @@ import { TEMPLATE_TYPES } from '../../../../template.types';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 
-import type { TemplateEntitlementRepository } from 'src/modules/template/domain/repositories/template-entitlement.repository';
-import type { TemplateListingRepository } from 'src/modules/template/domain/repositories/template-listing.repository';
+import type { TemplateEntitlementPort } from 'src/modules/marketplace/application/ports/template-distribution.port';
+import type { TemplateDistributionPort } from 'src/modules/marketplace/application/ports/template-distribution.port';
 import { UseTemplateCommand } from './use-template.command';
 
 export type UseTemplateResult = {
@@ -57,11 +58,11 @@ export class UseTemplateHandler {
     @Inject(TEMPLATE_TYPES.repositories.PageTemplateDatabaseSnapshotRepository)
     private readonly templateDatabaseSnapshotRepository: PageTemplateDatabaseSnapshotRepository,
 
-    @Inject(TEMPLATE_TYPES.repositories.TemplateEntitlementRepository)
-    private readonly templateEntitlementRepository: TemplateEntitlementRepository,
+    @Inject(MARKETPLACE_TYPES.ports.Entitlements)
+    private readonly templateEntitlementRepository: TemplateEntitlementPort,
 
-    @Inject(TEMPLATE_TYPES.repositories.TemplateListingRepository)
-    private readonly templateListingRepository: TemplateListingRepository,
+    @Inject(MARKETPLACE_TYPES.ports.Distribution)
+    private readonly templateListingRepository: TemplateDistributionPort,
 
     @Inject(CONTENT_TYPES.ports.PageProvisioning)
     private readonly pageProvisioningPort: ContentPageProvisioningPort,

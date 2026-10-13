@@ -1,9 +1,9 @@
 import { DataSource, EntityManager, In } from 'typeorm';
-import { TypeOrmTemplateListingRepository } from './typeorm-template-listing.repository';
-import { TypeOrmTemplateCategoryRepository } from './typeorm-template-category.repository';
-import { TemplateListingCategoryOrmEntity } from '../entities/template-listing-category.orm-entity';
-import { TemplateListingOrmEntity } from '../entities/template-listing.orm-entity';
-import { TemplateCategoryOrmEntity } from '../entities/template-category.orm-entity';
+import { TypeOrmTemplateListingRepository } from '../../../../../marketplace/infrastructure/persistence/typeorm/repositories/typeorm-template-listing.repository';
+import { TypeOrmTemplateCategoryRepository } from '../../../../../marketplace/infrastructure/persistence/typeorm/repositories/typeorm-template-category.repository';
+import { TemplateListingCategoryOrmEntity } from '../../../../../marketplace/infrastructure/persistence/typeorm/entities/template-listing-category.orm-entity';
+import { TemplateListingOrmEntity } from '../../../../../marketplace/infrastructure/persistence/typeorm/entities/template-listing.orm-entity';
+import { TemplateCategoryOrmEntity } from '../../../../../marketplace/infrastructure/persistence/typeorm/entities/template-category.orm-entity';
 
 describe('Marketplace category persistence', () => {
   const associations = {

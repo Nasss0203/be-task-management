@@ -4,7 +4,7 @@ import { Brackets, DataSource, EntityManager, Repository } from 'typeorm';
 import type { PersistenceContext } from 'src/shared/domain/persistence-context';
 
 import type { PageTemplate } from '../../../../domain/aggregates/page-template/page-template.aggregate';
-import { TemplateListingStatus } from '../../../../domain/enums/template-listing-status.enum';
+import { TemplateListingStatus } from '../../../../../marketplace/domain/enums/template-listing-status.enum';
 import { TemplateStatus } from '../../../../domain/enums/template-status.enum';
 import { TemplateVersionStatus } from '../../../../domain/enums/template-version-status.enum';
 import { TemplateVisibility } from '../../../../domain/enums/template-visibility.enum';
@@ -16,8 +16,8 @@ import type {
 } from '../../../../domain/repositories/page-template.repository';
 import { TemplateListScope } from '../../../../presentation/http/requests/list-page-templates.request';
 import { PageTemplateVersionOrmEntity } from '../entities/page-template-version.orm-entity';
-import { TemplateListingOrmEntity } from '../entities/template-listing.orm-entity';
-import { TemplateListingCategoryOrmEntity } from '../entities/template-listing-category.orm-entity';
+import { TemplateListingOrmEntity } from '../../../../../marketplace/infrastructure/persistence/typeorm/entities/template-listing.orm-entity';
+import { TemplateListingCategoryOrmEntity } from '../../../../../marketplace/infrastructure/persistence/typeorm/entities/template-listing-category.orm-entity';
 import { PageTemplateOrmEntity } from '../entities/page-template.orm-entity';
 import { PageTemplateMapper } from '../mappers/page-template.mapper';
 import { TemplateVersionMapper } from '../mappers/template-version.mapper';

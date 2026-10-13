@@ -7,22 +7,10 @@ export const TEMPLATE_TYPES = {
       'PageTemplateDatabaseSnapshotRepository',
     ),
     TemplateVersionAssetRepository: Symbol('TemplateVersionAssetRepository'),
-    TemplateListingRepository: Symbol('TemplateListingRepository'),
-    TemplateEntitlementRepository: Symbol('TemplateEntitlementRepository'),
-    TemplateCategoryRepository: Symbol('TemplateCategoryRepository'),
   },
-
   applications: {
-    GetMyClaimedTemplatesHandler: Symbol('GetMyClaimedTemplatesHandler'),
-    PublishTemplateToMarketplaceHandler: Symbol(
-      'PublishTemplateToMarketplaceHandler',
-    ),
-    ClaimFreeTemplateHandler: Symbol('ClaimFreeTemplateHandler'),
-    CreateTemplateListingHandler: Symbol('CreateTemplateListingHandler'),
-    PublishTemplateListingHandler: Symbol('PublishTemplateListingHandler'),
     CreatePageTemplateHandler: Symbol('CreatePageTemplateHandler'),
     UpdatePageTemplateHandler: Symbol('UpdatePageTemplateHandler'),
-
     ArchivePageTemplateHandler: Symbol('ArchivePageTemplateHandler'),
     RestorePageTemplateHandler: Symbol('RestorePageTemplateHandler'),
     CreateTemplateVersionHandler: Symbol('CreateTemplateVersionHandler'),
@@ -38,27 +26,16 @@ export const TEMPLATE_TYPES = {
     ),
     UseTemplateHandler: Symbol('UseTemplateHandler'),
     ListPageTemplatesHandler: Symbol('ListPageTemplatesHandler'),
-    ListPublicTemplatesHandler: Symbol('ListPublicTemplatesHandler'),
     GenerateTemplateVersionThumbnailHandler: Symbol(
       'GenerateTemplateVersionThumbnailHandler',
     ),
     GetTemplateVersionThumbnailHandler: Symbol(
       'GetTemplateVersionThumbnailHandler',
     ),
-    GetPublicTemplatePreviewHandler: Symbol('GetPublicTemplatePreviewHandler'),
-    GetPublicTemplateDetailHandler: Symbol('GetPublicTemplateDetailHandler'),
-
-    GetTemplateListingHandler: Symbol('GetTemplateListingHandler'),
-    UnpublishTemplateListingHandler: Symbol('UnpublishTemplateListingHandler'),
-    CreateTemplateCategoryHandler: Symbol('CreateTemplateCategoryHandler'),
-    ListTemplateCategoriesHandler: Symbol('ListTemplateCategoriesHandler'),
-    ListActiveTemplateCategoriesHandler: Symbol(
-      'ListActiveTemplateCategoriesHandler',
-    ),
-    UpdateTemplateCategoryHandler: Symbol('UpdateTemplateCategoryHandler'),
-    ChangeTemplateCategoryStatusHandler: Symbol(
-      'ChangeTemplateCategoryStatusHandler',
-    ),
+  },
+  ports: {
+    Content: Symbol('TemplateContentPort'),
+    Versions: Symbol('TemplateVersionPort'),
   },
   services: {
     TemplateThumbnailRenderer: Symbol('TemplateThumbnailRenderer'),

@@ -1,6 +1,6 @@
-import { TemplateListingStatus } from '../../enums/template-listing-status.enum';
-import { TemplateOfferType } from '../../enums/template-offer-type.enum';
-import { TemplateListing } from './template-listing.aggregate';
+import { TemplateListingStatus } from '../../../../marketplace/domain/enums/template-listing-status.enum';
+import { TemplateOfferType } from '../../../../marketplace/domain/enums/template-offer-type.enum';
+import { TemplateListing } from '../../../../marketplace/domain/aggregates/template-listing/template-listing.aggregate';
 
 describe('TemplateListingAggregate', () => {
   const validTemplateId = 'template-uuid-1';
