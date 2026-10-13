@@ -97,6 +97,8 @@ webpack(
           'utf8',
         );
         return {
+          ...record,
+          sourceSha256: record.sha256,
           file,
           sha256: crypto
             .createHash('sha256')

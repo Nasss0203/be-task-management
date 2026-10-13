@@ -3,7 +3,19 @@ import { readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { migrationFiles } from './database-options';
 
-type IntegrityManifest = { files: { file: string; sha256: string }[] };
+type IntegrityManifest = {
+  files: {
+    file: string;
+    sha256: string;
+    approval?: {
+      kind: 'automatic' | 'manual';
+      policy?: string;
+      generator?: string;
+      evidence?: string;
+      tables?: string[];
+    };
+  }[];
+};
 
 // This review snapshot detects later edits. TypeORM history has no SQL hashes,
 // so it cannot prove which bytes an older deployment originally executed.
@@ -18,7 +30,24 @@ export function migrationIntegrityProblems(): string[] {
     ]),
   );
   const problems: string[] = [];
+  if (
+    new Set(manifest.files.map((record) => record.file)).size !==
+    manifest.files.length
+  ) {
+    problems.push('Duplicate migration integrity records');
+  }
   for (const expected of manifest.files) {
+    if (
+      expected.approval &&
+      (!['automatic', 'manual'].includes(expected.approval.kind) ||
+        (expected.approval.kind === 'automatic' &&
+          (expected.approval.policy !== 'single-new-table-v1' ||
+            expected.approval.generator !== 'scripts/migration-tools.ts' ||
+            expected.approval.evidence !==
+              'static-generator-format-and-live-orm-diff' ||
+            expected.approval.tables?.length !== 1)))
+    )
+      problems.push(`Invalid migration approval provenance: ${expected.file}`);
     const file = files.get(expected.file);
     if (!file) {
       problems.push(`Reviewed migration file missing: ${expected.file}`);

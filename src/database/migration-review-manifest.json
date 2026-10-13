@@ -72,6 +72,19 @@
     {
       "file": "1791810001000-add-template-listing-pricing.ts",
       "sha256": "a70d34882cc8adc36ad5b1b2ce49698b686575c575b87bf9e4f5b2088a62c370"
+    },
+    {
+      "file": "1791903351862-CreateTemplatePurchases.ts",
+      "sha256": "37cc7d5f6073784a4f3e5ba850de2a13f27e0c30562465683b4502a3ec57b9f6",
+      "approval": {
+        "kind": "automatic",
+        "policy": "single-new-table-v1",
+        "generator": "scripts/migration-tools.ts",
+        "evidence": "static-generator-format-and-live-orm-diff",
+        "tables": [
+          "template_purchases"
+        ]
+      }
     }
   ]
 }

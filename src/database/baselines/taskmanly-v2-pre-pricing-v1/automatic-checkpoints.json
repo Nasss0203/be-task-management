@@ -1,0 +1,21 @@
+{
+  "policy": "isolated-single-new-table-v1",
+  "checkpoints": [
+    {
+      "applied": [
+        "AddPaidTemplateOffer1791810000000",
+        "AddTemplateListingPricing1791810001000",
+        "CreateTemplatePurchases1791903351862"
+      ],
+      "schemaFile": "checkpoints/automatic-1791903351862.sql",
+      "schemaSha256": "cd2419b72fdfbaa00bd4291e028abb3fc522cf151859af6f120988422936119e",
+      "evidence": "Automatic policy: two independent PostgreSQL 18 instances; verified input, exact executed SQL, whole-schema exclusion scope, catalog convergence and committed rollback.",
+      "approval": {
+        "kind": "automatic",
+        "policy": "isolated-single-new-table-v1",
+        "evidenceFile": "evidence/automatic-1791903351862.json",
+        "evidenceSha256": "47fe6fb21e021f36051b245a57681eb48e00da34f816180e904728e4cc283655"
+      }
+    }
+  ]
+}

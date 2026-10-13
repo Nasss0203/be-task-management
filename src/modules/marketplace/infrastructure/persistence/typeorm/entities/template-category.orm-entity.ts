@@ -15,15 +15,18 @@ import { TemplateListingCategoryOrmEntity } from './template-listing-category.or
 @Index('IDX_template_categories_is_active_sort_order', [
   'isActive',
   'sortOrder',
+  'name',
 ])
 export class TemplateCategoryOrmEntity {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn('uuid', {
+    primaryKeyConstraintName: 'PK_template_categories',
+  })
   id: string;
 
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: 'varchar', length: 255 })
   slug: string;
 
   @Column({ type: 'text', nullable: true })

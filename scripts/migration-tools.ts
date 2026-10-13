@@ -1,22 +1,126 @@
 import 'reflect-metadata';
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import source from '../src/database/data-source';
+
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { basename, join } from 'node:path';
+import { createInterface } from 'node:readline/promises';
+import { prepareAutomaticCheckpoint } from './automatic-checkpoint';
+import { migrationFiles } from '../src/database/database-options';
 import {
-  verificationSummary,
-  verifyMigrationState,
-} from '../src/database/migration-verification';
+  automaticGenerationOptions,
+  registerAutomaticIntegrity,
+  renderMigration,
+  verifyAutomaticCandidate,
+} from './migration-approval';
+
+import source from '../src/database/data-source';
 import {
   generationProblems,
   readOnlyDataSource,
 } from '../src/database/migration-safety';
+import {
+  verificationSummary,
+  verifyMigrationState,
+} from '../src/database/migration-verification';
 
-async function main() {
-  const command = process.argv[2];
-  if (!['audit', 'check', 'generate'].includes(command))
+type MigrationCommand = 'audit' | 'check' | 'generate';
+
+type GenerationOptions = {
+  name: string;
+  tables: string[];
+};
+
+/**
+ * Supports both:
+ *   npm run migration:generate
+ *   npm run migration:generate -- CreateTemplatePurchases --tables=template_purchases
+ *
+ * Explicit arguments retain their existing scope validation and missing-value
+ * prompts. Automatic generation has a separate, narrower SQL allowlist.
+ */
+async function resolveGenerationOptions(
+  args: string[],
+): Promise<GenerationOptions> {
+  const positional = args.filter((arg) => !arg.startsWith('--'));
+  const tableFlags = args.filter((arg) => arg.startsWith('--tables='));
+  const unknownFlags = args.filter(
+    (arg) => arg.startsWith('--') && !arg.startsWith('--tables='),
+  );
+
+  if (positional.length > 1 || tableFlags.length > 1 || unknownFlags.length) {
+    throw new Error(
+      'Usage: migration:generate [PascalCaseName] [--tables=table_one,table_two]',
+    );
+  }
+
+  let name = positional[0]?.trim();
+  let tableScope = tableFlags[0]?.slice('--tables='.length).trim();
+
+  if (!name || !tableScope) {
+    if (!process.stdin.isTTY || !process.stdout.isTTY) {
+      throw new Error(
+        'Non-interactive generation requires a PascalCase name and --tables=table_one,table_two',
+      );
+    }
+
+    const prompt = createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    try {
+      if (!name) {
+        name = (await prompt.question('Migration name (PascalCase): ')).trim();
+      }
+      if (!tableScope) {
+        tableScope = (
+          await prompt.question('Affected tables (comma separated): ')
+        ).trim();
+      }
+    } finally {
+      prompt.close();
+    }
+  }
+
+  if (!name || !/^[A-Z][A-Za-z0-9]+$/.test(name)) {
+    throw new Error('Migration name must be descriptive PascalCase');
+  }
+
+  const tables = (tableScope ?? '').split(',').map((table) => table.trim());
+  if (
+    !tables.length ||
+    tables.some((table) => !/^[a-z][a-z0-9_]*$/.test(table)) ||
+    new Set(tables).size !== tables.length
+  ) {
+    throw new Error('Table scope must contain unique snake_case table names');
+  }
+
+  return { name, tables };
+}
+
+async function main(): Promise<void> {
+  const command = process.argv[2] as MigrationCommand | undefined;
+  if (command !== 'audit' && command !== 'check' && command !== 'generate') {
     throw new Error(
       'Use audit, check, or generate; execution checks use migration:preflight',
     );
+  }
+
+  const args = process.argv.slice(3);
+  if (command === 'generate' && !args.length) {
+    const manifest = JSON.parse(
+      readFileSync(
+        join(process.cwd(), 'src/database/migration-review-manifest.json'),
+        'utf8',
+      ),
+    ) as { files: { file: string }[] };
+    for (const file of migrationFiles()) {
+      if (!manifest.files.some((record) => record.file === basename(file))) {
+        // TypeORM loads migration modules during initialize(). Reject executable
+        // code outside the generator template before loading an unapproved file.
+        verifyAutomaticCandidate(file, readFileSync(file, 'utf8'));
+      }
+    }
+  }
+
   const db = readOnlyDataSource(source.options);
   try {
     await db.initialize();
@@ -28,13 +132,18 @@ async function main() {
         access: 'read-only',
       }),
     );
+
     const state = await verifyMigrationState(db);
     const { rows, names, history, errors } = state;
     const diff = await db.driver.createSchemaBuilder().log();
+    const queries = diff.upQueries.map((query) => query.query);
+    const rollback = diff.downQueries.map((query) => query.query);
+
     console.log(JSON.stringify(verificationSummary(state), null, 2));
-    for (const query of diff.upQueries) console.log(query.query + ';');
+    for (const query of diff.upQueries) console.log(`${query.query};`);
 
     if (command === 'audit') return;
+
     if (command === 'check') {
       if (errors.length || diff.upQueries.length || history.pending.length) {
         throw new Error(
@@ -44,63 +153,136 @@ async function main() {
       return;
     }
 
-    const name = process.argv[3];
-    const tableArg = process.argv.find((argument) =>
-      argument.startsWith('--tables='),
-    );
-    if (!name || !/^[A-Z][A-Za-z0-9]+$/.test(name) || !tableArg)
-      throw new Error(
-        'Generate requires a descriptive PascalCase name and --tables=table_one,table_two',
+    // Recover one verified pending generator artifact instead of generating a
+    // duplicate. Only its missing integrity record is eligible for repair.
+    if (!args.length && history.pending.length === 1) {
+      const pending = history.pending[0];
+      const file = migrationFiles().find(
+        (file) =>
+          basename(file)
+            .replace(/^\d{13}-/, '')
+            .replace(/\.ts$/, '') +
+            basename(file).slice(0, 13) ===
+          pending,
       );
-    const tables = tableArg.slice('--tables='.length).split(',');
-    if (
-      !tables.length ||
-      tables.some((table) => !/^[a-z][a-z0-9_]*$/.test(table))
-    )
-      throw new Error('Invalid table scope');
-    const problems = generationProblems(
-      diff.upQueries.map((query) => query.query),
-      tables,
-    );
-    if (errors.length || history.pending.length || problems.length) {
-      for (const problem of problems) console.error(problem);
+      const missingRecord = file
+        ? `Active migration lacks a reviewed integrity record: ${basename(file)}`
+        : undefined;
+      if (!file || errors.some((error) => error !== missingRecord)) {
+        throw new Error(
+          'Pending automatic approval blocked by baseline/history/integrity verification',
+        );
+      }
+      const timestamp = Number(basename(file).slice(0, 13));
+      if (
+        timestamp > Date.now() ||
+        rows.some((row) => Number(row.timestamp) >= timestamp)
+      ) {
+        throw new Error(
+          'Pending automatic approval blocked by timestamp ordering',
+        );
+      }
+      if (
+        [...diff.upQueries, ...diff.downQueries].some(
+          (query) => query.parameters?.length,
+        )
+      ) {
+        throw new Error('Parameterized schema queries require manual review');
+      }
+      const approval = registerAutomaticIntegrity(file, queries, rollback);
+      const verified = await verifyMigrationState(db);
+      if (verified.errors.length) throw new Error(verified.errors.join('\n'));
+      await prepareAutomaticCheckpoint(db, file, queries, rollback);
+      console.log(
+        `Pending migration verified; integrity ${approval === 'registered' ? 'automatically registered' : 'record retained'}: ${basename(file)}. No duplicate generated.`,
+      );
+      return;
+    }
+
+    // Reject invalid history before offering an interactive generation prompt.
+    if (errors.length || history.pending.length) {
       throw new Error(
-        'Generation blocked: resolve history/pending migrations and out-of-scope/destructive drift first',
+        'Generation blocked: resolve baseline/history verification and pending migrations first.',
       );
     }
+
     if (!diff.upQueries.length) {
       console.log('No schema changes');
       return;
     }
+
+    const { name, tables } = args.length
+      ? await resolveGenerationOptions(args)
+      : automaticGenerationOptions(queries);
+
+    const problems = generationProblems(queries, tables);
+    if (problems.length) {
+      for (const problem of problems) console.error(problem);
+      throw new Error(
+        'Generation blocked: out-of-scope or destructive SQL detected. Review the entity metadata and database drift; do not bypass this check.',
+      );
+    }
+
     if (
       [...diff.upQueries, ...diff.downQueries].some(
         (query) => query.parameters?.length,
       )
-    )
+    ) {
       throw new Error(
         'Parameterized schema queries require a manual migration',
       );
+    }
+
+    console.log(
+      JSON.stringify({
+        name,
+        tables,
+        mode: args.length ? 'explicit' : 'automatic',
+      }),
+    );
+
     const timestamp = Date.now();
     if (
       rows.some((row) => Number(row.timestamp) >= timestamp) ||
       names.some((migration) => Number(migration.slice(-13)) >= timestamp)
-    )
+    ) {
       throw new Error(
         'Migration clock is behind existing history; reconcile timestamps before generation',
       );
-    const statements = (queries: typeof diff.upQueries) =>
-      queries
-        .map(
-          (query) => `    await runner.query(${JSON.stringify(query.query)});`,
-        )
-        .join('\n');
-    const content = `import { MigrationInterface, QueryRunner } from 'typeorm';\n\nexport class ${name}${timestamp} implements MigrationInterface {\n  name = '${name}${timestamp}';\n  async up(runner: QueryRunner): Promise<void> {\n${statements(diff.upQueries)}\n  }\n  async down(runner: QueryRunner): Promise<void> {\n${statements(diff.downQueries)}\n  }\n}\n`;
+    }
+
+    const down = args.length
+      ? rollback
+      : automaticGenerationOptions(queries).down;
+    const content = renderMigration(name, timestamp, queries, down);
+
     const directory = join(process.cwd(), 'src/database/migrations');
     mkdirSync(directory, { recursive: true });
     const file = join(directory, `${timestamp}-${name}.ts`);
     writeFileSync(file, content, { flag: 'wx' });
+    if (!args.length) {
+      registerAutomaticIntegrity(file, queries, rollback);
+      // This connection's metadata predates the newly written migration.
+      // Rediscover source files before checking pending history in isolation.
+      const checkpointDb = readOnlyDataSource({
+        ...db.options,
+        migrations: migrationFiles(),
+      });
+      try {
+        await checkpointDb.initialize();
+        await prepareAutomaticCheckpoint(checkpointDb, file, queries, rollback);
+      } finally {
+        if (checkpointDb.isInitialized) await checkpointDb.destroy();
+      }
+      console.log(
+        'Automatic integrity and isolated checkpoint approved; execution still requires read-only preflight.',
+      );
+    }
+
+    console.log(`Created ${file}`);
+    console.log('Review BOTH up() and down() before running the migration.');
     console.log(
-      `Created ${file}. Review up AND down SQL, then verify on an isolated database.`,
+      'Verify on an isolated database before applying to valuable data.',
     );
   } finally {
     if (db.isInitialized) await db.destroy();
@@ -108,7 +290,7 @@ async function main() {
 }
 
 main().catch((error: unknown) => {
-  // Do not dump connection options, URLs, or query parameters.
+  // Do not print connection options, URLs, or query parameters.
   console.error(
     error instanceof Error ? error.message : 'Migration verification failed',
   );

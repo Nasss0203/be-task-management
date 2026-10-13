@@ -1,12 +1,12 @@
-import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { DataSource } from 'typeorm';
 import { BASELINE_CUTOFF, BASELINE_VERSION } from './baseline-config';
 import { migrationHistory, type HistoryRow } from './migration-safety';
-
+import { loadAutomaticCheckpoints } from './automatic-checkpoint';
 export type BaselineManifest = {
   version: string;
   cutoff: number;
@@ -14,12 +14,15 @@ export type BaselineManifest = {
   sqlSha256: string;
   tableCount: number;
   legacyHistory: HistoryRow[];
-  checkpoints: { applied: string[]; schemaSha256: string; evidence: string; schemaFile?: string }[];
+  checkpoints: {
+    applied: string[];
+    schemaSha256: string;
+    evidence: string;
+    schemaFile?: string;
+  }[];
   roundtrip?: { file: string; schemaSha256: string };
 };
-
 const execute = promisify(execFile);
-
 export function activeMigrationNames(db: DataSource): string[] {
   const names = db.migrations.map(
     (migration) => migration.name ?? migration.constructor.name,
@@ -35,14 +38,12 @@ export function activeMigrationNames(db: DataSource): string[] {
     );
   return names.sort((a, b) => Number(a.slice(-13)) - Number(b.slice(-13)));
 }
-
 export function baselineDirectory(): string {
   const direct = join(__dirname, 'baselines', BASELINE_VERSION);
   return existsSync(direct)
     ? direct
     : join(__dirname, 'database/baselines', BASELINE_VERSION);
 }
-
 // Keep all DDL/function bodies. Only remove random psql restriction keys and
 // tool/server version headers, plus platform line endings, from fingerprints.
 export function canonicalSchema(sql: string): string {
@@ -72,11 +73,30 @@ export function canonicalSchema(sql: string): string {
       .trim() + '\n'
   );
 }
-
 export function schemaHash(sql: string): string {
+  // Historical hashes must remain unchanged.
   return createHash('sha256').update(canonicalSchema(sql)).digest('hex');
 }
 
+// PostgreSQL 18 can dump this *reviewed* constraint with either form.
+// This comparison is intentionally narrow: do not normalize arbitrary SQL,
+// and do not alter artifact fingerprints recorded in manifest.json.
+const CHECK_VISIBILITY_OVERRIDE =
+  'CONSTRAINT "CK_page_publications_visibility_override"';
+const VISIBILITY_ARRAY_CAST =
+  "(ARRAY['PUBLISHED'::character varying, 'UNPUBLISHED'::character varying])::text[]";
+const VISIBILITY_ELEMENT_CASTS =
+  "ARRAY[('PUBLISHED'::character varying)::text, ('UNPUBLISHED'::character varying)::text]";
+
+export function comparableReviewedSchema(sql: string): string {
+  return canonicalSchema(sql)
+    .split('\n')
+    .map((line) => {
+      if (!line.includes(CHECK_VISIBILITY_OVERRIDE)) return line;
+      return line.replace(VISIBILITY_ARRAY_CAST, VISIBILITY_ELEMENT_CASTS);
+    })
+    .join('\n');
+}
 export function loadBaseline(): BaselineManifest {
   const manifest = JSON.parse(
     readFileSync(join(baselineDirectory(), 'manifest.json'), 'utf8'),
@@ -102,9 +122,16 @@ export function loadBaseline(): BaselineManifest {
     throw new Error('Baseline SQL integrity mismatch');
   for (const checkpoint of manifest.checkpoints) {
     if (!checkpoint.schemaFile) continue;
-    if (!/^checkpoints\/[a-z0-9-]+\.sql$/.test(checkpoint.schemaFile)) throw new Error('Invalid checkpoint evidence path');
-    const snapshot = readFileSync(join(baselineDirectory(), checkpoint.schemaFile), 'utf8');
-    if (schemaHash(snapshot) !== checkpoint.schemaSha256) throw new Error(`Checkpoint SQL integrity mismatch: ${checkpoint.schemaFile}`);
+    if (!/^checkpoints\/[a-z0-9-]+\.sql$/.test(checkpoint.schemaFile))
+      throw new Error('Invalid checkpoint evidence path');
+    const snapshot = readFileSync(
+      join(baselineDirectory(), checkpoint.schemaFile),
+      'utf8',
+    );
+    if (schemaHash(snapshot) !== checkpoint.schemaSha256)
+      throw new Error(
+        `Checkpoint SQL integrity mismatch: ${checkpoint.schemaFile}`,
+      );
   }
   if (
     /^(?:COPY |INSERT INTO |SELECT pg_catalog\.setval|CREATE DATABASE|\\connect|BEGIN;|COMMIT;)/m.test(
@@ -149,9 +176,15 @@ export function loadBaseline(): BaselineManifest {
         'Roundtrip evidence differs beyond the reviewed equivalent array cast',
       );
   }
+  manifest.checkpoints.push(
+    ...loadAutomaticCheckpoints(
+      baselineDirectory(),
+      manifest.checkpoints,
+      schemaHash,
+    ),
+  );
   return manifest;
 }
-
 export function postgresTool(name: 'pg_dump' | 'psql'): string {
   const configured =
     process.env[name === 'pg_dump' ? 'PG_DUMP_BIN' : 'PSQL_BIN'];
@@ -161,7 +194,6 @@ export function postgresTool(name: 'pg_dump' | 'psql'): string {
     (process.platform === 'win32' && existsSync(windows) ? windows : name)
   );
 }
-
 export function postgresEnvironment(
   db: DataSource,
   readonly = true,
@@ -189,15 +221,25 @@ export function postgresEnvironment(
       : '-c statement_timeout=30000 -c lock_timeout=10000',
   };
 }
-
-export async function dumpSchema(db: DataSource): Promise<string> {
+export async function dumpSchema(
+  db: DataSource,
+  excludeTables: string[] = [],
+): Promise<string> {
+  if (excludeTables.some((table) => !/^[a-z][a-z0-9_]*$/.test(table))) {
+    throw new Error('Invalid schema dump exclusion');
+  }
   const tool = postgresTool('pg_dump');
   const { stdout: version } = await execute(tool, ['--version']);
   if (!/\b18\./.test(version))
     throw new Error('Baseline fingerprint requires PostgreSQL 18 pg_dump');
   const { stdout } = await execute(
     tool,
-    ['--schema-only', '--no-owner', '--no-privileges'],
+    [
+      '--schema-only',
+      '--no-owner',
+      '--no-privileges',
+      ...excludeTables.map((table) => `--exclude-table=public.${table}`),
+    ],
     {
       env: postgresEnvironment(db),
       maxBuffer: 10 * 1024 * 1024,
@@ -206,7 +248,6 @@ export async function dumpSchema(db: DataSource): Promise<string> {
   );
   return stdout;
 }
-
 function normalizedHistory(rows: HistoryRow[]) {
   return rows
     .map(({ id, timestamp, name }) => ({
@@ -216,7 +257,6 @@ function normalizedHistory(rows: HistoryRow[]) {
     }))
     .sort((a, b) => a.id - b.id);
 }
-
 export function baselineLineage(
   rows: HistoryRow[],
   manifest: BaselineManifest,
@@ -235,14 +275,12 @@ export function baselineLineage(
     incremental,
   };
 }
-
 export function checkpointFor(names: string[], manifest: BaselineManifest) {
   return manifest.checkpoints.find(
     (checkpoint) =>
       JSON.stringify(checkpoint.applied) === JSON.stringify(names),
   );
 }
-
 export async function verifyBaseline(
   db: DataSource,
   rows: HistoryRow[],
@@ -270,13 +308,28 @@ export async function verifyBaseline(
   )) as { database: string; version: number }[];
   if (Math.floor(identity[0].version / 10000) !== manifest.postgresMajor)
     errors.push('Server major differs from the verified baseline');
-  const actualHash = schemaHash(await dumpSchema(db));
+  const liveSchema = await dumpSchema(db);
+  const actualHash = schemaHash(liveSchema);
   const equivalentBaseline =
     applied.length === 0 && actualHash === manifest.roundtrip?.schemaSha256;
+
+  let equivalentReviewedCheckpoint = false;
+  if (checkpoint?.schemaFile && actualHash !== checkpoint.schemaSha256) {
+    // loadBaseline() already verified this evidence file's SHA-256.
+    const checkpointSql = readFileSync(
+      join(baselineDirectory(), checkpoint.schemaFile),
+      'utf8',
+    );
+    equivalentReviewedCheckpoint =
+      comparableReviewedSchema(liveSchema) ===
+      comparableReviewedSchema(checkpointSql);
+  }
+
   if (
     checkpoint &&
     actualHash !== checkpoint.schemaSha256 &&
-    !equivalentBaseline
+    !equivalentBaseline &&
+    !equivalentReviewedCheckpoint
   )
     errors.push('Live schema differs from the reviewed baseline/checkpoint');
   // pg_dump and history queries use separate read-only snapshots; fail on any
@@ -296,7 +349,6 @@ export async function verifyBaseline(
     errors,
   };
 }
-
 export function checkpointEvidenceGaps(
   sourceNames: string[],
   manifest = loadBaseline(),
@@ -310,7 +362,6 @@ export function checkpointEvidenceGaps(
         ],
   );
 }
-
 export const EMPTY_DATABASE_SQL = `SELECT object FROM (
   SELECT 'schema ' || nspname AS object FROM pg_namespace
     WHERE nspname NOT IN ('public','information_schema','pg_catalog','pg_toast') AND nspname !~ '^pg_(toast_)?temp_[0-9]+$'
@@ -322,7 +373,6 @@ export const EMPTY_DATABASE_SQL = `SELECT object FROM (
     WHERE n.nspname='public'
   UNION ALL SELECT 'extension ' || extname FROM pg_extension WHERE extname <> 'plpgsql'
 ) objects ORDER BY object`;
-
 export function bootstrapGuard(database: string): string {
   const literal = "'" + database.replace(/'/g, "''") + "'";
   return `SELECT pg_advisory_xact_lock(1791700000, 1);

@@ -3,6 +3,7 @@ export const MARKETPLACE_TYPES = {
     TemplateListingRepository: Symbol('TemplateListingRepository'),
     TemplateEntitlementRepository: Symbol('TemplateEntitlementRepository'),
     TemplateCategoryRepository: Symbol('TemplateCategoryRepository'),
+    TemplatePurchaseRepository: Symbol('TemplatePurchaseRepository'),
   },
   applications: {
     UpdateTemplateListingPricingHandler: Symbol(
