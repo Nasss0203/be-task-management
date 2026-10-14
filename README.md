@@ -25,6 +25,40 @@
 
 Database operations: [Taskmanly V2 database baseline and migration runbook](docs/database-baseline.md).
 
+### Migration workflow
+
+Add or update the entity, register it once in `src/database/entities.ts`, then run:
+
+```bash
+npm run migration:generate
+npm run migration:run
+```
+
+The generator uses TypeORM's schema diff and the existing shared safety checks.
+Automatic generation supports one new table or one supported additive PostgreSQL
+ENUM change at a time. Other changes require review; do not bypass the safety checks.
+An existing verified pending migration is reused instead of generating a duplicate.
+`migration:run` performs read-only preflight before applying migrations.
+Keep `synchronize: false` and never edit an already executed migration.
+
+For contributors and AI/code generators: reuse the existing migration helpers.
+Adding an entity does not require a new policy, helper, test, approval workflow,
+or per-change manifest. Extend migration safety only when explicitly requested.
+`enum-additive-policy.ts` is shared across migrations; enum evidence validation
+lives in `automatic-checkpoint.ts`. The existing enum tests protect this shared
+behavior and are not a template to copy for each entity.
+
+The current safety mechanism automatically publishes a schema checkpoint and JSON
+evidence for each supported generated migration, and updates the existing shared
+registries. These artifacts are required by baseline verification and production
+preflight; do not manually create, delete, or bypass them to reduce the file count.
+No script generates the shared TypeScript helpers or test files when adding entities.
+Removing per-migration evidence generation would require a separate safety redesign.
+
+To validate source metadata, migration integrity and checkpoint evidence without
+connecting to a database, use `npm run baseline:static`. `migration:check` additionally
+connects read-only and rejects pending migrations or schema drift.
+
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
 ## Project setup

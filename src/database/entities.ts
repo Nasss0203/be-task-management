@@ -41,6 +41,7 @@ import { TemplateEntitlementOrmEntity } from 'src/modules/marketplace/infrastruc
 import { TemplateListingCategoryOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-listing-category.orm-entity';
 import { TemplateListingOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-listing.orm-entity';
 import { TemplatePurchaseOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-purchase.orm-entity';
+import { MarketplaceWebhookEventOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/marketplace-webhook-event.orm-entity';
 import { Mention } from 'src/modules/mentions/infrastructure/persistence/typeorm/entities/mention.orm-entity';
 import { Notification } from 'src/modules/notifications/infrastructure/persistence/typeorm/entities/notification.orm-entity';
 import { Permission } from 'src/modules/permission/infrastructure/persistence/typeorm/entities/legacy-permission.orm-entity';
@@ -128,4 +129,5 @@ export const DATABASE_ENTITIES = [
   TemplateListingCategoryOrmEntity,
   TemplateEntitlementOrmEntity,
   TemplatePurchaseOrmEntity,
+  MarketplaceWebhookEventOrmEntity,
 ];

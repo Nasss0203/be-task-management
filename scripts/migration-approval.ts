@@ -2,6 +2,12 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, renameSync, unlinkSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { generationProblems } from '../src/database/migration-safety';
+import {
+  ENUM_POLICY,
+  EnumChange,
+  sqlTokens,
+} from '../src/database/enum-additive-policy';
+import { enumGenerationOptions } from './enum-migration';
 
 export const AUTOMATIC_POLICY = 'single-new-table-v1';
 
@@ -62,13 +68,10 @@ export function renderMigration(
 
 // Parse static generator output without importing/executing candidate code.
 // Exact reconstruction rejects extra imports, constructors, hooks and JS logic.
-export function verifyAutomaticCandidate(
-  file: string,
-  content: string,
-  expectedUp?: string[],
-  expectedDown?: string[],
-) {
-  const identity = basename(file).match(/^(\d{13})-(Create[A-Za-z0-9]+)\.ts$/);
+export function readStaticCandidate(file: string, content: string) {
+  const identity = basename(file).match(
+    /^(\d{13})-((?:Create|AddEnumValues)[A-Za-z0-9]+)\.ts$/,
+  );
   if (!identity)
     throw new Error('Candidate does not have the generator naming convention');
   const normalized = content.replace(/\r\n/g, '\n');
@@ -88,6 +91,37 @@ export function verifyAutomaticCandidate(
       'Candidate is not exact static generator output; manual review required',
     );
   }
+  return { identity, up, down };
+}
+
+export function verifyEnumAutomaticCandidate(
+  file: string,
+  content: string,
+  change: EnumChange,
+) {
+  const { identity, up, down } = readStaticCandidate(file, content);
+  const options = enumGenerationOptions(change);
+  if (
+    identity[2] !== options.name ||
+    JSON.stringify(up.map(sqlTokens)) !==
+      JSON.stringify(options.up.map(sqlTokens)) ||
+    JSON.stringify(down.map(sqlTokens)) !==
+      JSON.stringify(options.down.map(sqlTokens))
+  ) {
+    throw new Error(
+      'Automatic enum candidate differs from catalog/metadata-proven additive SQL and guarded rollback',
+    );
+  }
+  return options;
+}
+
+export function verifyAutomaticCandidate(
+  file: string,
+  content: string,
+  expectedUp?: string[],
+  expectedDown?: string[],
+) {
+  const { identity, up, down } = readStaticCandidate(file, content);
   const options = automaticGenerationOptions(up);
   if (options.name !== identity[2])
     throw new Error('Candidate name does not match its new table');
@@ -115,14 +149,12 @@ export function registerAutomaticIntegrity(
   file: string,
   expectedUp: string[],
   expectedDown: string[],
+  change?: EnumChange,
 ) {
   const content = readFileSync(file, 'utf8');
-  const options = verifyAutomaticCandidate(
-    file,
-    content,
-    expectedUp,
-    expectedDown,
-  );
+  const options = change
+    ? verifyEnumAutomaticCandidate(file, content, change)
+    : verifyAutomaticCandidate(file, content, expectedUp, expectedDown);
   const manifestPath = join(
     process.cwd(),
     'src/database/migration-review-manifest.json',
@@ -153,9 +185,11 @@ export function registerAutomaticIntegrity(
       sha256,
       approval: {
         kind: 'automatic',
-        policy: AUTOMATIC_POLICY,
+        policy: change ? ENUM_POLICY : AUTOMATIC_POLICY,
         generator: 'scripts/migration-tools.ts',
-        evidence: 'static-generator-format-and-live-orm-diff',
+        evidence: change
+          ? 'static-generator-format-and-catalog-metadata-enum-diff'
+          : 'static-generator-format-and-live-orm-diff',
         tables: options.tables,
       },
     });

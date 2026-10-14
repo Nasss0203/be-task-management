@@ -1,6 +1,18 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import {
+  ENUM_CHECKPOINT_POLICY,
+  ENUM_POLICY,
+  enumSchemaBefore,
+  assertEnumChange,
+  EnumChange,
+  enumAddedValues,
+  enumDown,
+  enumRestore,
+  enumUp,
+  sqlTokens,
+} from './enum-additive-policy';
 
 export const CHECKPOINT_POLICY = 'isolated-single-new-table-v1';
 export type Checkpoint = {
@@ -28,13 +40,16 @@ export function loadAutomaticCheckpoints(
   directory: string,
   reviewed: Checkpoint[],
   schemaHash: (sql: string) => string,
+  proposed?: { policy: string; checkpoints: AutomaticCheckpoint[] },
 ): AutomaticCheckpoint[] {
   const registryPath = join(directory, 'automatic-checkpoints.json');
-  if (!existsSync(registryPath)) return [];
-  const registry = JSON.parse(readFileSync(registryPath, 'utf8')) as {
-    policy: string;
-    checkpoints: AutomaticCheckpoint[];
-  };
+  if (!proposed && !existsSync(registryPath)) return [];
+  const registry =
+    proposed ??
+    (JSON.parse(readFileSync(registryPath, 'utf8')) as {
+      policy: string;
+      checkpoints: AutomaticCheckpoint[];
+    });
   if (registry.policy !== CHECKPOINT_POLICY)
     throw new Error('Unknown automatic checkpoint policy');
   const integrity = JSON.parse(
@@ -53,9 +68,10 @@ export function loadAutomaticCheckpoints(
   const accepted = [...reviewed];
   for (const checkpoint of registry.checkpoints) {
     const approval = checkpoint.approval;
+    const isEnum = approval?.policy === ENUM_CHECKPOINT_POLICY;
     if (
       approval?.kind !== 'automatic' ||
-      approval.policy !== CHECKPOINT_POLICY ||
+      ![CHECKPOINT_POLICY, ENUM_CHECKPOINT_POLICY].includes(approval.policy) ||
       !/^checkpoints\/automatic-\d{13}\.sql$/.test(checkpoint.schemaFile) ||
       !/^evidence\/automatic-\d{13}\.json$/.test(approval.evidenceFile)
     ) {
@@ -86,9 +102,18 @@ export function loadAutomaticCheckpoints(
     );
     if (
       evidence.kind !== 'automatic' ||
-      evidence.policy !== CHECKPOINT_POLICY ||
-      record?.approval?.kind !== 'automatic' ||
-      record.approval.policy !== 'single-new-table-v1' ||
+      evidence.policy !== approval.policy ||
+      (isEnum
+        ? !(
+            record?.approval?.kind === 'manual' ||
+            (record?.approval?.kind === 'automatic' &&
+              record.approval.policy === ENUM_POLICY)
+          ) ||
+          JSON.stringify(record?.approval) !==
+            JSON.stringify(migration?.approval)
+        : record?.approval?.kind !== 'automatic' ||
+          record.approval.policy !== 'single-new-table-v1') ||
+      !record ||
       (record.sourceSha256 ?? record.sha256) !== migration.sha256 ||
       !parent ||
       parent.schemaSha256 !== evidence.input.checkpointSha256 ||
@@ -105,6 +130,26 @@ export function loadAutomaticCheckpoints(
       throw new Error(
         'Automatic checkpoint is not bound to verified input, migration and independent trials',
       );
+    }
+    if (isEnum) {
+      validateEnumEvidence(evidence);
+      const stamp = migration.name.slice(-13);
+      if (
+        migration.file.replace(/^(\d{13})-(.+)\.ts$/, '$2$1') !==
+          migration.name ||
+        checkpoint.schemaFile !== `checkpoints/automatic-${stamp}.sql` ||
+        approval.evidenceFile !== `evidence/automatic-${stamp}.json` ||
+        schemaHash(
+          enumSchemaBefore(
+            readFileSync(join(directory, checkpoint.schemaFile), 'utf8'),
+            migration.enumChange,
+          ),
+        ) !== evidence.input.schemaSha256
+      ) {
+        throw new Error(
+          'Enum checkpoint artifact is not bound to its migration and exact schema scope',
+        );
+      }
     }
     for (const trial of evidence.trials) {
       const before = trial.historyBefore;
@@ -148,4 +193,92 @@ export function loadAutomaticCheckpoints(
     accepted.push(checkpoint);
   }
   return registry.checkpoints;
+}
+
+// Private validator shared by all additive enum checkpoints.
+const equal = (a: unknown, b: unknown) =>
+  JSON.stringify(a) === JSON.stringify(b);
+const hash = (value: unknown) =>
+  createHash('sha256').update(JSON.stringify(value)).digest('hex');
+
+function validateEnumEvidence(evidence: any): void {
+  const change: EnumChange = evidence.migration.enumChange;
+  assertEnumChange(change);
+  const manual = evidence.migration.approval?.kind === 'manual';
+  if (
+    !equal(evidence.migration.up, enumUp(change).map(sqlTokens)) ||
+    !equal(
+      evidence.migration.down,
+      (manual ? enumRestore(change) : enumDown(change)).map(sqlTokens),
+    )
+  ) {
+    throw new Error(
+      'Enum checkpoint SQL differs from the bounded additive policy',
+    );
+  }
+  for (const trial of evidence.trials) {
+    const proof = trial.enumVerification;
+    if (
+      !proof ||
+      !Array.isArray(proof.beforeCatalog) ||
+      !Array.isArray(proof.afterCatalog) ||
+      !equal(
+        proof.beforeCatalog.map((v: any) => v.label),
+        change.oldValues,
+      ) ||
+      !equal(
+        proof.afterCatalog.map((v: any) => v.label),
+        change.newValues,
+      ) ||
+      !proof.beforeCatalog.every(
+        (old: any) =>
+          /^\d+$/.test(old.oid) &&
+          proof.afterCatalog.some(
+            (v: any) => v.label === old.label && v.oid === old.oid,
+          ),
+      ) ||
+      ![proof.beforeCatalog, proof.afterCatalog].every((catalog: any[]) =>
+        catalog.every(
+          (v, index) =>
+            Number.isFinite(Number(v.position)) &&
+            (index === 0 ||
+              Number(v.position) > Number(catalog[index - 1].position)),
+        ),
+      ) ||
+      !equal(trial.catalog, {
+        labels: change.newValues,
+        table: change.table,
+        column: change.column,
+      }) ||
+      proof.oldValueOidsPreserved !== 'PASS' ||
+      proof.dataPreservation !== 'PASS' ||
+      proof.fixture !==
+        'synthetic-old-and-new-label-rows; transaction-local-fk-bypass-for-insertion-only' ||
+      !Array.isArray(trial.existingRowsBefore) ||
+      !trial.existingRowsBefore.some(
+        (row: any) =>
+          row.table === change.table && row.count >= change.oldValues.length,
+      ) ||
+      !trial.existingRowsBefore.every((row: any) =>
+        /^[a-f0-9]{64}$/.test(row.sha256),
+      ) ||
+      !equal(trial.existingRowsRollback, trial.existingRowsBefore) ||
+      !Array.isArray(proof.blockedRollbacks) ||
+      !equal(
+        proof.blockedRollbacks.map((test: any) => test.value),
+        enumAddedValues(change),
+      ) ||
+      !proof.blockedRollbacks.every(
+        (test: any) =>
+          test.result === 'PASS' &&
+          test.schemaSha256 === trial.afterHash &&
+          test.historySha256 === hash(trial.historyAfter) &&
+          /^[a-f0-9]{64}$/.test(test.dataSha256),
+      )
+    ) {
+      throw new Error(
+        'Enum checkpoint lacks catalog/order/OID/data preservation or protected rollback evidence',
+      );
+    }
+  }
 }

@@ -10,7 +10,10 @@ import {
   registerAutomaticIntegrity,
   renderMigration,
   verifyAutomaticCandidate,
+  readStaticCandidate,
 } from './migration-approval';
+import { detectEnumChange, enumGenerationOptions } from './enum-migration';
+import { migrationIntegrityProblems } from '../src/database/migration-integrity';
 
 import source from '../src/database/data-source';
 import {
@@ -106,6 +109,13 @@ async function main(): Promise<void> {
 
   const args = process.argv.slice(3);
   if (command === 'generate' && !args.length) {
+    const invalid = migrationIntegrityProblems().filter(
+      (error) =>
+        !error.startsWith(
+          'Active migration lacks a reviewed integrity record: ',
+        ),
+    );
+    if (invalid.length) throw new Error(invalid.join('\n'));
     const manifest = JSON.parse(
       readFileSync(
         join(process.cwd(), 'src/database/migration-review-manifest.json'),
@@ -116,7 +126,10 @@ async function main(): Promise<void> {
       if (!manifest.files.some((record) => record.file === basename(file))) {
         // TypeORM loads migration modules during initialize(). Reject executable
         // code outside the generator template before loading an unapproved file.
-        verifyAutomaticCandidate(file, readFileSync(file, 'utf8'));
+        const content = readFileSync(file, 'utf8');
+        const candidate = readStaticCandidate(file, content);
+        if (candidate.identity[2].startsWith('Create'))
+          verifyAutomaticCandidate(file, content);
       }
     }
   }
@@ -189,10 +202,27 @@ async function main(): Promise<void> {
       ) {
         throw new Error('Parameterized schema queries require manual review');
       }
-      const approval = registerAutomaticIntegrity(file, queries, rollback);
+      const change = await detectEnumChange(db);
+      const manifest = JSON.parse(
+        readFileSync(
+          join(process.cwd(), 'src/database/migration-review-manifest.json'),
+          'utf8',
+        ),
+      );
+      const record = manifest.files.find(
+        (item: any) => item.file === basename(file),
+      );
+      if (record?.approval?.kind === 'manual' && !change)
+        throw new Error(
+          'Reviewed pending migration is outside the supported additive enum checkpoint policy; source retained',
+        );
+      const approval =
+        record?.approval?.kind === 'manual'
+          ? 'existing'
+          : registerAutomaticIntegrity(file, queries, rollback, change);
       const verified = await verifyMigrationState(db);
       if (verified.errors.length) throw new Error(verified.errors.join('\n'));
-      await prepareAutomaticCheckpoint(db, file, queries, rollback);
+      await prepareAutomaticCheckpoint(db, file, queries, rollback, change);
       console.log(
         `Pending migration verified; integrity ${approval === 'registered' ? 'automatically registered' : 'record retained'}: ${basename(file)}. No duplicate generated.`,
       );
@@ -211,11 +241,13 @@ async function main(): Promise<void> {
       return;
     }
 
+    const change = args.length ? undefined : await detectEnumChange(db);
+    const enumOptions = change ? enumGenerationOptions(change) : undefined;
     const { name, tables } = args.length
       ? await resolveGenerationOptions(args)
-      : automaticGenerationOptions(queries);
+      : (enumOptions ?? automaticGenerationOptions(queries));
 
-    const problems = generationProblems(queries, tables);
+    const problems = change ? [] : generationProblems(queries, tables);
     if (problems.length) {
       for (const problem of problems) console.error(problem);
       throw new Error(
@@ -253,15 +285,20 @@ async function main(): Promise<void> {
 
     const down = args.length
       ? rollback
-      : automaticGenerationOptions(queries).down;
-    const content = renderMigration(name, timestamp, queries, down);
+      : (enumOptions ?? automaticGenerationOptions(queries)).down;
+    const content = renderMigration(
+      name,
+      timestamp,
+      enumOptions?.up ?? queries,
+      down,
+    );
 
     const directory = join(process.cwd(), 'src/database/migrations');
     mkdirSync(directory, { recursive: true });
     const file = join(directory, `${timestamp}-${name}.ts`);
     writeFileSync(file, content, { flag: 'wx' });
     if (!args.length) {
-      registerAutomaticIntegrity(file, queries, rollback);
+      registerAutomaticIntegrity(file, queries, rollback, change);
       // This connection's metadata predates the newly written migration.
       // Rediscover source files before checking pending history in isolation.
       const checkpointDb = readOnlyDataSource({
@@ -270,7 +307,13 @@ async function main(): Promise<void> {
       });
       try {
         await checkpointDb.initialize();
-        await prepareAutomaticCheckpoint(checkpointDb, file, queries, rollback);
+        await prepareAutomaticCheckpoint(
+          checkpointDb,
+          file,
+          queries,
+          rollback,
+          change,
+        );
       } finally {
         if (checkpointDb.isInitialized) await checkpointDb.destroy();
       }

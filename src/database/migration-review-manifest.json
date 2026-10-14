@@ -85,6 +85,27 @@
           "template_purchases"
         ]
       }
+    },
+    {
+      "file": "1791958800000-AddPaidPurchaseEntitlementSource.ts",
+      "sha256": "67ab802594036b8f147185f8083827e01ab8b7d7e3958b3392021976ef0ea826",
+      "approval": {
+        "kind": "manual",
+        "evidence": "Reviewed PostgreSQL entitlement enum migration"
+      }
+    },
+    {
+      "file": "1791986191301-CreateMarketplaceWebhookEvents.ts",
+      "sha256": "e6632dd744cac6a88b320a6d3d24c3fcdc348a9933fd19fcf0f6c61495dca4ab",
+      "approval": {
+        "kind": "automatic",
+        "policy": "single-new-table-v1",
+        "generator": "scripts/migration-tools.ts",
+        "evidence": "static-generator-format-and-live-orm-diff",
+        "tables": [
+          "marketplace_webhook_events"
+        ]
+      }
     }
   ]
 }

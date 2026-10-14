@@ -28,11 +28,23 @@ import {
 import {
   CHECKPOINT_POLICY,
   evidenceHash,
+  loadAutomaticCheckpoints,
   type AutomaticCheckpoint,
 } from '../src/database/automatic-checkpoint';
 import { migrationHistory } from '../src/database/migration-safety';
 import { verifyMigrationState } from '../src/database/migration-verification';
-import { verifyAutomaticCandidate } from './migration-approval';
+import {
+  verifyAutomaticCandidate,
+  verifyEnumAutomaticCandidate,
+} from './migration-approval';
+import {
+  ENUM_CHECKPOINT_POLICY,
+  ENUM_POLICY,
+  EnumChange,
+  sqlTokens,
+} from '../src/database/enum-additive-policy';
+import { verifyReviewedEnumCandidate } from './enum-migration';
+import { verifyIsolatedEnum } from './enum-checkpoint';
 
 const execute = promisify(execFile);
 const normalizedHistory = (
@@ -62,7 +74,7 @@ async function unusedPort(): Promise<number> {
   return port;
 }
 
-async function isolatedTrial(
+export async function isolatedTrial(
   real: DataSource,
   snapshot: string,
   history: Awaited<ReturnType<typeof migrationHistory>>,
@@ -70,6 +82,7 @@ async function isolatedTrial(
   table: string,
   expectedUp: string[],
   expectedDown: string[],
+  change?: EnumChange,
 ) {
   const root = mkdtempSync(join(tmpdir(), 'taskmanly-auto-checkpoint-'));
   const data = join(root, 'data');
@@ -106,6 +119,8 @@ async function isolatedTrial(
     url: undefined,
     ssl: false,
     synchronize: false,
+    dropSchema: false,
+    replication: undefined,
     migrationsRun: false,
     installExtensions: false,
     logging: ['query'],
@@ -158,10 +173,11 @@ async function isolatedTrial(
     );
     await db.initialize();
     const identity = await db.query(
-      "SELECT current_database() AS database,current_setting('server_version_num')::int AS version,system_identifier::text AS system FROM pg_control_system()",
+      "SELECT current_database() AS database,current_setting('server_version_num')::int AS version,current_setting('data_directory') AS directory,system_identifier::text AS system FROM pg_control_system()",
     );
     requireProof(
       identity[0].database === 'postgres' &&
+        resolve(identity[0].directory) === resolve(data) &&
         Math.floor(identity[0].version / 10000) === 18,
       'Isolated server identity/version failed',
     );
@@ -209,6 +225,17 @@ async function isolatedTrial(
       equal(historyBefore, normalizedHistory(history)),
       'Isolated input history is not an exact clone',
     );
+    if (change)
+      return await verifyIsolatedEnum(
+        db,
+        before,
+        pending,
+        identity[0].system,
+        change,
+        expectedUp,
+        expectedDown,
+        journal,
+      );
     const tables = (await db.query(
       "SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename<>'migrations' ORDER BY tablename",
     )) as { tablename: string }[];
@@ -379,22 +406,23 @@ export async function prepareAutomaticCheckpoint(
   file: string,
   up: string[],
   down: string[],
+  change?: EnumChange,
 ) {
+  const access = await real.query('SHOW default_transaction_read_only');
+  requireProof(
+    access[0].default_transaction_read_only === 'on',
+    'Checkpoint source connection must be read-only',
+  );
   const state = await verifyMigrationState(real);
   requireProof(
     state.errors.length === 0 && state.history.pending.length === 1,
     'Checkpoint preparation requires verified baseline/history/integrity and one pending migration',
   );
   const content = readFileSync(file, 'utf8');
-  const options = verifyAutomaticCandidate(file, content, up, down);
   const name = state.history.pending[0];
   const directory = baselineDirectory();
   const baseline = loadBaseline();
   const applied = [...state.proof.applied, name];
-  if (checkpointFor(applied, baseline)) {
-    console.log(`Verified checkpoint already exists for ${name}`);
-    return;
-  }
   const parent = checkpointFor(state.proof.applied, baseline);
   const integrityPath = join(
     process.cwd(),
@@ -405,11 +433,28 @@ export async function prepareAutomaticCheckpoint(
     (item: any) => item.file === basename(file),
   );
   requireProof(
-    record?.approval?.kind === 'automatic' &&
-      record.approval.policy === 'single-new-table-v1' &&
-      record.sha256 === evidenceHash(content),
-    'Checkpoint requires existing automatic migration integrity approval',
+    record?.sha256 === evidenceHash(content) &&
+      (change
+        ? record.approval?.kind === 'manual' ||
+          (record.approval?.kind === 'automatic' &&
+            record.approval.policy === ENUM_POLICY)
+        : record.approval?.kind === 'automatic' &&
+          record.approval.policy === 'single-new-table-v1'),
+    'Checkpoint requires matching reviewed migration integrity and supported provenance',
   );
+  const options = change
+    ? record.approval.kind === 'manual'
+      ? {
+          ...verifyReviewedEnumCandidate(file, content, change),
+          tables: [change.table],
+        }
+      : verifyEnumAutomaticCandidate(file, content, change)
+    : { ...verifyAutomaticCandidate(file, content, up, down), up };
+  const policy = change ? ENUM_CHECKPOINT_POLICY : CHECKPOINT_POLICY;
+  if (checkpointFor(applied, baseline)) {
+    console.log(`Verified checkpoint already exists for ${name}`);
+    return;
+  }
   requireProof(Boolean(parent), 'Input checkpoint missing');
   const snapshot = await dumpSchema(real);
   requireProof(
@@ -428,8 +473,9 @@ export async function prepareAutomaticCheckpoint(
         state.rows,
         name,
         options.tables[0],
-        up,
+        options.up,
         options.down,
+        change,
       ),
     );
   }
@@ -455,13 +501,14 @@ export async function prepareAutomaticCheckpoint(
     JSON.stringify(
       {
         kind: 'automatic',
-        policy: CHECKPOINT_POLICY,
+        policy,
         migration: {
           name,
           file: basename(file),
           sha256: record.sha256,
-          up: up.map((sql) => sql.trim()),
-          down: options.down,
+          up: options.up.map(change ? sqlTokens : (sql) => sql.trim()),
+          down: options.down.map(change ? sqlTokens : (sql) => sql.trim()),
+          ...(change ? { approval: record.approval, enumChange: change } : {}),
         },
         input: {
           applied: state.proof.applied,
@@ -485,7 +532,7 @@ export async function prepareAutomaticCheckpoint(
       'Automatic policy: two independent PostgreSQL 18 instances; verified input, exact executed SQL, whole-schema exclusion scope, catalog convergence and committed rollback.',
     approval: {
       kind: 'automatic',
-      policy: CHECKPOINT_POLICY,
+      policy,
       evidenceFile,
       evidenceSha256: evidenceHash(evidence),
     },
@@ -516,6 +563,12 @@ export async function prepareAutomaticCheckpoint(
         );
       else writeFileSync(target, text, { flag: 'wx' });
     }
+    // Validate the proposed state with the runtime loader before publishing it.
+    // Existing table-policy artifacts retain their exact validation rules.
+    loadAutomaticCheckpoints(directory, baseline.checkpoints, schemaHash, {
+      policy: CHECKPOINT_POLICY,
+      checkpoints: [checkpoint],
+    });
     registry.checkpoints.push(checkpoint);
     writeFileSync(temporary, JSON.stringify(registry, null, 2) + '\n', {
       flag: 'wx',

@@ -88,12 +88,17 @@ describe('Actual ADD PAID checkpoint and Pricing retry', () => {
     }
   });
 
-  it('discovers only the two incremental classes without opening a database connection', async () => {
+  it('discovers only incremental classes without opening a database connection', async () => {
     const connect = jest.spyOn(DataSource.prototype, 'initialize');
     try {
       expect(
         await staticMigrationNames(databaseOptions(() => undefined)),
-      ).toEqual(names);
+      ).toEqual([
+        ...names,
+        'CreateTemplatePurchases1791903351862',
+        'AddPaidPurchaseEntitlementSource1791958800000',
+        'CreateMarketplaceWebhookEvents1791986191301',
+      ]);
       expect(connect).not.toHaveBeenCalled();
     } finally {
       connect.mockRestore();

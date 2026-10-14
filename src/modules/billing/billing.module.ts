@@ -2,8 +2,15 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PaymentModule } from '../payment/payment.module';
 
+import { DatabaseModule } from 'src/database/database.module';
 import { CreateBillingCheckoutHandler } from './application/commands/checkout/create-billing-checkout/create-billing-checkout.handler';
+import { ProcessSepayPgIpnHandler } from './application/commands/webhook/process-sepay-pg-ipn/process-sepay-pg-ipn.handler';
+import { ProcessSepayWebhookHandler } from './application/commands/webhook/process-sepay-webhook/process-sepay-webhook.handler';
+import { ProcessStripeWebhookHandler } from './application/commands/webhook/process-stripe-webhook/process-stripe-webhook.handler';
+import { GetBillingPaymentStatusHandler } from './application/queries/payment/get-billing-payment-status/get-billing-payment-status.handler';
 import { ListBillingPlansHandler } from './application/queries/plan/list-billing-plans/list-billing-plans.handler';
+import { GetWorkspaceSubscriptionHandler } from './application/queries/subscription/get-workspace-subscription/get-workspace-subscription.handler';
+import { BillingPaymentSettlementService } from './application/services/billing-payment-settlement.service';
 import { WorkspaceSubscriptionProvisioningService } from './application/services/workspace-subscription-provisioning.service';
 import { BILLING_TYPES } from './billing.types';
 import { BillingFeatureOrmEntity } from './infrastructure/persistence/typeorm/entities/billing-feature.orm-entity';
@@ -21,15 +28,7 @@ import { TypeOrmBillingWebhookEventRepository } from './infrastructure/persisten
 import { TypeOrmPaymentOrderRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-payment-order.repository';
 import { TypeOrmWorkspaceSubscriptionRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-workspace-subscription.repository';
 import { BillingController } from './presentation/controllers/billing.controller';
-import { ProcessSepayWebhookHandler } from './application/commands/webhook/process-sepay-webhook/process-sepay-webhook.handler';
-import { DatabaseModule } from 'src/database/database.module';
 import { SepayWebhookController } from './presentation/controllers/sepay-webhook.controller';
-import { BillingPaymentSettlementService } from './application/services/billing-payment-settlement.service';
-import { ProcessSepayPgIpnHandler } from './application/commands/webhook/process-sepay-pg-ipn/process-sepay-pg-ipn.handler';
-import { ProcessStripeWebhookHandler } from './application/commands/webhook/process-stripe-webhook/process-stripe-webhook.handler';
-import { StripeWebhookController } from './presentation/controllers/stripe-webhook.controller';
-import { GetBillingPaymentStatusHandler } from './application/queries/payment/get-billing-payment-status/get-billing-payment-status.handler';
-import { GetWorkspaceSubscriptionHandler } from './application/queries/subscription/get-workspace-subscription/get-workspace-subscription.handler';
 
 @Module({
   imports: [
@@ -49,7 +48,6 @@ import { GetWorkspaceSubscriptionHandler } from './application/queries/subscript
   controllers: [
     BillingController,
     SepayWebhookController,
-    StripeWebhookController,
   ],
 
   providers: [
@@ -117,6 +115,9 @@ import { GetWorkspaceSubscriptionHandler } from './application/queries/subscript
       provide: BILLING_TYPES.applications.GetWorkspaceSubscriptionHandler,
       useClass: GetWorkspaceSubscriptionHandler,
     },
+  ],
+  exports: [
+    BILLING_TYPES.applications.ProcessStripeWebhookHandler,
   ],
 })
 export class BillingModule {}

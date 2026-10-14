@@ -1,11 +1,13 @@
 import {
   Global,
+  ExecutionContext,
   INestApplication,
   Module,
   ValidationPipe,
   VersioningType,
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { Reflector } from '@nestjs/core';
 import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import request from 'supertest';
@@ -36,6 +38,58 @@ import { CreateBillingCheckoutHandler } from './application/commands/checkout/cr
 import { BillingPaymentSettlementService } from './application/services/billing-payment-settlement.service';
 import { GetBillingPaymentStatusHandler } from './application/queries/payment/get-billing-payment-status/get-billing-payment-status.handler';
 import { GetBillingPaymentStatusQuery } from './application/queries/payment/get-billing-payment-status/get-billing-payment-status.query';
+import { StripeWebhookController } from '../stripe-webhook/stripe-webhook.controller';
+import { StripeWebhookRouter } from '../stripe-webhook/stripe-webhook-router.service';
+import { MARKETPLACE_TYPES } from '../marketplace/marketplace.types';
+
+const marketplaceHandler = { execute: jest.fn() };
+import { PermissionGuard } from 'src/common/guard/permission.guard';
+import { WorkspaceResolverService } from 'src/common/services/workspace-resolver.service';
+import { AuthorizationService } from '../permission/application/services/authorization.service';
+import { BillingController } from './presentation/controllers/billing.controller';
+
+describe('Billing checkout workspace permission', () => {
+  it.each([
+    ['OWNER', 'MEMBER', true],
+    ['MEMBER', 'MEMBER', false],
+    [null, 'GUEST', false],
+    [null, null, false],
+  ])(
+    'checks role %s and membership %s from the body workspace',
+    async (role, membershipType, allowed) => {
+      const findMembership = jest.fn(async () =>
+        membershipType ? { role, membershipType } : null,
+      );
+      const authorization = new AuthorizationService(
+        { findMembership } as any,
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any,
+        {} as any,
+      );
+      const guard = new PermissionGuard(
+        new Reflector(),
+        new WorkspaceResolverService({} as DataSource),
+        authorization,
+      );
+      const workspaceId = '11111111-1111-4111-8111-111111111111';
+      const req = { user: { id: 'actor' }, body: { workspaceId } };
+      const execution = {
+        getHandler: () => BillingController.prototype.createCheckout,
+        getClass: () => BillingController,
+        switchToHttp: () => ({ getRequest: () => req }),
+      } as unknown as ExecutionContext;
+      if (allowed)
+        await expect(guard.canActivate(execution)).resolves.toBe(true);
+      else
+        await expect(guard.canActivate(execution)).rejects.toThrow(
+          'You do not have required permissions',
+        );
+      expect(findMembership).toHaveBeenCalledWith(workspaceId, 'actor');
+    },
+  );
+});
 
 const context = { syntheticTransaction: true };
 const unitOfWork = { runInTransaction: jest.fn(async (fn) => fn(context)) };
@@ -72,6 +126,15 @@ const configuration = {
 
 function createBuilder() {
   return Test.createTestingModule({
+    controllers: [StripeWebhookController],
+    providers: [
+      StripeWebhookRouter,
+      {
+        provide:
+          MARKETPLACE_TYPES.applications.ProcessMarketplaceStripeWebhookHandler,
+        useValue: marketplaceHandler,
+      },
+    ],
     imports: [
       ConfigModule.forRoot({
         isGlobal: true,
@@ -80,6 +143,7 @@ function createBuilder() {
         load: [() => configuration],
       }),
       BillingModule,
+      PaymentModule,
     ],
   })
     .overrideModule(DatabaseModule)
@@ -132,6 +196,7 @@ describe('Subscription checkout and verified webhook settlement (synthetic persi
   const paidAt = new Date('2026-01-31T05:00:00Z');
   const events = new Map<string, BillingWebhookStatus>();
   const orderRepository = {
+    lockWorkspace: jest.fn(async () => undefined),
     findById: jest.fn(async () => order),
     findUnexpiredPendingByWorkspaceIdAndPlanPriceId: jest.fn(async () => order),
     findByOrderCodeForUpdate: jest.fn(async (code) =>
@@ -270,11 +335,9 @@ describe('Subscription checkout and verified webhook settlement (synthetic persi
       PAYMENT_TYPES.providers.StripeCheckoutService,
     );
     const client = (checkout as unknown as { stripe: Stripe }).stripe;
-    jest
-      .spyOn(client.checkout.sessions, 'create')
-      .mockResolvedValue({
-        url: 'https://example.test/checkout',
-      } as Stripe.Response<Stripe.Checkout.Session>);
+    jest.spyOn(client.checkout.sessions, 'create').mockResolvedValue({
+      url: 'https://example.test/checkout',
+    } as Stripe.Response<Stripe.Checkout.Session>);
     app = module.createNestApplication({ rawBody: true });
     app.setGlobalPrefix('api');
     app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
@@ -331,7 +394,12 @@ describe('Subscription checkout and verified webhook settlement (synthetic persi
       expect(second.paymentOrderId).toBe(first.paymentOrderId);
       expect(orderRepository.save).toHaveBeenCalledTimes(1);
       expect(order!.getSubscriptionId()).toBe(subscription.getId());
-      expect(unitOfWork.runInTransaction).not.toHaveBeenCalled();
+      expect(unitOfWork.runInTransaction).toHaveBeenCalledTimes(2);
+      expect(orderRepository.lockWorkspace).toHaveBeenCalledWith(
+        workspaceId,
+        context,
+      );
+      expect(orderRepository.save).toHaveBeenCalledWith(order, context);
     },
   );
 
@@ -416,6 +484,63 @@ describe('Subscription checkout and verified webhook settlement (synthetic persi
     ).toBe(200);
     expect(order!.getStatus()).toBe(PaymentOrderStatus.EXPIRED);
     expect(subscriptionRepository.save).not.toHaveBeenCalled();
+  });
+
+  it('does not expire an already paid order', async () => {
+    await sendStripe(stripePayload());
+    await sendStripe(
+      stripePayload('checkout.session.expired', 99000, 'evt_expired'),
+    );
+    expect(order!.getStatus()).toBe(PaymentOrderStatus.PAID);
+    expect(subscriptionRepository.save).toHaveBeenCalledTimes(1);
+  });
+
+  it('routes Marketplace events only to Marketplace settlement', async () => {
+    const payload = stripePayload();
+    Object.assign(payload.data.object.metadata, {
+      purpose: 'MARKETPLACE_TEMPLATE_PURCHASE',
+    });
+    expect((await sendStripe(payload)).status).toBe(200);
+    expect(marketplaceHandler.execute).toHaveBeenCalledTimes(1);
+    expect(eventRepository.insertIfAbsent).not.toHaveBeenCalled();
+    expect(subscriptionRepository.save).not.toHaveBeenCalled();
+  });
+
+  it('reuses a committed order after a Stripe network failure', async () => {
+    order = null;
+    const checkout = module.get<StripeCheckoutService>(
+      PAYMENT_TYPES.providers.StripeCheckoutService,
+    );
+    const client = (checkout as unknown as { stripe: Stripe }).stripe;
+    (client.checkout.sessions.create as jest.Mock).mockRejectedValueOnce(
+      new Error('network unavailable'),
+    );
+    const handler = module.get<CreateBillingCheckoutHandler>(
+      BILLING_TYPES.applications.CreateBillingCheckoutHandler,
+    );
+    const command = new CreateBillingCheckoutCommand(
+      workspaceId,
+      planPriceId,
+      'actor',
+    );
+    await expect(handler.execute(command)).rejects.toThrow(
+      'network unavailable',
+    );
+    const committed = order as PaymentOrder | null;
+    const response = await handler.execute(command);
+    expect(response.paymentOrderId).toBe(committed!.getId());
+    expect(orderRepository.save).toHaveBeenCalledTimes(1);
+    const calls = (client.checkout.sessions.create as jest.Mock).mock.calls;
+    expect(calls[0]).toEqual(calls[1]);
+    expect(calls[1][0].metadata).toEqual({
+      paymentOrderId: response.paymentOrderId,
+      workspaceId,
+      orderCode: response.orderCode,
+    });
+    expect(calls[1][0].line_items[0].price_data).toMatchObject({
+      currency: 'vnd',
+      unit_amount: 99000,
+    });
   });
 
   it('rejects invalid Stripe signatures before opening a settlement transaction', async () => {

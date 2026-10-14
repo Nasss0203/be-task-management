@@ -157,13 +157,18 @@ export class TemplatePurchaseAggregate {
    * Chỉ Settlement Service được gọi sau khi đã xác minh
    * webhook, amount, currency và payment transaction.
    */
-  markPaid(entitlementId: string): void {
+  markPaid(entitlementId: string, paidAt: Date): void {
     if (!entitlementId.trim()) {
       throw new Error('Entitlement id is required');
     }
 
+    if (!(paidAt instanceof Date) || !Number.isFinite(paidAt.getTime())) {
+      throw new Error('Invalid payment timestamp');
+    }
+
     if (this.status === TemplatePurchaseStatus.PAID) {
       if (this.entitlementId === entitlementId) return;
+
       throw new Error('Purchase already settled');
     }
 
@@ -175,13 +180,13 @@ export class TemplatePurchaseAggregate {
       throw new Error('Payment provider is required');
     }
 
-    if (this.expiresAt.getTime() <= Date.now()) {
+    if (paidAt.getTime() >= this.expiresAt.getTime()) {
       throw new Error('Expired purchase requires reconciliation');
     }
 
     this.status = TemplatePurchaseStatus.PAID;
     this.entitlementId = entitlementId;
-    this.paidAt = new Date();
+    this.paidAt = new Date(paidAt);
     this.updatedAt = new Date();
   }
 

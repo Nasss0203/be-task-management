@@ -3,6 +3,11 @@ import type { PersistenceContext } from 'src/shared/infrastructure/persistence/p
 import { PaymentOrder } from '../entities/payment-order.entity';
 
 export interface PaymentOrderRepository {
+  lockWorkspace(
+    workspaceId: string,
+    context: PersistenceContext,
+  ): Promise<void>;
+
   save(
     paymentOrder: PaymentOrder,
     context?: PersistenceContext,

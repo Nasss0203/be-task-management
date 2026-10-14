@@ -9,25 +9,25 @@ import {
   Req,
 } from '@nestjs/common';
 import type { RawBodyRequest } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import type { Request } from 'express';
 
 import { Public } from 'src/common/decorator/public.decorator';
 import { SkipTransform } from 'src/common/decorator/skip.transform';
 
-import { ProcessStripeWebhookCommand } from '../../application/commands/webhook/process-stripe-webhook/process-stripe-webhook.command';
-import { ProcessStripeWebhookHandler } from '../../application/commands/webhook/process-stripe-webhook/process-stripe-webhook.handler';
-import { BILLING_TYPES } from '../../billing.types';
-import { PAYMENT_TYPES } from 'src/modules/payment/payment.types';
-import { StripeWebhookService } from 'src/modules/payment/infrastructure/providers/stripe/stripe-webhook.service';
+import { StripeWebhookService } from '../payment/infrastructure/providers/stripe/stripe-webhook.service';
+import { PAYMENT_TYPES } from '../payment/payment.types';
+
+import { StripeWebhookRouter } from './stripe-webhook-router.service';
 
 @Controller('billing/webhooks/stripe')
+@SkipThrottle()
 export class StripeWebhookController {
   constructor(
     @Inject(PAYMENT_TYPES.providers.StripeWebhookService)
     private readonly stripeWebhookService: StripeWebhookService,
 
-    @Inject(BILLING_TYPES.applications.ProcessStripeWebhookHandler)
-    private readonly handler: ProcessStripeWebhookHandler,
+    private readonly router: StripeWebhookRouter,
   ) {}
 
   @Post()
@@ -47,7 +47,7 @@ export class StripeWebhookController {
       signature,
     );
 
-    await this.handler.execute(new ProcessStripeWebhookCommand(event));
+    await this.router.dispatch(event);
 
     return { received: true };
   }

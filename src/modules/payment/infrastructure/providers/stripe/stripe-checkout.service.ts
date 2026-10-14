@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 
 import type {
+  CreateMarketplaceStripeCheckoutInput,
   CreateStripeCheckoutInput,
   StripeCheckoutPort,
   StripeCheckoutResult,
@@ -85,6 +86,81 @@ export class StripeCheckoutService implements StripeCheckoutPort {
     };
   }
 
+  async createMarketplaceCheckout(
+    input: CreateMarketplaceStripeCheckoutInput,
+  ): Promise<StripeCheckoutResult> {
+    const metadata = {
+      purpose: 'MARKETPLACE_TEMPLATE_PURCHASE',
+      purchaseId: input.purchaseId,
+      templateId: input.templateId,
+      orderCode: input.orderCode,
+    };
+
+    const successUrl = this.getRequiredConfig(
+      'STRIPE_MARKETPLACE_CHECKOUT_SUCCESS_URL',
+    );
+
+    const cancelUrl = this.getRequiredConfig(
+      'STRIPE_MARKETPLACE_CHECKOUT_CANCEL_URL',
+    );
+
+    const session = await this.stripe.checkout.sessions.create(
+      {
+        mode: 'payment',
+        payment_method_types: ['card'],
+
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: input.currency.toLowerCase(),
+              unit_amount: input.amount,
+              product_data: {
+                name: 'TaskManly Marketplace Template',
+                description: `Template purchase ${input.orderCode}`,
+              },
+            },
+          },
+        ],
+
+        client_reference_id: input.purchaseId,
+
+        metadata,
+
+        payment_intent_data: {
+          metadata,
+        },
+
+        success_url: this.buildMarketplaceResultUrl(
+          successUrl,
+          input.purchaseId,
+          'success',
+        ),
+
+        cancel_url: this.buildMarketplaceResultUrl(
+          cancelUrl,
+          input.purchaseId,
+          'cancelled',
+        ),
+
+        expires_at: Math.floor(input.expiresAt.getTime() / 1000),
+      },
+      {
+        idempotencyKey: `marketplace-checkout-v1:${input.purchaseId}`,
+      },
+    );
+
+    if (!session.url) {
+      throw new Error('Marketplace Stripe Checkout URL is unavailable');
+    }
+
+    return {
+      checkoutUrl: session.url,
+      checkoutMethod: 'GET',
+      checkoutFields: {},
+    };
+  }
+
   private buildResultUrl(
     baseUrl: string,
     input: CreateStripeCheckoutInput,
@@ -109,5 +185,20 @@ export class StripeCheckoutService implements StripeCheckoutPort {
     }
 
     return value;
+  }
+
+  private buildMarketplaceResultUrl(
+    baseUrl: string,
+    purchaseId: string,
+    status: 'success' | 'cancelled',
+  ): string {
+    const url = new URL(baseUrl);
+
+    url.searchParams.set('purchaseId', purchaseId);
+    url.searchParams.set('status', status);
+
+    return url
+      .toString()
+      .replace(/%7BCHECKOUT_SESSION_ID%7D/gi, '{CHECKOUT_SESSION_ID}');
   }
 }

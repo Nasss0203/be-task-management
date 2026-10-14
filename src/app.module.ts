@@ -24,6 +24,7 @@ import { MailModule } from './modules/mail/mail.module';
 import { MentionsModule } from './modules/mentions/mentions.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PermissionModule } from './modules/permission/permission.module';
+import { StripeWebhookModule } from './modules/stripe-webhook/stripe-webhook.module';
 import { TemplateModule } from './modules/template/template.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
 import { QueueModule } from './shared/infrastructure/queue/queue.module';
@@ -70,6 +71,7 @@ import { QueueModule } from './shared/infrastructure/queue/queue.module';
     AdminModule,
 
     QueueModule,
+    StripeWebhookModule,
   ],
   controllers: [AppController],
   providers: [

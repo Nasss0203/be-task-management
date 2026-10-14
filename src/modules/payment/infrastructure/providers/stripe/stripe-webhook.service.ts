@@ -33,7 +33,7 @@ export class StripeWebhookService {
 
     if (!webhookSecret?.startsWith('whsec_')) {
       throw new ServiceUnavailableException(
-        'Stripe webhook secret is not configured',
+        'STRIPE_WEBHOOK_SECRET is not configured',
       );
     }
 
@@ -51,7 +51,6 @@ export class StripeWebhookService {
       );
     }
 
-    // Tích hợp này chỉ phục vụ sandbox của đồ án.
     if (event.livemode !== false) {
       throw new BadRequestException(
         'Live Stripe webhook events are not allowed',

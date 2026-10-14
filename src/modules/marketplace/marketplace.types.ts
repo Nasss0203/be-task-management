@@ -4,6 +4,9 @@ export const MARKETPLACE_TYPES = {
     TemplateEntitlementRepository: Symbol('TemplateEntitlementRepository'),
     TemplateCategoryRepository: Symbol('TemplateCategoryRepository'),
     TemplatePurchaseRepository: Symbol('TemplatePurchaseRepository'),
+    MarketplaceWebhookEventRepository: Symbol(
+      'MarketplaceWebhookEventRepository',
+    ),
   },
   applications: {
     UpdateTemplateListingPricingHandler: Symbol(
@@ -30,10 +33,21 @@ export const MARKETPLACE_TYPES = {
     ChangeTemplateCategoryStatusHandler: Symbol(
       'ChangeTemplateCategoryStatusHandler',
     ),
+    CreateTemplatePurchaseHandler: Symbol('CreateTemplatePurchaseHandler'),
+    CreateTemplatePurchaseCheckoutHandler: Symbol(
+      'CreateTemplatePurchaseCheckoutHandler',
+    ),
+    ProcessMarketplaceStripeWebhookHandler: Symbol(
+      'ProcessMarketplaceStripeWebhookHandler',
+    ),
   },
   ports: {
     Distribution: Symbol('TemplateDistributionPort'),
     Entitlements: Symbol('TemplateEntitlementPort'),
   },
-  services: {},
+  services: {
+    TemplatePurchaseSettlementService: Symbol(
+      'TemplatePurchaseSettlementService',
+    ),
+  },
 } as const;

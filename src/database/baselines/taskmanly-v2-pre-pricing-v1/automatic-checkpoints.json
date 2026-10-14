@@ -16,6 +16,41 @@
         "evidenceFile": "evidence/automatic-1791903351862.json",
         "evidenceSha256": "47fe6fb21e021f36051b245a57681eb48e00da34f816180e904728e4cc283655"
       }
+    },
+    {
+      "applied": [
+        "AddPaidTemplateOffer1791810000000",
+        "AddTemplateListingPricing1791810001000",
+        "CreateTemplatePurchases1791903351862",
+        "AddPaidPurchaseEntitlementSource1791958800000"
+      ],
+      "schemaFile": "checkpoints/automatic-1791958800000.sql",
+      "schemaSha256": "37a0b941fc58dd6eeda8be79fd133b9ebd17a24d91893683796f03f95ba74f40",
+      "evidence": "Automatic policy: two independent PostgreSQL 18 instances; verified input, exact executed SQL, whole-schema exclusion scope, catalog convergence and committed rollback.",
+      "approval": {
+        "kind": "automatic",
+        "policy": "isolated-additive-enum-v1",
+        "evidenceFile": "evidence/automatic-1791958800000.json",
+        "evidenceSha256": "c69e254c1485c920d80f2d0334c35b5e79d29aae21424d051efdda49686f4c56"
+      }
+    },
+    {
+      "applied": [
+        "AddPaidTemplateOffer1791810000000",
+        "AddTemplateListingPricing1791810001000",
+        "CreateTemplatePurchases1791903351862",
+        "AddPaidPurchaseEntitlementSource1791958800000",
+        "CreateMarketplaceWebhookEvents1791986191301"
+      ],
+      "schemaFile": "checkpoints/automatic-1791986191301.sql",
+      "schemaSha256": "9b947ebe4d48749501b294cc80ab0504750fce65c0717020c38b467db4a5b9d9",
+      "evidence": "Automatic policy: two independent PostgreSQL 18 instances; verified input, exact executed SQL, whole-schema exclusion scope, catalog convergence and committed rollback.",
+      "approval": {
+        "kind": "automatic",
+        "policy": "isolated-single-new-table-v1",
+        "evidenceFile": "evidence/automatic-1791986191301.json",
+        "evidenceSha256": "157452a78f0736d721515576abec52d54e31bf289ffb0eed5e4ad2271e41ef5a"
+      }
     }
   ]
 }

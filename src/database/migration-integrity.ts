@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { migrationFiles } from './database-options';
+import { ENUM_POLICY } from './enum-additive-policy';
 
 type IntegrityManifest = {
   files: {
@@ -41,10 +42,14 @@ export function migrationIntegrityProblems(): string[] {
       expected.approval &&
       (!['automatic', 'manual'].includes(expected.approval.kind) ||
         (expected.approval.kind === 'automatic' &&
-          (expected.approval.policy !== 'single-new-table-v1' ||
+          (!['single-new-table-v1', ENUM_POLICY].includes(
+            expected.approval.policy ?? '',
+          ) ||
             expected.approval.generator !== 'scripts/migration-tools.ts' ||
             expected.approval.evidence !==
-              'static-generator-format-and-live-orm-diff' ||
+              (expected.approval.policy === ENUM_POLICY
+                ? 'static-generator-format-and-catalog-metadata-enum-diff'
+                : 'static-generator-format-and-live-orm-diff') ||
             expected.approval.tables?.length !== 1)))
     )
       problems.push(`Invalid migration approval provenance: ${expected.file}`);

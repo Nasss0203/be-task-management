@@ -24,6 +24,18 @@ export class TypeOrmPaymentOrderRepository implements PaymentOrderRepository {
       : this.repository;
   }
 
+  async lockWorkspace(
+    workspaceId: string,
+    context: PersistenceContext,
+  ): Promise<void> {
+    // Lock a stable row even before the first subscription/order exists.
+    const rows = await (context as EntityManager).query(
+      'SELECT id FROM workspaces WHERE id = $1 FOR UPDATE',
+      [workspaceId],
+    );
+    if (!rows.length) throw new Error('Checkout workspace not found');
+  }
+
   async save(
     paymentOrder: PaymentOrder,
     context?: PersistenceContext,
