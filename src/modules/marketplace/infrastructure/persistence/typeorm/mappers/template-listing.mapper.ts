@@ -21,6 +21,9 @@ export class TemplateListingMapper {
       offerType: entity.offerType,
       status: entity.status,
       price,
+      previewMode: entity.previewMode,
+      demoVersionId: entity.demoVersionId,
+      demoConfig: entity.demoConfig,
       createdBy: entity.createdBy,
       publishedAt: entity.publishedAt,
       publishedVersionId: entity.publishedVersionId,
@@ -35,6 +38,9 @@ export class TemplateListingMapper {
     entity.id = domain.getId();
     entity.templateId = domain.getTemplateId();
     entity.offerType = domain.getOfferType();
+    entity.previewMode = domain.getPreviewMode();
+    entity.demoVersionId = domain.getDemoVersionId();
+    entity.demoConfig = domain.getDemoConfig();
 
     // TemplatePrice -> PostgreSQL
     const price = domain.getPrice();

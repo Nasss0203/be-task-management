@@ -1,5 +1,7 @@
 import { TemplateListingStatus } from '../../../../marketplace/domain/enums/template-listing-status.enum';
 import { TemplateOfferType } from '../../../../marketplace/domain/enums/template-offer-type.enum';
+import { TemplatePreviewMode } from '../../../../marketplace/domain/enums/template-preview-mode.enum';
+import { TemplatePrice } from '../../../../marketplace/domain/value-objects/template-price.vo';
 import { TemplateListing } from '../../../../marketplace/domain/aggregates/template-listing/template-listing.aggregate';
 
 describe('TemplateListingAggregate', () => {
@@ -176,6 +178,159 @@ describe('TemplateListingAggregate', () => {
       expect(listing.getStatus()).toBe(TemplateListingStatus.DRAFT);
       expect(listing.getPublishedAt()).toBeNull();
       expect(listing.getUpdatedAt()).toBe(initialUpdatedAt);
+    });
+  });
+
+  describe('previewMode', () => {
+    it('defaults to INTERACTIVE for FREE listing when not configured', () => {
+      const listing = TemplateListing.create({
+        templateId: validTemplateId,
+        createdBy: validUserId,
+        offerType: TemplateOfferType.FREE,
+      });
+
+      expect(listing.getPreviewMode()).toBe(TemplatePreviewMode.INTERACTIVE);
+    });
+
+    it('defaults to IMAGE for PAID listing when not configured', () => {
+      const listing = TemplateListing.create({
+        templateId: validTemplateId,
+        createdBy: validUserId,
+        offerType: TemplateOfferType.PAID,
+        price: TemplatePrice.create({ amount: 50000, currency: 'VND' }),
+      });
+
+      expect(listing.getPreviewMode()).toBe(TemplatePreviewMode.IMAGE);
+    });
+
+    it('uses configured previewMode when explicitly passed on create', () => {
+      const listingFree = TemplateListing.create({
+        templateId: validTemplateId,
+        createdBy: validUserId,
+        offerType: TemplateOfferType.FREE,
+        previewMode: TemplatePreviewMode.IMAGE,
+      });
+      expect(listingFree.getPreviewMode()).toBe(TemplatePreviewMode.IMAGE);
+
+      const listingPaid = TemplateListing.create({
+        templateId: validTemplateId,
+        createdBy: validUserId,
+        offerType: TemplateOfferType.PAID,
+        price: TemplatePrice.create({ amount: 50000, currency: 'VND' }),
+        previewMode: TemplatePreviewMode.INTERACTIVE,
+      });
+      expect(listingPaid.getPreviewMode()).toBe(
+        TemplatePreviewMode.INTERACTIVE,
+      );
+    });
+
+    it('allows changing previewMode via setPreviewMode', () => {
+      const listing = TemplateListing.create({
+        templateId: validTemplateId,
+        createdBy: validUserId,
+      });
+      expect(listing.getPreviewMode()).toBe(TemplatePreviewMode.INTERACTIVE);
+
+      const changed = listing.setPreviewMode(TemplatePreviewMode.IMAGE);
+      expect(changed).toBe(true);
+      expect(listing.getPreviewMode()).toBe(TemplatePreviewMode.IMAGE);
+
+      const idempotent = listing.setPreviewMode(TemplatePreviewMode.IMAGE);
+      expect(idempotent).toBe(false);
+    });
+
+    it('defaults to IMAGE when configuring offer from FREE to PAID without explicit previewMode', () => {
+      const listing = TemplateListing.create({
+        templateId: validTemplateId,
+        createdBy: validUserId,
+        offerType: TemplateOfferType.FREE,
+      });
+      expect(listing.getPreviewMode()).toBe(TemplatePreviewMode.INTERACTIVE);
+
+      const changed = listing.configureOffer(
+        TemplateOfferType.PAID,
+        TemplatePrice.create({ amount: 100000, currency: 'VND' }),
+      );
+      expect(changed).toBe(true);
+      expect(listing.getPreviewMode()).toBe(TemplatePreviewMode.IMAGE);
+    });
+
+    it('applies explicit previewMode in configureOffer', () => {
+      const listing = TemplateListing.create({
+        templateId: validTemplateId,
+        createdBy: validUserId,
+        offerType: TemplateOfferType.FREE,
+      });
+
+      listing.configureOffer(
+        TemplateOfferType.PAID,
+        TemplatePrice.create({ amount: 100000, currency: 'VND' }),
+        TemplatePreviewMode.INTERACTIVE,
+      );
+      expect(listing.getPreviewMode()).toBe(
+        TemplatePreviewMode.INTERACTIVE,
+      );
+    });
+  });
+
+  describe('demoPreview isolation', () => {
+    it('sets and updates demoVersionId and demoConfig', () => {
+      const listing = TemplateListing.create({
+        templateId: validTemplateId,
+        createdBy: validUserId,
+        offerType: TemplateOfferType.PAID,
+        price: TemplatePrice.create({ amount: 100000, currency: 'VND' }),
+        previewMode: TemplatePreviewMode.INTERACTIVE,
+      });
+
+      const changed = listing.setDemoPreview('demo-version-uuid', { tab: 'overview' });
+      expect(changed).toBe(true);
+      expect(listing.getDemoVersionId()).toBe('demo-version-uuid');
+      expect(listing.getDemoConfig()).toEqual({ tab: 'overview' });
+
+      const idempotent = listing.setDemoPreview('demo-version-uuid', { tab: 'overview' });
+      expect(idempotent).toBe(false);
+    });
+
+    it('rejects setting demoVersionId equal to publishedVersionId for PAID listing', () => {
+      const publishedVerId = 'published-ver-uuid';
+      const listing = TemplateListing.create({
+        templateId: validTemplateId,
+        createdBy: validUserId,
+        offerType: TemplateOfferType.PAID,
+        price: TemplatePrice.create({ amount: 100000, currency: 'VND' }),
+        previewMode: TemplatePreviewMode.INTERACTIVE,
+      });
+
+      listing.selectPublishedVersion({
+        getId: () => publishedVerId,
+        getTemplateId: () => validTemplateId,
+        isDraft: () => false,
+      });
+
+      expect(() => {
+        listing.setDemoPreview(publishedVerId);
+      }).toThrow('Demo version cannot be the same as the published paid version');
+    });
+
+    it('rejects selectPublishedVersion if it matches demoVersionId for PAID listing', () => {
+      const demoVerId = 'demo-ver-uuid';
+      const listing = TemplateListing.create({
+        templateId: validTemplateId,
+        createdBy: validUserId,
+        offerType: TemplateOfferType.PAID,
+        price: TemplatePrice.create({ amount: 100000, currency: 'VND' }),
+        previewMode: TemplatePreviewMode.INTERACTIVE,
+        demoVersionId: demoVerId,
+      });
+
+      expect(() => {
+        listing.selectPublishedVersion({
+          getId: () => demoVerId,
+          getTemplateId: () => validTemplateId,
+          isDraft: () => false,
+        });
+      }).toThrow('Demo version cannot be the same as the published paid version');
     });
   });
 });

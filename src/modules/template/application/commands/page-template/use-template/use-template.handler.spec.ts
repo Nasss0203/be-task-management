@@ -104,6 +104,7 @@ describe('UseTemplateHandler Regression Tests', () => {
       templateId,
       offerType: TemplateOfferType.FREE,
       status,
+      publishedVersionId: versionId,
       createdBy: creatorId,
       publishedAt:
         status === TemplateListingStatus.PUBLISHED ? new Date() : null,
@@ -313,22 +314,22 @@ describe('UseTemplateHandler Regression Tests', () => {
     });
   });
 
-  describe('UT-05: PUBLIC + Không có Listing (Legacy PUBLIC behavior)', () => {
-    it('allows using public template without entitlement if no listing exists', async () => {
+  describe('UT-05: PUBLIC without listing', () => {
+    it('denies use without entitlement or a listing', async () => {
       pageTemplateRepository.findById.mockResolvedValue(createTemplate());
       templateListingRepository.findByTemplateId.mockResolvedValue(null);
       templateVersionRepository.findById.mockResolvedValue(createVersion());
 
-      const result = await handler.execute(
-        new UseTemplateCommand(
-          templateId,
-          versionId,
-          destinationWorkspaceId,
-          claimingUserId,
+      await expect(
+        handler.execute(
+          new UseTemplateCommand(
+            templateId,
+            versionId,
+            destinationWorkspaceId,
+            claimingUserId,
+          ),
         ),
-      );
-
-      expect(result).toEqual({ pageId: newPageId });
+      ).rejects.toThrow(ForbiddenException);
       expect(
         templateEntitlementRepository.findByTemplateAndUser,
       ).not.toHaveBeenCalled();
@@ -357,6 +358,57 @@ describe('UseTemplateHandler Regression Tests', () => {
       );
 
       expect(result).toEqual({ pageId: newPageId });
+    });
+  });
+
+  describe('buyer rights after visibility and archive changes', () => {
+    it.each([TemplateVisibility.PRIVATE, TemplateVisibility.WORKSPACE])(
+      'keeps use access to the pinned version when visibility is %s',
+      async (visibility) => {
+        pageTemplateRepository.findById.mockResolvedValue(
+          createTemplate({ visibility }),
+        );
+        templateListingRepository.findByTemplateId.mockResolvedValue(
+          createListing(),
+        );
+        templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+          createEntitlement(),
+        );
+        templateVersionRepository.findById.mockResolvedValue(createVersion());
+        await expect(
+          handler.execute(
+            new UseTemplateCommand(
+              templateId,
+              versionId,
+              destinationWorkspaceId,
+              claimingUserId,
+            ),
+          ),
+        ).resolves.toEqual({ pageId: newPageId });
+      },
+    );
+
+    it('keeps use access to the pinned version after archive', async () => {
+      pageTemplateRepository.findById.mockResolvedValue(
+        createTemplate({ status: TemplateStatus.ARCHIVED }),
+      );
+      templateListingRepository.findByTemplateId.mockResolvedValue(
+        createListing(TemplateListingStatus.DRAFT),
+      );
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        createEntitlement(),
+      );
+      templateVersionRepository.findById.mockResolvedValue(createVersion());
+      await expect(
+        handler.execute(
+          new UseTemplateCommand(
+            templateId,
+            versionId,
+            destinationWorkspaceId,
+            claimingUserId,
+          ),
+        ),
+      ).resolves.toEqual({ pageId: newPageId });
     });
   });
 
@@ -848,14 +900,16 @@ describe('UseTemplateHandler Regression Tests', () => {
       templateListingRepository.findByTemplateId.mockResolvedValue(null);
       templateVersionRepository.findById.mockResolvedValue(createVersion());
 
-      await handler.execute(
-        new UseTemplateCommand(
-          templateId,
-          versionId,
-          destinationWorkspaceId,
-          claimingUserId,
+      await expect(
+        handler.execute(
+          new UseTemplateCommand(
+            templateId,
+            versionId,
+            destinationWorkspaceId,
+            claimingUserId,
+          ),
         ),
-      );
+      ).rejects.toThrow(ForbiddenException);
 
       expect(templateEntitlementRepository.create).not.toHaveBeenCalled();
     });
@@ -915,6 +969,12 @@ describe('UseTemplateHandler Regression Tests', () => {
         viewIdMap: new Map([[tplViewId, liveViewId]]),
       });
 
+      templateListingRepository.findByTemplateId.mockResolvedValue(
+        createListing(),
+      );
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        createEntitlement(),
+      );
       const result = await handler.execute(
         new UseTemplateCommand(
           templateId,
@@ -948,7 +1008,12 @@ describe('UseTemplateHandler Regression Tests', () => {
 
     it('throws BadRequestException if DATABASE_VIEW block references a view that does not belong to the database', async () => {
       pageTemplateRepository.findById.mockResolvedValue(createTemplate());
-      templateListingRepository.findByTemplateId.mockResolvedValue(null);
+      templateListingRepository.findByTemplateId.mockResolvedValue(
+        createListing(),
+      );
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        createEntitlement(),
+      );
       templateVersionRepository.findById.mockResolvedValue(createVersion());
 
       const tplDbId = 'tpl-db-1';
@@ -1022,7 +1087,7 @@ describe('UseTemplateHandler Regression Tests', () => {
             templateId,
             'missing-version',
             destinationWorkspaceId,
-            claimingUserId,
+            creatorId,
           ),
         ),
       ).rejects.toThrow(new NotFoundException('Template version not found'));

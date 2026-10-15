@@ -98,6 +98,8 @@ export class CreatePageTemplateHandler {
 
       const prepared = await this.contentSnapshotService.prepare({
         blocks: snapshot.blocks,
+        workspaceId: snapshot.page.workspaceId,
+        userId: command.userId,
         context,
       });
       const snapshotHash = this.fingerprintService.compute(prepared);

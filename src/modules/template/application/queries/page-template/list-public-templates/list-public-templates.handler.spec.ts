@@ -17,9 +17,15 @@ import {
   decodeTemplateListCursor,
 } from '../list-page-templates/template-list-cursor.helper';
 
+import { TemplateListing } from '../../../../../marketplace/domain/aggregates/template-listing/template-listing.aggregate';
+import { TemplatePreviewMode } from '../../../../../marketplace/domain/enums/template-preview-mode.enum';
+
 describe('ListPublicTemplatesHandler category enrichment', () => {
   const templates = { findMany: jest.fn() };
-  const listings = { findCategoriesByTemplateIds: jest.fn() };
+  const listings = {
+    findCategoriesByTemplateIds: jest.fn(),
+    findByTemplateIds: jest.fn(),
+  };
   const handler = new ListPublicTemplatesHandler(
     templates as unknown as PageTemplateRepository,
     listings as unknown as TemplateListingRepository,
@@ -85,6 +91,18 @@ describe('ListPublicTemplatesHandler category enrichment', () => {
           ]),
         ),
     );
+    listings.findByTemplateIds.mockImplementation(async (ids: string[]) =>
+      new Map(
+        ids.map((id) => [
+          id,
+          TemplateListing.create({
+            templateId: id,
+            createdBy: 'creator',
+            previewMode: TemplatePreviewMode.INTERACTIVE,
+          }),
+        ]),
+      ),
+    );
   });
   it('enriches a page in one batch, preserves order, metadata and represented version, and exposes only public category fields', async () => {
     const result = await handler.execute(new ListPublicTemplatesQuery());
@@ -98,11 +116,19 @@ describe('ListPublicTemplatesHandler category enrichment', () => {
         ...PageTemplateResponseDto.fromDomain(first),
         version: TemplateVersionResponseDto.fromDomain(version),
         categories: [{ id: 'a', name: 'Esports', slug: 'esports' }],
+        offer_type: 'FREE',
+        price_amount: 0,
+        currency: 'VND',
+        preview_mode: 'INTERACTIVE',
       },
       {
         ...PageTemplateResponseDto.fromDomain(second),
         version: null,
         categories: [{ id: 'b', name: 'Gaming', slug: 'gaming' }],
+        offer_type: 'FREE',
+        price_amount: 0,
+        currency: 'VND',
+        preview_mode: 'INTERACTIVE',
       },
     ]);
     expect(decodeTemplateListCursor(result.nextCursor!)).toEqual({

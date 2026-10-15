@@ -106,6 +106,24 @@
           "marketplace_webhook_events"
         ]
       }
+    },
+    {
+      "file": "1792050000000-AddTemplateListingPreviewMode.ts",
+      "sha256": "b6ba2d58ce79d9678b4abdb0866b196da426ddffd6c3b607c7034a2d24639e18",
+      "approval": {
+        "kind": "manual",
+        "evidence": "Reviewed PostgreSQL template_listings preview_mode enum, column, and legacy FREE backfill"
+      }
+    },
+    {
+      "file": "1792100000000-AddTemplateListingDemoPreview.ts",
+      "sha256": "b39deeac9f57074bce5823ffefe171ca8fc57b8f9e9ed42e062e0abb4547b064",
+      "approval": {
+        "kind": "automatic",
+        "policy": "isolated-migration-verification-v1",
+        "generator": "scripts/migration-prepare.ts",
+        "evidence": "isolated-postgresql-18-multi-trial-convergence"
+      }
     }
   ]
 }

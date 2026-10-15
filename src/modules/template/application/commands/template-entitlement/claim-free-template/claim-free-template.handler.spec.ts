@@ -91,8 +91,10 @@ describe('ClaimFreeTemplateHandler Regression Tests', () => {
     });
 
   beforeEach(() => {
+    const findMock = jest.fn();
     pageTemplateRepository = {
-      findById: jest.fn(),
+      findById: findMock,
+      findByIdForUpdate: findMock,
     } as unknown as jest.Mocked<PageTemplateRepository>;
 
     templateListingRepository = {

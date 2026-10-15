@@ -51,6 +51,7 @@ import { CreatePageTemplateRequest } from '../requests/create-page-template.requ
 import { ListPageTemplatesRequest } from '../requests/list-page-templates.request';
 import { UpdatePageTemplateRequest } from '../requests/update-page-template.request';
 import { UseTemplateRequest } from '../requests/use-template.request';
+import { CreateTemplateVersionRequest } from '../requests/create-template-version.request';
 
 @Controller('templates')
 export class TemplateController {
@@ -97,10 +98,15 @@ export class TemplateController {
   @ResponseMessage('Template version created successfully')
   async createVersion(
     @Param('templateId') templateId: string,
+    @Body() body: CreateTemplateVersionRequest,
     @Auth() auth: IAuth,
   ) {
     return this.createTemplateVersionHandler.execute(
-      new CreateTemplateVersionCommand(templateId, auth.id),
+      new CreateTemplateVersionCommand(
+        templateId,
+        auth.id,
+        body?.source_page_id,
+      ),
     );
   }
 

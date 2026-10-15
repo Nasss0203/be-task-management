@@ -76,7 +76,7 @@ export class CreateTemplateVersionHandler {
 
       template.ensureCanCreateVersion();
 
-      const sourcePageId = template.getSourcePageId();
+      const sourcePageId = command.sourcePageId ?? template.getSourcePageId();
 
       if (!sourcePageId) {
         throw new BadRequestException(
@@ -91,6 +91,12 @@ export class CreateTemplateVersionHandler {
 
       if (!snapshot) {
         throw new NotFoundException('Page not found');
+      }
+
+      if (snapshot.page.workspaceId !== template.getWorkspaceId()) {
+        throw new ForbiddenException(
+          'Source page must belong to the template workspace',
+        );
       }
 
       const canReadPage = await this.authorizationService.authorize({
@@ -119,6 +125,8 @@ export class CreateTemplateVersionHandler {
 
       const prepared = await this.contentSnapshotService.prepare({
         blocks: snapshot.blocks,
+        workspaceId: template.getWorkspaceId(),
+        userId: command.userId,
         context,
       });
 

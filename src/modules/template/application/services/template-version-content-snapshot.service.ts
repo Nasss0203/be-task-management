@@ -1,11 +1,16 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 
 import type { ContentPageBlockSnapshot } from 'src/modules/content/application/ports/content-page-snapshot-reader.port';
+import type { ContentPageSnapshotReaderPort } from 'src/modules/content/application/ports/content-page-snapshot-reader.port';
+import { CONTENT_TYPES } from 'src/modules/content/content.types';
+import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import type {
   DatabaseSnapshot,
   DatabaseSnapshotProperty,
@@ -38,6 +43,11 @@ export type PreparedTemplateSnapshot = {
 @Injectable()
 export class TemplateVersionContentSnapshotService {
   constructor(
+    @Inject(CONTENT_TYPES.ports.PageSnapshotReader)
+    private readonly pageSnapshotReader: ContentPageSnapshotReaderPort,
+
+    private readonly authorizationService: AuthorizationService,
+
     @Inject(DATABASE_TYPES.ports.DatabaseSnapshotReader)
     private readonly databaseSnapshotReader: DatabaseSnapshotReaderPort,
 
@@ -51,9 +61,13 @@ export class TemplateVersionContentSnapshotService {
   // The caller owns source authorization, version creation, and the transaction.
   async prepare({
     blocks,
+    workspaceId,
+    userId,
     context,
   }: {
     blocks: ContentPageBlockSnapshot[];
+    workspaceId: string;
+    userId: string;
     context: PersistenceContext;
   }): Promise<PreparedTemplateSnapshot> {
     const preparedBlocks = this.sortBlocks(structuredClone(blocks));
@@ -86,6 +100,29 @@ export class TemplateVersionContentSnapshotService {
 
       if (!sourceSnapshot) {
         throw new NotFoundException(`Database "${sourceDatabaseId}" not found`);
+      }
+
+      // A block's JSON is not an authorization grant. Resolve the database's
+      // owning page and verify both its workspace and the caller's page access.
+      const databasePageId = sourceSnapshot.database.pageId;
+      const databasePage = await this.pageSnapshotReader.getPageSnapshot(
+        databasePageId,
+        context,
+      );
+      if (!databasePage || databasePage.page.workspaceId !== workspaceId) {
+        throw new ForbiddenException(
+          'Database is outside the source workspace',
+        );
+      }
+      const canReadDatabasePage = await this.authorizationService.authorize({
+        userId,
+        permissions: [PERMISSIONS.PAGE_READ],
+        target: { type: 'page', id: databasePageId },
+      });
+      if (!canReadDatabasePage) {
+        throw new ForbiddenException(
+          'You do not have permission to snapshot this database',
+        );
       }
 
       const sourceViewIds = new Set(

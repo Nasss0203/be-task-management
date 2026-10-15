@@ -86,6 +86,7 @@ export class ListPublicTemplatesHandler {
         offer_type: listing.getOfferType(),
         price_amount: listing.getPrice().getAmount(),
         currency: listing.getPrice().getCurrency(),
+        preview_mode: listing.getPreviewMode(),
         categories: (categoriesByTemplate.get(template.getId()) ?? []).map(
           ({ id, name, slug }) => ({ id, name, slug }),
         ),

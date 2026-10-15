@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 
 import { TemplateListingStatus } from '../../enums/template-listing-status.enum';
 import { TemplateOfferType } from '../../enums/template-offer-type.enum';
+import { TemplatePreviewMode } from '../../enums/template-preview-mode.enum';
 import { TemplatePrice } from '../../value-objects/template-price.vo';
 
 export type CreateTemplateListingParams = {
@@ -9,6 +10,9 @@ export type CreateTemplateListingParams = {
   templateId: string;
   offerType?: TemplateOfferType;
   price?: TemplatePrice;
+  previewMode?: TemplatePreviewMode;
+  demoVersionId?: string | null;
+  demoConfig?: Record<string, any> | null;
   createdBy: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -20,6 +24,9 @@ export type RestoreTemplateListingParams = {
   offerType: TemplateOfferType;
   status: TemplateListingStatus;
   price?: TemplatePrice;
+  previewMode?: TemplatePreviewMode;
+  demoVersionId?: string | null;
+  demoConfig?: Record<string, any> | null;
   createdBy: string;
   publishedVersionId?: string | null;
   publishedAt: Date | null;
@@ -39,6 +46,9 @@ export class TemplateListingAggregate {
     private updatedAt: Date,
     private publishedVersionId: string | null = null,
     private price: TemplatePrice = TemplatePrice.free(),
+    private previewMode: TemplatePreviewMode = TemplatePreviewMode.IMAGE,
+    private demoVersionId: string | null = null,
+    private demoConfig: Record<string, any> | null = null,
   ) {
     if (!templateId.trim()) {
       throw new Error('Template id is required');
@@ -49,15 +59,31 @@ export class TemplateListingAggregate {
     }
 
     TemplateListingAggregate.validateOfferPrice(this.offerType, this.price);
+
+    if (
+      this.offerType === TemplateOfferType.PAID &&
+      this.demoVersionId &&
+      this.publishedVersionId &&
+      this.demoVersionId === this.publishedVersionId
+    ) {
+      throw new Error(
+        'Demo version cannot be the same as the published paid version',
+      );
+    }
   }
 
   static create(params: CreateTemplateListingParams): TemplateListingAggregate {
     const now = new Date();
+    const offerType = params.offerType ?? TemplateOfferType.FREE;
+    const defaultPreviewMode =
+      offerType === TemplateOfferType.PAID
+        ? TemplatePreviewMode.IMAGE
+        : TemplatePreviewMode.INTERACTIVE;
 
     return new TemplateListingAggregate(
       params.id ?? randomUUID(),
       params.templateId,
-      params.offerType ?? TemplateOfferType.FREE,
+      offerType,
       TemplateListingStatus.DRAFT,
       params.createdBy,
       null,
@@ -65,12 +91,20 @@ export class TemplateListingAggregate {
       params.updatedAt ?? now,
       null,
       params.price ?? TemplatePrice.free(),
+      params.previewMode ?? defaultPreviewMode,
+      params.demoVersionId ?? null,
+      params.demoConfig ?? null,
     );
   }
 
   static restore(
     params: RestoreTemplateListingParams,
   ): TemplateListingAggregate {
+    const defaultPreviewMode =
+      params.offerType === TemplateOfferType.PAID
+        ? TemplatePreviewMode.IMAGE
+        : TemplatePreviewMode.INTERACTIVE;
+
     return new TemplateListingAggregate(
       params.id,
       params.templateId,
@@ -82,6 +116,9 @@ export class TemplateListingAggregate {
       params.updatedAt,
       params.publishedVersionId ?? null,
       params.price ?? TemplatePrice.free(),
+      params.previewMode ?? defaultPreviewMode,
+      params.demoVersionId ?? null,
+      params.demoConfig ?? null,
     );
   }
 
@@ -124,6 +161,18 @@ export class TemplateListingAggregate {
     return this.price;
   }
 
+  getPreviewMode(): TemplatePreviewMode {
+    return this.previewMode;
+  }
+
+  getDemoVersionId(): string | null {
+    return this.demoVersionId;
+  }
+
+  getDemoConfig(): Record<string, any> | null {
+    return this.demoConfig;
+  }
+
   getStatus(): TemplateListingStatus {
     return this.status;
   }
@@ -156,18 +205,108 @@ export class TemplateListingAggregate {
     return this.status === TemplateListingStatus.PUBLISHED;
   }
 
-  configureOffer(offerType: TemplateOfferType, price: TemplatePrice): boolean {
+  setPreviewMode(previewMode: TemplatePreviewMode): boolean {
+    if (this.previewMode === previewMode) {
+      return false;
+    }
+
+    this.previewMode = previewMode;
+    this.updatedAt = new Date();
+
+    return true;
+  }
+
+  setDemoPreview(
+    demoVersionId?: string | null,
+    demoConfig?: Record<string, any> | null,
+  ): boolean {
+    const nextDemoVersionId = demoVersionId !== undefined ? demoVersionId : this.demoVersionId;
+    const nextDemoConfig = demoConfig !== undefined ? demoConfig : this.demoConfig;
+
+    if (
+      this.offerType === TemplateOfferType.PAID &&
+      nextDemoVersionId &&
+      this.publishedVersionId &&
+      nextDemoVersionId === this.publishedVersionId
+    ) {
+      throw new Error(
+        'Demo version cannot be the same as the published paid version',
+      );
+    }
+
+    const isSameDemoVersion = this.demoVersionId === nextDemoVersionId;
+    const isSameDemoConfig =
+      JSON.stringify(this.demoConfig) === JSON.stringify(nextDemoConfig);
+
+    if (isSameDemoVersion && isSameDemoConfig) {
+      return false;
+    }
+
+    this.demoVersionId = nextDemoVersionId;
+    this.demoConfig = nextDemoConfig;
+    this.updatedAt = new Date();
+
+    return true;
+  }
+
+  configureOffer(
+    offerType: TemplateOfferType,
+    price: TemplatePrice,
+    previewMode?: TemplatePreviewMode,
+    demoVersionId?: string | null,
+    demoConfig?: Record<string, any> | null,
+  ): boolean {
     TemplateListingAggregate.validateOfferPrice(offerType, price);
 
     const isSameOfferType = this.offerType === offerType;
     const isSamePrice = this.price.equals(price);
 
-    if (isSameOfferType && isSamePrice) {
+    const nextPreviewMode =
+      previewMode !== undefined
+        ? previewMode
+        : isSameOfferType
+          ? this.previewMode
+          : offerType === TemplateOfferType.PAID
+            ? TemplatePreviewMode.IMAGE
+            : TemplatePreviewMode.INTERACTIVE;
+
+    const isSamePreviewMode = this.previewMode === nextPreviewMode;
+
+    const nextDemoVersionId =
+      demoVersionId !== undefined ? demoVersionId : this.demoVersionId;
+    const nextDemoConfig =
+      demoConfig !== undefined ? demoConfig : this.demoConfig;
+
+    if (
+      offerType === TemplateOfferType.PAID &&
+      nextDemoVersionId &&
+      this.publishedVersionId &&
+      nextDemoVersionId === this.publishedVersionId
+    ) {
+      throw new Error(
+        'Demo version cannot be the same as the published paid version',
+      );
+    }
+
+    const isSameDemoVersion = this.demoVersionId === nextDemoVersionId;
+    const isSameDemoConfig =
+      JSON.stringify(this.demoConfig) === JSON.stringify(nextDemoConfig);
+
+    if (
+      isSameOfferType &&
+      isSamePrice &&
+      isSamePreviewMode &&
+      isSameDemoVersion &&
+      isSameDemoConfig
+    ) {
       return false;
     }
 
     this.offerType = offerType;
     this.price = price;
+    this.previewMode = nextPreviewMode;
+    this.demoVersionId = nextDemoVersionId;
+    this.demoConfig = nextDemoConfig;
     this.updatedAt = new Date();
 
     return true;
@@ -181,6 +320,16 @@ export class TemplateListingAggregate {
     if (version.getTemplateId() !== this.templateId || version.isDraft()) {
       throw new Error(
         'Listing requires a published version of the same template',
+      );
+    }
+
+    if (
+      this.offerType === TemplateOfferType.PAID &&
+      this.demoVersionId &&
+      this.demoVersionId === version.getId()
+    ) {
+      throw new Error(
+        'Demo version cannot be the same as the published paid version',
       );
     }
 

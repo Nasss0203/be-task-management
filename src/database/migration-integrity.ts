@@ -42,15 +42,21 @@ export function migrationIntegrityProblems(): string[] {
       expected.approval &&
       (!['automatic', 'manual'].includes(expected.approval.kind) ||
         (expected.approval.kind === 'automatic' &&
-          (!['single-new-table-v1', ENUM_POLICY].includes(
-            expected.approval.policy ?? '',
-          ) ||
-            expected.approval.generator !== 'scripts/migration-tools.ts' ||
-            expected.approval.evidence !==
-              (expected.approval.policy === ENUM_POLICY
-                ? 'static-generator-format-and-catalog-metadata-enum-diff'
-                : 'static-generator-format-and-live-orm-diff') ||
-            expected.approval.tables?.length !== 1)))
+          !(
+            (expected.approval.policy === 'single-new-table-v1' &&
+              expected.approval.generator === 'scripts/migration-tools.ts' &&
+              expected.approval.evidence === 'static-generator-format-and-live-orm-diff' &&
+              expected.approval.tables?.length === 1) ||
+            (expected.approval.policy === ENUM_POLICY &&
+              expected.approval.generator === 'scripts/migration-tools.ts' &&
+              expected.approval.evidence ===
+                'static-generator-format-and-catalog-metadata-enum-diff' &&
+              expected.approval.tables?.length === 1) ||
+            (expected.approval.policy === 'isolated-migration-verification-v1' &&
+              expected.approval.generator === 'scripts/migration-prepare.ts' &&
+              expected.approval.evidence ===
+                'isolated-postgresql-18-multi-trial-convergence')
+          )))
     )
       problems.push(`Invalid migration approval provenance: ${expected.file}`);
     const file = files.get(expected.file);

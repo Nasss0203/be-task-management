@@ -1,4 +1,5 @@
 import { TemplateOfferType } from '../../../../domain/enums/template-offer-type.enum';
+import { TemplatePreviewMode } from '../../../../domain/enums/template-preview-mode.enum';
 
 export class CreateTemplateListingCommand {
   constructor(
@@ -7,5 +8,8 @@ export class CreateTemplateListingCommand {
     public readonly offerType?: TemplateOfferType,
     public readonly priceAmount?: number,
     public readonly currency?: string,
+    public readonly previewMode?: TemplatePreviewMode,
+    public readonly demoVersionId?: string | null,
+    public readonly demoConfig?: Record<string, any> | null,
   ) {}
 }

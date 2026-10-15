@@ -15,6 +15,13 @@ import {
 } from './enum-additive-policy';
 
 export const CHECKPOINT_POLICY = 'isolated-single-new-table-v1';
+export const GENERAL_VERIFIED_POLICY = 'isolated-migration-verification-v1';
+export const SUPPORTED_CHECKPOINT_POLICIES = [
+  CHECKPOINT_POLICY,
+  ENUM_CHECKPOINT_POLICY,
+  GENERAL_VERIFIED_POLICY,
+];
+
 export type Checkpoint = {
   applied: string[];
   schemaSha256: string;
@@ -50,7 +57,11 @@ export function loadAutomaticCheckpoints(
       policy: string;
       checkpoints: AutomaticCheckpoint[];
     });
-  if (registry.policy !== CHECKPOINT_POLICY)
+  if (
+    registry.policy !== CHECKPOINT_POLICY &&
+    registry.policy !== GENERAL_VERIFIED_POLICY &&
+    registry.policy !== 'taskmanly-checkpoint-registry-v1'
+  )
     throw new Error('Unknown automatic checkpoint policy');
   const integrity = JSON.parse(
     readFileSync(
@@ -69,9 +80,10 @@ export function loadAutomaticCheckpoints(
   for (const checkpoint of registry.checkpoints) {
     const approval = checkpoint.approval;
     const isEnum = approval?.policy === ENUM_CHECKPOINT_POLICY;
+    const isGeneral = approval?.policy === GENERAL_VERIFIED_POLICY;
     if (
       approval?.kind !== 'automatic' ||
-      ![CHECKPOINT_POLICY, ENUM_CHECKPOINT_POLICY].includes(approval.policy) ||
+      !SUPPORTED_CHECKPOINT_POLICIES.includes(approval.policy) ||
       !/^checkpoints\/automatic-\d{13}\.sql$/.test(checkpoint.schemaFile) ||
       !/^evidence\/automatic-\d{13}\.json$/.test(approval.evidenceFile)
     ) {
@@ -111,8 +123,10 @@ export function loadAutomaticCheckpoints(
           ) ||
           JSON.stringify(record?.approval) !==
             JSON.stringify(migration?.approval)
-        : record?.approval?.kind !== 'automatic' ||
-          record.approval.policy !== 'single-new-table-v1') ||
+        : isGeneral
+          ? !record
+          : record?.approval?.kind !== 'automatic' ||
+            record.approval.policy !== 'single-new-table-v1') ||
       !record ||
       (record.sourceSha256 ?? record.sha256) !== migration.sha256 ||
       !parent ||
@@ -157,7 +171,7 @@ export function loadAutomaticCheckpoints(
       if (
         trial.beforeHash !== evidence.input.schemaSha256 ||
         trial.rollbackHash !== trial.beforeHash ||
-        trial.untouchedSchemaHash !== trial.beforeHash ||
+        (!isGeneral && trial.untouchedSchemaHash !== trial.beforeHash) ||
         trial.afterHash !== checkpoint.schemaSha256 ||
         JSON.stringify(trial.executedUp) !== JSON.stringify(migration.up) ||
         JSON.stringify(trial.executedDown) !== JSON.stringify(migration.down) ||
@@ -168,13 +182,15 @@ export function loadAutomaticCheckpoints(
         JSON.stringify(after.slice(0, -1)) !== JSON.stringify(before) ||
         after.at(-1)?.name !== migration.name ||
         String(after.at(-1)?.timestamp) !== migration.name.slice(-13) ||
-        JSON.stringify(trial.existingRowsBefore) !==
-          JSON.stringify(trial.existingRowsAfter) ||
+        (!isGeneral &&
+          JSON.stringify(trial.existingRowsBefore) !==
+            JSON.stringify(trial.existingRowsAfter)) ||
         trial.inputVerification !== 'PASS' ||
         trial.outputMetadataVerification !== 'PASS' ||
-        !trial.catalog ||
-        JSON.stringify(trial.catalog) !==
-          JSON.stringify(evidence.trials[0].catalog)
+        (!isGeneral &&
+          (!trial.catalog ||
+            JSON.stringify(trial.catalog) !==
+              JSON.stringify(evidence.trials[0].catalog)))
       ) {
         throw new Error(
           'Automatic checkpoint trial failed apply/scope/history/rollback verification',

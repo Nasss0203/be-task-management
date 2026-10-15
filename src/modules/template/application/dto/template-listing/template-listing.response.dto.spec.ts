@@ -1,6 +1,7 @@
 import { TemplateListing } from '../../../../marketplace/domain/aggregates/template-listing/template-listing.aggregate';
 import { TemplateListingStatus } from '../../../../marketplace/domain/enums/template-listing-status.enum';
 import { TemplateOfferType } from '../../../../marketplace/domain/enums/template-offer-type.enum';
+import { TemplatePreviewMode } from '../../../../marketplace/domain/enums/template-preview-mode.enum';
 import { TemplateListingResponseDto } from '../../../../marketplace/application/dto/template-listing/template-listing.response.dto';
 
 describe('TemplateListingResponseDto', () => {
@@ -23,6 +24,11 @@ describe('TemplateListingResponseDto', () => {
       id: 'listing-1',
       template_id: 'template-1',
       offer_type: TemplateOfferType.FREE,
+      price_amount: 0,
+      currency: 'VND',
+      preview_mode: TemplatePreviewMode.INTERACTIVE,
+      demo_version_id: null,
+      demo_config: null,
       status: TemplateListingStatus.DRAFT,
       created_by: 'user-1',
       published_at: null,

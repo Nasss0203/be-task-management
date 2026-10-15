@@ -3,6 +3,9 @@ import { GetPublicTemplateDetailHandler } from '../../../../../marketplace/appli
 import { GetPublicTemplateDetailQuery } from '../../../../../marketplace/application/queries/template-preview/get-public-template-detail/get-public-template-detail.query';
 import { PageTemplate } from '../../../../domain/aggregates/page-template/page-template.aggregate';
 import { TemplateVersion } from '../../../../domain/aggregates/template-version/template-version.aggregate';
+import { TemplateListing } from '../../../../../marketplace/domain/aggregates/template-listing/template-listing.aggregate';
+import { TemplateOfferType } from '../../../../../marketplace/domain/enums/template-offer-type.enum';
+import { TemplatePreviewMode } from '../../../../../marketplace/domain/enums/template-preview-mode.enum';
 import type { PageTemplateRepository } from '../../../../domain/repositories/page-template.repository';
 import type {
   TemplateListingRepository,
@@ -13,7 +16,10 @@ import { TemplateVersionResponseDto } from '../../../dto/template-version/templa
 
 describe('GetPublicTemplateDetailHandler category enrichment', () => {
   const templates = { findPublicById: jest.fn() };
-  const listings = { findCategoriesByTemplateIds: jest.fn() };
+  const listings = {
+    findCategoriesByTemplateIds: jest.fn(),
+    findByTemplateId: jest.fn(),
+  };
   const handler = new GetPublicTemplateDetailHandler(
     templates as unknown as PageTemplateRepository,
     listings as unknown as TemplateListingRepository,
@@ -32,6 +38,11 @@ describe('GetPublicTemplateDetailHandler category enrichment', () => {
     createdBy: 'creator',
   });
   version.publish();
+  const listing = TemplateListing.create({
+    id: 'l1',
+    templateId: 't1',
+    createdBy: 'creator',
+  });
   const categories: TemplateListingCategoryInfo[] = [
     { id: 'a', name: 'Esports', slug: 'esports', isActive: true },
     { id: 'b', name: 'Gaming', slug: 'gaming', isActive: true },
@@ -40,6 +51,7 @@ describe('GetPublicTemplateDetailHandler category enrichment', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     templates.findPublicById.mockResolvedValue({ template, version });
+    listings.findByTemplateId.mockResolvedValue(listing);
     listings.findCategoriesByTemplateIds.mockImplementation(
       async (_ids: string[], options: { activeOnly?: boolean }) =>
         new Map([
@@ -58,6 +70,10 @@ describe('GetPublicTemplateDetailHandler category enrichment', () => {
     );
     expect(result).toEqual({
       ...PageTemplateResponseDto.fromDomain(template),
+      offer_type: TemplateOfferType.FREE,
+      price_amount: 0,
+      currency: 'VND',
+      preview_mode: TemplatePreviewMode.INTERACTIVE,
       version: TemplateVersionResponseDto.fromDomain(version),
       categories: [
         { id: 'a', name: 'Esports', slug: 'esports' },

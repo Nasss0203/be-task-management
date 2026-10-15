@@ -15,6 +15,7 @@ import {
 
 import { TemplateListingStatus } from '../../../../domain/enums/template-listing-status.enum';
 import { TemplateOfferType } from '../../../../domain/enums/template-offer-type.enum';
+import { TemplatePreviewMode } from '../../../../domain/enums/template-preview-mode.enum';
 import { PageTemplateVersionOrmEntity } from '../../../../../template/infrastructure/persistence/typeorm/entities/page-template-version.orm-entity';
 import { PageTemplateOrmEntity } from '../../../../../template/infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 
@@ -51,6 +52,28 @@ export class TemplateListingOrmEntity {
     default: TemplateOfferType.FREE,
   })
   offerType: TemplateOfferType;
+
+  @Column({
+    name: 'preview_mode',
+    type: 'enum',
+    enum: TemplatePreviewMode,
+    default: TemplatePreviewMode.IMAGE,
+  })
+  previewMode: TemplatePreviewMode;
+
+  @Column({
+    name: 'demo_version_id',
+    type: 'uuid',
+    nullable: true,
+  })
+  demoVersionId: string | null;
+
+  @Column({
+    name: 'demo_config',
+    type: 'jsonb',
+    nullable: true,
+  })
+  demoConfig: Record<string, any> | null;
 
   // ============================
   // TEMPLATE PRICING

@@ -1,6 +1,7 @@
 import { TemplateListing } from '../../../domain/aggregates/template-listing/template-listing.aggregate';
 import { TemplateListingStatus } from '../../../domain/enums/template-listing-status.enum';
 import { TemplateOfferType } from '../../../domain/enums/template-offer-type.enum';
+import { TemplatePreviewMode } from '../../../domain/enums/template-preview-mode.enum';
 import type { TemplateListingCategoryInfo } from '../../../domain/repositories/template-listing.repository';
 
 export interface TemplateListingCategoryResponseDto {
@@ -16,6 +17,9 @@ export class TemplateListingResponseDto {
   offer_type: TemplateOfferType;
   price_amount: number;
   currency: 'VND';
+  preview_mode: TemplatePreviewMode;
+  demo_version_id: string | null;
+  demo_config: Record<string, any> | null;
   status: TemplateListingStatus;
   created_by: string;
   published_at: Date | null;
@@ -36,6 +40,9 @@ export class TemplateListingResponseDto {
     dto.offer_type = listing.getOfferType();
     dto.price_amount = listing.getPrice().getAmount();
     dto.currency = listing.getPrice().getCurrency();
+    dto.preview_mode = listing.getPreviewMode();
+    dto.demo_version_id = listing.getDemoVersionId();
+    dto.demo_config = listing.getDemoConfig();
     dto.status = listing.getStatus();
     dto.created_by = listing.getCreatedBy();
     dto.published_at = listing.getPublishedAt();

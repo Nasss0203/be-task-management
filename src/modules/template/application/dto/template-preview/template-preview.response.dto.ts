@@ -8,16 +8,25 @@ export class TemplatePreviewResponseDto {
   version: TemplateVersionResponseDto;
   blocks: PageTemplateBlockResponseDto[];
   databases: PageTemplateDatabaseResponseDto[];
+  isDemo?: boolean;
+  interactive?: boolean;
+  demoConfig?: Record<string, any> | null;
 
   constructor(input: {
     template: PageTemplateResponseDto;
     version: TemplateVersionResponseDto;
     blocks: PageTemplateBlockResponseDto[];
     databases: PageTemplateDatabaseResponseDto[];
+    isDemo?: boolean;
+    interactive?: boolean;
+    demoConfig?: Record<string, any> | null;
   }) {
     this.template = input.template;
     this.version = input.version;
     this.blocks = input.blocks;
     this.databases = input.databases;
+    this.isDemo = input.isDemo;
+    this.interactive = input.interactive;
+    this.demoConfig = input.demoConfig;
   }
 }

@@ -8,8 +8,11 @@ import {
   Min,
   Max,
   ValidateIf,
+  IsObject,
 } from 'class-validator';
 import { TemplateOfferType } from '../../../domain/enums/template-offer-type.enum';
+import { TemplatePreviewMode } from '../../../domain/enums/template-preview-mode.enum';
+
 export class PublishTemplateToMarketplaceRequest {
   @IsNotEmpty()
   @IsUUID()
@@ -33,4 +36,16 @@ export class PublishTemplateToMarketplaceRequest {
   @IsArray()
   @IsUUID('all', { each: true })
   category_ids?: string[];
+
+  @ValidateIf((_, value) => value !== undefined)
+  @IsEnum(TemplatePreviewMode)
+  preview_mode?: TemplatePreviewMode;
+
+  @ValidateIf((_, value) => value !== undefined)
+  @IsUUID()
+  demo_version_id?: string;
+
+  @ValidateIf((_, value) => value !== undefined)
+  @IsObject()
+  demo_config?: Record<string, any>;
 }

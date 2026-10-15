@@ -148,6 +148,7 @@ describe('Listing management category responses', () => {
     );
     const create = new CreateTemplateListingHandler(
       templatePort,
+      versions as any,
       listingPort,
       uow,
       auth,

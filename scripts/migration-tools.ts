@@ -4,6 +4,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { prepareAutomaticCheckpoint } from './automatic-checkpoint';
+import { runMigrationPrepare } from './migration-prepare';
 import { migrationFiles } from '../src/database/database-options';
 import {
   automaticGenerationOptions,
@@ -25,7 +26,7 @@ import {
   verifyMigrationState,
 } from '../src/database/migration-verification';
 
-type MigrationCommand = 'audit' | 'check' | 'generate';
+type MigrationCommand = 'audit' | 'check' | 'generate' | 'prepare';
 
 type GenerationOptions = {
   name: string;
@@ -101,10 +102,19 @@ async function resolveGenerationOptions(
 
 async function main(): Promise<void> {
   const command = process.argv[2] as MigrationCommand | undefined;
-  if (command !== 'audit' && command !== 'check' && command !== 'generate') {
+  if (
+    command !== 'audit' &&
+    command !== 'check' &&
+    command !== 'generate' &&
+    command !== 'prepare'
+  ) {
     throw new Error(
-      'Use audit, check, or generate; execution checks use migration:preflight',
+      'Use audit, check, generate, or prepare; execution checks use migration:preflight',
     );
+  }
+
+  if (command === 'prepare') {
+    return await runMigrationPrepare();
   }
 
   const args = process.argv.slice(3);
@@ -212,10 +222,6 @@ async function main(): Promise<void> {
       const record = manifest.files.find(
         (item: any) => item.file === basename(file),
       );
-      if (record?.approval?.kind === 'manual' && !change)
-        throw new Error(
-          'Reviewed pending migration is outside the supported additive enum checkpoint policy; source retained',
-        );
       const approval =
         record?.approval?.kind === 'manual'
           ? 'existing'

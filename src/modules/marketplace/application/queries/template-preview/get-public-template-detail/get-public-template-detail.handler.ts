@@ -43,6 +43,7 @@ export class GetPublicTemplateDetailHandler {
       offer_type: listing.getOfferType(),
       price_amount: listing.getPrice().getAmount(),
       currency: listing.getPrice().getCurrency(),
+      preview_mode: listing.getPreviewMode(),
       version: TemplateVersionResponseDto.fromDomain(result.version),
       categories: (categoriesByTemplate.get(templateId) ?? []).map(
         ({ id, name, slug }) => ({ id, name, slug }),

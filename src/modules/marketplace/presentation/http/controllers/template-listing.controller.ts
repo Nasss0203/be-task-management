@@ -71,6 +71,9 @@ export class TemplateListingController {
         request.category_ids,
         request.price_amount,
         request.currency,
+        request.preview_mode,
+        request.demo_version_id,
+        request.demo_config,
       ),
     );
   }
@@ -90,6 +93,9 @@ export class TemplateListingController {
         request?.offer_type,
         request?.price_amount,
         request?.currency,
+        request?.preview_mode,
+        request?.demo_version_id,
+        request?.demo_config,
       ),
     );
   }
@@ -103,10 +109,10 @@ export class TemplateListingController {
     );
   }
 
-  @Patch(':templateId/listing/pricing')
+  @Patch(':templateId/listing')
   @WriteRateLimit()
-  @ResponseMessage('Template listing pricing updated successfully')
-  async updatePricing(
+  @ResponseMessage('Template listing updated successfully')
+  async updateListing(
     @Param('templateId', ParseUUIDPipe) templateId: string,
     @Body() request: UpdateTemplateListingPricingRequest,
     @Auth() auth: IAuth,
@@ -118,8 +124,22 @@ export class TemplateListingController {
         request.offer_type,
         request.price_amount,
         request.currency,
+        request.preview_mode,
+        request.demo_version_id,
+        request.demo_config,
       ),
     );
+  }
+
+  @Patch(':templateId/listing/pricing')
+  @WriteRateLimit()
+  @ResponseMessage('Template listing pricing updated successfully')
+  async updatePricing(
+    @Param('templateId', ParseUUIDPipe) templateId: string,
+    @Body() request: UpdateTemplateListingPricingRequest,
+    @Auth() auth: IAuth,
+  ) {
+    return this.updateListing(templateId, request, auth);
   }
 
   @Post(':templateId/listing/unPublish')

@@ -15,7 +15,10 @@ import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-w
 
 import { TemplateOfferType } from 'src/modules/marketplace/domain/enums/template-offer-type.enum';
 import { TemplatePrice } from 'src/modules/marketplace/domain/value-objects/template-price.vo';
-import type { TemplateContentPort } from 'src/modules/template/application/ports/template-content.port';
+import type {
+  TemplateContentPort,
+  TemplateVersionPort,
+} from 'src/modules/template/application/ports/template-content.port';
 import { TemplateStatus } from '../../../../../template/domain/enums/template-status.enum';
 import { TEMPLATE_TYPES } from '../../../../../template/template.types';
 import { TemplateListing } from '../../../../domain/aggregates/template-listing/template-listing.aggregate';
@@ -28,6 +31,9 @@ export class CreateTemplateListingHandler {
   constructor(
     @Inject(TEMPLATE_TYPES.ports.Content)
     private readonly pageTemplateRepository: TemplateContentPort,
+
+    @Inject(TEMPLATE_TYPES.ports.Versions)
+    private readonly templateVersionRepository: TemplateVersionPort,
 
     @Inject(MARKETPLACE_TYPES.repositories.TemplateListingRepository)
     private readonly templateListingRepository: TemplateListingRepository,
@@ -92,6 +98,26 @@ export class CreateTemplateListingHandler {
           );
         }
 
+        if (command.demoVersionId) {
+          const demoVersion = await this.templateVersionRepository.findById(
+            command.demoVersionId,
+            context,
+          );
+          if (!demoVersion) {
+            throw new NotFoundException('Demo template version not found');
+          }
+          if (demoVersion.getTemplateId() !== template.getId()) {
+            throw new BadRequestException(
+              'Demo version does not belong to this template',
+            );
+          }
+          if (!demoVersion.isPublished()) {
+            throw new BadRequestException(
+              'Demo version must be a published template version',
+            );
+          }
+        }
+
         let listing: TemplateListing;
 
         try {
@@ -105,6 +131,9 @@ export class CreateTemplateListingHandler {
             createdBy: command.userId,
             offerType,
             price,
+            previewMode: command.previewMode,
+            demoVersionId: command.demoVersionId,
+            demoConfig: command.demoConfig,
           });
         } catch (error) {
           throw new BadRequestException(

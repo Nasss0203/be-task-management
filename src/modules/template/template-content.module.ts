@@ -19,7 +19,6 @@ import { GetPageTemplateHandler } from './application/queries/page-template/get-
 import { GetTemplateVersionHandler } from './application/queries/template-version/get-template-version/get-template-version.handler';
 import { ListTemplateVersionsHandler } from './application/queries/template-version/list-template-versions/list-template-versions.handler';
 import { GetTemplateVersionBlocksHandler } from './application/queries/template-block/get-template-version-blocks/get-template-version-blocks.handler';
-import { GetTemplatePreviewHandler } from './application/queries/template-preview/get-template-preview/get-template-preview.handler';
 import { GetInternalTemplateRenderHandler } from './application/queries/internal-template-render/get-internal-template-render/get-internal-template-render.handler';
 import { ListPageTemplatesHandler } from './application/queries/page-template/list-page-templates/list-page-templates.handler';
 import { GenerateTemplateVersionThumbnailHandler } from './application/commands/generate-template-version-thumbnail/generate-template-version-thumbnail.handler';
@@ -123,10 +122,6 @@ import { InternalTemplateRenderGuard } from 'src/common/guard/internal-template-
       useClass: GetTemplateVersionBlocksHandler,
     },
     {
-      provide: TEMPLATE_TYPES.applications.GetTemplatePreviewHandler,
-      useClass: GetTemplatePreviewHandler,
-    },
-    {
       provide: TEMPLATE_TYPES.applications.GetInternalTemplateRenderHandler,
       useClass: GetInternalTemplateRenderHandler,
     },
@@ -197,7 +192,6 @@ import { InternalTemplateRenderGuard } from 'src/common/guard/internal-template-
     TEMPLATE_TYPES.applications.GetTemplateVersionHandler,
     TEMPLATE_TYPES.applications.ListTemplateVersionsHandler,
     TEMPLATE_TYPES.applications.GetTemplateVersionBlocksHandler,
-    TEMPLATE_TYPES.applications.GetTemplatePreviewHandler,
     TEMPLATE_TYPES.applications.GetInternalTemplateRenderHandler,
     TEMPLATE_TYPES.applications.ListPageTemplatesHandler,
     TEMPLATE_TYPES.applications.GenerateTemplateVersionThumbnailHandler,

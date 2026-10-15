@@ -98,6 +98,8 @@ describe('Actual ADD PAID checkpoint and Pricing retry', () => {
         'CreateTemplatePurchases1791903351862',
         'AddPaidPurchaseEntitlementSource1791958800000',
         'CreateMarketplaceWebhookEvents1791986191301',
+        'AddTemplateListingPreviewMode1792050000000',
+        'AddTemplateListingDemoPreview1792100000000',
       ]);
       expect(connect).not.toHaveBeenCalled();
     } finally {

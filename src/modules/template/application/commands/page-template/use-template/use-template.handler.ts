@@ -37,6 +37,7 @@ import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-w
 
 import type { TemplateEntitlementPort } from 'src/modules/marketplace/application/ports/template-distribution.port';
 import type { TemplateDistributionPort } from 'src/modules/marketplace/application/ports/template-distribution.port';
+import { TemplateOfferType } from 'src/modules/marketplace/domain/enums/template-offer-type.enum';
 import { UseTemplateCommand } from './use-template.command';
 
 export type UseTemplateResult = {
@@ -87,19 +88,42 @@ export class UseTemplateHandler {
         throw new NotFoundException('Page template not found');
       }
 
-      if (template.getStatus() === TemplateStatus.ARCHIVED) {
-        throw new BadRequestException('Archived template cannot be used');
-      }
-
-      if (template.getVisibility() === TemplateVisibility.PRIVATE) {
-        const isCreator = template.getCreatedBy() === command.userId;
-        const isOwner = await this.authorizationService.authorize({
+      const listing = await this.templateListingRepository.findByTemplateId(
+        template.getId(),
+        context,
+      );
+      const isCreator = template.getCreatedBy() === command.userId;
+      const canManageWorkspace =
+        isCreator ||
+        (await this.authorizationService.authorize({
           userId: command.userId,
           permissions: [PERMISSIONS.WORKSPACE_UPDATE],
           target: { type: 'workspace', id: template.getWorkspaceId() },
-        });
+        }));
+      const entitlement =
+        listing && !canManageWorkspace
+          ? await this.templateEntitlementRepository.findByTemplateAndUser(
+              template.getId(),
+              command.userId,
+              context,
+            )
+          : null;
 
-        if (!isCreator && !isOwner) {
+      if (template.getStatus() === TemplateStatus.ARCHIVED && !entitlement) {
+        throw new BadRequestException('Archived template cannot be used');
+      }
+
+      if (entitlement) {
+        if (
+          !listing?.getPublishedVersionId() ||
+          command.versionId !== listing.getPublishedVersionId()
+        ) {
+          throw new BadRequestException(
+            'Use the currently distributed marketplace version',
+          );
+        }
+      } else if (template.getVisibility() === TemplateVisibility.PRIVATE) {
+        if (!canManageWorkspace) {
           throw new ForbiddenException(
             'You do not have permission to use this private template',
           );
@@ -116,46 +140,19 @@ export class UseTemplateHandler {
             'You do not have permission to use this template',
           );
         }
+        if (
+          listing?.getOfferType() === TemplateOfferType.PAID &&
+          !canManageWorkspace
+        ) {
+          throw new ForbiddenException(
+            'You must purchase this template before using it',
+          );
+        }
       } else if (template.getVisibility() === TemplateVisibility.PUBLIC) {
-        const listing = await this.templateListingRepository.findByTemplateId(
-          template.getId(),
-          context,
-        );
-
-        if (listing) {
-          const isCreator = template.getCreatedBy() === command.userId;
-
-          const canManageWorkspace = isCreator
-            ? true
-            : await this.authorizationService.authorize({
-                userId: command.userId,
-                permissions: [PERMISSIONS.WORKSPACE_UPDATE],
-                target: {
-                  type: 'workspace',
-                  id: template.getWorkspaceId(),
-                },
-              });
-
-          if (!isCreator && !canManageWorkspace) {
-            const entitlement =
-              await this.templateEntitlementRepository.findByTemplateAndUser(
-                template.getId(),
-                command.userId,
-                context,
-              );
-
-            if (!entitlement) {
-              throw new ForbiddenException(
-                'You must claim this template before using it',
-              );
-            }
-            const activeVersionId = listing.getPublishedVersionId();
-            if (activeVersionId && command.versionId !== activeVersionId) {
-              throw new BadRequestException(
-                'Use the currently distributed marketplace version',
-              );
-            }
-          }
+        if (!canManageWorkspace) {
+          throw new ForbiddenException(
+            'You must claim this template before using it',
+          );
         }
       }
 
