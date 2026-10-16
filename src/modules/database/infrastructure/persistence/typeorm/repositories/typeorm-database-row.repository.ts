@@ -44,14 +44,27 @@ export class TypeOrmDatabaseRowRepository implements DatabaseRowRepository {
   async findByDatabaseId(
     databaseId: string,
     context?: PersistenceContext,
+    options?: {
+      limit?: number;
+    },
   ): Promise<DatabaseRow[]> {
     const repository = this.getRowRepository(context);
 
     const entities = await repository.find({
-      where: { databaseId },
+      where: {
+        databaseId,
+      },
       relations: {
         values: true,
       },
+      order: {
+        id: 'ASC',
+      },
+      ...(options?.limit !== undefined
+        ? {
+            take: options.limit,
+          }
+        : {}),
     });
 
     return entities.map((entity) => DatabaseRowMapper.toDomain(entity));
@@ -129,5 +142,18 @@ export class TypeOrmDatabaseRowRepository implements DatabaseRowRepository {
     }
 
     return (context as EntityManager).getRepository(RowValueOrmEntity);
+  }
+
+  async countByDatabaseId(
+    databaseId: string,
+    context?: PersistenceContext,
+  ): Promise<number> {
+    const repository = this.getRowRepository(context);
+
+    return repository.count({
+      where: {
+        databaseId,
+      },
+    });
   }
 }

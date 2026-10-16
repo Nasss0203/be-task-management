@@ -101,6 +101,14 @@ import { DatabaseController } from './presentation/http/controllers/database.con
     CreateDatabaseViewHandler,
     CreateDatabaseRowHandler,
     SetRowValueHandler,
+
+    GetDatabaseHandler,
+    GetDatabaseRowsHandler,
+    GetDatabaseViewHandler,
+    GetDatabaseViewsHandler,
+
+    DATABASE_TYPES.repositories.DatabaseRepository,
+    DATABASE_TYPES.repositories.DatabaseRowRepository,
   ],
 })
 export class DatabaseModule {}

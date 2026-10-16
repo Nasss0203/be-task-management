@@ -48,6 +48,16 @@ import { FastApiAiRuntimeAdapter } from './infrastructure/runtime/fast-api-ai-ru
 
 import { AiAssistantController } from './presentation/http/controllers/ai-assistant.controller';
 
+import { GetAiPageContextHandler } from './application/queries/get-ai-page-context/get-ai-page-context.handler';
+
+import { AiModificationPlanValidatorService } from './application/services/ai-modification-plan-validator.service';
+import { AiModificationPlanExecutor } from './application/services/ai-modification-plan-executor.service';
+import { AiModificationPlannerService } from './application/services/ai-modification-planner.service';
+
+import { ConfirmAiModificationPlanHandler } from './application/commands/confirm-ai-modification-plan/confirm-ai-modification-plan.handler';
+
+import { ConfirmGenerationHandler } from './application/commands/confirm-generation/confirm-generation.handler';
+
 @Module({
   imports: [
     HttpModule,
@@ -81,15 +91,21 @@ import { AiAssistantController } from './presentation/http/controllers/ai-assist
     CreateToolCallHandler,
     StartToolCallHandler,
     CompleteToolCallHandler,
+    ConfirmGenerationHandler,
     ConfirmPageCompositionHandler,
+    ConfirmAiModificationPlanHandler,
 
     ListConversationsHandler,
     GetConversationHandler,
     ListConversationMessagesHandler,
     GetGenerationHandler,
     GetAiUsageSummaryHandler,
+    GetAiPageContextHandler,
 
     AiAssistantService,
+    AiModificationPlannerService,
+    AiModificationPlanValidatorService,
+    AiModificationPlanExecutor,
     PageCompositionDraftValidator,
     PageCompositionExecutor,
 

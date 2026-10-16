@@ -7,6 +7,7 @@ export interface PageBlockRepository {
     pageId: string,
     context?: PersistenceContext,
   ): Promise<PageBlock[]>;
+  countByPageId(pageId: string, context?: PersistenceContext): Promise<number>;
   findActiveSiblings(
     pageId: string,
     parentBlockId: string | null,

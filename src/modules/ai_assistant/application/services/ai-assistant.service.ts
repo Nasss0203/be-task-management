@@ -1,5 +1,6 @@
 import {
   BadGatewayException,
+  BadRequestException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -19,6 +20,7 @@ import type { AiConversationRepository } from '../../domain/repositories/ai-conv
 import type { AiGenerationRepository } from '../../domain/repositories/ai-generation.repository';
 import type { AiMessageRepository } from '../../domain/repositories/ai-message.repository';
 import type { AiUsageRepository } from '../../domain/repositories/ai-usage.repository';
+import { AI_MODIFICATION_PLAN_CAPABILITY } from '../constants/ai-modification-plan.constant';
 import { PAGE_COMPOSITION_CAPABILITY } from '../constants/page-composition.constant';
 import { AiGenerationResponseDto } from '../dto/response/ai-generation.response.dto';
 import type { AiRuntimePort } from '../ports/ai-runtime.port';
@@ -57,6 +59,12 @@ export class AiAssistantService {
   async submit(
     params: SubmitAiRequestParams,
   ): Promise<AiGenerationResponseDto> {
+    if (params.capability === AI_MODIFICATION_PLAN_CAPABILITY) {
+      throw new BadRequestException(
+        'Page modification planning must use the dedicated page endpoint',
+      );
+    }
+
     const conversation = await this.conversationRepository.findByIdAndUserId(
       params.conversationId,
       params.userId,

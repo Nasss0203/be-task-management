@@ -1,8 +1,9 @@
 import type { HttpService } from '@nestjs/axios';
-import { BadGatewayException } from '@nestjs/common';
+import { BadGatewayException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { of } from 'rxjs';
 
+import { AI_MODIFICATION_PLAN_CAPABILITY } from '../../application/constants/ai-modification-plan.constant';
 import { PAGE_COMPOSITION_CAPABILITY } from '../../application/constants/page-composition.constant';
 import { FastApiAiRuntimeAdapter } from './fast-api-ai-runtime.adapter';
 
@@ -332,6 +333,278 @@ describe('FastApiAiRuntimeAdapter usage', () => {
           input: {},
         }),
       ).rejects.toThrow(BadGatewayException);
+    });
+  });
+
+  describe('modification planner', () => {
+    it('calls the modification planner endpoint with instruction and context', async () => {
+      const context = {
+        schemaVersion: 1,
+        builtAt: '2026-10-06T08:00:00.000Z',
+        page: {
+          id: 'page-1',
+          workspaceId: 'workspace-1',
+          teamspaceId: null,
+          parentPageId: null,
+          title: 'Sprint Tasks',
+          icon: null,
+          coverUrl: null,
+          updatedAt: '2026-10-06T08:00:00.000Z',
+        },
+        blocks: [],
+        databaseReferences: [],
+        databases: [],
+        completeness: {
+          blocks: {
+            total: 0,
+            included: 0,
+            truncated: false,
+          },
+          databases: {
+            total: 0,
+            included: 0,
+            truncated: false,
+          },
+          rows: [],
+          textTruncated: false,
+        },
+      };
+
+      const plan = {
+        schemaVersion: 1,
+        type: 'AI_MODIFICATION_PLAN',
+        pageId: 'page-1',
+        status: 'PLAN_READY',
+        summary: 'Add a note to the page.',
+        operations: [
+          {
+            type: 'INSERT_BLOCKS',
+            parentBlockId: null,
+            afterBlockId: null,
+            blocks: [
+              {
+                type: 'TEXT',
+                content: {
+                  text: 'Release note',
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      const post = jest.fn().mockReturnValue(
+        of({
+          data: {
+            result: plan,
+            provider: 'ollama',
+            model: 'qwen3:4b-instruct',
+            usage: {
+              prompt_tokens: 200,
+              completion_tokens: 70,
+              total_tokens: 270,
+            },
+          },
+        }),
+      );
+
+      const adapter = new FastApiAiRuntimeAdapter(
+        {
+          post,
+        } as unknown as HttpService,
+        new ConfigService({
+          AI_SERVICE_BASE_URL: 'http://ai.test',
+          AI_INTERNAL_TOKEN: 'test-token',
+        }),
+      );
+
+      const result = await adapter.execute({
+        requestId: 'request-modification-1',
+        capability: AI_MODIFICATION_PLAN_CAPABILITY,
+        content: 'Thêm một ghi chú release vào page.',
+        input: {},
+        context,
+      });
+
+      expect(post).toHaveBeenCalledTimes(1);
+
+      expect(post).toHaveBeenCalledWith(
+        'http://ai.test/internal/v1/modification-planner',
+        {
+          instruction: 'Thêm một ghi chú release vào page.',
+          context,
+        },
+        {
+          timeout: 65000,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Service-Token': 'test-token',
+          },
+        },
+      );
+
+      expect(result).toEqual({
+        output: plan,
+        provider: 'ollama',
+        model: 'qwen3:4b-instruct',
+        usage: {
+          promptTokens: 200,
+          completionTokens: 70,
+          totalTokens: 270,
+        },
+      });
+    });
+
+    it('succeeds without usage when modification planner usage is absent', async () => {
+      const plan = {
+        schemaVersion: 1,
+        type: 'AI_MODIFICATION_PLAN',
+        pageId: 'page-1',
+        status: 'NEED_MORE_CONTEXT',
+        summary: 'More context is required.',
+        operations: [],
+        contextRequests: [
+          {
+            reason: 'AMBIGUOUS_TARGET',
+            description: 'The requested target cannot be identified.',
+          },
+        ],
+      };
+
+      const post = jest.fn().mockReturnValue(
+        of({
+          data: {
+            result: plan,
+            provider: 'ollama',
+            model: 'qwen3:4b-instruct',
+          },
+        }),
+      );
+
+      const adapter = new FastApiAiRuntimeAdapter(
+        {
+          post,
+        } as unknown as HttpService,
+        new ConfigService({
+          AI_SERVICE_BASE_URL: 'http://ai.test',
+          AI_INTERNAL_TOKEN: 'test-token',
+        }),
+      );
+
+      const result = await adapter.execute({
+        requestId: 'request-modification-2',
+        capability: AI_MODIFICATION_PLAN_CAPABILITY,
+        content: 'Cập nhật phần phù hợp.',
+        input: {},
+        context: {
+          page: {
+            id: 'page-1',
+          },
+        },
+      });
+
+      expect(result).toEqual({
+        output: plan,
+        provider: 'ollama',
+        model: 'qwen3:4b-instruct',
+      });
+
+      expect(result).not.toHaveProperty('usage');
+    });
+
+    it('rejects an empty modification planner instruction', async () => {
+      const post = jest.fn();
+
+      const adapter = new FastApiAiRuntimeAdapter(
+        {
+          post,
+        } as unknown as HttpService,
+        new ConfigService({
+          AI_SERVICE_BASE_URL: 'http://ai.test',
+          AI_INTERNAL_TOKEN: 'test-token',
+        }),
+      );
+
+      await expect(
+        adapter.execute({
+          requestId: 'request-modification-3',
+          capability: AI_MODIFICATION_PLAN_CAPABILITY,
+          content: '   ',
+          input: {},
+          context: {
+            page: {
+              id: 'page-1',
+            },
+          },
+        }),
+      ).rejects.toThrow(
+        new BadRequestException('AI modification plan instruction is required'),
+      );
+
+      expect(post).not.toHaveBeenCalled();
+    });
+
+    it('rejects a modification planner request without context', async () => {
+      const post = jest.fn();
+
+      const adapter = new FastApiAiRuntimeAdapter(
+        {
+          post,
+        } as unknown as HttpService,
+        new ConfigService({
+          AI_SERVICE_BASE_URL: 'http://ai.test',
+          AI_INTERNAL_TOKEN: 'test-token',
+        }),
+      );
+
+      await expect(
+        adapter.execute({
+          requestId: 'request-modification-4',
+          capability: AI_MODIFICATION_PLAN_CAPABILITY,
+          content: 'Thêm một task.',
+          input: {},
+        }),
+      ).rejects.toThrow(
+        new BadRequestException('AI modification plan context is required'),
+      );
+
+      expect(post).not.toHaveBeenCalled();
+    });
+
+    it('rejects a non-object modification planner result', async () => {
+      const adapter = new FastApiAiRuntimeAdapter(
+        {
+          post: jest.fn().mockReturnValue(
+            of({
+              data: {
+                result: 'invalid',
+                provider: 'ollama',
+                model: 'qwen3:4b-instruct',
+              },
+            }),
+          ),
+        } as unknown as HttpService,
+        new ConfigService({
+          AI_SERVICE_BASE_URL: 'http://ai.test',
+          AI_INTERNAL_TOKEN: 'test-token',
+        }),
+      );
+
+      await expect(
+        adapter.execute({
+          requestId: 'request-modification-5',
+          capability: AI_MODIFICATION_PLAN_CAPABILITY,
+          content: 'Thêm một task.',
+          input: {},
+          context: {
+            page: {
+              id: 'page-1',
+            },
+          },
+        }),
+      ).rejects.toThrow(
+        new BadGatewayException('AI service returned an invalid response'),
+      );
     });
   });
 });

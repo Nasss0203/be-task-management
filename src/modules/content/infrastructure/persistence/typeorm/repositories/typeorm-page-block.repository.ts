@@ -121,6 +121,17 @@ export class TypeOrmPageBlockRepository implements PageBlockRepository {
     return orms.map((orm) => PageBlockMapper.toDomain(orm));
   }
 
+  async countByPageId(
+    pageId: string,
+    context?: PersistenceContext,
+  ): Promise<number> {
+    return this.resolveRepo(context)
+      .createQueryBuilder('block')
+      .where('block.page_id = :pageId', { pageId })
+      .andWhere('block.deleted_at IS NULL')
+      .getCount();
+  }
+
   async findDeletedById(
     id: string,
     context?: PersistenceContext,

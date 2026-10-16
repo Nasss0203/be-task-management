@@ -8,6 +8,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+
 import { Auth } from 'src/common/decorator/auth.decorator';
 import {
   ReadRateLimit,
@@ -15,14 +16,24 @@ import {
 } from 'src/common/decorator/rate-limit.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import type { IAuth } from 'src/types/auth';
+
 import { ArchiveConversationCommand } from '../../../application/commands/archive-conversation/archive-conversation.command';
 import { ArchiveConversationHandler } from '../../../application/commands/archive-conversation/archive-conversation.handler';
+import { ConfirmGenerationCommand } from '../../../application/commands/confirm-generation/confirm-generation.command';
+import { ConfirmGenerationHandler } from '../../../application/commands/confirm-generation/confirm-generation.handler';
+
 import { CreateConversationCommand } from '../../../application/commands/create-conversation/create-conversation.command';
 import { CreateConversationHandler } from '../../../application/commands/create-conversation/create-conversation.handler';
+import { DiscardGenerationCommand } from '../../../application/commands/discard-generation/discard-generation.command';
+import { DiscardGenerationHandler } from '../../../application/commands/discard-generation/discard-generation.handler';
+
+import { ConfirmPageCompositionRequestDto } from '../../../application/dto/request/confirm-page-composition.request.dto';
 import { CreateAiConversationRequestDto } from '../../../application/dto/request/create-ai-conversation.request.dto';
+import { GenerateAiModificationPlanRequestDto } from '../../../application/dto/request/generate-ai-modification-plan.request.dto';
 import { ListAiConversationsRequestDto } from '../../../application/dto/request/list-ai-conversations.request.dto';
 import { ListAiMessagesRequestDto } from '../../../application/dto/request/list-ai-messages.request.dto';
 import { SubmitAiMessageRequestDto } from '../../../application/dto/request/submit-ai-message.request.dto';
+
 import { GetConversationHandler } from '../../../application/queries/get-conversation/get-conversation.handler';
 import { GetConversationQuery } from '../../../application/queries/get-conversation/get-conversation.query';
 import { GetGenerationHandler } from '../../../application/queries/get-generation/get-generation.handler';
@@ -31,12 +42,9 @@ import { ListConversationMessagesHandler } from '../../../application/queries/li
 import { ListConversationMessagesQuery } from '../../../application/queries/list-conversation-messages/list-conversation-messages.query';
 import { ListConversationsHandler } from '../../../application/queries/list-conversations/list-conversations.handler';
 import { ListConversationsQuery } from '../../../application/queries/list-conversations/list-conversations.query';
+
 import { AiAssistantService } from '../../../application/services/ai-assistant.service';
-import { ConfirmPageCompositionCommand } from '../../../application/commands/confirm-page-composition/confirm-page-composition.command';
-import { ConfirmPageCompositionHandler } from '../../../application/commands/confirm-page-composition/confirm-page-composition.handler';
-import { ConfirmPageCompositionRequestDto } from '../../../application/dto/request/confirm-page-composition.request.dto';
-import { DiscardGenerationCommand } from '../../../application/commands/discard-generation/discard-generation.command';
-import { DiscardGenerationHandler } from '../../../application/commands/discard-generation/discard-generation.handler';
+import { AiModificationPlannerService } from '../../../application/services/ai-modification-planner.service';
 
 @Controller('ai-assistant')
 @ReadRateLimit()
@@ -48,9 +56,10 @@ export class AiAssistantController {
     private readonly getConversationHandler: GetConversationHandler,
     private readonly listConversationMessagesHandler: ListConversationMessagesHandler,
     private readonly getGenerationHandler: GetGenerationHandler,
-    private readonly confirmPageCompositionHandler: ConfirmPageCompositionHandler,
+    private readonly confirmGenerationHandler: ConfirmGenerationHandler,
     private readonly aiAssistantService: AiAssistantService,
     private readonly discardGenerationHandler: DiscardGenerationHandler,
+    private readonly aiModificationPlannerService: AiModificationPlannerService,
   ) {}
 
   @Post('conversations')
@@ -105,7 +114,9 @@ export class AiAssistantController {
       conversationId,
       capability: dto.capability,
       content: dto.content,
-      input: dto.input ?? { message: dto.content },
+      input: dto.input ?? {
+        message: dto.content,
+      },
       context: dto.context,
     });
   }
@@ -134,31 +145,52 @@ export class AiAssistantController {
     );
   }
 
+  @Post('pages/:pageId/modification-plan')
+  @WriteRateLimit()
+  @ResponseMessage('AI modification plan generated')
+  generateModificationPlan(
+    @Auth() auth: IAuth,
+    @Param('pageId') pageId: string,
+    @Body() dto: GenerateAiModificationPlanRequestDto,
+    @Query('shareToken') shareToken?: string,
+  ) {
+    return this.aiModificationPlannerService.generate({
+      requestId: dto.requestId ?? randomUUID(),
+      userId: auth.id,
+      pageId,
+      instruction: dto.instruction,
+      shareToken,
+    });
+  }
+
   @Get('generations/:generationId')
   @ResponseMessage('AI generation found')
   getGeneration(
     @Auth() auth: IAuth,
     @Param('generationId') generationId: string,
+    @Query('shareToken') shareToken?: string,
   ) {
     return this.getGenerationHandler.execute(
-      new GetGenerationQuery(auth.id, generationId),
+      new GetGenerationQuery(auth.id, generationId, shareToken),
     );
   }
 
   @Post('generations/:generationId/confirm')
   @WriteRateLimit()
-  @ResponseMessage('AI page composition confirmed')
-  confirmPageComposition(
+  @ResponseMessage('AI generation confirmed')
+  confirmGeneration(
     @Auth() auth: IAuth,
     @Param('generationId') generationId: string,
     @Body() dto: ConfirmPageCompositionRequestDto,
+    @Query('shareToken') shareToken?: string,
   ) {
-    return this.confirmPageCompositionHandler.execute(
-      new ConfirmPageCompositionCommand(
+    return this.confirmGenerationHandler.execute(
+      new ConfirmGenerationCommand(
         auth.id,
         generationId,
         dto.teamspaceId ?? null,
         dto.parentPageId ?? null,
+        shareToken,
       ),
     );
   }

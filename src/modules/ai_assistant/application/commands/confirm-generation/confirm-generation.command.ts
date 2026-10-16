@@ -1,0 +1,9 @@
+export class ConfirmGenerationCommand {
+  constructor(
+    public readonly userId: string,
+    public readonly generationId: string,
+    public readonly teamspaceId?: string | null,
+    public readonly parentPageId?: string | null,
+    public readonly shareToken?: string,
+  ) {}
+}

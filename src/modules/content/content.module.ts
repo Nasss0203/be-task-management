@@ -510,6 +510,9 @@ const ports = [
     CONTENT_TYPES.applications.CreatePageHandler,
     CONTENT_TYPES.applications.CreatePageBlockHandler,
     CONTENT_TYPES.applications.AddDatabaseViewToBlockHandler,
+
+    CONTENT_TYPES.applications.FindPageByIdHandler,
+    CONTENT_TYPES.applications.FindPageBlockByPageHandler,
   ],
 })
 export class ContentModule {}

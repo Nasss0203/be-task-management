@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { firstValueFrom } from 'rxjs';
 
+import { AI_MODIFICATION_PLAN_CAPABILITY } from '../../application/constants/ai-modification-plan.constant';
 import { PAGE_COMPOSITION_CAPABILITY } from '../../application/constants/page-composition.constant';
 import type {
   AiRuntimePort,
@@ -56,6 +57,18 @@ interface FastApiPageCompositionResponse {
   usage?: FastApiUsage;
 }
 
+interface FastApiModificationPlannerRequest {
+  instruction: string;
+  context: Record<string, unknown>;
+}
+
+interface FastApiModificationPlannerResponse {
+  result: Record<string, unknown>;
+  provider: string;
+  model: string;
+  usage?: FastApiUsage;
+}
+
 const WRITING_CAPABILITIES: Record<string, WritingAction> = {
   'writing.improve': 'IMPROVE',
   'writing.shorten': 'SHORTEN',
@@ -75,6 +88,10 @@ export class FastApiAiRuntimeAdapter implements AiRuntimePort {
   async execute(request: AiRuntimeRequest): Promise<AiRuntimeResult> {
     if (request.capability === PAGE_COMPOSITION_CAPABILITY) {
       return this.executePageComposition(request);
+    }
+
+    if (request.capability === AI_MODIFICATION_PLAN_CAPABILITY) {
+      return this.executeModificationPlanner(request);
     }
 
     const action = WRITING_CAPABILITIES[request.capability];
@@ -142,6 +159,49 @@ export class FastApiAiRuntimeAdapter implements AiRuntimePort {
 
     const response = await this.post<FastApiPageCompositionResponse>(
       '/internal/v1/page-composition',
+      payload,
+    );
+
+    if (
+      !response.result ||
+      typeof response.result !== 'object' ||
+      Array.isArray(response.result)
+    ) {
+      throw new BadGatewayException('AI service returned an invalid response');
+    }
+
+    return {
+      output: response.result,
+      provider: response.provider,
+      model: response.model,
+      ...this.mapUsage(response),
+    };
+  }
+
+  private async executeModificationPlanner(
+    request: AiRuntimeRequest,
+  ): Promise<AiRuntimeResult> {
+    if (typeof request.content !== 'string' || !request.content.trim()) {
+      throw new BadRequestException(
+        'AI modification plan instruction is required',
+      );
+    }
+
+    if (
+      !request.context ||
+      typeof request.context !== 'object' ||
+      Array.isArray(request.context)
+    ) {
+      throw new BadRequestException('AI modification plan context is required');
+    }
+
+    const payload: FastApiModificationPlannerRequest = {
+      instruction: request.content,
+      context: request.context,
+    };
+
+    const response = await this.post<FastApiModificationPlannerResponse>(
+      '/internal/v1/modification-planner',
       payload,
     );
 

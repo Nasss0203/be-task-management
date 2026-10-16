@@ -3,8 +3,14 @@ import {
   type AiGenerationData,
 } from '../../../domain/aggregates/ai-generation/ai-generation.aggregate';
 import { AiGenerationStatus } from '../../../domain/enums/ai-generation-status.enum';
+
+import { AI_MODIFICATION_PLAN_CAPABILITY } from '../../constants/ai-modification-plan.constant';
 import { PAGE_COMPOSITION_CAPABILITY } from '../../constants/page-composition.constant';
+
+import type { AiModificationPlan } from '../../types/ai-modification-plan';
 import type { PageCompositionDraft } from '../../types/page-composition-draft';
+
+import { AiModificationPlanPreviewResponseDto } from './ai-modification-plan-preview.response.dto';
 import { PageCompositionPreviewResponseDto } from './page-composition-preview.response.dto';
 
 export class AiGenerationResponseDto {
@@ -14,7 +20,11 @@ export class AiGenerationResponseDto {
   capability: string;
   status: AiGenerationStatus;
   output_data: AiGenerationData;
-  preview?: PageCompositionPreviewResponseDto;
+
+  preview?:
+    | PageCompositionPreviewResponseDto
+    | AiModificationPlanPreviewResponseDto;
+
   provider: string | null;
   model: string | null;
   error_code: string | null;
@@ -23,10 +33,13 @@ export class AiGenerationResponseDto {
   created_at: Date;
   updated_at: Date;
 
-  static fromDomain(generation: AiGeneration): AiGenerationResponseDto {
+  static fromDomain(
+    generation: AiGeneration,
+    validatedModificationPlan?: AiModificationPlan,
+  ): AiGenerationResponseDto {
     const outputData = generation.getOutputData();
 
-    const preview =
+    const pageCompositionPreview =
       generation.getCapability() === PAGE_COMPOSITION_CAPABILITY &&
       outputData !== null &&
       typeof outputData === 'object' &&
@@ -35,6 +48,16 @@ export class AiGenerationResponseDto {
             outputData as unknown as PageCompositionDraft,
           )
         : undefined;
+
+    const modificationPlanPreview =
+      generation.getCapability() === AI_MODIFICATION_PLAN_CAPABILITY &&
+      validatedModificationPlan !== undefined
+        ? AiModificationPlanPreviewResponseDto.fromPlan(
+            validatedModificationPlan,
+          )
+        : undefined;
+
+    const preview = modificationPlanPreview ?? pageCompositionPreview;
 
     return {
       id: generation.getId(),

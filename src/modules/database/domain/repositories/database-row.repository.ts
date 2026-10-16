@@ -10,7 +10,15 @@ export interface DatabaseRowRepository {
   findByDatabaseId(
     databaseId: string,
     context?: PersistenceContext,
+    options?: {
+      limit?: number;
+    },
   ): Promise<DatabaseRow[]>;
+
+  countByDatabaseId(
+    databaseId: string,
+    context?: PersistenceContext,
+  ): Promise<number>;
 
   save(row: DatabaseRow, context?: PersistenceContext): Promise<void>;
 
