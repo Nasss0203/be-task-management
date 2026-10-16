@@ -16,6 +16,8 @@ import { TemplateStatus } from '../../../../../template/domain/enums/template-st
 import { TemplateVisibility } from '../../../../../template/domain/enums/template-visibility.enum';
 import type { TemplateContentPort } from 'src/modules/template/application/ports/template-content.port';
 import type { TemplateListingRepository } from '../../../../domain/repositories/template-listing.repository';
+import type { TemplateMarketplaceReleaseRepository } from '../../../../domain/repositories/template-marketplace-release.repository';
+import { TemplateMarketplaceRelease } from '../../../../domain/aggregates/template-marketplace-release/template-marketplace-release.aggregate';
 import type { TemplateVersionPort } from 'src/modules/template/application/ports/template-content.port';
 import { TEMPLATE_TYPES } from '../../../../../template/template.types';
 import { TemplateListingResponseDto } from '../../../dto/template-listing/template-listing.response.dto';
@@ -37,6 +39,9 @@ export class PublishTemplateListingHandler {
     private readonly unitOfWork: UnitOfWork,
 
     private readonly authorizationService: AuthorizationService,
+
+    @Inject(MARKETPLACE_TYPES.repositories.TemplateMarketplaceReleaseRepository)
+    private readonly releases: TemplateMarketplaceReleaseRepository,
   ) {}
 
   async execute(
@@ -87,16 +92,20 @@ export class PublishTemplateListingHandler {
       }
 
       const selectedId = listing.getPublishedVersionId();
-      const publishedVersion = selectedId
-        ? await this.templateVersionRepository.findById(selectedId, context)
-        : await this.templateVersionRepository.findPublishedByTemplateId(
-            command.templateId,
-            context,
-          );
+      if (!selectedId) {
+        throw new BadRequestException(
+          'Select an official template version before publishing the listing',
+        );
+      }
+      const publishedVersion =
+        await this.templateVersionRepository.findByIdForUpdate(
+          selectedId,
+          context,
+        );
 
       if (
         !publishedVersion ||
-        publishedVersion.isDraft() ||
+        !publishedVersion.isPublished() ||
         publishedVersion.getTemplateId() !== template.getId()
       ) {
         throw new BadRequestException(
@@ -104,8 +113,32 @@ export class PublishTemplateListingHandler {
         );
       }
 
+      if (listing.getDemoVersionId() === publishedVersion.getId()) {
+        throw new BadRequestException(
+          'Demo version cannot be the official release version',
+        );
+      }
+
       listing.selectPublishedVersion(publishedVersion);
       listing.publish();
+
+      if (
+        !(await this.releases.existsByTemplateAndVersion(
+          template.getId(),
+          publishedVersion.getId(),
+          context,
+        ))
+      ) {
+        await this.releases.insertIfAbsent(
+          TemplateMarketplaceRelease.create({
+            templateId: template.getId(),
+            versionId: publishedVersion.getId(),
+            releasedBy: command.userId,
+            offerTypeAtRelease: listing.getOfferType(),
+          }),
+          context,
+        );
+      }
 
       const savedListing = await this.templateListingRepository.save(
         listing,

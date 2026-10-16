@@ -4,6 +4,9 @@ export const MARKETPLACE_TYPES = {
     TemplateEntitlementRepository: Symbol('TemplateEntitlementRepository'),
     TemplateCategoryRepository: Symbol('TemplateCategoryRepository'),
     TemplatePurchaseRepository: Symbol('TemplatePurchaseRepository'),
+    TemplateMarketplaceReleaseRepository: Symbol(
+      'TemplateMarketplaceReleaseRepository',
+    ),
     MarketplaceWebhookEventRepository: Symbol(
       'MarketplaceWebhookEventRepository',
     ),

@@ -19,11 +19,13 @@ import { PageTemplateDatabase } from '../../../../domain/aggregates/template-dat
 import { PageTemplateDatabaseView } from '../../../../domain/aggregates/template-database/page-template-database-view.entity';
 import { TemplateEntitlement } from '../../../../../marketplace/domain/aggregates/template-entitlement/template-entitlement.aggregate';
 import { TemplateListing } from '../../../../../marketplace/domain/aggregates/template-listing/template-listing.aggregate';
+import { TemplateMarketplaceRelease } from '../../../../../marketplace/domain/aggregates/template-marketplace-release/template-marketplace-release.aggregate';
 import { TemplateVersion } from '../../../../domain/aggregates/template-version/template-version.aggregate';
 import { PageTemplateBlock } from '../../../../domain/entities/page-template-block.entity';
 import { TemplateEntitlementSource } from '../../../../../marketplace/domain/enums/template-entitlement-source.enum';
 import { TemplateListingStatus } from '../../../../../marketplace/domain/enums/template-listing-status.enum';
 import { TemplateOfferType } from '../../../../../marketplace/domain/enums/template-offer-type.enum';
+import { TemplatePrice } from '../../../../../marketplace/domain/value-objects/template-price.vo';
 import { TemplateStatus } from '../../../../domain/enums/template-status.enum';
 import { TemplateVisibility } from '../../../../domain/enums/template-visibility.enum';
 import type { PageTemplateBlockRepository } from '../../../../domain/repositories/page-template-block.repository';
@@ -31,6 +33,7 @@ import type { PageTemplateDatabaseSnapshotRepository } from '../../../../domain/
 import type { PageTemplateRepository } from '../../../../domain/repositories/page-template.repository';
 import type { TemplateEntitlementRepository } from '../../../../../marketplace/domain/repositories/template-entitlement.repository';
 import type { TemplateListingRepository } from '../../../../../marketplace/domain/repositories/template-listing.repository';
+import type { TemplateMarketplaceReleaseRepository } from '../../../../../marketplace/domain/repositories/template-marketplace-release.repository';
 import type { TemplateVersionRepository } from '../../../../domain/repositories/template-version.repository';
 import { UseTemplateCommand } from './use-template.command';
 import { UseTemplateHandler } from './use-template.handler';
@@ -42,6 +45,7 @@ describe('UseTemplateHandler Regression Tests', () => {
   let templateDatabaseSnapshotRepository: jest.Mocked<PageTemplateDatabaseSnapshotRepository>;
   let templateEntitlementRepository: jest.Mocked<TemplateEntitlementRepository>;
   let templateListingRepository: jest.Mocked<TemplateListingRepository>;
+  let releaseRepository: jest.Mocked<TemplateMarketplaceReleaseRepository>;
   let pageProvisioningPort: jest.Mocked<ContentPageProvisioningPort>;
   let databaseProvisioning: jest.Mocked<DatabaseProvisioningPort>;
   let uow: jest.Mocked<UnitOfWork>;
@@ -147,6 +151,19 @@ describe('UseTemplateHandler Regression Tests', () => {
       findByTemplateId: jest.fn(),
     } as unknown as jest.Mocked<TemplateListingRepository>;
 
+    releaseRepository = {
+      findByTemplateAndVersion: jest
+        .fn()
+        .mockImplementation(async (_templateId, requestedVersionId) =>
+          TemplateMarketplaceRelease.create({
+            templateId,
+            versionId: requestedVersionId,
+            releasedBy: null,
+            offerTypeAtRelease: TemplateOfferType.FREE,
+          }),
+        ),
+    } as unknown as jest.Mocked<TemplateMarketplaceReleaseRepository>;
+
     pageProvisioningPort = {
       createPageShell: jest.fn().mockResolvedValue({ pageId: newPageId }),
       createBlocksFromSnapshot: jest.fn().mockResolvedValue(undefined),
@@ -185,6 +202,7 @@ describe('UseTemplateHandler Regression Tests', () => {
       databaseProvisioning,
       uow,
       authorizationService,
+      releaseRepository,
     );
 
     // Default setups for blocks and databases
@@ -1167,7 +1185,7 @@ describe('UseTemplateHandler Regression Tests', () => {
       expect(result).toEqual({ pageId: newPageId });
     });
   });
-  it('rejects using a version other than the pinned marketplace version for a claimant', async () => {
+  it('rejects an unrecorded version for a claimant', async () => {
     pageTemplateRepository.findById.mockResolvedValue(createTemplate());
     const listing = createListing();
     listing.selectPublishedVersion(createVersion());
@@ -1175,6 +1193,15 @@ describe('UseTemplateHandler Regression Tests', () => {
     templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
       createEntitlement(),
     );
+    const otherVersion = TemplateVersion.create({
+      id: 'different-published-version',
+      templateId,
+      versionNumber: 2,
+      createdBy: creatorId,
+    });
+    otherVersion.publish();
+    templateVersionRepository.findById.mockResolvedValue(otherVersion);
+    releaseRepository.findByTemplateAndVersion.mockResolvedValue(null);
     await expect(
       handler.execute(
         new UseTemplateCommand(
@@ -1184,7 +1211,9 @@ describe('UseTemplateHandler Regression Tests', () => {
           claimingUserId,
         ),
       ),
-    ).rejects.toThrow('Use the currently distributed marketplace version');
+    ).rejects.toThrow(
+      'Template version is not an official marketplace release',
+    );
     expect(pageProvisioningPort.createPageShell).not.toHaveBeenCalled();
   });
   it('preserves claimed access to the pinned version after unpublish', async () => {
@@ -1209,5 +1238,223 @@ describe('UseTemplateHandler Regression Tests', () => {
       ),
     ).resolves.toEqual({ pageId: newPageId });
     expect(templateEntitlementRepository.create).not.toHaveBeenCalled();
+  });
+
+  describe('Official Marketplace Releases', () => {
+    const v1 = 'paid-version-v1';
+    const v2 = 'demo-version-v2';
+    const v3 = 'paid-version-v3';
+
+    const paidEntitlement = () =>
+      TemplateEntitlement.restore({
+        id: 'paid-entitlement',
+        templateId,
+        userId: claimingUserId,
+        source: TemplateEntitlementSource.PAID_PURCHASE,
+        createdAt: new Date('2026-01-02T00:00:00Z'),
+      });
+    const paidListing = () =>
+      TemplateListing.restore({
+        id: 'paid-listing',
+        templateId,
+        offerType: TemplateOfferType.PAID,
+        price: TemplatePrice.create({ amount: 50000, currency: 'VND' }),
+        status: TemplateListingStatus.PUBLISHED,
+        publishedVersionId: v3,
+        demoVersionId: v2,
+        createdBy: creatorId,
+        publishedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    const publishedVersion = (id: string) => {
+      const item = TemplateVersion.create({
+        id,
+        templateId,
+        versionNumber: id === v1 ? 1 : id === v2 ? 2 : 3,
+        createdBy: creatorId,
+      });
+      item.publish();
+      return item;
+    };
+    const officialRelease = (
+      id: string,
+      offerTypeAtRelease = TemplateOfferType.PAID,
+    ) =>
+      TemplateMarketplaceRelease.create({
+        templateId,
+        versionId: id,
+        releasedBy: creatorId,
+        offerTypeAtRelease,
+      });
+
+    beforeEach(() => {
+      pageTemplateRepository.findById.mockResolvedValue(createTemplate());
+      templateListingRepository.findByTemplateId.mockResolvedValue(
+        paidListing(),
+      );
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        paidEntitlement(),
+      );
+      templateVersionRepository.findById.mockImplementation(async (id) =>
+        publishedVersion(id),
+      );
+      releaseRepository.findByTemplateAndVersion.mockImplementation(
+        async (_id, id) => (id === v2 ? null : officialRelease(id)),
+      );
+    });
+
+    it.each([v1, v3])(
+      'lets a paid buyer use official release %s',
+      async (id) => {
+        await expect(
+          handler.execute(
+            new UseTemplateCommand(
+              templateId,
+              id,
+              destinationWorkspaceId,
+              claimingUserId,
+            ),
+          ),
+        ).resolves.toEqual({ pageId: newPageId });
+        expect(releaseRepository.findByTemplateAndVersion).toHaveBeenCalledWith(
+          templateId,
+          id,
+          mockContext,
+        );
+        expect(pageProvisioningPort.createPageShell).toHaveBeenCalled();
+      },
+    );
+
+    it('keeps V1 access after the listing changes to V3 and is unpublished, private, or archived', async () => {
+      const listing = paidListing();
+      listing.unpublish();
+      templateListingRepository.findByTemplateId.mockResolvedValue(listing);
+      for (const template of [
+        createTemplate(),
+        createTemplate({ visibility: TemplateVisibility.PRIVATE }),
+        createTemplate({ status: TemplateStatus.ARCHIVED }),
+      ]) {
+        pageTemplateRepository.findById.mockResolvedValue(template);
+        await expect(
+          handler.execute(
+            new UseTemplateCommand(
+              templateId,
+              v1,
+              destinationWorkspaceId,
+              claimingUserId,
+            ),
+          ),
+        ).resolves.toEqual({ pageId: newPageId });
+      }
+    });
+
+    it('rejects Demo V2 even if a release record is present', async () => {
+      releaseRepository.findByTemplateAndVersion.mockResolvedValue(
+        officialRelease(v2),
+      );
+      await expect(
+        handler.execute(
+          new UseTemplateCommand(
+            templateId,
+            v2,
+            destinationWorkspaceId,
+            claimingUserId,
+          ),
+        ),
+      ).rejects.toThrow('Demo version cannot be used as an official release');
+      expect(pageProvisioningPort.createPageShell).not.toHaveBeenCalled();
+    });
+
+    it('rejects a Draft version before reading release history', async () => {
+      templateVersionRepository.findById.mockResolvedValue(
+        TemplateVersion.create({
+          id: v1,
+          templateId,
+          versionNumber: 1,
+          createdBy: creatorId,
+        }),
+      );
+      await expect(
+        handler.execute(
+          new UseTemplateCommand(
+            templateId,
+            v1,
+            destinationWorkspaceId,
+            claimingUserId,
+          ),
+        ),
+      ).rejects.toThrow('Only published template versions can be used');
+      expect(releaseRepository.findByTemplateAndVersion).not.toHaveBeenCalled();
+    });
+
+    it('denies a paid release without an entitlement', async () => {
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        null,
+      );
+      await expect(
+        handler.execute(
+          new UseTemplateCommand(
+            templateId,
+            v1,
+            destinationWorkspaceId,
+            claimingUserId,
+          ),
+        ),
+      ).rejects.toThrow(ForbiddenException);
+      expect(pageProvisioningPort.createPageShell).not.toHaveBeenCalled();
+    });
+
+    it('keeps FREE_CLAIM out of a PAID release', async () => {
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        createEntitlement(),
+      );
+      await expect(
+        handler.execute(
+          new UseTemplateCommand(
+            templateId,
+            v1,
+            destinationWorkspaceId,
+            claimingUserId,
+          ),
+        ),
+      ).rejects.toThrow('Free claim does not grant access to paid releases');
+    });
+
+    it('lets FREE_CLAIM use an older FREE release after a listing becomes PAID', async () => {
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        createEntitlement(),
+      );
+      releaseRepository.findByTemplateAndVersion.mockResolvedValue(
+        officialRelease(v1, TemplateOfferType.FREE),
+      );
+      await expect(
+        handler.execute(
+          new UseTemplateCommand(
+            templateId,
+            v1,
+            destinationWorkspaceId,
+            claimingUserId,
+          ),
+        ),
+      ).resolves.toEqual({ pageId: newPageId });
+    });
+
+    it('still requires PAGE_CREATE in the destination workspace', async () => {
+      authorizationService.authorize.mockResolvedValue(false);
+      await expect(
+        handler.execute(
+          new UseTemplateCommand(
+            templateId,
+            v1,
+            destinationWorkspaceId,
+            claimingUserId,
+          ),
+        ),
+      ).rejects.toThrow(
+        'You do not have permission to create page in destination workspace',
+      );
+      expect(pageProvisioningPort.createPageShell).not.toHaveBeenCalled();
+    });
   });
 });

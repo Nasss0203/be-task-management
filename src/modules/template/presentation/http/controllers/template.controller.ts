@@ -46,6 +46,8 @@ import { GetTemplatePreviewHandler } from 'src/modules/template/application/quer
 import { GetTemplatePreviewQuery } from 'src/modules/template/application/queries/template-preview/get-template-preview/get-template-preview.query';
 import { ListTemplateVersionsHandler } from 'src/modules/template/application/queries/template-version/list-template-versions/list-template-versions.handler';
 import { ListTemplateVersionsQuery } from 'src/modules/template/application/queries/template-version/list-template-versions/list-template-versions.query';
+import { GetUsableTemplateVersionsHandler } from 'src/modules/template/application/queries/template-version/get-usable-template-versions/get-usable-template-versions.handler';
+import { GetUsableTemplateVersionsQuery } from 'src/modules/template/application/queries/template-version/get-usable-template-versions/get-usable-template-versions.query';
 import type { ListPageTemplatesResponseDto } from '../../../application/dto/page-template/list-page-templates.response.dto';
 import { CreatePageTemplateRequest } from '../requests/create-page-template.request';
 import { ListPageTemplatesRequest } from '../requests/list-page-templates.request';
@@ -79,6 +81,9 @@ export class TemplateController {
 
     @Inject(TEMPLATE_TYPES.applications.ListTemplateVersionsHandler)
     private readonly listTemplateVersionsHandler: ListTemplateVersionsHandler,
+
+    @Inject(TEMPLATE_TYPES.applications.GetUsableTemplateVersionsHandler)
+    private readonly getUsableTemplateVersionsHandler: GetUsableTemplateVersionsHandler,
 
     @Inject(TEMPLATE_TYPES.applications.UpdatePageTemplateHandler)
     private readonly updatePageTemplateHandler: UpdatePageTemplateHandler,
@@ -174,6 +179,18 @@ export class TemplateController {
         request.cursor,
         request.limit,
       ),
+    );
+  }
+
+  @Get(':templateId/usable-versions')
+  @ReadRateLimit()
+  @ResponseMessage('Usable template versions retrieved successfully')
+  async getUsableVersions(
+    @Param('templateId') templateId: string,
+    @Auth() auth: IAuth,
+  ) {
+    return this.getUsableTemplateVersionsHandler.execute(
+      new GetUsableTemplateVersionsQuery(templateId, auth.id),
     );
   }
 

@@ -34,30 +34,32 @@ npm run migration:generate
 npm run migration:run
 ```
 
-The generator uses TypeORM's schema diff and the existing shared safety checks.
-Automatic generation supports one new table or one supported additive PostgreSQL
-ENUM change at a time. Other changes require review; do not bypass the safety checks.
-An existing verified pending migration is reused instead of generating a duplicate.
-`migration:run` performs read-only preflight before applying migrations.
+`migration:generate` compares TypeORM entity metadata with the current PostgreSQL
+schema and writes a timestamped migration in `src/database/migrations`. It does not
+execute SQL or create an empty migration. Run pending migrations before generating
+another. `migration:run` applies pending migrations in timestamp order, using a
+transaction for each migration and TypeORM's `migrations` history table. Neither
+command requires `migration:prepare` or `migration:preflight`.
+
+Both commands verify baseline history and reviewed migration integrity. Existing
+schema checkpoints are checked when available. New states without a checkpoint
+verify history and PostgreSQL version; use the optional `migration:audit` for deeper
+checks. Review the generated `up()` and `down()` SQL before committing. `DROP TABLE`,
+`DROP COLUMN`, dangerous type changes and similar data loss operations are blocked
+unless `MIGRATION_ALLOW_DESTRUCTIVE=1` is explicitly set for generation and execution.
 Keep `synchronize: false` and never edit an already executed migration.
 
-For contributors and AI/code generators: reuse the existing migration helpers.
-Adding an entity does not require a new policy, helper, test, approval workflow,
-or per-change manifest. Extend migration safety only when explicitly requested.
-`enum-additive-policy.ts` is shared across migrations; enum evidence validation
-lives in `automatic-checkpoint.ts`. The existing enum tests protect this shared
-behavior and are not a template to copy for each entity.
+The PostgreSQL integration test uses a separate, empty database named by
+`MIGRATION_TEST_DB_NAME` (ending in `_test`). It refuses the configured `DB_NAME` and
+cleans up its test schema afterward. Example in PowerShell:
 
-The current safety mechanism automatically publishes a schema checkpoint and JSON
-evidence for each supported generated migration, and updates the existing shared
-registries. These artifacts are required by baseline verification and production
-preflight; do not manually create, delete, or bypass them to reduce the file count.
-No script generates the shared TypeScript helpers or test files when adding entities.
-Removing per-migration evidence generation would require a separate safety redesign.
+```powershell
+$env:MIGRATION_TEST_DB_NAME = 'taskmanly_marketplace_test'
+npm test -- --runInBand src/database/local-migration.spec.ts
+```
 
-To validate source metadata, migration integrity and checkpoint evidence without
-connecting to a database, use `npm run baseline:static`. `migration:check` additionally
-connects read-only and rejects pending migrations or schema drift.
+`migration:audit`, `migration:check`, `baseline:static`, and the older checkpoint
+scripts remain available for CI and historical verification.
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 

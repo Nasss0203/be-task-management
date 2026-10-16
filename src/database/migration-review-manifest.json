@@ -124,6 +124,14 @@
         "generator": "scripts/migration-prepare.ts",
         "evidence": "isolated-postgresql-18-multi-trial-convergence"
       }
+    },
+    {
+      "file": "1792100000001-CreateTemplateMarketplaceReleases.ts",
+      "sha256": "1df0cdcaae4952ce4c9baeed5b18dd7bbc05ffc9399d42c7cef5d48ff5ec4890"
+    },
+    {
+      "file": "1792200000000-BackfillOfficialMarketplaceReleases.ts",
+      "sha256": "d1afa66f86c82eab79dd1546285e18e7cb994431ee9b67914ff4de725b67a00b"
     }
   ]
 }

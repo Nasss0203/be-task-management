@@ -37,6 +37,8 @@ import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-w
 
 import type { TemplateEntitlementPort } from 'src/modules/marketplace/application/ports/template-distribution.port';
 import type { TemplateDistributionPort } from 'src/modules/marketplace/application/ports/template-distribution.port';
+import type { TemplateMarketplaceReleaseRepository } from 'src/modules/marketplace/domain/repositories/template-marketplace-release.repository';
+import { TemplateEntitlementSource } from 'src/modules/marketplace/domain/enums/template-entitlement-source.enum';
 import { TemplateOfferType } from 'src/modules/marketplace/domain/enums/template-offer-type.enum';
 import { UseTemplateCommand } from './use-template.command';
 
@@ -75,6 +77,9 @@ export class UseTemplateHandler {
     private readonly uow: UnitOfWork,
 
     private readonly authorizationService: AuthorizationService,
+
+    @Inject(MARKETPLACE_TYPES.repositories.TemplateMarketplaceReleaseRepository)
+    private readonly releases: TemplateMarketplaceReleaseRepository,
   ) {}
 
   async execute(command: UseTemplateCommand): Promise<UseTemplateResult> {
@@ -113,22 +118,19 @@ export class UseTemplateHandler {
         throw new BadRequestException('Archived template cannot be used');
       }
 
-      if (entitlement) {
-        if (
-          !listing?.getPublishedVersionId() ||
-          command.versionId !== listing.getPublishedVersionId()
-        ) {
-          throw new BadRequestException(
-            'Use the currently distributed marketplace version',
-          );
-        }
-      } else if (template.getVisibility() === TemplateVisibility.PRIVATE) {
+      if (
+        !entitlement &&
+        template.getVisibility() === TemplateVisibility.PRIVATE
+      ) {
         if (!canManageWorkspace) {
           throw new ForbiddenException(
             'You do not have permission to use this private template',
           );
         }
-      } else if (template.getVisibility() === TemplateVisibility.WORKSPACE) {
+      } else if (
+        !entitlement &&
+        template.getVisibility() === TemplateVisibility.WORKSPACE
+      ) {
         const isMember = await this.authorizationService.authorize({
           userId: command.userId,
           permissions: [PERMISSIONS.WORKSPACE_READ],
@@ -148,7 +150,10 @@ export class UseTemplateHandler {
             'You must purchase this template before using it',
           );
         }
-      } else if (template.getVisibility() === TemplateVisibility.PUBLIC) {
+      } else if (
+        !entitlement &&
+        template.getVisibility() === TemplateVisibility.PUBLIC
+      ) {
         if (!canManageWorkspace) {
           throw new ForbiddenException(
             'You must claim this template before using it',
@@ -172,6 +177,38 @@ export class UseTemplateHandler {
       }
 
       version.ensureUsable();
+
+      if (entitlement) {
+        if (listing?.getDemoVersionId() === version.getId()) {
+          throw new BadRequestException(
+            'Demo version cannot be used as an official release',
+          );
+        }
+        const release = await this.releases.findByTemplateAndVersion(
+          template.getId(),
+          version.getId(),
+          context,
+        );
+        if (!release) {
+          throw new BadRequestException(
+            'Template version is not an official marketplace release',
+          );
+        }
+        if (
+          entitlement.getSource() === TemplateEntitlementSource.FREE_CLAIM &&
+          release.getOfferTypeAtRelease() !== TemplateOfferType.FREE
+        ) {
+          throw new ForbiddenException(
+            'Free claim does not grant access to paid releases',
+          );
+        }
+        if (
+          entitlement.getSource() !== TemplateEntitlementSource.FREE_CLAIM &&
+          entitlement.getSource() !== TemplateEntitlementSource.PAID_PURCHASE
+        ) {
+          throw new ForbiddenException('Unsupported template entitlement');
+        }
+      }
 
       const canCreateInDestination = await this.authorizationService.authorize({
         userId: command.userId,

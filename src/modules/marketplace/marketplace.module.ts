@@ -29,11 +29,13 @@ import { TemplateEntitlementOrmEntity } from './infrastructure/persistence/typeo
 import { TemplateListingCategoryOrmEntity } from './infrastructure/persistence/typeorm/entities/template-listing-category.orm-entity';
 import { TemplateListingOrmEntity } from './infrastructure/persistence/typeorm/entities/template-listing.orm-entity';
 import { TemplatePurchaseOrmEntity } from './infrastructure/persistence/typeorm/entities/template-purchase.orm-entity';
+import { TemplateMarketplaceReleaseOrmEntity } from './infrastructure/persistence/typeorm/entities/template-marketplace-release.orm-entity';
 import { MarketplaceWebhookEventOrmEntity } from './infrastructure/persistence/typeorm/entities/marketplace-webhook-event.orm-entity';
 import { TypeOrmTemplateCategoryRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-category.repository';
 import { TypeOrmTemplateEntitlementRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-entitlement.repository';
 import { TypeOrmTemplateListingRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-listing.repository';
 import { TypeOrmTemplatePurchaseRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-purchase.repository';
+import { TypeOrmTemplateMarketplaceReleaseRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-marketplace-release.repository';
 import { TypeOrmMarketplaceWebhookEventRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-marketplace-webhook-event.repository';
 import { MyClaimedTemplatesController } from './presentation/http/controllers/my-claimed-templates.controller';
 import { PublicTemplateCategoryController } from './presentation/http/controllers/public-template-category.controller';
@@ -53,6 +55,7 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
       TemplateListingCategoryOrmEntity,
       TemplateEntitlementOrmEntity,
       TemplatePurchaseOrmEntity,
+      TemplateMarketplaceReleaseOrmEntity,
       MarketplaceWebhookEventOrmEntity,
     ]),
   ],
@@ -160,7 +163,11 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
     },
     {
       provide:
-        MARKETPLACE_TYPES.repositories.MarketplaceWebhookEventRepository,
+        MARKETPLACE_TYPES.repositories.TemplateMarketplaceReleaseRepository,
+      useClass: TypeOrmTemplateMarketplaceReleaseRepository,
+    },
+    {
+      provide: MARKETPLACE_TYPES.repositories.MarketplaceWebhookEventRepository,
       useClass: TypeOrmMarketplaceWebhookEventRepository,
     },
     {
@@ -184,6 +191,7 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
   exports: [
     MARKETPLACE_TYPES.ports.Distribution,
     MARKETPLACE_TYPES.ports.Entitlements,
+    MARKETPLACE_TYPES.repositories.TemplateMarketplaceReleaseRepository,
     MARKETPLACE_TYPES.applications.CreateTemplateCategoryHandler,
     MARKETPLACE_TYPES.applications.ListTemplateCategoriesHandler,
     MARKETPLACE_TYPES.applications.UpdateTemplateCategoryHandler,

@@ -13,6 +13,8 @@ import type {
   TemplateEntitlementPort,
 } from 'src/modules/marketplace/application/ports/template-distribution.port';
 import { TemplateOfferType } from 'src/modules/marketplace/domain/enums/template-offer-type.enum';
+import { TemplateEntitlementSource } from 'src/modules/marketplace/domain/enums/template-entitlement-source.enum';
+import type { TemplateMarketplaceReleaseRepository } from 'src/modules/marketplace/domain/repositories/template-marketplace-release.repository';
 import { TemplatePreviewMode } from 'src/modules/marketplace/domain/enums/template-preview-mode.enum';
 import { TemplateStatus } from '../../../../domain/enums/template-status.enum';
 import { TemplateVisibility } from '../../../../domain/enums/template-visibility.enum';
@@ -42,6 +44,8 @@ export class GetTemplatePreviewHandler {
     private readonly templateListingRepository: TemplateDistributionPort,
     @Inject(MARKETPLACE_TYPES.ports.Entitlements)
     private readonly templateEntitlementRepository: TemplateEntitlementPort,
+    @Inject(MARKETPLACE_TYPES.repositories.TemplateMarketplaceReleaseRepository)
+    private readonly releases: TemplateMarketplaceReleaseRepository,
   ) {}
 
   async execute(
@@ -91,17 +95,37 @@ export class GetTemplatePreviewHandler {
       return this.fullPreview(template, version);
     }
 
-    // Entitlement survives unpublish, PRIVATE and ARCHIVED, but is limited to
-    // the pinned distributed version rather than every published version.
     if (entitlement) {
       if (
-        !listing?.getPublishedVersionId() ||
-        query.versionId !== listing.getPublishedVersionId() ||
-        !version.isPublished()
+        !version.isPublished() ||
+        listing?.getDemoVersionId() === version.getId()
       ) {
         throw new ForbiddenException(
           'This template version is not available to your entitlement',
         );
+      }
+      const release = await this.releases.findByTemplateAndVersion(
+        template.getId(),
+        version.getId(),
+      );
+      if (!release) {
+        throw new ForbiddenException(
+          'This template version is not available to your entitlement',
+        );
+      }
+      if (
+        entitlement.getSource() === TemplateEntitlementSource.FREE_CLAIM &&
+        release.getOfferTypeAtRelease() !== TemplateOfferType.FREE
+      ) {
+        throw new ForbiddenException(
+          'Free claim does not grant access to paid releases',
+        );
+      }
+      if (
+        entitlement.getSource() !== TemplateEntitlementSource.FREE_CLAIM &&
+        entitlement.getSource() !== TemplateEntitlementSource.PAID_PURCHASE
+      ) {
+        throw new ForbiddenException('Unsupported template entitlement');
       }
       return this.fullPreview(template, version);
     }
@@ -117,6 +141,15 @@ export class GetTemplatePreviewHandler {
       if (version.isDraft()) {
         throw new ForbiddenException(
           'You do not have permission to preview draft template versions',
+        );
+      }
+      const release = await this.releases.findByTemplateAndVersion(
+        template.getId(),
+        version.getId(),
+      );
+      if (release?.getOfferTypeAtRelease() === TemplateOfferType.PAID) {
+        throw new ForbiddenException(
+          'You must purchase this template to access its full content',
         );
       }
       return this.fullPreview(template, version);

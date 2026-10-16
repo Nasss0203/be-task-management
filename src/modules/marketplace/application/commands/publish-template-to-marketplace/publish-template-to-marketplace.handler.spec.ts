@@ -1,4 +1,8 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PublishTemplateToMarketplaceHandler } from './publish-template-to-marketplace.handler';
 import { PublishTemplateToMarketplaceCommand } from './publish-template-to-marketplace.command';
 import { TemplateOfferType } from '../../../domain/enums/template-offer-type.enum';
@@ -13,6 +17,7 @@ describe('PublishTemplateToMarketplaceHandler Security & Demo Isolation', () => 
   let versions: any;
   let listings: any;
   let categories: any;
+  let releases: any;
   let uow: any;
   let authorization: any;
 
@@ -46,12 +51,15 @@ describe('PublishTemplateToMarketplaceHandler Security & Demo Isolation', () => 
     };
     versions = {
       findByIdForUpdate: jest.fn().mockImplementation((id: string) => {
-        if (id === versionId) return Promise.resolve(createMockVersion(versionId));
+        if (id === versionId)
+          return Promise.resolve(createMockVersion(versionId));
         return Promise.resolve(null);
       }),
       findById: jest.fn().mockImplementation((id: string) => {
-        if (id === demoVersionId) return Promise.resolve(createMockVersion(demoVersionId));
-        if (id === versionId) return Promise.resolve(createMockVersion(versionId));
+        if (id === demoVersionId)
+          return Promise.resolve(createMockVersion(demoVersionId));
+        if (id === versionId)
+          return Promise.resolve(createMockVersion(versionId));
         return Promise.resolve(null);
       }),
       save: jest.fn().mockImplementation((v) => Promise.resolve(v)),
@@ -65,6 +73,10 @@ describe('PublishTemplateToMarketplaceHandler Security & Demo Isolation', () => 
     };
     categories = {
       findByIdsForShare: jest.fn().mockResolvedValue([]),
+    };
+    releases = {
+      existsByTemplateAndVersion: jest.fn().mockResolvedValue(false),
+      insertIfAbsent: jest.fn().mockResolvedValue(undefined),
     };
     uow = {
       runInTransaction: jest.fn().mockImplementation((fn) => fn({})),
@@ -80,6 +92,7 @@ describe('PublishTemplateToMarketplaceHandler Security & Demo Isolation', () => 
       uow,
       authorization,
       categories,
+      releases,
     );
   });
 
@@ -103,6 +116,47 @@ describe('PublishTemplateToMarketplaceHandler Security & Demo Isolation', () => 
     expect(result.listing.preview_mode).toBe(TemplatePreviewMode.INTERACTIVE);
     expect(result.listing.demo_version_id).toBe(demoVersionId);
     expect(result.listing.demo_config).toEqual({ sandbox: true });
+    expect(releases.insertIfAbsent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        templateId,
+        versionId,
+        releasedBy: creatorId,
+        offerTypeAtRelease: TemplateOfferType.PAID,
+      }),
+      expect.anything(),
+    );
+  });
+
+  it('does not create a duplicate release when the version was released before', async () => {
+    releases.existsByTemplateAndVersion.mockResolvedValue(true);
+    await handler.execute(
+      new PublishTemplateToMarketplaceCommand(
+        templateId,
+        versionId,
+        creatorId,
+        TemplateOfferType.FREE,
+      ),
+    );
+    expect(releases.insertIfAbsent).not.toHaveBeenCalled();
+    expect(listings.save).toHaveBeenCalled();
+  });
+
+  it('requires an already published template version', async () => {
+    versions.findByIdForUpdate.mockResolvedValue(
+      createMockVersion(versionId, false),
+    );
+    await expect(
+      handler.execute(
+        new PublishTemplateToMarketplaceCommand(
+          templateId,
+          versionId,
+          creatorId,
+          TemplateOfferType.FREE,
+        ),
+      ),
+    ).rejects.toThrow('Template version must be published');
+    expect(releases.insertIfAbsent).not.toHaveBeenCalled();
+    expect(listings.save).not.toHaveBeenCalled();
   });
 
   it('rejects publishing PAID listing if demoVersionId matches version being published', async () => {
@@ -120,7 +174,7 @@ describe('PublishTemplateToMarketplaceHandler Security & Demo Isolation', () => 
           versionId, // Same as versionId being sold!
         ),
       ),
-    ).rejects.toThrow('Demo version cannot be the same as the published paid version');
+    ).rejects.toThrow('Demo version cannot be the official release version');
   });
 
   it('rejects publishing if demoVersion does not exist', async () => {

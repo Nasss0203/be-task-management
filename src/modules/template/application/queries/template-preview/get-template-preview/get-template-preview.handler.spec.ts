@@ -9,6 +9,8 @@ import { PageTemplate } from '../../../../domain/aggregates/page-template/page-t
 import { TemplateVersion } from '../../../../domain/aggregates/template-version/template-version.aggregate';
 import { TemplateVisibility } from '../../../../domain/enums/template-visibility.enum';
 import { TemplateListing } from '../../../../../marketplace/domain/aggregates/template-listing/template-listing.aggregate';
+import { TemplateMarketplaceRelease } from '../../../../../marketplace/domain/aggregates/template-marketplace-release/template-marketplace-release.aggregate';
+import { TemplateEntitlementSource } from '../../../../../marketplace/domain/enums/template-entitlement-source.enum';
 import { TemplateOfferType } from '../../../../../marketplace/domain/enums/template-offer-type.enum';
 import { TemplatePreviewMode } from '../../../../../marketplace/domain/enums/template-preview-mode.enum';
 import { TemplatePrice } from '../../../../../marketplace/domain/value-objects/template-price.vo';
@@ -23,6 +25,7 @@ describe('GetTemplatePreviewHandler Security & Access Control', () => {
   let templatePreviewLoader: any;
   let templateListingRepository: any;
   let templateEntitlementRepository: any;
+  let releases: any;
 
   const templateId = '11111111-1111-1111-1111-111111111111';
   const versionId = '22222222-2222-2222-2222-222222222222';
@@ -62,6 +65,17 @@ describe('GetTemplatePreviewHandler Security & Access Control', () => {
     return listing;
   };
 
+  const entitlement = (source: TemplateEntitlementSource) => ({
+    getSource: () => source,
+  });
+  const release = (id: string, offerTypeAtRelease: TemplateOfferType) =>
+    TemplateMarketplaceRelease.create({
+      templateId,
+      versionId: id,
+      releasedBy: null,
+      offerTypeAtRelease,
+    });
+
   beforeEach(() => {
     pageTemplateRepository = {
       findById: jest.fn().mockResolvedValue(createMockTemplate()),
@@ -92,6 +106,13 @@ describe('GetTemplatePreviewHandler Security & Access Control', () => {
     templateEntitlementRepository = {
       findByTemplateAndUser: jest.fn().mockResolvedValue(null),
     };
+    releases = {
+      findByTemplateAndVersion: jest
+        .fn()
+        .mockImplementation(async (_templateId: string, id: string) =>
+          release(id, TemplateOfferType.FREE),
+        ),
+    };
 
     handler = new GetTemplatePreviewHandler(
       pageTemplateRepository,
@@ -102,6 +123,7 @@ describe('GetTemplatePreviewHandler Security & Access Control', () => {
       templatePreviewLoader,
       templateListingRepository,
       templateEntitlementRepository,
+      releases,
     );
   });
 
@@ -114,11 +136,18 @@ describe('GetTemplatePreviewHandler Security & Access Control', () => {
       previewMode: TemplatePreviewMode.IMAGE,
     });
 
-    it('limits buyer full preview to the pinned sold version', async () => {
+    beforeEach(() => {
+      releases.findByTemplateAndVersion.mockImplementation(
+        async (_templateId: string, id: string) =>
+          release(id, TemplateOfferType.PAID),
+      );
+    });
+
+    it('denies an unrecorded published version to a buyer', async () => {
       templateListingRepository.findByTemplateId.mockResolvedValue(paidListing);
-      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue({
-        id: 'entitlement',
-      });
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        entitlement(TemplateEntitlementSource.PAID_PURCHASE),
+      );
       const otherId = '77777777-7777-7777-7777-777777777777';
       const other = TemplateVersion.create({
         id: otherId,
@@ -128,6 +157,7 @@ describe('GetTemplatePreviewHandler Security & Access Control', () => {
       });
       other.publish();
       templateVersionRepository.findById.mockResolvedValue(other);
+      releases.findByTemplateAndVersion.mockResolvedValue(null);
       await expect(
         handler.execute(
           new GetTemplatePreviewQuery(templateId, otherId, buyerId),
@@ -147,9 +177,9 @@ describe('GetTemplatePreviewHandler Security & Access Control', () => {
         });
         listing.unpublish();
         templateListingRepository.findByTemplateId.mockResolvedValue(listing);
-        templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue({
-          id: 'entitlement',
-        });
+        templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+          entitlement(TemplateEntitlementSource.PAID_PURCHASE),
+        );
         pageTemplateRepository.findById.mockResolvedValue(
           createMockTemplate(visibility),
         );
@@ -169,9 +199,9 @@ describe('GetTemplatePreviewHandler Security & Access Control', () => {
       template.archive();
       pageTemplateRepository.findById.mockResolvedValue(template);
       templateListingRepository.findByTemplateId.mockResolvedValue(paidListing);
-      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue({
-        id: 'entitlement',
-      });
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        entitlement(TemplateEntitlementSource.PAID_PURCHASE),
+      );
       const result = await handler.execute(
         new GetTemplatePreviewQuery(templateId, versionId, buyerId),
       );
@@ -243,11 +273,9 @@ describe('GetTemplatePreviewHandler Security & Access Control', () => {
 
     it('allows user with valid entitlement to access Full Snapshot of PAID template', async () => {
       templateListingRepository.findByTemplateId.mockResolvedValue(paidListing);
-      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue({
-        id: 'entitlement-uuid',
-        templateId,
-        userId: buyerId,
-      });
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        entitlement(TemplateEntitlementSource.PAID_PURCHASE),
+      );
 
       const result = await handler.execute(
         new GetTemplatePreviewQuery(templateId, versionId, buyerId),
@@ -258,6 +286,166 @@ describe('GetTemplatePreviewHandler Security & Access Control', () => {
       expect(
         templateEntitlementRepository.findByTemplateAndUser,
       ).toHaveBeenCalledWith(templateId, buyerId);
+    });
+
+    it.each([
+      ['V1', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 1],
+      ['V3', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 3],
+    ])(
+      'gives a paid buyer full preview of official %s',
+      async (_label, id, number) => {
+        templateListingRepository.findByTemplateId.mockResolvedValue(
+          paidListing,
+        );
+        templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+          entitlement(TemplateEntitlementSource.PAID_PURCHASE),
+        );
+        const selected = TemplateVersion.create({
+          id,
+          templateId,
+          versionNumber: number,
+          createdBy: creatorId,
+        });
+        selected.publish();
+        templateVersionRepository.findById.mockResolvedValue(selected);
+        const result = await handler.execute(
+          new GetTemplatePreviewQuery(templateId, id, buyerId),
+        );
+        expect(result.isDemo).toBe(false);
+        expect(templatePreviewLoader.loadFrom).toHaveBeenCalledWith(
+          expect.anything(),
+          selected,
+        );
+        expect(releases.findByTemplateAndVersion).toHaveBeenCalledWith(
+          templateId,
+          id,
+        );
+      },
+    );
+
+    it('does not give a buyer full preview of the Demo version', async () => {
+      const demoId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+      const listing = createListing({
+        templateId,
+        createdBy: creatorId,
+        offerType: TemplateOfferType.PAID,
+        price: TemplatePrice.create({ amount: 150000, currency: 'VND' }),
+        demoVersionId: demoId,
+      });
+      templateListingRepository.findByTemplateId.mockResolvedValue(listing);
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        entitlement(TemplateEntitlementSource.PAID_PURCHASE),
+      );
+      const demo = TemplateVersion.create({
+        id: demoId,
+        templateId,
+        versionNumber: 2,
+        createdBy: creatorId,
+      });
+      demo.publish();
+      templateVersionRepository.findById.mockResolvedValue(demo);
+      await expect(
+        handler.execute(
+          new GetTemplatePreviewQuery(templateId, demoId, buyerId),
+        ),
+      ).rejects.toThrow(ForbiddenException);
+      expect(templatePreviewLoader.loadFrom).not.toHaveBeenCalled();
+    });
+
+    it('denies a Draft version before loading its snapshot', async () => {
+      templateListingRepository.findByTemplateId.mockResolvedValue(paidListing);
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        entitlement(TemplateEntitlementSource.PAID_PURCHASE),
+      );
+      templateVersionRepository.findById.mockResolvedValue(
+        createMockVersion(false),
+      );
+      await expect(
+        handler.execute(
+          new GetTemplatePreviewQuery(templateId, versionId, buyerId),
+        ),
+      ).rejects.toThrow(ForbiddenException);
+      expect(releases.findByTemplateAndVersion).not.toHaveBeenCalled();
+      expect(templatePreviewLoader.loadFrom).not.toHaveBeenCalled();
+    });
+
+    it('denies FREE_CLAIM full preview of a PAID release', async () => {
+      templateListingRepository.findByTemplateId.mockResolvedValue(paidListing);
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        entitlement(TemplateEntitlementSource.FREE_CLAIM),
+      );
+      await expect(
+        handler.execute(
+          new GetTemplatePreviewQuery(templateId, versionId, buyerId),
+        ),
+      ).rejects.toThrow('Free claim does not grant access to paid releases');
+      expect(templatePreviewLoader.loadFrom).not.toHaveBeenCalled();
+    });
+
+    it('lets FREE_CLAIM preview an older FREE release after the listing becomes PAID', async () => {
+      templateListingRepository.findByTemplateId.mockResolvedValue(paidListing);
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        entitlement(TemplateEntitlementSource.FREE_CLAIM),
+      );
+      releases.findByTemplateAndVersion.mockResolvedValue(
+        release(versionId, TemplateOfferType.FREE),
+      );
+      await expect(
+        handler.execute(
+          new GetTemplatePreviewQuery(templateId, versionId, buyerId),
+        ),
+      ).resolves.toMatchObject({ isDemo: false });
+    });
+
+    it('preserves an older official release after the listing selects a new version', async () => {
+      templateListingRepository.findByTemplateId.mockResolvedValue(paidListing);
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        entitlement(TemplateEntitlementSource.PAID_PURCHASE),
+      );
+      const oldId = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+      const old = TemplateVersion.create({
+        id: oldId,
+        templateId,
+        versionNumber: 1,
+        createdBy: creatorId,
+      });
+      old.publish();
+      templateVersionRepository.findById.mockResolvedValue(old);
+      await expect(
+        handler.execute(
+          new GetTemplatePreviewQuery(templateId, oldId, buyerId),
+        ),
+      ).resolves.toMatchObject({ isDemo: false });
+    });
+
+    it('never loads an older paid snapshot for an unentitled visitor changing versionId', async () => {
+      const demoId = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
+      const listing = createListing({
+        templateId,
+        createdBy: creatorId,
+        offerType: TemplateOfferType.PAID,
+        price: TemplatePrice.create({ amount: 150000, currency: 'VND' }),
+        previewMode: TemplatePreviewMode.INTERACTIVE,
+        demoVersionId: demoId,
+      });
+      templateListingRepository.findByTemplateId.mockResolvedValue(listing);
+      const oldId = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
+      const old = TemplateVersion.create({
+        id: oldId,
+        templateId,
+        versionNumber: 3,
+        createdBy: creatorId,
+      });
+      old.publish();
+      templateVersionRepository.findById.mockImplementation(
+        async (id: string) => (id === oldId ? old : createMockVersion()),
+      );
+      await expect(
+        handler.execute(
+          new GetTemplatePreviewQuery(templateId, oldId, randomUserId),
+        ),
+      ).rejects.toThrow(NotFoundException);
+      expect(templatePreviewLoader.loadFrom).not.toHaveBeenCalled();
     });
 
     it('FAIL CLOSED: blocks unpurchased user from PAID + INTERACTIVE when demo_version_id is null', async () => {
@@ -408,11 +596,12 @@ describe('GetTemplatePreviewHandler Security & Access Control', () => {
       templateListingRepository.findByTemplateId.mockResolvedValue(
         freeImageListing,
       );
-      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue({
-        id: 'entitlement-uuid',
-        templateId,
-        userId: buyerId,
-      });
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        entitlement(TemplateEntitlementSource.FREE_CLAIM),
+      );
+      releases.findByTemplateAndVersion.mockResolvedValue(
+        release(versionId, TemplateOfferType.FREE),
+      );
 
       const result = await handler.execute(
         new GetTemplatePreviewQuery(templateId, versionId, buyerId),
@@ -456,6 +645,25 @@ describe('GetTemplatePreviewHandler Security & Access Control', () => {
       );
       expect(result.isDemo).toBe(false);
       expect(templatePreviewLoader.loadFrom).toHaveBeenCalled();
+    });
+
+    it('keeps a PAID official release private from an unentitled workspace member', async () => {
+      pageTemplateRepository.findById.mockResolvedValue(
+        createMockTemplate(TemplateVisibility.WORKSPACE),
+      );
+      authorizationService.authorize.mockImplementation(
+        async ({ permissions }: { permissions: string[] }) =>
+          permissions.includes('workspace.read'),
+      );
+      releases.findByTemplateAndVersion.mockResolvedValue(
+        release(versionId, TemplateOfferType.PAID),
+      );
+      await expect(
+        handler.execute(
+          new GetTemplatePreviewQuery(templateId, versionId, randomUserId),
+        ),
+      ).rejects.toThrow(ForbiddenException);
+      expect(templatePreviewLoader.loadFrom).not.toHaveBeenCalled();
     });
 
     it('blocks non-creator and non-owner for PRIVATE template', async () => {

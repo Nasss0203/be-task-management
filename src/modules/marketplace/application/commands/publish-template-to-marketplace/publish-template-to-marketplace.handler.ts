@@ -1,4 +1,3 @@
-import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
 import {
   BadRequestException,
   ForbiddenException,
@@ -6,24 +5,28 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
 import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
+import type {
+  TemplateContentPort,
+  TemplateVersionPort,
+} from 'src/modules/template/application/ports/template-content.port';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
-import type { TemplateContentPort } from 'src/modules/template/application/ports/template-content.port';
-import type { TemplateVersionPort } from 'src/modules/template/application/ports/template-content.port';
-import type { TemplateListingRepository } from '../../../domain/repositories/template-listing.repository';
-import type { TemplateCategoryRepository } from '../../../domain/repositories/template-category.repository';
-import { TemplateListing } from '../../../domain/aggregates/template-listing/template-listing.aggregate';
-import { TemplateOfferType } from '../../../domain/enums/template-offer-type.enum';
+import { PageTemplateResponseDto } from '../../../../template/application/dto/page-template/page-template.response.dto';
+import { TemplateVersionResponseDto } from '../../../../template/application/dto/template-version/template-version.response.dto';
 import { TemplateStatus } from '../../../../template/domain/enums/template-status.enum';
 import { TemplateVisibility } from '../../../../template/domain/enums/template-visibility.enum';
 import { TEMPLATE_TYPES } from '../../../../template/template.types';
-import { PageTemplateResponseDto } from '../../../../template/application/dto/page-template/page-template.response.dto';
-import { TemplateVersionResponseDto } from '../../../../template/application/dto/template-version/template-version.response.dto';
+import { TemplateListing } from '../../../domain/aggregates/template-listing/template-listing.aggregate';
+import { TemplateMarketplaceRelease } from '../../../domain/aggregates/template-marketplace-release/template-marketplace-release.aggregate';
+import type { TemplateCategoryRepository } from '../../../domain/repositories/template-category.repository';
+import type { TemplateListingRepository } from '../../../domain/repositories/template-listing.repository';
+import type { TemplateMarketplaceReleaseRepository } from '../../../domain/repositories/template-marketplace-release.repository';
 import { TemplateListingResponseDto } from '../../dto/template-listing/template-listing.response.dto';
-import { PublishTemplateToMarketplaceCommand } from './publish-template-to-marketplace.command';
 import { resolveTemplateListingPricing } from '../../services/template-listing-pricing';
+import { PublishTemplateToMarketplaceCommand } from './publish-template-to-marketplace.command';
 
 @Injectable()
 export class PublishTemplateToMarketplaceHandler {
@@ -38,6 +41,8 @@ export class PublishTemplateToMarketplaceHandler {
     private readonly authorization: AuthorizationService,
     @Inject(MARKETPLACE_TYPES.repositories.TemplateCategoryRepository)
     private readonly categories: TemplateCategoryRepository,
+    @Inject(MARKETPLACE_TYPES.repositories.TemplateMarketplaceReleaseRepository)
+    private readonly releases: TemplateMarketplaceReleaseRepository,
   ) {}
   async execute(command: PublishTemplateToMarketplaceCommand) {
     const pricing = resolveTemplateListingPricing(
@@ -77,7 +82,7 @@ export class PublishTemplateToMarketplaceHandler {
           'Listing pricing does not match; update listing pricing before publishing',
         );
       }
-      let version = await this.versions.findByIdForUpdate(
+      const version = await this.versions.findByIdForUpdate(
         command.versionId,
         context,
       );
@@ -86,6 +91,8 @@ export class PublishTemplateToMarketplaceHandler {
         throw new BadRequestException(
           'Template version does not belong to this template',
         );
+      if (!version.isPublished())
+        throw new BadRequestException('Template version must be published');
       const normalizedCategoryIds =
         command.categoryIds === undefined
           ? undefined
@@ -106,10 +113,6 @@ export class PublishTemplateToMarketplaceHandler {
           throw new BadRequestException(
             'Only active template categories can be assigned',
           );
-      }
-      if (version.isDraft()) {
-        version.publish();
-        version = await this.versions.save(version, context);
       }
       if (template.getVisibility() !== TemplateVisibility.PUBLIC) {
         template.updateMetadata({ visibility: TemplateVisibility.PUBLIC });
@@ -138,12 +141,9 @@ export class PublishTemplateToMarketplaceHandler {
             'Demo version must be a published template version',
           );
         }
-        if (
-          pricing.offerType === TemplateOfferType.PAID &&
-          demoVersion.getId() === version.getId()
-        ) {
+        if (demoVersion.getId() === version.getId()) {
           throw new BadRequestException(
-            'Demo version cannot be the same as the published paid version',
+            'Demo version cannot be the official release version',
           );
         }
       }
@@ -178,6 +178,23 @@ export class PublishTemplateToMarketplaceHandler {
       }
       listing.selectPublishedVersion(version);
       listing.publish();
+      if (
+        !(await this.releases.existsByTemplateAndVersion(
+          template.getId(),
+          version.getId(),
+          context,
+        ))
+      ) {
+        await this.releases.insertIfAbsent(
+          TemplateMarketplaceRelease.create({
+            templateId: template.getId(),
+            versionId: version.getId(),
+            releasedBy: command.userId,
+            offerTypeAtRelease: listing.getOfferType(),
+          }),
+          context,
+        );
+      }
       if (needsSave) listing = await this.listings.save(listing, context);
       if (normalizedCategoryIds !== undefined) {
         await this.listings.replaceCategoryIds(
