@@ -16,7 +16,7 @@ services:
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_NAME: ${DB_NAME:-back_task}
-      DB_SYNCHRONIZE: ${DB_SYNCHRONIZE:-true}
+      DB_SYNCHRONIZE: "false"
       JWT_ACCESS_TOKEN_SECRET: ${JWT_ACCESS_TOKEN_SECRET:-change-me}
       JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
     ports:

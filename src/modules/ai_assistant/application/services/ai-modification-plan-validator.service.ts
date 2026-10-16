@@ -1,7 +1,5 @@
 import { BadGatewayException, Injectable } from '@nestjs/common';
 
-import { PageBlockType } from 'src/modules/content/domain/entities/page-block.entity';
-
 import { PropertyType } from 'src/modules/database/domain/enums/property-type.enum';
 
 import {
@@ -21,6 +19,7 @@ import {
   type AiPageContextResponseDto,
 } from '../dto/response/ai-page-context.response.dto';
 
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import {
   type AiCreateDatabaseRowsOperation,
   type AiInsertBlocksOperation,

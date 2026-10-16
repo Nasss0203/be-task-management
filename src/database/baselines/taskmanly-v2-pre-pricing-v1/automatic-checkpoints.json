@@ -1,0 +1,95 @@
+{
+  "policy": "isolated-single-new-table-v1",
+  "checkpoints": [
+    {
+      "applied": [
+        "AddPaidTemplateOffer1791810000000",
+        "AddTemplateListingPricing1791810001000",
+        "CreateTemplatePurchases1791903351862"
+      ],
+      "schemaFile": "checkpoints/automatic-1791903351862.sql",
+      "schemaSha256": "cd2419b72fdfbaa00bd4291e028abb3fc522cf151859af6f120988422936119e",
+      "evidence": "Automatic policy: two independent PostgreSQL 18 instances; verified input, exact executed SQL, whole-schema exclusion scope, catalog convergence and committed rollback.",
+      "approval": {
+        "kind": "automatic",
+        "policy": "isolated-single-new-table-v1",
+        "evidenceFile": "evidence/automatic-1791903351862.json",
+        "evidenceSha256": "47fe6fb21e021f36051b245a57681eb48e00da34f816180e904728e4cc283655"
+      }
+    },
+    {
+      "applied": [
+        "AddPaidTemplateOffer1791810000000",
+        "AddTemplateListingPricing1791810001000",
+        "CreateTemplatePurchases1791903351862",
+        "AddPaidPurchaseEntitlementSource1791958800000"
+      ],
+      "schemaFile": "checkpoints/automatic-1791958800000.sql",
+      "schemaSha256": "37a0b941fc58dd6eeda8be79fd133b9ebd17a24d91893683796f03f95ba74f40",
+      "evidence": "Automatic policy: two independent PostgreSQL 18 instances; verified input, exact executed SQL, whole-schema exclusion scope, catalog convergence and committed rollback.",
+      "approval": {
+        "kind": "automatic",
+        "policy": "isolated-additive-enum-v1",
+        "evidenceFile": "evidence/automatic-1791958800000.json",
+        "evidenceSha256": "c69e254c1485c920d80f2d0334c35b5e79d29aae21424d051efdda49686f4c56"
+      }
+    },
+    {
+      "applied": [
+        "AddPaidTemplateOffer1791810000000",
+        "AddTemplateListingPricing1791810001000",
+        "CreateTemplatePurchases1791903351862",
+        "AddPaidPurchaseEntitlementSource1791958800000",
+        "CreateMarketplaceWebhookEvents1791986191301"
+      ],
+      "schemaFile": "checkpoints/automatic-1791986191301.sql",
+      "schemaSha256": "9b947ebe4d48749501b294cc80ab0504750fce65c0717020c38b467db4a5b9d9",
+      "evidence": "Automatic policy: two independent PostgreSQL 18 instances; verified input, exact executed SQL, whole-schema exclusion scope, catalog convergence and committed rollback.",
+      "approval": {
+        "kind": "automatic",
+        "policy": "isolated-single-new-table-v1",
+        "evidenceFile": "evidence/automatic-1791986191301.json",
+        "evidenceSha256": "157452a78f0736d721515576abec52d54e31bf289ffb0eed5e4ad2271e41ef5a"
+      }
+    },
+    {
+      "applied": [
+        "AddPaidTemplateOffer1791810000000",
+        "AddTemplateListingPricing1791810001000",
+        "CreateTemplatePurchases1791903351862",
+        "AddPaidPurchaseEntitlementSource1791958800000",
+        "CreateMarketplaceWebhookEvents1791986191301",
+        "AddTemplateListingPreviewMode1792050000000"
+      ],
+      "schemaFile": "checkpoints/automatic-1792050000000.sql",
+      "schemaSha256": "ec2597518fcd4a1313ac783210b5437a033479295c48cb8fe892f73593545b05",
+      "evidence": "Automatic policy: two independent PostgreSQL 18 instances; verified input, exact executed SQL, whole-schema verification, ORM schema alignment and committed rollback.",
+      "approval": {
+        "kind": "automatic",
+        "policy": "isolated-migration-verification-v1",
+        "evidenceFile": "evidence/automatic-1792050000000.json",
+        "evidenceSha256": "fbd7037539f587794af1c6e54133da11b454ed27acfdbf7cfbdd493c540ea278"
+      }
+    },
+    {
+      "applied": [
+        "AddPaidTemplateOffer1791810000000",
+        "AddTemplateListingPricing1791810001000",
+        "CreateTemplatePurchases1791903351862",
+        "AddPaidPurchaseEntitlementSource1791958800000",
+        "CreateMarketplaceWebhookEvents1791986191301",
+        "AddTemplateListingPreviewMode1792050000000",
+        "AddTemplateListingDemoPreview1792100000000"
+      ],
+      "schemaFile": "checkpoints/automatic-1792100000000.sql",
+      "schemaSha256": "544f496097f6f18cd3cdea8fe8714b593abda04b4447c3c516b0faaed094297a",
+      "evidence": "Automatic policy: two independent PostgreSQL 18 instances; verified input, exact executed SQL, whole-schema verification, ORM schema alignment and committed rollback.",
+      "approval": {
+        "kind": "automatic",
+        "policy": "isolated-migration-verification-v1",
+        "evidenceFile": "evidence/automatic-1792100000000.json",
+        "evidenceSha256": "febd99d24287748670e63ca88e40a225e83728b1f2434eed5a39c4763e419ee8"
+      }
+    }
+  ]
+}

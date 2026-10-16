@@ -34,7 +34,6 @@ export class AiMessageOrmEntity {
   @Column({
     type: 'enum',
     enum: AiMessageRole,
-    enumName: 'ai_messages_role_enum',
   })
   role: AiMessageRole;
 

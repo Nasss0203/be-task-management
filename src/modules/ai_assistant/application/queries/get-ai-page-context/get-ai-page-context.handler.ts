@@ -10,11 +10,7 @@ import { FindPageBlockByPageQuery } from 'src/modules/content/application/querie
 import { FindPageByIdHandler } from 'src/modules/content/application/queries/page/find-page-by-id/find-page-by-id.handler';
 import { FindPageByIdQuery } from 'src/modules/content/application/queries/page/find-page-by-id/find-page-by-id.query';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
-import {
-  PageBlockType,
-  type PageBlockDatabaseViewDataConfig,
-  type PageBlockJson,
-} from 'src/modules/content/domain/entities/page-block.entity';
+
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
 
 import { GetDatabaseViewsHandler } from 'src/modules/database/application/queries/get-database-views/get-database-views.handler';
@@ -24,9 +20,14 @@ import type { Database } from 'src/modules/database/domain/aggregates/database/d
 import type { DatabaseRow } from 'src/modules/database/domain/aggregates/row/database-row.aggregate';
 import type { RowValueData } from 'src/modules/database/domain/aggregates/row/row-value.type';
 import { PropertyType } from 'src/modules/database/domain/enums/property-type.enum';
-import type { DatabaseRepository } from 'src/modules/database/domain/repositories/database.repository';
 import type { DatabaseRowRepository } from 'src/modules/database/domain/repositories/database-row.repository';
+import type { DatabaseRepository } from 'src/modules/database/domain/repositories/database.repository';
 
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
+import {
+  PageBlockDatabaseViewDataConfig,
+  PageBlockJson,
+} from 'src/shared/domain/page-block.types';
 import {
   AI_PAGE_CONTEXT_SCHEMA_VERSION,
   MAX_AI_PAGE_CONTEXT_BLOCKS,

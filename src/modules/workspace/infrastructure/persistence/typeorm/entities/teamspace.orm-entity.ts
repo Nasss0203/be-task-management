@@ -35,9 +35,7 @@ export class TeamspaceOrmEntity {
     nullable: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({
-    name: 'workspace_id',
-  })
+  @JoinColumn({ name: 'workspace_id' })
   workspace: WorkspaceOrmEntity;
 
   @Column({
@@ -68,7 +66,6 @@ export class TeamspaceOrmEntity {
   @Column({
     type: 'enum',
     enum: TeamspaceVisibility,
-    enumName: 'teamspaces_visibility_enum',
     default: TeamspaceVisibility.OPEN,
   })
   visibility: TeamspaceVisibility;

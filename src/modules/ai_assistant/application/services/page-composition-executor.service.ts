@@ -7,7 +7,7 @@ import { CreatePageBlockHandler } from 'src/modules/content/application/commands
 import { CreatePageCommand } from 'src/modules/content/application/commands/page/create-page/create-page.command';
 import { CreatePageHandler } from 'src/modules/content/application/commands/page/create-page/create-page.handler';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
-import { PageBlockType } from 'src/modules/content/domain/entities/page-block.entity';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 
 import { AddPropertyOptionCommand } from 'src/modules/database/application/commands/add-property-option/add-property-option.command';
 import { AddPropertyOptionHandler } from 'src/modules/database/application/commands/add-property-option/add-property-option.handler';

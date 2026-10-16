@@ -25,14 +25,20 @@ export class PublishedSiteOrmEntity {
   workspace_id: string;
 
   @ManyToOne(() => WorkspaceOrmEntity, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'workspace_id' })
+  @JoinColumn({
+    name: 'workspace_id',
+    foreignKeyConstraintName: 'FK_published_sites_workspace',
+  })
   workspace: WorkspaceOrmEntity;
 
   @Column('uuid')
   root_page_id: string;
 
   @ManyToOne(() => PageOrmEntity, { onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'root_page_id' })
+  @JoinColumn({
+    name: 'root_page_id',
+    foreignKeyConstraintName: 'FK_published_sites_root_page',
+  })
   rootPage: PageOrmEntity;
 
   @Column({ type: 'varchar', length: 63 })
@@ -45,7 +51,10 @@ export class PublishedSiteOrmEntity {
   created_by: string;
 
   @ManyToOne(() => User, { onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'created_by' })
+  @JoinColumn({
+    name: 'created_by',
+    foreignKeyConstraintName: 'FK_published_sites_created_by',
+  })
   creator: User;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })

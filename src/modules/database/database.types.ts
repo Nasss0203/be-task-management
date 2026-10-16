@@ -4,4 +4,8 @@ export const DATABASE_TYPES = {
     DatabaseRowRepository: Symbol('DatabaseRowRepository'),
     DatabaseViewRepository: Symbol('DatabaseViewRepository'),
   },
+  ports: {
+    DatabaseProvisioning: Symbol('DatabaseProvisioning'),
+    DatabaseSnapshotReader: Symbol('DatabaseSnapshotReader'),
+  },
 } as const;

@@ -6,6 +6,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
+import type { SepayPgCheckoutPort } from 'src/modules/payment/application/ports/sepay-pg-checkout.port';
+import type { StripeCheckoutPort } from 'src/modules/payment/application/ports/stripe-checkout.port';
+import { PAYMENT_TYPES } from 'src/modules/payment/payment.types';
+import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
+import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
+import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 
 import { BILLING_TYPES } from '../../../../billing.types';
 import { BillingProvider } from '../../../../domain/constants/billing-provider.constant';
@@ -13,8 +19,6 @@ import { PaymentOrder } from '../../../../domain/entities/payment-order.entity';
 import type { BillingPlanPriceRepository } from '../../../../domain/repositories/billing-plan-price.repository';
 import type { PaymentOrderRepository } from '../../../../domain/repositories/payment-order.repository';
 import { CreateBillingCheckoutResponseDto } from '../../../dto/response/create-billing-checkout.response.dto';
-import type { SepayPgCheckoutPort } from '../../../ports/sepay-pg-checkout.port';
-import type { StripeCheckoutPort } from '../../../ports/stripe-checkout.port';
 import { WorkspaceSubscriptionProvisioningService } from '../../../services/workspace-subscription-provisioning.service';
 import { CreateBillingCheckoutCommand } from './create-billing-checkout.command';
 
@@ -32,18 +36,37 @@ export class CreateBillingCheckoutHandler {
     @Inject(BILLING_TYPES.services.WorkspaceSubscriptionProvisioningService)
     private readonly subscriptionProvisioningService: WorkspaceSubscriptionProvisioningService,
 
-    @Inject(BILLING_TYPES.providers.SepayPgCheckoutService)
+    @Inject(PAYMENT_TYPES.providers.SepayPgCheckoutService)
     private readonly sepayPgCheckoutService: SepayPgCheckoutPort,
 
-    @Inject(BILLING_TYPES.providers.StripeCheckoutService)
+    @Inject(PAYMENT_TYPES.providers.StripeCheckoutService)
     private readonly stripeCheckoutService: StripeCheckoutPort,
+
+    @Inject(PERSISTENCE_TYPES.UnitOfWork)
+    private readonly unitOfWork: UnitOfWork,
   ) {}
 
   async execute(
     command: CreateBillingCheckoutCommand,
   ): Promise<CreateBillingCheckoutResponseDto> {
+    const order = await this.unitOfWork.runInTransaction(async (context) => {
+      await this.paymentOrderRepository.lockWorkspace(
+        command.workspaceId,
+        context,
+      );
+      return this.prepareOrder(command, context);
+    });
+    // Commit the order before calling a gateway; failed calls can retry the same ID.
+    return this.toResponse(order);
+  }
+
+  private async prepareOrder(
+    command: CreateBillingCheckoutCommand,
+    context: PersistenceContext,
+  ): Promise<PaymentOrder> {
     const planPrice = await this.billingPlanPriceRepository.findActiveById(
       command.planPriceId,
+      context,
     );
 
     if (!planPrice) {
@@ -68,6 +91,7 @@ export class CreateBillingCheckoutHandler {
     const subscription =
       await this.subscriptionProvisioningService.getOrCreateInitialFree(
         command.workspaceId,
+        context,
       );
 
     const now = new Date();
@@ -77,6 +101,7 @@ export class CreateBillingCheckoutHandler {
         command.workspaceId,
         command.planPriceId,
         now,
+        context,
       );
 
     if (existingPaymentOrder) {
@@ -94,13 +119,15 @@ export class CreateBillingCheckoutHandler {
       if (!existingSubscriptionId) {
         existingPaymentOrder.attachSubscription(subscription.getId(), now);
 
-        const updatedPaymentOrder =
-          await this.paymentOrderRepository.save(existingPaymentOrder);
+        const updatedPaymentOrder = await this.paymentOrderRepository.save(
+          existingPaymentOrder,
+          context,
+        );
 
-        return this.toResponse(updatedPaymentOrder);
+        return updatedPaymentOrder;
       }
 
-      return this.toResponse(existingPaymentOrder);
+      return existingPaymentOrder;
     }
 
     const paymentOrder = PaymentOrder.create({
@@ -117,10 +144,12 @@ export class CreateBillingCheckoutHandler {
       updatedAt: now,
     });
 
-    const savedPaymentOrder =
-      await this.paymentOrderRepository.save(paymentOrder);
+    const savedPaymentOrder = await this.paymentOrderRepository.save(
+      paymentOrder,
+      context,
+    );
 
-    return this.toResponse(savedPaymentOrder);
+    return savedPaymentOrder;
   }
 
   private generateOrderCode(): string {

@@ -1,6 +1,6 @@
-import { PageBlockType } from 'src/modules/content/domain/entities/page-block.entity';
 import { type RowValueData } from 'src/modules/database/domain/aggregates/row/row-value.type';
 
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import {
   AI_MODIFICATION_CONTEXT_REQUEST_REASONS,
   AI_MODIFICATION_OPERATION_TYPES,

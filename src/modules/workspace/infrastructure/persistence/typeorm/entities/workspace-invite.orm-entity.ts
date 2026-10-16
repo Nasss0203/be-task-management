@@ -67,7 +67,6 @@ export class WorkspaceInviteOrmEntity {
     name: 'role_name',
     type: 'enum',
     enum: WorkspaceRole,
-    enumName: 'workspace_invites_role_name_enum',
     default: WorkspaceRole.MEMBER,
   })
   roleName: WorkspaceRole;

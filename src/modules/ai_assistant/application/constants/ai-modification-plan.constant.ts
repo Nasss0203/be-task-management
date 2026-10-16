@@ -1,5 +1,5 @@
-import { PageBlockType } from 'src/modules/content/domain/entities/page-block.entity';
 import { PropertyType } from 'src/modules/database/domain/enums/property-type.enum';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 
 export const AI_MODIFICATION_PLAN_CAPABILITY =
   'GENERATE_PAGE_MODIFICATION_PLAN' as const;

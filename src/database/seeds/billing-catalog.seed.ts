@@ -171,12 +171,41 @@ const prices = [
     amount: 2490000,
     provider: 'SEPAY',
   },
+
+  {
+    planCode: 'PLUS',
+    billingInterval: 'MONTHLY',
+    currency: 'VND',
+    amount: 99000,
+    provider: 'STRIPE',
+  },
+  {
+    planCode: 'PLUS',
+    billingInterval: 'YEARLY',
+    currency: 'VND',
+    amount: 990000,
+    provider: 'STRIPE',
+  },
+  {
+    planCode: 'BUSINESS',
+    billingInterval: 'MONTHLY',
+    currency: 'VND',
+    amount: 249000,
+    provider: 'STRIPE',
+  },
+  {
+    planCode: 'BUSINESS',
+    billingInterval: 'YEARLY',
+    currency: 'VND',
+    amount: 2490000,
+    provider: 'STRIPE',
+  },
 ] satisfies Array<{
   planCode: Exclude<PlanCode, 'FREE'>;
   billingInterval: 'MONTHLY' | 'YEARLY';
   currency: 'VND';
   amount: number;
-  provider: 'SEPAY';
+  provider: 'SEPAY' | 'STRIPE';
 }>;
 
 async function upsertPlan(
@@ -319,19 +348,7 @@ async function upsertPrice(
   const existingId = existingRows[0]?.id;
 
   if (existingId) {
-    await manager.query(
-      `
-        UPDATE "billing_plan_prices"
-        SET
-          "amount" = $2,
-          "provider_price_id" = NULL,
-          "is_active" = true,
-          "updated_at" = CURRENT_TIMESTAMP
-        WHERE "id" = $1
-      `,
-      [existingId, definition.amount.toString()],
-    );
-
+    // Prices may be referenced by orders/subscriptions: never rewrite them.
     return;
   }
 
@@ -394,6 +411,10 @@ async function seedBillingCatalog(): Promise<void> {
     const dataSource = app.get(DataSource);
 
     await dataSource.transaction(async (manager) => {
+      // Serialize seed runs: prices intentionally have no natural-key UNIQUE constraint.
+      await manager.query(
+        'LOCK TABLE "billing_plan_prices" IN SHARE ROW EXCLUSIVE MODE',
+      );
       const planIds = new Map<PlanCode, string>();
       const featureIds = new Map<FeatureCode, string>();
 

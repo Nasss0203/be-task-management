@@ -37,9 +37,7 @@ export class TeamspaceMemberOrmEntity {
     nullable: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({
-    name: 'teamspace_id',
-  })
+  @JoinColumn({ name: 'teamspace_id' })
   teamspace: TeamspaceOrmEntity;
 
   @Column({
@@ -52,16 +50,13 @@ export class TeamspaceMemberOrmEntity {
     nullable: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({
-    name: 'workspace_member_id',
-  })
+  @JoinColumn({ name: 'workspace_member_id' })
   workspaceMember: WorkspaceMemberOrmEntity;
 
   @Column({
     name: 'role_name',
     type: 'enum',
     enum: TeamspaceRole,
-    enumName: 'teamspace_members_role_name_enum',
     default: TeamspaceRole.MEMBER,
   })
   roleName: TeamspaceRole;

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { MarketplaceModule } from '../marketplace/marketplace.module';
 import { ADMIN_TYPES } from './admin.types';
 import { CreateAdminBillingPlanPriceVersionHandler } from './application/commands/create-admin-billing-plan-price-version/create-admin-billing-plan-price-version.handler';
 import { UpdateAdminBillingPlanHandler } from './application/commands/update-admin-billing-plan/update-admin-billing-plan.handler';
@@ -18,12 +19,12 @@ import { ListAdminBillingWebhookEventsHandler } from './application/queries/list
 import { ListAdminUsersHandler } from './application/queries/list-admin-users/list-admin-users.handler';
 import { ListAdminWorkspaceMembersHandler } from './application/queries/list-admin-workspace-members/list-admin-workspace-members.handler';
 import { ListAdminWorkspacePagesHandler } from './application/queries/list-admin-workspace-pages/list-admin-workspace-pages.handler';
-import { ListAdminWorkspacesHandler } from './application/queries/list-admin-workspaces/list-admin-workspaces.handler';
 import { ListAdminWorkspaceTeamspacesHandler } from './application/queries/list-admin-workspace-teamspaces/list-admin-workspace-teamspaces.handler';
+import { ListAdminWorkspacesHandler } from './application/queries/list-admin-workspaces/list-admin-workspaces.handler';
 import { AdminAuthorizationService } from './application/services/admin-authorization.service';
 import { TypeOrmAdminBillingPlanReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-billing-plan.reader';
-import { TypeOrmAdminBillingReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-billing.reader';
 import { TypeOrmAdminBillingWebhookReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-billing-webhook.reader';
+import { TypeOrmAdminBillingReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-billing.reader';
 import { TypeOrmAdminDashboardReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-dashboard.reader';
 import { TypeOrmAdminUserReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-user.reader';
 import { TypeOrmAdminWorkspaceReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-workspace.reader';
@@ -32,17 +33,20 @@ import { TypeOrmAdminUserWriter } from './infrastructure/persistence/typeorm/wri
 import { AdminAccessController } from './presentation/http/controllers/admin-access.controller';
 import { AdminBillingController } from './presentation/http/controllers/admin-billing.controller';
 import { AdminDashboardController } from './presentation/http/controllers/admin-dashboard.controller';
+import { AdminTemplateCategoryController } from './presentation/http/controllers/admin-template-category.controller';
 import { AdminUsersController } from './presentation/http/controllers/admin-users.controller';
 import { AdminWorkspacesController } from './presentation/http/controllers/admin-workspaces.controller';
 import { AdminPermissionGuard } from './presentation/http/guards/admin-permission.guard';
 
 @Module({
+  imports: [MarketplaceModule],
   controllers: [
     AdminAccessController,
     AdminUsersController,
     AdminWorkspacesController,
     AdminDashboardController,
     AdminBillingController,
+    AdminTemplateCategoryController,
   ],
   providers: [
     {

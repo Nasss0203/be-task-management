@@ -45,7 +45,6 @@ export class WorkspaceMemberOrmEntity {
     name: 'membership_type',
     type: 'enum',
     enum: WorkspaceMembershipType,
-    enumName: 'workspace_members_membership_type_enum',
     default: WorkspaceMembershipType.MEMBER,
   })
   membershipType: WorkspaceMembershipType;
@@ -54,7 +53,6 @@ export class WorkspaceMemberOrmEntity {
     name: 'role_name',
     type: 'enum',
     enum: WorkspaceRole,
-    enumName: 'workspace_members_role_name_enum',
     default: WorkspaceRole.MEMBER,
     nullable: true,
   })

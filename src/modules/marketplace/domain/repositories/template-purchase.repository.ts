@@ -1,0 +1,41 @@
+import type { PersistenceContext } from 'src/shared/domain/persistence-context';
+
+import type { TemplatePurchase } from '../aggregates/template-purchase/template-purchase.aggregate';
+
+export interface TemplatePurchaseRepository {
+  create(
+    purchase: TemplatePurchase,
+    context?: PersistenceContext,
+  ): Promise<TemplatePurchase>;
+
+  save(
+    purchase: TemplatePurchase,
+    context?: PersistenceContext,
+  ): Promise<TemplatePurchase>;
+
+  findById(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<TemplatePurchase | null>;
+
+  findByOrderCode(
+    orderCode: string,
+    context?: PersistenceContext,
+  ): Promise<TemplatePurchase | null>;
+
+  findByBuyerAndIdempotencyKey(
+    buyerId: string,
+    idempotencyKey: string,
+    context?: PersistenceContext,
+  ): Promise<TemplatePurchase | null>;
+
+  findByIdForUpdate(
+    id: string,
+    context: PersistenceContext,
+  ): Promise<TemplatePurchase | null>;
+
+  findByOrderCodeForUpdate(
+    orderCode: string,
+    context: PersistenceContext,
+  ): Promise<TemplatePurchase | null>;
+}

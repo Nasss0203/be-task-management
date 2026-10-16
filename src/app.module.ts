@@ -13,18 +13,21 @@ import { SystemRoleGuard } from './common/guard/system-role.guard';
 import { WorkspaceResolverService } from './common/services/workspace-resolver.service';
 import { DatabaseModule } from './database/database.module';
 import { ActivityModule } from './modules/activity/activity.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { AiAssistantModule } from './modules/ai_assistant/ai-assistant.module';
 import { AttachmentModule } from './modules/attachment/attachment.module';
 import { BillingModule } from './modules/billing/billing.module';
-import { IdentityModule } from './modules/identity/identity.module';
+import { ContentModule } from './modules/content/content.module';
 import { DatabaseModule as DatabaseModules } from './modules/database/database.module';
+import { IdentityModule } from './modules/identity/identity.module';
 import { MailModule } from './modules/mail/mail.module';
 import { MentionsModule } from './modules/mentions/mentions.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
-import { ContentModule } from './modules/content/content.module';
 import { PermissionModule } from './modules/permission/permission.module';
+import { StripeWebhookModule } from './modules/stripe-webhook/stripe-webhook.module';
+import { TemplateModule } from './modules/template/template.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
-import { AdminModule } from './modules/admin/admin.module';
+import { QueueModule } from './shared/infrastructure/queue/queue.module';
 
 @Module({
   imports: [
@@ -55,6 +58,7 @@ import { AdminModule } from './modules/admin/admin.module';
     WorkspaceModule,
     PermissionModule,
     ContentModule,
+    TemplateModule,
     MailModule,
     AttachmentModule,
     ActivityModule,
@@ -65,6 +69,9 @@ import { AdminModule } from './modules/admin/admin.module';
     BillingModule,
     DatabaseModules,
     AdminModule,
+
+    QueueModule,
+    StripeWebhookModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,11 +1,11 @@
-import {
-  PageBlockType,
-  type PageBlockJson,
-  type PageBlockStyleConfig,
-} from 'src/modules/content/domain/entities/page-block.entity';
 import { type RowValueData } from 'src/modules/database/domain/aggregates/row/row-value.type';
 import { DatabaseViewType } from 'src/modules/database/domain/enums/database-view-type.enum';
 import { PropertyType } from 'src/modules/database/domain/enums/property-type.enum';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
+import {
+  PageBlockJson,
+  PageBlockStyleConfig,
+} from 'src/shared/domain/page-block.types';
 
 export interface AiPageContextPageDto {
   id: string;

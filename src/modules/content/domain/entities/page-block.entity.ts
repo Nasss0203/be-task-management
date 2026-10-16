@@ -1,40 +1,8 @@
-export enum PageBlockType {
-  TEXT = 'TEXT',
-  HEADER = 'HEADER',
-  QUOTE = 'QUOTE',
-  DIVIDER = 'DIVIDER',
-  CODE = 'CODE',
-  TODO = 'TODO',
-
-  IMAGE = 'IMAGE',
-  VIDEO = 'VIDEO',
-  FILE = 'FILE',
-  BOOKMARK = 'BOOKMARK',
-
-  EMBED = 'EMBED',
-  FIGMA = 'FIGMA',
-  GITHUB_GIST = 'GITHUB_GIST',
-  GOOGLE_MAPS = 'GOOGLE_MAPS',
-  TWEET = 'TWEET',
-
-  DATABASE_VIEW = 'DATABASE_VIEW',
-  TABLE_SIMPLE = 'TABLE_SIMPLE',
-  MERMAID = 'MERMAID',
-  BUTTON = 'BUTTON',
-  TOGGLE = 'TOGGLE',
-}
-
-export type PageBlockDatabaseViewDataConfig = {
-  database_id: string;
-  view_id: string;
-};
-
-export type PageBlockJson =
-  | Record<string, unknown>
-  | unknown[]
-  | PageBlockDatabaseViewDataConfig
-  | null;
-export type PageBlockStyleConfig = Record<string, unknown> | null;
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
+import type {
+  PageBlockJson,
+  PageBlockStyleConfig,
+} from 'src/shared/domain/page-block.types';
 
 export class PageBlock {
   constructor(

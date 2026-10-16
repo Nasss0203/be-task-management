@@ -140,7 +140,6 @@ describe('root-owned public sites', () => {
           slug: original.getSlug(),
           icon: original.getIcon(),
           coverUrl: original.getCoverUrl(),
-          isTemplate: original.getIsTemplate(),
           teamspaceId,
           parentPageId: parentId,
           publicSubdomain: subdomain ?? null,

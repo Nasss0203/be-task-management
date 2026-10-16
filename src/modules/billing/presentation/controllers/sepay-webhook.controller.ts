@@ -22,8 +22,9 @@ import { ProcessSepayWebhookHandler } from '../../application/commands/webhook/p
 import { SepayPgIpnRequestDto } from '../../application/dto/request/sepay-pg-ipn.request.dto';
 import { SePayWebhookRequestDto } from '../../application/dto/request/sepay-webhook.request.dto';
 import { BILLING_TYPES } from '../../billing.types';
-import { SepayPgIpnAuthService } from '../../infrastructure/providers/sepay/sepay-pg-ipn-auth.service';
-import { SepayWebhookService } from '../../infrastructure/providers/sepay/sepay-webhook.service';
+import { PAYMENT_TYPES } from 'src/modules/payment/payment.types';
+import { SepayPgIpnAuthService } from 'src/modules/payment/infrastructure/providers/sepay/sepay-pg-ipn-auth.service';
+import { SepayWebhookService } from 'src/modules/payment/infrastructure/providers/sepay/sepay-webhook.service';
 
 @Controller('billing/webhooks/sepay')
 export class SepayWebhookController {
@@ -31,13 +32,13 @@ export class SepayWebhookController {
     @Inject(BILLING_TYPES.applications.ProcessSepayWebhookHandler)
     private readonly webhookHandler: ProcessSepayWebhookHandler,
 
-    @Inject(BILLING_TYPES.providers.SepayWebhookService)
+    @Inject(PAYMENT_TYPES.providers.SepayWebhookService)
     private readonly sepayWebhookService: SepayWebhookService,
 
     @Inject(BILLING_TYPES.applications.ProcessSepayPgIpnHandler)
     private readonly pgIpnHandler: ProcessSepayPgIpnHandler,
 
-    @Inject(BILLING_TYPES.providers.SepayPgIpnAuthService)
+    @Inject(PAYMENT_TYPES.providers.SepayPgIpnAuthService)
     private readonly pgIpnAuthService: SepayPgIpnAuthService,
   ) {}
 

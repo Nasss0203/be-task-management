@@ -1,0 +1,3200 @@
+{
+  "kind": "automatic",
+  "policy": "isolated-single-new-table-v1",
+  "migration": {
+    "name": "CreateTemplatePurchases1791903351862",
+    "file": "1791903351862-CreateTemplatePurchases.ts",
+    "sha256": "37cc7d5f6073784a4f3e5ba850de2a13f27e0c30562465683b4502a3ec57b9f6",
+    "up": [
+      "CREATE TABLE \"template_purchases\" (\"id\" uuid NOT NULL, \"order_code\" character varying(34) NOT NULL, \"template_id\" uuid NOT NULL, \"listing_id\" uuid NOT NULL, \"buyer_id\" uuid NOT NULL, \"published_version_id\" uuid NOT NULL, \"amount\" bigint NOT NULL, \"currency\" character varying(3) NOT NULL, \"idempotency_key\" character varying(255) NOT NULL, \"status\" character varying(32) NOT NULL, \"provider\" character varying(16), \"entitlement_id\" uuid, \"expires_at\" TIMESTAMP WITH TIME ZONE NOT NULL, \"paid_at\" TIMESTAMP WITH TIME ZONE, \"created_at\" TIMESTAMP WITH TIME ZONE NOT NULL, \"updated_at\" TIMESTAMP WITH TIME ZONE NOT NULL, CONSTRAINT \"CHK_template_purchases_currency\" CHECK (\"currency\" = 'VND'), CONSTRAINT \"CHK_template_purchases_amount\" CHECK (\"amount\" > 0 AND \"amount\" <= 9007199254740991), CONSTRAINT \"PK_36c766dd2149cbf8580fe3f32d7\" PRIMARY KEY (\"id\"))",
+      "CREATE INDEX \"IDX_template_purchases_template_id\" ON \"template_purchases\" (\"template_id\")",
+      "CREATE UNIQUE INDEX \"UQ_template_purchases_buyer_id_idempotency_key\" ON \"template_purchases\" (\"buyer_id\", \"idempotency_key\")",
+      "CREATE UNIQUE INDEX \"UQ_template_purchases_order_code\" ON \"template_purchases\" (\"order_code\")"
+    ],
+    "down": [
+      "DROP INDEX \"public\".\"IDX_template_purchases_template_id\"",
+      "DROP INDEX \"public\".\"UQ_template_purchases_buyer_id_idempotency_key\"",
+      "DROP INDEX \"public\".\"UQ_template_purchases_order_code\"",
+      "DROP TABLE \"template_purchases\""
+    ]
+  },
+  "input": {
+    "applied": [
+      "AddPaidTemplateOffer1791810000000",
+      "AddTemplateListingPricing1791810001000"
+    ],
+    "schemaSha256": "f0b2cdb3f72ccbcd56f71273612a7ccc5d8ffae514639f68e7f9a2c3644902d4",
+    "sourceSchemaSha256": "e59ae0784bc041bd1f0a4c2b6c7ddd66dad8949442e8c6c0806275388eaca990",
+    "checkpointSha256": "f0b2cdb3f72ccbcd56f71273612a7ccc5d8ffae514639f68e7f9a2c3644902d4",
+    "history": [
+      {
+        "id": 1,
+        "timestamp": "1786788580541",
+        "name": "InitSchema1786788580541"
+      },
+      {
+        "id": 2,
+        "timestamp": "1786791565431",
+        "name": "InitSchema1786791565431"
+      },
+      {
+        "id": 3,
+        "timestamp": "1786890030727",
+        "name": "InitSchema1786890030727"
+      },
+      {
+        "id": 4,
+        "timestamp": "1786985029532",
+        "name": "InitSchema1786985029532"
+      },
+      {
+        "id": 5,
+        "timestamp": "1787217935536",
+        "name": "InitSchema1787217935536"
+      },
+      {
+        "id": 6,
+        "timestamp": "1787485597431",
+        "name": "InitSchema1787485597431"
+      },
+      {
+        "id": 7,
+        "timestamp": "1787486000000",
+        "name": "AddPageBlockParentForeignKey1787486000000"
+      },
+      {
+        "id": 8,
+        "timestamp": "1787491979774",
+        "name": "InitSchema1787491979774"
+      },
+      {
+        "id": 9,
+        "timestamp": "1787646530190",
+        "name": "InitSchema1787646530190"
+      },
+      {
+        "id": 10,
+        "timestamp": "1787752723307",
+        "name": "InitSchema1787752723307"
+      },
+      {
+        "id": 11,
+        "timestamp": "1787806828741",
+        "name": "InitSchema1787806828741"
+      },
+      {
+        "id": 12,
+        "timestamp": "1787904390507",
+        "name": "InitSchema1787904390507"
+      },
+      {
+        "id": 13,
+        "timestamp": "1787983229505",
+        "name": "InitSchema1787983229505"
+      },
+      {
+        "id": 14,
+        "timestamp": "1787983788903",
+        "name": "InitSchema1787983788903"
+      },
+      {
+        "id": 15,
+        "timestamp": "1788193103934",
+        "name": "InitSchema1788193103934"
+      },
+      {
+        "id": 16,
+        "timestamp": "1788445911230",
+        "name": "InitSchema1788445911230"
+      },
+      {
+        "id": 17,
+        "timestamp": "1788514253326",
+        "name": "InitSchema1788514253326"
+      },
+      {
+        "id": 18,
+        "timestamp": "1788532282857",
+        "name": "InitSchema1788532282857"
+      },
+      {
+        "id": 19,
+        "timestamp": "1788535097172",
+        "name": "InitSchema1788535097172"
+      },
+      {
+        "id": 20,
+        "timestamp": "1788536358533",
+        "name": "InitSchema1788536358533"
+      },
+      {
+        "id": 21,
+        "timestamp": "1788597148310",
+        "name": "InitSchema1788597148310"
+      },
+      {
+        "id": 22,
+        "timestamp": "1788670739733",
+        "name": "InitSchema1788670739733"
+      },
+      {
+        "id": 23,
+        "timestamp": "1788939255327",
+        "name": "InitSchema1788939255327"
+      },
+      {
+        "id": 24,
+        "timestamp": "1789284620127",
+        "name": "InitSchema1789284620127"
+      },
+      {
+        "id": 25,
+        "timestamp": "1789659900943",
+        "name": "InitSchema1789659900943"
+      },
+      {
+        "id": 26,
+        "timestamp": "1789804144773",
+        "name": "InitSchema1789804144773"
+      },
+      {
+        "id": 27,
+        "timestamp": "1789915646859",
+        "name": "InitSchema1789915646859"
+      },
+      {
+        "id": 28,
+        "timestamp": "1790035200000",
+        "name": "AddWorkspaceMembershipType1790035200000"
+      },
+      {
+        "id": 29,
+        "timestamp": "1790326133210",
+        "name": "InitSchema1790326133210"
+      },
+      {
+        "id": 30,
+        "timestamp": "1790409430359",
+        "name": "AddPublishedSitesAndPagePublications1790409430359"
+      },
+      {
+        "id": 31,
+        "timestamp": "1790640000000",
+        "name": "AddPublicationTree1790640000000"
+      },
+      {
+        "id": 34,
+        "timestamp": "1790411960687",
+        "name": "InitSchema1790411960687"
+      },
+      {
+        "id": 35,
+        "timestamp": "1790720000000",
+        "name": "RootPublicSiteOwnership1790720000000"
+      },
+      {
+        "id": 36,
+        "timestamp": "1790800000000",
+        "name": "ChildPublicationVisibilityOverride1790800000000"
+      },
+      {
+        "id": 37,
+        "timestamp": "1790812800000",
+        "name": "AddAllowUpdatesToPublishedSites1790812800000"
+      },
+      {
+        "id": 38,
+        "timestamp": "1790900000000",
+        "name": "DropLegacyTemplatesAndPageIsTemplate1790900000000"
+      },
+      {
+        "id": 39,
+        "timestamp": "1791000000000",
+        "name": "CreateCoreTemplateV21791000000000"
+      },
+      {
+        "id": 40,
+        "timestamp": "1791100000000",
+        "name": "AddSourcePageToPageTemplates1791100000000"
+      },
+      {
+        "id": 41,
+        "timestamp": "1791200000000",
+        "name": "CreateTemplateDatabaseSnapshot1791200000000"
+      },
+      {
+        "id": 42,
+        "timestamp": "1791300000000",
+        "name": "AddSnapshotHashToTemplateVersions1791300000000"
+      },
+      {
+        "id": 43,
+        "timestamp": "1791400000000",
+        "name": "CreateTemplateVersionAssets1791400000000"
+      },
+      {
+        "id": 44,
+        "timestamp": "1791500000000",
+        "name": "CreateTemplateListings1791500000000"
+      },
+      {
+        "id": 45,
+        "timestamp": "1791651159000",
+        "name": "CreateTemplateEntitlements1791651159000"
+      },
+      {
+        "id": 46,
+        "timestamp": "1791676800000",
+        "name": "PinMarketplaceVersion1791676800000"
+      },
+      {
+        "id": 47,
+        "timestamp": "1791700000000",
+        "name": "CreateTemplateCategories1791700000000"
+      },
+      {
+        "id": 48,
+        "timestamp": "1791810000000",
+        "name": "AddPaidTemplateOffer1791810000000"
+      },
+      {
+        "id": 49,
+        "timestamp": "1791810001000",
+        "name": "AddTemplateListingPricing1791810001000"
+      }
+    ],
+    "initialization": "verified-schema-only-clone-and-history-copy"
+  },
+  "output": {
+    "applied": [
+      "AddPaidTemplateOffer1791810000000",
+      "AddTemplateListingPricing1791810001000",
+      "CreateTemplatePurchases1791903351862"
+    ],
+    "schemaSha256": "cd2419b72fdfbaa00bd4291e028abb3fc522cf151859af6f120988422936119e"
+  },
+  "trials": [
+    {
+      "systemIdentifier": "7696180564400409080",
+      "beforeHash": "f0b2cdb3f72ccbcd56f71273612a7ccc5d8ffae514639f68e7f9a2c3644902d4",
+      "afterHash": "cd2419b72fdfbaa00bd4291e028abb3fc522cf151859af6f120988422936119e",
+      "rollbackHash": "f0b2cdb3f72ccbcd56f71273612a7ccc5d8ffae514639f68e7f9a2c3644902d4",
+      "untouchedSchemaHash": "f0b2cdb3f72ccbcd56f71273612a7ccc5d8ffae514639f68e7f9a2c3644902d4",
+      "historyBefore": [
+        {
+          "id": 1,
+          "timestamp": "1786788580541",
+          "name": "InitSchema1786788580541"
+        },
+        {
+          "id": 2,
+          "timestamp": "1786791565431",
+          "name": "InitSchema1786791565431"
+        },
+        {
+          "id": 3,
+          "timestamp": "1786890030727",
+          "name": "InitSchema1786890030727"
+        },
+        {
+          "id": 4,
+          "timestamp": "1786985029532",
+          "name": "InitSchema1786985029532"
+        },
+        {
+          "id": 5,
+          "timestamp": "1787217935536",
+          "name": "InitSchema1787217935536"
+        },
+        {
+          "id": 6,
+          "timestamp": "1787485597431",
+          "name": "InitSchema1787485597431"
+        },
+        {
+          "id": 7,
+          "timestamp": "1787486000000",
+          "name": "AddPageBlockParentForeignKey1787486000000"
+        },
+        {
+          "id": 8,
+          "timestamp": "1787491979774",
+          "name": "InitSchema1787491979774"
+        },
+        {
+          "id": 9,
+          "timestamp": "1787646530190",
+          "name": "InitSchema1787646530190"
+        },
+        {
+          "id": 10,
+          "timestamp": "1787752723307",
+          "name": "InitSchema1787752723307"
+        },
+        {
+          "id": 11,
+          "timestamp": "1787806828741",
+          "name": "InitSchema1787806828741"
+        },
+        {
+          "id": 12,
+          "timestamp": "1787904390507",
+          "name": "InitSchema1787904390507"
+        },
+        {
+          "id": 13,
+          "timestamp": "1787983229505",
+          "name": "InitSchema1787983229505"
+        },
+        {
+          "id": 14,
+          "timestamp": "1787983788903",
+          "name": "InitSchema1787983788903"
+        },
+        {
+          "id": 15,
+          "timestamp": "1788193103934",
+          "name": "InitSchema1788193103934"
+        },
+        {
+          "id": 16,
+          "timestamp": "1788445911230",
+          "name": "InitSchema1788445911230"
+        },
+        {
+          "id": 17,
+          "timestamp": "1788514253326",
+          "name": "InitSchema1788514253326"
+        },
+        {
+          "id": 18,
+          "timestamp": "1788532282857",
+          "name": "InitSchema1788532282857"
+        },
+        {
+          "id": 19,
+          "timestamp": "1788535097172",
+          "name": "InitSchema1788535097172"
+        },
+        {
+          "id": 20,
+          "timestamp": "1788536358533",
+          "name": "InitSchema1788536358533"
+        },
+        {
+          "id": 21,
+          "timestamp": "1788597148310",
+          "name": "InitSchema1788597148310"
+        },
+        {
+          "id": 22,
+          "timestamp": "1788670739733",
+          "name": "InitSchema1788670739733"
+        },
+        {
+          "id": 23,
+          "timestamp": "1788939255327",
+          "name": "InitSchema1788939255327"
+        },
+        {
+          "id": 24,
+          "timestamp": "1789284620127",
+          "name": "InitSchema1789284620127"
+        },
+        {
+          "id": 25,
+          "timestamp": "1789659900943",
+          "name": "InitSchema1789659900943"
+        },
+        {
+          "id": 26,
+          "timestamp": "1789804144773",
+          "name": "InitSchema1789804144773"
+        },
+        {
+          "id": 27,
+          "timestamp": "1789915646859",
+          "name": "InitSchema1789915646859"
+        },
+        {
+          "id": 28,
+          "timestamp": "1790035200000",
+          "name": "AddWorkspaceMembershipType1790035200000"
+        },
+        {
+          "id": 29,
+          "timestamp": "1790326133210",
+          "name": "InitSchema1790326133210"
+        },
+        {
+          "id": 30,
+          "timestamp": "1790409430359",
+          "name": "AddPublishedSitesAndPagePublications1790409430359"
+        },
+        {
+          "id": 31,
+          "timestamp": "1790640000000",
+          "name": "AddPublicationTree1790640000000"
+        },
+        {
+          "id": 34,
+          "timestamp": "1790411960687",
+          "name": "InitSchema1790411960687"
+        },
+        {
+          "id": 35,
+          "timestamp": "1790720000000",
+          "name": "RootPublicSiteOwnership1790720000000"
+        },
+        {
+          "id": 36,
+          "timestamp": "1790800000000",
+          "name": "ChildPublicationVisibilityOverride1790800000000"
+        },
+        {
+          "id": 37,
+          "timestamp": "1790812800000",
+          "name": "AddAllowUpdatesToPublishedSites1790812800000"
+        },
+        {
+          "id": 38,
+          "timestamp": "1790900000000",
+          "name": "DropLegacyTemplatesAndPageIsTemplate1790900000000"
+        },
+        {
+          "id": 39,
+          "timestamp": "1791000000000",
+          "name": "CreateCoreTemplateV21791000000000"
+        },
+        {
+          "id": 40,
+          "timestamp": "1791100000000",
+          "name": "AddSourcePageToPageTemplates1791100000000"
+        },
+        {
+          "id": 41,
+          "timestamp": "1791200000000",
+          "name": "CreateTemplateDatabaseSnapshot1791200000000"
+        },
+        {
+          "id": 42,
+          "timestamp": "1791300000000",
+          "name": "AddSnapshotHashToTemplateVersions1791300000000"
+        },
+        {
+          "id": 43,
+          "timestamp": "1791400000000",
+          "name": "CreateTemplateVersionAssets1791400000000"
+        },
+        {
+          "id": 44,
+          "timestamp": "1791500000000",
+          "name": "CreateTemplateListings1791500000000"
+        },
+        {
+          "id": 45,
+          "timestamp": "1791651159000",
+          "name": "CreateTemplateEntitlements1791651159000"
+        },
+        {
+          "id": 46,
+          "timestamp": "1791676800000",
+          "name": "PinMarketplaceVersion1791676800000"
+        },
+        {
+          "id": 47,
+          "timestamp": "1791700000000",
+          "name": "CreateTemplateCategories1791700000000"
+        },
+        {
+          "id": 48,
+          "timestamp": "1791810000000",
+          "name": "AddPaidTemplateOffer1791810000000"
+        },
+        {
+          "id": 49,
+          "timestamp": "1791810001000",
+          "name": "AddTemplateListingPricing1791810001000"
+        }
+      ],
+      "historyAfter": [
+        {
+          "id": 1,
+          "timestamp": "1786788580541",
+          "name": "InitSchema1786788580541"
+        },
+        {
+          "id": 2,
+          "timestamp": "1786791565431",
+          "name": "InitSchema1786791565431"
+        },
+        {
+          "id": 3,
+          "timestamp": "1786890030727",
+          "name": "InitSchema1786890030727"
+        },
+        {
+          "id": 4,
+          "timestamp": "1786985029532",
+          "name": "InitSchema1786985029532"
+        },
+        {
+          "id": 5,
+          "timestamp": "1787217935536",
+          "name": "InitSchema1787217935536"
+        },
+        {
+          "id": 6,
+          "timestamp": "1787485597431",
+          "name": "InitSchema1787485597431"
+        },
+        {
+          "id": 7,
+          "timestamp": "1787486000000",
+          "name": "AddPageBlockParentForeignKey1787486000000"
+        },
+        {
+          "id": 8,
+          "timestamp": "1787491979774",
+          "name": "InitSchema1787491979774"
+        },
+        {
+          "id": 9,
+          "timestamp": "1787646530190",
+          "name": "InitSchema1787646530190"
+        },
+        {
+          "id": 10,
+          "timestamp": "1787752723307",
+          "name": "InitSchema1787752723307"
+        },
+        {
+          "id": 11,
+          "timestamp": "1787806828741",
+          "name": "InitSchema1787806828741"
+        },
+        {
+          "id": 12,
+          "timestamp": "1787904390507",
+          "name": "InitSchema1787904390507"
+        },
+        {
+          "id": 13,
+          "timestamp": "1787983229505",
+          "name": "InitSchema1787983229505"
+        },
+        {
+          "id": 14,
+          "timestamp": "1787983788903",
+          "name": "InitSchema1787983788903"
+        },
+        {
+          "id": 15,
+          "timestamp": "1788193103934",
+          "name": "InitSchema1788193103934"
+        },
+        {
+          "id": 16,
+          "timestamp": "1788445911230",
+          "name": "InitSchema1788445911230"
+        },
+        {
+          "id": 17,
+          "timestamp": "1788514253326",
+          "name": "InitSchema1788514253326"
+        },
+        {
+          "id": 18,
+          "timestamp": "1788532282857",
+          "name": "InitSchema1788532282857"
+        },
+        {
+          "id": 19,
+          "timestamp": "1788535097172",
+          "name": "InitSchema1788535097172"
+        },
+        {
+          "id": 20,
+          "timestamp": "1788536358533",
+          "name": "InitSchema1788536358533"
+        },
+        {
+          "id": 21,
+          "timestamp": "1788597148310",
+          "name": "InitSchema1788597148310"
+        },
+        {
+          "id": 22,
+          "timestamp": "1788670739733",
+          "name": "InitSchema1788670739733"
+        },
+        {
+          "id": 23,
+          "timestamp": "1788939255327",
+          "name": "InitSchema1788939255327"
+        },
+        {
+          "id": 24,
+          "timestamp": "1789284620127",
+          "name": "InitSchema1789284620127"
+        },
+        {
+          "id": 25,
+          "timestamp": "1789659900943",
+          "name": "InitSchema1789659900943"
+        },
+        {
+          "id": 26,
+          "timestamp": "1789804144773",
+          "name": "InitSchema1789804144773"
+        },
+        {
+          "id": 27,
+          "timestamp": "1789915646859",
+          "name": "InitSchema1789915646859"
+        },
+        {
+          "id": 28,
+          "timestamp": "1790035200000",
+          "name": "AddWorkspaceMembershipType1790035200000"
+        },
+        {
+          "id": 29,
+          "timestamp": "1790326133210",
+          "name": "InitSchema1790326133210"
+        },
+        {
+          "id": 30,
+          "timestamp": "1790409430359",
+          "name": "AddPublishedSitesAndPagePublications1790409430359"
+        },
+        {
+          "id": 31,
+          "timestamp": "1790640000000",
+          "name": "AddPublicationTree1790640000000"
+        },
+        {
+          "id": 34,
+          "timestamp": "1790411960687",
+          "name": "InitSchema1790411960687"
+        },
+        {
+          "id": 35,
+          "timestamp": "1790720000000",
+          "name": "RootPublicSiteOwnership1790720000000"
+        },
+        {
+          "id": 36,
+          "timestamp": "1790800000000",
+          "name": "ChildPublicationVisibilityOverride1790800000000"
+        },
+        {
+          "id": 37,
+          "timestamp": "1790812800000",
+          "name": "AddAllowUpdatesToPublishedSites1790812800000"
+        },
+        {
+          "id": 38,
+          "timestamp": "1790900000000",
+          "name": "DropLegacyTemplatesAndPageIsTemplate1790900000000"
+        },
+        {
+          "id": 39,
+          "timestamp": "1791000000000",
+          "name": "CreateCoreTemplateV21791000000000"
+        },
+        {
+          "id": 40,
+          "timestamp": "1791100000000",
+          "name": "AddSourcePageToPageTemplates1791100000000"
+        },
+        {
+          "id": 41,
+          "timestamp": "1791200000000",
+          "name": "CreateTemplateDatabaseSnapshot1791200000000"
+        },
+        {
+          "id": 42,
+          "timestamp": "1791300000000",
+          "name": "AddSnapshotHashToTemplateVersions1791300000000"
+        },
+        {
+          "id": 43,
+          "timestamp": "1791400000000",
+          "name": "CreateTemplateVersionAssets1791400000000"
+        },
+        {
+          "id": 44,
+          "timestamp": "1791500000000",
+          "name": "CreateTemplateListings1791500000000"
+        },
+        {
+          "id": 45,
+          "timestamp": "1791651159000",
+          "name": "CreateTemplateEntitlements1791651159000"
+        },
+        {
+          "id": 46,
+          "timestamp": "1791676800000",
+          "name": "PinMarketplaceVersion1791676800000"
+        },
+        {
+          "id": 47,
+          "timestamp": "1791700000000",
+          "name": "CreateTemplateCategories1791700000000"
+        },
+        {
+          "id": 48,
+          "timestamp": "1791810000000",
+          "name": "AddPaidTemplateOffer1791810000000"
+        },
+        {
+          "id": 49,
+          "timestamp": "1791810001000",
+          "name": "AddTemplateListingPricing1791810001000"
+        },
+        {
+          "id": 50,
+          "timestamp": "1791903351862",
+          "name": "CreateTemplatePurchases1791903351862"
+        }
+      ],
+      "historyRollback": [
+        {
+          "id": 1,
+          "timestamp": "1786788580541",
+          "name": "InitSchema1786788580541"
+        },
+        {
+          "id": 2,
+          "timestamp": "1786791565431",
+          "name": "InitSchema1786791565431"
+        },
+        {
+          "id": 3,
+          "timestamp": "1786890030727",
+          "name": "InitSchema1786890030727"
+        },
+        {
+          "id": 4,
+          "timestamp": "1786985029532",
+          "name": "InitSchema1786985029532"
+        },
+        {
+          "id": 5,
+          "timestamp": "1787217935536",
+          "name": "InitSchema1787217935536"
+        },
+        {
+          "id": 6,
+          "timestamp": "1787485597431",
+          "name": "InitSchema1787485597431"
+        },
+        {
+          "id": 7,
+          "timestamp": "1787486000000",
+          "name": "AddPageBlockParentForeignKey1787486000000"
+        },
+        {
+          "id": 8,
+          "timestamp": "1787491979774",
+          "name": "InitSchema1787491979774"
+        },
+        {
+          "id": 9,
+          "timestamp": "1787646530190",
+          "name": "InitSchema1787646530190"
+        },
+        {
+          "id": 10,
+          "timestamp": "1787752723307",
+          "name": "InitSchema1787752723307"
+        },
+        {
+          "id": 11,
+          "timestamp": "1787806828741",
+          "name": "InitSchema1787806828741"
+        },
+        {
+          "id": 12,
+          "timestamp": "1787904390507",
+          "name": "InitSchema1787904390507"
+        },
+        {
+          "id": 13,
+          "timestamp": "1787983229505",
+          "name": "InitSchema1787983229505"
+        },
+        {
+          "id": 14,
+          "timestamp": "1787983788903",
+          "name": "InitSchema1787983788903"
+        },
+        {
+          "id": 15,
+          "timestamp": "1788193103934",
+          "name": "InitSchema1788193103934"
+        },
+        {
+          "id": 16,
+          "timestamp": "1788445911230",
+          "name": "InitSchema1788445911230"
+        },
+        {
+          "id": 17,
+          "timestamp": "1788514253326",
+          "name": "InitSchema1788514253326"
+        },
+        {
+          "id": 18,
+          "timestamp": "1788532282857",
+          "name": "InitSchema1788532282857"
+        },
+        {
+          "id": 19,
+          "timestamp": "1788535097172",
+          "name": "InitSchema1788535097172"
+        },
+        {
+          "id": 20,
+          "timestamp": "1788536358533",
+          "name": "InitSchema1788536358533"
+        },
+        {
+          "id": 21,
+          "timestamp": "1788597148310",
+          "name": "InitSchema1788597148310"
+        },
+        {
+          "id": 22,
+          "timestamp": "1788670739733",
+          "name": "InitSchema1788670739733"
+        },
+        {
+          "id": 23,
+          "timestamp": "1788939255327",
+          "name": "InitSchema1788939255327"
+        },
+        {
+          "id": 24,
+          "timestamp": "1789284620127",
+          "name": "InitSchema1789284620127"
+        },
+        {
+          "id": 25,
+          "timestamp": "1789659900943",
+          "name": "InitSchema1789659900943"
+        },
+        {
+          "id": 26,
+          "timestamp": "1789804144773",
+          "name": "InitSchema1789804144773"
+        },
+        {
+          "id": 27,
+          "timestamp": "1789915646859",
+          "name": "InitSchema1789915646859"
+        },
+        {
+          "id": 28,
+          "timestamp": "1790035200000",
+          "name": "AddWorkspaceMembershipType1790035200000"
+        },
+        {
+          "id": 29,
+          "timestamp": "1790326133210",
+          "name": "InitSchema1790326133210"
+        },
+        {
+          "id": 30,
+          "timestamp": "1790409430359",
+          "name": "AddPublishedSitesAndPagePublications1790409430359"
+        },
+        {
+          "id": 31,
+          "timestamp": "1790640000000",
+          "name": "AddPublicationTree1790640000000"
+        },
+        {
+          "id": 34,
+          "timestamp": "1790411960687",
+          "name": "InitSchema1790411960687"
+        },
+        {
+          "id": 35,
+          "timestamp": "1790720000000",
+          "name": "RootPublicSiteOwnership1790720000000"
+        },
+        {
+          "id": 36,
+          "timestamp": "1790800000000",
+          "name": "ChildPublicationVisibilityOverride1790800000000"
+        },
+        {
+          "id": 37,
+          "timestamp": "1790812800000",
+          "name": "AddAllowUpdatesToPublishedSites1790812800000"
+        },
+        {
+          "id": 38,
+          "timestamp": "1790900000000",
+          "name": "DropLegacyTemplatesAndPageIsTemplate1790900000000"
+        },
+        {
+          "id": 39,
+          "timestamp": "1791000000000",
+          "name": "CreateCoreTemplateV21791000000000"
+        },
+        {
+          "id": 40,
+          "timestamp": "1791100000000",
+          "name": "AddSourcePageToPageTemplates1791100000000"
+        },
+        {
+          "id": 41,
+          "timestamp": "1791200000000",
+          "name": "CreateTemplateDatabaseSnapshot1791200000000"
+        },
+        {
+          "id": 42,
+          "timestamp": "1791300000000",
+          "name": "AddSnapshotHashToTemplateVersions1791300000000"
+        },
+        {
+          "id": 43,
+          "timestamp": "1791400000000",
+          "name": "CreateTemplateVersionAssets1791400000000"
+        },
+        {
+          "id": 44,
+          "timestamp": "1791500000000",
+          "name": "CreateTemplateListings1791500000000"
+        },
+        {
+          "id": 45,
+          "timestamp": "1791651159000",
+          "name": "CreateTemplateEntitlements1791651159000"
+        },
+        {
+          "id": 46,
+          "timestamp": "1791676800000",
+          "name": "PinMarketplaceVersion1791676800000"
+        },
+        {
+          "id": 47,
+          "timestamp": "1791700000000",
+          "name": "CreateTemplateCategories1791700000000"
+        },
+        {
+          "id": 48,
+          "timestamp": "1791810000000",
+          "name": "AddPaidTemplateOffer1791810000000"
+        },
+        {
+          "id": 49,
+          "timestamp": "1791810001000",
+          "name": "AddTemplateListingPricing1791810001000"
+        }
+      ],
+      "existingRowsBefore": [
+        {
+          "table": "activities",
+          "count": "0"
+        },
+        {
+          "table": "ai_conversations",
+          "count": "0"
+        },
+        {
+          "table": "ai_generations",
+          "count": "0"
+        },
+        {
+          "table": "ai_messages",
+          "count": "0"
+        },
+        {
+          "table": "ai_tool_calls",
+          "count": "0"
+        },
+        {
+          "table": "ai_usage",
+          "count": "0"
+        },
+        {
+          "table": "attachments",
+          "count": "0"
+        },
+        {
+          "table": "billing_features",
+          "count": "0"
+        },
+        {
+          "table": "billing_plan_features",
+          "count": "0"
+        },
+        {
+          "table": "billing_plan_prices",
+          "count": "0"
+        },
+        {
+          "table": "billing_plans",
+          "count": "0"
+        },
+        {
+          "table": "billing_usage",
+          "count": "0"
+        },
+        {
+          "table": "billing_webhook_events",
+          "count": "0"
+        },
+        {
+          "table": "database_properties",
+          "count": "0"
+        },
+        {
+          "table": "database_property_options",
+          "count": "0"
+        },
+        {
+          "table": "database_row_values",
+          "count": "0"
+        },
+        {
+          "table": "database_rows",
+          "count": "0"
+        },
+        {
+          "table": "database_view_properties",
+          "count": "0"
+        },
+        {
+          "table": "database_views",
+          "count": "0"
+        },
+        {
+          "table": "databases",
+          "count": "0"
+        },
+        {
+          "table": "mentions",
+          "count": "0"
+        },
+        {
+          "table": "notifications",
+          "count": "0"
+        },
+        {
+          "table": "page_access_requests",
+          "count": "0"
+        },
+        {
+          "table": "page_blocks",
+          "count": "0"
+        },
+        {
+          "table": "page_edit_requests",
+          "count": "0"
+        },
+        {
+          "table": "page_favorites",
+          "count": "0"
+        },
+        {
+          "table": "page_publications",
+          "count": "0"
+        },
+        {
+          "table": "page_share_links",
+          "count": "0"
+        },
+        {
+          "table": "page_share_settings",
+          "count": "0"
+        },
+        {
+          "table": "page_shares",
+          "count": "0"
+        },
+        {
+          "table": "page_template_blocks",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_properties",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_property_options",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_row_values",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_rows",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_view_properties",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_views",
+          "count": "0"
+        },
+        {
+          "table": "page_template_databases",
+          "count": "0"
+        },
+        {
+          "table": "page_template_versions",
+          "count": "0"
+        },
+        {
+          "table": "page_templates",
+          "count": "0"
+        },
+        {
+          "table": "pages",
+          "count": "0"
+        },
+        {
+          "table": "payment_orders",
+          "count": "0"
+        },
+        {
+          "table": "payment_transactions",
+          "count": "0"
+        },
+        {
+          "table": "permissions",
+          "count": "0"
+        },
+        {
+          "table": "publication_root_ownership_created_publications",
+          "count": "0"
+        },
+        {
+          "table": "publication_root_ownership_publication_backup",
+          "count": "0"
+        },
+        {
+          "table": "publication_root_ownership_site_backup",
+          "count": "0"
+        },
+        {
+          "table": "published_sites",
+          "count": "0"
+        },
+        {
+          "table": "refresh_tokens",
+          "count": "0"
+        },
+        {
+          "table": "teamspace_members",
+          "count": "0"
+        },
+        {
+          "table": "teamspaces",
+          "count": "0"
+        },
+        {
+          "table": "template_categories",
+          "count": "0"
+        },
+        {
+          "table": "template_entitlements",
+          "count": "0"
+        },
+        {
+          "table": "template_listing_categories",
+          "count": "0"
+        },
+        {
+          "table": "template_listings",
+          "count": "0"
+        },
+        {
+          "table": "template_version_assets",
+          "count": "0"
+        },
+        {
+          "table": "user_auth_identities",
+          "count": "0"
+        },
+        {
+          "table": "user_profiles",
+          "count": "0"
+        },
+        {
+          "table": "users",
+          "count": "0"
+        },
+        {
+          "table": "workspace_invites",
+          "count": "0"
+        },
+        {
+          "table": "workspace_members",
+          "count": "0"
+        },
+        {
+          "table": "workspace_subscriptions",
+          "count": "0"
+        },
+        {
+          "table": "workspaces",
+          "count": "0"
+        }
+      ],
+      "existingRowsAfter": [
+        {
+          "table": "activities",
+          "count": "0"
+        },
+        {
+          "table": "ai_conversations",
+          "count": "0"
+        },
+        {
+          "table": "ai_generations",
+          "count": "0"
+        },
+        {
+          "table": "ai_messages",
+          "count": "0"
+        },
+        {
+          "table": "ai_tool_calls",
+          "count": "0"
+        },
+        {
+          "table": "ai_usage",
+          "count": "0"
+        },
+        {
+          "table": "attachments",
+          "count": "0"
+        },
+        {
+          "table": "billing_features",
+          "count": "0"
+        },
+        {
+          "table": "billing_plan_features",
+          "count": "0"
+        },
+        {
+          "table": "billing_plan_prices",
+          "count": "0"
+        },
+        {
+          "table": "billing_plans",
+          "count": "0"
+        },
+        {
+          "table": "billing_usage",
+          "count": "0"
+        },
+        {
+          "table": "billing_webhook_events",
+          "count": "0"
+        },
+        {
+          "table": "database_properties",
+          "count": "0"
+        },
+        {
+          "table": "database_property_options",
+          "count": "0"
+        },
+        {
+          "table": "database_row_values",
+          "count": "0"
+        },
+        {
+          "table": "database_rows",
+          "count": "0"
+        },
+        {
+          "table": "database_view_properties",
+          "count": "0"
+        },
+        {
+          "table": "database_views",
+          "count": "0"
+        },
+        {
+          "table": "databases",
+          "count": "0"
+        },
+        {
+          "table": "mentions",
+          "count": "0"
+        },
+        {
+          "table": "notifications",
+          "count": "0"
+        },
+        {
+          "table": "page_access_requests",
+          "count": "0"
+        },
+        {
+          "table": "page_blocks",
+          "count": "0"
+        },
+        {
+          "table": "page_edit_requests",
+          "count": "0"
+        },
+        {
+          "table": "page_favorites",
+          "count": "0"
+        },
+        {
+          "table": "page_publications",
+          "count": "0"
+        },
+        {
+          "table": "page_share_links",
+          "count": "0"
+        },
+        {
+          "table": "page_share_settings",
+          "count": "0"
+        },
+        {
+          "table": "page_shares",
+          "count": "0"
+        },
+        {
+          "table": "page_template_blocks",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_properties",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_property_options",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_row_values",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_rows",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_view_properties",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_views",
+          "count": "0"
+        },
+        {
+          "table": "page_template_databases",
+          "count": "0"
+        },
+        {
+          "table": "page_template_versions",
+          "count": "0"
+        },
+        {
+          "table": "page_templates",
+          "count": "0"
+        },
+        {
+          "table": "pages",
+          "count": "0"
+        },
+        {
+          "table": "payment_orders",
+          "count": "0"
+        },
+        {
+          "table": "payment_transactions",
+          "count": "0"
+        },
+        {
+          "table": "permissions",
+          "count": "0"
+        },
+        {
+          "table": "publication_root_ownership_created_publications",
+          "count": "0"
+        },
+        {
+          "table": "publication_root_ownership_publication_backup",
+          "count": "0"
+        },
+        {
+          "table": "publication_root_ownership_site_backup",
+          "count": "0"
+        },
+        {
+          "table": "published_sites",
+          "count": "0"
+        },
+        {
+          "table": "refresh_tokens",
+          "count": "0"
+        },
+        {
+          "table": "teamspace_members",
+          "count": "0"
+        },
+        {
+          "table": "teamspaces",
+          "count": "0"
+        },
+        {
+          "table": "template_categories",
+          "count": "0"
+        },
+        {
+          "table": "template_entitlements",
+          "count": "0"
+        },
+        {
+          "table": "template_listing_categories",
+          "count": "0"
+        },
+        {
+          "table": "template_listings",
+          "count": "0"
+        },
+        {
+          "table": "template_version_assets",
+          "count": "0"
+        },
+        {
+          "table": "user_auth_identities",
+          "count": "0"
+        },
+        {
+          "table": "user_profiles",
+          "count": "0"
+        },
+        {
+          "table": "users",
+          "count": "0"
+        },
+        {
+          "table": "workspace_invites",
+          "count": "0"
+        },
+        {
+          "table": "workspace_members",
+          "count": "0"
+        },
+        {
+          "table": "workspace_subscriptions",
+          "count": "0"
+        },
+        {
+          "table": "workspaces",
+          "count": "0"
+        }
+      ],
+      "executedUp": [
+        "CREATE TABLE \"template_purchases\" (\"id\" uuid NOT NULL, \"order_code\" character varying(34) NOT NULL, \"template_id\" uuid NOT NULL, \"listing_id\" uuid NOT NULL, \"buyer_id\" uuid NOT NULL, \"published_version_id\" uuid NOT NULL, \"amount\" bigint NOT NULL, \"currency\" character varying(3) NOT NULL, \"idempotency_key\" character varying(255) NOT NULL, \"status\" character varying(32) NOT NULL, \"provider\" character varying(16), \"entitlement_id\" uuid, \"expires_at\" TIMESTAMP WITH TIME ZONE NOT NULL, \"paid_at\" TIMESTAMP WITH TIME ZONE, \"created_at\" TIMESTAMP WITH TIME ZONE NOT NULL, \"updated_at\" TIMESTAMP WITH TIME ZONE NOT NULL, CONSTRAINT \"CHK_template_purchases_currency\" CHECK (\"currency\" = 'VND'), CONSTRAINT \"CHK_template_purchases_amount\" CHECK (\"amount\" > 0 AND \"amount\" <= 9007199254740991), CONSTRAINT \"PK_36c766dd2149cbf8580fe3f32d7\" PRIMARY KEY (\"id\"))",
+        "CREATE INDEX \"IDX_template_purchases_template_id\" ON \"template_purchases\" (\"template_id\")",
+        "CREATE UNIQUE INDEX \"UQ_template_purchases_buyer_id_idempotency_key\" ON \"template_purchases\" (\"buyer_id\", \"idempotency_key\")",
+        "CREATE UNIQUE INDEX \"UQ_template_purchases_order_code\" ON \"template_purchases\" (\"order_code\")"
+      ],
+      "executedDown": [
+        "DROP INDEX \"public\".\"IDX_template_purchases_template_id\"",
+        "DROP INDEX \"public\".\"UQ_template_purchases_buyer_id_idempotency_key\"",
+        "DROP INDEX \"public\".\"UQ_template_purchases_order_code\"",
+        "DROP TABLE \"template_purchases\""
+      ],
+      "catalog": {
+        "columns": [
+          {
+            "column_name": "id",
+            "data_type": "uuid",
+            "character_maximum_length": null,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "order_code",
+            "data_type": "character varying",
+            "character_maximum_length": 34,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "template_id",
+            "data_type": "uuid",
+            "character_maximum_length": null,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "listing_id",
+            "data_type": "uuid",
+            "character_maximum_length": null,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "buyer_id",
+            "data_type": "uuid",
+            "character_maximum_length": null,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "published_version_id",
+            "data_type": "uuid",
+            "character_maximum_length": null,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "amount",
+            "data_type": "bigint",
+            "character_maximum_length": null,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "currency",
+            "data_type": "character varying",
+            "character_maximum_length": 3,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "idempotency_key",
+            "data_type": "character varying",
+            "character_maximum_length": 255,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "status",
+            "data_type": "character varying",
+            "character_maximum_length": 32,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "provider",
+            "data_type": "character varying",
+            "character_maximum_length": 16,
+            "is_nullable": "YES",
+            "column_default": null
+          },
+          {
+            "column_name": "entitlement_id",
+            "data_type": "uuid",
+            "character_maximum_length": null,
+            "is_nullable": "YES",
+            "column_default": null
+          },
+          {
+            "column_name": "expires_at",
+            "data_type": "timestamp with time zone",
+            "character_maximum_length": null,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "paid_at",
+            "data_type": "timestamp with time zone",
+            "character_maximum_length": null,
+            "is_nullable": "YES",
+            "column_default": null
+          },
+          {
+            "column_name": "created_at",
+            "data_type": "timestamp with time zone",
+            "character_maximum_length": null,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "updated_at",
+            "data_type": "timestamp with time zone",
+            "character_maximum_length": null,
+            "is_nullable": "NO",
+            "column_default": null
+          }
+        ],
+        "constraints": [
+          {
+            "conname": "CHK_template_purchases_amount",
+            "contype": "c",
+            "definition": "CHECK (((amount > 0) AND (amount <= '9007199254740991'::bigint)))"
+          },
+          {
+            "conname": "CHK_template_purchases_currency",
+            "contype": "c",
+            "definition": "CHECK (((currency)::text = 'VND'::text))"
+          },
+          {
+            "conname": "PK_36c766dd2149cbf8580fe3f32d7",
+            "contype": "p",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "conname": "template_purchases_amount_not_null",
+            "contype": "n",
+            "definition": "NOT NULL amount"
+          },
+          {
+            "conname": "template_purchases_buyer_id_not_null",
+            "contype": "n",
+            "definition": "NOT NULL buyer_id"
+          },
+          {
+            "conname": "template_purchases_created_at_not_null",
+            "contype": "n",
+            "definition": "NOT NULL created_at"
+          },
+          {
+            "conname": "template_purchases_currency_not_null",
+            "contype": "n",
+            "definition": "NOT NULL currency"
+          },
+          {
+            "conname": "template_purchases_expires_at_not_null",
+            "contype": "n",
+            "definition": "NOT NULL expires_at"
+          },
+          {
+            "conname": "template_purchases_id_not_null",
+            "contype": "n",
+            "definition": "NOT NULL id"
+          },
+          {
+            "conname": "template_purchases_idempotency_key_not_null",
+            "contype": "n",
+            "definition": "NOT NULL idempotency_key"
+          },
+          {
+            "conname": "template_purchases_listing_id_not_null",
+            "contype": "n",
+            "definition": "NOT NULL listing_id"
+          },
+          {
+            "conname": "template_purchases_order_code_not_null",
+            "contype": "n",
+            "definition": "NOT NULL order_code"
+          },
+          {
+            "conname": "template_purchases_published_version_id_not_null",
+            "contype": "n",
+            "definition": "NOT NULL published_version_id"
+          },
+          {
+            "conname": "template_purchases_status_not_null",
+            "contype": "n",
+            "definition": "NOT NULL status"
+          },
+          {
+            "conname": "template_purchases_template_id_not_null",
+            "contype": "n",
+            "definition": "NOT NULL template_id"
+          },
+          {
+            "conname": "template_purchases_updated_at_not_null",
+            "contype": "n",
+            "definition": "NOT NULL updated_at"
+          }
+        ],
+        "indexes": [
+          {
+            "indexname": "IDX_template_purchases_template_id",
+            "indexdef": "CREATE INDEX \"IDX_template_purchases_template_id\" ON public.template_purchases USING btree (template_id)"
+          },
+          {
+            "indexname": "PK_36c766dd2149cbf8580fe3f32d7",
+            "indexdef": "CREATE UNIQUE INDEX \"PK_36c766dd2149cbf8580fe3f32d7\" ON public.template_purchases USING btree (id)"
+          },
+          {
+            "indexname": "UQ_template_purchases_buyer_id_idempotency_key",
+            "indexdef": "CREATE UNIQUE INDEX \"UQ_template_purchases_buyer_id_idempotency_key\" ON public.template_purchases USING btree (buyer_id, idempotency_key)"
+          },
+          {
+            "indexname": "UQ_template_purchases_order_code",
+            "indexdef": "CREATE UNIQUE INDEX \"UQ_template_purchases_order_code\" ON public.template_purchases USING btree (order_code)"
+          }
+        ]
+      },
+      "inputVerification": "PASS",
+      "outputMetadataVerification": "PASS"
+    },
+    {
+      "systemIdentifier": "7696180585270714832",
+      "beforeHash": "f0b2cdb3f72ccbcd56f71273612a7ccc5d8ffae514639f68e7f9a2c3644902d4",
+      "afterHash": "cd2419b72fdfbaa00bd4291e028abb3fc522cf151859af6f120988422936119e",
+      "rollbackHash": "f0b2cdb3f72ccbcd56f71273612a7ccc5d8ffae514639f68e7f9a2c3644902d4",
+      "untouchedSchemaHash": "f0b2cdb3f72ccbcd56f71273612a7ccc5d8ffae514639f68e7f9a2c3644902d4",
+      "historyBefore": [
+        {
+          "id": 1,
+          "timestamp": "1786788580541",
+          "name": "InitSchema1786788580541"
+        },
+        {
+          "id": 2,
+          "timestamp": "1786791565431",
+          "name": "InitSchema1786791565431"
+        },
+        {
+          "id": 3,
+          "timestamp": "1786890030727",
+          "name": "InitSchema1786890030727"
+        },
+        {
+          "id": 4,
+          "timestamp": "1786985029532",
+          "name": "InitSchema1786985029532"
+        },
+        {
+          "id": 5,
+          "timestamp": "1787217935536",
+          "name": "InitSchema1787217935536"
+        },
+        {
+          "id": 6,
+          "timestamp": "1787485597431",
+          "name": "InitSchema1787485597431"
+        },
+        {
+          "id": 7,
+          "timestamp": "1787486000000",
+          "name": "AddPageBlockParentForeignKey1787486000000"
+        },
+        {
+          "id": 8,
+          "timestamp": "1787491979774",
+          "name": "InitSchema1787491979774"
+        },
+        {
+          "id": 9,
+          "timestamp": "1787646530190",
+          "name": "InitSchema1787646530190"
+        },
+        {
+          "id": 10,
+          "timestamp": "1787752723307",
+          "name": "InitSchema1787752723307"
+        },
+        {
+          "id": 11,
+          "timestamp": "1787806828741",
+          "name": "InitSchema1787806828741"
+        },
+        {
+          "id": 12,
+          "timestamp": "1787904390507",
+          "name": "InitSchema1787904390507"
+        },
+        {
+          "id": 13,
+          "timestamp": "1787983229505",
+          "name": "InitSchema1787983229505"
+        },
+        {
+          "id": 14,
+          "timestamp": "1787983788903",
+          "name": "InitSchema1787983788903"
+        },
+        {
+          "id": 15,
+          "timestamp": "1788193103934",
+          "name": "InitSchema1788193103934"
+        },
+        {
+          "id": 16,
+          "timestamp": "1788445911230",
+          "name": "InitSchema1788445911230"
+        },
+        {
+          "id": 17,
+          "timestamp": "1788514253326",
+          "name": "InitSchema1788514253326"
+        },
+        {
+          "id": 18,
+          "timestamp": "1788532282857",
+          "name": "InitSchema1788532282857"
+        },
+        {
+          "id": 19,
+          "timestamp": "1788535097172",
+          "name": "InitSchema1788535097172"
+        },
+        {
+          "id": 20,
+          "timestamp": "1788536358533",
+          "name": "InitSchema1788536358533"
+        },
+        {
+          "id": 21,
+          "timestamp": "1788597148310",
+          "name": "InitSchema1788597148310"
+        },
+        {
+          "id": 22,
+          "timestamp": "1788670739733",
+          "name": "InitSchema1788670739733"
+        },
+        {
+          "id": 23,
+          "timestamp": "1788939255327",
+          "name": "InitSchema1788939255327"
+        },
+        {
+          "id": 24,
+          "timestamp": "1789284620127",
+          "name": "InitSchema1789284620127"
+        },
+        {
+          "id": 25,
+          "timestamp": "1789659900943",
+          "name": "InitSchema1789659900943"
+        },
+        {
+          "id": 26,
+          "timestamp": "1789804144773",
+          "name": "InitSchema1789804144773"
+        },
+        {
+          "id": 27,
+          "timestamp": "1789915646859",
+          "name": "InitSchema1789915646859"
+        },
+        {
+          "id": 28,
+          "timestamp": "1790035200000",
+          "name": "AddWorkspaceMembershipType1790035200000"
+        },
+        {
+          "id": 29,
+          "timestamp": "1790326133210",
+          "name": "InitSchema1790326133210"
+        },
+        {
+          "id": 30,
+          "timestamp": "1790409430359",
+          "name": "AddPublishedSitesAndPagePublications1790409430359"
+        },
+        {
+          "id": 31,
+          "timestamp": "1790640000000",
+          "name": "AddPublicationTree1790640000000"
+        },
+        {
+          "id": 34,
+          "timestamp": "1790411960687",
+          "name": "InitSchema1790411960687"
+        },
+        {
+          "id": 35,
+          "timestamp": "1790720000000",
+          "name": "RootPublicSiteOwnership1790720000000"
+        },
+        {
+          "id": 36,
+          "timestamp": "1790800000000",
+          "name": "ChildPublicationVisibilityOverride1790800000000"
+        },
+        {
+          "id": 37,
+          "timestamp": "1790812800000",
+          "name": "AddAllowUpdatesToPublishedSites1790812800000"
+        },
+        {
+          "id": 38,
+          "timestamp": "1790900000000",
+          "name": "DropLegacyTemplatesAndPageIsTemplate1790900000000"
+        },
+        {
+          "id": 39,
+          "timestamp": "1791000000000",
+          "name": "CreateCoreTemplateV21791000000000"
+        },
+        {
+          "id": 40,
+          "timestamp": "1791100000000",
+          "name": "AddSourcePageToPageTemplates1791100000000"
+        },
+        {
+          "id": 41,
+          "timestamp": "1791200000000",
+          "name": "CreateTemplateDatabaseSnapshot1791200000000"
+        },
+        {
+          "id": 42,
+          "timestamp": "1791300000000",
+          "name": "AddSnapshotHashToTemplateVersions1791300000000"
+        },
+        {
+          "id": 43,
+          "timestamp": "1791400000000",
+          "name": "CreateTemplateVersionAssets1791400000000"
+        },
+        {
+          "id": 44,
+          "timestamp": "1791500000000",
+          "name": "CreateTemplateListings1791500000000"
+        },
+        {
+          "id": 45,
+          "timestamp": "1791651159000",
+          "name": "CreateTemplateEntitlements1791651159000"
+        },
+        {
+          "id": 46,
+          "timestamp": "1791676800000",
+          "name": "PinMarketplaceVersion1791676800000"
+        },
+        {
+          "id": 47,
+          "timestamp": "1791700000000",
+          "name": "CreateTemplateCategories1791700000000"
+        },
+        {
+          "id": 48,
+          "timestamp": "1791810000000",
+          "name": "AddPaidTemplateOffer1791810000000"
+        },
+        {
+          "id": 49,
+          "timestamp": "1791810001000",
+          "name": "AddTemplateListingPricing1791810001000"
+        }
+      ],
+      "historyAfter": [
+        {
+          "id": 1,
+          "timestamp": "1786788580541",
+          "name": "InitSchema1786788580541"
+        },
+        {
+          "id": 2,
+          "timestamp": "1786791565431",
+          "name": "InitSchema1786791565431"
+        },
+        {
+          "id": 3,
+          "timestamp": "1786890030727",
+          "name": "InitSchema1786890030727"
+        },
+        {
+          "id": 4,
+          "timestamp": "1786985029532",
+          "name": "InitSchema1786985029532"
+        },
+        {
+          "id": 5,
+          "timestamp": "1787217935536",
+          "name": "InitSchema1787217935536"
+        },
+        {
+          "id": 6,
+          "timestamp": "1787485597431",
+          "name": "InitSchema1787485597431"
+        },
+        {
+          "id": 7,
+          "timestamp": "1787486000000",
+          "name": "AddPageBlockParentForeignKey1787486000000"
+        },
+        {
+          "id": 8,
+          "timestamp": "1787491979774",
+          "name": "InitSchema1787491979774"
+        },
+        {
+          "id": 9,
+          "timestamp": "1787646530190",
+          "name": "InitSchema1787646530190"
+        },
+        {
+          "id": 10,
+          "timestamp": "1787752723307",
+          "name": "InitSchema1787752723307"
+        },
+        {
+          "id": 11,
+          "timestamp": "1787806828741",
+          "name": "InitSchema1787806828741"
+        },
+        {
+          "id": 12,
+          "timestamp": "1787904390507",
+          "name": "InitSchema1787904390507"
+        },
+        {
+          "id": 13,
+          "timestamp": "1787983229505",
+          "name": "InitSchema1787983229505"
+        },
+        {
+          "id": 14,
+          "timestamp": "1787983788903",
+          "name": "InitSchema1787983788903"
+        },
+        {
+          "id": 15,
+          "timestamp": "1788193103934",
+          "name": "InitSchema1788193103934"
+        },
+        {
+          "id": 16,
+          "timestamp": "1788445911230",
+          "name": "InitSchema1788445911230"
+        },
+        {
+          "id": 17,
+          "timestamp": "1788514253326",
+          "name": "InitSchema1788514253326"
+        },
+        {
+          "id": 18,
+          "timestamp": "1788532282857",
+          "name": "InitSchema1788532282857"
+        },
+        {
+          "id": 19,
+          "timestamp": "1788535097172",
+          "name": "InitSchema1788535097172"
+        },
+        {
+          "id": 20,
+          "timestamp": "1788536358533",
+          "name": "InitSchema1788536358533"
+        },
+        {
+          "id": 21,
+          "timestamp": "1788597148310",
+          "name": "InitSchema1788597148310"
+        },
+        {
+          "id": 22,
+          "timestamp": "1788670739733",
+          "name": "InitSchema1788670739733"
+        },
+        {
+          "id": 23,
+          "timestamp": "1788939255327",
+          "name": "InitSchema1788939255327"
+        },
+        {
+          "id": 24,
+          "timestamp": "1789284620127",
+          "name": "InitSchema1789284620127"
+        },
+        {
+          "id": 25,
+          "timestamp": "1789659900943",
+          "name": "InitSchema1789659900943"
+        },
+        {
+          "id": 26,
+          "timestamp": "1789804144773",
+          "name": "InitSchema1789804144773"
+        },
+        {
+          "id": 27,
+          "timestamp": "1789915646859",
+          "name": "InitSchema1789915646859"
+        },
+        {
+          "id": 28,
+          "timestamp": "1790035200000",
+          "name": "AddWorkspaceMembershipType1790035200000"
+        },
+        {
+          "id": 29,
+          "timestamp": "1790326133210",
+          "name": "InitSchema1790326133210"
+        },
+        {
+          "id": 30,
+          "timestamp": "1790409430359",
+          "name": "AddPublishedSitesAndPagePublications1790409430359"
+        },
+        {
+          "id": 31,
+          "timestamp": "1790640000000",
+          "name": "AddPublicationTree1790640000000"
+        },
+        {
+          "id": 34,
+          "timestamp": "1790411960687",
+          "name": "InitSchema1790411960687"
+        },
+        {
+          "id": 35,
+          "timestamp": "1790720000000",
+          "name": "RootPublicSiteOwnership1790720000000"
+        },
+        {
+          "id": 36,
+          "timestamp": "1790800000000",
+          "name": "ChildPublicationVisibilityOverride1790800000000"
+        },
+        {
+          "id": 37,
+          "timestamp": "1790812800000",
+          "name": "AddAllowUpdatesToPublishedSites1790812800000"
+        },
+        {
+          "id": 38,
+          "timestamp": "1790900000000",
+          "name": "DropLegacyTemplatesAndPageIsTemplate1790900000000"
+        },
+        {
+          "id": 39,
+          "timestamp": "1791000000000",
+          "name": "CreateCoreTemplateV21791000000000"
+        },
+        {
+          "id": 40,
+          "timestamp": "1791100000000",
+          "name": "AddSourcePageToPageTemplates1791100000000"
+        },
+        {
+          "id": 41,
+          "timestamp": "1791200000000",
+          "name": "CreateTemplateDatabaseSnapshot1791200000000"
+        },
+        {
+          "id": 42,
+          "timestamp": "1791300000000",
+          "name": "AddSnapshotHashToTemplateVersions1791300000000"
+        },
+        {
+          "id": 43,
+          "timestamp": "1791400000000",
+          "name": "CreateTemplateVersionAssets1791400000000"
+        },
+        {
+          "id": 44,
+          "timestamp": "1791500000000",
+          "name": "CreateTemplateListings1791500000000"
+        },
+        {
+          "id": 45,
+          "timestamp": "1791651159000",
+          "name": "CreateTemplateEntitlements1791651159000"
+        },
+        {
+          "id": 46,
+          "timestamp": "1791676800000",
+          "name": "PinMarketplaceVersion1791676800000"
+        },
+        {
+          "id": 47,
+          "timestamp": "1791700000000",
+          "name": "CreateTemplateCategories1791700000000"
+        },
+        {
+          "id": 48,
+          "timestamp": "1791810000000",
+          "name": "AddPaidTemplateOffer1791810000000"
+        },
+        {
+          "id": 49,
+          "timestamp": "1791810001000",
+          "name": "AddTemplateListingPricing1791810001000"
+        },
+        {
+          "id": 50,
+          "timestamp": "1791903351862",
+          "name": "CreateTemplatePurchases1791903351862"
+        }
+      ],
+      "historyRollback": [
+        {
+          "id": 1,
+          "timestamp": "1786788580541",
+          "name": "InitSchema1786788580541"
+        },
+        {
+          "id": 2,
+          "timestamp": "1786791565431",
+          "name": "InitSchema1786791565431"
+        },
+        {
+          "id": 3,
+          "timestamp": "1786890030727",
+          "name": "InitSchema1786890030727"
+        },
+        {
+          "id": 4,
+          "timestamp": "1786985029532",
+          "name": "InitSchema1786985029532"
+        },
+        {
+          "id": 5,
+          "timestamp": "1787217935536",
+          "name": "InitSchema1787217935536"
+        },
+        {
+          "id": 6,
+          "timestamp": "1787485597431",
+          "name": "InitSchema1787485597431"
+        },
+        {
+          "id": 7,
+          "timestamp": "1787486000000",
+          "name": "AddPageBlockParentForeignKey1787486000000"
+        },
+        {
+          "id": 8,
+          "timestamp": "1787491979774",
+          "name": "InitSchema1787491979774"
+        },
+        {
+          "id": 9,
+          "timestamp": "1787646530190",
+          "name": "InitSchema1787646530190"
+        },
+        {
+          "id": 10,
+          "timestamp": "1787752723307",
+          "name": "InitSchema1787752723307"
+        },
+        {
+          "id": 11,
+          "timestamp": "1787806828741",
+          "name": "InitSchema1787806828741"
+        },
+        {
+          "id": 12,
+          "timestamp": "1787904390507",
+          "name": "InitSchema1787904390507"
+        },
+        {
+          "id": 13,
+          "timestamp": "1787983229505",
+          "name": "InitSchema1787983229505"
+        },
+        {
+          "id": 14,
+          "timestamp": "1787983788903",
+          "name": "InitSchema1787983788903"
+        },
+        {
+          "id": 15,
+          "timestamp": "1788193103934",
+          "name": "InitSchema1788193103934"
+        },
+        {
+          "id": 16,
+          "timestamp": "1788445911230",
+          "name": "InitSchema1788445911230"
+        },
+        {
+          "id": 17,
+          "timestamp": "1788514253326",
+          "name": "InitSchema1788514253326"
+        },
+        {
+          "id": 18,
+          "timestamp": "1788532282857",
+          "name": "InitSchema1788532282857"
+        },
+        {
+          "id": 19,
+          "timestamp": "1788535097172",
+          "name": "InitSchema1788535097172"
+        },
+        {
+          "id": 20,
+          "timestamp": "1788536358533",
+          "name": "InitSchema1788536358533"
+        },
+        {
+          "id": 21,
+          "timestamp": "1788597148310",
+          "name": "InitSchema1788597148310"
+        },
+        {
+          "id": 22,
+          "timestamp": "1788670739733",
+          "name": "InitSchema1788670739733"
+        },
+        {
+          "id": 23,
+          "timestamp": "1788939255327",
+          "name": "InitSchema1788939255327"
+        },
+        {
+          "id": 24,
+          "timestamp": "1789284620127",
+          "name": "InitSchema1789284620127"
+        },
+        {
+          "id": 25,
+          "timestamp": "1789659900943",
+          "name": "InitSchema1789659900943"
+        },
+        {
+          "id": 26,
+          "timestamp": "1789804144773",
+          "name": "InitSchema1789804144773"
+        },
+        {
+          "id": 27,
+          "timestamp": "1789915646859",
+          "name": "InitSchema1789915646859"
+        },
+        {
+          "id": 28,
+          "timestamp": "1790035200000",
+          "name": "AddWorkspaceMembershipType1790035200000"
+        },
+        {
+          "id": 29,
+          "timestamp": "1790326133210",
+          "name": "InitSchema1790326133210"
+        },
+        {
+          "id": 30,
+          "timestamp": "1790409430359",
+          "name": "AddPublishedSitesAndPagePublications1790409430359"
+        },
+        {
+          "id": 31,
+          "timestamp": "1790640000000",
+          "name": "AddPublicationTree1790640000000"
+        },
+        {
+          "id": 34,
+          "timestamp": "1790411960687",
+          "name": "InitSchema1790411960687"
+        },
+        {
+          "id": 35,
+          "timestamp": "1790720000000",
+          "name": "RootPublicSiteOwnership1790720000000"
+        },
+        {
+          "id": 36,
+          "timestamp": "1790800000000",
+          "name": "ChildPublicationVisibilityOverride1790800000000"
+        },
+        {
+          "id": 37,
+          "timestamp": "1790812800000",
+          "name": "AddAllowUpdatesToPublishedSites1790812800000"
+        },
+        {
+          "id": 38,
+          "timestamp": "1790900000000",
+          "name": "DropLegacyTemplatesAndPageIsTemplate1790900000000"
+        },
+        {
+          "id": 39,
+          "timestamp": "1791000000000",
+          "name": "CreateCoreTemplateV21791000000000"
+        },
+        {
+          "id": 40,
+          "timestamp": "1791100000000",
+          "name": "AddSourcePageToPageTemplates1791100000000"
+        },
+        {
+          "id": 41,
+          "timestamp": "1791200000000",
+          "name": "CreateTemplateDatabaseSnapshot1791200000000"
+        },
+        {
+          "id": 42,
+          "timestamp": "1791300000000",
+          "name": "AddSnapshotHashToTemplateVersions1791300000000"
+        },
+        {
+          "id": 43,
+          "timestamp": "1791400000000",
+          "name": "CreateTemplateVersionAssets1791400000000"
+        },
+        {
+          "id": 44,
+          "timestamp": "1791500000000",
+          "name": "CreateTemplateListings1791500000000"
+        },
+        {
+          "id": 45,
+          "timestamp": "1791651159000",
+          "name": "CreateTemplateEntitlements1791651159000"
+        },
+        {
+          "id": 46,
+          "timestamp": "1791676800000",
+          "name": "PinMarketplaceVersion1791676800000"
+        },
+        {
+          "id": 47,
+          "timestamp": "1791700000000",
+          "name": "CreateTemplateCategories1791700000000"
+        },
+        {
+          "id": 48,
+          "timestamp": "1791810000000",
+          "name": "AddPaidTemplateOffer1791810000000"
+        },
+        {
+          "id": 49,
+          "timestamp": "1791810001000",
+          "name": "AddTemplateListingPricing1791810001000"
+        }
+      ],
+      "existingRowsBefore": [
+        {
+          "table": "activities",
+          "count": "0"
+        },
+        {
+          "table": "ai_conversations",
+          "count": "0"
+        },
+        {
+          "table": "ai_generations",
+          "count": "0"
+        },
+        {
+          "table": "ai_messages",
+          "count": "0"
+        },
+        {
+          "table": "ai_tool_calls",
+          "count": "0"
+        },
+        {
+          "table": "ai_usage",
+          "count": "0"
+        },
+        {
+          "table": "attachments",
+          "count": "0"
+        },
+        {
+          "table": "billing_features",
+          "count": "0"
+        },
+        {
+          "table": "billing_plan_features",
+          "count": "0"
+        },
+        {
+          "table": "billing_plan_prices",
+          "count": "0"
+        },
+        {
+          "table": "billing_plans",
+          "count": "0"
+        },
+        {
+          "table": "billing_usage",
+          "count": "0"
+        },
+        {
+          "table": "billing_webhook_events",
+          "count": "0"
+        },
+        {
+          "table": "database_properties",
+          "count": "0"
+        },
+        {
+          "table": "database_property_options",
+          "count": "0"
+        },
+        {
+          "table": "database_row_values",
+          "count": "0"
+        },
+        {
+          "table": "database_rows",
+          "count": "0"
+        },
+        {
+          "table": "database_view_properties",
+          "count": "0"
+        },
+        {
+          "table": "database_views",
+          "count": "0"
+        },
+        {
+          "table": "databases",
+          "count": "0"
+        },
+        {
+          "table": "mentions",
+          "count": "0"
+        },
+        {
+          "table": "notifications",
+          "count": "0"
+        },
+        {
+          "table": "page_access_requests",
+          "count": "0"
+        },
+        {
+          "table": "page_blocks",
+          "count": "0"
+        },
+        {
+          "table": "page_edit_requests",
+          "count": "0"
+        },
+        {
+          "table": "page_favorites",
+          "count": "0"
+        },
+        {
+          "table": "page_publications",
+          "count": "0"
+        },
+        {
+          "table": "page_share_links",
+          "count": "0"
+        },
+        {
+          "table": "page_share_settings",
+          "count": "0"
+        },
+        {
+          "table": "page_shares",
+          "count": "0"
+        },
+        {
+          "table": "page_template_blocks",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_properties",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_property_options",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_row_values",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_rows",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_view_properties",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_views",
+          "count": "0"
+        },
+        {
+          "table": "page_template_databases",
+          "count": "0"
+        },
+        {
+          "table": "page_template_versions",
+          "count": "0"
+        },
+        {
+          "table": "page_templates",
+          "count": "0"
+        },
+        {
+          "table": "pages",
+          "count": "0"
+        },
+        {
+          "table": "payment_orders",
+          "count": "0"
+        },
+        {
+          "table": "payment_transactions",
+          "count": "0"
+        },
+        {
+          "table": "permissions",
+          "count": "0"
+        },
+        {
+          "table": "publication_root_ownership_created_publications",
+          "count": "0"
+        },
+        {
+          "table": "publication_root_ownership_publication_backup",
+          "count": "0"
+        },
+        {
+          "table": "publication_root_ownership_site_backup",
+          "count": "0"
+        },
+        {
+          "table": "published_sites",
+          "count": "0"
+        },
+        {
+          "table": "refresh_tokens",
+          "count": "0"
+        },
+        {
+          "table": "teamspace_members",
+          "count": "0"
+        },
+        {
+          "table": "teamspaces",
+          "count": "0"
+        },
+        {
+          "table": "template_categories",
+          "count": "0"
+        },
+        {
+          "table": "template_entitlements",
+          "count": "0"
+        },
+        {
+          "table": "template_listing_categories",
+          "count": "0"
+        },
+        {
+          "table": "template_listings",
+          "count": "0"
+        },
+        {
+          "table": "template_version_assets",
+          "count": "0"
+        },
+        {
+          "table": "user_auth_identities",
+          "count": "0"
+        },
+        {
+          "table": "user_profiles",
+          "count": "0"
+        },
+        {
+          "table": "users",
+          "count": "0"
+        },
+        {
+          "table": "workspace_invites",
+          "count": "0"
+        },
+        {
+          "table": "workspace_members",
+          "count": "0"
+        },
+        {
+          "table": "workspace_subscriptions",
+          "count": "0"
+        },
+        {
+          "table": "workspaces",
+          "count": "0"
+        }
+      ],
+      "existingRowsAfter": [
+        {
+          "table": "activities",
+          "count": "0"
+        },
+        {
+          "table": "ai_conversations",
+          "count": "0"
+        },
+        {
+          "table": "ai_generations",
+          "count": "0"
+        },
+        {
+          "table": "ai_messages",
+          "count": "0"
+        },
+        {
+          "table": "ai_tool_calls",
+          "count": "0"
+        },
+        {
+          "table": "ai_usage",
+          "count": "0"
+        },
+        {
+          "table": "attachments",
+          "count": "0"
+        },
+        {
+          "table": "billing_features",
+          "count": "0"
+        },
+        {
+          "table": "billing_plan_features",
+          "count": "0"
+        },
+        {
+          "table": "billing_plan_prices",
+          "count": "0"
+        },
+        {
+          "table": "billing_plans",
+          "count": "0"
+        },
+        {
+          "table": "billing_usage",
+          "count": "0"
+        },
+        {
+          "table": "billing_webhook_events",
+          "count": "0"
+        },
+        {
+          "table": "database_properties",
+          "count": "0"
+        },
+        {
+          "table": "database_property_options",
+          "count": "0"
+        },
+        {
+          "table": "database_row_values",
+          "count": "0"
+        },
+        {
+          "table": "database_rows",
+          "count": "0"
+        },
+        {
+          "table": "database_view_properties",
+          "count": "0"
+        },
+        {
+          "table": "database_views",
+          "count": "0"
+        },
+        {
+          "table": "databases",
+          "count": "0"
+        },
+        {
+          "table": "mentions",
+          "count": "0"
+        },
+        {
+          "table": "notifications",
+          "count": "0"
+        },
+        {
+          "table": "page_access_requests",
+          "count": "0"
+        },
+        {
+          "table": "page_blocks",
+          "count": "0"
+        },
+        {
+          "table": "page_edit_requests",
+          "count": "0"
+        },
+        {
+          "table": "page_favorites",
+          "count": "0"
+        },
+        {
+          "table": "page_publications",
+          "count": "0"
+        },
+        {
+          "table": "page_share_links",
+          "count": "0"
+        },
+        {
+          "table": "page_share_settings",
+          "count": "0"
+        },
+        {
+          "table": "page_shares",
+          "count": "0"
+        },
+        {
+          "table": "page_template_blocks",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_properties",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_property_options",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_row_values",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_rows",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_view_properties",
+          "count": "0"
+        },
+        {
+          "table": "page_template_database_views",
+          "count": "0"
+        },
+        {
+          "table": "page_template_databases",
+          "count": "0"
+        },
+        {
+          "table": "page_template_versions",
+          "count": "0"
+        },
+        {
+          "table": "page_templates",
+          "count": "0"
+        },
+        {
+          "table": "pages",
+          "count": "0"
+        },
+        {
+          "table": "payment_orders",
+          "count": "0"
+        },
+        {
+          "table": "payment_transactions",
+          "count": "0"
+        },
+        {
+          "table": "permissions",
+          "count": "0"
+        },
+        {
+          "table": "publication_root_ownership_created_publications",
+          "count": "0"
+        },
+        {
+          "table": "publication_root_ownership_publication_backup",
+          "count": "0"
+        },
+        {
+          "table": "publication_root_ownership_site_backup",
+          "count": "0"
+        },
+        {
+          "table": "published_sites",
+          "count": "0"
+        },
+        {
+          "table": "refresh_tokens",
+          "count": "0"
+        },
+        {
+          "table": "teamspace_members",
+          "count": "0"
+        },
+        {
+          "table": "teamspaces",
+          "count": "0"
+        },
+        {
+          "table": "template_categories",
+          "count": "0"
+        },
+        {
+          "table": "template_entitlements",
+          "count": "0"
+        },
+        {
+          "table": "template_listing_categories",
+          "count": "0"
+        },
+        {
+          "table": "template_listings",
+          "count": "0"
+        },
+        {
+          "table": "template_version_assets",
+          "count": "0"
+        },
+        {
+          "table": "user_auth_identities",
+          "count": "0"
+        },
+        {
+          "table": "user_profiles",
+          "count": "0"
+        },
+        {
+          "table": "users",
+          "count": "0"
+        },
+        {
+          "table": "workspace_invites",
+          "count": "0"
+        },
+        {
+          "table": "workspace_members",
+          "count": "0"
+        },
+        {
+          "table": "workspace_subscriptions",
+          "count": "0"
+        },
+        {
+          "table": "workspaces",
+          "count": "0"
+        }
+      ],
+      "executedUp": [
+        "CREATE TABLE \"template_purchases\" (\"id\" uuid NOT NULL, \"order_code\" character varying(34) NOT NULL, \"template_id\" uuid NOT NULL, \"listing_id\" uuid NOT NULL, \"buyer_id\" uuid NOT NULL, \"published_version_id\" uuid NOT NULL, \"amount\" bigint NOT NULL, \"currency\" character varying(3) NOT NULL, \"idempotency_key\" character varying(255) NOT NULL, \"status\" character varying(32) NOT NULL, \"provider\" character varying(16), \"entitlement_id\" uuid, \"expires_at\" TIMESTAMP WITH TIME ZONE NOT NULL, \"paid_at\" TIMESTAMP WITH TIME ZONE, \"created_at\" TIMESTAMP WITH TIME ZONE NOT NULL, \"updated_at\" TIMESTAMP WITH TIME ZONE NOT NULL, CONSTRAINT \"CHK_template_purchases_currency\" CHECK (\"currency\" = 'VND'), CONSTRAINT \"CHK_template_purchases_amount\" CHECK (\"amount\" > 0 AND \"amount\" <= 9007199254740991), CONSTRAINT \"PK_36c766dd2149cbf8580fe3f32d7\" PRIMARY KEY (\"id\"))",
+        "CREATE INDEX \"IDX_template_purchases_template_id\" ON \"template_purchases\" (\"template_id\")",
+        "CREATE UNIQUE INDEX \"UQ_template_purchases_buyer_id_idempotency_key\" ON \"template_purchases\" (\"buyer_id\", \"idempotency_key\")",
+        "CREATE UNIQUE INDEX \"UQ_template_purchases_order_code\" ON \"template_purchases\" (\"order_code\")"
+      ],
+      "executedDown": [
+        "DROP INDEX \"public\".\"IDX_template_purchases_template_id\"",
+        "DROP INDEX \"public\".\"UQ_template_purchases_buyer_id_idempotency_key\"",
+        "DROP INDEX \"public\".\"UQ_template_purchases_order_code\"",
+        "DROP TABLE \"template_purchases\""
+      ],
+      "catalog": {
+        "columns": [
+          {
+            "column_name": "id",
+            "data_type": "uuid",
+            "character_maximum_length": null,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "order_code",
+            "data_type": "character varying",
+            "character_maximum_length": 34,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "template_id",
+            "data_type": "uuid",
+            "character_maximum_length": null,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "listing_id",
+            "data_type": "uuid",
+            "character_maximum_length": null,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "buyer_id",
+            "data_type": "uuid",
+            "character_maximum_length": null,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "published_version_id",
+            "data_type": "uuid",
+            "character_maximum_length": null,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "amount",
+            "data_type": "bigint",
+            "character_maximum_length": null,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "currency",
+            "data_type": "character varying",
+            "character_maximum_length": 3,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "idempotency_key",
+            "data_type": "character varying",
+            "character_maximum_length": 255,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "status",
+            "data_type": "character varying",
+            "character_maximum_length": 32,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "provider",
+            "data_type": "character varying",
+            "character_maximum_length": 16,
+            "is_nullable": "YES",
+            "column_default": null
+          },
+          {
+            "column_name": "entitlement_id",
+            "data_type": "uuid",
+            "character_maximum_length": null,
+            "is_nullable": "YES",
+            "column_default": null
+          },
+          {
+            "column_name": "expires_at",
+            "data_type": "timestamp with time zone",
+            "character_maximum_length": null,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "paid_at",
+            "data_type": "timestamp with time zone",
+            "character_maximum_length": null,
+            "is_nullable": "YES",
+            "column_default": null
+          },
+          {
+            "column_name": "created_at",
+            "data_type": "timestamp with time zone",
+            "character_maximum_length": null,
+            "is_nullable": "NO",
+            "column_default": null
+          },
+          {
+            "column_name": "updated_at",
+            "data_type": "timestamp with time zone",
+            "character_maximum_length": null,
+            "is_nullable": "NO",
+            "column_default": null
+          }
+        ],
+        "constraints": [
+          {
+            "conname": "CHK_template_purchases_amount",
+            "contype": "c",
+            "definition": "CHECK (((amount > 0) AND (amount <= '9007199254740991'::bigint)))"
+          },
+          {
+            "conname": "CHK_template_purchases_currency",
+            "contype": "c",
+            "definition": "CHECK (((currency)::text = 'VND'::text))"
+          },
+          {
+            "conname": "PK_36c766dd2149cbf8580fe3f32d7",
+            "contype": "p",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "conname": "template_purchases_amount_not_null",
+            "contype": "n",
+            "definition": "NOT NULL amount"
+          },
+          {
+            "conname": "template_purchases_buyer_id_not_null",
+            "contype": "n",
+            "definition": "NOT NULL buyer_id"
+          },
+          {
+            "conname": "template_purchases_created_at_not_null",
+            "contype": "n",
+            "definition": "NOT NULL created_at"
+          },
+          {
+            "conname": "template_purchases_currency_not_null",
+            "contype": "n",
+            "definition": "NOT NULL currency"
+          },
+          {
+            "conname": "template_purchases_expires_at_not_null",
+            "contype": "n",
+            "definition": "NOT NULL expires_at"
+          },
+          {
+            "conname": "template_purchases_id_not_null",
+            "contype": "n",
+            "definition": "NOT NULL id"
+          },
+          {
+            "conname": "template_purchases_idempotency_key_not_null",
+            "contype": "n",
+            "definition": "NOT NULL idempotency_key"
+          },
+          {
+            "conname": "template_purchases_listing_id_not_null",
+            "contype": "n",
+            "definition": "NOT NULL listing_id"
+          },
+          {
+            "conname": "template_purchases_order_code_not_null",
+            "contype": "n",
+            "definition": "NOT NULL order_code"
+          },
+          {
+            "conname": "template_purchases_published_version_id_not_null",
+            "contype": "n",
+            "definition": "NOT NULL published_version_id"
+          },
+          {
+            "conname": "template_purchases_status_not_null",
+            "contype": "n",
+            "definition": "NOT NULL status"
+          },
+          {
+            "conname": "template_purchases_template_id_not_null",
+            "contype": "n",
+            "definition": "NOT NULL template_id"
+          },
+          {
+            "conname": "template_purchases_updated_at_not_null",
+            "contype": "n",
+            "definition": "NOT NULL updated_at"
+          }
+        ],
+        "indexes": [
+          {
+            "indexname": "IDX_template_purchases_template_id",
+            "indexdef": "CREATE INDEX \"IDX_template_purchases_template_id\" ON public.template_purchases USING btree (template_id)"
+          },
+          {
+            "indexname": "PK_36c766dd2149cbf8580fe3f32d7",
+            "indexdef": "CREATE UNIQUE INDEX \"PK_36c766dd2149cbf8580fe3f32d7\" ON public.template_purchases USING btree (id)"
+          },
+          {
+            "indexname": "UQ_template_purchases_buyer_id_idempotency_key",
+            "indexdef": "CREATE UNIQUE INDEX \"UQ_template_purchases_buyer_id_idempotency_key\" ON public.template_purchases USING btree (buyer_id, idempotency_key)"
+          },
+          {
+            "indexname": "UQ_template_purchases_order_code",
+            "indexdef": "CREATE UNIQUE INDEX \"UQ_template_purchases_order_code\" ON public.template_purchases USING btree (order_code)"
+          }
+        ]
+      },
+      "inputVerification": "PASS",
+      "outputMetadataVerification": "PASS"
+    }
+  ]
+}

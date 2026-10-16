@@ -23,6 +23,44 @@
 
 ## Description
 
+Database operations: [Taskmanly V2 database baseline and migration runbook](docs/database-baseline.md).
+
+### Migration workflow
+
+Add or update the entity, register it once in `src/database/entities.ts`, then run:
+
+```bash
+npm run migration:generate
+npm run migration:run
+```
+
+`migration:generate` compares TypeORM entity metadata with the current PostgreSQL
+schema and writes a timestamped migration in `src/database/migrations`. It does not
+execute SQL or create an empty migration. Run pending migrations before generating
+another. `migration:run` applies pending migrations in timestamp order, using a
+transaction for each migration and TypeORM's `migrations` history table. Neither
+command requires `migration:prepare` or `migration:preflight`.
+
+Both commands verify baseline history and reviewed migration integrity. Existing
+schema checkpoints are checked when available. New states without a checkpoint
+verify history and PostgreSQL version; use the optional `migration:audit` for deeper
+checks. Review the generated `up()` and `down()` SQL before committing. `DROP TABLE`,
+`DROP COLUMN`, dangerous type changes and similar data loss operations are blocked
+unless `MIGRATION_ALLOW_DESTRUCTIVE=1` is explicitly set for generation and execution.
+Keep `synchronize: false` and never edit an already executed migration.
+
+The PostgreSQL integration test uses a separate, empty database named by
+`MIGRATION_TEST_DB_NAME` (ending in `_test`). It refuses the configured `DB_NAME` and
+cleans up its test schema afterward. Example in PowerShell:
+
+```powershell
+$env:MIGRATION_TEST_DB_NAME = 'taskmanly_marketplace_test'
+npm test -- --runInBand src/database/local-migration.spec.ts
+```
+
+`migration:audit`, `migration:check`, `baseline:static`, and the older checkpoint
+scripts remain available for CI and historical verification.
+
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
 ## Project setup

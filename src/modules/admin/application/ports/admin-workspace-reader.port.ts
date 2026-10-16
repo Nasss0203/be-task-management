@@ -105,7 +105,6 @@ export interface AdminWorkspacePageSummary {
   slug: string | null;
   icon: string | null;
   coverUrl: string | null;
-  isTemplate: boolean;
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;

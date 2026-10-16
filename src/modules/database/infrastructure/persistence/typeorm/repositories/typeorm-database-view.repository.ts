@@ -47,10 +47,12 @@ export class TypeOrmDatabaseViewRepository implements DatabaseViewRepository {
       },
       order: {
         position: 'ASC',
+        id: 'ASC',
+        properties: { position: 'ASC', id: 'ASC' },
       },
     });
 
-    return views.map(DatabaseViewMapper.toDomain);
+    return views.map((view) => DatabaseViewMapper.toDomain(view));
   }
 
   async save(view: DatabaseView, context?: PersistenceContext): Promise<void> {

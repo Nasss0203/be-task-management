@@ -1,8 +1,8 @@
 import type {
   PageBlockJson,
   PageBlockStyleConfig,
-} from 'src/modules/content/domain/entities/page-block.entity';
-import { PageBlockType } from 'src/modules/content/domain/entities/page-block.entity';
+} from 'src/shared/domain/page-block.types';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import { User } from 'src/modules/identity/identity.types';
 import {
   Column,

@@ -42,14 +42,20 @@ export class PagePublicationOrmEntity {
   site_id: string;
 
   @ManyToOne(() => PublishedSiteOrmEntity, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'site_id' })
+  @JoinColumn({
+    name: 'site_id',
+    foreignKeyConstraintName: 'FK_page_publications_site',
+  })
   site: PublishedSiteOrmEntity;
 
   @Column('uuid')
   page_id: string;
 
   @ManyToOne(() => PageOrmEntity, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'page_id' })
+  @JoinColumn({
+    name: 'page_id',
+    foreignKeyConstraintName: 'FK_page_publications_page',
+  })
   page: PageOrmEntity;
 
   @Column({ type: 'uuid', nullable: true })
@@ -95,7 +101,10 @@ export class PagePublicationOrmEntity {
   published_by: string;
 
   @ManyToOne(() => User, { onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'published_by' })
+  @JoinColumn({
+    name: 'published_by',
+    foreignKeyConstraintName: 'FK_page_publications_published_by',
+  })
   publisher: User;
 
   @Column({ name: 'published_at', type: 'timestamptz' })

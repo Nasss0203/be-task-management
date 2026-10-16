@@ -6,7 +6,6 @@ export class Page {
     private slug: string | null,
     private icon: string | null,
     private coverUrl: string | null,
-    private isTemplate: boolean,
     private teamspaceId: string | null,
 
     private parentPageId: string | null,
@@ -26,7 +25,6 @@ export class Page {
     slug?: string | null;
     icon?: string | null;
     coverUrl?: string | null;
-    isTemplate?: boolean;
     teamspaceId?: string | null;
 
     parentPageId?: string | null;
@@ -39,7 +37,6 @@ export class Page {
       params.slug ?? null,
       params.icon ?? null,
       params.coverUrl ?? null,
-      params.isTemplate ?? false,
       params.teamspaceId ?? null,
 
       params.parentPageId ?? null,
@@ -58,7 +55,6 @@ export class Page {
     slug: string | null;
     icon: string | null;
     coverUrl: string | null;
-    isTemplate: boolean;
     teamspaceId: string | null;
 
     parentPageId: string | null;
@@ -77,7 +73,6 @@ export class Page {
       params.slug,
       params.icon,
       params.coverUrl,
-      params.isTemplate,
       params.teamspaceId,
 
       params.parentPageId,
@@ -130,10 +125,6 @@ export class Page {
 
   getCoverUrl(): string | null {
     return this.coverUrl;
-  }
-
-  getIsTemplate(): boolean {
-    return this.isTemplate;
   }
 
   getCreatedBy(): string {

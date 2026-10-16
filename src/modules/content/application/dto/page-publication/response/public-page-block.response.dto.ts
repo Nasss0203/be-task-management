@@ -1,9 +1,9 @@
-import {
-  PageBlock,
+import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity';
+import type {
   PageBlockJson,
   PageBlockStyleConfig,
-  PageBlockType,
-} from 'src/modules/content/domain/entities/page-block.entity';
+} from 'src/shared/domain/page-block.types';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 
 export class PublicPageBlockResponseDto {
   id: string;
