@@ -179,11 +179,7 @@ export class UseTemplateHandler {
       version.ensureUsable();
 
       if (entitlement) {
-        if (listing?.getDemoVersionId() === version.getId()) {
-          throw new BadRequestException(
-            'Demo version cannot be used as an official release',
-          );
-        }
+        // Only official release records grant use; being the demo does not revoke it.
         const release = await this.releases.findByTemplateAndVersion(
           template.getId(),
           version.getId(),

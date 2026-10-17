@@ -17,10 +17,15 @@ import type {
 } from 'src/modules/template/application/ports/template-content.port';
 import type { TemplateListingRepository } from '../../../../domain/repositories/template-listing.repository';
 import { TEMPLATE_TYPES } from '../../../../../template/template.types';
-import { TemplateOfferType } from '../../../../domain/enums/template-offer-type.enum';
 import { TemplateListingResponseDto } from '../../../dto/template-listing/template-listing.response.dto';
 import { resolveTemplateListingPricing } from '../../../services/template-listing-pricing';
 import { UpdateTemplateListingPricingCommand } from './update-template-listing-pricing.command';
+import { TemplateListing } from '../../../../domain/aggregates/template-listing/template-listing.aggregate';
+import { TemplatePreviewLoader } from '../../../../../template/application/services/template-preview-loader.service';
+import {
+  assertDemoConfigFitsVersion,
+  toBadRequest,
+} from '../../../services/listing-demo-config-validator';
 
 @Injectable()
 export class UpdateTemplateListingPricingHandler {
@@ -34,6 +39,7 @@ export class UpdateTemplateListingPricingHandler {
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
     private readonly authorization: AuthorizationService,
+    private readonly previewLoader: TemplatePreviewLoader,
   ) {}
 
   async execute(
@@ -79,11 +85,25 @@ export class UpdateTemplateListingPricingHandler {
         );
       }
 
+      const demoVersionChanges =
+        command.demoVersionId !== undefined &&
+        command.demoVersionId !== listing.getDemoVersionId();
+      const effectiveDemoVersionId =
+        command.demoVersionId !== undefined
+          ? command.demoVersionId
+          : listing.getDemoVersionId();
+      // Mirrors the aggregate: a new demo version drops the old version's config.
+      const effectiveDemoConfig =
+        command.demoConfig !== undefined
+          ? command.demoConfig
+          : demoVersionChanges
+            ? null
+            : listing.getDemoConfig();
+
+      const demoVersion = effectiveDemoVersionId
+        ? await this.versions.findById(effectiveDemoVersionId, context)
+        : null;
       if (command.demoVersionId) {
-        const demoVersion = await this.versions.findById(
-          command.demoVersionId,
-          context,
-        );
         if (!demoVersion) {
           throw new NotFoundException('Demo template version not found');
         }
@@ -97,22 +117,31 @@ export class UpdateTemplateListingPricingHandler {
             'Demo version must be a published template version',
           );
         }
-        const effectiveOfferType =
-          command.offerType !== undefined
-            ? command.offerType
-            : listing.getOfferType();
-        if (
-          effectiveOfferType === TemplateOfferType.PAID &&
-          listing.getPublishedVersionId() &&
-          demoVersion.getId() === listing.getPublishedVersionId()
-        ) {
-          throw new BadRequestException(
-            'Demo version cannot be the same as the published paid version',
-          );
-        }
+      }
+
+      const effectiveOfferType =
+        command.offerType !== undefined
+          ? command.offerType
+          : listing.getOfferType();
+      toBadRequest(() =>
+        TemplateListing.assertDemoPolicy(
+          effectiveOfferType,
+          effectiveDemoVersionId,
+          listing!.getPublishedVersionId(),
+          effectiveDemoConfig,
+        ),
+      );
+      if (command.demoConfig !== undefined || demoVersionChanges) {
+        await assertDemoConfigFitsVersion(
+          this.previewLoader,
+          template,
+          demoVersion,
+          effectiveDemoConfig,
+        );
       }
 
       let modified = false;
+      const current = listing;
 
       if (command.offerType !== undefined) {
         const { offerType, price } = resolveTemplateListingPricing(
@@ -121,12 +150,14 @@ export class UpdateTemplateListingPricingHandler {
           command.currency,
         );
         if (
-          listing.configureOffer(
-            offerType,
-            price,
-            command.previewMode,
-            command.demoVersionId,
-            command.demoConfig,
+          toBadRequest(() =>
+            current.configureOffer(
+              offerType,
+              price,
+              command.previewMode,
+              command.demoVersionId,
+              command.demoConfig,
+            ),
           )
         ) {
           modified = true;
@@ -134,14 +165,16 @@ export class UpdateTemplateListingPricingHandler {
       } else {
         if (
           command.previewMode !== undefined &&
-          listing.setPreviewMode(command.previewMode)
+          current.setPreviewMode(command.previewMode)
         ) {
           modified = true;
         }
         if (
           (command.demoVersionId !== undefined ||
             command.demoConfig !== undefined) &&
-          listing.setDemoPreview(command.demoVersionId, command.demoConfig)
+          toBadRequest(() =>
+            current.setDemoPreview(command.demoVersionId, command.demoConfig),
+          )
         ) {
           modified = true;
         }

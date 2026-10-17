@@ -85,7 +85,6 @@ export class GetUsableTemplateVersionsHandler {
           !version ||
           version.getTemplateId() !== query.templateId ||
           !version.isPublished() ||
-          listing?.getDemoVersionId() === version.getId() ||
           (source === TemplateEntitlementSource.FREE_CLAIM &&
             release.getOfferTypeAtRelease() !== TemplateOfferType.FREE)
         ) {

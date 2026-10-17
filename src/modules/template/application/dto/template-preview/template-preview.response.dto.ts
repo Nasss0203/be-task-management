@@ -11,6 +11,10 @@ export class TemplatePreviewResponseDto {
   isDemo?: boolean;
   interactive?: boolean;
   demoConfig?: Record<string, any> | null;
+  /** FULL_VERSION for a separate demo version, LIMITED for an allowlisted one. */
+  demoScope?: 'FULL_VERSION' | 'LIMITED';
+  /** How much content a LIMITED demo left out, for "buy to see more" UI. */
+  hiddenContent?: { blocks: number; rows: number };
 
   constructor(input: {
     template: PageTemplateResponseDto;

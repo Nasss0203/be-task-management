@@ -33,6 +33,9 @@ import { CreateTemplateListingRequest } from '../requests/create-template-listin
 import { UpdateTemplateListingPricingRequest } from '../requests/update-template-listing-pricing.request';
 import { UpdateTemplateListingPricingCommand } from '../../../application/commands/template-listing/update-template-listing-pricing/update-template-listing-pricing.command';
 import { UpdateTemplateListingPricingHandler } from '../../../application/commands/template-listing/update-template-listing-pricing/update-template-listing-pricing.handler';
+import { PreviewTemplateDemoHandler } from '../../../application/queries/template-preview/preview-template-demo/preview-template-demo.handler';
+import { PreviewTemplateDemoQuery } from '../../../application/queries/template-preview/preview-template-demo/preview-template-demo.query';
+import { PreviewTemplateDemoRequest } from '../requests/preview-template-demo.request';
 
 @Controller('templates')
 export class TemplateListingController {
@@ -52,7 +55,29 @@ export class TemplateListingController {
 
     @Inject(MARKETPLACE_TYPES.applications.GetTemplateListingHandler)
     private readonly getTemplateListingHandler: GetTemplateListingHandler,
+
+    @Inject(MARKETPLACE_TYPES.applications.PreviewTemplateDemoHandler)
+    private readonly previewTemplateDemoHandler: PreviewTemplateDemoHandler,
   ) {}
+
+  // POST because it carries an unsaved config; it never writes anything.
+  @Post(':templateId/listing/demo-preview')
+  @ReadRateLimit()
+  @ResponseMessage('Template demo preview generated successfully')
+  async previewDemo(
+    @Param('templateId', ParseUUIDPipe) templateId: string,
+    @Body() request: PreviewTemplateDemoRequest,
+    @Auth() auth: IAuth,
+  ) {
+    return this.previewTemplateDemoHandler.execute(
+      new PreviewTemplateDemoQuery(
+        templateId,
+        auth.id,
+        request.demo_version_id,
+        request.demo_config,
+      ),
+    );
+  }
 
   @Post(':templateId/marketplace/publish')
   @WriteRateLimit()

@@ -22,7 +22,6 @@ import { GetTemplateVersionBlocksHandler } from './application/queries/template-
 import { GetInternalTemplateRenderHandler } from './application/queries/internal-template-render/get-internal-template-render/get-internal-template-render.handler';
 import { ListPageTemplatesHandler } from './application/queries/page-template/list-page-templates/list-page-templates.handler';
 import { GenerateTemplateVersionThumbnailHandler } from './application/commands/generate-template-version-thumbnail/generate-template-version-thumbnail.handler';
-import { GetTemplateVersionThumbnailHandler } from './application/queries/template-version/get-template-version-thumbnail/get-template-version-thumbnail.handler';
 import { PlaywrightTemplateThumbnailRendererService } from './infrastructure/rendering/playwright-template-thumbnail-renderer.service';
 import { BullMqTemplateThumbnailJobQueue } from './infrastructure/queue/bullmq-template-thumbnail-job-queue.service';
 import { TypeOrmUnitOfWork } from 'src/common/helper/unit-work.typeorm';
@@ -135,10 +134,6 @@ import { InternalTemplateRenderGuard } from 'src/common/guard/internal-template-
       useClass: GenerateTemplateVersionThumbnailHandler,
     },
     {
-      provide: TEMPLATE_TYPES.applications.GetTemplateVersionThumbnailHandler,
-      useClass: GetTemplateVersionThumbnailHandler,
-    },
-    {
       provide: TEMPLATE_TYPES.services.TemplateThumbnailRenderer,
       useClass: PlaywrightTemplateThumbnailRendererService,
     },
@@ -195,7 +190,6 @@ import { InternalTemplateRenderGuard } from 'src/common/guard/internal-template-
     TEMPLATE_TYPES.applications.GetInternalTemplateRenderHandler,
     TEMPLATE_TYPES.applications.ListPageTemplatesHandler,
     TEMPLATE_TYPES.applications.GenerateTemplateVersionThumbnailHandler,
-    TEMPLATE_TYPES.applications.GetTemplateVersionThumbnailHandler,
     TEMPLATE_TYPES.services.TemplateThumbnailRenderer,
     TEMPLATE_TYPES.services.TemplateThumbnailJobQueue,
     PERSISTENCE_TYPES.UnitOfWork,

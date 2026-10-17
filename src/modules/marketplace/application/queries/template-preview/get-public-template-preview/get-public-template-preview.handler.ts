@@ -16,6 +16,11 @@ import type { TemplateListingRepository } from '../../../../domain/repositories/
 import { TemplatePreviewResponseDto } from '../../../../../template/application/dto/template-preview/template-preview.response.dto';
 import { TemplatePreviewLoader } from '../../../../../template/application/services/template-preview-loader.service';
 import { GetPublicTemplatePreviewQuery } from './get-public-template-preview.query';
+import {
+  buildTemplateDemoPreview,
+  resolvePaidDemoPreviewPlan,
+  TemplateDemoPreviewUnavailableError,
+} from '../../../services/template-demo-preview-policy';
 
 @Injectable()
 export class GetPublicTemplatePreviewHandler {
@@ -64,56 +69,61 @@ export class GetPublicTemplatePreviewHandler {
     }
 
     const { template } = publicTemplate;
-    let versionToPreview = publicTemplate.version;
+    const officialVersion = publicTemplate.version;
 
-    if (listing.getOfferType() === TemplateOfferType.PAID) {
-      if (!listing.getDemoVersionId()) {
-        throw new ForbiddenException(
-          'Interactive demo preview is not configured for this paid template',
-        );
+    if (listing.getOfferType() !== TemplateOfferType.PAID) {
+      if (officialVersion.getId() !== query.versionId) {
+        throw new NotFoundException('Template version not found');
       }
-
-      const demoVersion = await this.templateVersionRepository.findById(
-        listing.getDemoVersionId()!,
+      const preview = await this.templatePreviewLoader.loadFrom(
+        template,
+        officialVersion,
       );
+      preview.isDemo = false;
+      preview.interactive = true;
+      preview.demoConfig = null;
+      return preview;
+    }
 
-      if (
-        !demoVersion ||
-        demoVersion.getTemplateId() !== query.templateId ||
-        !demoVersion.isPublished() ||
-        demoVersion.getId() === publicTemplate.version.getId() ||
-        (listing.getPublishedVersionId() &&
-          demoVersion.getId() === listing.getPublishedVersionId())
-      ) {
-        throw new ForbiddenException(
-          'Interactive demo preview is not available for this paid template',
-        );
-      }
-
-      if (
-        query.versionId !== publicTemplate.version.getId() &&
-        query.versionId !== demoVersion.getId()
-      ) {
-        throw new NotFoundException('Template version not found');
-      }
-
-      versionToPreview = demoVersion;
-    } else {
-      if (publicTemplate.version.getId() !== query.versionId) {
-        throw new NotFoundException('Template version not found');
-      }
+    const plan = toForbidden(() =>
+      resolvePaidDemoPreviewPlan(listing, officialVersion.getId()),
+    );
+    const demoVersion =
+      plan.demoVersionId === officialVersion.getId()
+        ? officialVersion
+        : await this.templateVersionRepository.findById(plan.demoVersionId);
+    if (
+      !demoVersion ||
+      demoVersion.getTemplateId() !== query.templateId ||
+      !demoVersion.isPublished()
+    ) {
+      throw new ForbiddenException(
+        'Interactive demo preview is not available for this paid template',
+      );
+    }
+    if (
+      query.versionId !== officialVersion.getId() &&
+      query.versionId !== demoVersion.getId()
+    ) {
+      throw new NotFoundException('Template version not found');
     }
 
     const preview = await this.templatePreviewLoader.loadFrom(
       template,
-      versionToPreview,
+      demoVersion,
     );
+    // LIMITED demos are filtered here, before anything leaves the server.
+    return toForbidden(() => buildTemplateDemoPreview(preview, plan.config));
+  }
+}
 
-    const isPaid = listing.getOfferType() === TemplateOfferType.PAID;
-    preview.isDemo = isPaid;
-    preview.interactive = true;
-    preview.demoConfig = listing.getDemoConfig() ?? null;
-
-    return preview;
+function toForbidden<T>(run: () => T): T {
+  try {
+    return run();
+  } catch (error) {
+    if (error instanceof TemplateDemoPreviewUnavailableError) {
+      throw new ForbiddenException(error.message);
+    }
+    throw error;
   }
 }

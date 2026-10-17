@@ -1349,7 +1349,7 @@ describe('UseTemplateHandler Regression Tests', () => {
       }
     });
 
-    it('rejects Demo V2 even if a release record is present', async () => {
+    it('lets a PAID_PURCHASE buyer use an official release that is also the demo', async () => {
       releaseRepository.findByTemplateAndVersion.mockResolvedValue(
         officialRelease(v2),
       );
@@ -1362,7 +1362,49 @@ describe('UseTemplateHandler Regression Tests', () => {
             claimingUserId,
           ),
         ),
-      ).rejects.toThrow('Demo version cannot be used as an official release');
+      ).resolves.toEqual({ pageId: newPageId });
+    });
+
+    it('still rejects a demo version that was never officially released', async () => {
+      releaseRepository.findByTemplateAndVersion.mockResolvedValue(null);
+      await expect(
+        handler.execute(
+          new UseTemplateCommand(
+            templateId,
+            v2,
+            destinationWorkspaceId,
+            claimingUserId,
+          ),
+        ),
+      ).rejects.toThrow(
+        'Template version is not an official marketplace release',
+      );
+      expect(pageProvisioningPort.createPageShell).not.toHaveBeenCalled();
+    });
+
+    it('does not let a FREE_CLAIM use a paid release, even when it is the demo', async () => {
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        TemplateEntitlement.restore({
+          id: 'free-entitlement',
+          templateId,
+          userId: claimingUserId,
+          source: TemplateEntitlementSource.FREE_CLAIM,
+          createdAt: new Date('2026-01-02T00:00:00Z'),
+        }),
+      );
+      releaseRepository.findByTemplateAndVersion.mockResolvedValue(
+        officialRelease(v2, TemplateOfferType.PAID),
+      );
+      await expect(
+        handler.execute(
+          new UseTemplateCommand(
+            templateId,
+            v2,
+            destinationWorkspaceId,
+            claimingUserId,
+          ),
+        ),
+      ).rejects.toThrow('Free claim does not grant access to paid releases');
       expect(pageProvisioningPort.createPageShell).not.toHaveBeenCalled();
     });
 

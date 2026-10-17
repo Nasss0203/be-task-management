@@ -25,6 +25,8 @@ import { TemplateListing } from '../../../../domain/aggregates/template-listing/
 import type { TemplateListingRepository } from '../../../../domain/repositories/template-listing.repository';
 import { TemplateListingResponseDto } from '../../../dto/template-listing/template-listing.response.dto';
 import { CreateTemplateListingCommand } from './create-template-listing.command';
+import { TemplatePreviewLoader } from '../../../../../template/application/services/template-preview-loader.service';
+import { assertDemoConfigFitsVersion } from '../../../services/listing-demo-config-validator';
 
 @Injectable()
 export class CreateTemplateListingHandler {
@@ -42,6 +44,8 @@ export class CreateTemplateListingHandler {
     private readonly unitOfWork: UnitOfWork,
 
     private readonly authorizationService: AuthorizationService,
+
+    private readonly previewLoader: TemplatePreviewLoader,
   ) {}
 
   async execute(
@@ -98,11 +102,13 @@ export class CreateTemplateListingHandler {
           );
         }
 
+        const demoVersion = command.demoVersionId
+          ? await this.templateVersionRepository.findById(
+              command.demoVersionId,
+              context,
+            )
+          : null;
         if (command.demoVersionId) {
-          const demoVersion = await this.templateVersionRepository.findById(
-            command.demoVersionId,
-            context,
-          );
           if (!demoVersion) {
             throw new NotFoundException('Demo template version not found');
           }
@@ -117,6 +123,13 @@ export class CreateTemplateListingHandler {
             );
           }
         }
+
+        await assertDemoConfigFitsVersion(
+          this.previewLoader,
+          template,
+          demoVersion,
+          command.demoConfig,
+        );
 
         let listing: TemplateListing;
 

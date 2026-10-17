@@ -23,6 +23,7 @@ import { GetMyClaimedTemplatesHandler } from './application/queries/template-ent
 import { GetTemplateListingHandler } from './application/queries/template-listing/get-template-listing/get-template-listing.handler';
 import { GetPublicTemplateDetailHandler } from './application/queries/template-preview/get-public-template-detail/get-public-template-detail.handler';
 import { GetPublicTemplatePreviewHandler } from './application/queries/template-preview/get-public-template-preview/get-public-template-preview.handler';
+import { PreviewTemplateDemoHandler } from './application/queries/template-preview/preview-template-demo/preview-template-demo.handler';
 import { TemplatePurchaseSettlementService } from './application/services/template-purchase-settlement.service';
 import { TemplateCategoryOrmEntity } from './infrastructure/persistence/typeorm/entities/template-category.orm-entity';
 import { TemplateEntitlementOrmEntity } from './infrastructure/persistence/typeorm/entities/template-entitlement.orm-entity';
@@ -109,6 +110,10 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
     {
       provide: MARKETPLACE_TYPES.applications.GetTemplateListingHandler,
       useClass: GetTemplateListingHandler,
+    },
+    {
+      provide: MARKETPLACE_TYPES.applications.PreviewTemplateDemoHandler,
+      useClass: PreviewTemplateDemoHandler,
     },
     {
       provide: MARKETPLACE_TYPES.applications.UnpublishTemplateListingHandler,

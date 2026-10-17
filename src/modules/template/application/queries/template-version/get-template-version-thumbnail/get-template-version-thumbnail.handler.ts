@@ -21,6 +21,15 @@ import type { ObjectStoragePort } from 'src/shared/application/ports/object-stor
 import { STORAGE_TYPES } from 'src/shared/infrastructure/storage/storage.types';
 
 import { GetTemplateVersionThumbnailQuery } from './get-template-version-thumbnail.query';
+import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
+import type {
+  TemplateDistributionPort,
+  TemplateEntitlementPort,
+} from 'src/modules/marketplace/application/ports/template-distribution.port';
+import type { TemplateMarketplaceReleaseRepository } from 'src/modules/marketplace/domain/repositories/template-marketplace-release.repository';
+import { TemplateEntitlementSource } from 'src/modules/marketplace/domain/enums/template-entitlement-source.enum';
+import { TemplateOfferType } from 'src/modules/marketplace/domain/enums/template-offer-type.enum';
+import { TemplateDemoConfig } from 'src/modules/marketplace/domain/value-objects/template-demo-config.vo';
 
 const THUMBNAIL_SIGNED_URL_EXPIRES_IN_SECONDS = 900;
 
@@ -47,6 +56,15 @@ export class GetTemplateVersionThumbnailHandler {
     private readonly objectStorage: ObjectStoragePort,
 
     private readonly authorizationService: AuthorizationService,
+
+    @Inject(MARKETPLACE_TYPES.ports.Distribution)
+    private readonly listings: TemplateDistributionPort,
+
+    @Inject(MARKETPLACE_TYPES.ports.Entitlements)
+    private readonly entitlements: TemplateEntitlementPort,
+
+    @Inject(MARKETPLACE_TYPES.repositories.TemplateMarketplaceReleaseRepository)
+    private readonly releases: TemplateMarketplaceReleaseRepository,
   ) {}
 
   async execute(
@@ -121,11 +139,24 @@ export class GetTemplateVersionThumbnailHandler {
     }
 
     /*
+     * 4b. Paid content: a public screenshot of a paid version would expose
+     * the content buyers pay for. Visitors get the separate demo's
+     * screenshot instead, or nothing (the client falls back to cover_url).
+     */
+    const assetVersionId = isPublicPublished
+      ? await this.resolvePublicThumbnailVersionId(
+          template,
+          version,
+          query.userId,
+        )
+      : query.versionId;
+
+    /*
      * 5. Load thumbnail asset
      */
     const asset =
       await this.templateVersionAssetRepository.findByVersionAndType(
-        query.versionId,
+        assetVersionId,
         TemplateVersionAssetType.THUMBNAIL,
       );
 
@@ -164,6 +195,72 @@ export class GetTemplateVersionThumbnailHandler {
       width,
       height,
     };
+  }
+
+  private async resolvePublicThumbnailVersionId(
+    template: {
+      getId(): string;
+      getCreatedBy(): string;
+      getWorkspaceId(): string;
+    },
+    version: { getId(): string },
+    userId?: string,
+  ): Promise<string> {
+    const [listing, release] = await Promise.all([
+      this.listings.findByTemplateId(template.getId()),
+      this.releases.findByTemplateAndVersion(template.getId(), version.getId()),
+    ]);
+    const isPaidContent =
+      listing?.getOfferType() === TemplateOfferType.PAID ||
+      release?.getOfferTypeAtRelease() === TemplateOfferType.PAID;
+    if (!isPaidContent) return version.getId();
+    if (await this.canSeePaidContent(template, userId)) return version.getId();
+
+    // Only a separate, fully public demo version is safe to picture.
+    const demoVersionId = listing?.getDemoVersionId();
+    const demoConfig = TemplateDemoConfig.tryParse(listing?.getDemoConfig());
+    const isSeparateFullDemo =
+      Boolean(demoVersionId) &&
+      demoVersionId !== listing?.getPublishedVersionId() &&
+      demoConfig !== 'INVALID' &&
+      !demoConfig?.isLimited();
+    if (isSeparateFullDemo) {
+      const demoVersion = await this.templateVersionRepository.findById(
+        demoVersionId!,
+      );
+      if (
+        demoVersion &&
+        demoVersion.getTemplateId() === template.getId() &&
+        String(demoVersion.getStatus()) === 'PUBLISHED'
+      ) {
+        return demoVersion.getId();
+      }
+    }
+
+    throw new NotFoundException('Template thumbnail not found');
+  }
+
+  private async canSeePaidContent(
+    template: {
+      getId(): string;
+      getCreatedBy(): string;
+      getWorkspaceId(): string;
+    },
+    userId?: string,
+  ): Promise<boolean> {
+    if (!userId) return false;
+    if (template.getCreatedBy() === userId) return true;
+    const canManage = await this.authorizationService.authorize({
+      userId,
+      permissions: [PERMISSIONS.WORKSPACE_UPDATE],
+      target: { type: 'workspace', id: template.getWorkspaceId() },
+    });
+    if (canManage) return true;
+    const entitlement = await this.entitlements.findByTemplateAndUser(
+      template.getId(),
+      userId,
+    );
+    return entitlement?.getSource() === TemplateEntitlementSource.PAID_PURCHASE;
   }
 
   private async authorizePrivateAccess(input: {

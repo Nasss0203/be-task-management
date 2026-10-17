@@ -27,6 +27,11 @@ import type { TemplateMarketplaceReleaseRepository } from '../../../domain/repos
 import { TemplateListingResponseDto } from '../../dto/template-listing/template-listing.response.dto';
 import { resolveTemplateListingPricing } from '../../services/template-listing-pricing';
 import { PublishTemplateToMarketplaceCommand } from './publish-template-to-marketplace.command';
+import { TemplatePreviewLoader } from '../../../../template/application/services/template-preview-loader.service';
+import {
+  assertDemoConfigFitsVersion,
+  toBadRequest,
+} from '../../services/listing-demo-config-validator';
 
 @Injectable()
 export class PublishTemplateToMarketplaceHandler {
@@ -43,6 +48,7 @@ export class PublishTemplateToMarketplaceHandler {
     private readonly categories: TemplateCategoryRepository,
     @Inject(MARKETPLACE_TYPES.repositories.TemplateMarketplaceReleaseRepository)
     private readonly releases: TemplateMarketplaceReleaseRepository,
+    private readonly previewLoader: TemplatePreviewLoader,
   ) {}
   async execute(command: PublishTemplateToMarketplaceCommand) {
     const pricing = resolveTemplateListingPricing(
@@ -123,11 +129,20 @@ export class PublishTemplateToMarketplaceHandler {
           ? command.demoVersionId
           : listing?.getDemoVersionId();
 
+      const demoVersionChanges =
+        command.demoVersionId !== undefined &&
+        command.demoVersionId !== (listing?.getDemoVersionId() ?? null);
+      const effectiveDemoConfig =
+        command.demoConfig !== undefined
+          ? command.demoConfig
+          : demoVersionChanges
+            ? null
+            : (listing?.getDemoConfig() ?? null);
+      const demoVersion = effectiveDemoVersionId
+        ? await this.versions.findById(effectiveDemoVersionId, context)
+        : null;
+
       if (effectiveDemoVersionId) {
-        const demoVersion = await this.versions.findById(
-          effectiveDemoVersionId,
-          context,
-        );
         if (!demoVersion) {
           throw new NotFoundException('Demo template version not found');
         }
@@ -141,11 +156,23 @@ export class PublishTemplateToMarketplaceHandler {
             'Demo version must be a published template version',
           );
         }
-        if (demoVersion.getId() === version.getId()) {
-          throw new BadRequestException(
-            'Demo version cannot be the official release version',
-          );
-        }
+      }
+      // Same-version paid demos need a LIMITED config; FREE ignores demos.
+      toBadRequest(() =>
+        TemplateListing.assertDemoPolicy(
+          pricing.offerType,
+          effectiveDemoVersionId,
+          version.getId(),
+          effectiveDemoConfig,
+        ),
+      );
+      if (command.demoConfig !== undefined || demoVersionChanges) {
+        await assertDemoConfigFitsVersion(
+          this.previewLoader,
+          template,
+          demoVersion,
+          effectiveDemoConfig,
+        );
       }
 
       let needsSave =
@@ -153,14 +180,16 @@ export class PublishTemplateToMarketplaceHandler {
         !listing.isPublished() ||
         listing.getPublishedVersionId() !== version.getId();
       if (!listing) {
-        listing = TemplateListing.create({
-          templateId: template.getId(),
-          createdBy: command.userId,
-          ...pricing,
-          previewMode: command.previewMode,
-          demoVersionId: command.demoVersionId,
-          demoConfig: command.demoConfig,
-        });
+        listing = toBadRequest(() =>
+          TemplateListing.create({
+            templateId: template.getId(),
+            createdBy: command.userId,
+            ...pricing,
+            previewMode: command.previewMode,
+            demoVersionId: command.demoVersionId,
+            demoConfig: command.demoConfig,
+          }),
+        );
       } else {
         if (
           command.previewMode !== undefined &&
@@ -171,12 +200,15 @@ export class PublishTemplateToMarketplaceHandler {
         if (
           (command.demoVersionId !== undefined ||
             command.demoConfig !== undefined) &&
-          listing.setDemoPreview(command.demoVersionId, command.demoConfig)
+          toBadRequest(() =>
+            listing!.setDemoPreview(command.demoVersionId, command.demoConfig),
+          )
         ) {
           needsSave = true;
         }
       }
-      listing.selectPublishedVersion(version);
+      const releasedListing = listing;
+      toBadRequest(() => releasedListing.selectPublishedVersion(version));
       listing.publish();
       if (
         !(await this.releases.existsByTemplateAndVersion(

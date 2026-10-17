@@ -22,6 +22,7 @@ import type { TemplateVersionPort } from 'src/modules/template/application/ports
 import { TEMPLATE_TYPES } from '../../../../../template/template.types';
 import { TemplateListingResponseDto } from '../../../dto/template-listing/template-listing.response.dto';
 import { PublishTemplateListingCommand } from './publish-template-listing.command';
+import { toBadRequest } from '../../../services/listing-demo-config-validator';
 
 @Injectable()
 export class PublishTemplateListingHandler {
@@ -113,13 +114,8 @@ export class PublishTemplateListingHandler {
         );
       }
 
-      if (listing.getDemoVersionId() === publishedVersion.getId()) {
-        throw new BadRequestException(
-          'Demo version cannot be the official release version',
-        );
-      }
-
-      listing.selectPublishedVersion(publishedVersion);
+      // Same-version paid demos need a LIMITED config (enforced by the aggregate).
+      toBadRequest(() => listing.selectPublishedVersion(publishedVersion));
       listing.publish();
 
       if (

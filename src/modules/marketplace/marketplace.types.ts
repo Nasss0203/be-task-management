@@ -26,6 +26,7 @@ export const MARKETPLACE_TYPES = {
     GetPublicTemplatePreviewHandler: Symbol('GetPublicTemplatePreviewHandler'),
     GetPublicTemplateDetailHandler: Symbol('GetPublicTemplateDetailHandler'),
     GetTemplateListingHandler: Symbol('GetTemplateListingHandler'),
+    PreviewTemplateDemoHandler: Symbol('PreviewTemplateDemoHandler'),
     UnpublishTemplateListingHandler: Symbol('UnpublishTemplateListingHandler'),
     CreateTemplateCategoryHandler: Symbol('CreateTemplateCategoryHandler'),
     ListTemplateCategoriesHandler: Symbol('ListTemplateCategoriesHandler'),

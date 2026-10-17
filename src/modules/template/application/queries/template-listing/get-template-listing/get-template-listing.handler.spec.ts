@@ -152,6 +152,7 @@ describe('Listing management category responses', () => {
       listingPort,
       uow,
       auth,
+      { loadFrom: jest.fn() } as any,
     );
     const result = await create.execute(
       new CreateTemplateListingCommand('t1', 'creator'),

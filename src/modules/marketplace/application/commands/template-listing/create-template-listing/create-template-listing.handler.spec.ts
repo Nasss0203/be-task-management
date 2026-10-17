@@ -57,6 +57,7 @@ describe('CreateTemplateListingHandler previewMode', () => {
       templateListingRepository,
       unitOfWork,
       authorizationService,
+      { loadFrom: jest.fn() } as any,
     );
   });
 

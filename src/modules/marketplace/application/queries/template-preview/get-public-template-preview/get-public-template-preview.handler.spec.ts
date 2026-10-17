@@ -287,7 +287,9 @@ describe('GetPublicTemplatePreviewHandler Security & Policy', () => {
 
     expect(result.interactive).toBe(true);
     expect(result.isDemo).toBe(true);
-    expect(result.demoConfig).toEqual({ dummyData: true });
+    // The raw demo_config is creator configuration and is never returned publicly.
+    expect(result.demoConfig).toBeNull();
+    expect(result.demoScope).toBe('FULL_VERSION');
     expect(templateVersionRepository.findById).toHaveBeenCalledWith(
       demoVersionId,
     );

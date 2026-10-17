@@ -323,19 +323,15 @@ describe('GetTemplatePreviewHandler Security & Access Control', () => {
       },
     );
 
-    it('does not give a buyer full preview of the Demo version', async () => {
-      const demoId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
-      const listing = createListing({
+    const paidDemoListing = (demoId: string) =>
+      createListing({
         templateId,
         createdBy: creatorId,
         offerType: TemplateOfferType.PAID,
         price: TemplatePrice.create({ amount: 150000, currency: 'VND' }),
         demoVersionId: demoId,
       });
-      templateListingRepository.findByTemplateId.mockResolvedValue(listing);
-      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
-        entitlement(TemplateEntitlementSource.PAID_PURCHASE),
-      );
+    const publishedDemo = (demoId: string) => {
       const demo = TemplateVersion.create({
         id: demoId,
         templateId,
@@ -343,13 +339,69 @@ describe('GetTemplatePreviewHandler Security & Access Control', () => {
         createdBy: creatorId,
       });
       demo.publish();
-      templateVersionRepository.findById.mockResolvedValue(demo);
+      return demo;
+    };
+
+    it('does not give a buyer full preview of a demo version that was never released', async () => {
+      const demoId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+      templateListingRepository.findByTemplateId.mockResolvedValue(
+        paidDemoListing(demoId),
+      );
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        entitlement(TemplateEntitlementSource.PAID_PURCHASE),
+      );
+      templateVersionRepository.findById.mockResolvedValue(
+        publishedDemo(demoId),
+      );
+      releases.findByTemplateAndVersion.mockResolvedValue(null);
       await expect(
         handler.execute(
           new GetTemplatePreviewQuery(templateId, demoId, buyerId),
         ),
       ).rejects.toThrow(ForbiddenException);
       expect(templatePreviewLoader.loadFrom).not.toHaveBeenCalled();
+    });
+
+    it('gives a PAID_PURCHASE buyer the full official release even when it is the demo', async () => {
+      const demoId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+      templateListingRepository.findByTemplateId.mockResolvedValue(
+        paidDemoListing(demoId),
+      );
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        entitlement(TemplateEntitlementSource.PAID_PURCHASE),
+      );
+      templateVersionRepository.findById.mockResolvedValue(
+        publishedDemo(demoId),
+      );
+      releases.findByTemplateAndVersion.mockResolvedValue(
+        release(demoId, TemplateOfferType.PAID),
+      );
+      const result = await handler.execute(
+        new GetTemplatePreviewQuery(templateId, demoId, buyerId),
+      );
+      expect(result.isDemo).toBe(false);
+      expect(templatePreviewLoader.loadFrom).toHaveBeenCalled();
+    });
+
+    it('does not give a FREE_CLAIM the paid release that is also the demo', async () => {
+      const demoId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+      templateListingRepository.findByTemplateId.mockResolvedValue(
+        paidDemoListing(demoId),
+      );
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        entitlement(TemplateEntitlementSource.FREE_CLAIM),
+      );
+      templateVersionRepository.findById.mockResolvedValue(
+        publishedDemo(demoId),
+      );
+      releases.findByTemplateAndVersion.mockResolvedValue(
+        release(demoId, TemplateOfferType.PAID),
+      );
+      await expect(
+        handler.execute(
+          new GetTemplatePreviewQuery(templateId, demoId, buyerId),
+        ),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('denies a Draft version before loading its snapshot', async () => {
@@ -514,7 +566,9 @@ describe('GetTemplatePreviewHandler Security & Access Control', () => {
 
       expect(result.isDemo).toBe(true);
       expect(result.interactive).toBe(true);
-      expect(result.demoConfig).toEqual({ sandbox: true });
+      // The raw demo_config is creator configuration and is never returned to visitors.
+      expect(result.demoConfig).toBeNull();
+      expect(result.demoScope).toBe('FULL_VERSION');
       expect(templatePreviewLoader.loadFrom).toHaveBeenCalledWith(
         expect.anything(),
         mockDemoVersion,

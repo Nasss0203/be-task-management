@@ -5,6 +5,7 @@ import { TemplateOfferType } from '../../../../domain/enums/template-offer-type.
 import { TemplatePreviewMode } from '../../../../domain/enums/template-preview-mode.enum';
 import { PageTemplate } from '../../../../../template/domain/aggregates/page-template/page-template.aggregate';
 import { TemplateListing } from '../../../../domain/aggregates/template-listing/template-listing.aggregate';
+import { TemplateListingStatus } from '../../../../domain/enums/template-listing-status.enum';
 
 describe('UpdateTemplateListingPricingHandler previewMode', () => {
   let handler: UpdateTemplateListingPricingHandler;
@@ -64,6 +65,7 @@ describe('UpdateTemplateListingPricingHandler previewMode', () => {
       templateListingRepository,
       unitOfWork,
       authorizationService,
+      { loadFrom: jest.fn() } as any,
     );
   });
 
@@ -245,6 +247,91 @@ describe('UpdateTemplateListingPricingHandler previewMode', () => {
           publishedVerId,
         ),
       ),
-    ).rejects.toThrow('Demo version cannot be the same as the published paid version');
+    ).rejects.toThrow('A paid demo that uses the released version requires a LIMITED demo_config');
+  });
+  describe('same-version LIMITED demo', () => {
+    const publishedVerId = '88888888-8888-4888-8888-888888888888';
+    const blockId = '55555555-5555-4555-8555-555555555555';
+    const limitedConfig = { schema: 1, scope: 'LIMITED', block_ids: [blockId] };
+    let loadFrom: jest.Mock;
+
+    beforeEach(() => {
+      mockListing = TemplateListing.restore({
+        id: '99999999-9999-4999-8999-999999999999',
+        templateId,
+        offerType: TemplateOfferType.FREE,
+        status: TemplateListingStatus.PUBLISHED,
+        createdBy: creatorId,
+        publishedVersionId: publishedVerId,
+        publishedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      loadFrom = jest.fn().mockResolvedValue({
+        blocks: [{ id: blockId }],
+        databases: [],
+      });
+      handler = new UpdateTemplateListingPricingHandler(
+        pageTemplateRepository,
+        templateVersionRepository,
+        templateListingRepository,
+        unitOfWork,
+        authorizationService,
+        { loadFrom } as any,
+      );
+    });
+
+    const update = (
+      demoVersionId?: string | null,
+      demoConfig?: Record<string, unknown> | null,
+    ) =>
+      handler.execute(
+        new UpdateTemplateListingPricingCommand(
+          templateId,
+          creatorId,
+          TemplateOfferType.PAID,
+          50000,
+          'VND',
+          TemplatePreviewMode.INTERACTIVE,
+          demoVersionId,
+          demoConfig,
+        ),
+      );
+
+    it('accepts the released version as a LIMITED demo', async () => {
+      const result = await update(publishedVerId, limitedConfig);
+
+      expect(result.demo_version_id).toBe(publishedVerId);
+      expect(result.demo_config).toEqual(limitedConfig);
+      expect(loadFrom).toHaveBeenCalled();
+    });
+
+    it('rejects the released version without a config', async () => {
+      await expect(update(publishedVerId)).rejects.toThrow(
+        'requires a LIMITED demo_config',
+      );
+      expect(templateListingRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('rejects ids that are not part of the demo version', async () => {
+      loadFrom.mockResolvedValue({ blocks: [], databases: [] });
+      await expect(update(publishedVerId, limitedConfig)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('rejects an invalid schema-1 config', async () => {
+      await expect(
+        update(publishedVerId, { schema: 1, scope: 'LIMITED', block_ids: ['x'] }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('clears the demo version with null', async () => {
+      await update('77777777-7777-4777-8777-777777777777', null);
+      const result = await update(null);
+
+      expect(result.demo_version_id).toBeNull();
+      expect(result.demo_config).toBeNull();
+    });
   });
 });

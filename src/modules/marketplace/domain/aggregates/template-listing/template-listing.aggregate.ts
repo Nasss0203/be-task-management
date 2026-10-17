@@ -3,7 +3,11 @@ import { randomUUID } from 'crypto';
 import { TemplateListingStatus } from '../../enums/template-listing-status.enum';
 import { TemplateOfferType } from '../../enums/template-offer-type.enum';
 import { TemplatePreviewMode } from '../../enums/template-preview-mode.enum';
+import { TemplateDemoConfig } from '../../value-objects/template-demo-config.vo';
 import { TemplatePrice } from '../../value-objects/template-price.vo';
+
+export const SAME_VERSION_DEMO_ERROR =
+  'A paid demo that uses the released version requires a LIMITED demo_config';
 
 export type CreateTemplateListingParams = {
   id?: string;
@@ -60,16 +64,15 @@ export class TemplateListingAggregate {
 
     TemplateListingAggregate.validateOfferPrice(this.offerType, this.price);
 
-    if (
-      this.offerType === TemplateOfferType.PAID &&
-      this.demoVersionId &&
-      this.publishedVersionId &&
-      this.demoVersionId === this.publishedVersionId
-    ) {
-      throw new Error(
-        'Demo version cannot be the same as the published paid version',
-      );
-    }
+    TemplateListingAggregate.assertDemoPolicy(
+      this.offerType,
+      this.demoVersionId,
+      this.publishedVersionId,
+      // Stored rows are trusted to parse; an unreadable config simply grants nothing.
+      TemplateDemoConfig.tryParse(this.demoConfig) === 'INVALID'
+        ? null
+        : this.demoConfig,
+    );
   }
 
   static create(params: CreateTemplateListingParams): TemplateListingAggregate {
@@ -120,6 +123,29 @@ export class TemplateListingAggregate {
       params.demoVersionId ?? null,
       params.demoConfig ?? null,
     );
+  }
+
+  /**
+   * A paid demo may reuse the released version only with a LIMITED config,
+   * so the full paid snapshot is never public. Throws for an invalid schema-1
+   * config. Separate demo versions and FREE listings are unaffected.
+   */
+  static assertDemoPolicy(
+    offerType: TemplateOfferType,
+    demoVersionId: string | null | undefined,
+    publishedVersionId: string | null | undefined,
+    demoConfig: Record<string, any> | null | undefined,
+  ): void {
+    const config = TemplateDemoConfig.parse(demoConfig);
+    if (
+      offerType === TemplateOfferType.PAID &&
+      demoVersionId &&
+      publishedVersionId &&
+      demoVersionId === publishedVersionId &&
+      !config?.isLimited()
+    ) {
+      throw new Error(SAME_VERSION_DEMO_ERROR);
+    }
   }
 
   static validateOfferPrice(
@@ -221,18 +247,17 @@ export class TemplateListingAggregate {
     demoConfig?: Record<string, any> | null,
   ): boolean {
     const nextDemoVersionId = demoVersionId !== undefined ? demoVersionId : this.demoVersionId;
-    const nextDemoConfig = demoConfig !== undefined ? demoConfig : this.demoConfig;
+    const nextDemoConfig = this.resolveNextDemoConfig(
+      nextDemoVersionId,
+      demoConfig,
+    );
 
-    if (
-      this.offerType === TemplateOfferType.PAID &&
-      nextDemoVersionId &&
-      this.publishedVersionId &&
-      nextDemoVersionId === this.publishedVersionId
-    ) {
-      throw new Error(
-        'Demo version cannot be the same as the published paid version',
-      );
-    }
+    TemplateListingAggregate.assertDemoPolicy(
+      this.offerType,
+      nextDemoVersionId,
+      this.publishedVersionId,
+      nextDemoConfig,
+    );
 
     const isSameDemoVersion = this.demoVersionId === nextDemoVersionId;
     const isSameDemoConfig =
@@ -274,19 +299,17 @@ export class TemplateListingAggregate {
 
     const nextDemoVersionId =
       demoVersionId !== undefined ? demoVersionId : this.demoVersionId;
-    const nextDemoConfig =
-      demoConfig !== undefined ? demoConfig : this.demoConfig;
+    const nextDemoConfig = this.resolveNextDemoConfig(
+      nextDemoVersionId,
+      demoConfig,
+    );
 
-    if (
-      offerType === TemplateOfferType.PAID &&
-      nextDemoVersionId &&
-      this.publishedVersionId &&
-      nextDemoVersionId === this.publishedVersionId
-    ) {
-      throw new Error(
-        'Demo version cannot be the same as the published paid version',
-      );
-    }
+    TemplateListingAggregate.assertDemoPolicy(
+      offerType,
+      nextDemoVersionId,
+      this.publishedVersionId,
+      nextDemoConfig,
+    );
 
     const isSameDemoVersion = this.demoVersionId === nextDemoVersionId;
     const isSameDemoConfig =
@@ -323,20 +346,29 @@ export class TemplateListingAggregate {
       );
     }
 
-    if (
-      this.offerType === TemplateOfferType.PAID &&
-      this.demoVersionId &&
-      this.demoVersionId === version.getId()
-    ) {
-      throw new Error(
-        'Demo version cannot be the same as the published paid version',
-      );
-    }
+    TemplateListingAggregate.assertDemoPolicy(
+      this.offerType,
+      this.demoVersionId,
+      version.getId(),
+      this.demoConfig,
+    );
 
     if (this.publishedVersionId !== version.getId()) {
       this.publishedVersionId = version.getId();
       this.updatedAt = new Date();
     }
+  }
+
+  /**
+   * Config ids belong to one demo version's snapshot, so switching the demo
+   * version without sending a new config clears the old one.
+   */
+  private resolveNextDemoConfig(
+    nextDemoVersionId: string | null,
+    demoConfig: Record<string, any> | null | undefined,
+  ): Record<string, any> | null {
+    if (demoConfig !== undefined) return demoConfig;
+    return nextDemoVersionId === this.demoVersionId ? this.demoConfig : null;
   }
 
   publish(): void {

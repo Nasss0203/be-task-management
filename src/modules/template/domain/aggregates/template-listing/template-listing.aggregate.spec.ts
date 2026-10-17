@@ -310,7 +310,7 @@ describe('TemplateListingAggregate', () => {
 
       expect(() => {
         listing.setDemoPreview(publishedVerId);
-      }).toThrow('Demo version cannot be the same as the published paid version');
+      }).toThrow('A paid demo that uses the released version requires a LIMITED demo_config');
     });
 
     it('rejects selectPublishedVersion if it matches demoVersionId for PAID listing', () => {
@@ -330,7 +330,97 @@ describe('TemplateListingAggregate', () => {
           getTemplateId: () => validTemplateId,
           isDraft: () => false,
         });
-      }).toThrow('Demo version cannot be the same as the published paid version');
+      }).toThrow('A paid demo that uses the released version requires a LIMITED demo_config');
+    });
+      describe('same-version LIMITED demo', () => {
+      const releaseId = 'release-ver-uuid';
+      const limitedConfig = {
+        schema: 1,
+        scope: 'LIMITED',
+        block_ids: ['11111111-1111-4111-8111-111111111111'],
+      };
+      const paidListing = () => {
+        const listing = TemplateListing.create({
+          templateId: validTemplateId,
+          createdBy: validUserId,
+          offerType: TemplateOfferType.PAID,
+          price: TemplatePrice.create({ amount: 100000, currency: 'VND' }),
+          previewMode: TemplatePreviewMode.INTERACTIVE,
+        });
+        listing.selectPublishedVersion({
+          getId: () => releaseId,
+          getTemplateId: () => validTemplateId,
+          isDraft: () => false,
+        });
+        return listing;
+      };
+
+      it('allows the released version as demo with a LIMITED config', () => {
+        const listing = paidListing();
+        expect(listing.setDemoPreview(releaseId, limitedConfig)).toBe(true);
+        expect(listing.getDemoVersionId()).toBe(releaseId);
+      });
+
+      it('rejects a FULL_VERSION or legacy config for the released version', () => {
+        expect(() =>
+          paidListing().setDemoPreview(releaseId, { schema: 1, scope: 'FULL_VERSION' }),
+        ).toThrow('requires a LIMITED demo_config');
+        expect(() => paidListing().setDemoPreview(releaseId, { sandbox: true })).toThrow(
+          'requires a LIMITED demo_config',
+        );
+      });
+
+      it('rejects an invalid schema-1 config', () => {
+        expect(() =>
+          paidListing().setDemoPreview(releaseId, { schema: 1, scope: 'LIMITED', block_ids: [] }),
+        ).toThrow('block_ids');
+      });
+
+      it('allows releasing the demo version when its config is LIMITED', () => {
+        const listing = TemplateListing.create({
+          templateId: validTemplateId,
+          createdBy: validUserId,
+          offerType: TemplateOfferType.PAID,
+          price: TemplatePrice.create({ amount: 100000, currency: 'VND' }),
+          demoVersionId: releaseId,
+          demoConfig: limitedConfig,
+        });
+        expect(() =>
+          listing.selectPublishedVersion({
+            getId: () => releaseId,
+            getTemplateId: () => validTemplateId,
+            isDraft: () => false,
+          }),
+        ).not.toThrow();
+      });
+
+      it('does not restrict FREE listings', () => {
+        const listing = TemplateListing.create({
+          templateId: validTemplateId,
+          createdBy: validUserId,
+          demoVersionId: releaseId,
+        });
+        expect(() =>
+          listing.selectPublishedVersion({
+            getId: () => releaseId,
+            getTemplateId: () => validTemplateId,
+            isDraft: () => false,
+          }),
+        ).not.toThrow();
+      });
+
+      it('clears the config when the demo version changes without a new config', () => {
+        const listing = paidListing();
+        listing.setDemoPreview(releaseId, limitedConfig);
+        listing.setDemoPreview('other-demo-uuid');
+        expect(listing.getDemoConfig()).toBeNull();
+      });
+
+      it('keeps the separate-demo behaviour unchanged', () => {
+        const listing = paidListing();
+        expect(listing.setDemoPreview('separate-demo-uuid', { tab: 'overview' })).toBe(true);
+        expect(listing.getDemoConfig()).toEqual({ tab: 'overview' });
+      });
     });
   });
 });

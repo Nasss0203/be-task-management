@@ -26,6 +26,11 @@ import { TEMPLATE_TYPES } from '../../../../template.types';
 import { TemplatePreviewResponseDto } from '../../../dto/template-preview/template-preview.response.dto';
 import { TemplatePreviewLoader } from '../../../services/template-preview-loader.service';
 import { GetTemplatePreviewQuery } from './get-template-preview.query';
+import {
+  buildTemplateDemoPreview,
+  resolvePaidDemoPreviewPlan,
+  TemplateDemoPreviewUnavailableError,
+} from 'src/modules/marketplace/application/services/template-demo-preview-policy';
 
 @Injectable()
 export class GetTemplatePreviewHandler {
@@ -96,10 +101,8 @@ export class GetTemplatePreviewHandler {
     }
 
     if (entitlement) {
-      if (
-        !version.isPublished() ||
-        listing?.getDemoVersionId() === version.getId()
-      ) {
+      // Access follows official releases; a release that is also the demo stays usable.
+      if (!version.isPublished()) {
         throw new ForbiddenException(
           'This template version is not available to your entitlement',
         );
@@ -183,19 +186,20 @@ export class GetTemplatePreviewHandler {
       return this.fullPreview(template, version);
     }
 
-    const demoId = listing.getDemoVersionId();
-    if (!demoId || demoId === listing.getPublishedVersionId()) {
-      throw new ForbiddenException(
-        'You must purchase this template to access its full content',
-      );
-    }
+    // Non-null: checked by the availability guard above.
+    const officialVersionId = listing.getPublishedVersionId()!;
+    const plan = toForbidden(() =>
+      resolvePaidDemoPreviewPlan(listing, officialVersionId),
+    );
     if (
-      query.versionId !== listing.getPublishedVersionId() &&
-      query.versionId !== demoId
+      query.versionId !== officialVersionId &&
+      query.versionId !== plan.demoVersionId
     ) {
       throw new NotFoundException('Template version not found');
     }
-    const demoVersion = await this.templateVersionRepository.findById(demoId);
+    const demoVersion = await this.templateVersionRepository.findById(
+      plan.demoVersionId,
+    );
     if (
       !demoVersion ||
       demoVersion.getTemplateId() !== template.getId() ||
@@ -209,10 +213,8 @@ export class GetTemplatePreviewHandler {
       template,
       demoVersion,
     );
-    preview.isDemo = true;
-    preview.interactive = true;
-    preview.demoConfig = listing.getDemoConfig() ?? null;
-    return preview;
+    // Same filter as the public endpoint: signed-in visitors get no more than anonymous ones.
+    return toForbidden(() => buildTemplateDemoPreview(preview, plan.config));
   }
 
   private async fullPreview(
@@ -226,5 +228,18 @@ export class GetTemplatePreviewHandler {
     preview.isDemo = false;
     preview.interactive = true;
     return preview;
+  }
+}
+
+function toForbidden<T>(run: () => T): T {
+  try {
+    return run();
+  } catch (error) {
+    if (error instanceof TemplateDemoPreviewUnavailableError) {
+      throw new ForbiddenException(
+        'You must purchase this template to access its full content',
+      );
+    }
+    throw error;
   }
 }

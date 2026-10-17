@@ -93,6 +93,7 @@ describe('PublishTemplateToMarketplaceHandler Security & Demo Isolation', () => 
       authorization,
       categories,
       releases,
+      { loadFrom: jest.fn() } as any,
     );
   });
 
@@ -174,7 +175,70 @@ describe('PublishTemplateToMarketplaceHandler Security & Demo Isolation', () => 
           versionId, // Same as versionId being sold!
         ),
       ),
-    ).rejects.toThrow('Demo version cannot be the official release version');
+    ).rejects.toThrow(
+      'A paid demo that uses the released version requires a LIMITED demo_config',
+    );
+  });
+
+  describe('same-version LIMITED demo', () => {
+    const blockId = '55555555-5555-4555-8555-555555555555';
+    const limitedConfig = { schema: 1, scope: 'LIMITED', block_ids: [blockId] };
+    const withLoader = (blockIds: string[]) =>
+      new PublishTemplateToMarketplaceHandler(
+        templates,
+        versions,
+        listings,
+        uow,
+        authorization,
+        categories,
+        releases,
+        {
+          loadFrom: jest.fn().mockResolvedValue({
+            blocks: blockIds.map((id) => ({ id })),
+            databases: [],
+          }),
+        } as any,
+      );
+    const command = (demoConfig?: Record<string, unknown>) =>
+      new PublishTemplateToMarketplaceCommand(
+        templateId,
+        versionId,
+        creatorId,
+        TemplateOfferType.PAID,
+        [],
+        50000,
+        'VND',
+        TemplatePreviewMode.INTERACTIVE,
+        versionId,
+        demoConfig,
+      );
+
+    it('releases a PAID version that is also its LIMITED demo', async () => {
+      const result = await withLoader([blockId]).execute(
+        command(limitedConfig),
+      );
+
+      expect(result.listing.published_version_id).toBe(versionId);
+      expect(result.listing.demo_version_id).toBe(versionId);
+      expect(releases.insertIfAbsent).toHaveBeenCalled();
+    });
+
+    it('rejects a LIMITED config whose ids are not in the demo snapshot', async () => {
+      await expect(
+        withLoader(['66666666-6666-4666-8666-666666666666']).execute(
+          command(limitedConfig),
+        ),
+      ).rejects.toThrow(BadRequestException);
+      expect(releases.insertIfAbsent).not.toHaveBeenCalled();
+    });
+
+    it('rejects a same-version FULL_VERSION config', async () => {
+      await expect(
+        withLoader([blockId]).execute(
+          command({ schema: 1, scope: 'FULL_VERSION' }),
+        ),
+      ).rejects.toThrow('requires a LIMITED demo_config');
+    });
   });
 
   it('rejects publishing if demoVersion does not exist', async () => {

@@ -21,11 +21,13 @@ export class UpdateTemplateListingPricingRequest {
   @IsEnum(TemplatePreviewMode)
   preview_mode?: TemplatePreviewMode;
 
-  @ValidateIf((_, value) => value !== undefined)
+  // null clears the demo version.
+  @ValidateIf((_, value) => value !== undefined && value !== null)
   @IsUUID()
-  demo_version_id?: string;
+  demo_version_id?: string | null;
 
-  @ValidateIf((_, value) => value !== undefined)
+  // null clears the config; the schema is validated by TemplateDemoConfig.
+  @ValidateIf((_, value) => value !== undefined && value !== null)
   @IsObject()
-  demo_config?: Record<string, any>;
+  demo_config?: Record<string, any> | null;
 }
