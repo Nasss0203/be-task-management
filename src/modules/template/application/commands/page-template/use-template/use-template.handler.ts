@@ -1,4 +1,3 @@
-import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
 import {
   BadRequestException,
   ForbiddenException,
@@ -6,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
 
 import type {
   ContentPageProvisioningPort,
@@ -35,11 +35,16 @@ import { TEMPLATE_TYPES } from '../../../../template.types';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 
-import type { TemplateEntitlementPort } from 'src/modules/marketplace/application/ports/template-distribution.port';
-import type { TemplateDistributionPort } from 'src/modules/marketplace/application/ports/template-distribution.port';
-import type { TemplateMarketplaceReleaseRepository } from 'src/modules/marketplace/domain/repositories/template-marketplace-release.repository';
+import type {
+  TemplateDistributionPort,
+  TemplateEntitlementPort,
+  TemplateFreeClaimPort,
+} from 'src/modules/marketplace/application/ports/template-distribution.port';
+import { isDuplicateEntitlementError } from 'src/modules/marketplace/application/services/free-template-claim.service';
+import { TemplateListingStatus } from 'src/modules/marketplace/domain/enums/template-listing-status.enum';
 import { TemplateEntitlementSource } from 'src/modules/marketplace/domain/enums/template-entitlement-source.enum';
 import { TemplateOfferType } from 'src/modules/marketplace/domain/enums/template-offer-type.enum';
+import type { TemplateMarketplaceReleaseRepository } from 'src/modules/marketplace/domain/repositories/template-marketplace-release.repository';
 import { UseTemplateCommand } from './use-template.command';
 
 export type UseTemplateResult = {
@@ -80,9 +85,27 @@ export class UseTemplateHandler {
 
     @Inject(MARKETPLACE_TYPES.repositories.TemplateMarketplaceReleaseRepository)
     private readonly releases: TemplateMarketplaceReleaseRepository,
+
+    @Inject(MARKETPLACE_TYPES.ports.FreeClaims)
+    private readonly freeClaims: TemplateFreeClaimPort,
   ) {}
 
   async execute(command: UseTemplateCommand): Promise<UseTemplateResult> {
+    try {
+      return await this.useInTransaction(command);
+    } catch (error) {
+      // A concurrent Use/Claim created the same FREE_CLAIM first. Our transaction
+      // rolled back (no page, no duplicate claim); retry once with that entitlement.
+      if (isDuplicateEntitlementError(error)) {
+        return this.useInTransaction(command);
+      }
+      throw error;
+    }
+  }
+
+  private useInTransaction(
+    command: UseTemplateCommand,
+  ): Promise<UseTemplateResult> {
     return this.uow.runInTransaction(async (context) => {
       const template = await this.pageTemplateRepository.findById(
         command.templateId,
@@ -105,7 +128,8 @@ export class UseTemplateHandler {
           permissions: [PERMISSIONS.WORKSPACE_UPDATE],
           target: { type: 'workspace', id: template.getWorkspaceId() },
         }));
-      const entitlement =
+
+      let entitlement =
         listing && !canManageWorkspace
           ? await this.templateEntitlementRepository.findByTemplateAndUser(
               template.getId(),
@@ -152,11 +176,28 @@ export class UseTemplateHandler {
         }
       } else if (
         !entitlement &&
-        template.getVisibility() === TemplateVisibility.PUBLIC
+        template.getVisibility() === TemplateVisibility.PUBLIC &&
+        !canManageWorkspace
       ) {
-        if (!canManageWorkspace) {
+        if (
+          listing?.getStatus() === TemplateListingStatus.PUBLISHED &&
+          listing.getOfferType() === TemplateOfferType.FREE
+        ) {
+          // Using a FREE marketplace template claims it. Same transaction as the
+          // clone below, so a failed clone leaves no claim behind. The release
+          // checks that follow still require an official FREE release.
+          entitlement = await this.freeClaims.claim(
+            template.getId(),
+            command.userId,
+            context,
+          );
+        } else if (listing?.getOfferType() === TemplateOfferType.PAID) {
           throw new ForbiddenException(
-            'You must claim this template before using it',
+            'You must purchase this template before using it',
+          );
+        } else {
+          throw new ForbiddenException(
+            'This template is not available on the marketplace',
           );
         }
       }
@@ -176,7 +217,16 @@ export class UseTemplateHandler {
         );
       }
 
-      version.ensureUsable();
+      try {
+        version.ensureUsable();
+      } catch (error) {
+        // Domain errors are plain Errors; a draft version is a client error, not a 500.
+        throw new BadRequestException(
+          error instanceof Error
+            ? error.message
+            : 'Template version cannot be used',
+        );
+      }
 
       if (entitlement) {
         // Only official release records grant use; being the demo does not revoke it.

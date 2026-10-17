@@ -125,7 +125,17 @@ describe('UseTemplateHandler Regression Tests', () => {
       createdAt: new Date('2026-01-02T00:00:00.000Z'),
     });
 
+  let freeClaims: { claim: jest.Mock };
+
   beforeEach(() => {
+    freeClaims = {
+      claim: jest
+        .fn()
+        .mockImplementation(async (_templateId: string, userId: string) =>
+          createEntitlement(userId),
+        ),
+    };
+
     pageTemplateRepository = {
       findById: jest.fn(),
     } as unknown as jest.Mocked<PageTemplateRepository>;
@@ -203,6 +213,7 @@ describe('UseTemplateHandler Regression Tests', () => {
       uow,
       authorizationService,
       releaseRepository,
+      freeClaims,
     );
 
     // Default setups for blocks and databases
@@ -225,7 +236,7 @@ describe('UseTemplateHandler Regression Tests', () => {
   });
 
   describe('UT-01: PUBLIC + Listing PUBLISHED + User chưa Claim', () => {
-    it('throws ForbiddenException when user has no entitlement', async () => {
+    it('claims the FREE template in the same transaction and clones it', async () => {
       pageTemplateRepository.findById.mockResolvedValue(createTemplate());
       templateListingRepository.findByTemplateId.mockResolvedValue(
         createListing(TemplateListingStatus.PUBLISHED),
@@ -233,21 +244,24 @@ describe('UseTemplateHandler Regression Tests', () => {
       templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
         null,
       );
+      templateVersionRepository.findById.mockResolvedValue(createVersion());
 
-      await expect(
-        handler.execute(
-          new UseTemplateCommand(
-            templateId,
-            versionId,
-            destinationWorkspaceId,
-            claimingUserId,
-          ),
+      const result = await handler.execute(
+        new UseTemplateCommand(
+          templateId,
+          versionId,
+          destinationWorkspaceId,
+          claimingUserId,
         ),
-      ).rejects.toThrow(
-        new ForbiddenException('You must claim this template before using it'),
       );
 
-      expect(pageProvisioningPort.createPageShell).not.toHaveBeenCalled();
+      expect(result).toEqual({ pageId: newPageId });
+      expect(freeClaims.claim).toHaveBeenCalledWith(
+        templateId,
+        claimingUserId,
+        mockContext,
+      );
+      expect(uow.runInTransaction).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -303,8 +317,9 @@ describe('UseTemplateHandler Regression Tests', () => {
           ),
         ),
       ).rejects.toThrow(
-        new ForbiddenException('You must claim this template before using it'),
+        new ForbiddenException('This template is not available on the marketplace'),
       );
+      expect(freeClaims.claim).not.toHaveBeenCalled();
     });
   });
 
@@ -696,7 +711,7 @@ describe('UseTemplateHandler Regression Tests', () => {
   });
 
   describe('UT-14: Entitlement thuộc User khác', () => {
-    it('denies access when user does not own the entitlement', async () => {
+    it("never reuses another user's entitlement; claims for the caller instead", async () => {
       pageTemplateRepository.findById.mockResolvedValue(createTemplate());
       templateListingRepository.findByTemplateId.mockResolvedValue(
         createListing(),
@@ -721,8 +736,12 @@ describe('UseTemplateHandler Regression Tests', () => {
             'user-c-uuid',
           ),
         ),
-      ).rejects.toThrow(
-        new ForbiddenException('You must claim this template before using it'),
+      ).rejects.toThrow(NotFoundException);
+      // user-c gets their own claim; user-b's entitlement is never used.
+      expect(freeClaims.claim).toHaveBeenCalledWith(
+        templateId,
+        'user-c-uuid',
+        mockContext,
       );
     });
   });
@@ -1497,6 +1516,177 @@ describe('UseTemplateHandler Regression Tests', () => {
         'You do not have permission to create page in destination workspace',
       );
       expect(pageProvisioningPort.createPageShell).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Implicit FREE claim on Use', () => {
+    const useAs = (userId = claimingUserId, version = versionId) =>
+      handler.execute(
+        new UseTemplateCommand(templateId, version, destinationWorkspaceId, userId),
+      );
+    const freeRelease = (offerTypeAtRelease: TemplateOfferType) =>
+      releaseRepository.findByTemplateAndVersion.mockImplementation(
+        async (_templateId, requestedVersionId) =>
+          TemplateMarketplaceRelease.create({
+            templateId,
+            versionId: requestedVersionId,
+            releasedBy: null,
+            offerTypeAtRelease,
+          }),
+      );
+    const paidListing = () =>
+      TemplateListing.restore({
+        id: 'listing-uuid-1',
+        templateId,
+        offerType: TemplateOfferType.PAID,
+        price: TemplatePrice.create({ amount: 99000, currency: 'VND' }),
+        status: TemplateListingStatus.PUBLISHED,
+        publishedVersionId: versionId,
+        createdBy: creatorId,
+        publishedAt: new Date(),
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      });
+
+    beforeEach(() => {
+      pageTemplateRepository.findById.mockResolvedValue(createTemplate());
+      templateListingRepository.findByTemplateId.mockResolvedValue(
+        createListing(TemplateListingStatus.PUBLISHED),
+      );
+      templateVersionRepository.findById.mockResolvedValue(createVersion());
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(null);
+    });
+
+    it('does not claim again when a FREE_CLAIM already exists', async () => {
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        createEntitlement(claimingUserId),
+      );
+      await expect(useAs()).resolves.toEqual({ pageId: newPageId });
+      expect(freeClaims.claim).not.toHaveBeenCalled();
+    });
+
+    it('keeps a PAID_PURCHASE untouched and lets the buyer use a paid release', async () => {
+      templateListingRepository.findByTemplateId.mockResolvedValue(paidListing());
+      freeRelease(TemplateOfferType.PAID);
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        TemplateEntitlement.restore({
+          id: 'paid-entitlement',
+          templateId,
+          userId: claimingUserId,
+          source: TemplateEntitlementSource.PAID_PURCHASE,
+          createdAt: new Date('2026-01-02T00:00:00.000Z'),
+        }),
+      );
+      await expect(useAs()).resolves.toEqual({ pageId: newPageId });
+      expect(freeClaims.claim).not.toHaveBeenCalled();
+    });
+
+    it('rejects a PAID template the user has not bought, without claiming', async () => {
+      templateListingRepository.findByTemplateId.mockResolvedValue(paidListing());
+      await expect(useAs()).rejects.toThrow(
+        new ForbiddenException('You must purchase this template before using it'),
+      );
+      expect(freeClaims.claim).not.toHaveBeenCalled();
+      expect(pageProvisioningPort.createPageShell).not.toHaveBeenCalled();
+    });
+
+    it('does not let a FREE_CLAIM use a paid release (no free copy of paid content)', async () => {
+      // Listing is FREE now, but the requested version was released as PAID.
+      freeRelease(TemplateOfferType.PAID);
+      await expect(useAs()).rejects.toThrow(
+        new ForbiddenException('Free claim does not grant access to paid releases'),
+      );
+      expect(pageProvisioningPort.createPageShell).not.toHaveBeenCalled();
+    });
+
+    it('does not require any permission on the source workspace', async () => {
+      // Default authorize mock grants only PAGE_CREATE on the destination.
+      await expect(useAs()).resolves.toEqual({ pageId: newPageId });
+      expect(authorizationService.authorize).toHaveBeenCalledWith(
+        expect.objectContaining({
+          permissions: [PERMISSIONS.WORKSPACE_UPDATE],
+          target: { type: 'workspace', id: sourceWorkspaceId },
+        }),
+      );
+    });
+
+    it('requires PAGE_CREATE on the destination workspace', async () => {
+      authorizationService.authorize.mockResolvedValue(false);
+      await expect(useAs()).rejects.toThrow(
+        new ForbiddenException(
+          'You do not have permission to create page in destination workspace',
+        ),
+      );
+      expect(pageProvisioningPort.createPageShell).not.toHaveBeenCalled();
+    });
+
+    it('rejects versions that are not official releases or are drafts', async () => {
+      releaseRepository.findByTemplateAndVersion.mockResolvedValue(null);
+      await expect(useAs()).rejects.toThrow(
+        new BadRequestException(
+          'Template version is not an official marketplace release',
+        ),
+      );
+
+      // A draft is rejected even when it has a (FREE) release record.
+      freeRelease(TemplateOfferType.FREE);
+      templateVersionRepository.findById.mockResolvedValue(
+        createVersion({ published: false }),
+      );
+      await expect(useAs()).rejects.toThrow(BadRequestException);
+      expect(releaseRepository.findByTemplateAndVersion).toHaveBeenCalledTimes(1);
+      expect(pageProvisioningPort.createPageShell).not.toHaveBeenCalled();
+    });
+
+    it('rolls the new claim back when cloning fails', async () => {
+      const committed: string[] = [];
+      const rolledBack: string[] = [];
+      uow.runInTransaction.mockImplementation(async (fn) => {
+        try {
+          const result = await fn(mockContext);
+          committed.push('tx');
+          return result;
+        } catch (error) {
+          rolledBack.push('tx');
+          throw error;
+        }
+      });
+      pageProvisioningPort.createBlocksFromSnapshot.mockRejectedValue(
+        new Error('clone failed'),
+      );
+
+      await expect(useAs()).rejects.toThrow('clone failed');
+      // The claim ran inside the transaction that rolled back.
+      expect(freeClaims.claim).toHaveBeenCalledWith(
+        templateId,
+        claimingUserId,
+        mockContext,
+      );
+      expect(rolledBack).toEqual(['tx']);
+      expect(committed).toEqual([]);
+    });
+
+    it('retries once with the existing claim when a concurrent Use created it first', async () => {
+      freeClaims.claim.mockRejectedValueOnce({
+        driverError: {
+          code: '23505',
+          constraint: 'UQ_template_entitlements_template_user',
+        },
+      });
+      // The second attempt sees the claim the other request committed.
+      templateEntitlementRepository.findByTemplateAndUser
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(createEntitlement(claimingUserId));
+
+      await expect(useAs()).resolves.toEqual({ pageId: newPageId });
+      expect(uow.runInTransaction).toHaveBeenCalledTimes(2);
+      expect(freeClaims.claim).toHaveBeenCalledTimes(1);
+      expect(pageProvisioningPort.createPageShell).toHaveBeenCalledTimes(1);
+    });
+
+    it('never claims for the creator or a source workspace manager', async () => {
+      await expect(useAs(creatorId)).resolves.toEqual({ pageId: newPageId });
+      expect(freeClaims.claim).not.toHaveBeenCalled();
     });
   });
 });

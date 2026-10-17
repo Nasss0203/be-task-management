@@ -8,6 +8,7 @@ import { PublishTemplateToMarketplaceHandler } from './application/commands/publ
 import { CreateTemplateCategoryHandler } from './application/commands/template-category/create-template-category/create-template-category.handler';
 import { UpdateTemplateCategoryHandler } from './application/commands/template-category/update-template-category/update-template-category.handler';
 import { ClaimFreeTemplateHandler } from './application/commands/template-entitlement/claim-free-template/claim-free-template.handler';
+import { FreeTemplateClaimService } from './application/services/free-template-claim.service';
 import { CreateTemplateListingHandler } from './application/commands/template-listing/create-template-listing/create-template-listing.handler';
 import { PublishTemplateListingHandler } from './application/commands/template-listing/publish-template-listing/publish-template-listing.handler';
 import { UnpublishTemplateListingHandler } from './application/commands/template-listing/unpublish-template-listing/unpublish-template-listing.handler';
@@ -68,6 +69,11 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
     {
       provide: MARKETPLACE_TYPES.ports.Entitlements,
       useExisting: MARKETPLACE_TYPES.repositories.TemplateEntitlementRepository,
+    },
+    FreeTemplateClaimService,
+    {
+      provide: MARKETPLACE_TYPES.ports.FreeClaims,
+      useExisting: FreeTemplateClaimService,
     },
     {
       provide:
@@ -196,6 +202,7 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
   exports: [
     MARKETPLACE_TYPES.ports.Distribution,
     MARKETPLACE_TYPES.ports.Entitlements,
+    MARKETPLACE_TYPES.ports.FreeClaims,
     MARKETPLACE_TYPES.repositories.TemplateMarketplaceReleaseRepository,
     MARKETPLACE_TYPES.applications.CreateTemplateCategoryHandler,
     MARKETPLACE_TYPES.applications.ListTemplateCategoriesHandler,

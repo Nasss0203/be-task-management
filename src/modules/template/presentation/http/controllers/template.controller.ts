@@ -20,9 +20,9 @@ import { ResponseMessage } from 'src/common/decorator/response-message.decorator
 
 import { UseTemplateCommand } from '../../../application/commands/page-template/use-template/use-template.command';
 import { UseTemplateHandler } from '../../../application/commands/page-template/use-template/use-template.handler';
-import { TEMPLATE_TYPES } from '../../../template.types';
 import { GetTemplateVersionThumbnailHandler } from '../../../application/queries/template-version/get-template-version-thumbnail/get-template-version-thumbnail.handler';
 import { GetTemplateVersionThumbnailQuery } from '../../../application/queries/template-version/get-template-version-thumbnail/get-template-version-thumbnail.query';
+import { TEMPLATE_TYPES } from '../../../template.types';
 
 import { type IAuth } from 'src/types/auth';
 
@@ -34,9 +34,9 @@ import { RestorePageTemplateCommand } from 'src/modules/template/application/com
 import { RestorePageTemplateHandler } from 'src/modules/template/application/commands/page-template/restore-page-template/restore-page-template.handler';
 import { UpdatePageTemplateCommand } from 'src/modules/template/application/commands/page-template/update-page-template/update-page-template.command';
 import { UpdatePageTemplateHandler } from 'src/modules/template/application/commands/page-template/update-page-template/update-page-template.handler';
-import { PublishTemplateVersionCommand } from 'src/modules/template/application/commands/template-version/publish-template-version/publish-template-version.command';
 import { CreateTemplateVersionCommand } from 'src/modules/template/application/commands/template-version/create-template-version/create-template-version.command';
 import { CreateTemplateVersionHandler } from 'src/modules/template/application/commands/template-version/create-template-version/create-template-version.handler';
+import { PublishTemplateVersionCommand } from 'src/modules/template/application/commands/template-version/publish-template-version/publish-template-version.command';
 import { PublishTemplateVersionHandler } from 'src/modules/template/application/commands/template-version/publish-template-version/publish-template-version.handler';
 import { GetPageTemplateHandler } from 'src/modules/template/application/queries/page-template/get-page-template/get-page-template.handler';
 import { GetPageTemplateQuery } from 'src/modules/template/application/queries/page-template/get-page-template/get-page-template.query';
@@ -44,16 +44,16 @@ import { ListPageTemplatesHandler } from 'src/modules/template/application/queri
 import { ListPageTemplatesQuery } from 'src/modules/template/application/queries/page-template/list-page-templates/list-page-templates.query';
 import { GetTemplatePreviewHandler } from 'src/modules/template/application/queries/template-preview/get-template-preview/get-template-preview.handler';
 import { GetTemplatePreviewQuery } from 'src/modules/template/application/queries/template-preview/get-template-preview/get-template-preview.query';
-import { ListTemplateVersionsHandler } from 'src/modules/template/application/queries/template-version/list-template-versions/list-template-versions.handler';
-import { ListTemplateVersionsQuery } from 'src/modules/template/application/queries/template-version/list-template-versions/list-template-versions.query';
 import { GetUsableTemplateVersionsHandler } from 'src/modules/template/application/queries/template-version/get-usable-template-versions/get-usable-template-versions.handler';
 import { GetUsableTemplateVersionsQuery } from 'src/modules/template/application/queries/template-version/get-usable-template-versions/get-usable-template-versions.query';
+import { ListTemplateVersionsHandler } from 'src/modules/template/application/queries/template-version/list-template-versions/list-template-versions.handler';
+import { ListTemplateVersionsQuery } from 'src/modules/template/application/queries/template-version/list-template-versions/list-template-versions.query';
 import type { ListPageTemplatesResponseDto } from '../../../application/dto/page-template/list-page-templates.response.dto';
 import { CreatePageTemplateRequest } from '../requests/create-page-template.request';
+import { CreateTemplateVersionRequest } from '../requests/create-template-version.request';
 import { ListPageTemplatesRequest } from '../requests/list-page-templates.request';
 import { UpdatePageTemplateRequest } from '../requests/update-page-template.request';
 import { UseTemplateRequest } from '../requests/use-template.request';
-import { CreateTemplateVersionRequest } from '../requests/create-template-version.request';
 
 @Controller('templates')
 export class TemplateController {
