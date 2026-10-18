@@ -22,7 +22,7 @@ import { TemplateVisibility } from '../../../../../template/domain/enums/templat
 import { TemplatePurchaseAggregate } from '../../../../domain/aggregates/template-purchase/template-purchase.aggregate';
 import { TemplateOfferType } from '../../../../domain/enums/template-offer-type.enum';
 
-import type { TemplateEntitlementRepository } from '../../../../domain/repositories/template-entitlement.repository';
+import { TemplatePurchaseEligibilityService } from '../../../services/template-purchase-eligibility.service';
 import type { TemplateListingRepository } from '../../../../domain/repositories/template-listing.repository';
 import type { TemplatePurchaseRepository } from '../../../../domain/repositories/template-purchase.repository';
 
@@ -42,8 +42,8 @@ export class CreateTemplatePurchaseHandler {
     @Inject(MARKETPLACE_TYPES.repositories.TemplateListingRepository)
     private readonly listingRepository: TemplateListingRepository,
 
-    @Inject(MARKETPLACE_TYPES.repositories.TemplateEntitlementRepository)
-    private readonly entitlementRepository: TemplateEntitlementRepository,
+    @Inject(MARKETPLACE_TYPES.services.TemplatePurchaseEligibilityService)
+    private readonly eligibility: TemplatePurchaseEligibilityService,
 
     @Inject(MARKETPLACE_TYPES.repositories.TemplatePurchaseRepository)
     private readonly purchaseRepository: TemplatePurchaseRepository,
@@ -97,17 +97,16 @@ export class CreateTemplatePurchaseHandler {
           throw new BadRequestException('Template listing is not paid');
         }
 
-        // 4. Check existing Entitlement
-        const entitlement =
-          await this.entitlementRepository.findByTemplateAndUser(
-            command.templateId,
-            command.buyerId,
-            context,
-          );
-
-        if (entitlement) {
-          throw new ConflictException('User already owns this template');
-        }
+        // 4. Creator, existing PAID ownership, pending reconciliation.
+        // A FREE_CLAIM is allowed: settlement upgrades it to PAID_PURCHASE.
+        await this.eligibility.assertCanPurchase(
+          {
+            templateId: template.getId(),
+            templateCreatorId: template.getCreatedBy(),
+            buyerId: command.buyerId,
+          },
+          context,
+        );
 
         // 5. Resolve Published Version
         const publishedVersionId = listing.getPublishedVersionId();

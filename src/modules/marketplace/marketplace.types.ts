@@ -12,6 +12,9 @@ export const MARKETPLACE_TYPES = {
     ),
   },
   applications: {
+    ResolveTemplatePurchaseReconciliationHandler: Symbol(
+      'ResolveTemplatePurchaseReconciliationHandler',
+    ),
     UpdateTemplateListingPricingHandler: Symbol(
       'UpdateTemplateListingPricingHandler',
     ),
@@ -53,6 +56,9 @@ export const MARKETPLACE_TYPES = {
   services: {
     TemplatePurchaseSettlementService: Symbol(
       'TemplatePurchaseSettlementService',
+    ),
+    TemplatePurchaseEligibilityService: Symbol(
+      'TemplatePurchaseEligibilityService',
     ),
   },
 } as const;

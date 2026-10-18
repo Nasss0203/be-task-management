@@ -14,11 +14,10 @@ export class DatabaseRowValueController {
   constructor(
     private readonly setRowValueHandler: SetRowValueHandler,
     private readonly clearRowValueHandler: ClearRowValueHandler,
-  ) {}
+  ) { }
 
   @Patch(':propertyId')
-  @WorkspaceContext({ source: 'resource', type: 'database_row', key: 'rowId' })
-  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+
   async setValue(
     @Param('rowId') rowId: string,
     @Param('propertyId') propertyId: string,
@@ -37,8 +36,7 @@ export class DatabaseRowValueController {
   }
 
   @Delete(':propertyId')
-  @WorkspaceContext({ source: 'resource', type: 'database_row', key: 'rowId' })
-  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+
   async clearValue(
     @Param('rowId') rowId: string,
     @Param('propertyId') propertyId: string,

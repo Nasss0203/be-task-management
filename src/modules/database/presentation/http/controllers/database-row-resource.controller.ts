@@ -9,11 +9,10 @@ import { DeleteDatabaseRowHandler } from 'src/modules/database/application/comma
 export class DatabaseRowResourceController {
   constructor(
     private readonly deleteDatabaseRowHandler: DeleteDatabaseRowHandler,
-  ) {}
+  ) { }
 
   @Delete(':rowId')
-  @WorkspaceContext({ source: 'resource', type: 'database_row', key: 'rowId' })
-  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
+
   async deleteRow(@Param('rowId') rowId: string) {
     await this.deleteDatabaseRowHandler.execute(
       new DeleteDatabaseRowCommand(rowId),

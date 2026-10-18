@@ -13,6 +13,7 @@ import { CreateTemplateListingHandler } from './application/commands/template-li
 import { PublishTemplateListingHandler } from './application/commands/template-listing/publish-template-listing/publish-template-listing.handler';
 import { UnpublishTemplateListingHandler } from './application/commands/template-listing/unpublish-template-listing/unpublish-template-listing.handler';
 import { UpdateTemplateListingPricingHandler } from './application/commands/template-listing/update-template-listing-pricing/update-template-listing-pricing.handler';
+import { ResolveTemplatePurchaseReconciliationHandler } from './application/commands/template-purchase/resolve-template-purchase-reconciliation/resolve-template-purchase-reconciliation.handler';
 import { CreateTemplatePurchaseCheckoutHandler } from './application/commands/template-purchase/create-template-purchase-checkout/create-template-purchase-checkout.handler';
 import { CreateTemplatePurchaseHandler } from './application/commands/template-purchase/create-template-purchase/create-template-purchase.handler';
 import { ProcessMarketplaceStripeWebhookHandler } from './application/commands/template-purchase/process-stripe-webhook/process-marketplace-stripe-webhook.handler';
@@ -26,6 +27,7 @@ import { GetPublicTemplateDetailHandler } from './application/queries/template-p
 import { GetPublicTemplatePreviewHandler } from './application/queries/template-preview/get-public-template-preview/get-public-template-preview.handler';
 import { PreviewTemplateDemoHandler } from './application/queries/template-preview/preview-template-demo/preview-template-demo.handler';
 import { TemplatePurchaseSettlementService } from './application/services/template-purchase-settlement.service';
+import { TemplatePurchaseEligibilityService } from './application/services/template-purchase-eligibility.service';
 import { TemplateCategoryOrmEntity } from './infrastructure/persistence/typeorm/entities/template-category.orm-entity';
 import { TemplateEntitlementOrmEntity } from './infrastructure/persistence/typeorm/entities/template-entitlement.orm-entity';
 import { TemplateListingCategoryOrmEntity } from './infrastructure/persistence/typeorm/entities/template-listing-category.orm-entity';
@@ -157,6 +159,12 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
       useClass: CreateTemplatePurchaseCheckoutHandler,
     },
     {
+      provide:
+        MARKETPLACE_TYPES.applications
+          .ResolveTemplatePurchaseReconciliationHandler,
+      useClass: ResolveTemplatePurchaseReconciliationHandler,
+    },
+    {
       provide: MARKETPLACE_TYPES.repositories.TemplateListingRepository,
       useClass: TypeOrmTemplateListingRepository,
     },
@@ -186,6 +194,10 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
       useClass: TemplatePurchaseSettlementService,
     },
     {
+      provide: MARKETPLACE_TYPES.services.TemplatePurchaseEligibilityService,
+      useClass: TemplatePurchaseEligibilityService,
+    },
+    {
       provide:
         MARKETPLACE_TYPES.applications.ProcessMarketplaceStripeWebhookHandler,
       useClass: ProcessMarketplaceStripeWebhookHandler,
@@ -210,6 +222,7 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
     MARKETPLACE_TYPES.applications.ChangeTemplateCategoryStatusHandler,
 
     MARKETPLACE_TYPES.applications.ProcessMarketplaceStripeWebhookHandler,
+    MARKETPLACE_TYPES.applications.ResolveTemplatePurchaseReconciliationHandler,
   ],
 })
 export class MarketplaceModule {}

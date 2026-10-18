@@ -1,3 +1,4 @@
+import { TemplateEntitlementSource } from '../../../../domain/enums/template-entitlement-source.enum';
 import { Injectable } from '@nestjs/common';
 import { Brackets, DataSource, EntityManager, Repository } from 'typeorm';
 
@@ -44,6 +45,18 @@ export class TypeOrmTemplateEntitlementRepository implements TemplateEntitlement
     });
 
     return entity ? TemplateEntitlementMapper.toDomain(entity) : null;
+  }
+
+  async upgradeFreeClaimToPaidPurchase(
+    entitlementId: string,
+    context?: PersistenceContext,
+  ): Promise<boolean> {
+    const result = await this.getRepo(context).update(
+      { id: entitlementId, source: TemplateEntitlementSource.FREE_CLAIM },
+      { source: TemplateEntitlementSource.PAID_PURCHASE },
+    );
+
+    return (result.affected ?? 0) === 1;
   }
 
   async findClaimedByUser(

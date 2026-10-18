@@ -149,7 +149,34 @@ export class TemplatePurchaseSettlementService {
         input.context,
       );
 
-    // Đã có quyền sở hữu từ giao dịch khác (hoặc giao dịch đồng thời vừa hoàn thành).
+    // FREE_CLAIM -> PAID_PURCHASE trên cùng một dòng, giữ created_at để
+    // biết user từng claim FREE (refund sau này chỉ hạ quyền, không xoá).
+    if (
+      existingEntitlement?.getSource() === TemplateEntitlementSource.FREE_CLAIM
+    ) {
+      const upgraded =
+        await this.entitlementRepository.upgradeFreeClaimToPaidPurchase(
+          existingEntitlement.getId(),
+          input.context,
+        );
+
+      if (!upgraded) {
+        this.logger.warn(
+          `Entitlement ${existingEntitlement.getId()} changed during upgrade. Moving purchase ${purchase.getId()} to reconciliation.`,
+        );
+        purchase.requireReconciliation();
+        await this.purchaseRepository.save(purchase, input.context);
+
+        return 'RECONCILIATION_REQUIRED';
+      }
+
+      purchase.markPaid(existingEntitlement.getId(), input.paidAt);
+      await this.purchaseRepository.save(purchase, input.context);
+
+      return 'PROCESSED';
+    }
+
+    // Đã có PAID_PURCHASE từ giao dịch khác (hoặc giao dịch đồng thời vừa hoàn thành).
     // Không gán Entitlement đó cho Purchase hiện tại, chuyển sang đối soát.
     if (existingEntitlement) {
       this.logger.warn(

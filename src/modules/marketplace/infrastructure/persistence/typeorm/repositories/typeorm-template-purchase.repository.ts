@@ -1,3 +1,4 @@
+import { TemplatePurchaseStatus } from '../../../../domain/aggregates/template-purchase/template-purchase.aggregate';
 import { Injectable } from '@nestjs/common';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 
@@ -70,6 +71,17 @@ export class TypeOrmTemplatePurchaseRepository implements TemplatePurchaseReposi
     });
 
     return entity ? TemplatePurchaseMapper.toDomain(entity) : null;
+  }
+
+  async existsByBuyerTemplateAndStatus(
+    buyerId: string,
+    templateId: string,
+    status: TemplatePurchaseStatus,
+    context?: PersistenceContext,
+  ): Promise<boolean> {
+    return this.getRepo(context).exists({
+      where: { buyerId, templateId, status },
+    });
   }
 
   async findByIdForUpdate(

@@ -22,6 +22,9 @@ import {
 } from '../../../../domain/aggregates/template-purchase/template-purchase.aggregate';
 
 import type { TemplatePurchaseRepository } from '../../../../domain/repositories/template-purchase.repository';
+import type { TemplateContentPort } from 'src/modules/template/application/ports/template-content.port';
+import { TEMPLATE_TYPES } from 'src/modules/template/template.types';
+import { TemplatePurchaseEligibilityService } from '../../../services/template-purchase-eligibility.service';
 
 import { CreateTemplatePurchaseCheckoutCommand } from './create-template-purchase-checkout.command';
 
@@ -38,6 +41,12 @@ export class CreateTemplatePurchaseCheckoutHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly unitOfWork: UnitOfWork,
+
+    @Inject(TEMPLATE_TYPES.ports.Content)
+    private readonly templateRepository: TemplateContentPort,
+
+    @Inject(MARKETPLACE_TYPES.services.TemplatePurchaseEligibilityService)
+    private readonly eligibility: TemplatePurchaseEligibilityService,
   ) {}
 
   async execute(
@@ -63,6 +72,26 @@ export class CreateTemplatePurchaseCheckoutHandler {
       if (existingPurchase.getStatus() !== TemplatePurchaseStatus.PENDING) {
         throw new ConflictException('Template purchase is not pending');
       }
+
+      // Recheck: ownership or a reconciliation may have appeared since this
+      // purchase was created, and no new Stripe session may be opened then.
+      const template = await this.templateRepository.findById(
+        existingPurchase.getTemplateId(),
+        context,
+      );
+
+      if (!template) {
+        throw new NotFoundException('Template not found');
+      }
+
+      await this.eligibility.assertCanPurchase(
+        {
+          templateId: template.getId(),
+          templateCreatorId: template.getCreatedBy(),
+          buyerId: command.buyerId,
+        },
+        context,
+      );
 
       const remainingMs =
         existingPurchase.getExpiresAt().getTime() - Date.now();

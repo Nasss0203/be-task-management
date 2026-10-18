@@ -37,11 +37,9 @@ export class DatabaseViewController {
     private readonly renameDatabaseViewHandler: RenameDatabaseViewHandler,
     private readonly getDatabaseViewHandler: GetDatabaseViewHandler,
     private readonly setViewPropertyVisibilityHandler: SetViewPropertyVisibilityHandler,
-  ) {}
+  ) { }
 
   @Post()
-  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
-  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
   async createView(
     @Param('databaseId') databaseId: string,
     @Body() request: CreateDatabaseViewRequest,
@@ -52,8 +50,6 @@ export class DatabaseViewController {
   }
 
   @Get()
-  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
-  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
   async getViews(@Param('databaseId') databaseId: string) {
     return this.getDatabaseViewsHandler.execute(
       new GetDatabaseViewsQuery(databaseId),
@@ -61,8 +57,6 @@ export class DatabaseViewController {
   }
 
   @Get(':viewId')
-  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
-  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
   async getView(
     @Param('databaseId') databaseId: string,
     @Param('viewId') viewId: string,
@@ -73,8 +67,6 @@ export class DatabaseViewController {
   }
 
   @Patch(':viewId')
-  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
-  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   async renameView(
     @Param('databaseId') databaseId: string,
     @Param('viewId') viewId: string,
@@ -86,8 +78,6 @@ export class DatabaseViewController {
   }
 
   @Patch(':viewId/properties/:propertyId/visibility')
-  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
-  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   async setPropertyVisibility(
     @Param('databaseId') databaseId: string,
     @Param('viewId') viewId: string,
@@ -105,8 +95,6 @@ export class DatabaseViewController {
   }
 
   @Delete(':viewId')
-  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
-  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async deleteView(
     @Param('databaseId') databaseId: string,
     @Param('viewId') viewId: string,

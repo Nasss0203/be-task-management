@@ -1,3 +1,4 @@
+import { TemplatePurchaseStatus } from '../aggregates/template-purchase/template-purchase.aggregate';
 import type { PersistenceContext } from 'src/shared/domain/persistence-context';
 
 import type { TemplatePurchase } from '../aggregates/template-purchase/template-purchase.aggregate';
@@ -38,4 +39,11 @@ export interface TemplatePurchaseRepository {
     orderCode: string,
     context: PersistenceContext,
   ): Promise<TemplatePurchase | null>;
+
+  existsByBuyerTemplateAndStatus(
+    buyerId: string,
+    templateId: string,
+    status: TemplatePurchaseStatus,
+    context?: PersistenceContext,
+  ): Promise<boolean>;
 }

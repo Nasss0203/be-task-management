@@ -41,7 +41,7 @@ export class PermissionGuard implements CanActivate {
     private readonly workspaceResolver: WorkspaceResolverService,
 
     private readonly authorizationService: AuthorizationService,
-  ) {}
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredPermissions = this.reflector.getAllAndOverride<
@@ -171,20 +171,6 @@ export class PermissionGuard implements CanActivate {
           id: resourceId,
         };
 
-      /**
-       * Database là nội dung của Page,
-       * nên kế thừa quyền của Page chứa nó.
-       */
-      case 'database':
-      case 'database_row':
-        if (!req.authorizationPageId) {
-          throw new ForbiddenException('Authorization resource id not found');
-        }
-
-        return {
-          type: 'page',
-          id: req.authorizationPageId,
-        };
 
       default:
         return {

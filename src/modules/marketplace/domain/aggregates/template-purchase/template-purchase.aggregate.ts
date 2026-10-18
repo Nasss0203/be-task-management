@@ -6,6 +6,8 @@ export enum TemplatePurchaseStatus {
   FAILED = 'FAILED',
   EXPIRED = 'EXPIRED',
   RECONCILIATION_REQUIRED = 'RECONCILIATION_REQUIRED',
+  /** Reconciled as not granted; the payment is refunded at the provider. */
+  REFUNDED = 'REFUNDED',
 }
 
 export enum TemplatePurchaseProvider {
@@ -221,6 +223,34 @@ export class TemplatePurchaseAggregate {
 
     this.status = TemplatePurchaseStatus.RECONCILIATION_REQUIRED;
     this.updatedAt = new Date();
+  }
+
+  /** Admin decision after reconciliation: the payment is valid, grant it. */
+  resolveReconciliationAsPaid(entitlementId: string, resolvedAt: Date): void {
+    this.assertAwaitingReconciliation();
+
+    if (!entitlementId.trim()) {
+      throw new Error('Entitlement id is required');
+    }
+
+    this.status = TemplatePurchaseStatus.PAID;
+    this.entitlementId = entitlementId;
+    this.paidAt = new Date(resolvedAt);
+    this.updatedAt = new Date();
+  }
+
+  /** Admin decision after reconciliation: the payment was refunded. */
+  resolveReconciliationAsRefunded(): void {
+    this.assertAwaitingReconciliation();
+
+    this.status = TemplatePurchaseStatus.REFUNDED;
+    this.updatedAt = new Date();
+  }
+
+  private assertAwaitingReconciliation(): void {
+    if (this.status !== TemplatePurchaseStatus.RECONCILIATION_REQUIRED) {
+      throw new Error('Purchase is not awaiting reconciliation');
+    }
   }
 
   getId(): string {

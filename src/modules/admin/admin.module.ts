@@ -38,6 +38,7 @@ import { AdminUsersController } from './presentation/http/controllers/admin-user
 import { AdminWorkspacesController } from './presentation/http/controllers/admin-workspaces.controller';
 import { AdminPermissionGuard } from './presentation/http/guards/admin-permission.guard';
 
+import { AdminTemplatePurchaseController } from './presentation/http/controllers/admin-template-purchase.controller';
 @Module({
   imports: [MarketplaceModule],
   controllers: [
@@ -47,6 +48,7 @@ import { AdminPermissionGuard } from './presentation/http/guards/admin-permissio
     AdminDashboardController,
     AdminBillingController,
     AdminTemplateCategoryController,
+    AdminTemplatePurchaseController,
   ],
   providers: [
     {

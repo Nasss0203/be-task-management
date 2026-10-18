@@ -29,11 +29,9 @@ export class DatabasePropertyController {
     private readonly deletePropertyHandler: DeletePropertyHandler,
     private readonly updatePropertyOptionHandler: UpdatePropertyOptionHandler,
     private readonly deletePropertyOptionHandler: DeletePropertyOptionHandler,
-  ) {}
+  ) { }
 
   @Post()
-  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
-  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
   async addProperty(
     @Param('databaseId') databaseId: string,
     @Body() request: AddPropertyRequest,
@@ -44,8 +42,6 @@ export class DatabasePropertyController {
   }
 
   @Post(':propertyId/options')
-  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
-  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
   async addPropertyOption(
     @Param('databaseId') databaseId: string,
     @Param('propertyId') propertyId: string,
@@ -69,8 +65,6 @@ export class DatabasePropertyController {
   }
 
   @Patch(':propertyId')
-  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
-  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   async renameProperty(
     @Param('databaseId')
     databaseId: string,
@@ -87,8 +81,6 @@ export class DatabasePropertyController {
   }
 
   @Delete(':propertyId')
-  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
-  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async deleteProperty(
     @Param('databaseId')
     databaseId: string,
@@ -105,8 +97,6 @@ export class DatabasePropertyController {
   }
 
   @Patch(':propertyId/options/:optionId')
-  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
-  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   async updatePropertyOption(
     @Param('databaseId')
     databaseId: string,
@@ -132,8 +122,6 @@ export class DatabasePropertyController {
   }
 
   @Delete(':propertyId/options/:optionId')
-  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
-  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async deletePropertyOption(
     @Param('databaseId')
     databaseId: string,

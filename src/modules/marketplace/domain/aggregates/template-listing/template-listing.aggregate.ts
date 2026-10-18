@@ -249,7 +249,6 @@ export class TemplateListingAggregate {
   setDemoPreview(
     demoVersionId?: string | null,
     demoConfig?: Record<string, any> | null,
-    targetPublishedVersionId: string | null = this.publishedVersionId,
   ): boolean {
     const nextDemoVersionId = demoVersionId !== undefined ? demoVersionId : this.demoVersionId;
     const nextDemoConfig = this.resolveNextDemoConfig(
@@ -260,7 +259,7 @@ export class TemplateListingAggregate {
     TemplateListingAggregate.assertDemoPolicy(
       this.offerType,
       nextDemoVersionId,
-      targetPublishedVersionId,
+      this.publishedVersionId,
       nextDemoConfig,
     );
 

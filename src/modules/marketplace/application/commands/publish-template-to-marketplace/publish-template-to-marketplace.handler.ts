@@ -49,7 +49,7 @@ export class PublishTemplateToMarketplaceHandler {
     @Inject(MARKETPLACE_TYPES.repositories.TemplateMarketplaceReleaseRepository)
     private readonly releases: TemplateMarketplaceReleaseRepository,
     private readonly previewLoader: TemplatePreviewLoader,
-  ) {}
+  ) { }
   async execute(command: PublishTemplateToMarketplaceCommand) {
     const pricing = resolveTemplateListingPricing(
       command.offerType,
@@ -202,11 +202,7 @@ export class PublishTemplateToMarketplaceHandler {
             command.demoConfig !== undefined) &&
           toBadRequest(() =>
             // Check the demo against the version being released, not the old one.
-            listing!.setDemoPreview(
-              command.demoVersionId,
-              command.demoConfig,
-              version.getId(),
-            ),
+            listing!.setDemoPreview(command.demoVersionId, command.demoConfig),
           )
         ) {
           needsSave = true;

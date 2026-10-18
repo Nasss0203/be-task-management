@@ -9,11 +9,9 @@ import { CreateDatabaseRequest } from '../requests/create-database.request';
 
 @Controller('pages/:pageId/databases')
 export class DatabaseController {
-  constructor(private readonly createDatabaseHandler: CreateDatabaseHandler) {}
+  constructor(private readonly createDatabaseHandler: CreateDatabaseHandler) { }
 
   @Post()
-  @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
-  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
   async createDatabase(
     @Param('pageId') pageId: string,
     @Body() request: CreateDatabaseRequest,
