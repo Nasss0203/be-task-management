@@ -35,6 +35,7 @@ export class GetMyClaimedTemplatesHandler {
       userId: query.userId,
       cursor,
       limit,
+      source: query.source,
     });
     const last = result.items.at(-1);
     return {

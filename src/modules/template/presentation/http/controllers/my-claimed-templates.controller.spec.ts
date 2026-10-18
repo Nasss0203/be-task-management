@@ -117,6 +117,19 @@ describe('MyClaimedTemplatesController HTTP contract', () => {
     },
   );
 
+  it.each(['FREE_CLAIM', 'PAID_PURCHASE'])(
+    'forwards source=%s as a library filter',
+    async (source) => {
+      await request(app.getHttpServer())
+        .get(url + '?source=' + source)
+        .set('Authorization', 'Bearer ' + jwt.sign({ id: 'user-a' }))
+        .expect(200);
+      expect(findClaimedByUser).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: 'user-a', source }),
+      );
+    },
+  );
+
   it.each([
     'userId=user-b',
     'user_id=user-b',
@@ -125,6 +138,7 @@ describe('MyClaimedTemplatesController HTTP contract', () => {
     'limit=1.5',
     'limit=abc',
     'cursor=bad',
+    'source=GIFT',
   ])('rejects unsupported or malformed query %s', async (query) => {
     await request(app.getHttpServer())
       .get(url + '?' + query)

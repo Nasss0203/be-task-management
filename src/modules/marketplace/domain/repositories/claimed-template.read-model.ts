@@ -29,6 +29,8 @@ export type ClaimedTemplateReadModel = {
 export type FindClaimedTemplatesFilters = {
   userId: string;
   limit: number;
+  /** Only FREE_CLAIM or only PAID_PURCHASE; both when omitted. */
+  source?: TemplateEntitlementSource;
   cursor?: { createdAt: Date; id: string };
 };
 

@@ -8,6 +8,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
 } from '@nestjs/common';
 
 import { Auth } from 'src/common/decorator/auth.decorator';
@@ -27,6 +28,10 @@ import { CreateTemplatePurchaseCheckoutDto } from 'src/modules/marketplace/appli
 import { CreateTemplatePurchaseCommand } from '../../../application/commands/template-purchase/create-template-purchase/create-template-purchase.command';
 import { CreateTemplatePurchaseHandler } from '../../../application/commands/template-purchase/create-template-purchase/create-template-purchase.handler';
 import { CreateTemplatePurchaseResponseDto } from '../../../application/dto/template-purchase/create-template-purchase.response.dto';
+import { GetMyTemplatePurchasesHandler } from '../../../application/queries/template-purchase/get-my-template-purchases/get-my-template-purchases.handler';
+import { GetMyTemplatePurchasesQuery } from '../../../application/queries/template-purchase/get-my-template-purchases/get-my-template-purchases.query';
+import type { TemplatePurchaseHistoryResponseDto } from '../../../application/dto/template-purchase/template-purchase-history.response.dto';
+import { GetMyClaimedTemplatesRequest } from '../requests/get-my-claimed-templates.request';
 import { GetTemplatePurchaseHandler } from '../../../application/queries/template-purchase/get-template-purchase/get-template-purchase.handler';
 import { GetTemplatePurchaseQuery } from '../../../application/queries/template-purchase/get-template-purchase/get-template-purchase.query';
 
@@ -43,7 +48,23 @@ export class TemplatePurchaseController {
 
     @Inject(MARKETPLACE_TYPES.applications.GetTemplatePurchaseHandler)
     private readonly getTemplatePurchaseHandler: GetTemplatePurchaseHandler,
+
+    @Inject(MARKETPLACE_TYPES.applications.GetMyTemplatePurchasesHandler)
+    private readonly getMyTemplatePurchasesHandler: GetMyTemplatePurchasesHandler,
   ) {}
+
+  // Buyer purchase history. Two path segments so it can't be read as /templates/:templateId.
+  @Get('me/purchases')
+  @ReadRateLimit()
+  @ResponseMessage('Template purchases retrieved successfully')
+  async listMine(
+    @Query() request: GetMyClaimedTemplatesRequest,
+    @Auth() auth: IAuth,
+  ): Promise<TemplatePurchaseHistoryResponseDto> {
+    return this.getMyTemplatePurchasesHandler.execute(
+      new GetMyTemplatePurchasesQuery(auth.id, request.cursor, request.limit),
+    );
+  }
 
   // Read-only status for the buyer (e.g. after returning from Stripe).
   @Get('purchases/:purchaseId')

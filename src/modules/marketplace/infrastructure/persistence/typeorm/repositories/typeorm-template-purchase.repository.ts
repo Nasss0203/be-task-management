@@ -1,6 +1,14 @@
+import type {
+  FindPurchaseHistoryFilters,
+  FindPurchaseHistoryResult,
+  TemplatePurchaseHistoryReadModel,
+} from '../../../../domain/repositories/template-purchase-history.read-model';
+import { TemplateVisibility } from '../../../../../template/domain/enums/template-visibility.enum';
+import { PageTemplateOrmEntity } from '../../../../../template/infrastructure/persistence/typeorm/entities/page-template.orm-entity';
+import { PageTemplateVersionOrmEntity } from '../../../../../template/infrastructure/persistence/typeorm/entities/page-template-version.orm-entity';
 import { TemplatePurchaseStatus } from '../../../../domain/aggregates/template-purchase/template-purchase.aggregate';
 import { Injectable } from '@nestjs/common';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { Brackets, DataSource, EntityManager, Repository } from 'typeorm';
 
 import type { PersistenceContext } from 'src/shared/domain/persistence-context';
 
@@ -71,6 +79,76 @@ export class TypeOrmTemplatePurchaseRepository implements TemplatePurchaseReposi
     });
 
     return entity ? TemplatePurchaseMapper.toDomain(entity) : null;
+  }
+
+  async findHistoryByBuyer(
+    filters: FindPurchaseHistoryFilters,
+    context?: PersistenceContext,
+  ): Promise<FindPurchaseHistoryResult> {
+    const qb = this.getRepo(context)
+      .createQueryBuilder('purchase')
+      .leftJoin(PageTemplateOrmEntity, 'template', 'template.id = purchase.templateId')
+      .leftJoin(
+        PageTemplateVersionOrmEntity,
+        'version',
+        'version.id = purchase.publishedVersionId',
+      )
+      .select('purchase.id', 'id')
+      .addSelect('purchase.orderCode', 'orderCode')
+      .addSelect('purchase.templateId', 'templateId')
+      .addSelect(
+        'CASE WHEN template.visibility = :publicVisibility THEN template.name ELSE NULL END',
+        'templateName',
+      )
+      .addSelect(
+        'CASE WHEN template.visibility = :publicVisibility THEN template.icon ELSE NULL END',
+        'templateIcon',
+      )
+      .addSelect('version.versionNumber', 'versionNumber')
+      .addSelect('purchase.amount', 'amount')
+      .addSelect('purchase.currency', 'currency')
+      .addSelect('purchase.status', 'status')
+      .addSelect('purchase.createdAt', 'createdAt')
+      .addSelect('purchase.paidAt', 'paidAt')
+      .where('purchase.buyerId = :buyerId', { buyerId: filters.buyerId })
+      .setParameters({ publicVisibility: TemplateVisibility.PUBLIC });
+
+    if (filters.cursor) {
+      qb.andWhere(
+        new Brackets((cursorQb) => {
+          cursorQb
+            .where('purchase.createdAt < :cursorCreatedAt')
+            .orWhere(
+              '(purchase.createdAt = :cursorCreatedAt AND purchase.id < :cursorId)',
+            );
+        }),
+        {
+          cursorCreatedAt: filters.cursor.createdAt,
+          cursorId: filters.cursor.id,
+        },
+      );
+    }
+
+    const rows = await qb
+      .orderBy('purchase.createdAt', 'DESC')
+      .addOrderBy('purchase.id', 'DESC')
+      .limit(filters.limit + 1)
+      .getRawMany<
+        Omit<TemplatePurchaseHistoryReadModel, 'amount' | 'versionNumber'> & {
+          amount: string | number;
+          versionNumber: number | null;
+        }
+      >();
+
+    return {
+      hasNextPage: rows.length > filters.limit,
+      items: rows.slice(0, filters.limit).map((row) => ({
+        ...row,
+        // bigint arrives as a string from pg.
+        amount: Number(row.amount),
+        versionNumber: row.versionNumber ?? null,
+      })),
+    };
   }
 
   async existsByBuyerTemplateAndStatus(

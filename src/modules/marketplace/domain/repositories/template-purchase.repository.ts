@@ -1,3 +1,7 @@
+import type {
+  FindPurchaseHistoryFilters,
+  FindPurchaseHistoryResult,
+} from './template-purchase-history.read-model';
 import { TemplatePurchaseStatus } from '../aggregates/template-purchase/template-purchase.aggregate';
 import type { PersistenceContext } from 'src/shared/domain/persistence-context';
 
@@ -39,6 +43,12 @@ export interface TemplatePurchaseRepository {
     orderCode: string,
     context: PersistenceContext,
   ): Promise<TemplatePurchase | null>;
+
+  /** The buyer's purchases, newest first (keyset cursor). Read-only. */
+  findHistoryByBuyer(
+    filters: FindPurchaseHistoryFilters,
+    context?: PersistenceContext,
+  ): Promise<FindPurchaseHistoryResult>;
 
   existsByBuyerTemplateAndStatus(
     buyerId: string,

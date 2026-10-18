@@ -1,3 +1,4 @@
+import { GetMyTemplatePurchasesHandler } from './application/queries/template-purchase/get-my-template-purchases/get-my-template-purchases.handler';
 import { TypeOrmTemplateCreatorReader } from './infrastructure/persistence/typeorm/readers/typeorm-template-creator.reader';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -160,6 +161,10 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
     {
       provide: MARKETPLACE_TYPES.applications.GetTemplatePurchaseHandler,
       useClass: GetTemplatePurchaseHandler,
+    },
+    {
+      provide: MARKETPLACE_TYPES.applications.GetMyTemplatePurchasesHandler,
+      useClass: GetMyTemplatePurchasesHandler,
     },
     {
       provide:

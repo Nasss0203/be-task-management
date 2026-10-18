@@ -113,6 +113,9 @@ export class TypeOrmTemplateEntitlementRepository implements TemplateEntitlement
         field,
       );
     }
+    if (filters.source) {
+      qb.andWhere('entitlement.source = :source', { source: filters.source });
+    }
     if (filters.cursor) {
       qb.andWhere(
         new Brackets((cursorQb) => {

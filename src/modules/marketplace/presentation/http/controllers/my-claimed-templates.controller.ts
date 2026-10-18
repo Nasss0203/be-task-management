@@ -24,7 +24,12 @@ export class MyClaimedTemplatesController {
     @Auth() auth: IAuth,
   ): Promise<MyClaimedTemplatesResponseDto> {
     return this.handler.execute(
-      new GetMyClaimedTemplatesQuery(auth.id, request.cursor, request.limit),
+      new GetMyClaimedTemplatesQuery(
+        auth.id,
+        request.cursor,
+        request.limit,
+        request.source,
+      ),
     );
   }
 }
