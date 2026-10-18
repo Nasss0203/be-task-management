@@ -22,7 +22,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "typeorm": "typeorm-ts-node-commonjs",
     "typeorm:prod": "typeorm",
-    "migration:generate": "ts-node -r tsconfig-paths/register scripts/local-migration.ts generate",
+    "migration:generate": "ts-node scripts/sync-entities.ts && ts-node -r tsconfig-paths/register scripts/local-migration.ts generate",
     "migration:audit": "ts-node -r tsconfig-paths/register scripts/migration-tools.ts audit",
     "migration:check": "ts-node -r tsconfig-paths/register scripts/migration-tools.ts check",
     "migration:prepare": "ts-node -r tsconfig-paths/register scripts/migration-prepare.ts",
