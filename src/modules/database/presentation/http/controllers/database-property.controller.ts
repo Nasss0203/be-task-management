@@ -1,4 +1,7 @@
 import { Body, Controller, Delete, Param, Patch, Post } from '@nestjs/common';
+import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 
 import { AddPropertyOptionCommand } from 'src/modules/database/application/commands/add-property-option/add-property-option.command';
 import { AddPropertyOptionHandler } from 'src/modules/database/application/commands/add-property-option/add-property-option.handler';
@@ -29,6 +32,8 @@ export class DatabasePropertyController {
   ) {}
 
   @Post()
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
   async addProperty(
     @Param('databaseId') databaseId: string,
     @Body() request: AddPropertyRequest,
@@ -39,6 +44,8 @@ export class DatabasePropertyController {
   }
 
   @Post(':propertyId/options')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
   async addPropertyOption(
     @Param('databaseId') databaseId: string,
     @Param('propertyId') propertyId: string,
@@ -62,6 +69,8 @@ export class DatabasePropertyController {
   }
 
   @Patch(':propertyId')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   async renameProperty(
     @Param('databaseId')
     databaseId: string,
@@ -78,6 +87,8 @@ export class DatabasePropertyController {
   }
 
   @Delete(':propertyId')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async deleteProperty(
     @Param('databaseId')
     databaseId: string,
@@ -94,6 +105,8 @@ export class DatabasePropertyController {
   }
 
   @Patch(':propertyId/options/:optionId')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   async updatePropertyOption(
     @Param('databaseId')
     databaseId: string,
@@ -119,6 +132,8 @@ export class DatabasePropertyController {
   }
 
   @Delete(':propertyId/options/:optionId')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async deletePropertyOption(
     @Param('databaseId')
     databaseId: string,

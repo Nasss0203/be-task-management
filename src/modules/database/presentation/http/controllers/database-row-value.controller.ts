@@ -1,4 +1,7 @@
 import { Body, Controller, Delete, Param, Patch } from '@nestjs/common';
+import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 
 import { ClearRowValueCommand } from 'src/modules/database/application/commands/clear-row-value/clear-row-value.command';
 import { ClearRowValueHandler } from 'src/modules/database/application/commands/clear-row-value/clear-row-value.handler';
@@ -14,6 +17,8 @@ export class DatabaseRowValueController {
   ) {}
 
   @Patch(':propertyId')
+  @WorkspaceContext({ source: 'resource', type: 'database_row', key: 'rowId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   async setValue(
     @Param('rowId') rowId: string,
     @Param('propertyId') propertyId: string,
@@ -32,6 +37,8 @@ export class DatabaseRowValueController {
   }
 
   @Delete(':propertyId')
+  @WorkspaceContext({ source: 'resource', type: 'database_row', key: 'rowId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   async clearValue(
     @Param('rowId') rowId: string,
     @Param('propertyId') propertyId: string,

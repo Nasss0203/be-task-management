@@ -1,4 +1,7 @@
 import { Controller, Get, Param } from '@nestjs/common';
+import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
+import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 
 import { GetDatabaseHandler } from 'src/modules/database/application/queries/get-database/get-database.handler';
 import { GetDatabaseQuery } from 'src/modules/database/application/queries/get-database/get-database.query';
@@ -8,6 +11,8 @@ export class DatabaseQueryController {
   constructor(private readonly getDatabaseHandler: GetDatabaseHandler) {}
 
   @Get(':databaseId')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
   async getDatabase(@Param('databaseId') databaseId: string) {
     const database = await this.getDatabaseHandler.execute(
       new GetDatabaseQuery(databaseId),

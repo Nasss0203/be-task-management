@@ -421,6 +421,43 @@ describe('TemplateListingAggregate', () => {
         expect(listing.setDemoPreview('separate-demo-uuid', { tab: 'overview' })).toBe(true);
         expect(listing.getDemoConfig()).toEqual({ tab: 'overview' });
       });
+
+      // E2E H2: one marketplace/publish request moves the release and the demo.
+      const release = (id: string) => ({
+        getId: () => id,
+        getTemplateId: () => validTemplateId,
+        isDraft: () => false,
+      });
+
+      it('allows the old release as a separate demo while releasing a new version', () => {
+        const listing = paidListing();
+        const fullVersion = { schema: 1, scope: 'FULL_VERSION' };
+        expect(() => {
+          listing.setDemoPreview(releaseId, fullVersion, 'next-release-uuid');
+          listing.selectPublishedVersion(release('next-release-uuid'));
+        }).not.toThrow();
+        expect(listing.getPublishedVersionId()).toBe('next-release-uuid');
+        expect(listing.getDemoVersionId()).toBe(releaseId);
+      });
+
+      it('allows switching an existing demo to LIMITED while re-releasing that version', () => {
+        const listing = paidListing();
+        listing.setDemoPreview('old-demo-uuid', { schema: 1, scope: 'FULL_VERSION' });
+        expect(() => {
+          listing.setDemoPreview('old-demo-uuid', limitedConfig, 'old-demo-uuid');
+          listing.selectPublishedVersion(release('old-demo-uuid'));
+        }).not.toThrow();
+      });
+
+      it('still rejects a non-LIMITED demo equal to the target release', () => {
+        expect(() =>
+          paidListing().setDemoPreview(
+            'next-release-uuid',
+            { schema: 1, scope: 'FULL_VERSION' },
+            'next-release-uuid',
+          ),
+        ).toThrow('requires a LIMITED demo_config');
+      });
     });
   });
 });

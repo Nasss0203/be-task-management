@@ -6,7 +6,9 @@ export type WorkspaceResourceType =
   | 'workspace'
   | 'page'
   | 'page_block'
-  | 'attachment';
+  | 'attachment'
+  | 'database'
+  | 'database_row';
 
 export type WorkspaceContextMeta =
   | { source: 'param' | 'body' | 'query'; key: string }

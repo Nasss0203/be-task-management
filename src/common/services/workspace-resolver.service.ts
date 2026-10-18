@@ -12,6 +12,7 @@ type WorkspaceLookup = {
 
 type WorkspaceLookupRow = {
   workspaceId?: string;
+  pageId?: string;
 };
 
 type RequestWithWorkspaceContext = {
@@ -19,6 +20,8 @@ type RequestWithWorkspaceContext = {
   body?: Record<string, unknown>;
   query?: Record<string, unknown>;
   workspaceId?: string;
+  // Page that owns a database resource; the guard authorizes against it.
+  authorizationPageId?: string;
 };
 
 const UUID_PATTERN =
@@ -46,6 +49,25 @@ const WORKSPACE_LOOKUPS: Record<WorkspaceResourceType, WorkspaceLookup> = {
     paramKeys: ['attachmentId', 'id'],
     query:
       'SELECT workspace_id AS "workspaceId" FROM attachments WHERE id = $1',
+  },
+  database: {
+    paramKeys: ['databaseId'],
+    query: `
+      SELECT p.workspace_id AS "workspaceId", p.id AS "pageId"
+      FROM databases d
+      INNER JOIN pages p ON p.id = d.page_id
+      WHERE d.id = $1
+    `,
+  },
+  database_row: {
+    paramKeys: ['rowId'],
+    query: `
+      SELECT p.workspace_id AS "workspaceId", p.id AS "pageId"
+      FROM database_rows r
+      INNER JOIN databases d ON d.id = r.database_id
+      INNER JOIN pages p ON p.id = d.page_id
+      WHERE r.id = $1
+    `,
   },
 };
 
@@ -158,6 +180,10 @@ export class WorkspaceResolverService {
       lookup.query,
       [entityId],
     );
+
+    if (rows?.[0]?.pageId) {
+      req.authorizationPageId = rows[0].pageId;
+    }
 
     return rows?.[0]?.workspaceId;
   }

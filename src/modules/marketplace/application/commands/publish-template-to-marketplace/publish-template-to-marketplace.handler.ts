@@ -201,7 +201,12 @@ export class PublishTemplateToMarketplaceHandler {
           (command.demoVersionId !== undefined ||
             command.demoConfig !== undefined) &&
           toBadRequest(() =>
-            listing!.setDemoPreview(command.demoVersionId, command.demoConfig),
+            // Check the demo against the version being released, not the old one.
+            listing!.setDemoPreview(
+              command.demoVersionId,
+              command.demoConfig,
+              version.getId(),
+            ),
           )
         ) {
           needsSave = true;
