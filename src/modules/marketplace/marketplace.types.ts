@@ -53,12 +53,19 @@ export const MARKETPLACE_TYPES = {
       'ProcessMarketplaceStripeWebhookHandler',
     ),
     RecordTemplateViewHandler: Symbol('RecordTemplateViewHandler'),
+    ListCreatorTemplateAnalyticsHandler: Symbol(
+      'ListCreatorTemplateAnalyticsHandler',
+    ),
+    GetCreatorTemplateAnalyticsHandler: Symbol(
+      'GetCreatorTemplateAnalyticsHandler',
+    ),
   },
   ports: {
     Distribution: Symbol('TemplateDistributionPort'),
     Entitlements: Symbol('TemplateEntitlementPort'),
     FreeClaims: Symbol('TemplateFreeClaimPort'),
     CreatorReader: Symbol('TemplateCreatorReader'),
+    AnalyticsReader: Symbol('TemplateAnalyticsReader'),
   },
   services: {
     TemplatePurchaseSettlementService: Symbol(

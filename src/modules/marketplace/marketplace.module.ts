@@ -1,5 +1,9 @@
 import { GetMyTemplatePurchasesHandler } from './application/queries/template-purchase/get-my-template-purchases/get-my-template-purchases.handler';
 import { TypeOrmTemplateCreatorReader } from './infrastructure/persistence/typeorm/readers/typeorm-template-creator.reader';
+import { TypeOrmTemplateAnalyticsReader } from './infrastructure/persistence/typeorm/readers/typeorm-template-analytics.reader';
+import { GetCreatorTemplateAnalyticsHandler } from './application/queries/template-analytics/get-creator-template-analytics/get-creator-template-analytics.handler';
+import { ListCreatorTemplateAnalyticsHandler } from './application/queries/template-analytics/list-creator-template-analytics/list-creator-template-analytics.handler';
+import { CreatorTemplateAnalyticsController } from './presentation/http/controllers/creator-template-analytics.controller';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
@@ -231,6 +235,20 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
       provide: MARKETPLACE_TYPES.applications.RecordTemplateViewHandler,
       useClass: RecordTemplateViewHandler,
     },
+    {
+      provide: MARKETPLACE_TYPES.ports.AnalyticsReader,
+      useClass: TypeOrmTemplateAnalyticsReader,
+    },
+    {
+      provide:
+        MARKETPLACE_TYPES.applications.ListCreatorTemplateAnalyticsHandler,
+      useClass: ListCreatorTemplateAnalyticsHandler,
+    },
+    {
+      provide:
+        MARKETPLACE_TYPES.applications.GetCreatorTemplateAnalyticsHandler,
+      useClass: GetCreatorTemplateAnalyticsHandler,
+    },
   ],
   controllers: [
     MyClaimedTemplatesController,
@@ -239,6 +257,7 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
     TemplateEntitlementController,
     PublicTemplateCategoryController,
     TemplatePurchaseController,
+    CreatorTemplateAnalyticsController,
   ],
   exports: [
     MARKETPLACE_TYPES.ports.Distribution,

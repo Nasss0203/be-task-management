@@ -1,0 +1,75 @@
+/**
+ * Calendar-day range in `timeZone`, both ends inclusive (YYYY-MM-DD).
+ * `from: null` means all-time.
+ */
+export interface TemplateAnalyticsRange {
+  from: string | null;
+  to: string;
+  timeZone: string;
+}
+
+export interface TemplateAnalyticsTotals {
+  views: number;
+  uniqueViewers: number;
+  guestViews: number;
+  uses: number;
+  paidPurchases: number;
+  grossRevenue: number;
+}
+
+export interface TemplateAnalyticsTemplateTotals {
+  templateId: string;
+  name: string;
+  totals: TemplateAnalyticsTotals;
+}
+
+export interface TemplateAnalyticsDailyPoint {
+  date: string;
+  views: number;
+  uses: number;
+  paidPurchases: number;
+  grossRevenue: number;
+}
+
+export interface TemplateAnalyticsVersionPoint {
+  versionId: string;
+  versionNumber: number;
+  uses: number;
+  paidPurchases: number;
+  grossRevenue: number;
+}
+
+export interface TemplateAnalyticsOwner {
+  createdBy: string;
+  createdAt: Date;
+}
+
+/**
+ * Creator analytics read side. Views/uses exclude the template creator's own
+ * events; revenue counts PAID purchases by paid_at only.
+ */
+export interface TemplateAnalyticsReader {
+  findTemplateOwner(templateId: string): Promise<TemplateAnalyticsOwner | null>;
+
+  listCreatorTotals(
+    creatorId: string,
+    range: TemplateAnalyticsRange,
+  ): Promise<TemplateAnalyticsTemplateTotals[]>;
+
+  getTemplateTotals(
+    templateId: string,
+    range: TemplateAnalyticsRange,
+  ): Promise<TemplateAnalyticsTotals>;
+
+  /** One zero-filled point per day; requires a bounded range. */
+  getTemplateDaily(
+    templateId: string,
+    range: TemplateAnalyticsRange & { from: string },
+  ): Promise<TemplateAnalyticsDailyPoint[]>;
+
+  /** Published versions plus any version with activity in the range. */
+  getTemplateVersions(
+    templateId: string,
+    range: TemplateAnalyticsRange,
+  ): Promise<TemplateAnalyticsVersionPoint[]>;
+}
