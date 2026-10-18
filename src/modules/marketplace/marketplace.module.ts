@@ -15,6 +15,7 @@ import { UnpublishTemplateListingHandler } from './application/commands/template
 import { UpdateTemplateListingPricingHandler } from './application/commands/template-listing/update-template-listing-pricing/update-template-listing-pricing.handler';
 import { ResolveTemplatePurchaseReconciliationHandler } from './application/commands/template-purchase/resolve-template-purchase-reconciliation/resolve-template-purchase-reconciliation.handler';
 import { CreateTemplatePurchaseCheckoutHandler } from './application/commands/template-purchase/create-template-purchase-checkout/create-template-purchase-checkout.handler';
+import { GetTemplatePurchaseHandler } from './application/queries/template-purchase/get-template-purchase/get-template-purchase.handler';
 import { CreateTemplatePurchaseHandler } from './application/commands/template-purchase/create-template-purchase/create-template-purchase.handler';
 import { ProcessMarketplaceStripeWebhookHandler } from './application/commands/template-purchase/process-stripe-webhook/process-marketplace-stripe-webhook.handler';
 import { ListPublicTemplatesHandler } from './application/queries/page-template/list-public-templates/list-public-templates.handler';
@@ -152,6 +153,10 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
     {
       provide: MARKETPLACE_TYPES.applications.CreateTemplatePurchaseHandler,
       useClass: CreateTemplatePurchaseHandler,
+    },
+    {
+      provide: MARKETPLACE_TYPES.applications.GetTemplatePurchaseHandler,
+      useClass: GetTemplatePurchaseHandler,
     },
     {
       provide:

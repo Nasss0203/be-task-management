@@ -13,6 +13,7 @@ export class CreateTemplatePurchaseResponseDto {
   currency: string;
   status: TemplatePurchaseStatus;
   expiresAt: Date;
+  paidAt: Date | null;
   createdAt: Date;
 
   static fromDomain(
@@ -29,6 +30,7 @@ export class CreateTemplatePurchaseResponseDto {
     dto.currency = purchase.getCurrency();
     dto.status = purchase.getStatus();
     dto.expiresAt = purchase.getExpiresAt();
+    dto.paidAt = purchase.getPaidAt();
     dto.createdAt = purchase.getCreatedAt();
 
     return dto;

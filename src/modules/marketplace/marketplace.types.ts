@@ -12,6 +12,7 @@ export const MARKETPLACE_TYPES = {
     ),
   },
   applications: {
+    GetTemplatePurchaseHandler: Symbol('GetTemplatePurchaseHandler'),
     ResolveTemplatePurchaseReconciliationHandler: Symbol(
       'ResolveTemplatePurchaseReconciliationHandler',
     ),

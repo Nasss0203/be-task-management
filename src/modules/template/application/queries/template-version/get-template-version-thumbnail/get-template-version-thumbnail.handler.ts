@@ -20,16 +20,16 @@ import { TEMPLATE_TYPES } from 'src/modules/template/template.types';
 import type { ObjectStoragePort } from 'src/shared/application/ports/object-storage.port';
 import { STORAGE_TYPES } from 'src/shared/infrastructure/storage/storage.types';
 
-import { GetTemplateVersionThumbnailQuery } from './get-template-version-thumbnail.query';
-import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
 import type {
   TemplateDistributionPort,
   TemplateEntitlementPort,
 } from 'src/modules/marketplace/application/ports/template-distribution.port';
-import type { TemplateMarketplaceReleaseRepository } from 'src/modules/marketplace/domain/repositories/template-marketplace-release.repository';
 import { TemplateEntitlementSource } from 'src/modules/marketplace/domain/enums/template-entitlement-source.enum';
 import { TemplateOfferType } from 'src/modules/marketplace/domain/enums/template-offer-type.enum';
+import type { TemplateMarketplaceReleaseRepository } from 'src/modules/marketplace/domain/repositories/template-marketplace-release.repository';
 import { TemplateDemoConfig } from 'src/modules/marketplace/domain/value-objects/template-demo-config.vo';
+import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
+import { GetTemplateVersionThumbnailQuery } from './get-template-version-thumbnail.query';
 
 const THUMBNAIL_SIGNED_URL_EXPIRES_IN_SECONDS = 900;
 
@@ -104,14 +104,6 @@ export class GetTemplateVersionThumbnailHandler {
      */
     const visibility = String(template.getVisibility());
     const versionStatus = String(version.getStatus());
-
-    console.log('[thumbnail-public-check]', {
-      templateId: query.templateId,
-      versionId: query.versionId,
-      visibility,
-      versionStatus,
-      userId: query.userId,
-    });
 
     const isPublicPublished =
       visibility === 'PUBLIC' && versionStatus === 'PUBLISHED';

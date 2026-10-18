@@ -2,14 +2,19 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Headers,
   Inject,
   Param,
+  ParseUUIDPipe,
   Post,
 } from '@nestjs/common';
 
 import { Auth } from 'src/common/decorator/auth.decorator';
-import { WriteRateLimit } from 'src/common/decorator/rate-limit.decorator';
+import {
+  ReadRateLimit,
+  WriteRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 
 import type { IAuth } from 'src/types/auth';
@@ -22,6 +27,8 @@ import { CreateTemplatePurchaseCheckoutDto } from 'src/modules/marketplace/appli
 import { CreateTemplatePurchaseCommand } from '../../../application/commands/template-purchase/create-template-purchase/create-template-purchase.command';
 import { CreateTemplatePurchaseHandler } from '../../../application/commands/template-purchase/create-template-purchase/create-template-purchase.handler';
 import { CreateTemplatePurchaseResponseDto } from '../../../application/dto/template-purchase/create-template-purchase.response.dto';
+import { GetTemplatePurchaseHandler } from '../../../application/queries/template-purchase/get-template-purchase/get-template-purchase.handler';
+import { GetTemplatePurchaseQuery } from '../../../application/queries/template-purchase/get-template-purchase/get-template-purchase.query';
 
 @Controller('templates')
 export class TemplatePurchaseController {
@@ -33,7 +40,23 @@ export class TemplatePurchaseController {
       MARKETPLACE_TYPES.applications.CreateTemplatePurchaseCheckoutHandler,
     )
     private readonly createTemplatePurchaseCheckoutHandler: CreateTemplatePurchaseCheckoutHandler,
+
+    @Inject(MARKETPLACE_TYPES.applications.GetTemplatePurchaseHandler)
+    private readonly getTemplatePurchaseHandler: GetTemplatePurchaseHandler,
   ) {}
+
+  // Read-only status for the buyer (e.g. after returning from Stripe).
+  @Get('purchases/:purchaseId')
+  @ReadRateLimit()
+  @ResponseMessage('Template purchase retrieved successfully')
+  async findOne(
+    @Param('purchaseId', ParseUUIDPipe) purchaseId: string,
+    @Auth() auth: IAuth,
+  ): Promise<CreateTemplatePurchaseResponseDto> {
+    return this.getTemplatePurchaseHandler.execute(
+      new GetTemplatePurchaseQuery(purchaseId, auth.id),
+    );
+  }
 
   @Post(':templateId/purchases')
   @WriteRateLimit()
