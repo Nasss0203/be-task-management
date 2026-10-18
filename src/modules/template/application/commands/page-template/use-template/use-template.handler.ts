@@ -45,6 +45,9 @@ import { TemplateListingStatus } from 'src/modules/marketplace/domain/enums/temp
 import { TemplateEntitlementSource } from 'src/modules/marketplace/domain/enums/template-entitlement-source.enum';
 import { TemplateOfferType } from 'src/modules/marketplace/domain/enums/template-offer-type.enum';
 import type { TemplateMarketplaceReleaseRepository } from 'src/modules/marketplace/domain/repositories/template-marketplace-release.repository';
+import { TemplateAnalyticsEvent } from 'src/modules/marketplace/domain/entities/template-analytics-event.entity';
+import { TemplateAnalyticsEventType } from 'src/modules/marketplace/domain/enums/template-analytics-event-type.enum';
+import type { TemplateAnalyticsEventRepository } from 'src/modules/marketplace/domain/repositories/template-analytics-event.repository';
 import { UseTemplateCommand } from './use-template.command';
 
 export type UseTemplateResult = {
@@ -88,6 +91,9 @@ export class UseTemplateHandler {
 
     @Inject(MARKETPLACE_TYPES.ports.FreeClaims)
     private readonly freeClaims: TemplateFreeClaimPort,
+
+    @Inject(MARKETPLACE_TYPES.repositories.TemplateAnalyticsEventRepository)
+    private readonly analyticsEvents: TemplateAnalyticsEventRepository,
   ) {}
 
   async execute(command: UseTemplateCommand): Promise<UseTemplateResult> {
@@ -340,6 +346,19 @@ export class UseTemplateHandler {
           createdBy: command.userId,
           blocks: remappedBlocks,
         },
+        context,
+      );
+
+      // Same transaction as the clone: a rolled-back clone leaves no USE, and
+      // the new page ID makes a retried write a no-op.
+      await this.analyticsEvents.insertIfAbsent(
+        TemplateAnalyticsEvent.create({
+          templateId: template.getId(),
+          versionId: version.getId(),
+          eventType: TemplateAnalyticsEventType.USE,
+          userId: command.userId,
+          sourceId: pageResult.pageId,
+        }),
         context,
       );
 

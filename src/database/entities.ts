@@ -36,6 +36,8 @@ import { RefreshToken } from 'src/modules/identity/infrastructure/persistence/ty
 import { UserAuthIdentityOrmEntity } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user-auth-identity.orm-entity';
 import { UserProfile } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user-profile.orm-entity';
 import { User } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user.orm-entity';
+import { MarketplaceWebhookEventOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/marketplace-webhook-event.orm-entity';
+import { TemplateAnalyticsEventOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-analytics-event.orm-entity';
 import { TemplateCategoryOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-category.orm-entity';
 import { TemplateEntitlementOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-entitlement.orm-entity';
 import { TemplateListingCategoryOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-listing-category.orm-entity';
@@ -43,7 +45,6 @@ import { TemplateListingTagOrmEntity } from 'src/modules/marketplace/infrastruct
 import { TemplateListingOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-listing.orm-entity';
 import { TemplateMarketplaceReleaseOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-marketplace-release.orm-entity';
 import { TemplatePurchaseOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-purchase.orm-entity';
-import { MarketplaceWebhookEventOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/marketplace-webhook-event.orm-entity';
 import { Mention } from 'src/modules/mentions/infrastructure/persistence/typeorm/entities/mention.orm-entity';
 import { Notification } from 'src/modules/notifications/infrastructure/persistence/typeorm/entities/notification.orm-entity';
 import { Permission } from 'src/modules/permission/infrastructure/persistence/typeorm/entities/legacy-permission.orm-entity';
@@ -134,4 +135,5 @@ export const DATABASE_ENTITIES = [
   TemplateEntitlementOrmEntity,
   TemplatePurchaseOrmEntity,
   MarketplaceWebhookEventOrmEntity,
+  TemplateAnalyticsEventOrmEntity,
 ];

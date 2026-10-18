@@ -34,6 +34,8 @@ import type { PageTemplateRepository } from '../../../../domain/repositories/pag
 import type { TemplateEntitlementRepository } from '../../../../../marketplace/domain/repositories/template-entitlement.repository';
 import type { TemplateListingRepository } from '../../../../../marketplace/domain/repositories/template-listing.repository';
 import type { TemplateMarketplaceReleaseRepository } from '../../../../../marketplace/domain/repositories/template-marketplace-release.repository';
+import type { TemplateAnalyticsEventRepository } from '../../../../../marketplace/domain/repositories/template-analytics-event.repository';
+import { TemplateAnalyticsEventType } from '../../../../../marketplace/domain/enums/template-analytics-event-type.enum';
 import type { TemplateVersionRepository } from '../../../../domain/repositories/template-version.repository';
 import { UseTemplateCommand } from './use-template.command';
 import { UseTemplateHandler } from './use-template.handler';
@@ -50,6 +52,7 @@ describe('UseTemplateHandler Regression Tests', () => {
   let databaseProvisioning: jest.Mocked<DatabaseProvisioningPort>;
   let uow: jest.Mocked<UnitOfWork>;
   let authorizationService: jest.Mocked<AuthorizationService>;
+  let analyticsEvents: jest.Mocked<TemplateAnalyticsEventRepository>;
 
   let handler: UseTemplateHandler;
 
@@ -201,6 +204,11 @@ describe('UseTemplateHandler Regression Tests', () => {
       authorize: jest.fn(),
     } as unknown as jest.Mocked<AuthorizationService>;
 
+    analyticsEvents = {
+      insertIfAbsent: jest.fn().mockResolvedValue(true),
+      findById: jest.fn(),
+    } as unknown as jest.Mocked<TemplateAnalyticsEventRepository>;
+
     handler = new UseTemplateHandler(
       pageTemplateRepository,
       templateVersionRepository,
@@ -214,6 +222,7 @@ describe('UseTemplateHandler Regression Tests', () => {
       authorizationService,
       releaseRepository,
       freeClaims,
+      analyticsEvents,
     );
 
     // Default setups for blocks and databases
@@ -906,6 +915,63 @@ describe('UseTemplateHandler Regression Tests', () => {
       );
 
       expect(result).toEqual({ pageId: specificPageId });
+    });
+  });
+
+  describe('USE analytics event', () => {
+    beforeEach(() => {
+      pageTemplateRepository.findById.mockResolvedValue(createTemplate());
+      templateListingRepository.findByTemplateId.mockResolvedValue(
+        createListing(),
+      );
+      templateEntitlementRepository.findByTemplateAndUser.mockResolvedValue(
+        createEntitlement(claimingUserId),
+      );
+      templateVersionRepository.findById.mockResolvedValue(createVersion());
+    });
+
+    const execute = () =>
+      handler.execute(
+        new UseTemplateCommand(
+          templateId,
+          versionId,
+          destinationWorkspaceId,
+          claimingUserId,
+        ),
+      );
+
+    it('records one USE keyed by the new page in the clone transaction', async () => {
+      await execute();
+
+      expect(analyticsEvents.insertIfAbsent).toHaveBeenCalledTimes(1);
+      const [event, context] = analyticsEvents.insertIfAbsent.mock.calls[0];
+      expect(context).toBe(mockContext);
+      expect(event.getEventType()).toBe(TemplateAnalyticsEventType.USE);
+      expect(event.getTemplateId()).toBe(templateId);
+      expect(event.getVersionId()).toBe(versionId);
+      expect(event.getUserId()).toBe(claimingUserId);
+      expect(event.getSourceId()).toBe(newPageId);
+    });
+
+    it('still returns the page when the USE was already recorded', async () => {
+      analyticsEvents.insertIfAbsent.mockResolvedValue(false);
+
+      await expect(execute()).resolves.toEqual({ pageId: newPageId });
+    });
+
+    it('records nothing when the clone fails', async () => {
+      pageProvisioningPort.createBlocksFromSnapshot.mockRejectedValue(
+        new Error('clone failed'),
+      );
+
+      await expect(execute()).rejects.toThrow('clone failed');
+      expect(analyticsEvents.insertIfAbsent).not.toHaveBeenCalled();
+    });
+
+    it('fails the use when the analytics write fails, so the transaction rolls back', async () => {
+      analyticsEvents.insertIfAbsent.mockRejectedValue(new Error('db down'));
+
+      await expect(execute()).rejects.toThrow('db down');
     });
   });
 

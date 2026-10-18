@@ -9,6 +9,7 @@ import { TemplateContentModule } from '../template/template-content.module';
 import { PublishTemplateToMarketplaceHandler } from './application/commands/publish-template-to-marketplace/publish-template-to-marketplace.handler';
 import { CreateTemplateCategoryHandler } from './application/commands/template-category/create-template-category/create-template-category.handler';
 import { UpdateTemplateCategoryHandler } from './application/commands/template-category/update-template-category/update-template-category.handler';
+import { RecordTemplateViewHandler } from './application/commands/template-analytics/record-template-view/record-template-view.handler';
 import { ClaimFreeTemplateHandler } from './application/commands/template-entitlement/claim-free-template/claim-free-template.handler';
 import { FreeTemplateClaimService } from './application/services/free-template-claim.service';
 import { CreateTemplateListingHandler } from './application/commands/template-listing/create-template-listing/create-template-listing.handler';
@@ -39,12 +40,14 @@ import { TemplateListingOrmEntity } from './infrastructure/persistence/typeorm/e
 import { TemplatePurchaseOrmEntity } from './infrastructure/persistence/typeorm/entities/template-purchase.orm-entity';
 import { TemplateMarketplaceReleaseOrmEntity } from './infrastructure/persistence/typeorm/entities/template-marketplace-release.orm-entity';
 import { MarketplaceWebhookEventOrmEntity } from './infrastructure/persistence/typeorm/entities/marketplace-webhook-event.orm-entity';
+import { TemplateAnalyticsEventOrmEntity } from './infrastructure/persistence/typeorm/entities/template-analytics-event.orm-entity';
 import { TypeOrmTemplateCategoryRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-category.repository';
 import { TypeOrmTemplateEntitlementRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-entitlement.repository';
 import { TypeOrmTemplateListingRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-listing.repository';
 import { TypeOrmTemplatePurchaseRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-purchase.repository';
 import { TypeOrmTemplateMarketplaceReleaseRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-marketplace-release.repository';
 import { TypeOrmMarketplaceWebhookEventRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-marketplace-webhook-event.repository';
+import { TypeOrmTemplateAnalyticsEventRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-analytics-event.repository';
 import { MyClaimedTemplatesController } from './presentation/http/controllers/my-claimed-templates.controller';
 import { PublicTemplateCategoryController } from './presentation/http/controllers/public-template-category.controller';
 import { PublicTemplateController } from './presentation/http/controllers/public-template.controller';
@@ -66,6 +69,7 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
       TemplatePurchaseOrmEntity,
       TemplateMarketplaceReleaseOrmEntity,
       MarketplaceWebhookEventOrmEntity,
+      TemplateAnalyticsEventOrmEntity,
     ]),
   ],
   providers: [
@@ -203,6 +207,10 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
       useClass: TypeOrmMarketplaceWebhookEventRepository,
     },
     {
+      provide: MARKETPLACE_TYPES.repositories.TemplateAnalyticsEventRepository,
+      useClass: TypeOrmTemplateAnalyticsEventRepository,
+    },
+    {
       provide: MARKETPLACE_TYPES.services.TemplatePurchaseSettlementService,
       useClass: TemplatePurchaseSettlementService,
     },
@@ -219,6 +227,10 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
         MARKETPLACE_TYPES.applications.ProcessMarketplaceStripeWebhookHandler,
       useClass: ProcessMarketplaceStripeWebhookHandler,
     },
+    {
+      provide: MARKETPLACE_TYPES.applications.RecordTemplateViewHandler,
+      useClass: RecordTemplateViewHandler,
+    },
   ],
   controllers: [
     MyClaimedTemplatesController,
@@ -233,6 +245,7 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
     MARKETPLACE_TYPES.ports.Entitlements,
     MARKETPLACE_TYPES.ports.FreeClaims,
     MARKETPLACE_TYPES.repositories.TemplateMarketplaceReleaseRepository,
+    MARKETPLACE_TYPES.repositories.TemplateAnalyticsEventRepository,
     MARKETPLACE_TYPES.applications.CreateTemplateCategoryHandler,
     MARKETPLACE_TYPES.applications.ListTemplateCategoriesHandler,
     MARKETPLACE_TYPES.applications.UpdateTemplateCategoryHandler,

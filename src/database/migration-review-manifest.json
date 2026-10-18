@@ -136,6 +136,10 @@
     {
       "file": "1792309696611-CreateTemplateListingTags.ts",
       "sha256": "73d2a8b5f705f8346d69cb28644a936c2df0d065fe509507bc66fd6d908df267"
+    },
+    {
+      "file": "1792329003733-CreateTemplateAnalyticsEvents.ts",
+      "sha256": "e5a555a6dfbeb594003c6c84b5e0cc50eac46b711b5f12d4d946051ca0bcf8b8"
     }
   ]
 }

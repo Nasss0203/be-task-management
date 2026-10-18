@@ -10,6 +10,9 @@ export const MARKETPLACE_TYPES = {
     MarketplaceWebhookEventRepository: Symbol(
       'MarketplaceWebhookEventRepository',
     ),
+    TemplateAnalyticsEventRepository: Symbol(
+      'TemplateAnalyticsEventRepository',
+    ),
   },
   applications: {
     GetTemplatePurchaseHandler: Symbol('GetTemplatePurchaseHandler'),
@@ -49,6 +52,7 @@ export const MARKETPLACE_TYPES = {
     ProcessMarketplaceStripeWebhookHandler: Symbol(
       'ProcessMarketplaceStripeWebhookHandler',
     ),
+    RecordTemplateViewHandler: Symbol('RecordTemplateViewHandler'),
   },
   ports: {
     Distribution: Symbol('TemplateDistributionPort'),
