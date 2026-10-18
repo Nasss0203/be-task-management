@@ -132,6 +132,10 @@
     {
       "file": "1792200000000-BackfillOfficialMarketplaceReleases.ts",
       "sha256": "d1afa66f86c82eab79dd1546285e18e7cb994431ee9b67914ff4de725b67a00b"
+    },
+    {
+      "file": "1792309696611-CreateTemplateListingTags.ts",
+      "sha256": "73d2a8b5f705f8346d69cb28644a936c2df0d065fe509507bc66fd6d908df267"
     }
   ]
 }

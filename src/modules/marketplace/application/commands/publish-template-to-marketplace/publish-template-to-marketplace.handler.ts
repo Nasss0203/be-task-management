@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { normalizeTemplateTags } from '../../../domain/value-objects/template-tags';
 import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
 import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
@@ -99,6 +100,10 @@ export class PublishTemplateToMarketplaceHandler {
         );
       if (!version.isPublished())
         throw new BadRequestException('Template version must be published');
+      const normalizedTags =
+        command.tags === undefined
+          ? undefined
+          : toBadRequest(() => normalizeTemplateTags(command.tags!));
       const normalizedCategoryIds =
         command.categoryIds === undefined
           ? undefined
@@ -240,6 +245,9 @@ export class PublishTemplateToMarketplaceHandler {
           context,
         );
       }
+      if (normalizedTags !== undefined) {
+        await this.listings.replaceTags(listing.getId(), normalizedTags, context);
+      }
       const listingCategories = await this.listings.findCategoriesByTemplateIds(
         [listing.getTemplateId()],
         { activeOnly: false },
@@ -251,6 +259,12 @@ export class PublishTemplateToMarketplaceHandler {
         listing: TemplateListingResponseDto.fromDomain(
           listing,
           listingCategories.get(listing.getTemplateId()) ?? [],
+          (
+            await this.listings.findTagsByTemplateIds(
+              [listing.getTemplateId()],
+              context,
+            )
+          ).get(listing.getTemplateId()) ?? [],
         ),
       };
     });

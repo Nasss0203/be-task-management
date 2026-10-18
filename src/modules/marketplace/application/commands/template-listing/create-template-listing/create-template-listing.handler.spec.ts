@@ -42,6 +42,7 @@ describe('CreateTemplateListingHandler previewMode', () => {
     templateListingRepository = {
       findByTemplateId: jest.fn().mockResolvedValue(null),
       create: jest.fn().mockImplementation((listing) => Promise.resolve(listing)),
+      findTagsByTemplateIds: jest.fn().mockResolvedValue(new Map()),
       findCategoriesByTemplateIds: jest.fn().mockResolvedValue(new Map()),
     };
     unitOfWork = {

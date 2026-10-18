@@ -1,3 +1,5 @@
+import type { TemplateCreatorReader } from '../../../ports/template-creator-reader.port';
+import { toPublicCreator } from '../../../dto/page-template/public-template-creator';
 import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
@@ -16,6 +18,8 @@ export class GetPublicTemplateDetailHandler {
     private readonly pageTemplateRepository: TemplateContentPort,
     @Inject(MARKETPLACE_TYPES.repositories.TemplateListingRepository)
     private readonly templateListingRepository: TemplateListingRepository,
+    @Inject(MARKETPLACE_TYPES.ports.CreatorReader)
+    private readonly creatorReader: TemplateCreatorReader,
   ) {}
 
   async execute(
@@ -38,6 +42,12 @@ export class GetPublicTemplateDetailHandler {
         [templateId],
         { activeOnly: true },
       );
+    const [tagsByTemplate, creators] = await Promise.all([
+      this.templateListingRepository.findTagsByTemplateIds([templateId]),
+      this.creatorReader.findProfiles([
+        result.template.getCreatedBy(),
+      ]),
+    ]);
     return {
       ...PageTemplateResponseDto.fromDomain(result.template),
       offer_type: listing.getOfferType(),
@@ -48,6 +58,8 @@ export class GetPublicTemplateDetailHandler {
       categories: (categoriesByTemplate.get(templateId) ?? []).map(
         ({ id, name, slug }) => ({ id, name, slug }),
       ),
+      tags: tagsByTemplate.get(templateId) ?? [],
+      creator: toPublicCreator(creators.get(result.template.getCreatedBy())),
     };
   }
 }

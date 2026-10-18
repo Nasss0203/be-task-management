@@ -191,6 +191,9 @@ export class UpdateTemplateListingPricingHandler {
       return TemplateListingResponseDto.fromDomain(
         listing,
         categories.get(command.templateId) ?? [],
+        (
+          await this.listings.findTagsByTemplateIds([command.templateId], context)
+        ).get(command.templateId) ?? [],
       );
     });
   }

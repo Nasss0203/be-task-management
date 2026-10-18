@@ -1,3 +1,4 @@
+import { TypeOrmTemplateCreatorReader } from './infrastructure/persistence/typeorm/readers/typeorm-template-creator.reader';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
@@ -32,6 +33,7 @@ import { TemplatePurchaseEligibilityService } from './application/services/templ
 import { TemplateCategoryOrmEntity } from './infrastructure/persistence/typeorm/entities/template-category.orm-entity';
 import { TemplateEntitlementOrmEntity } from './infrastructure/persistence/typeorm/entities/template-entitlement.orm-entity';
 import { TemplateListingCategoryOrmEntity } from './infrastructure/persistence/typeorm/entities/template-listing-category.orm-entity';
+import { TemplateListingTagOrmEntity } from './infrastructure/persistence/typeorm/entities/template-listing-tag.orm-entity';
 import { TemplateListingOrmEntity } from './infrastructure/persistence/typeorm/entities/template-listing.orm-entity';
 import { TemplatePurchaseOrmEntity } from './infrastructure/persistence/typeorm/entities/template-purchase.orm-entity';
 import { TemplateMarketplaceReleaseOrmEntity } from './infrastructure/persistence/typeorm/entities/template-marketplace-release.orm-entity';
@@ -58,6 +60,7 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
       TemplateListingOrmEntity,
       TemplateCategoryOrmEntity,
       TemplateListingCategoryOrmEntity,
+      TemplateListingTagOrmEntity,
       TemplateEntitlementOrmEntity,
       TemplatePurchaseOrmEntity,
       TemplateMarketplaceReleaseOrmEntity,
@@ -197,6 +200,10 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
     {
       provide: MARKETPLACE_TYPES.services.TemplatePurchaseSettlementService,
       useClass: TemplatePurchaseSettlementService,
+    },
+    {
+      provide: MARKETPLACE_TYPES.ports.CreatorReader,
+      useClass: TypeOrmTemplateCreatorReader,
     },
     {
       provide: MARKETPLACE_TYPES.services.TemplatePurchaseEligibilityService,

@@ -4,5 +4,7 @@ export class ListPublicTemplatesQuery {
     public readonly cursor?: string,
     public readonly limit?: number,
     public readonly category?: string,
+    public readonly tag?: string,
+    public readonly offerType?: 'FREE' | 'PAID',
   ) {}
 }

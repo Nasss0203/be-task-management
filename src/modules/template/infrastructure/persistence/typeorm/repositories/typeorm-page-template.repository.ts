@@ -18,6 +18,7 @@ import { TemplateListScope } from '../../../../presentation/http/requests/list-p
 import { PageTemplateVersionOrmEntity } from '../entities/page-template-version.orm-entity';
 import { TemplateListingOrmEntity } from '../../../../../marketplace/infrastructure/persistence/typeorm/entities/template-listing.orm-entity';
 import { TemplateListingCategoryOrmEntity } from '../../../../../marketplace/infrastructure/persistence/typeorm/entities/template-listing-category.orm-entity';
+import { TemplateListingTagOrmEntity } from '../../../../../marketplace/infrastructure/persistence/typeorm/entities/template-listing-tag.orm-entity';
 import { PageTemplateOrmEntity } from '../entities/page-template.orm-entity';
 import { PageTemplateMapper } from '../mappers/page-template.mapper';
 import { TemplateVersionMapper } from '../mappers/template-version.mapper';
@@ -219,6 +220,46 @@ export class TypeOrmPageTemplateRepository implements PageTemplateRepository {
       );
     }
 
+    if (filters.scope === TemplateListScope.PUBLIC && filters.tag !== undefined) {
+      qb.andWhere(
+        (subQb) => {
+          const taggedListing = subQb
+            .subQuery()
+            .select('1')
+            .from(TemplateListingTagOrmEntity, 'filterTag')
+            .innerJoin(
+              TemplateListingOrmEntity,
+              'tagListing',
+              'tagListing.id = filterTag.listingId',
+            )
+            .where('tagListing.templateId = template.id')
+            .andWhere('filterTag.tag = :filterTag')
+            .getQuery();
+          return 'EXISTS ' + taggedListing;
+        },
+        { filterTag: filters.tag },
+      );
+    }
+
+    if (
+      filters.scope === TemplateListScope.PUBLIC &&
+      filters.offerType !== undefined
+    ) {
+      qb.andWhere(
+        (subQb) => {
+          const offerListing = subQb
+            .subQuery()
+            .select('1')
+            .from(TemplateListingOrmEntity, 'offerListing')
+            .where('offerListing.templateId = template.id')
+            .andWhere('offerListing.offerType = :filterOfferType')
+            .getQuery();
+          return 'EXISTS ' + offerListing;
+        },
+        { filterOfferType: filters.offerType },
+      );
+    }
+
     if (filters.search) {
       qb.andWhere(
         new Brackets((subQb) => {
@@ -229,6 +270,24 @@ export class TypeOrmPageTemplateRepository implements PageTemplateRepository {
             .orWhere('template.description ILIKE :search', {
               search: `%${filters.search}%`,
             });
+          // The public catalog also finds templates by their tags.
+          if (filters.scope === TemplateListScope.PUBLIC) {
+            subQb.orWhere((tagQb) => {
+              const taggedListing = tagQb
+                .subQuery()
+                .select('1')
+                .from(TemplateListingTagOrmEntity, 'searchTag')
+                .innerJoin(
+                  TemplateListingOrmEntity,
+                  'searchTagListing',
+                  'searchTagListing.id = searchTag.listingId',
+                )
+                .where('searchTagListing.templateId = template.id')
+                .andWhere('searchTag.tag ILIKE :search')
+                .getQuery();
+              return 'EXISTS ' + taggedListing;
+            });
+          }
         }),
       );
     }

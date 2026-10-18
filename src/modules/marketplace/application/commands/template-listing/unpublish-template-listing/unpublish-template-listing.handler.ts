@@ -92,6 +92,9 @@ export class UnpublishTemplateListingHandler {
       return TemplateListingResponseDto.fromDomain(
         savedListing,
         listingCategories.get(savedListing.getTemplateId()) ?? [],
+        (
+          await this.templateListingRepository.findTagsByTemplateIds([savedListing.getTemplateId()], context)
+        ).get(savedListing.getTemplateId()) ?? [],
       );
     });
   }

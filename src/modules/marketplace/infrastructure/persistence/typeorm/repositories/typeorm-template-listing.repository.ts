@@ -10,6 +10,7 @@ import type {
 } from '../../../../domain/repositories/template-listing.repository';
 import { TemplateListingOrmEntity } from '../entities/template-listing.orm-entity';
 import { TemplateListingCategoryOrmEntity } from '../entities/template-listing-category.orm-entity';
+import { TemplateListingTagOrmEntity } from '../entities/template-listing-tag.orm-entity';
 import { TemplateListingMapper } from '../mappers/template-listing.mapper';
 
 @Injectable()
@@ -167,6 +168,46 @@ export class TypeOrmTemplateListingRepository implements TemplateListingReposito
       await associations.insert(
         toAdd.map((categoryId) => ({ listingId, categoryId })),
       );
+    }
+  }
+
+  async findTagsByTemplateIds(
+    templateIds: string[],
+    context?: PersistenceContext,
+  ): Promise<Map<string, string[]>> {
+    const ids = [...new Set(templateIds)];
+    const result = new Map<string, string[]>(ids.map((id) => [id, []]));
+    if (ids.length === 0) return result;
+
+    const rows = await this.getRepo(context)
+      .manager.getRepository(TemplateListingTagOrmEntity)
+      .createQueryBuilder('tag')
+      .innerJoin('tag.listing', 'listing')
+      .select('listing.templateId', 'templateId')
+      .addSelect('tag.tag', 'tag')
+      .where('listing.templateId IN (:...templateIds)', { templateIds: ids })
+      .orderBy('tag.tag', 'ASC')
+      .getRawMany<{ templateId: string; tag: string }>();
+
+    for (const row of rows) result.get(row.templateId)?.push(row.tag);
+    return result;
+  }
+
+  async replaceTags(
+    listingId: string,
+    tags: string[],
+    context: PersistenceContext,
+  ): Promise<void> {
+    if (!context) {
+      throw new Error('replaceTags requires a transaction context');
+    }
+
+    const repository = this.getRepo(context).manager.getRepository(
+      TemplateListingTagOrmEntity,
+    );
+    await repository.delete({ listingId });
+    if (tags.length > 0) {
+      await repository.insert(tags.map((tag) => ({ listingId, tag })));
     }
   }
 

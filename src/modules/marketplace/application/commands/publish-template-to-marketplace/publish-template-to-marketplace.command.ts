@@ -13,5 +13,6 @@ export class PublishTemplateToMarketplaceCommand {
     public readonly previewMode?: TemplatePreviewMode,
     public readonly demoVersionId?: string | null,
     public readonly demoConfig?: Record<string, any> | null,
+    public readonly tags?: string[],
   ) {}
 }

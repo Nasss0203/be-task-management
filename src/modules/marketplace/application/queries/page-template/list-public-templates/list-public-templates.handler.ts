@@ -1,3 +1,5 @@
+import type { TemplateCreatorReader } from '../../../ports/template-creator-reader.port';
+import { toPublicCreator } from '../../../dto/page-template/public-template-creator';
 import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
 import {
   BadRequestException,
@@ -30,6 +32,8 @@ export class ListPublicTemplatesHandler {
     private readonly pageTemplateRepository: TemplateContentPort,
     @Inject(MARKETPLACE_TYPES.repositories.TemplateListingRepository)
     private readonly templateListingRepository: TemplateListingRepository,
+    @Inject(MARKETPLACE_TYPES.ports.CreatorReader)
+    private readonly creatorReader: TemplateCreatorReader,
   ) {}
 
   async execute(
@@ -62,6 +66,8 @@ export class ListPublicTemplatesHandler {
       requirePublishedVersion: true,
       search,
       ...(categorySlug !== undefined ? { categorySlug } : {}),
+      ...(query.tag !== undefined ? { tag: query.tag } : {}),
+      ...(query.offerType !== undefined ? { offerType: query.offerType } : {}),
       cursor,
       limit,
     });
@@ -77,6 +83,13 @@ export class ListPublicTemplatesHandler {
             { activeOnly: true },
           )
         : new Map<string, TemplateListingCategoryInfo[]>();
+    const templateIds = result.items.map((template) => template.getId());
+    const [tagsByTemplate, creators] = await Promise.all([
+      this.templateListingRepository.findTagsByTemplateIds(templateIds),
+      this.creatorReader.findProfiles(
+        result.items.map((template) => template.getCreatedBy()),
+      ),
+    ]);
     const items = result.items.map((template) => {
       const listing = listingsByTemplate.get(template.getId());
       if (!listing) throw new NotFoundException('Template listing not found');
@@ -90,6 +103,8 @@ export class ListPublicTemplatesHandler {
         categories: (categoriesByTemplate.get(template.getId()) ?? []).map(
           ({ id, name, slug }) => ({ id, name, slug }),
         ),
+        tags: tagsByTemplate.get(template.getId()) ?? [],
+        creator: toPublicCreator(creators.get(template.getCreatedBy())),
         version: version
           ? TemplateVersionResponseDto.fromDomain(version)
           : null,

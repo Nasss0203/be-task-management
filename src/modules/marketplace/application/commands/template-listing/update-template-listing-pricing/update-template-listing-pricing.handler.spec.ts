@@ -50,6 +50,7 @@ describe('UpdateTemplateListingPricingHandler previewMode', () => {
     templateListingRepository = {
       findByTemplateId: jest.fn().mockImplementation(() => Promise.resolve(mockListing)),
       save: jest.fn().mockImplementation((listing) => Promise.resolve(listing)),
+      findTagsByTemplateIds: jest.fn().mockResolvedValue(new Map()),
       findCategoriesByTemplateIds: jest.fn().mockResolvedValue(new Map()),
     };
     unitOfWork = {

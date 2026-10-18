@@ -69,6 +69,7 @@ describe('PublishTemplateToMarketplaceHandler Security & Demo Isolation', () => 
       create: jest.fn().mockImplementation((l) => Promise.resolve(l)),
       save: jest.fn().mockImplementation((l) => Promise.resolve(l)),
       replaceCategoryIds: jest.fn().mockResolvedValue(undefined),
+      findTagsByTemplateIds: jest.fn().mockResolvedValue(new Map()),
       findCategoriesByTemplateIds: jest.fn().mockResolvedValue(new Map()),
     };
     categories = {

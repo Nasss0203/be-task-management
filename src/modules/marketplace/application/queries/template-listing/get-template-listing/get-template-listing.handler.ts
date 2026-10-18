@@ -70,6 +70,9 @@ export class GetTemplateListingHandler {
     return TemplateListingResponseDto.fromDomain(
       listing,
       listingCategories.get(listing.getTemplateId()) ?? [],
+      (await this.templateListingRepository.findTagsByTemplateIds([listing.getTemplateId()])).get(
+        listing.getTemplateId(),
+      ) ?? [],
     );
   }
 }

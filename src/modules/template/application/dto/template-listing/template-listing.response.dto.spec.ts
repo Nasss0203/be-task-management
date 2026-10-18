@@ -37,6 +37,7 @@ describe('TemplateListingResponseDto', () => {
       updated_at: updatedAt,
       category_ids: [],
       categories: [],
+      tags: [],
     });
     expect(result.created_at).toBe(createdAt);
     expect(result.updated_at).toBe(updatedAt);

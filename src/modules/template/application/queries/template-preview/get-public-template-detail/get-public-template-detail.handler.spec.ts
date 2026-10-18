@@ -17,12 +17,15 @@ import { TemplateVersionResponseDto } from '../../../dto/template-version/templa
 describe('GetPublicTemplateDetailHandler category enrichment', () => {
   const templates = { findPublicById: jest.fn() };
   const listings = {
+    findTagsByTemplateIds: jest.fn().mockResolvedValue(new Map()),
     findCategoriesByTemplateIds: jest.fn(),
     findByTemplateId: jest.fn(),
   };
+  const creators = { findProfiles: jest.fn().mockResolvedValue(new Map()) };
   const handler = new GetPublicTemplateDetailHandler(
     templates as unknown as PageTemplateRepository,
     listings as unknown as TemplateListingRepository,
+    creators as never,
   );
   const template = PageTemplate.create({
     id: 't1',
@@ -50,6 +53,8 @@ describe('GetPublicTemplateDetailHandler category enrichment', () => {
   ];
   beforeEach(() => {
     jest.resetAllMocks();
+    listings.findTagsByTemplateIds.mockResolvedValue(new Map());
+    creators.findProfiles.mockResolvedValue(new Map());
     templates.findPublicById.mockResolvedValue({ template, version });
     listings.findByTemplateId.mockResolvedValue(listing);
     listings.findCategoriesByTemplateIds.mockImplementation(
@@ -70,6 +75,8 @@ describe('GetPublicTemplateDetailHandler category enrichment', () => {
     );
     expect(result).toEqual({
       ...PageTemplateResponseDto.fromDomain(template),
+      tags: [],
+      creator: null,
       offer_type: TemplateOfferType.FREE,
       price_amount: 0,
       currency: 'VND',
@@ -105,5 +112,26 @@ describe('GetPublicTemplateDetailHandler category enrichment', () => {
     expect(listings.findCategoriesByTemplateIds).toHaveBeenCalledWith(['t1'], {
       activeOnly: true,
     });
+  });
+
+  it('adds tags and a public creator byline without id or email', async () => {
+    listings.findTagsByTemplateIds.mockResolvedValue(
+      new Map([['t1', ['crm', 'sales-ops']]]),
+    );
+    creators.findProfiles.mockResolvedValue(
+      new Map([
+        [
+          template.getCreatedBy(),
+          { id: template.getCreatedBy(), username: 'nam', avatarUrl: null },
+        ],
+      ]),
+    );
+
+    const result = await handler.execute(
+      new GetPublicTemplateDetailQuery('t1'),
+    );
+
+    expect(result.tags).toEqual(['crm', 'sales-ops']);
+    expect(result.creator).toEqual({ username: 'nam', avatar_url: null });
   });
 });

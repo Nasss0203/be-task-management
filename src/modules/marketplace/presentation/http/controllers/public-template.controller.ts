@@ -37,6 +37,8 @@ export class PublicTemplateController {
         query.cursor,
         query.limit,
         query.category,
+        query.tag,
+        query.offer_type,
       ),
     );
   }

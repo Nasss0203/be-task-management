@@ -39,6 +39,7 @@ import { User } from 'src/modules/identity/infrastructure/persistence/typeorm/en
 import { TemplateCategoryOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-category.orm-entity';
 import { TemplateEntitlementOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-entitlement.orm-entity';
 import { TemplateListingCategoryOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-listing-category.orm-entity';
+import { TemplateListingTagOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-listing-tag.orm-entity';
 import { TemplateListingOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-listing.orm-entity';
 import { TemplateMarketplaceReleaseOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-marketplace-release.orm-entity';
 import { TemplatePurchaseOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-purchase.orm-entity';
@@ -129,6 +130,7 @@ export const DATABASE_ENTITIES = [
   TemplateMarketplaceReleaseOrmEntity,
   TemplateCategoryOrmEntity,
   TemplateListingCategoryOrmEntity,
+  TemplateListingTagOrmEntity,
   TemplateEntitlementOrmEntity,
   TemplatePurchaseOrmEntity,
   MarketplaceWebhookEventOrmEntity,

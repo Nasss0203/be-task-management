@@ -23,12 +23,15 @@ import { TemplatePreviewMode } from '../../../../../marketplace/domain/enums/tem
 describe('ListPublicTemplatesHandler category enrichment', () => {
   const templates = { findMany: jest.fn() };
   const listings = {
+    findTagsByTemplateIds: jest.fn().mockResolvedValue(new Map()),
     findCategoriesByTemplateIds: jest.fn(),
     findByTemplateIds: jest.fn(),
   };
+  const creators = { findProfiles: jest.fn().mockResolvedValue(new Map()) };
   const handler = new ListPublicTemplatesHandler(
     templates as unknown as PageTemplateRepository,
     listings as unknown as TemplateListingRepository,
+    creators as never,
   );
   const first = PageTemplate.create({
     id: '550e8400-e29b-41d4-a716-446655440001',
@@ -75,6 +78,8 @@ describe('ListPublicTemplatesHandler category enrichment', () => {
   ]);
   beforeEach(() => {
     jest.resetAllMocks();
+    listings.findTagsByTemplateIds.mockResolvedValue(new Map());
+    creators.findProfiles.mockResolvedValue(new Map());
     templates.findMany.mockResolvedValue({
       items: [first, second],
       versions: new Map([[first.getId(), version]]),
@@ -116,6 +121,8 @@ describe('ListPublicTemplatesHandler category enrichment', () => {
         ...PageTemplateResponseDto.fromDomain(first),
         version: TemplateVersionResponseDto.fromDomain(version),
         categories: [{ id: 'a', name: 'Esports', slug: 'esports' }],
+        tags: [],
+        creator: null,
         offer_type: 'FREE',
         price_amount: 0,
         currency: 'VND',
@@ -125,6 +132,8 @@ describe('ListPublicTemplatesHandler category enrichment', () => {
         ...PageTemplateResponseDto.fromDomain(second),
         version: null,
         categories: [{ id: 'b', name: 'Gaming', slug: 'gaming' }],
+        tags: [],
+        creator: null,
         offer_type: 'FREE',
         price_amount: 0,
         currency: 'VND',

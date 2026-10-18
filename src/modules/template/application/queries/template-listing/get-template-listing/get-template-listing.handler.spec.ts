@@ -22,6 +22,7 @@ describe('Listing management category responses', () => {
   const templates = { findById: jest.fn(), findByIdForUpdate: jest.fn() };
   const listings = {
     findByTemplateId: jest.fn(),
+    findTagsByTemplateIds: jest.fn().mockResolvedValue(new Map()),
     findCategoriesByTemplateIds: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
@@ -45,6 +46,7 @@ describe('Listing management category responses', () => {
   };
   beforeEach(() => {
     jest.resetAllMocks();
+    listings.findTagsByTemplateIds.mockResolvedValue(new Map());
     const template = PageTemplate.create({
       id: 't1',
       workspaceId: 'w1',

@@ -11,6 +11,7 @@ import { PageTemplateVersionOrmEntity } from '../entities/page-template-version.
 import { TemplateListingOrmEntity } from '../../../../../marketplace/infrastructure/persistence/typeorm/entities/template-listing.orm-entity';
 import { TemplateListingCategoryOrmEntity } from '../../../../../marketplace/infrastructure/persistence/typeorm/entities/template-listing-category.orm-entity';
 import { TemplateCategoryOrmEntity } from '../../../../../marketplace/infrastructure/persistence/typeorm/entities/template-category.orm-entity';
+import { TemplateListingTagOrmEntity } from '../../../../../marketplace/infrastructure/persistence/typeorm/entities/template-listing-tag.orm-entity';
 import { TemplateListScope } from '../../../../presentation/http/requests/list-page-templates.request';
 import { PageTemplate } from '../../../../domain/aggregates/page-template/page-template.aggregate';
 import { TemplateVersion } from '../../../../domain/aggregates/template-version/template-version.aggregate';
@@ -42,6 +43,7 @@ describe('Public category filtering SQL and pagination', () => {
       TemplateListingOrmEntity,
       TemplateListingCategoryOrmEntity,
       TemplateCategoryOrmEntity,
+      TemplateListingTagOrmEntity,
     ].map((target) => {
       const columns: Record<string, EntitySchemaColumnOptions> = {};
       for (const column of storage.columns.filter(
@@ -206,6 +208,24 @@ describe('Public category filtering SQL and pagination', () => {
       '"activeListing"."published_version_id" IS NULL OR "version"."id" = "activeListing"."published_version_id"',
     );
     expect(captured[1].parameters.templateIds).toEqual([template.getId()]);
+  });
+  it('filters the public catalog by tag and offer, and search also matches tags', async () => {
+    await repository.findMany({
+      scope: TemplateListScope.PUBLIC,
+      requirePublishedVersion: true,
+      tag: 'crm',
+      offerType: 'PAID',
+      search: 'sales',
+      limit: 20,
+    });
+    expect(captured[0].parameters).toMatchObject({
+      filterTag: 'crm',
+      filterOfferType: 'PAID',
+      search: '%sales%',
+    });
+    expect(captured[0].sql).toContain('"filterTag"."tag" = $');
+    expect(captured[0].sql).toContain('"offerListing"."offer_type" = $');
+    expect(captured[0].sql).toContain('"searchTag"."tag" ILIKE $');
   });
   it('returns no next page and skips version execution when the SQL result is empty', async () => {
     const result = await repository.findMany({

@@ -12,6 +12,9 @@ export type FindPageTemplatesFilters = {
   requirePublishedVersion?: boolean;
   search?: string;
   categorySlug?: string;
+  // Public catalog only: listing tag and FREE/PAID offer.
+  tag?: string;
+  offerType?: 'FREE' | 'PAID';
   cursor?: {
     createdAt: Date;
     id: string;

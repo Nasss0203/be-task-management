@@ -53,6 +53,7 @@ export const MARKETPLACE_TYPES = {
     Distribution: Symbol('TemplateDistributionPort'),
     Entitlements: Symbol('TemplateEntitlementPort'),
     FreeClaims: Symbol('TemplateFreeClaimPort'),
+    CreatorReader: Symbol('TemplateCreatorReader'),
   },
   services: {
     TemplatePurchaseSettlementService: Symbol(

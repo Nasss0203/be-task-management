@@ -26,6 +26,18 @@ export interface TemplateListingRepository {
     context: PersistenceContext,
   ): Promise<void>;
 
+  /** Normalized tags per template id (empty array when none). */
+  findTagsByTemplateIds(
+    templateIds: string[],
+    context?: PersistenceContext,
+  ): Promise<Map<string, string[]>>;
+
+  replaceTags(
+    listingId: string,
+    tags: string[],
+    context: PersistenceContext,
+  ): Promise<void>;
+
   create(
     listing: TemplateListing,
     context?: PersistenceContext,

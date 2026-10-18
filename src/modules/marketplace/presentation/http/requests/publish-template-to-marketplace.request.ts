@@ -9,6 +9,8 @@ import {
   Max,
   ValidateIf,
   IsObject,
+  ArrayMaxSize,
+  MaxLength,
 } from 'class-validator';
 import { TemplateOfferType } from '../../../domain/enums/template-offer-type.enum';
 import { TemplatePreviewMode } from '../../../domain/enums/template-preview-mode.enum';
@@ -36,6 +38,14 @@ export class PublishTemplateToMarketplaceRequest {
   @IsArray()
   @IsUUID('all', { each: true })
   category_ids?: string[];
+
+  // Free-form; normalized and limited (10) by normalizeTemplateTags.
+  @ValidateIf((_, value) => value !== undefined)
+  @IsArray()
+  @ArrayMaxSize(50)
+  @IsString({ each: true })
+  @MaxLength(64, { each: true })
+  tags?: string[];
 
   @ValidateIf((_, value) => value !== undefined)
   @IsEnum(TemplatePreviewMode)

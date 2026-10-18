@@ -1,0 +1,2 @@
+# Baseline SQL is hashed and parsed line by line; keep it LF on every OS.
+src/database/baselines/** text eol=lf

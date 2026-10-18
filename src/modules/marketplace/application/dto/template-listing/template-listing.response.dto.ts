@@ -28,10 +28,12 @@ export class TemplateListingResponseDto {
   updated_at: Date;
   category_ids: string[];
   categories: TemplateListingCategoryResponseDto[];
+  tags: string[];
 
   static fromDomain(
     listing: TemplateListing,
     categories: TemplateListingCategoryInfo[],
+    tags: string[] = [],
   ): TemplateListingResponseDto {
     const dto = new TemplateListingResponseDto();
 
@@ -56,6 +58,7 @@ export class TemplateListingResponseDto {
       is_active: category.isActive,
     }));
     dto.category_ids = dto.categories.map((category) => category.id);
+    dto.tags = tags;
 
     return dto;
   }

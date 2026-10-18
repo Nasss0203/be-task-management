@@ -99,6 +99,7 @@ export class TemplateListingController {
         request.preview_mode,
         request.demo_version_id,
         request.demo_config,
+        request.tags,
       ),
     );
   }
