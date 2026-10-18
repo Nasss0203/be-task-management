@@ -15,6 +15,8 @@ interface TemplateAnalyticsRangeDto {
 
 export interface CreatorTemplateAnalyticsListResponseDto extends TemplateAnalyticsRangeDto {
   items: TemplateAnalyticsTemplateTotals[];
+  /** Summed over all templates; empty when the creator has none. */
+  daily: TemplateAnalyticsDailyPoint[];
 }
 
 export interface CreatorTemplateAnalyticsResponseDto extends TemplateAnalyticsRangeDto {

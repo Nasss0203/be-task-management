@@ -31,6 +31,10 @@ describe('creator template analytics handlers', () => {
       getTemplateTotals: jest.fn().mockResolvedValue(totals),
       getTemplateDaily: jest.fn().mockResolvedValue([]),
       getTemplateVersions: jest.fn().mockResolvedValue([]),
+      getCreatorDaily: jest.fn().mockResolvedValue([]),
+      findCreatorFirstTemplateAt: jest
+        .fn()
+        .mockResolvedValue(new Date('2026-09-30T18:00:00.000Z')),
     };
   });
 
@@ -121,6 +125,49 @@ describe('creator template analytics handlers', () => {
       });
       expect(result.items).toHaveLength(1);
       expect(result.currency).toBe('VND');
+    });
+
+    it('adds a daily series summed over the bounded range', async () => {
+      const handler = new ListCreatorTemplateAnalyticsHandler(reader);
+
+      await handler.execute(
+        new ListCreatorTemplateAnalyticsQuery(
+          'creator-1',
+          '2026-10-12',
+          '2026-10-18',
+        ),
+      );
+
+      expect(reader.getCreatorDaily).toHaveBeenCalledWith('creator-1', {
+        from: '2026-10-12',
+        to: '2026-10-18',
+        timeZone: ANALYTICS_TIME_ZONE,
+      });
+      expect(reader.findCreatorFirstTemplateAt).not.toHaveBeenCalled();
+    });
+
+    it('starts an all-time series on the first template day in Vietnam time', async () => {
+      const result = await new ListCreatorTemplateAnalyticsHandler(
+        reader,
+      ).execute(new ListCreatorTemplateAnalyticsQuery('creator-1'));
+
+      expect(result.from).toBeNull();
+      // 18:00 UTC on Sep 30 is Oct 1 in Vietnam.
+      expect(reader.getCreatorDaily).toHaveBeenCalledWith(
+        'creator-1',
+        expect.objectContaining({ from: '2026-10-01', to: '2026-10-18' }),
+      );
+    });
+
+    it('skips the series when the creator has no templates', async () => {
+      reader.findCreatorFirstTemplateAt.mockResolvedValue(null);
+
+      const result = await new ListCreatorTemplateAnalyticsHandler(
+        reader,
+      ).execute(new ListCreatorTemplateAnalyticsQuery('creator-1'));
+
+      expect(result.daily).toEqual([]);
+      expect(reader.getCreatorDaily).not.toHaveBeenCalled();
     });
   });
 });

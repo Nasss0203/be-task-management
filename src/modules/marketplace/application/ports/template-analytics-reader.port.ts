@@ -67,6 +67,15 @@ export interface TemplateAnalyticsReader {
     range: TemplateAnalyticsRange & { from: string },
   ): Promise<TemplateAnalyticsDailyPoint[]>;
 
+  /** Same series summed over every template the creator owns. */
+  getCreatorDaily(
+    creatorId: string,
+    range: TemplateAnalyticsRange & { from: string },
+  ): Promise<TemplateAnalyticsDailyPoint[]>;
+
+  /** Creation time of the creator's oldest template; starts an all-time chart. */
+  findCreatorFirstTemplateAt(creatorId: string): Promise<Date | null>;
+
   /** Published versions plus any version with activity in the range. */
   getTemplateVersions(
     templateId: string,

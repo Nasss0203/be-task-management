@@ -80,61 +80,27 @@ export class TypeOrmTemplateAnalyticsReader implements TemplateAnalyticsReader {
         };
   }
 
-  async getTemplateDaily(
+  getTemplateDaily(
     templateId: string,
     range: TemplateAnalyticsRange & { from: string },
   ): Promise<TemplateAnalyticsDailyPoint[]> {
-    const rows: {
-      date: string;
-      views: number;
-      uses: number;
-      paid_purchases: number;
-      gross_revenue: string;
-    }[] = await this.dataSource.query(
-      `
-      WITH t AS (
-        SELECT id, created_by FROM page_templates WHERE id = $1
-      ),
-      days AS (
-        SELECT generate_series($2::date, $3::date, interval '1 day')::date AS day
-      ),
-      ev AS (
-        SELECT (e.created_at AT TIME ZONE $4::text)::date AS day,
-          COUNT(*) FILTER (WHERE e.event_type = 'VIEW') AS views,
-          COUNT(*) FILTER (WHERE e.event_type = 'USE') AS uses
-        FROM template_analytics_events e
-        JOIN t ON t.id = e.template_id
-        WHERE ${NOT_CREATOR} AND ${inRange('e.created_at')}
-        GROUP BY 1
-      ),
-      pu AS (
-        SELECT (p.paid_at AT TIME ZONE $4::text)::date AS day,
-          COUNT(*) AS paid_purchases,
-          SUM(p.amount) AS gross_revenue
-        FROM template_purchases p
-        WHERE p.template_id = $1 AND p.status = 'PAID' AND ${inRange('p.paid_at')}
-        GROUP BY 1
-      )
-      SELECT to_char(d.day, 'YYYY-MM-DD') AS date,
-        COALESCE(ev.views, 0)::int AS views,
-        COALESCE(ev.uses, 0)::int AS uses,
-        COALESCE(pu.paid_purchases, 0)::int AS paid_purchases,
-        COALESCE(pu.gross_revenue, 0)::text AS gross_revenue
-      FROM days d
-      LEFT JOIN ev ON ev.day = d.day
-      LEFT JOIN pu ON pu.day = d.day
-      ORDER BY d.day
-      `,
-      [templateId, range.from, range.to, range.timeZone],
+    return this.daily('id', templateId, range);
+  }
+
+  getCreatorDaily(
+    creatorId: string,
+    range: TemplateAnalyticsRange & { from: string },
+  ): Promise<TemplateAnalyticsDailyPoint[]> {
+    return this.daily('created_by', creatorId, range);
+  }
+
+  async findCreatorFirstTemplateAt(creatorId: string): Promise<Date | null> {
+    const rows: { first_at: Date | null }[] = await this.dataSource.query(
+      'SELECT MIN(created_at) AS first_at FROM page_templates WHERE created_by = $1',
+      [creatorId],
     );
 
-    return rows.map((row) => ({
-      date: row.date,
-      views: row.views,
-      uses: row.uses,
-      paidPurchases: row.paid_purchases,
-      grossRevenue: Number(row.gross_revenue),
-    }));
+    return rows[0]?.first_at ?? null;
   }
 
   async getTemplateVersions(
@@ -191,6 +157,65 @@ export class TypeOrmTemplateAnalyticsReader implements TemplateAnalyticsReader {
   }
 
   // filterColumn is one of two fixed literals, never user input.
+  private async daily(
+    filterColumn: 'id' | 'created_by',
+    value: string,
+    range: TemplateAnalyticsRange & { from: string },
+  ): Promise<TemplateAnalyticsDailyPoint[]> {
+    const rows: {
+      date: string;
+      views: number;
+      uses: number;
+      paid_purchases: number;
+      gross_revenue: string;
+    }[] = await this.dataSource.query(
+      `
+      WITH t AS (
+        SELECT id, created_by FROM page_templates WHERE ${filterColumn} = $1
+      ),
+      days AS (
+        SELECT generate_series($2::date, $3::date, interval '1 day')::date AS day
+      ),
+      ev AS (
+        SELECT (e.created_at AT TIME ZONE $4::text)::date AS day,
+          COUNT(*) FILTER (WHERE e.event_type = 'VIEW') AS views,
+          COUNT(*) FILTER (WHERE e.event_type = 'USE') AS uses
+        FROM template_analytics_events e
+        JOIN t ON t.id = e.template_id
+        WHERE ${NOT_CREATOR} AND ${inRange('e.created_at')}
+        GROUP BY 1
+      ),
+      pu AS (
+        SELECT (p.paid_at AT TIME ZONE $4::text)::date AS day,
+          COUNT(*) AS paid_purchases,
+          SUM(p.amount) AS gross_revenue
+        FROM template_purchases p
+        JOIN t ON t.id = p.template_id
+        WHERE p.status = 'PAID' AND ${inRange('p.paid_at')}
+        GROUP BY 1
+      )
+      SELECT to_char(d.day, 'YYYY-MM-DD') AS date,
+        COALESCE(ev.views, 0)::int AS views,
+        COALESCE(ev.uses, 0)::int AS uses,
+        COALESCE(pu.paid_purchases, 0)::int AS paid_purchases,
+        COALESCE(pu.gross_revenue, 0)::text AS gross_revenue
+      FROM days d
+      LEFT JOIN ev ON ev.day = d.day
+      LEFT JOIN pu ON pu.day = d.day
+      ORDER BY d.day
+      `,
+      [value, range.from, range.to, range.timeZone],
+    );
+
+    return rows.map((row) => ({
+      date: row.date,
+      views: row.views,
+      uses: row.uses,
+      paidPurchases: row.paid_purchases,
+      grossRevenue: Number(row.gross_revenue),
+    }));
+  }
+
   private totals(
     filterColumn: 'id' | 'created_by',
     value: string,

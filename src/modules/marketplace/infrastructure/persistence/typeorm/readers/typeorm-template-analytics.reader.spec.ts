@@ -144,4 +144,28 @@ describe('TypeOrmTemplateAnalyticsReader', () => {
     });
     await expect(reader.findTemplateOwner('missing')).resolves.toBeNull();
   });
+
+  it('scopes the creator daily series by created_by and joins purchases to it', async () => {
+    query.mockResolvedValue([]);
+
+    await reader.getCreatorDaily('creator-1', range);
+
+    const [sql, params] = query.mock.calls[0] as [string, unknown[]];
+    expect(sql).toContain('WHERE created_by = $1');
+    expect(sql).toContain('JOIN t ON t.id = p.template_id');
+    expect(params[0]).toBe('creator-1');
+  });
+
+  it("reads the creator's first template time", async () => {
+    const firstAt = new Date('2026-09-01T00:00:00.000Z');
+    query.mockResolvedValueOnce([{ first_at: firstAt }]);
+    query.mockResolvedValueOnce([{ first_at: null }]);
+
+    await expect(reader.findCreatorFirstTemplateAt('creator-1')).resolves.toBe(
+      firstAt,
+    );
+    await expect(
+      reader.findCreatorFirstTemplateAt('nobody'),
+    ).resolves.toBeNull();
+  });
 });

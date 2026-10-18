@@ -3,7 +3,10 @@ import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
 
 import type { CreatorTemplateAnalyticsListResponseDto } from '../../../dto/template-analytics/template-analytics.response.dto';
 import type { TemplateAnalyticsReader } from '../../../ports/template-analytics-reader.port';
-import { resolveAnalyticsRange } from '../../../services/template-analytics-range';
+import {
+  resolveAnalyticsRange,
+  toAnalyticsDate,
+} from '../../../services/template-analytics-range';
 import { ListCreatorTemplateAnalyticsQuery } from './list-creator-template-analytics.query';
 
 /** Totals for every template the caller created; the reader scopes by created_by. */
@@ -18,8 +21,23 @@ export class ListCreatorTemplateAnalyticsHandler {
     query: ListCreatorTemplateAnalyticsQuery,
   ): Promise<CreatorTemplateAnalyticsListResponseDto> {
     const range = resolveAnalyticsRange(query.from, query.to);
-    const items = await this.reader.listCreatorTotals(query.creatorId, range);
+    // An all-time chart starts on the day the creator's first template was made.
+    const firstTemplateAt = range.from
+      ? null
+      : await this.reader.findCreatorFirstTemplateAt(query.creatorId);
+    const dailyFrom =
+      range.from ?? (firstTemplateAt && toAnalyticsDate(firstTemplateAt));
 
-    return { ...range, currency: 'VND', items };
+    const [items, daily] = await Promise.all([
+      this.reader.listCreatorTotals(query.creatorId, range),
+      dailyFrom
+        ? this.reader.getCreatorDaily(query.creatorId, {
+            ...range,
+            from: dailyFrom,
+          })
+        : [],
+    ]);
+
+    return { ...range, currency: 'VND', items, daily };
   }
 }
