@@ -246,9 +246,14 @@ export class TemplateListingAggregate {
    * `targetPublishedVersionId` is the release this demo will sit next to;
    * pass it when the same request also switches the released version.
    */
+  /**
+   * `targetPublishedVersionId` is the release this demo will sit next to;
+   * pass it when the same request also switches the released version.
+   */
   setDemoPreview(
     demoVersionId?: string | null,
     demoConfig?: Record<string, any> | null,
+    targetPublishedVersionId: string | null = this.publishedVersionId,
   ): boolean {
     const nextDemoVersionId = demoVersionId !== undefined ? demoVersionId : this.demoVersionId;
     const nextDemoConfig = this.resolveNextDemoConfig(
@@ -259,7 +264,7 @@ export class TemplateListingAggregate {
     TemplateListingAggregate.assertDemoPolicy(
       this.offerType,
       nextDemoVersionId,
-      this.publishedVersionId,
+      targetPublishedVersionId,
       nextDemoConfig,
     );
 

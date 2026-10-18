@@ -1,3 +1,5 @@
+import { ConflictException } from '@nestjs/common';
+
 import { TemplateVersion } from '../../../../domain/aggregates/template-version/template-version.aggregate';
 import { PublishTemplateVersionCommand } from './publish-template-version.command';
 import { PublishTemplateVersionHandler } from './publish-template-version.handler';
@@ -50,5 +52,42 @@ describe('PublishTemplateVersionHandler listing pin', () => {
     expect(soldVersion.isPublished()).toBe(true);
     expect(listing.publishedVersionId).toBe(soldVersion.getId());
     expect(versionRepository.save).toHaveBeenCalledTimes(1);
+  });
+
+  it('answers 409 when the version is already published, without saving', async () => {
+    const templateId = '11111111-1111-4111-8111-111111111111';
+    const userId = '22222222-2222-4222-8222-222222222222';
+    const published = TemplateVersion.create({
+      templateId,
+      versionNumber: 1,
+      createdBy: userId,
+    });
+    published.publish();
+    const publishedAt = published.getPublishedAt();
+    const versionRepository = {
+      findByIdForUpdate: jest.fn().mockResolvedValue(published),
+      save: jest.fn(),
+    };
+    const handler = new PublishTemplateVersionHandler(
+      {
+        findById: jest.fn().mockResolvedValue({
+          getCreatedBy: () => userId,
+          getWorkspaceId: () => 'workspace',
+        }),
+      } as never,
+      versionRepository as never,
+      {
+        runInTransaction: jest.fn().mockImplementation((work) => work({})),
+      } as never,
+      { authorize: jest.fn().mockResolvedValue(true) } as never,
+    );
+
+    await expect(
+      handler.execute(
+        new PublishTemplateVersionCommand(templateId, published.getId(), userId),
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(versionRepository.save).not.toHaveBeenCalled();
+    expect(published.getPublishedAt()).toBe(publishedAt);
   });
 });

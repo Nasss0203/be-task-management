@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -72,6 +73,11 @@ export class PublishTemplateVersionHandler {
         throw new BadRequestException(
           'Template version does not belong to this template',
         );
+      }
+
+      // Republishing is a business conflict, not a server error.
+      if (!version.isDraft()) {
+        throw new ConflictException('Template version is already published');
       }
 
       version.publish();
