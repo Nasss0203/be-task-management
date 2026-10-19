@@ -29,6 +29,7 @@ export class DatabaseController {
         name: property.getName(),
         type: property.getType(),
         isDefault: property.getIsDefault(),
+        isHideable: property.getIsHideable(),
         position: property.getPosition(),
       })),
     };

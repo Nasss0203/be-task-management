@@ -156,6 +156,14 @@
     {
       "file": "1792423034264-CreateCreatorProfiles.ts",
       "sha256": "e332b8a72d2c30a811e5ac3e93eba07126afdf478bd468c55743b9100b184d6a"
+    },
+    {
+      "file": "1792428262477-UpdateSchema.ts",
+      "sha256": "24ff10d3ff46376c38ce66499b237b6bcfb7abf6b78105a3867beb96ce29f7a7"
+    },
+    {
+      "file": "1792429159192-UpdateSchema.ts",
+      "sha256": "f97b519920e5389aa96cfb015b70f07bd43961f7cea057f548c83a190ca09220"
     }
   ]
 }
