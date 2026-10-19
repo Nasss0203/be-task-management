@@ -65,6 +65,7 @@ export class PublicTemplateController {
         query.tag,
         query.offer_type,
         query.sort,
+        query.creator,
       ),
     );
   }

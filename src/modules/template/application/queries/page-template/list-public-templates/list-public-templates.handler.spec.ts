@@ -34,6 +34,7 @@ describe('ListPublicTemplatesHandler category enrichment', () => {
     listings as unknown as TemplateListingRepository,
     creators as never,
     feedback as never,
+    { findPublicByHandle: jest.fn() } as never,
   );
   const first = PageTemplate.create({
     id: '550e8400-e29b-41d4-a716-446655440001',

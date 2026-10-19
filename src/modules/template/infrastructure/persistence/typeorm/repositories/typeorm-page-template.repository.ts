@@ -269,6 +269,15 @@ export class TypeOrmPageTemplateRepository implements PageTemplateRepository {
       );
     }
 
+    if (
+      filters.scope === TemplateListScope.PUBLIC &&
+      filters.createdBy !== undefined
+    ) {
+      qb.andWhere('template.createdBy = :publicCreatorId', {
+        publicCreatorId: filters.createdBy,
+      });
+    }
+
     if (filters.search) {
       qb.andWhere(
         new Brackets((subQb) => {

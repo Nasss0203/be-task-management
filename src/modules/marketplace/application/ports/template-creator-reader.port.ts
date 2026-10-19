@@ -4,6 +4,8 @@ export interface TemplateCreatorProfile {
   id: string;
   username: string;
   avatarUrl: string | null;
+  handle: string;
+  displayName: string | null;
 }
 
 /** Public creator profiles shown on marketplace listings (never email). */

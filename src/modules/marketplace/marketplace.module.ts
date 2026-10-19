@@ -57,6 +57,16 @@ import { DeleteTemplateReviewHandler } from './application/commands/template-fee
 import { SetTemplateLikeHandler } from './application/commands/template-feedback/set-template-like/set-template-like.handler';
 import { ListPublicTemplateReviewsHandler } from './application/queries/template-feedback/list-public-template-reviews/list-public-template-reviews.handler';
 import { TemplateFeedbackController } from './presentation/http/controllers/template-feedback.controller';
+import { StorageInfrastructureModule } from 'src/shared/infrastructure/storage/storage.module';
+import { CreatorProfileOrmEntity } from './infrastructure/persistence/typeorm/entities/creator-profile.orm-entity';
+import { TypeOrmCreatorProfileRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-creator-profile.repository';
+import { TypeOrmCreatorProfileReader } from './infrastructure/persistence/typeorm/readers/typeorm-creator-profile.reader';
+import { GetPublicCreatorProfileHandler } from './application/queries/creator-profile/get-public-creator-profile/get-public-creator-profile.handler';
+import { GetMyCreatorProfileHandler } from './application/queries/creator-profile/get-my-creator-profile/get-my-creator-profile.handler';
+import { UpsertMyCreatorProfileHandler } from './application/commands/creator-profile/upsert-my-creator-profile/upsert-my-creator-profile.handler';
+import { SetCreatorImageHandler } from './application/commands/creator-profile/set-creator-image/set-creator-image.handler';
+import { CreatorProfileController } from './presentation/http/controllers/creator-profile.controller';
+import { PublicCreatorController } from './presentation/http/controllers/public-creator.controller';
 import { TypeOrmTemplateCategoryRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-category.repository';
 import { TypeOrmTemplateEntitlementRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-entitlement.repository';
 import { TypeOrmTemplateListingRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-listing.repository';
@@ -79,6 +89,7 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
     PaymentModule,
     TemplateContentModule,
     PermissionModule,
+    StorageInfrastructureModule,
     TypeOrmModule.forFeature([
       TemplateListingOrmEntity,
       TemplateCategoryOrmEntity,
@@ -92,6 +103,7 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
       MarketplaceCommissionRateOrmEntity,
       TemplateReviewOrmEntity,
       TemplateLikeOrmEntity,
+      CreatorProfileOrmEntity,
     ]),
   ],
   providers: [
@@ -277,6 +289,30 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
       useClass: TypeOrmMarketplaceCommissionRateReader,
     },
     {
+      provide: MARKETPLACE_TYPES.ports.CreatorProfileReader,
+      useClass: TypeOrmCreatorProfileReader,
+    },
+    {
+      provide: MARKETPLACE_TYPES.repositories.CreatorProfileRepository,
+      useClass: TypeOrmCreatorProfileRepository,
+    },
+    {
+      provide: MARKETPLACE_TYPES.applications.GetPublicCreatorProfileHandler,
+      useClass: GetPublicCreatorProfileHandler,
+    },
+    {
+      provide: MARKETPLACE_TYPES.applications.GetMyCreatorProfileHandler,
+      useClass: GetMyCreatorProfileHandler,
+    },
+    {
+      provide: MARKETPLACE_TYPES.applications.UpsertMyCreatorProfileHandler,
+      useClass: UpsertMyCreatorProfileHandler,
+    },
+    {
+      provide: MARKETPLACE_TYPES.applications.SetCreatorImageHandler,
+      useClass: SetCreatorImageHandler,
+    },
+    {
       provide: MARKETPLACE_TYPES.ports.FeedbackReader,
       useClass: TypeOrmTemplateFeedbackReader,
     },
@@ -324,6 +360,8 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
     TemplatePurchaseController,
     CreatorTemplateAnalyticsController,
     TemplateFeedbackController,
+    CreatorProfileController,
+    PublicCreatorController,
   ],
   exports: [
     MARKETPLACE_TYPES.ports.Distribution,

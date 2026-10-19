@@ -9,5 +9,6 @@ export class ListPublicTemplatesQuery {
     public readonly tag?: string,
     public readonly offerType?: 'FREE' | 'PAID',
     public readonly sort: PublicTemplateSort = 'newest',
+    public readonly creator?: string,
   ) {}
 }

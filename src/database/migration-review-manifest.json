@@ -152,6 +152,10 @@
     {
       "file": "1792420815933-CreateTemplateLikes.ts",
       "sha256": "a214992e7e2c775ef2703a2f7e4ed16ece9c6bce07f7f85fea4c4ee4f4a50c0f"
+    },
+    {
+      "file": "1792423034264-CreateCreatorProfiles.ts",
+      "sha256": "e332b8a72d2c30a811e5ac3e93eba07126afdf478bd468c55743b9100b184d6a"
     }
   ]
 }

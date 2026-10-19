@@ -2,6 +2,7 @@ import type { TemplateCreatorReader } from '../../../ports/template-creator-read
 import { toPublicCreator } from '../../../dto/page-template/public-template-creator';
 import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
 import type { TemplateFeedbackReader } from '../../../ports/template-feedback-reader.port';
+import type { CreatorProfileReader } from '../../../ports/creator-profile-reader.port';
 import { toFeedbackSummaryDto } from '../../../dto/template-feedback/template-feedback.response.dto';
 import {
   BadRequestException,
@@ -38,6 +39,8 @@ export class ListPublicTemplatesHandler {
     private readonly creatorReader: TemplateCreatorReader,
     @Inject(MARKETPLACE_TYPES.ports.FeedbackReader)
     private readonly feedbackReader: TemplateFeedbackReader,
+    @Inject(MARKETPLACE_TYPES.ports.CreatorProfileReader)
+    private readonly creatorProfileReader: CreatorProfileReader,
   ) {}
 
   async execute(
@@ -68,6 +71,14 @@ export class ListPublicTemplatesHandler {
     if (cursor && query.sort !== 'newest' && cursor.score === undefined) {
       throw new BadRequestException('Cursor does not match the sort order');
     }
+    let createdBy: string | undefined;
+    if (query.creator !== undefined) {
+      const creator = await this.creatorProfileReader.findPublicByHandle(
+        query.creator,
+      );
+      if (!creator) return { items: [], nextCursor: null };
+      createdBy = creator.userId;
+    }
     const result = await this.pageTemplateRepository.findMany({
       scope: TemplateListScope.PUBLIC,
       requirePublishedVersion: true,
@@ -75,6 +86,7 @@ export class ListPublicTemplatesHandler {
       ...(categorySlug !== undefined ? { categorySlug } : {}),
       ...(query.tag !== undefined ? { tag: query.tag } : {}),
       ...(query.offerType !== undefined ? { offerType: query.offerType } : {}),
+      ...(createdBy !== undefined ? { createdBy } : {}),
       sort: query.sort,
       cursor,
       limit,

@@ -17,6 +17,7 @@ export type FindPageTemplatesFilters = {
   // Public catalog only: listing tag and FREE/PAID offer.
   tag?: string;
   offerType?: 'FREE' | 'PAID';
+  createdBy?: string;
   sort?: PublicTemplateSort;
   cursor?: {
     createdAt: Date;

@@ -128,7 +128,13 @@ describe('GetPublicTemplateDetailHandler category enrichment', () => {
       new Map([
         [
           template.getCreatedBy(),
-          { id: template.getCreatedBy(), username: 'nam', avatarUrl: null },
+          {
+            id: template.getCreatedBy(),
+            username: 'nam',
+            avatarUrl: null,
+            handle: 'nam-design',
+            displayName: 'Nam',
+          },
         ],
       ]),
     );
@@ -138,6 +144,11 @@ describe('GetPublicTemplateDetailHandler category enrichment', () => {
     );
 
     expect(result.tags).toEqual(['crm', 'sales-ops']);
-    expect(result.creator).toEqual({ username: 'nam', avatar_url: null });
+    expect(result.creator).toEqual({
+      username: 'nam',
+      avatar_url: null,
+      handle: 'nam-design',
+      display_name: 'Nam',
+    });
   });
 });

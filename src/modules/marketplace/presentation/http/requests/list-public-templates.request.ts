@@ -37,6 +37,15 @@ export class ListPublicTemplatesRequest extends PickType(
   @IsIn(['FREE', 'PAID'])
   offer_type?: 'FREE' | 'PAID';
 
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
+  @ValidateIf((_, value) => value !== undefined)
+  @IsString()
+  @MaxLength(100)
+  @Matches(/^[a-z0-9_-]+$/)
+  creator?: string;
+
   @ValidateIf((_, value) => value !== undefined)
   @IsIn(['newest', 'top_rated', 'most_liked'])
   sort?: 'newest' | 'top_rated' | 'most_liked';

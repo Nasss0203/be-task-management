@@ -18,6 +18,7 @@ export const MARKETPLACE_TYPES = {
     ),
     TemplateReviewRepository: Symbol('TemplateReviewRepository'),
     TemplateLikeRepository: Symbol('TemplateLikeRepository'),
+    CreatorProfileRepository: Symbol('CreatorProfileRepository'),
   },
   applications: {
     GetTemplatePurchaseHandler: Symbol('GetTemplatePurchaseHandler'),
@@ -76,6 +77,10 @@ export const MARKETPLACE_TYPES = {
     ListPublicTemplateReviewsHandler: Symbol(
       'ListPublicTemplateReviewsHandler',
     ),
+    GetPublicCreatorProfileHandler: Symbol('GetPublicCreatorProfileHandler'),
+    GetMyCreatorProfileHandler: Symbol('GetMyCreatorProfileHandler'),
+    UpsertMyCreatorProfileHandler: Symbol('UpsertMyCreatorProfileHandler'),
+    SetCreatorImageHandler: Symbol('SetCreatorImageHandler'),
   },
   ports: {
     Distribution: Symbol('TemplateDistributionPort'),
@@ -85,6 +90,7 @@ export const MARKETPLACE_TYPES = {
     AnalyticsReader: Symbol('TemplateAnalyticsReader'),
     CommissionRateReader: Symbol('MarketplaceCommissionRateReader'),
     FeedbackReader: Symbol('TemplateFeedbackReader'),
+    CreatorProfileReader: Symbol('CreatorProfileReader'),
   },
   services: {
     TemplatePurchaseSettlementService: Symbol(
