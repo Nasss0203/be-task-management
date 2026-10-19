@@ -23,6 +23,7 @@ import { TemplatePurchaseAggregate } from '../../../../domain/aggregates/templat
 import { TemplateOfferType } from '../../../../domain/enums/template-offer-type.enum';
 
 import { TemplatePurchaseEligibilityService } from '../../../services/template-purchase-eligibility.service';
+import type { MarketplaceCommissionRateReader } from '../../../ports/marketplace-commission-rate-reader.port';
 import type { TemplateListingRepository } from '../../../../domain/repositories/template-listing.repository';
 import type { TemplatePurchaseRepository } from '../../../../domain/repositories/template-purchase.repository';
 
@@ -47,6 +48,9 @@ export class CreateTemplatePurchaseHandler {
 
     @Inject(MARKETPLACE_TYPES.repositories.TemplatePurchaseRepository)
     private readonly purchaseRepository: TemplatePurchaseRepository,
+
+    @Inject(MARKETPLACE_TYPES.ports.CommissionRateReader)
+    private readonly commissionRates: MarketplaceCommissionRateReader,
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly unitOfWork: UnitOfWork,
@@ -128,6 +132,8 @@ export class CreateTemplatePurchaseHandler {
 
         // 6. Snapshot Price
         const price = listing.getPrice();
+        const commissionRateBps =
+          await this.commissionRates.getCurrentRateBps(context);
 
         // 7. Create PENDING Purchase
         const purchase = TemplatePurchaseAggregate.create({
@@ -137,6 +143,7 @@ export class CreateTemplatePurchaseHandler {
           publishedVersionId: version.getId(),
           amount: price.getAmount(),
           currency: price.getCurrency(),
+          commissionRateBps,
           idempotencyKey: command.idempotencyKey,
           expiresAt: new Date(Date.now() + PURCHASE_EXPIRATION_MS),
         });

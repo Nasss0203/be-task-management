@@ -1,5 +1,6 @@
 import type {
   TemplateAnalyticsDailyPoint,
+  TemplateAnalyticsSale,
   TemplateAnalyticsTemplateTotals,
   TemplateAnalyticsTotals,
   TemplateAnalyticsVersionPoint,
@@ -24,4 +25,5 @@ export interface CreatorTemplateAnalyticsResponseDto extends TemplateAnalyticsRa
   totals: TemplateAnalyticsTotals;
   daily: TemplateAnalyticsDailyPoint[];
   versions: TemplateAnalyticsVersionPoint[];
+  sales: TemplateAnalyticsSale[];
 }

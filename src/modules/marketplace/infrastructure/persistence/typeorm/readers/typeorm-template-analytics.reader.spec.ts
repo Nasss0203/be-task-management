@@ -33,6 +33,7 @@ describe('TypeOrmTemplateAnalyticsReader', () => {
     expect(sql).toContain('WHERE id = $1');
     expect(sql).toContain('e.user_id IS DISTINCT FROM t.created_by');
     expect(sql).toContain("p.status = 'PAID'");
+    expect(sql).toContain('SUM(p.amount - p.platform_fee_amount) AS earnings');
   });
 
   it('scopes the list by creator and converts bigint revenue to numbers', async () => {
@@ -46,6 +47,7 @@ describe('TypeOrmTemplateAnalyticsReader', () => {
         uses: 1,
         paid_purchases: 2,
         gross_revenue: '150000',
+        earnings: '142500',
       },
     ]);
 
@@ -68,6 +70,7 @@ describe('TypeOrmTemplateAnalyticsReader', () => {
           uses: 1,
           paidPurchases: 2,
           grossRevenue: 150000,
+          earnings: 142500,
         },
       },
     ]);
@@ -83,6 +86,7 @@ describe('TypeOrmTemplateAnalyticsReader', () => {
       uses: 0,
       paidPurchases: 0,
       grossRevenue: 0,
+      earnings: 0,
     });
   });
 
@@ -95,6 +99,7 @@ describe('TypeOrmTemplateAnalyticsReader', () => {
           uses: 0,
           paid_purchases: 0,
           gross_revenue: '0',
+          earnings: '0',
         },
       ])
       .mockResolvedValueOnce([
@@ -104,6 +109,7 @@ describe('TypeOrmTemplateAnalyticsReader', () => {
           uses: 4,
           paid_purchases: 1,
           gross_revenue: '50000',
+          earnings: '47500',
         },
       ]);
 
@@ -115,6 +121,7 @@ describe('TypeOrmTemplateAnalyticsReader', () => {
           uses: 0,
           paidPurchases: 0,
           grossRevenue: 0,
+          earnings: 0,
         },
       ],
     );
@@ -127,7 +134,48 @@ describe('TypeOrmTemplateAnalyticsReader', () => {
         uses: 4,
         paidPurchases: 1,
         grossRevenue: 50000,
+        earnings: 47500,
       },
+    ]);
+  });
+
+  it('lists paid sales with the snapshot fee and limit', async () => {
+    const paidAt = new Date('2026-10-19T13:25:49.000Z');
+    query.mockResolvedValueOnce([
+      {
+        id: 'purchase-1',
+        order_code: 'TP1',
+        paid_at: paidAt,
+        version_number: 2,
+        amount: '100000000',
+        commission_rate_bps: 750,
+        platform_fee_amount: '7500000',
+      },
+    ]);
+
+    await expect(
+      reader.getTemplateSales('template-1', range, 100),
+    ).resolves.toEqual([
+      {
+        purchaseId: 'purchase-1',
+        orderCode: 'TP1',
+        paidAt,
+        versionNumber: 2,
+        amount: 100000000,
+        commissionRateBps: 750,
+        platformFeeAmount: 7500000,
+        earnings: 92500000,
+      },
+    ]);
+
+    const [sql, params] = query.mock.calls[0] as [string, unknown[]];
+    expect(sql).toContain("p.status = 'PAID'");
+    expect(params).toEqual([
+      'template-1',
+      '2026-10-01',
+      '2026-10-07',
+      'Asia/Ho_Chi_Minh',
+      100,
     ]);
   });
 

@@ -16,6 +16,7 @@ describe('creator template analytics handlers', () => {
     uses: 1,
     paidPurchases: 1,
     grossRevenue: 50000,
+    earnings: 47500,
   };
   let reader: jest.Mocked<TemplateAnalyticsReader>;
 
@@ -31,6 +32,7 @@ describe('creator template analytics handlers', () => {
       getTemplateTotals: jest.fn().mockResolvedValue(totals),
       getTemplateDaily: jest.fn().mockResolvedValue([]),
       getTemplateVersions: jest.fn().mockResolvedValue([]),
+      getTemplateSales: jest.fn().mockResolvedValue([]),
       getCreatorDaily: jest.fn().mockResolvedValue([]),
       findCreatorFirstTemplateAt: jest
         .fn()

@@ -9,6 +9,7 @@ export const ADMIN_TYPES = {
     BillingWebhookReader: Symbol('AdminBillingWebhookReader'),
     BillingPlanReader: Symbol('AdminBillingPlanReader'),
     BillingPlanWriter: Symbol('AdminBillingPlanWriter'),
+    MarketplaceSalesReader: Symbol('AdminMarketplaceSalesReader'),
   },
   applications: {
     GetAdminAccessHandler: Symbol('AdminGetAdminAccessHandler'),
@@ -47,6 +48,12 @@ export const ADMIN_TYPES = {
     UpdateAdminBillingPlanHandler: Symbol('AdminUpdateAdminBillingPlanHandler'),
     CreateAdminBillingPlanPriceVersionHandler: Symbol(
       'AdminCreateAdminBillingPlanPriceVersionHandler',
+    ),
+    GetAdminMarketplaceSalesOverviewHandler: Symbol(
+      'AdminGetAdminMarketplaceSalesOverviewHandler',
+    ),
+    ListAdminMarketplaceSalesHandler: Symbol(
+      'AdminListAdminMarketplaceSalesHandler',
     ),
   },
   services: {

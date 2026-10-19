@@ -20,6 +20,8 @@ describe('GetTemplatePurchaseHandler', () => {
       publishedVersionId: 'version-1',
       amount: 50000,
       currency: 'VND',
+      commissionRateBps: 0,
+      platformFeeAmount: 0,
       idempotencyKey: 'key-1',
       expiresAt: new Date('2026-10-18T10:00:00Z'),
       status,

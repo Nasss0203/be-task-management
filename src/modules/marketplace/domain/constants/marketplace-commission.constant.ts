@@ -1,0 +1,2 @@
+export const DEFAULT_COMMISSION_RATE_BPS = 500;
+export const MAX_COMMISSION_RATE_BPS = 10000;

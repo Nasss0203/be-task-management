@@ -9,6 +9,8 @@ import {
 } from '../../../services/template-analytics-range';
 import { GetCreatorTemplateAnalyticsQuery } from './get-creator-template-analytics.query';
 
+const SALES_LIMIT = 100;
+
 @Injectable()
 export class GetCreatorTemplateAnalyticsHandler {
   constructor(
@@ -33,10 +35,11 @@ export class GetCreatorTemplateAnalyticsHandler {
       from: range.from ?? toAnalyticsDate(owner.createdAt),
     };
 
-    const [totals, daily, versions] = await Promise.all([
+    const [totals, daily, versions, sales] = await Promise.all([
       this.reader.getTemplateTotals(query.templateId, range),
       this.reader.getTemplateDaily(query.templateId, dailyRange),
       this.reader.getTemplateVersions(query.templateId, range),
+      this.reader.getTemplateSales(query.templateId, range, SALES_LIMIT),
     ]);
 
     return {
@@ -46,6 +49,7 @@ export class GetCreatorTemplateAnalyticsHandler {
       totals,
       daily,
       versions,
+      sales,
     };
   }
 }

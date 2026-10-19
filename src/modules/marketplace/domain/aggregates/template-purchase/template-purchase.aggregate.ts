@@ -1,5 +1,7 @@
 import { randomUUID } from 'crypto';
 
+import { MAX_COMMISSION_RATE_BPS } from '../../constants/marketplace-commission.constant';
+
 export enum TemplatePurchaseStatus {
   PENDING = 'PENDING',
   PAID = 'PAID',
@@ -23,6 +25,7 @@ export type CreateTemplatePurchaseParams = {
   publishedVersionId: string;
   amount: number;
   currency: string;
+  commissionRateBps: number;
   idempotencyKey: string;
   expiresAt: Date;
 };
@@ -30,6 +33,7 @@ export type CreateTemplatePurchaseParams = {
 export type RestoreTemplatePurchaseParams = CreateTemplatePurchaseParams & {
   id: string;
   orderCode: string;
+  platformFeeAmount: number;
   status: TemplatePurchaseStatus;
   provider: TemplatePurchaseProvider | null;
   entitlementId: string | null;
@@ -48,6 +52,8 @@ export class TemplatePurchaseAggregate {
     private readonly publishedVersionId: string,
     private readonly amount: number,
     private readonly currency: string,
+    private readonly commissionRateBps: number,
+    private readonly platformFeeAmount: number,
     private readonly idempotencyKey: string,
     private readonly expiresAt: Date,
     private status: TemplatePurchaseStatus,
@@ -84,6 +90,19 @@ export class TemplatePurchaseAggregate {
     }
 
     if (
+      !Number.isInteger(params.commissionRateBps) ||
+      params.commissionRateBps < 0 ||
+      params.commissionRateBps > MAX_COMMISSION_RATE_BPS
+    ) {
+      throw new Error('Invalid commission rate');
+    }
+
+    const platformFeeAmount = Number(
+      (BigInt(params.amount) * BigInt(params.commissionRateBps)) /
+        BigInt(MAX_COMMISSION_RATE_BPS),
+    );
+
+    if (
       !(params.expiresAt instanceof Date) ||
       !Number.isFinite(params.expiresAt.getTime()) ||
       params.expiresAt.getTime() <= Date.now()
@@ -102,6 +121,8 @@ export class TemplatePurchaseAggregate {
       params.publishedVersionId,
       params.amount,
       params.currency,
+      params.commissionRateBps,
+      platformFeeAmount,
       params.idempotencyKey,
       new Date(params.expiresAt),
       TemplatePurchaseStatus.PENDING,
@@ -125,6 +146,8 @@ export class TemplatePurchaseAggregate {
       params.publishedVersionId,
       params.amount,
       params.currency,
+      params.commissionRateBps,
+      params.platformFeeAmount,
       params.idempotencyKey,
       params.expiresAt,
       params.status,
@@ -276,6 +299,12 @@ export class TemplatePurchaseAggregate {
   }
   getCurrency(): string {
     return this.currency;
+  }
+  getCommissionRateBps(): number {
+    return this.commissionRateBps;
+  }
+  getPlatformFeeAmount(): number {
+    return this.platformFeeAmount;
   }
   getIdempotencyKey(): string {
     return this.idempotencyKey;

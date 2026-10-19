@@ -13,6 +13,16 @@ export class TemplatePurchaseMapper {
       throw new Error('Invalid template purchase amount');
     }
 
+    const platformFeeAmount = Number(entity.platformFeeAmount);
+
+    if (
+      !Number.isSafeInteger(platformFeeAmount) ||
+      platformFeeAmount < 0 ||
+      platformFeeAmount > amount
+    ) {
+      throw new Error('Invalid template purchase platform fee amount');
+    }
+
     return TemplatePurchase.restore({
       id: entity.id,
       orderCode: entity.orderCode,
@@ -22,6 +32,8 @@ export class TemplatePurchaseMapper {
       publishedVersionId: entity.publishedVersionId,
       amount,
       currency: entity.currency,
+      commissionRateBps: entity.commissionRateBps,
+      platformFeeAmount,
       idempotencyKey: entity.idempotencyKey,
       expiresAt: entity.expiresAt,
       status: entity.status,
@@ -46,6 +58,8 @@ export class TemplatePurchaseMapper {
     // PostgreSQL bigint lưu dưới dạng string
     entity.amount = purchase.getAmount().toString();
     entity.currency = purchase.getCurrency();
+    entity.commissionRateBps = purchase.getCommissionRateBps();
+    entity.platformFeeAmount = purchase.getPlatformFeeAmount().toString();
 
     entity.idempotencyKey = purchase.getIdempotencyKey();
     entity.expiresAt = purchase.getExpiresAt();

@@ -20,6 +20,14 @@ import {
   '"amount" > 0 AND "amount" <= 9007199254740991',
 )
 @Check('CHK_template_purchases_currency', '"currency" = \'VND\'')
+@Check(
+  'CHK_template_purchases_commission_rate_bps',
+  '"commission_rate_bps" >= 0 AND "commission_rate_bps" <= 10000',
+)
+@Check(
+  'CHK_template_purchases_platform_fee_amount',
+  '"platform_fee_amount" >= 0 AND "platform_fee_amount" <= "amount"',
+)
 export class TemplatePurchaseOrmEntity {
   @PrimaryColumn({ name: 'id', type: 'uuid' })
   id!: string;
@@ -45,6 +53,12 @@ export class TemplatePurchaseOrmEntity {
 
   @Column({ name: 'currency', type: 'varchar', length: 3 })
   currency!: string;
+
+  @Column({ name: 'commission_rate_bps', type: 'integer', default: 0 })
+  commissionRateBps!: number;
+
+  @Column({ name: 'platform_fee_amount', type: 'bigint', default: 0 })
+  platformFeeAmount!: string;
 
   @Column({ name: 'idempotency_key', type: 'varchar', length: 255 })
   idempotencyKey!: string;

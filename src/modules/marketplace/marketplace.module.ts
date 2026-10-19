@@ -1,6 +1,7 @@
 import { GetMyTemplatePurchasesHandler } from './application/queries/template-purchase/get-my-template-purchases/get-my-template-purchases.handler';
 import { TypeOrmTemplateCreatorReader } from './infrastructure/persistence/typeorm/readers/typeorm-template-creator.reader';
 import { TypeOrmTemplateAnalyticsReader } from './infrastructure/persistence/typeorm/readers/typeorm-template-analytics.reader';
+import { TypeOrmMarketplaceCommissionRateReader } from './infrastructure/persistence/typeorm/readers/typeorm-marketplace-commission-rate.reader';
 import { GetCreatorTemplateAnalyticsHandler } from './application/queries/template-analytics/get-creator-template-analytics/get-creator-template-analytics.handler';
 import { ListCreatorTemplateAnalyticsHandler } from './application/queries/template-analytics/list-creator-template-analytics/list-creator-template-analytics.handler';
 import { CreatorTemplateAnalyticsController } from './presentation/http/controllers/creator-template-analytics.controller';
@@ -45,6 +46,7 @@ import { TemplatePurchaseOrmEntity } from './infrastructure/persistence/typeorm/
 import { TemplateMarketplaceReleaseOrmEntity } from './infrastructure/persistence/typeorm/entities/template-marketplace-release.orm-entity';
 import { MarketplaceWebhookEventOrmEntity } from './infrastructure/persistence/typeorm/entities/marketplace-webhook-event.orm-entity';
 import { TemplateAnalyticsEventOrmEntity } from './infrastructure/persistence/typeorm/entities/template-analytics-event.orm-entity';
+import { MarketplaceCommissionRateOrmEntity } from './infrastructure/persistence/typeorm/entities/marketplace-commission-rate.orm-entity';
 import { TypeOrmTemplateCategoryRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-category.repository';
 import { TypeOrmTemplateEntitlementRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-entitlement.repository';
 import { TypeOrmTemplateListingRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-listing.repository';
@@ -52,6 +54,9 @@ import { TypeOrmTemplatePurchaseRepository } from './infrastructure/persistence/
 import { TypeOrmTemplateMarketplaceReleaseRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-marketplace-release.repository';
 import { TypeOrmMarketplaceWebhookEventRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-marketplace-webhook-event.repository';
 import { TypeOrmTemplateAnalyticsEventRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-analytics-event.repository';
+import { TypeOrmMarketplaceCommissionRateRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-marketplace-commission-rate.repository';
+import { GetMarketplaceCommissionRateHandler } from './application/queries/marketplace-commission/get-marketplace-commission-rate/get-marketplace-commission-rate.handler';
+import { UpdateMarketplaceCommissionRateHandler } from './application/commands/marketplace-commission/update-marketplace-commission-rate/update-marketplace-commission-rate.handler';
 import { MyClaimedTemplatesController } from './presentation/http/controllers/my-claimed-templates.controller';
 import { PublicTemplateCategoryController } from './presentation/http/controllers/public-template-category.controller';
 import { PublicTemplateController } from './presentation/http/controllers/public-template.controller';
@@ -74,6 +79,7 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
       TemplateMarketplaceReleaseOrmEntity,
       MarketplaceWebhookEventOrmEntity,
       TemplateAnalyticsEventOrmEntity,
+      MarketplaceCommissionRateOrmEntity,
     ]),
   ],
   providers: [
@@ -215,6 +221,21 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
       useClass: TypeOrmTemplateAnalyticsEventRepository,
     },
     {
+      provide:
+        MARKETPLACE_TYPES.repositories.MarketplaceCommissionRateRepository,
+      useClass: TypeOrmMarketplaceCommissionRateRepository,
+    },
+    {
+      provide:
+        MARKETPLACE_TYPES.applications.GetMarketplaceCommissionRateHandler,
+      useClass: GetMarketplaceCommissionRateHandler,
+    },
+    {
+      provide:
+        MARKETPLACE_TYPES.applications.UpdateMarketplaceCommissionRateHandler,
+      useClass: UpdateMarketplaceCommissionRateHandler,
+    },
+    {
       provide: MARKETPLACE_TYPES.services.TemplatePurchaseSettlementService,
       useClass: TemplatePurchaseSettlementService,
     },
@@ -238,6 +259,10 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
     {
       provide: MARKETPLACE_TYPES.ports.AnalyticsReader,
       useClass: TypeOrmTemplateAnalyticsReader,
+    },
+    {
+      provide: MARKETPLACE_TYPES.ports.CommissionRateReader,
+      useClass: TypeOrmMarketplaceCommissionRateReader,
     },
     {
       provide:
@@ -272,6 +297,8 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
 
     MARKETPLACE_TYPES.applications.ProcessMarketplaceStripeWebhookHandler,
     MARKETPLACE_TYPES.applications.ResolveTemplatePurchaseReconciliationHandler,
+    MARKETPLACE_TYPES.applications.GetMarketplaceCommissionRateHandler,
+    MARKETPLACE_TYPES.applications.UpdateMarketplaceCommissionRateHandler,
   ],
 })
 export class MarketplaceModule {}

@@ -39,6 +39,11 @@ import { AdminWorkspacesController } from './presentation/http/controllers/admin
 import { AdminPermissionGuard } from './presentation/http/guards/admin-permission.guard';
 
 import { AdminTemplatePurchaseController } from './presentation/http/controllers/admin-template-purchase.controller';
+import { AdminMarketplaceCommissionController } from './presentation/http/controllers/admin-marketplace-commission.controller';
+import { AdminMarketplaceSalesController } from './presentation/http/controllers/admin-marketplace-sales.controller';
+import { TypeOrmAdminMarketplaceSalesReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-marketplace-sales.reader';
+import { GetAdminMarketplaceSalesOverviewHandler } from './application/queries/get-admin-marketplace-sales-overview/get-admin-marketplace-sales-overview.handler';
+import { ListAdminMarketplaceSalesHandler } from './application/queries/list-admin-marketplace-sales/list-admin-marketplace-sales.handler';
 @Module({
   imports: [MarketplaceModule],
   controllers: [
@@ -49,6 +54,8 @@ import { AdminTemplatePurchaseController } from './presentation/http/controllers
     AdminBillingController,
     AdminTemplateCategoryController,
     AdminTemplatePurchaseController,
+    AdminMarketplaceCommissionController,
+    AdminMarketplaceSalesController,
   ],
   providers: [
     {
@@ -70,6 +77,18 @@ import { AdminTemplatePurchaseController } from './presentation/http/controllers
     {
       provide: ADMIN_TYPES.ports.BillingReader,
       useClass: TypeOrmAdminBillingReader,
+    },
+    {
+      provide: ADMIN_TYPES.ports.MarketplaceSalesReader,
+      useClass: TypeOrmAdminMarketplaceSalesReader,
+    },
+    {
+      provide: ADMIN_TYPES.applications.GetAdminMarketplaceSalesOverviewHandler,
+      useClass: GetAdminMarketplaceSalesOverviewHandler,
+    },
+    {
+      provide: ADMIN_TYPES.applications.ListAdminMarketplaceSalesHandler,
+      useClass: ListAdminMarketplaceSalesHandler,
     },
     {
       provide: ADMIN_TYPES.ports.BillingWebhookReader,

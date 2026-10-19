@@ -15,6 +15,7 @@ export interface TemplateAnalyticsTotals {
   uses: number;
   paidPurchases: number;
   grossRevenue: number;
+  earnings: number;
 }
 
 export interface TemplateAnalyticsTemplateTotals {
@@ -29,6 +30,7 @@ export interface TemplateAnalyticsDailyPoint {
   uses: number;
   paidPurchases: number;
   grossRevenue: number;
+  earnings: number;
 }
 
 export interface TemplateAnalyticsVersionPoint {
@@ -37,6 +39,18 @@ export interface TemplateAnalyticsVersionPoint {
   uses: number;
   paidPurchases: number;
   grossRevenue: number;
+  earnings: number;
+}
+
+export interface TemplateAnalyticsSale {
+  purchaseId: string;
+  orderCode: string;
+  paidAt: Date;
+  versionNumber: number | null;
+  amount: number;
+  commissionRateBps: number;
+  platformFeeAmount: number;
+  earnings: number;
 }
 
 export interface TemplateAnalyticsOwner {
@@ -44,10 +58,6 @@ export interface TemplateAnalyticsOwner {
   createdAt: Date;
 }
 
-/**
- * Creator analytics read side. Views/uses exclude the template creator's own
- * events; revenue counts PAID purchases by paid_at only.
- */
 export interface TemplateAnalyticsReader {
   findTemplateOwner(templateId: string): Promise<TemplateAnalyticsOwner | null>;
 
@@ -81,4 +91,10 @@ export interface TemplateAnalyticsReader {
     templateId: string,
     range: TemplateAnalyticsRange,
   ): Promise<TemplateAnalyticsVersionPoint[]>;
+
+  getTemplateSales(
+    templateId: string,
+    range: TemplateAnalyticsRange,
+    limit: number,
+  ): Promise<TemplateAnalyticsSale[]>;
 }

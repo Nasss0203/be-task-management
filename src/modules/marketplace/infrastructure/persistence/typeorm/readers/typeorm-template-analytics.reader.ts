@@ -6,6 +6,7 @@ import type {
   TemplateAnalyticsOwner,
   TemplateAnalyticsRange,
   TemplateAnalyticsReader,
+  TemplateAnalyticsSale,
   TemplateAnalyticsTemplateTotals,
   TemplateAnalyticsTotals,
   TemplateAnalyticsVersionPoint,
@@ -29,6 +30,7 @@ type TotalsRow = {
   uses: number;
   paid_purchases: number;
   gross_revenue: string;
+  earnings: string;
 };
 
 @Injectable()
@@ -77,6 +79,7 @@ export class TypeOrmTemplateAnalyticsReader implements TemplateAnalyticsReader {
           uses: 0,
           paidPurchases: 0,
           grossRevenue: 0,
+          earnings: 0,
         };
   }
 
@@ -113,6 +116,7 @@ export class TypeOrmTemplateAnalyticsReader implements TemplateAnalyticsReader {
       uses: number;
       paid_purchases: number;
       gross_revenue: string;
+      earnings: string;
     }[] = await this.dataSource.query(
       `
       WITH t AS (
@@ -128,7 +132,8 @@ export class TypeOrmTemplateAnalyticsReader implements TemplateAnalyticsReader {
       pu AS (
         SELECT p.published_version_id AS version_id,
           COUNT(*) AS paid_purchases,
-          SUM(p.amount) AS gross_revenue
+          SUM(p.amount) AS gross_revenue,
+          SUM(p.amount - p.platform_fee_amount) AS earnings
         FROM template_purchases p
         WHERE p.template_id = $1 AND p.status = 'PAID' AND ${inRange('p.paid_at')}
         GROUP BY p.published_version_id
@@ -136,7 +141,8 @@ export class TypeOrmTemplateAnalyticsReader implements TemplateAnalyticsReader {
       SELECT v.id AS version_id, v.version_number,
         COALESCE(ev.uses, 0)::int AS uses,
         COALESCE(pu.paid_purchases, 0)::int AS paid_purchases,
-        COALESCE(pu.gross_revenue, 0)::text AS gross_revenue
+        COALESCE(pu.gross_revenue, 0)::text AS gross_revenue,
+        COALESCE(pu.earnings, 0)::text AS earnings
       FROM page_template_versions v
       LEFT JOIN ev ON ev.version_id = v.id
       LEFT JOIN pu ON pu.version_id = v.id
@@ -153,7 +159,53 @@ export class TypeOrmTemplateAnalyticsReader implements TemplateAnalyticsReader {
       uses: row.uses,
       paidPurchases: row.paid_purchases,
       grossRevenue: Number(row.gross_revenue),
+      earnings: Number(row.earnings),
     }));
+  }
+
+  async getTemplateSales(
+    templateId: string,
+    range: TemplateAnalyticsRange,
+    limit: number,
+  ): Promise<TemplateAnalyticsSale[]> {
+    const rows: {
+      id: string;
+      order_code: string;
+      paid_at: Date;
+      version_number: number | null;
+      amount: string;
+      commission_rate_bps: number;
+      platform_fee_amount: string;
+    }[] = await this.dataSource.query(
+      `
+      SELECT p.id, p.order_code, p.paid_at, v.version_number,
+        p.amount::text AS amount,
+        p.commission_rate_bps,
+        p.platform_fee_amount::text AS platform_fee_amount
+      FROM template_purchases p
+      LEFT JOIN page_template_versions v ON v.id = p.published_version_id
+      WHERE p.template_id = $1 AND p.status = 'PAID' AND ${inRange('p.paid_at')}
+      ORDER BY p.paid_at DESC, p.id
+      LIMIT $5
+      `,
+      [templateId, range.from, range.to, range.timeZone, limit],
+    );
+
+    return rows.map((row) => {
+      const amount = Number(row.amount);
+      const platformFeeAmount = Number(row.platform_fee_amount);
+
+      return {
+        purchaseId: row.id,
+        orderCode: row.order_code,
+        paidAt: row.paid_at,
+        versionNumber: row.version_number,
+        amount,
+        commissionRateBps: row.commission_rate_bps,
+        platformFeeAmount,
+        earnings: amount - platformFeeAmount,
+      };
+    });
   }
 
   // filterColumn is one of two fixed literals, never user input.
@@ -168,6 +220,7 @@ export class TypeOrmTemplateAnalyticsReader implements TemplateAnalyticsReader {
       uses: number;
       paid_purchases: number;
       gross_revenue: string;
+      earnings: string;
     }[] = await this.dataSource.query(
       `
       WITH t AS (
@@ -188,7 +241,8 @@ export class TypeOrmTemplateAnalyticsReader implements TemplateAnalyticsReader {
       pu AS (
         SELECT (p.paid_at AT TIME ZONE $4::text)::date AS day,
           COUNT(*) AS paid_purchases,
-          SUM(p.amount) AS gross_revenue
+          SUM(p.amount) AS gross_revenue,
+          SUM(p.amount - p.platform_fee_amount) AS earnings
         FROM template_purchases p
         JOIN t ON t.id = p.template_id
         WHERE p.status = 'PAID' AND ${inRange('p.paid_at')}
@@ -198,7 +252,8 @@ export class TypeOrmTemplateAnalyticsReader implements TemplateAnalyticsReader {
         COALESCE(ev.views, 0)::int AS views,
         COALESCE(ev.uses, 0)::int AS uses,
         COALESCE(pu.paid_purchases, 0)::int AS paid_purchases,
-        COALESCE(pu.gross_revenue, 0)::text AS gross_revenue
+        COALESCE(pu.gross_revenue, 0)::text AS gross_revenue,
+        COALESCE(pu.earnings, 0)::text AS earnings
       FROM days d
       LEFT JOIN ev ON ev.day = d.day
       LEFT JOIN pu ON pu.day = d.day
@@ -213,6 +268,7 @@ export class TypeOrmTemplateAnalyticsReader implements TemplateAnalyticsReader {
       uses: row.uses,
       paidPurchases: row.paid_purchases,
       grossRevenue: Number(row.gross_revenue),
+      earnings: Number(row.earnings),
     }));
   }
 
@@ -242,7 +298,8 @@ export class TypeOrmTemplateAnalyticsReader implements TemplateAnalyticsReader {
       pu AS (
         SELECT p.template_id,
           COUNT(*) AS paid_purchases,
-          SUM(p.amount) AS gross_revenue
+          SUM(p.amount) AS gross_revenue,
+          SUM(p.amount - p.platform_fee_amount) AS earnings
         FROM template_purchases p
         JOIN t ON t.id = p.template_id
         WHERE p.status = 'PAID' AND ${inRange('p.paid_at')}
@@ -254,7 +311,8 @@ export class TypeOrmTemplateAnalyticsReader implements TemplateAnalyticsReader {
         COALESCE(ev.guest_views, 0)::int AS guest_views,
         COALESCE(ev.uses, 0)::int AS uses,
         COALESCE(pu.paid_purchases, 0)::int AS paid_purchases,
-        COALESCE(pu.gross_revenue, 0)::text AS gross_revenue
+        COALESCE(pu.gross_revenue, 0)::text AS gross_revenue,
+        COALESCE(pu.earnings, 0)::text AS earnings
       FROM t
       LEFT JOIN ev ON ev.template_id = t.id
       LEFT JOIN pu ON pu.template_id = t.id
@@ -274,5 +332,6 @@ function toTotals(row: TotalsRow): TemplateAnalyticsTotals {
     paidPurchases: row.paid_purchases,
     // bigint arrives as text; VND totals stay well inside Number's safe range.
     grossRevenue: Number(row.gross_revenue),
+    earnings: Number(row.earnings),
   };
 }

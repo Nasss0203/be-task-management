@@ -140,6 +140,14 @@
     {
       "file": "1792329003733-CreateTemplateAnalyticsEvents.ts",
       "sha256": "e5a555a6dfbeb594003c6c84b5e0cc50eac46b711b5f12d4d946051ca0bcf8b8"
+    },
+    {
+      "file": "1792400000000-BackfillDatabaseStatusDefaults.ts",
+      "sha256": "96e10802bad74c6e715fcf46ec21f9f57e4e4d5bdc60294a2f9dbd8d8f5c9575"
+    },
+    {
+      "file": "1792413822052-CreateMarketplaceCommissionRates.ts",
+      "sha256": "848a137511f0e3678cc3093281c326fcb9354f666d1db0a72cdf018374289352"
     }
   ]
 }

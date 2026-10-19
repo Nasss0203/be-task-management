@@ -13,6 +13,9 @@ export const MARKETPLACE_TYPES = {
     TemplateAnalyticsEventRepository: Symbol(
       'TemplateAnalyticsEventRepository',
     ),
+    MarketplaceCommissionRateRepository: Symbol(
+      'MarketplaceCommissionRateRepository',
+    ),
   },
   applications: {
     GetTemplatePurchaseHandler: Symbol('GetTemplatePurchaseHandler'),
@@ -59,6 +62,12 @@ export const MARKETPLACE_TYPES = {
     GetCreatorTemplateAnalyticsHandler: Symbol(
       'GetCreatorTemplateAnalyticsHandler',
     ),
+    GetMarketplaceCommissionRateHandler: Symbol(
+      'GetMarketplaceCommissionRateHandler',
+    ),
+    UpdateMarketplaceCommissionRateHandler: Symbol(
+      'UpdateMarketplaceCommissionRateHandler',
+    ),
   },
   ports: {
     Distribution: Symbol('TemplateDistributionPort'),
@@ -66,6 +75,7 @@ export const MARKETPLACE_TYPES = {
     FreeClaims: Symbol('TemplateFreeClaimPort'),
     CreatorReader: Symbol('TemplateCreatorReader'),
     AnalyticsReader: Symbol('TemplateAnalyticsReader'),
+    CommissionRateReader: Symbol('MarketplaceCommissionRateReader'),
   },
   services: {
     TemplatePurchaseSettlementService: Symbol(

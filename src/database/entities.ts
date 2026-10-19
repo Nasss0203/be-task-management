@@ -36,6 +36,7 @@ import { RefreshToken } from 'src/modules/identity/infrastructure/persistence/ty
 import { UserAuthIdentityOrmEntity } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user-auth-identity.orm-entity';
 import { UserProfile } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user-profile.orm-entity';
 import { User } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user.orm-entity';
+import { MarketplaceCommissionRateOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/marketplace-commission-rate.orm-entity';
 import { MarketplaceWebhookEventOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/marketplace-webhook-event.orm-entity';
 import { TemplateAnalyticsEventOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-analytics-event.orm-entity';
 import { TemplateCategoryOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-category.orm-entity';
@@ -136,4 +137,5 @@ export const DATABASE_ENTITIES = [
   TemplatePurchaseOrmEntity,
   MarketplaceWebhookEventOrmEntity,
   TemplateAnalyticsEventOrmEntity,
+  MarketplaceCommissionRateOrmEntity,
 ];

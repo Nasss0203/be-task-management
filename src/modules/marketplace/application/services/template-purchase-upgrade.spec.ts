@@ -88,6 +88,7 @@ function pendingPurchase() {
     publishedVersionId: 'version-2',
     amount: 50000,
     currency: 'VND',
+    commissionRateBps: 0,
     idempotencyKey: 'key-1',
     expiresAt: new Date(Date.now() + 60 * 60 * 1000),
   });
