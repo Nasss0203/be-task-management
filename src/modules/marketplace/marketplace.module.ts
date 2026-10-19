@@ -47,6 +47,16 @@ import { TemplateMarketplaceReleaseOrmEntity } from './infrastructure/persistenc
 import { MarketplaceWebhookEventOrmEntity } from './infrastructure/persistence/typeorm/entities/marketplace-webhook-event.orm-entity';
 import { TemplateAnalyticsEventOrmEntity } from './infrastructure/persistence/typeorm/entities/template-analytics-event.orm-entity';
 import { MarketplaceCommissionRateOrmEntity } from './infrastructure/persistence/typeorm/entities/marketplace-commission-rate.orm-entity';
+import { TemplateReviewOrmEntity } from './infrastructure/persistence/typeorm/entities/template-review.orm-entity';
+import { TemplateLikeOrmEntity } from './infrastructure/persistence/typeorm/entities/template-like.orm-entity';
+import { TypeOrmTemplateReviewRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-review.repository';
+import { TypeOrmTemplateLikeRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-like.repository';
+import { TypeOrmTemplateFeedbackReader } from './infrastructure/persistence/typeorm/readers/typeorm-template-feedback.reader';
+import { UpsertTemplateReviewHandler } from './application/commands/template-feedback/upsert-template-review/upsert-template-review.handler';
+import { DeleteTemplateReviewHandler } from './application/commands/template-feedback/delete-template-review/delete-template-review.handler';
+import { SetTemplateLikeHandler } from './application/commands/template-feedback/set-template-like/set-template-like.handler';
+import { ListPublicTemplateReviewsHandler } from './application/queries/template-feedback/list-public-template-reviews/list-public-template-reviews.handler';
+import { TemplateFeedbackController } from './presentation/http/controllers/template-feedback.controller';
 import { TypeOrmTemplateCategoryRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-category.repository';
 import { TypeOrmTemplateEntitlementRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-entitlement.repository';
 import { TypeOrmTemplateListingRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-template-listing.repository';
@@ -80,6 +90,8 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
       MarketplaceWebhookEventOrmEntity,
       TemplateAnalyticsEventOrmEntity,
       MarketplaceCommissionRateOrmEntity,
+      TemplateReviewOrmEntity,
+      TemplateLikeOrmEntity,
     ]),
   ],
   providers: [
@@ -265,6 +277,34 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
       useClass: TypeOrmMarketplaceCommissionRateReader,
     },
     {
+      provide: MARKETPLACE_TYPES.ports.FeedbackReader,
+      useClass: TypeOrmTemplateFeedbackReader,
+    },
+    {
+      provide: MARKETPLACE_TYPES.repositories.TemplateReviewRepository,
+      useClass: TypeOrmTemplateReviewRepository,
+    },
+    {
+      provide: MARKETPLACE_TYPES.repositories.TemplateLikeRepository,
+      useClass: TypeOrmTemplateLikeRepository,
+    },
+    {
+      provide: MARKETPLACE_TYPES.applications.UpsertTemplateReviewHandler,
+      useClass: UpsertTemplateReviewHandler,
+    },
+    {
+      provide: MARKETPLACE_TYPES.applications.DeleteTemplateReviewHandler,
+      useClass: DeleteTemplateReviewHandler,
+    },
+    {
+      provide: MARKETPLACE_TYPES.applications.SetTemplateLikeHandler,
+      useClass: SetTemplateLikeHandler,
+    },
+    {
+      provide: MARKETPLACE_TYPES.applications.ListPublicTemplateReviewsHandler,
+      useClass: ListPublicTemplateReviewsHandler,
+    },
+    {
       provide:
         MARKETPLACE_TYPES.applications.ListCreatorTemplateAnalyticsHandler,
       useClass: ListCreatorTemplateAnalyticsHandler,
@@ -283,6 +323,7 @@ import { TemplatePurchaseController } from './presentation/http/controllers/temp
     PublicTemplateCategoryController,
     TemplatePurchaseController,
     CreatorTemplateAnalyticsController,
+    TemplateFeedbackController,
   ],
   exports: [
     MARKETPLACE_TYPES.ports.Distribution,

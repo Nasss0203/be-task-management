@@ -28,10 +28,12 @@ describe('ListPublicTemplatesHandler category enrichment', () => {
     findByTemplateIds: jest.fn(),
   };
   const creators = { findProfiles: jest.fn().mockResolvedValue(new Map()) };
+  const feedback = { getSummaries: jest.fn().mockResolvedValue(new Map()) };
   const handler = new ListPublicTemplatesHandler(
     templates as unknown as PageTemplateRepository,
     listings as unknown as TemplateListingRepository,
     creators as never,
+    feedback as never,
   );
   const first = PageTemplate.create({
     id: '550e8400-e29b-41d4-a716-446655440001',
@@ -78,6 +80,7 @@ describe('ListPublicTemplatesHandler category enrichment', () => {
   ]);
   beforeEach(() => {
     jest.resetAllMocks();
+    feedback.getSummaries.mockResolvedValue(new Map());
     listings.findTagsByTemplateIds.mockResolvedValue(new Map());
     creators.findProfiles.mockResolvedValue(new Map());
     templates.findMany.mockResolvedValue({
@@ -123,6 +126,9 @@ describe('ListPublicTemplatesHandler category enrichment', () => {
         categories: [{ id: 'a', name: 'Esports', slug: 'esports' }],
         tags: [],
         creator: null,
+        rating_average: null,
+        rating_count: 0,
+        like_count: 0,
         offer_type: 'FREE',
         price_amount: 0,
         currency: 'VND',
@@ -134,6 +140,9 @@ describe('ListPublicTemplatesHandler category enrichment', () => {
         categories: [{ id: 'b', name: 'Gaming', slug: 'gaming' }],
         tags: [],
         creator: null,
+        rating_average: null,
+        rating_count: 0,
+        like_count: 0,
         offer_type: 'FREE',
         price_amount: 0,
         currency: 'VND',
@@ -181,6 +190,7 @@ describe('ListPublicTemplatesHandler category enrichment', () => {
       scope: TemplateListScope.PUBLIC,
       requirePublishedVersion: true,
       search: 'esports',
+      sort: 'newest',
       cursor: payload,
       limit: 2,
     });

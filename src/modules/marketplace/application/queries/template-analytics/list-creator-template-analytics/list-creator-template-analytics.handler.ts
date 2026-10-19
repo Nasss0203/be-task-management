@@ -3,6 +3,7 @@ import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
 
 import type { CreatorTemplateAnalyticsListResponseDto } from '../../../dto/template-analytics/template-analytics.response.dto';
 import type { TemplateAnalyticsReader } from '../../../ports/template-analytics-reader.port';
+import type { TemplateFeedbackReader } from '../../../ports/template-feedback-reader.port';
 import {
   resolveAnalyticsRange,
   toAnalyticsDate,
@@ -15,6 +16,9 @@ export class ListCreatorTemplateAnalyticsHandler {
   constructor(
     @Inject(MARKETPLACE_TYPES.ports.AnalyticsReader)
     private readonly reader: TemplateAnalyticsReader,
+
+    @Inject(MARKETPLACE_TYPES.ports.FeedbackReader)
+    private readonly feedbackReader: TemplateFeedbackReader,
   ) {}
 
   async execute(
@@ -38,6 +42,22 @@ export class ListCreatorTemplateAnalyticsHandler {
         : [],
     ]);
 
-    return { ...range, currency: 'VND', items, daily };
+    const feedback = await this.feedbackReader.getSummaries(
+      items.map((item) => item.templateId),
+    );
+
+    return {
+      ...range,
+      currency: 'VND',
+      items: items.map((item) => ({
+        ...item,
+        feedback: feedback.get(item.templateId) ?? {
+          ratingAverage: null,
+          ratingCount: 0,
+          likeCount: 0,
+        },
+      })),
+      daily,
+    };
   }
 }

@@ -5,6 +5,7 @@ import type {
   TemplateAnalyticsTotals,
   TemplateAnalyticsVersionPoint,
 } from '../../ports/template-analytics-reader.port';
+import type { TemplateFeedbackSummary } from '../../ports/template-feedback-reader.port';
 
 interface TemplateAnalyticsRangeDto {
   /** Null means all-time. */
@@ -15,7 +16,9 @@ interface TemplateAnalyticsRangeDto {
 }
 
 export interface CreatorTemplateAnalyticsListResponseDto extends TemplateAnalyticsRangeDto {
-  items: TemplateAnalyticsTemplateTotals[];
+  items: (TemplateAnalyticsTemplateTotals & {
+    feedback: TemplateFeedbackSummary;
+  })[];
   /** Summed over all templates; empty when the creator has none. */
   daily: TemplateAnalyticsDailyPoint[];
 }

@@ -36,4 +36,8 @@ export class ListPublicTemplatesRequest extends PickType(
   @ValidateIf((_, value) => value !== undefined)
   @IsIn(['FREE', 'PAID'])
   offer_type?: 'FREE' | 'PAID';
+
+  @ValidateIf((_, value) => value !== undefined)
+  @IsIn(['newest', 'top_rated', 'most_liked'])
+  sort?: 'newest' | 'top_rated' | 'most_liked';
 }

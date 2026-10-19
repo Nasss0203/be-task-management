@@ -1,3 +1,5 @@
+import type { PublicTemplateSort } from 'src/modules/template/domain/repositories/page-template.repository';
+
 export class ListPublicTemplatesQuery {
   constructor(
     public readonly search?: string,
@@ -6,5 +8,6 @@ export class ListPublicTemplatesQuery {
     public readonly category?: string,
     public readonly tag?: string,
     public readonly offerType?: 'FREE' | 'PAID',
+    public readonly sort: PublicTemplateSort = 'newest',
   ) {}
 }

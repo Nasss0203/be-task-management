@@ -22,10 +22,12 @@ describe('GetPublicTemplateDetailHandler category enrichment', () => {
     findByTemplateId: jest.fn(),
   };
   const creators = { findProfiles: jest.fn().mockResolvedValue(new Map()) };
+  const feedback = { getSummaries: jest.fn().mockResolvedValue(new Map()) };
   const handler = new GetPublicTemplateDetailHandler(
     templates as unknown as PageTemplateRepository,
     listings as unknown as TemplateListingRepository,
     creators as never,
+    feedback as never,
   );
   const template = PageTemplate.create({
     id: 't1',
@@ -53,6 +55,7 @@ describe('GetPublicTemplateDetailHandler category enrichment', () => {
   ];
   beforeEach(() => {
     jest.resetAllMocks();
+    feedback.getSummaries.mockResolvedValue(new Map());
     listings.findTagsByTemplateIds.mockResolvedValue(new Map());
     creators.findProfiles.mockResolvedValue(new Map());
     templates.findPublicById.mockResolvedValue({ template, version });
@@ -77,6 +80,9 @@ describe('GetPublicTemplateDetailHandler category enrichment', () => {
       ...PageTemplateResponseDto.fromDomain(template),
       tags: [],
       creator: null,
+      rating_average: null,
+      rating_count: 0,
+      like_count: 0,
       offer_type: TemplateOfferType.FREE,
       price_amount: 0,
       currency: 'VND',

@@ -1,4 +1,5 @@
 import type { PublicTemplateCreatorDto } from './public-template-creator';
+import type { TemplateFeedbackSummaryDto } from '../template-feedback/template-feedback.response.dto';
 import type { TemplateVersionResponseDto } from '../../../../template/application/dto/template-version/template-version.response.dto';
 import type { ListPageTemplatesResponseDto } from '../../../../template/application/dto/page-template/list-page-templates.response.dto';
 import type { PageTemplateResponseDto } from '../../../../template/application/dto/page-template/page-template.response.dto';
@@ -20,7 +21,8 @@ export interface PublicTemplateCategoryDto {
 
 export interface ListPublicTemplatesResponseDto {
   items: (ListPageTemplatesResponseDto['items'][number] &
-    PublicTemplatePricingDto & {
+    PublicTemplatePricingDto &
+    TemplateFeedbackSummaryDto & {
       categories: PublicTemplateCategoryDto[];
       tags: string[];
       creator: PublicTemplateCreatorDto | null;
@@ -29,7 +31,10 @@ export interface ListPublicTemplatesResponseDto {
 }
 
 export interface PublicTemplateDetailResponseDto
-  extends PageTemplateResponseDto, PublicTemplatePricingDto {
+  extends
+    PageTemplateResponseDto,
+    PublicTemplatePricingDto,
+    TemplateFeedbackSummaryDto {
   version: TemplateVersionResponseDto;
   categories: PublicTemplateCategoryDto[];
   tags: string[];

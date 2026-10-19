@@ -16,6 +16,8 @@ export const MARKETPLACE_TYPES = {
     MarketplaceCommissionRateRepository: Symbol(
       'MarketplaceCommissionRateRepository',
     ),
+    TemplateReviewRepository: Symbol('TemplateReviewRepository'),
+    TemplateLikeRepository: Symbol('TemplateLikeRepository'),
   },
   applications: {
     GetTemplatePurchaseHandler: Symbol('GetTemplatePurchaseHandler'),
@@ -68,6 +70,12 @@ export const MARKETPLACE_TYPES = {
     UpdateMarketplaceCommissionRateHandler: Symbol(
       'UpdateMarketplaceCommissionRateHandler',
     ),
+    UpsertTemplateReviewHandler: Symbol('UpsertTemplateReviewHandler'),
+    DeleteTemplateReviewHandler: Symbol('DeleteTemplateReviewHandler'),
+    SetTemplateLikeHandler: Symbol('SetTemplateLikeHandler'),
+    ListPublicTemplateReviewsHandler: Symbol(
+      'ListPublicTemplateReviewsHandler',
+    ),
   },
   ports: {
     Distribution: Symbol('TemplateDistributionPort'),
@@ -76,6 +84,7 @@ export const MARKETPLACE_TYPES = {
     CreatorReader: Symbol('TemplateCreatorReader'),
     AnalyticsReader: Symbol('TemplateAnalyticsReader'),
     CommissionRateReader: Symbol('MarketplaceCommissionRateReader'),
+    FeedbackReader: Symbol('TemplateFeedbackReader'),
   },
   services: {
     TemplatePurchaseSettlementService: Symbol(

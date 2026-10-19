@@ -41,11 +41,13 @@ import { MarketplaceWebhookEventOrmEntity } from 'src/modules/marketplace/infras
 import { TemplateAnalyticsEventOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-analytics-event.orm-entity';
 import { TemplateCategoryOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-category.orm-entity';
 import { TemplateEntitlementOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-entitlement.orm-entity';
+import { TemplateLikeOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-like.orm-entity';
 import { TemplateListingCategoryOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-listing-category.orm-entity';
 import { TemplateListingTagOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-listing-tag.orm-entity';
 import { TemplateListingOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-listing.orm-entity';
 import { TemplateMarketplaceReleaseOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-marketplace-release.orm-entity';
 import { TemplatePurchaseOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-purchase.orm-entity';
+import { TemplateReviewOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-review.orm-entity';
 import { Mention } from 'src/modules/mentions/infrastructure/persistence/typeorm/entities/mention.orm-entity';
 import { Notification } from 'src/modules/notifications/infrastructure/persistence/typeorm/entities/notification.orm-entity';
 import { Permission } from 'src/modules/permission/infrastructure/persistence/typeorm/entities/legacy-permission.orm-entity';
@@ -138,4 +140,6 @@ export const DATABASE_ENTITIES = [
   MarketplaceWebhookEventOrmEntity,
   TemplateAnalyticsEventOrmEntity,
   MarketplaceCommissionRateOrmEntity,
+  TemplateLikeOrmEntity,
+  TemplateReviewOrmEntity,
 ];

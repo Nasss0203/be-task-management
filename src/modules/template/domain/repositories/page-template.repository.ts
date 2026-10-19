@@ -3,6 +3,8 @@ import type { TemplateListScope } from '../../presentation/http/requests/list-pa
 import { PageTemplate } from '../aggregates/page-template/page-template.aggregate';
 import type { TemplateVersion } from '../aggregates/template-version/template-version.aggregate';
 
+export type PublicTemplateSort = 'newest' | 'top_rated' | 'most_liked';
+
 export type FindPageTemplatesFilters = {
   scope: TemplateListScope;
   userId?: string;
@@ -15,9 +17,11 @@ export type FindPageTemplatesFilters = {
   // Public catalog only: listing tag and FREE/PAID offer.
   tag?: string;
   offerType?: 'FREE' | 'PAID';
+  sort?: PublicTemplateSort;
   cursor?: {
     createdAt: Date;
     id: string;
+    score?: number;
   };
   limit: number;
 };

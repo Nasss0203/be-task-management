@@ -1,5 +1,13 @@
 import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
-import { Controller, Get, Inject, Param, Post, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Inject,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
 
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { Public } from 'src/common/decorator/public.decorator';
@@ -19,6 +27,10 @@ import { ListPublicTemplatesQuery } from '../../../application/queries/page-temp
 import { GetPublicTemplatePreviewHandler } from '../../../application/queries/template-preview/get-public-template-preview/get-public-template-preview.handler';
 import { GetPublicTemplatePreviewQuery } from '../../../application/queries/template-preview/get-public-template-preview/get-public-template-preview.query';
 import { ListPublicTemplatesRequest } from '../requests/list-public-templates.request';
+import { ListTemplateReviewsRequest } from '../requests/list-template-reviews.request';
+import { ListPublicTemplateReviewsHandler } from '../../../application/queries/template-feedback/list-public-template-reviews/list-public-template-reviews.handler';
+import { ListPublicTemplateReviewsQuery } from '../../../application/queries/template-feedback/list-public-template-reviews/list-public-template-reviews.query';
+import type { TemplateReviewsResponseDto } from '../../../application/dto/template-feedback/template-feedback.response.dto';
 
 @Controller('public/templates')
 export class PublicTemplateController {
@@ -34,6 +46,9 @@ export class PublicTemplateController {
 
     @Inject(MARKETPLACE_TYPES.applications.RecordTemplateViewHandler)
     private readonly recordTemplateViewHandler: RecordTemplateViewHandler,
+
+    @Inject(MARKETPLACE_TYPES.applications.ListPublicTemplateReviewsHandler)
+    private readonly listReviewsHandler: ListPublicTemplateReviewsHandler,
   ) {}
 
   @Public()
@@ -49,6 +64,7 @@ export class PublicTemplateController {
         query.category,
         query.tag,
         query.offer_type,
+        query.sort,
       ),
     );
   }
@@ -72,6 +88,25 @@ export class PublicTemplateController {
   async getDetail(@Param('templateId') templateId: string) {
     return this.getPublicTemplateDetailHandler.execute(
       new GetPublicTemplateDetailQuery(templateId),
+    );
+  }
+
+  @Public()
+  @Get(':templateId/reviews')
+  @ReadRateLimit()
+  @ResponseMessage('Template reviews retrieved successfully')
+  async listReviews(
+    @Param('templateId', ParseUUIDPipe) templateId: string,
+    @Query() query: ListTemplateReviewsRequest,
+    @Auth() auth: IAuth | null,
+  ): Promise<TemplateReviewsResponseDto> {
+    return this.listReviewsHandler.execute(
+      new ListPublicTemplateReviewsQuery(
+        templateId,
+        query.page,
+        query.limit,
+        auth?.id ?? null,
+      ),
     );
   }
 

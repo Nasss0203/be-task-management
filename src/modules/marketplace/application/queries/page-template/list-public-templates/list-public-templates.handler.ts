@@ -1,6 +1,8 @@
 import type { TemplateCreatorReader } from '../../../ports/template-creator-reader.port';
 import { toPublicCreator } from '../../../dto/page-template/public-template-creator';
 import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
+import type { TemplateFeedbackReader } from '../../../ports/template-feedback-reader.port';
+import { toFeedbackSummaryDto } from '../../../dto/template-feedback/template-feedback.response.dto';
 import {
   BadRequestException,
   Inject,
@@ -34,6 +36,8 @@ export class ListPublicTemplatesHandler {
     private readonly templateListingRepository: TemplateListingRepository,
     @Inject(MARKETPLACE_TYPES.ports.CreatorReader)
     private readonly creatorReader: TemplateCreatorReader,
+    @Inject(MARKETPLACE_TYPES.ports.FeedbackReader)
+    private readonly feedbackReader: TemplateFeedbackReader,
   ) {}
 
   async execute(
@@ -61,6 +65,9 @@ export class ListPublicTemplatesHandler {
     const cursor = query.cursor
       ? decodeTemplateListCursor(query.cursor)
       : undefined;
+    if (cursor && query.sort !== 'newest' && cursor.score === undefined) {
+      throw new BadRequestException('Cursor does not match the sort order');
+    }
     const result = await this.pageTemplateRepository.findMany({
       scope: TemplateListScope.PUBLIC,
       requirePublishedVersion: true,
@@ -68,6 +75,7 @@ export class ListPublicTemplatesHandler {
       ...(categorySlug !== undefined ? { categorySlug } : {}),
       ...(query.tag !== undefined ? { tag: query.tag } : {}),
       ...(query.offerType !== undefined ? { offerType: query.offerType } : {}),
+      sort: query.sort,
       cursor,
       limit,
     });
@@ -84,11 +92,12 @@ export class ListPublicTemplatesHandler {
           )
         : new Map<string, TemplateListingCategoryInfo[]>();
     const templateIds = result.items.map((template) => template.getId());
-    const [tagsByTemplate, creators] = await Promise.all([
+    const [tagsByTemplate, creators, feedback] = await Promise.all([
       this.templateListingRepository.findTagsByTemplateIds(templateIds),
       this.creatorReader.findProfiles(
         result.items.map((template) => template.getCreatedBy()),
       ),
+      this.feedbackReader.getSummaries(templateIds),
     ]);
     const items = result.items.map((template) => {
       const listing = listingsByTemplate.get(template.getId());
@@ -105,6 +114,7 @@ export class ListPublicTemplatesHandler {
         ),
         tags: tagsByTemplate.get(template.getId()) ?? [],
         creator: toPublicCreator(creators.get(template.getCreatedBy())),
+        ...toFeedbackSummaryDto(feedback.get(template.getId())),
         version: version
           ? TemplateVersionResponseDto.fromDomain(version)
           : null,
@@ -116,6 +126,15 @@ export class ListPublicTemplatesHandler {
         ? encodeTemplateListCursor({
             createdAt: last.getCreatedAt(),
             id: last.getId(),
+            ...(query.sort === 'top_rated'
+              ? {
+                  score: Math.round(
+                    (feedback.get(last.getId())?.ratingAverage ?? 0) * 100,
+                  ),
+                }
+              : query.sort === 'most_liked'
+                ? { score: feedback.get(last.getId())?.likeCount ?? 0 }
+                : {}),
           })
         : null;
     return { items, nextCursor };

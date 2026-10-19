@@ -148,6 +148,10 @@
     {
       "file": "1792413822052-CreateMarketplaceCommissionRates.ts",
       "sha256": "848a137511f0e3678cc3093281c326fcb9354f666d1db0a72cdf018374289352"
+    },
+    {
+      "file": "1792420815933-CreateTemplateLikes.ts",
+      "sha256": "a214992e7e2c775ef2703a2f7e4ed16ece9c6bce07f7f85fea4c4ee4f4a50c0f"
     }
   ]
 }

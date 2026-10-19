@@ -105,6 +105,19 @@ describe('creator template analytics handlers', () => {
   });
 
   describe('ListCreatorTemplateAnalyticsHandler', () => {
+    const feedback = {
+      getSummaries: jest.fn(() =>
+        Promise.resolve(
+          new Map([
+            [
+              'template-1',
+              { ratingAverage: 4.5, ratingCount: 2, likeCount: 7 },
+            ],
+          ]),
+        ),
+      ),
+    };
+
     it("lists only the caller's templates for the range", async () => {
       reader.listCreatorTotals.mockResolvedValue([
         { templateId: 'template-1', name: 'Planner', totals },
@@ -112,6 +125,7 @@ describe('creator template analytics handlers', () => {
 
       const result = await new ListCreatorTemplateAnalyticsHandler(
         reader,
+        feedback as never,
       ).execute(
         new ListCreatorTemplateAnalyticsQuery(
           'creator-1',
@@ -126,11 +140,19 @@ describe('creator template analytics handlers', () => {
         timeZone: ANALYTICS_TIME_ZONE,
       });
       expect(result.items).toHaveLength(1);
+      expect(result.items[0].feedback).toEqual({
+        ratingAverage: 4.5,
+        ratingCount: 2,
+        likeCount: 7,
+      });
       expect(result.currency).toBe('VND');
     });
 
     it('adds a daily series summed over the bounded range', async () => {
-      const handler = new ListCreatorTemplateAnalyticsHandler(reader);
+      const handler = new ListCreatorTemplateAnalyticsHandler(
+        reader,
+        feedback as never,
+      );
 
       await handler.execute(
         new ListCreatorTemplateAnalyticsQuery(
@@ -151,6 +173,7 @@ describe('creator template analytics handlers', () => {
     it('starts an all-time series on the first template day in Vietnam time', async () => {
       const result = await new ListCreatorTemplateAnalyticsHandler(
         reader,
+        feedback as never,
       ).execute(new ListCreatorTemplateAnalyticsQuery('creator-1'));
 
       expect(result.from).toBeNull();
@@ -166,6 +189,7 @@ describe('creator template analytics handlers', () => {
 
       const result = await new ListCreatorTemplateAnalyticsHandler(
         reader,
+        feedback as never,
       ).execute(new ListCreatorTemplateAnalyticsQuery('creator-1'));
 
       expect(result.daily).toEqual([]);

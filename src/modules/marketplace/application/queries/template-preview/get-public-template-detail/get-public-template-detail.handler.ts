@@ -1,6 +1,8 @@
 import type { TemplateCreatorReader } from '../../../ports/template-creator-reader.port';
 import { toPublicCreator } from '../../../dto/page-template/public-template-creator';
 import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
+import type { TemplateFeedbackReader } from '../../../ports/template-feedback-reader.port';
+import { toFeedbackSummaryDto } from '../../../dto/template-feedback/template-feedback.response.dto';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
 import type { TemplateContentPort } from 'src/modules/template/application/ports/template-content.port';
@@ -20,6 +22,8 @@ export class GetPublicTemplateDetailHandler {
     private readonly templateListingRepository: TemplateListingRepository,
     @Inject(MARKETPLACE_TYPES.ports.CreatorReader)
     private readonly creatorReader: TemplateCreatorReader,
+    @Inject(MARKETPLACE_TYPES.ports.FeedbackReader)
+    private readonly feedbackReader: TemplateFeedbackReader,
   ) {}
 
   async execute(
@@ -42,11 +46,12 @@ export class GetPublicTemplateDetailHandler {
         [templateId],
         { activeOnly: true },
       );
-    const [tagsByTemplate, creators] = await Promise.all([
+    const [tagsByTemplate, creators, feedback] = await Promise.all([
       this.templateListingRepository.findTagsByTemplateIds([templateId]),
       this.creatorReader.findProfiles([
         result.template.getCreatedBy(),
       ]),
+      this.feedbackReader.getSummaries([templateId]),
     ]);
     return {
       ...PageTemplateResponseDto.fromDomain(result.template),
@@ -60,6 +65,7 @@ export class GetPublicTemplateDetailHandler {
       ),
       tags: tagsByTemplate.get(templateId) ?? [],
       creator: toPublicCreator(creators.get(result.template.getCreatedBy())),
+      ...toFeedbackSummaryDto(feedback.get(templateId)),
     };
   }
 }

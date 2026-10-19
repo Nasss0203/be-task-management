@@ -13,6 +13,7 @@ import type {
   FindPageTemplatesResult,
   FindPublicPageTemplateByIdResult,
   PageTemplateRepository,
+  PublicTemplateSort,
 } from '../../../../domain/repositories/page-template.repository';
 import { TemplateListScope } from '../../../../presentation/http/requests/list-page-templates.request';
 import { PageTemplateVersionOrmEntity } from '../entities/page-template-version.orm-entity';
@@ -22,6 +23,14 @@ import { TemplateListingTagOrmEntity } from '../../../../../marketplace/infrastr
 import { PageTemplateOrmEntity } from '../entities/page-template.orm-entity';
 import { PageTemplateMapper } from '../mappers/page-template.mapper';
 import { TemplateVersionMapper } from '../mappers/template-version.mapper';
+
+const PUBLIC_SORT_SCORE: Record<PublicTemplateSort, string | null> = {
+  newest: null,
+  top_rated:
+    '(SELECT COALESCE(ROUND(AVG(score_review.rating), 2) * 100, 0)::int FROM template_reviews score_review WHERE score_review.template_id = template.id)',
+  most_liked:
+    '(SELECT COUNT(*)::int FROM template_likes score_like WHERE score_like.template_id = template.id)',
+};
 
 @Injectable()
 export class TypeOrmPageTemplateRepository implements PageTemplateRepository {
@@ -292,8 +301,22 @@ export class TypeOrmPageTemplateRepository implements PageTemplateRepository {
       );
     }
 
+    const scoreExpression =
+      filters.scope === TemplateListScope.PUBLIC && filters.sort
+        ? PUBLIC_SORT_SCORE[filters.sort]
+        : null;
+
     const cursor = filters.cursor;
-    if (cursor) {
+    if (cursor && scoreExpression) {
+      qb.andWhere(
+        `(${scoreExpression} < :cursorScore OR (${scoreExpression} = :cursorScore AND (template.createdAt < :cursorCreatedAt OR (template.createdAt = :cursorCreatedAt AND template.id < :cursorId))))`,
+        {
+          cursorScore: cursor.score ?? 0,
+          cursorCreatedAt: cursor.createdAt,
+          cursorId: cursor.id,
+        },
+      );
+    } else if (cursor) {
       qb.andWhere(
         new Brackets((cursorQb) => {
           cursorQb
@@ -315,9 +338,13 @@ export class TypeOrmPageTemplateRepository implements PageTemplateRepository {
       );
     }
 
-    qb.orderBy('template.createdAt', 'DESC')
-      .addOrderBy('template.id', 'DESC')
-      .take(filters.limit + 1);
+    if (scoreExpression) {
+      qb.orderBy(scoreExpression, 'DESC').addOrderBy('template.createdAt', 'DESC');
+    } else {
+      qb.orderBy('template.createdAt', 'DESC');
+    }
+
+    qb.addOrderBy('template.id', 'DESC').take(filters.limit + 1);
 
     const rows = await qb.getMany();
     const hasNextPage = rows.length > filters.limit;

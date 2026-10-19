@@ -3,6 +3,7 @@ import { BadRequestException } from '@nestjs/common';
 export type TemplateListCursorPayload = {
   createdAt: Date;
   id: string;
+  score?: number;
 };
 
 const UUID_REGEX =
@@ -14,6 +15,7 @@ export function encodeTemplateListCursor(
   const data = {
     createdAt: payload.createdAt.toISOString(),
     id: payload.id,
+    ...(payload.score !== undefined ? { score: payload.score } : {}),
   };
   return Buffer.from(JSON.stringify(data), 'utf8').toString('base64url');
 }
@@ -34,7 +36,15 @@ export function decodeTemplateListCursor(
       throw new BadRequestException('Invalid cursor format');
     }
 
-    const { createdAt, id } = parsed as { createdAt: string; id: string };
+    const { createdAt, id, score } = parsed as {
+      createdAt: string;
+      id: string;
+      score?: unknown;
+    };
+
+    if (score !== undefined && !Number.isSafeInteger(score)) {
+      throw new BadRequestException('Invalid cursor score');
+    }
 
     const date = new Date(createdAt);
     if (Number.isNaN(date.getTime())) {
@@ -48,6 +58,7 @@ export function decodeTemplateListCursor(
     return {
       createdAt: date,
       id,
+      ...(score !== undefined ? { score: score as number } : {}),
     };
   } catch (error) {
     if (error instanceof BadRequestException) {
