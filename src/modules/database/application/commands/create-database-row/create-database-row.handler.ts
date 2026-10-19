@@ -4,6 +4,8 @@ import { randomUUID } from 'crypto';
 import { DATABASE_TYPES } from '../../../database.types';
 
 import { DatabaseRow } from '../../../domain/aggregates/row/database-row.aggregate';
+import { RowValue } from '../../../domain/aggregates/row/row-value.entity';
+import { PropertyType } from '../../../domain/enums/property-type.enum';
 import { type DatabaseRowRepository } from '../../../domain/repositories/database-row.repository';
 import { type DatabaseRepository } from '../../../domain/repositories/database.repository';
 
@@ -37,6 +39,20 @@ export class CreateDatabaseRowHandler {
       id: randomUUID(),
       databaseId: database.getId(),
     });
+
+    // Like Notion, a STATUS property always has a value: start at its first option.
+    for (const property of database.getProperties()) {
+      const option =
+        property.getType() === PropertyType.STATUS
+          ? property.getDefaultOption()
+          : undefined;
+      if (option) {
+        row.setValue(
+          property,
+          new RowValue(randomUUID(), row.getId(), property.getId(), option.getId()),
+        );
+      }
+    }
 
     await this.databaseRowRepository.save(row, context);
 

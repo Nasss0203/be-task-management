@@ -141,4 +141,16 @@ export class DatabaseView {
 
     property.setVisible(visible);
   }
+
+  setPropertyWidth(propertyId: string, width: number | null): void {
+    const property = this.properties.find(
+      (item) => item.getPropertyId() === propertyId,
+    );
+
+    if (!property) {
+      throw new DatabaseViewPropertyNotFoundException();
+    }
+
+    property.changeWidth(width);
+  }
 }

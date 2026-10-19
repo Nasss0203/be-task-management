@@ -15,6 +15,7 @@ import { RenameDatabaseViewHandler } from './application/commands/rename-databas
 import { RenamePropertyHandler } from './application/commands/rename-property/rename-property.handler';
 import { SetRowValueHandler } from './application/commands/set-row-value/set-row-value.handler';
 import { SetViewPropertyVisibilityHandler } from './application/commands/set-view-property-visibility/set-view-property-visibility.handler';
+import { SetViewPropertyWidthHandler } from './application/commands/set-view-property-width/set-view-property-width.handler';
 import { UpdatePropertyOptionHandler } from './application/commands/update-property-option/update-property-option.handler';
 import { GetDatabaseRowsHandler } from './application/queries/get-database-rows/get-database-rows.handler';
 import { GetDatabaseViewHandler } from './application/queries/get-database-view/get-database-view.handler';
@@ -84,6 +85,7 @@ import { DatabaseController } from './presentation/http/controllers/database.con
     DeleteDatabaseViewHandler,
     GetDatabaseViewHandler,
     SetViewPropertyVisibilityHandler,
+    SetViewPropertyWidthHandler,
     {
       provide: DATABASE_TYPES.repositories.DatabaseRepository,
       useClass: TypeOrmDatabaseRepository,

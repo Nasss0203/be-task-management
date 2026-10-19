@@ -57,6 +57,13 @@ export class DatabaseProperty {
     return [...this.options];
   }
 
+  /** First option by position; new rows start at it for STATUS properties. */
+  getDefaultOption(): PropertyOption | undefined {
+    return [...this.options].sort(
+      (a, b) => Number(a.getPosition()) - Number(b.getPosition()),
+    )[0];
+  }
+
   rename(name: string): void {
     this.name = PropertyName.create(name);
   }

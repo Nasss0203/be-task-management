@@ -20,6 +20,8 @@ import { RenameDatabaseViewCommand } from 'src/modules/database/application/comm
 import { RenameDatabaseViewHandler } from 'src/modules/database/application/commands/rename-database-view/rename-database-view.handler';
 import { SetViewPropertyVisibilityCommand } from 'src/modules/database/application/commands/set-view-property-visibility/set-view-property-visibility.command';
 import { SetViewPropertyVisibilityHandler } from 'src/modules/database/application/commands/set-view-property-visibility/set-view-property-visibility.handler';
+import { SetViewPropertyWidthCommand } from 'src/modules/database/application/commands/set-view-property-width/set-view-property-width.command';
+import { SetViewPropertyWidthHandler } from 'src/modules/database/application/commands/set-view-property-width/set-view-property-width.handler';
 import { GetDatabaseViewHandler } from 'src/modules/database/application/queries/get-database-view/get-database-view.handler';
 import { GetDatabaseViewQuery } from 'src/modules/database/application/queries/get-database-view/get-database-view.query';
 import { GetDatabaseViewsHandler } from 'src/modules/database/application/queries/get-database-views/get-database-views.handler';
@@ -27,6 +29,7 @@ import { GetDatabaseViewsQuery } from 'src/modules/database/application/queries/
 import { CreateDatabaseViewRequest } from '../requests/create-database-view.request';
 import { RenameDatabaseViewRequest } from '../requests/rename-database-view.request';
 import { SetViewPropertyVisibilityRequest } from '../requests/set-view-property-visibility.request';
+import { SetViewPropertyWidthRequest } from '../requests/set-view-property-width.request';
 
 @Controller('databases/:databaseId/views')
 export class DatabaseViewController {
@@ -37,6 +40,7 @@ export class DatabaseViewController {
     private readonly renameDatabaseViewHandler: RenameDatabaseViewHandler,
     private readonly getDatabaseViewHandler: GetDatabaseViewHandler,
     private readonly setViewPropertyVisibilityHandler: SetViewPropertyVisibilityHandler,
+    private readonly setViewPropertyWidthHandler: SetViewPropertyWidthHandler,
   ) { }
 
   @Post()
@@ -90,6 +94,23 @@ export class DatabaseViewController {
         viewId,
         propertyId,
         request.visible,
+      ),
+    );
+  }
+
+  @Patch(':viewId/properties/:propertyId/width')
+  async setPropertyWidth(
+    @Param('databaseId') databaseId: string,
+    @Param('viewId') viewId: string,
+    @Param('propertyId') propertyId: string,
+    @Body() request: SetViewPropertyWidthRequest,
+  ) {
+    return this.setViewPropertyWidthHandler.execute(
+      new SetViewPropertyWidthCommand(
+        databaseId,
+        viewId,
+        propertyId,
+        request.width,
       ),
     );
   }

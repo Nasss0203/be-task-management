@@ -6,9 +6,11 @@ import { DATABASE_TYPES } from '../../../database.types';
 
 import { DatabaseProperty } from '../../../domain/aggregates/database/database-property.entity';
 import { PropertyOption } from '../../../domain/aggregates/database/property-option.entity';
+import { RowValue } from '../../../domain/aggregates/row/row-value.entity';
 
 import { PropertyType } from '../../../domain/enums/property-type.enum';
 
+import type { DatabaseRowRepository } from '../../../domain/repositories/database-row.repository';
 import type { DatabaseViewRepository } from '../../../domain/repositories/database-view.repository';
 
 import type { DatabaseRepository } from '../../../domain/repositories/database.repository';
@@ -27,6 +29,9 @@ export class AddPropertyHandler {
 
     @Inject(DATABASE_TYPES.repositories.DatabaseViewRepository)
     private readonly databaseViewRepository: DatabaseViewRepository,
+
+    @Inject(DATABASE_TYPES.repositories.DatabaseRowRepository)
+    private readonly databaseRowRepository: DatabaseRowRepository,
   ) {}
 
   async execute(
@@ -68,6 +73,30 @@ export class AddPropertyHandler {
     database.addProperty(property);
 
     await this.databaseRepository.save(database, context);
+
+    // Existing rows get the default status too, so none are left "without status".
+    const defaultOption =
+      command.type === PropertyType.STATUS
+        ? property.getDefaultOption()
+        : undefined;
+    if (defaultOption) {
+      const rows = await this.databaseRowRepository.findByDatabaseId(
+        command.databaseId,
+        context,
+      );
+      for (const row of rows) {
+        row.setValue(
+          property,
+          new RowValue(
+            randomUUID(),
+            row.getId(),
+            property.getId(),
+            defaultOption.getId(),
+          ),
+        );
+        await this.databaseRowRepository.save(row, context);
+      }
+    }
 
     const views = await this.databaseViewRepository.findByDatabaseId(
       command.databaseId,
