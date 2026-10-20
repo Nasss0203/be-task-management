@@ -7,8 +7,10 @@ import {
   Headers,
   Inject,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Query,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -35,6 +37,10 @@ import { RestorePageCommand } from 'src/modules/content/application/commands/pag
 import { RestorePageHandler } from 'src/modules/content/application/commands/page/restore-page/restore-page.handler';
 import { UpdatePageCommand } from 'src/modules/content/application/commands/page/update-page/update-page.command';
 import { UpdatePageHandler } from 'src/modules/content/application/commands/page/update-page/update-page.handler';
+import { ApplyPagePresetCommand } from 'src/modules/content/application/commands/page/apply-page-preset/apply-page-preset.command';
+import { ApplyPagePresetHandler } from 'src/modules/content/application/commands/page/apply-page-preset/apply-page-preset.handler';
+import { ApplyPagePresetDto } from 'src/modules/content/application/dto/page/apply-page-preset.dto';
+import { ListPagePresetsHandler } from 'src/modules/content/application/queries/page/list-page-presets/list-page-presets.handler';
 import { CreatePageDto } from 'src/modules/content/application/dto/page/create-page.dto';
 import { MovePageDto } from 'src/modules/content/application/dto/page/move-page.dto';
 import { PageResponseDto } from 'src/modules/content/application/dto/page/response/page.response.dto';
@@ -79,6 +85,12 @@ export class PageController {
     @Inject(CONTENT_TYPES.applications.UpdatePageHandler)
     private readonly updatePageHandler: UpdatePageHandler,
 
+    @Inject(CONTENT_TYPES.applications.ApplyPagePresetHandler)
+    private readonly applyPagePresetHandler: ApplyPagePresetHandler,
+
+    @Inject(CONTENT_TYPES.applications.ListPagePresetsHandler)
+    private readonly listPagePresetsHandler: ListPagePresetsHandler,
+
     @Inject(CONTENT_TYPES.applications.MovePageHandler)
     private readonly movePageHandler: MovePageHandler,
 
@@ -105,6 +117,12 @@ export class PageController {
       ),
     );
   }
+  @Get('presets')
+  @ResponseMessage('Find page presets')
+  findPresets() {
+    return this.listPagePresetsHandler.execute();
+  }
+
   @Get('trash')
   @WorkspaceContext({ source: 'query', key: 'workspaceId' })
   @RequirePermissions(PERMISSIONS.PAGE_READ)
@@ -181,6 +199,25 @@ export class PageController {
   @ResponseMessage('Update page')
   updatePage(@Param('pageId') pageId: string, @Body() dto: UpdatePageDto) {
     return this.updatePageHandler.execute(new UpdatePageCommand(pageId, dto));
+  }
+
+  @Put(':pageId/preset')
+  @StrictWriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
+  @RequirePermissions(
+    PERMISSIONS.PAGE_BLOCK_CREATE,
+    PERMISSIONS.PAGE_BLOCK_DELETE,
+  )
+  @ResponseMessage('Apply page preset')
+  async applyPreset(
+    @Param('pageId', ParseUUIDPipe) pageId: string,
+    @Body() dto: ApplyPagePresetDto,
+    @Auth() auth: IAuth,
+  ) {
+    await this.applyPagePresetHandler.execute(
+      new ApplyPagePresetCommand(pageId, dto.preset, auth.id),
+    );
+    return { success: true };
   }
 
   @Delete(':pageId')

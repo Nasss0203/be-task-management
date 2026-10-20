@@ -18,6 +18,8 @@ import { DeletePageHandler } from './application/commands/page/delete-page/delet
 import { PermanentlyDeletePageHandler } from './application/commands/page/permanently-delete-page/permanently-delete-page.handler';
 import { RestorePageHandler } from './application/commands/page/restore-page/restore-page.handler';
 import { UpdatePageHandler } from './application/commands/page/update-page/update-page.handler';
+import { ApplyPagePresetHandler } from './application/commands/page/apply-page-preset/apply-page-preset.handler';
+import { ListPagePresetsHandler } from './application/queries/page/list-page-presets/list-page-presets.handler';
 
 import { FindDeletedPageBlocksHandler } from './application/queries/page-block/find-deleted-page-blocks/find-deleted-page-blocks.handler';
 import { FindPageBlockByIdHandler } from './application/queries/page-block/find-page-block-by-id/find-page-block-by-id.handler';
@@ -170,6 +172,14 @@ const pageHandlers = [
   {
     provide: CONTENT_TYPES.applications.UpdatePageHandler,
     useClass: UpdatePageHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.ApplyPagePresetHandler,
+    useClass: ApplyPagePresetHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.ListPagePresetsHandler,
+    useClass: ListPagePresetsHandler,
   },
   {
     provide: CONTENT_TYPES.applications.DeletePageHandler,
