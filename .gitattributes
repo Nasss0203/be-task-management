@@ -1,2 +1,6 @@
 # Baseline SQL is hashed and parsed line by line; keep it LF on every OS.
 src/database/baselines/** text eol=lf
+# Each branch appends to these; merge both sides instead of conflicting.
+# The manifest driver is registered by `npm install` (prepare script).
+src/database/migration-review-manifest.json merge=migration-manifest
+src/database/entities.ts merge=union

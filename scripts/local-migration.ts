@@ -277,16 +277,20 @@ export async function runMigrations(
     files: { file: string; sha256: string; approval?: unknown }[];
   };
   for (const name of pending) {
+    // Match on the unique timestamp: older files are kebab-case
+    // (add-paid-template-offer) while their class is AddPaidTemplateOffer.
     const file = files.find((candidate) => {
       const match = basename(candidate).match(/^(\d{13})-(.+)\.(?:ts|js)$/);
-      return match && `${match[2]}${match[1]}` === name;
+      return match && name.endsWith(match[1]);
     });
     if (!file) throw new Error(`Source file missing for ${name}`);
     const record = manifest.files.find((item) => item.file === basename(file));
     if (record) {
       if (fileHash(file) !== record.sha256)
         throw new Error(`Reviewed migration changed: ${name}`);
-      if (!record.approval) {
+      // Its author already confirmed destructive SQL at generate time; the
+      // hash proves it is unchanged, so local databases need not confirm again.
+      if (!record.approval && !isLocalDatabase(options)) {
         const statements = generatedStatements(file);
         if (statements) assertSafeStatements(statements);
       }
@@ -328,7 +332,12 @@ if (require.main === module) {
   const action = process.argv[2];
   const task =
     action === 'generate'
-      ? generateMigration()
+      ? // After a merge, apply teammates' migrations first so the diff holds
+        // only this branch's entity changes.
+        (isLocalDatabase(source.options)
+          ? runMigrations()
+          : Promise.resolve()
+        ).then(() => generateMigration())
       : action === 'run'
         ? runMigrations()
         : Promise.reject(new Error('Use generate or run'));

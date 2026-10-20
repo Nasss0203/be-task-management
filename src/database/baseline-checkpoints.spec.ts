@@ -12,7 +12,7 @@ import {
   schemaHash,
 } from './baseline';
 
-import { databaseOptions } from './database-options';
+import { databaseOptions, migrationFiles } from './database-options';
 import { inspectHistory, type HistoryRow } from './migration-safety';
 import { staticMigrationNames } from './migration-verification';
 
@@ -211,9 +211,12 @@ describe('Actual ADD PAID checkpoint and Pricing retry', () => {
     const connect = jest.spyOn(DataSource.prototype, 'initialize');
 
     try {
-      expect(
-        await staticMigrationNames(databaseOptions(() => undefined)),
-      ).toEqual([
+      const discovered = await staticMigrationNames(
+        databaseOptions(() => undefined),
+      );
+      // Migrations added later (on any branch) extend this list.
+      expect(discovered).toHaveLength(migrationFiles().length);
+      expect(discovered.slice(0, names.length + 8)).toEqual([
         ...names,
         'CreateTemplatePurchases1791903351862',
         'AddPaidPurchaseEntitlementSource1791958800000',

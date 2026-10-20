@@ -35,9 +35,10 @@ npm run migration:run
 ```
 
 `migration:generate` compares TypeORM entity metadata with the current PostgreSQL
-schema and writes a timestamped migration in `src/database/migrations`. It does not
-execute SQL or create an empty migration. Run pending migrations before generating
-another. `migration:run` applies pending migrations in timestamp order, using a
+schema and writes a timestamped migration in `src/database/migrations`. It never
+creates an empty migration. On a localhost database it first applies pending
+migrations (for example teammates' migrations after a merge), so after a merge one
+`npm run migration:generate` is enough. `migration:run` applies pending migrations in timestamp order, using a
 transaction for each migration and TypeORM's `migrations` history table. Neither
 command requires `migration:prepare` or `migration:preflight`.
 
@@ -46,8 +47,13 @@ schema checkpoints are checked when available. New states without a checkpoint
 verify history and PostgreSQL version; use the optional `migration:audit` for deeper
 checks. Review the generated `up()` and `down()` SQL before committing. `DROP TABLE`,
 `DROP COLUMN`, dangerous type changes and similar data loss operations are blocked
-unless `MIGRATION_ALLOW_DESTRUCTIVE=1` is explicitly set for generation and execution.
+unless `MIGRATION_ALLOW_DESTRUCTIVE=1` is explicitly set for generation. Executing an
+already-recorded, unchanged migration on a localhost database needs no flag again.
 Keep `synchronize: false` and never edit an already executed migration.
+
+After cloning, run `npm install` once: it registers the git merge driver that merges
+`migration-review-manifest.json` when two branches both generated migrations. Do
+not run Prettier or ESLint `--fix` on generated migrations; their bytes are hashed.
 
 The PostgreSQL integration test uses a separate, empty database named by
 `MIGRATION_TEST_DB_NAME` (ending in `_test`). It refuses the configured `DB_NAME` and

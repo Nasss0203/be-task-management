@@ -1,0 +1,5 @@
+# Generated migration bytes are hashed in migration-review-manifest.json;
+# reformatting them breaks migration:run with "Reviewed migration changed".
+src/database/migrations/
+src/database/migration-review-manifest.json
+src/database/baselines/

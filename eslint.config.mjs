@@ -6,7 +6,8 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs'],
+    // Generated migrations are hash-checked; --fix would rewrite them.
+    ignores: ['eslint.config.mjs', 'src/database/migrations/**'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,

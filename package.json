@@ -7,6 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build && node scripts/build-migrations.cjs",
+    "prepare": "ts-node -T scripts/merge-migration-manifest.ts --install || exit 0",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
