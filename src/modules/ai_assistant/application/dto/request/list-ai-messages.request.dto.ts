@@ -1,7 +1,19 @@
 import { Type } from 'class-transformer';
-import { IsDateString, IsInt, IsOptional, Max, Min } from 'class-validator';
+import {
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class ListAiMessagesRequestDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  shareToken?: string;
+
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -10,6 +22,7 @@ export class ListAiMessagesRequestDto {
   limit?: number;
 
   @IsOptional()
-  @IsDateString()
+  @IsString()
+  @MaxLength(256)
   cursor?: string;
 }

@@ -27,9 +27,11 @@ import { GetAiUsageSummaryHandler } from './application/queries/get-ai-usage-sum
 import { GetConversationHandler } from './application/queries/get-conversation/get-conversation.handler';
 import { GetGenerationHandler } from './application/queries/get-generation/get-generation.handler';
 import { ListConversationMessagesHandler } from './application/queries/list-conversation-messages/list-conversation-messages.handler';
+import { ListConversationGenerationsHandler } from './application/queries/list-conversation-generations/list-conversation-generations.handler';
 import { ListConversationsHandler } from './application/queries/list-conversations/list-conversations.handler';
 
 import { AiAssistantService } from './application/services/ai-assistant.service';
+import { AiConversationAccessService } from './application/services/ai-conversation-access.service';
 import { PageCompositionDraftValidator } from './application/services/page-composition-draft-validator.service';
 import { PageCompositionExecutor } from './application/services/page-composition-executor.service';
 import { AiConversationOrmEntity } from './infrastructure/persistence/typeorm/entities/ai-conversation.orm-entity';
@@ -43,6 +45,7 @@ import { TypeOrmAiGenerationRepository } from './infrastructure/persistence/type
 import { TypeOrmAiMessageRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-ai-message.repository';
 import { TypeOrmAiToolCallRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-ai-tool-call.repository';
 import { TypeOrmAiUsageRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-ai-usage.repository';
+import { AiPageContextTransactionLockService } from './infrastructure/persistence/typeorm/ai-page-context-transaction-lock.service';
 
 import { FastApiAiRuntimeAdapter } from './infrastructure/runtime/fast-api-ai-runtime.adapter';
 
@@ -57,6 +60,10 @@ import { AiModificationPlannerService } from './application/services/ai-modifica
 import { ConfirmAiModificationPlanHandler } from './application/commands/confirm-ai-modification-plan/confirm-ai-modification-plan.handler';
 
 import { ConfirmGenerationHandler } from './application/commands/confirm-generation/confirm-generation.handler';
+import { PageReferenceResolver } from './application/resolution/page-reference-resolver.service';
+import { PageExactResolutionReader } from './infrastructure/resolution/page-exact-resolution.reader';
+import { PageIntentExtractionService } from './application/resolution/page-intent-extraction.service';
+import { AiPageInstructionPlannerService } from './application/services/ai-page-instruction-planner.service';
 
 @Module({
   imports: [
@@ -98,16 +105,36 @@ import { ConfirmGenerationHandler } from './application/commands/confirm-generat
     ListConversationsHandler,
     GetConversationHandler,
     ListConversationMessagesHandler,
+    ListConversationGenerationsHandler,
     GetGenerationHandler,
     GetAiUsageSummaryHandler,
     GetAiPageContextHandler,
+    PageReferenceResolver,
+    PageIntentExtractionService,
+    AiPageInstructionPlannerService,
 
     AiAssistantService,
+    {
+      provide: AI_ASSISTANT_TYPES.services.AiConversationAccess,
+      useClass: AiConversationAccessService,
+    },
     AiModificationPlannerService,
     AiModificationPlanValidatorService,
     AiModificationPlanExecutor,
     PageCompositionDraftValidator,
     PageCompositionExecutor,
+    {
+      provide: AI_ASSISTANT_TYPES.ports.PageResolutionReader,
+      useClass: PageExactResolutionReader,
+    },
+    {
+      provide: AI_ASSISTANT_TYPES.ports.PageIntentExtractor,
+      useExisting: AI_ASSISTANT_TYPES.runtime.AiRuntime,
+    },
+    {
+      provide: AI_ASSISTANT_TYPES.ports.PageContextTransactionLocker,
+      useClass: AiPageContextTransactionLockService,
+    },
 
     {
       provide: AI_ASSISTANT_TYPES.repositories.AiConversationRepository,

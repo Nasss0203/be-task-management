@@ -30,9 +30,15 @@ import { DiscardGenerationHandler } from '../../../application/commands/discard-
 import { ConfirmPageCompositionRequestDto } from '../../../application/dto/request/confirm-page-composition.request.dto';
 import { CreateAiConversationRequestDto } from '../../../application/dto/request/create-ai-conversation.request.dto';
 import { GenerateAiModificationPlanRequestDto } from '../../../application/dto/request/generate-ai-modification-plan.request.dto';
+import { GenerateAiPagePlanFromInstructionRequestDto } from '../../../application/dto/request/generate-ai-page-plan-from-instruction.request.dto';
 import { ListAiConversationsRequestDto } from '../../../application/dto/request/list-ai-conversations.request.dto';
 import { ListAiMessagesRequestDto } from '../../../application/dto/request/list-ai-messages.request.dto';
+import { ListAiGenerationsRequestDto } from '../../../application/dto/request/list-ai-generations.request.dto';
 import { SubmitAiMessageRequestDto } from '../../../application/dto/request/submit-ai-message.request.dto';
+import { ResolveAiPageRequestDto } from '../../../application/dto/request/resolve-ai-page.request.dto';
+import { ExtractAiPageIntentRequestDto } from '../../../application/dto/request/extract-ai-page-intent.request.dto';
+import { PageReferenceResolver } from '../../../application/resolution/page-reference-resolver.service';
+import { PageIntentExtractionService } from '../../../application/resolution/page-intent-extraction.service';
 
 import { GetConversationHandler } from '../../../application/queries/get-conversation/get-conversation.handler';
 import { GetConversationQuery } from '../../../application/queries/get-conversation/get-conversation.query';
@@ -40,11 +46,14 @@ import { GetGenerationHandler } from '../../../application/queries/get-generatio
 import { GetGenerationQuery } from '../../../application/queries/get-generation/get-generation.query';
 import { ListConversationMessagesHandler } from '../../../application/queries/list-conversation-messages/list-conversation-messages.handler';
 import { ListConversationMessagesQuery } from '../../../application/queries/list-conversation-messages/list-conversation-messages.query';
+import { ListConversationGenerationsHandler } from '../../../application/queries/list-conversation-generations/list-conversation-generations.handler';
+import { ListConversationGenerationsQuery } from '../../../application/queries/list-conversation-generations/list-conversation-generations.query';
 import { ListConversationsHandler } from '../../../application/queries/list-conversations/list-conversations.handler';
 import { ListConversationsQuery } from '../../../application/queries/list-conversations/list-conversations.query';
 
 import { AiAssistantService } from '../../../application/services/ai-assistant.service';
 import { AiModificationPlannerService } from '../../../application/services/ai-modification-planner.service';
+import { AiPageInstructionPlannerService } from '../../../application/services/ai-page-instruction-planner.service';
 
 @Controller('ai-assistant')
 @ReadRateLimit()
@@ -55,12 +64,65 @@ export class AiAssistantController {
     private readonly listConversationsHandler: ListConversationsHandler,
     private readonly getConversationHandler: GetConversationHandler,
     private readonly listConversationMessagesHandler: ListConversationMessagesHandler,
+    private readonly listConversationGenerationsHandler: ListConversationGenerationsHandler,
     private readonly getGenerationHandler: GetGenerationHandler,
     private readonly confirmGenerationHandler: ConfirmGenerationHandler,
     private readonly aiAssistantService: AiAssistantService,
     private readonly discardGenerationHandler: DiscardGenerationHandler,
     private readonly aiModificationPlannerService: AiModificationPlannerService,
+    private readonly pageReferenceResolver: PageReferenceResolver,
+    private readonly pageIntentExtractionService: PageIntentExtractionService,
+    private readonly aiPageInstructionPlannerService: AiPageInstructionPlannerService,
   ) {}
+
+  /**
+   * Phase 3: extract natural-language target, resolve an authorized Page,
+   * and create a preview draft. Changes are executed only via Confirm.
+   */
+  @Post('pages/modification-plan/from-instruction')
+  @WriteRateLimit()
+  @ResponseMessage('AI page instruction processed')
+  generatePagePlanFromInstruction(
+    @Auth() auth: IAuth,
+    @Body() dto: GenerateAiPagePlanFromInstructionRequestDto,
+    @Query('shareToken') shareToken?: string,
+  ) {
+    return this.aiPageInstructionPlannerService.generate({
+      userId: auth.id,
+      workspaceId: dto.workspaceId,
+      instruction: dto.instruction,
+      currentPageId: dto.currentPageId,
+      selectedPageId: dto.selectedPageId,
+      requestId: dto.requestId ?? randomUUID(),
+      conversationId: dto.conversationId,
+      shareToken,
+    });
+  }
+
+  /** Phase 2: extract intent only; no resolution, generation or mutation. */
+  @Post('pages/extract-intent')
+  @WriteRateLimit()
+  @ResponseMessage('AI page intent extracted')
+  extractPageIntent(@Auth() _auth: IAuth, @Body() dto: ExtractAiPageIntentRequestDto) {
+    return this.pageIntentExtractionService.extract(dto.instruction);
+  }
+
+  /** Read-only Phase 1 lookup. No generation or page changes are performed. */
+  @Post('pages/resolve')
+  @ResponseMessage('AI page reference resolved')
+  resolvePage(
+    @Auth() auth: IAuth,
+    @Body() dto: ResolveAiPageRequestDto,
+    @Query('shareToken') shareToken?: string,
+  ) {
+    return this.pageReferenceResolver.resolve({
+      userId: auth.id,
+      workspaceId: dto.workspaceId,
+      title: dto.title,
+      currentPageId: dto.currentPageId,
+      shareToken,
+    });
+  }
 
   @Post('conversations')
   @WriteRateLimit()
@@ -68,12 +130,16 @@ export class AiAssistantController {
   createConversation(
     @Auth() auth: IAuth,
     @Body() dto: CreateAiConversationRequestDto,
+    @Query('shareToken') shareToken?: string,
   ) {
     return this.createConversationHandler.execute(
       new CreateConversationCommand(
         auth.id,
         dto.workspaceId ?? null,
         dto.title ?? null,
+        dto.scope,
+        dto.pageId ?? null,
+        shareToken,
       ),
     );
   }
@@ -84,8 +150,9 @@ export class AiAssistantController {
     @Auth() auth: IAuth,
     @Query() query: ListAiConversationsRequestDto,
   ) {
+    const { shareToken, ...filters } = query;
     return this.listConversationsHandler.execute(
-      new ListConversationsQuery(auth.id, query),
+      new ListConversationsQuery(auth.id, filters, shareToken),
     );
   }
 
@@ -94,9 +161,10 @@ export class AiAssistantController {
   getConversation(
     @Auth() auth: IAuth,
     @Param('conversationId') conversationId: string,
+    @Query('shareToken') shareToken?: string,
   ) {
     return this.getConversationHandler.execute(
-      new GetConversationQuery(auth.id, conversationId),
+      new GetConversationQuery(auth.id, conversationId, shareToken),
     );
   }
 
@@ -107,6 +175,7 @@ export class AiAssistantController {
     @Auth() auth: IAuth,
     @Param('conversationId') conversationId: string,
     @Body() dto: SubmitAiMessageRequestDto,
+    @Query('shareToken') shareToken?: string,
   ) {
     return this.aiAssistantService.submit({
       requestId: dto.requestId ?? randomUUID(),
@@ -118,6 +187,7 @@ export class AiAssistantController {
         message: dto.content,
       },
       context: dto.context,
+      shareToken,
     });
   }
 
@@ -129,7 +199,29 @@ export class AiAssistantController {
     @Query() query: ListAiMessagesRequestDto,
   ) {
     return this.listConversationMessagesHandler.execute(
-      new ListConversationMessagesQuery(auth.id, conversationId, query),
+      new ListConversationMessagesQuery(
+        auth.id,
+        conversationId,
+        { limit: query.limit, cursor: query.cursor },
+        query.shareToken,
+      ),
+    );
+  }
+
+  @Get('conversations/:conversationId/generations')
+  @ResponseMessage('AI conversation generations found')
+  listConversationGenerations(
+    @Auth() auth: IAuth,
+    @Param('conversationId') conversationId: string,
+    @Query() query: ListAiGenerationsRequestDto,
+  ) {
+    return this.listConversationGenerationsHandler.execute(
+      new ListConversationGenerationsQuery(
+        auth.id,
+        conversationId,
+        { limit: query.limit, cursor: query.cursor },
+        query.shareToken,
+      ),
     );
   }
 
@@ -139,9 +231,10 @@ export class AiAssistantController {
   archiveConversation(
     @Auth() auth: IAuth,
     @Param('conversationId') conversationId: string,
+    @Query('shareToken') shareToken?: string,
   ) {
     return this.archiveConversationHandler.execute(
-      new ArchiveConversationCommand(auth.id, conversationId),
+      new ArchiveConversationCommand(auth.id, conversationId, shareToken),
     );
   }
 
@@ -159,6 +252,7 @@ export class AiAssistantController {
       userId: auth.id,
       pageId,
       instruction: dto.instruction,
+      conversationId: dto.conversationId,
       shareToken,
     });
   }

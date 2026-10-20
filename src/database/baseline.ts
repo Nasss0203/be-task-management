@@ -139,7 +139,11 @@ export function loadBaseline(): BaselineManifest {
     )
   )
     throw new Error('Baseline must be schema-only and transaction-safe');
-  const meta = [...sql.matchAll(/^\\([^\n]+)$/gm)].map((match) => match[1]);
+  // Git may check out SQL with CRLF on Windows. Normalize line endings only;
+  // preserve strict validation of every metacommand and its restriction key.
+  const meta = [...sql.replace(/\r\n/g, '\n').matchAll(/^\\([^\n]+)$/gm)].map(
+    (match) => match[1],
+  );
   if (
     meta.length !== 2 ||
     !/^restrict [A-Za-z0-9]+$/.test(meta[0]) ||

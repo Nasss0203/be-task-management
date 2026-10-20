@@ -25,9 +25,11 @@ import {
   type AiModificationPlanExecutionResult,
 } from '../../services/ai-modification-plan-executor.service';
 import { AiModificationPlanValidatorService } from '../../services/ai-modification-plan-validator.service';
+import { assertAiPageContextFresh } from '../../services/ai-page-context-fingerprint';
 
 import { GetAiPageContextHandler } from '../../queries/get-ai-page-context/get-ai-page-context.handler';
 import { GetAiPageContextQuery } from '../../queries/get-ai-page-context/get-ai-page-context.query';
+import type { AiPageContextTransactionLocker } from '../../services/ai-page-context-transaction-lock.port';
 
 import { ApplyGenerationCommand } from '../apply-generation/apply-generation.command';
 import { ApplyGenerationHandler } from '../apply-generation/apply-generation.handler';
@@ -57,17 +59,23 @@ export class ConfirmAiModificationPlanHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly unitOfWork: UnitOfWork,
+
+    @Inject(AI_ASSISTANT_TYPES.ports.PageContextTransactionLocker)
+    private readonly pageContextLock: AiPageContextTransactionLocker,
   ) {}
 
   async execute(
     command: ConfirmAiModificationPlanCommand,
   ): Promise<ConfirmAiModificationPlanResult> {
     return this.unitOfWork.runInTransaction(async (context) => {
-      const generation = await this.generationRepository.findByIdAndUserId(
-        command.generationId,
-        command.userId,
-        context,
-      );
+      // Lock before checking status. This serializes Confirm/Confirm and
+      // Confirm/Discard for this generation across server instances.
+      const generation =
+        await this.generationRepository.findByIdAndUserIdForUpdate(
+          command.generationId,
+          command.userId,
+          context,
+        );
 
       if (!generation) {
         throw new NotFoundException('AI generation not found');
@@ -97,13 +105,18 @@ export class ConfirmAiModificationPlanHandler {
         );
       }
 
-      const pageId = (inputData as Record<string, unknown>).pageId;
+      const pageId = inputData.pageId;
 
       if (typeof pageId !== 'string' || pageId.trim().length === 0) {
         throw new InternalServerErrorException(
           'AI modification plan generation is missing pageId',
         );
       }
+
+      // Generation lock alone cannot serialize concurrent normal Page edits.
+      // Lock the entire FK-backed context before rebuilding and hashing it.
+      // Keep these locks through validation, execution and Generation APPLIED.
+      await this.pageContextLock.lock(pageId, context, command.userId);
 
       /*
        * Rebuild fresh authorized page context.
@@ -123,6 +136,11 @@ export class ConfirmAiModificationPlanHandler {
           'AI generation workspace scope does not match target page',
         );
       }
+
+      // Check staleness before revalidating operation references: a removed
+      // anchor/database should return 409 STALE, not a plan-validator error.
+      // Neither this step nor validation executes any Page mutation.
+      assertAiPageContextFresh(inputData.pageContextFingerprint, pageContext);
 
       /*
        * Stored output đã validate lúc generation hoàn thành,

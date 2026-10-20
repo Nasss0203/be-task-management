@@ -1,6 +1,6 @@
 import { BadGatewayException } from '@nestjs/common';
 
-import { PageBlockType } from 'src/modules/content/domain/entities/page-block.entity';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import { DatabaseViewType } from 'src/modules/database/domain/enums/database-view-type.enum';
 import { PropertyType } from 'src/modules/database/domain/enums/property-type.enum';
 

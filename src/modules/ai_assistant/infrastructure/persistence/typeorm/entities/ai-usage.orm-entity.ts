@@ -59,7 +59,7 @@ export class AiUsageOrmEntity {
   @ManyToOne(
     () => AiConversationOrmEntity,
     (conversation) => conversation.usageRecords,
-    { nullable: true, onDelete: 'SET NULL' },
+    { nullable: true, onDelete: 'CASCADE' },
   )
   @JoinColumn({ name: 'conversation_id' })
   conversation: AiConversationOrmEntity | null;
@@ -70,7 +70,7 @@ export class AiUsageOrmEntity {
   @ManyToOne(
     () => AiGenerationOrmEntity,
     (generation) => generation.usageRecords,
-    { nullable: true, onDelete: 'SET NULL' },
+    { nullable: true, onDelete: 'CASCADE' },
   )
   @JoinColumn({ name: 'generation_id' })
   generation: AiGenerationOrmEntity | null;

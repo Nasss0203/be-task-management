@@ -46,7 +46,7 @@ function createFixture() {
     getOutputData: jest.fn().mockReturnValue(draft),
   };
 
-  const findByIdAndUserId = jest.fn().mockResolvedValue(generation);
+  const findByIdAndUserIdForUpdate = jest.fn().mockResolvedValue(generation);
 
   const findPageById = jest.fn();
 
@@ -82,7 +82,7 @@ function createFixture() {
 
   const handler = new ConfirmPageCompositionHandler(
     {
-      findByIdAndUserId,
+      findByIdAndUserIdForUpdate,
     } as unknown as AiGenerationRepository,
 
     {
@@ -121,7 +121,7 @@ function createFixture() {
     executionResult,
     appliedGeneration,
 
-    findByIdAndUserId,
+    findByIdAndUserIdForUpdate,
     findPageById,
     authorize,
     validate,
@@ -141,7 +141,7 @@ describe('ConfirmPageCompositionHandler', () => {
 
     expect(fixture.runInTransaction).toHaveBeenCalledTimes(1);
 
-    expect(fixture.findByIdAndUserId).toHaveBeenCalledWith(
+    expect(fixture.findByIdAndUserIdForUpdate).toHaveBeenCalledWith(
       'generation-1',
       'user-1',
       fixture.context,
@@ -310,7 +310,7 @@ describe('ConfirmPageCompositionHandler', () => {
   it('rejects when the generation does not exist for the user', async () => {
     const fixture = createFixture();
 
-    fixture.findByIdAndUserId.mockResolvedValue(null);
+    fixture.findByIdAndUserIdForUpdate.mockResolvedValue(null);
 
     await expect(
       fixture.handler.execute(

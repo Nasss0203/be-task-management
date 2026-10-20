@@ -17,6 +17,8 @@ import type {
   AiRuntimeRequest,
   AiRuntimeResult,
 } from '../../application/ports/ai-runtime.port';
+import type { PageIntentExtractor } from '../../application/resolution/page-intent.port';
+import type { PageIntentResult } from '../../application/resolution/page-intent.types';
 
 type WritingAction =
   | 'IMPROVE'
@@ -79,11 +81,66 @@ const WRITING_CAPABILITIES: Record<string, WritingAction> = {
 };
 
 @Injectable()
-export class FastApiAiRuntimeAdapter implements AiRuntimePort {
+export class FastApiAiRuntimeAdapter implements AiRuntimePort, PageIntentExtractor {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {}
+
+  async extract(instruction: string): Promise<PageIntentResult> {
+    const raw: unknown = await this.post<unknown>(
+      '/internal/v1/page-intent',
+      { instruction },
+    );
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+      throw new BadGatewayException('AI service returned an invalid response');
+    }
+    const response = raw as Record<string, unknown>;
+    const value = response.result;
+    if (
+      Object.keys(response).sort().join(',') !== 'model,provider,result' ||
+      typeof response.provider !== 'string' || !response.provider.trim() ||
+      typeof response.model !== 'string' || !response.model.trim() ||
+      !value || typeof value !== 'object' || Array.isArray(value)
+    ) {
+      throw new BadGatewayException('AI service returned an invalid response');
+    }
+    const result = value as Record<string, unknown>;
+    const validKeys = Object.keys(result).sort().join(',') ===
+      'instruction,intent,needsClarification,pageReference,referenceType';
+    const intent = result.intent;
+    const referenceType = result.referenceType;
+    const needsClarification = result.needsClarification;
+    const pageReference = result.pageReference;
+    const editInstruction = result.instruction;
+    let valid = validKeys && typeof needsClarification === 'boolean';
+    if (intent === 'MODIFY_PAGE') {
+      valid = valid && typeof editInstruction === 'string' && !!editInstruction.trim()
+        && editInstruction.length <= 4000;
+      if (referenceType === 'TITLE') {
+        valid = valid && typeof pageReference === 'string' && !!pageReference.trim()
+          && instruction.normalize('NFC').toLocaleLowerCase('vi').includes(
+            pageReference.normalize('NFC').toLocaleLowerCase('vi'),
+          ) && !needsClarification;
+      } else if (referenceType === 'CURRENT_PAGE') {
+        valid = valid && pageReference === null && !needsClarification
+          && /(?:page này|trang này|trang hiện tại|page hiện tại|this page|current page)/iu.test(instruction);
+      } else if (referenceType === 'UNRESOLVED') {
+        valid = valid && pageReference === null && needsClarification === true;
+      } else {
+        valid = false;
+      }
+    } else if (intent === 'OTHER' || intent === 'UNCLEAR') {
+      valid = valid && referenceType === 'UNRESOLVED' && pageReference === null
+        && editInstruction === null && needsClarification === (intent === 'UNCLEAR');
+    } else {
+      valid = false;
+    }
+    if (!valid) {
+      throw new BadGatewayException('AI service returned an invalid response');
+    }
+    return raw as PageIntentResult;
+  }
 
   async execute(request: AiRuntimeRequest): Promise<AiRuntimeResult> {
     if (request.capability === PAGE_COMPOSITION_CAPABILITY) {

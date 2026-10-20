@@ -4,6 +4,7 @@ import { AiMessage } from 'src/modules/ai_assistant/domain/entities/ai-message.e
 import { AiToolCall } from 'src/modules/ai_assistant/domain/entities/ai-tool-call.entity';
 import { AiUsage } from 'src/modules/ai_assistant/domain/entities/ai-usage.entity';
 import { AiConversationStatus } from 'src/modules/ai_assistant/domain/enums/ai-conversation-status.enum';
+import { AiConversationScope } from 'src/modules/ai_assistant/domain/enums/ai-conversation-scope.enum';
 import { AiGenerationStatus } from 'src/modules/ai_assistant/domain/enums/ai-generation-status.enum';
 import { AiMessageRole } from 'src/modules/ai_assistant/domain/enums/ai-message-role.enum';
 import { AiToolCallStatus } from 'src/modules/ai_assistant/domain/enums/ai-tool-call-status.enum';
@@ -33,9 +34,30 @@ describe('AI Assistant mappers', () => {
     );
     expect(restored.getId()).toBe('conversation-1');
     expect(restored.getWorkspaceId()).toBeNull();
+    expect(restored.getScope()).toBe(AiConversationScope.LEGACY);
+    expect(restored.getPageId()).toBeNull();
     expect(restored.getStatus()).toBe(AiConversationStatus.ARCHIVED);
     expect(restored.getUpdatedAt()).toBe(updatedAt);
   });
+
+  it.each([AiConversationScope.GLOBAL, AiConversationScope.PAGE])(
+    'round-trips a %s conversation without losing its context',
+    (scope) => {
+      const domain = AiConversation.create({
+        userId: 'user-1',
+        workspaceId: 'workspace-1',
+        scope,
+        pageId: scope === AiConversationScope.PAGE ? 'page-1' : null,
+      });
+      const orm = AiConversationMapper.toOrm(domain);
+      expect(orm.scope).toBe(scope);
+      expect(orm.pageId).toBe(domain.getPageId());
+      const restored = AiConversationMapper.toDomain(orm);
+      expect(restored.getScope()).toBe(scope);
+      expect(restored.getPageId()).toBe(domain.getPageId());
+      expect(restored.getWorkspaceId()).toBe('workspace-1');
+    },
+  );
 
   it('round-trips a message including metadata', () => {
     const domain = AiMessage.restore({

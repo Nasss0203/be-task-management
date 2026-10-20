@@ -1,5 +1,7 @@
 import type { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
 import { AiConversationStatus } from 'src/modules/ai_assistant/domain/enums/ai-conversation-status.enum';
+import { AiConversationScope } from 'src/modules/ai_assistant/domain/enums/ai-conversation-scope.enum';
+import { AiConversation } from 'src/modules/ai_assistant/domain/aggregates/ai-conversation/ai-conversation.aggregate';
 import { AiGenerationStatus } from 'src/modules/ai_assistant/domain/enums/ai-generation-status.enum';
 import { AiMessageRole } from 'src/modules/ai_assistant/domain/enums/ai-message-role.enum';
 import { AiToolCallStatus } from 'src/modules/ai_assistant/domain/enums/ai-tool-call-status.enum';
@@ -23,6 +25,67 @@ function dataSourceWithRepository<T>(repository: Partial<Repository<T>>) {
 }
 
 describe('AI Assistant TypeORM repositories', () => {
+  it.each([AiConversationScope.GLOBAL, AiConversationScope.PAGE])(
+    'persists %s through the supplied transaction context',
+    async (scope) => {
+      const save = jest.fn(async (entity) => entity);
+      const getRepository = jest.fn().mockReturnValue({ save });
+      const dataSource = dataSourceWithRepository<AiConversationOrmEntity>({});
+      const repository = new TypeOrmAiConversationRepository(dataSource);
+      const conversation = AiConversation.create({
+        userId: 'user-1',
+        workspaceId: 'workspace-1',
+        scope,
+        pageId: scope === AiConversationScope.PAGE ? 'page-1' : null,
+      });
+      const result = await repository.save(conversation, { getRepository });
+      expect(getRepository).toHaveBeenCalledWith(AiConversationOrmEntity);
+      expect(dataSource.getRepository).not.toHaveBeenCalled();
+      expect(save).toHaveBeenCalledWith(
+        expect.objectContaining({ scope, pageId: conversation.getPageId() }),
+      );
+      expect(result.getScope()).toBe(scope);
+      expect(result.getPageId()).toBe(conversation.getPageId());
+    },
+  );
+
+  it('filters by owner, workspace, scope and page without requiring uniqueness', async () => {
+    const builder = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([]),
+    };
+    const repository = new TypeOrmAiConversationRepository(
+      dataSourceWithRepository<AiConversationOrmEntity>({
+        createQueryBuilder: jest.fn().mockReturnValue(builder),
+      }),
+    );
+    await repository.findByUserId('user-1', {
+      workspaceId: 'workspace-1',
+      scope: AiConversationScope.PAGE,
+      pageId: 'page-1',
+    });
+    expect(builder.where).toHaveBeenCalledWith(
+      'conversation.user_id = :userId',
+      { userId: 'user-1' },
+    );
+    expect(builder.andWhere).toHaveBeenCalledWith(
+      'conversation.workspace_id = :workspaceId',
+      { workspaceId: 'workspace-1' },
+    );
+    expect(builder.andWhere).toHaveBeenCalledWith(
+      'conversation.scope = :scope',
+      { scope: AiConversationScope.PAGE },
+    );
+    expect(builder.andWhere).toHaveBeenCalledWith(
+      'conversation.page_id = :pageId',
+      { pageId: 'page-1' },
+    );
+  });
+
   it('scopes conversation lookup by id and user id', async () => {
     const findOne = jest.fn().mockResolvedValue(
       Object.assign(new AiConversationOrmEntity(), {
@@ -79,6 +142,59 @@ describe('AI Assistant TypeORM repositories', () => {
     expect(findOne).toHaveBeenCalledWith({
       where: { id: 'generation-1', userId: 'user-1' },
     });
+  });
+
+  it('locks an owned generation through the supplied transaction manager', async () => {
+    const findOne = jest.fn().mockResolvedValue(
+      Object.assign(new AiGenerationOrmEntity(), {
+        id: 'generation-1',
+        conversationId: null,
+        userId: 'user-1',
+        workspaceId: null,
+        capability: 'GENERATE_PAGE_MODIFICATION_PLAN',
+        status: AiGenerationStatus.COMPLETED,
+        inputData: {},
+        outputData: null,
+        provider: null,
+        model: null,
+        errorCode: null,
+        errorMessage: null,
+        appliedAt: null,
+        createdAt,
+        updatedAt: createdAt,
+      }),
+    );
+    const getRepository = jest.fn().mockReturnValue({ findOne });
+    const dataSource = dataSourceWithRepository<AiGenerationOrmEntity>({});
+    const repository = new TypeOrmAiGenerationRepository(dataSource);
+
+    const result = await repository.findByIdAndUserIdForUpdate(
+      'generation-1',
+      'user-1',
+      { getRepository },
+    );
+
+    expect(getRepository).toHaveBeenCalledWith(AiGenerationOrmEntity);
+    expect(dataSource.getRepository).not.toHaveBeenCalled();
+    expect(findOne).toHaveBeenCalledWith({
+      where: { id: 'generation-1', userId: 'user-1' },
+      lock: { mode: 'pessimistic_write' },
+    });
+    expect(result?.getStatus()).toBe(AiGenerationStatus.COMPLETED);
+  });
+
+  it('refuses to lock a generation without a transaction context', async () => {
+    const repository = new TypeOrmAiGenerationRepository(
+      dataSourceWithRepository<AiGenerationOrmEntity>({}),
+    );
+
+    await expect(
+      repository.findByIdAndUserIdForUpdate(
+        'generation-1',
+        'user-1',
+        undefined,
+      ),
+    ).rejects.toThrow('A transaction context is required');
   });
 
   it('orders messages chronologically', async () => {

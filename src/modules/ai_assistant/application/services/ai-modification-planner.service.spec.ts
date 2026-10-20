@@ -1,4 +1,7 @@
 import { BadGatewayException, BadRequestException } from '@nestjs/common';
+import { AiConversation } from '../../domain/aggregates/ai-conversation/ai-conversation.aggregate';
+import { AiConversationScope } from '../../domain/enums/ai-conversation-scope.enum';
+import { AiMessageRole } from '../../domain/enums/ai-message-role.enum';
 
 import { AiGenerationStatus } from '../../domain/enums/ai-generation-status.enum';
 import type { AiGenerationRepository } from '../../domain/repositories/ai-generation.repository';
@@ -10,8 +13,25 @@ import { GetAiPageContextQuery } from '../queries/get-ai-page-context/get-ai-pag
 import type { AiModificationPlan } from '../types/ai-modification-plan';
 import { AiModificationPlanValidatorService } from './ai-modification-plan-validator.service';
 import { AiModificationPlannerService } from './ai-modification-planner.service';
+import { fingerprintAiPageContext } from './ai-page-context-fingerprint';
 
 describe('AiModificationPlannerService', () => {
+  it('rejects truncated context before persisting a draft or calling the model', async () => {
+    const context = makeContext();
+    context.completeness.textTruncated = true;
+    const { service, generationRepository, runtime } = createService({ context });
+    await expect(
+      service.generate({
+        requestId: 'request-incomplete',
+        userId: 'user-1',
+        pageId: 'page-1',
+        instruction: 'Add a block',
+      }),
+    ).rejects.toThrow('Page context is incomplete');
+    expect(generationRepository.save).not.toHaveBeenCalled();
+    expect(runtime.execute).not.toHaveBeenCalled();
+  });
+
   function makeContext(): AiPageContextResponseDto {
     return {
       schemaVersion: 1,
@@ -116,11 +136,33 @@ describe('AiModificationPlannerService', () => {
     };
 
     const generationRepository: AiGenerationRepository = {
-      save: jest.fn().mockImplementation(async (generation) => generation),
+      save: jest.fn().mockImplementation(async (generation) => {
+        lastGeneration = generation;
+        return generation;
+      }),
       findById: jest.fn(),
       findByIdAndUserId: jest.fn(),
+      findByIdAndUserIdForUpdate: jest.fn(),
       findByConversationId: jest.fn(),
     };
+    let lastGeneration: any;
+    let lastConversation: AiConversation | null = null;
+    const conversationRepository = {
+      save: jest.fn(async (conversation: AiConversation) => {
+        lastConversation = conversation;
+        return conversation;
+      }),
+      findByIdAndUserId: jest.fn(async () => lastConversation),
+    };
+    const messageRepository = { save: jest.fn(async (message: any) => message) };
+    const usageRepository = { save: jest.fn(async (usage: any) => usage) };
+    const unitOfWork = {
+      runInTransaction: jest.fn(async (fn: (context: any) => Promise<any>) => fn({})),
+    };
+    const accessService = { assertCanRead: jest.fn() };
+    (generationRepository.findByIdAndUserId as jest.Mock).mockImplementation(
+      async () => lastGeneration ?? null,
+    );
 
     const runtime: AiRuntimePort = {
       execute: jest.fn().mockResolvedValue(runtimeResult),
@@ -132,8 +174,13 @@ describe('AiModificationPlannerService', () => {
 
     const service = new AiModificationPlannerService(
       getAiPageContextHandler as unknown as GetAiPageContextHandler,
+      conversationRepository as any,
+      messageRepository as any,
       generationRepository,
+      usageRepository as any,
       runtime,
+      unitOfWork as any,
+      accessService as any,
       planValidator as unknown as AiModificationPlanValidatorService,
     );
 
@@ -144,6 +191,16 @@ describe('AiModificationPlannerService', () => {
       runtimeResult,
       getAiPageContextHandler,
       generationRepository,
+      conversationRepository,
+      messageRepository,
+      usageRepository,
+      unitOfWork,
+      accessService,
+      setConversation: (conversation: AiConversation) => {
+        (conversationRepository.findByIdAndUserId as jest.Mock).mockResolvedValue(
+          conversation,
+        );
+      },
       runtime,
       planValidator,
     };
@@ -194,6 +251,7 @@ describe('AiModificationPlannerService', () => {
     expect(planValidator.validate).toHaveBeenCalledWith(validatedPlan, context);
 
     expect(result).toEqual({
+      conversationId: expect.any(String),
       generationId: expect.any(String),
       ...validatedPlan,
     });
@@ -210,12 +268,12 @@ describe('AiModificationPlannerService', () => {
       instruction: 'Thêm một release note.',
     });
 
-    expect(generationRepository.save).toHaveBeenCalledTimes(1);
+    expect(generationRepository.save).toHaveBeenCalledTimes(2);
 
     const generation = (generationRepository.save as jest.Mock).mock
       .calls[0][0];
 
-    expect(generation.getConversationId()).toBeNull();
+    expect(generation.getConversationId()).toEqual(expect.any(String));
 
     expect(generation.getUserId()).toBe('user-1');
 
@@ -229,6 +287,7 @@ describe('AiModificationPlannerService', () => {
       pageId: context.page.id,
       instruction: 'Thêm một release note.',
       requestId: 'request-persist-1',
+      pageContextFingerprint: fingerprintAiPageContext(context),
     });
 
     expect(generation.getOutputData()).toEqual(validatedPlan);
@@ -262,11 +321,12 @@ describe('AiModificationPlannerService', () => {
     });
 
     expect(result).toEqual({
+      conversationId: expect.any(String),
       generationId: expect.any(String),
       ...validatedPlan,
     });
 
-    expect(generationRepository.save).toHaveBeenCalledTimes(1);
+    expect(generationRepository.save).toHaveBeenCalledTimes(2);
 
     const generation = (generationRepository.save as jest.Mock).mock
       .calls[0][0];
@@ -278,6 +338,72 @@ describe('AiModificationPlannerService', () => {
     expect((result as unknown as { generationId: string }).generationId).toBe(
       generation.getId(),
     );
+  });
+
+  it('reuses an existing PAGE conversation and correlates both messages with the generation', async () => {
+    const f = createService();
+    const conversation = AiConversation.create({
+      id: 'existing-page-thread',
+      userId: 'user-1',
+      workspaceId: 'workspace-1',
+      scope: AiConversationScope.PAGE,
+      pageId: 'page-1',
+    });
+    f.setConversation(conversation);
+    const result = await f.service.generate({
+      requestId: 'reuse-1',
+      userId: 'user-1',
+      pageId: 'page-1',
+      instruction: 'Add tasks',
+      conversationId: conversation.getId(),
+    });
+    expect(result.conversationId).toBe('existing-page-thread');
+    expect(f.conversationRepository.save).not.toHaveBeenCalled();
+    expect(f.accessService.assertCanRead).toHaveBeenCalledTimes(2);
+    expect(f.messageRepository.save).toHaveBeenCalledTimes(2);
+    const userMessage = (f.messageRepository.save as jest.Mock).mock.calls[0][0];
+    const assistantMessage = (f.messageRepository.save as jest.Mock).mock.calls[1][0];
+    expect(userMessage.getRole()).toBe(AiMessageRole.USER);
+    expect(assistantMessage.getRole()).toBe(AiMessageRole.ASSISTANT);
+    expect(userMessage.getMetadata().generationId).toBe(result.generationId);
+    expect(assistantMessage.getMetadata().generationId).toBe(result.generationId);
+    expect(userMessage.getConversationId()).toBe(result.conversationId);
+  });
+
+  it('rejects a conversation belonging to another page before persisting history', async () => {
+    const f = createService();
+    f.setConversation(AiConversation.create({
+      id: 'other-page-thread',
+      userId: 'user-1',
+      workspaceId: 'workspace-1',
+      scope: AiConversationScope.PAGE,
+      pageId: 'other-page',
+    }));
+    await expect(f.service.generate({
+      requestId: 'wrong-page',
+      userId: 'user-1',
+      pageId: 'page-1',
+      instruction: 'Add tasks',
+      conversationId: 'other-page-thread',
+    })).rejects.toThrow('AI page conversation not found');
+    expect(f.runtime.execute).not.toHaveBeenCalled();
+    expect(f.messageRepository.save).not.toHaveBeenCalled();
+  });
+
+  it('persists a failed generation and user message when runtime fails', async () => {
+    const f = createService();
+    (f.runtime.execute as jest.Mock).mockRejectedValue(new Error('Runtime unavailable'));
+    await expect(f.service.generate({
+      requestId: 'failed-plan',
+      userId: 'user-1',
+      pageId: 'page-1',
+      instruction: 'Add tasks',
+    })).rejects.toThrow('Runtime unavailable');
+    expect(f.generationRepository.save).toHaveBeenCalledTimes(2);
+    expect(f.messageRepository.save).toHaveBeenCalledTimes(1);
+    const failed = (f.generationRepository.save as jest.Mock).mock.calls[1][0];
+    expect(failed.getStatus()).toBe(AiGenerationStatus.FAILED);
+    expect(failed.getErrorCode()).toBe('AI_MODIFICATION_PLAN_ERROR');
   });
 
   it('does not build context or call runtime when instruction is blank', async () => {
@@ -359,7 +485,7 @@ describe('AiModificationPlannerService', () => {
 
     expect(planValidator.validate).not.toHaveBeenCalled();
 
-    expect(generationRepository.save).not.toHaveBeenCalled();
+    expect(generationRepository.save).toHaveBeenCalledTimes(2);
   });
 
   it('propagates validator errors after runtime returns output', async () => {
@@ -387,6 +513,6 @@ describe('AiModificationPlannerService', () => {
 
     expect(planValidator.validate).toHaveBeenCalledTimes(1);
 
-    expect(generationRepository.save).not.toHaveBeenCalled();
+    expect(generationRepository.save).toHaveBeenCalledTimes(2);
   });
 });

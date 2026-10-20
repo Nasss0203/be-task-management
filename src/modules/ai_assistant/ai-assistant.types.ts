@@ -1,4 +1,12 @@
 export const AI_ASSISTANT_TYPES = {
+  ports: {
+    PageResolutionReader: Symbol('PageResolutionReader'),
+    PageIntentExtractor: Symbol('PageIntentExtractor'),
+    PageContextTransactionLocker: Symbol('PageContextTransactionLocker'),
+  },
+  services: {
+    AiConversationAccess: Symbol('AiConversationAccess'),
+  },
   repositories: {
     AiConversationRepository: Symbol('AiConversationRepository'),
     AiMessageRepository: Symbol('AiMessageRepository'),

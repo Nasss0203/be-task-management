@@ -81,9 +81,7 @@
         "policy": "single-new-table-v1",
         "generator": "scripts/migration-tools.ts",
         "evidence": "static-generator-format-and-live-orm-diff",
-        "tables": [
-          "template_purchases"
-        ]
+        "tables": ["template_purchases"]
       }
     },
     {
@@ -102,9 +100,7 @@
         "policy": "single-new-table-v1",
         "generator": "scripts/migration-tools.ts",
         "evidence": "static-generator-format-and-live-orm-diff",
-        "tables": [
-          "marketplace_webhook_events"
-        ]
+        "tables": ["marketplace_webhook_events"]
       }
     },
     {
