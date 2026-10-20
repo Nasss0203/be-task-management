@@ -29,6 +29,7 @@ import { GetWorkspaceOverviewHandler } from './application/queries/workspace/get
 import { GetWorkspaceHandler } from './application/queries/workspace/get-workspace/get-workspace.handler';
 import { ListDeletedWorkspacesHandler } from './application/queries/workspace/list-deleted-workspaces/list-deleted-workspaces.handler';
 import { ListWorkspacesHandler } from './application/queries/workspace/list-workspaces/list-workspaces.handler';
+import { ListWorkspaceStartersHandler } from './application/queries/workspace/list-workspace-starters/list-workspace-starters.handler';
 import { WorkspaceInviteOrmEntity } from './infrastructure/persistence/typeorm/entities/workspace-invite.orm-entity';
 import { WorkspaceMemberOrmEntity } from './infrastructure/persistence/typeorm/entities/workspace-member.orm-entity';
 import { WorkspaceOrmEntity } from './infrastructure/persistence/typeorm/entities/workspace.orm-entity';
@@ -88,6 +89,7 @@ import { TeamspaceController } from './presentation/http/controllers/teamspace.c
     RestoreWorkspaceHandler,
     RemoveWorkspaceFromTrashHandler,
     ListWorkspacesHandler,
+    ListWorkspaceStartersHandler,
     GetWorkspaceHandler,
     GetWorkspaceAccessHandler,
     GetWorkspaceOverviewHandler,

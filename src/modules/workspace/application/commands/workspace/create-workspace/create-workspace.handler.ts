@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { ContentPageProvisioningPort } from 'src/modules/content/application/ports/content-page-provisioning.port';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
+import { getWorkspaceStarter } from 'src/modules/workspace/application/services/workspace-starters';
 import { WorkspaceResponseDto } from 'src/modules/workspace/application/dto/workspace/response/workspaces.response.dto';
 import { WorkspaceMember } from 'src/modules/workspace/domain/aggregates/workspace-member/workspace-member.aggregate';
 import { Workspace } from 'src/modules/workspace/domain/aggregates/workspace/workspace.aggregate';
@@ -35,20 +36,39 @@ export class CreateWorkspaceHandler {
     command: CreateWorkspaceCommand,
   ): Promise<WorkspaceResponseDto> {
     const workspace = await this.uow.runInTransaction(async (context) => {
+      const starter = getWorkspaceStarter(command.starter);
       const createdWorkspace = await this.createWorkspaceCore(
-        { name: command.name, userId: command.userId },
-        context,
-      );
-
-      await this.pageProvisioningPort.createDefaultPage(
         {
-          workspaceId: createdWorkspace.getId(),
-          title: createdWorkspace.getName(),
-          slug: createdWorkspace.getSlug(),
-          createdBy: command.userId,
+          name: command.name?.trim() || starter.defaultName,
+          userId: command.userId,
         },
         context,
       );
+
+      if (starter.pages.length === 0) {
+        await this.pageProvisioningPort.createDefaultPage(
+          {
+            workspaceId: createdWorkspace.getId(),
+            title: createdWorkspace.getName(),
+            slug: createdWorkspace.getSlug(),
+            createdBy: command.userId,
+          },
+          context,
+        );
+      }
+
+      for (const page of starter.pages) {
+        await this.pageProvisioningPort.createPageFromSnapshot(
+          {
+            workspaceId: createdWorkspace.getId(),
+            title: page.title,
+            icon: page.icon,
+            createdBy: command.userId,
+            blocks: page.blocks,
+          },
+          context,
+        );
+      }
 
       return createdWorkspace;
     });

@@ -43,6 +43,7 @@ import { ListDeletedWorkspacesHandler } from 'src/modules/workspace/application/
 import { ListDeletedWorkspacesQuery } from 'src/modules/workspace/application/queries/workspace/list-deleted-workspaces/list-deleted-workspaces.query';
 import { ListWorkspacesHandler } from 'src/modules/workspace/application/queries/workspace/list-workspaces/list-workspaces.handler';
 import { ListWorkspacesQuery } from 'src/modules/workspace/application/queries/workspace/list-workspaces/list-workspaces.query';
+import { ListWorkspaceStartersHandler } from 'src/modules/workspace/application/queries/workspace/list-workspace-starters/list-workspace-starters.handler';
 
 import { CreateWorkspaceCommand } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.command';
 import { CreateWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.handler';
@@ -56,6 +57,7 @@ export class WorkspacesController {
   constructor(
     private readonly createWorkspaceHandler: CreateWorkspaceHandler,
     private readonly listWorkspacesHandler: ListWorkspacesHandler,
+    private readonly listWorkspaceStartersHandler: ListWorkspaceStartersHandler,
     private readonly getWorkspaceHandler: GetWorkspaceHandler,
     private readonly getWorkspaceAccessHandler: GetWorkspaceAccessHandler,
     private readonly listDeletedWorkspacesHandler: ListDeletedWorkspacesHandler,
@@ -73,7 +75,7 @@ export class WorkspacesController {
   @ResponseMessage('Workspace created')
   async create(@Body() dto: CreateWorkspaceDto, @Auth() auth: IAuth) {
     return this.createWorkspaceHandler.execute(
-      new CreateWorkspaceCommand(auth.id, dto.name),
+      new CreateWorkspaceCommand(auth.id, dto.name, dto.starter),
     );
   }
 
@@ -81,6 +83,12 @@ export class WorkspacesController {
   @ResponseMessage('Find all workspace')
   async findAllWorkspace(@Auth() auth: IAuth) {
     return this.listWorkspacesHandler.execute(new ListWorkspacesQuery(auth.id));
+  }
+
+  @Get('starters')
+  @ResponseMessage('Find workspace starters')
+  findStarters() {
+    return this.listWorkspaceStartersHandler.execute();
   }
 
   @Get('trash')
