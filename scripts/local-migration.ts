@@ -22,9 +22,11 @@ import {
 import { migrationFiles } from '../src/database/database-options';
 import { migrationIntegrityProblems } from '../src/database/migration-integrity';
 import {
+  historyToReorder,
   inspectHistory,
   migrationHistory,
   readOnlyDataSource,
+  type HistoryRow,
 } from '../src/database/migration-safety';
 import source from '../src/database/data-source';
 
@@ -106,7 +108,14 @@ function generatedStatements(file: string): string[] | null {
     : null;
 }
 
-async function inspect(db: DataSource) {
+// After a merge, a local database may already hold newer migrations than one
+// that just arrived. Only local databases may apply it out of order.
+function isLocalDatabase(options: DataSourceOptions): boolean {
+  const host = (options as { host?: string }).host;
+  return host === 'localhost' || host === '127.0.0.1' || host === '::1';
+}
+
+async function inspect(db: DataSource, allowOutOfOrder = false) {
   const names = activeMigrationNames(db);
   const rows = await migrationHistory(db);
   const baseline = loadBaseline();
@@ -114,12 +123,23 @@ async function inspect(db: DataSource) {
   if (!lineage.valid)
     throw new Error('Migration history differs from the frozen baseline.');
   const applied = lineage.incremental.map((row) => row.name);
-  if (applied.some((name, index) => names[index] !== name))
+  const outOfOrder = applied.some((name, index) => names[index] !== name);
+  if (
+    outOfOrder &&
+    !(allowOutOfOrder && applied.every((name) => names.includes(name)))
+  )
     throw new Error(
-      'Executed migrations are not an ordered prefix of source migrations.',
+      'Executed migrations are not an ordered prefix of source migrations.' +
+        (isLocalDatabase(db.options)
+          ? ' A merge brought in an older migration; run `npm run migration:run` first.'
+          : ''),
     );
   const history = inspectHistory(names, rows, lineage.legacy);
-  if (history.errors.length) throw new Error(history.errors.join('\n'));
+  const historyErrors = history.errors.filter(
+    (error) =>
+      !(allowOutOfOrder && error.startsWith('Out-of-order pending migration:')),
+  );
+  if (historyErrors.length) throw new Error(historyErrors.join('\n'));
   const integrity = migrationIntegrityProblems().filter(
     (problem) =>
       !problem.startsWith(
@@ -140,7 +160,32 @@ async function inspect(db: DataSource) {
       'No schema checkpoint for this newer migration state. History is valid, but unrelated schema drift cannot be ruled out; review migration SQL.',
     );
   }
-  return { names, rows, history };
+  return { names, rows, history, outOfOrder };
+}
+
+// Rewrite incremental history in timestamp order, as a fresh database would
+// record it, so the strict prefix checks pass again.
+async function reorderHistory(db: DataSource): Promise<void> {
+  const cutoff = loadBaseline().cutoff;
+  await db.transaction(async (manager) => {
+    const rows: HistoryRow[] = await manager.query(
+      'SELECT id, timestamp, name FROM public.migrations WHERE timestamp > $1 ORDER BY id',
+      [cutoff],
+    );
+    const moved = historyToReorder(rows);
+    if (!moved.length) return;
+    await manager.query('DELETE FROM public.migrations WHERE name = ANY($1)', [
+      moved.map((row) => row.name),
+    ]);
+    for (const row of moved)
+      await manager.query(
+        'INSERT INTO public.migrations (timestamp, name) VALUES ($1, $2)',
+        [row.timestamp, row.name],
+      );
+    console.log(
+      `Reordered ${moved.length} migration history row(s) to source order.`,
+    );
+  });
 }
 
 export async function generateMigration(
@@ -213,13 +258,16 @@ export async function runMigrations(
 ): Promise<string[]> {
   const readOnly = readOnlyDataSource(options);
   let pending: string[];
+  let outOfOrder: boolean;
   try {
     await readOnly.initialize();
-    pending = (await inspect(readOnly)).history.pending;
+    const inspected = await inspect(readOnly, isLocalDatabase(options));
+    pending = inspected.history.pending;
+    outOfOrder = inspected.outOfOrder;
   } finally {
     if (readOnly.isInitialized) await readOnly.destroy();
   }
-  if (!pending.length) {
+  if (!pending.length && !outOfOrder) {
     console.log('No pending migrations.');
     return [];
   }
@@ -262,6 +310,7 @@ export async function runMigrations(
     await db.initialize();
     const executed = await db.runMigrations({ transaction: 'each' });
     console.log(`Executed ${executed.length} migration(s).`);
+    if (outOfOrder) await reorderHistory(db);
     return executed.map(
       (migration) => migration.name ?? migration.constructor.name,
     );

@@ -7,6 +7,21 @@ export type HistoryRow = {
   name: string;
 };
 
+// Tail of an id-ordered history that is out of timestamp order, sorted by
+// timestamp; empty when the history is already ordered.
+export function historyToReorder<T extends HistoryRow>(rows: T[]): T[] {
+  const first = rows.findIndex((row, index) =>
+    rows
+      .slice(index + 1)
+      .some((later) => Number(later.timestamp) < Number(row.timestamp)),
+  );
+  return first < 0
+    ? []
+    : rows
+        .slice(first)
+        .sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
+}
+
 export function inspectHistory(
   sourceNames: string[],
   rows: HistoryRow[],
