@@ -1,4 +1,4 @@
-import { PageBlockType } from 'src/modules/content/domain/entities/page-block.entity';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 
 import type { AiModificationPlan } from '../../types/ai-modification-plan';
 import { AiModificationPlanPreviewResponseDto } from './ai-modification-plan-preview.response.dto';

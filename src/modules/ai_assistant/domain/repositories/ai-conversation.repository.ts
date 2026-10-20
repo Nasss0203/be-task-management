@@ -1,10 +1,14 @@
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
+import type { AiHistoryCursor } from './ai-history-cursor';
 import type { AiConversation } from '../aggregates/ai-conversation/ai-conversation.aggregate';
+import type { AiConversationScope } from '../enums/ai-conversation-scope.enum';
 
 export interface AiConversationListOptions {
   workspaceId?: string | null;
+  scope?: AiConversationScope;
+  pageId?: string;
   limit?: number;
-  cursor?: string;
+  cursor?: AiHistoryCursor;
 }
 
 export interface AiConversationRepository {

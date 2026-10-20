@@ -63,11 +63,13 @@ export class ConfirmPageCompositionHandler {
     command: ConfirmPageCompositionCommand,
   ): Promise<ConfirmPageCompositionResult> {
     return this.unitOfWork.runInTransaction(async (context) => {
-      const generation = await this.generationRepository.findByIdAndUserId(
-        command.generationId,
-        command.userId,
-        context,
-      );
+      // Also serialize Page Composition confirmation with Discard.
+      const generation =
+        await this.generationRepository.findByIdAndUserIdForUpdate(
+          command.generationId,
+          command.userId,
+          context,
+        );
 
       if (!generation) {
         throw new NotFoundException('AI generation not found');

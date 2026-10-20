@@ -17,6 +17,28 @@ import { GetGenerationHandler } from './get-generation.handler';
 import { GetGenerationQuery } from './get-generation.query';
 
 describe('GetGenerationHandler', () => {
+  it('reads a FAILED modification generation without validating null output', async () => {
+    const generation = AiGeneration.create({
+      userId: 'user-1',
+      workspaceId: 'workspace-1',
+      capability: AI_MODIFICATION_PLAN_CAPABILITY,
+      inputData: { pageId: 'page-1' },
+    });
+    generation.fail('AI_MODIFICATION_PLAN_ERROR', 'Runtime unavailable');
+    const context = { page: { id: 'page-1', workspaceId: 'workspace-1' } };
+    const validate = jest.fn();
+    const handler = new GetGenerationHandler(
+      { findByIdAndUserId: jest.fn().mockResolvedValue(generation) } as unknown as AiGenerationRepository,
+      { authorize: jest.fn() } as unknown as AuthorizationService,
+      { execute: jest.fn().mockResolvedValue(context) } as unknown as GetAiPageContextHandler,
+      { validate } as unknown as AiModificationPlanValidatorService,
+    );
+    const result = await handler.execute(new GetGenerationQuery('user-1', generation.getId()));
+    expect(result.status).toBe(AiGenerationStatus.FAILED);
+    expect(result.error_message).toBe('Runtime unavailable');
+    expect(validate).not.toHaveBeenCalled();
+  });
+
   it('returns page composition output with preview', async () => {
     const draft = {
       schemaVersion: PAGE_COMPOSITION_SCHEMA_VERSION,

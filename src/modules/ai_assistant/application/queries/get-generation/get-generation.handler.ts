@@ -1,4 +1,6 @@
 import {
+  BadGatewayException,
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -9,11 +11,13 @@ import { AuthorizationService } from 'src/modules/permission/application/service
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 
 import { AI_ASSISTANT_TYPES } from '../../../ai-assistant.types';
+import { AiGenerationStatus } from '../../../domain/enums/ai-generation-status.enum';
 import type { AiGenerationRepository } from '../../../domain/repositories/ai-generation.repository';
 
 import { AI_MODIFICATION_PLAN_CAPABILITY } from '../../constants/ai-modification-plan.constant';
 import { AiGenerationResponseDto } from '../../dto/response/ai-generation.response.dto';
 import { AiModificationPlanValidatorService } from '../../services/ai-modification-plan-validator.service';
+import { assertAiPageContextFresh } from '../../services/ai-page-context-fingerprint';
 
 import { GetAiPageContextHandler } from '../get-ai-page-context/get-ai-page-context.handler';
 import { GetAiPageContextQuery } from '../get-ai-page-context/get-ai-page-context.query';
@@ -73,12 +77,38 @@ export class GetGenerationHandler {
         );
       }
 
-      const validatedPlan = this.planValidator.validate(
-        generation.getOutputData(),
-        context,
-      );
+      // A PROCESSING/FAILED generation has no executable plan to validate.
+      // Authorization and workspace checks above still apply.
+      if (
+        generation.getStatus() === AiGenerationStatus.PROCESSING ||
+        generation.getStatus() === AiGenerationStatus.FAILED
+      ) {
+        return AiGenerationResponseDto.fromDomain(generation);
+      }
 
-      return AiGenerationResponseDto.fromDomain(generation, validatedPlan);
+      try {
+        const validatedPlan = this.planValidator.validate(
+          generation.getOutputData(),
+          context,
+        );
+        return AiGenerationResponseDto.fromDomain(generation, validatedPlan);
+      } catch (error) {
+        if (!(error instanceof BadGatewayException)) throw error;
+        try {
+          assertAiPageContextFresh(
+            (inputData as Record<string, unknown>).pageContextFingerprint,
+            context,
+          );
+        } catch (staleError) {
+          if (staleError instanceof ConflictException) {
+            // The draft was validated when persisted, but its old anchors may
+            // no longer exist. Allow history/Discard; Confirm still returns 409.
+            return AiGenerationResponseDto.fromDomain(generation);
+          }
+          throw staleError;
+        }
+        throw error;
+      }
     }
 
     const workspaceId = generation.getWorkspaceId();

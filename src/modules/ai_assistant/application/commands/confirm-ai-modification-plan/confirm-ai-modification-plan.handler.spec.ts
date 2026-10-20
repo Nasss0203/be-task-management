@@ -1,12 +1,13 @@
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException } from '@nestjs/common';
 
-import { PageBlockType } from 'src/modules/content/domain/entities/page-block.entity';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import type { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
 
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
+import type { AiPageContextTransactionLocker } from '../../services/ai-page-context-transaction-lock.port';
 
 import { AiGenerationStatus } from '../../../domain/enums/ai-generation-status.enum';
 import type { AiGenerationRepository } from '../../../domain/repositories/ai-generation.repository';
@@ -18,6 +19,7 @@ import type { GetAiPageContextHandler } from '../../queries/get-ai-page-context/
 
 import type { AiModificationPlanExecutor } from '../../services/ai-modification-plan-executor.service';
 import type { AiModificationPlanValidatorService } from '../../services/ai-modification-plan-validator.service';
+import { fingerprintAiPageContext } from '../../services/ai-page-context-fingerprint';
 
 import type { ApplyGenerationHandler } from '../apply-generation/apply-generation.handler';
 
@@ -30,15 +32,31 @@ describe('ConfirmAiModificationPlanHandler', () => {
   } as unknown as PersistenceContext;
 
   const pageContext = {
+    schemaVersion: 1,
+    builtAt: '2026-10-19T08:00:00Z',
     page: {
       id: 'page-1',
       workspaceId: 'workspace-1',
       teamspaceId: null,
+      parentPageId: null,
+      title: 'Page 1',
+      icon: null,
+      coverUrl: null,
+      updatedAt: '2026-10-19T07:00:00Z',
+    },
+    blocks: [],
+    databaseReferences: [],
+    databases: [],
+    completeness: {
+      blocks: { total: 0, included: 0, truncated: false },
+      databases: { total: 0, included: 0, truncated: false },
+      rows: [],
+      textTruncated: false,
     },
   } as unknown as AiPageContextResponseDto;
 
   let generationRepository: {
-    findByIdAndUserId: jest.Mock;
+    findByIdAndUserIdForUpdate: jest.Mock;
   };
 
   let authorizationService: {
@@ -64,6 +82,7 @@ describe('ConfirmAiModificationPlanHandler', () => {
   let unitOfWork: {
     runInTransaction: jest.Mock;
   };
+  let pageContextLock: { lock: jest.Mock };
 
   let handler: ConfirmAiModificationPlanHandler;
 
@@ -73,6 +92,7 @@ describe('ConfirmAiModificationPlanHandler', () => {
     getInputData: jest.fn().mockReturnValue({
       pageId: 'page-1',
       instruction: 'Add tasks',
+      pageContextFingerprint: fingerprintAiPageContext(pageContext),
     }),
     getOutputData: jest.fn().mockReturnValue({
       stored: 'plan',
@@ -84,7 +104,7 @@ describe('ConfirmAiModificationPlanHandler', () => {
     jest.clearAllMocks();
 
     generationRepository = {
-      findByIdAndUserId: jest.fn().mockResolvedValue(generation),
+      findByIdAndUserIdForUpdate: jest.fn().mockResolvedValue(generation),
     };
 
     authorizationService = {
@@ -115,6 +135,7 @@ describe('ConfirmAiModificationPlanHandler', () => {
       ),
     };
 
+    pageContextLock = { lock: jest.fn().mockResolvedValue(undefined) };
     handler = new ConfirmAiModificationPlanHandler(
       generationRepository as unknown as AiGenerationRepository,
       authorizationService as unknown as AuthorizationService,
@@ -123,6 +144,7 @@ describe('ConfirmAiModificationPlanHandler', () => {
       planExecutor as unknown as AiModificationPlanExecutor,
       applyGenerationHandler as unknown as ApplyGenerationHandler,
       unitOfWork as unknown as UnitOfWork,
+      pageContextLock as unknown as AiPageContextTransactionLocker,
     );
   });
 
@@ -185,10 +207,14 @@ describe('ConfirmAiModificationPlanHandler', () => {
 
     expect(unitOfWork.runInTransaction).toHaveBeenCalledTimes(1);
 
-    expect(generationRepository.findByIdAndUserId).toHaveBeenCalledWith(
+    expect(generationRepository.findByIdAndUserIdForUpdate).toHaveBeenCalledWith(
       'generation-1',
       'user-1',
       context,
+    );
+    expect(pageContextLock.lock).toHaveBeenCalledWith('page-1', context, 'user-1');
+    expect(pageContextLock.lock.mock.invocationCallOrder[0]).toBeLessThan(
+      getAiPageContextHandler.execute.mock.invocationCallOrder[0],
     );
 
     expect(getAiPageContextHandler.execute).toHaveBeenCalledWith(
@@ -269,6 +295,132 @@ describe('ConfirmAiModificationPlanHandler', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
 
     expect(authorizationService.authorize).not.toHaveBeenCalled();
+    expect(planExecutor.execute).not.toHaveBeenCalled();
+    expect(applyGenerationHandler.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects a legacy draft missing a Page fingerprint before execution', async () => {
+    generation.getInputData.mockReturnValueOnce({ pageId: 'page-1' });
+    planValidator.validate.mockReturnValue({
+      status: 'PLAN_READY',
+      pageId: 'page-1',
+      operations: [{ type: 'INSERT_BLOCKS' }],
+    });
+
+    await expect(
+      handler.execute(new ConfirmAiModificationPlanCommand('user-1', 'generation-1')),
+    ).rejects.toMatchObject({
+      status: 409,
+      response: { code: 'AI_MODIFICATION_PLAN_STALE' },
+    });
+
+    expect(authorizationService.authorize).not.toHaveBeenCalled();
+    expect(planExecutor.execute).not.toHaveBeenCalled();
+    expect(applyGenerationHandler.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects a modified Page even when existing block IDs still validate', async () => {
+    planValidator.validate.mockReturnValue({
+      status: 'PLAN_READY',
+      pageId: 'page-1',
+      operations: [{ type: 'INSERT_BLOCKS' }],
+    });
+    const changedPageContext = {
+      ...pageContext,
+      page: { ...pageContext.page, title: 'Renamed after planning' },
+    };
+    getAiPageContextHandler.execute.mockResolvedValue(changedPageContext);
+
+    await expect(
+      handler.execute(new ConfirmAiModificationPlanCommand('user-1', 'generation-1')),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    expect(planValidator.validate).not.toHaveBeenCalled();
+    expect(authorizationService.authorize).not.toHaveBeenCalled();
+    expect(planExecutor.execute).not.toHaveBeenCalled();
+    expect(applyGenerationHandler.execute).not.toHaveBeenCalled();
+  });
+
+  it('returns 409 before plan validation when a referenced block was deleted', async () => {
+    const original = {
+      ...pageContext,
+      blocks: [
+        {
+          id: 'block-to-delete',
+          parentBlockId: null,
+          type: PageBlockType.TEXT,
+          orderIndex: 0,
+          title: null,
+          content: { text: 'Original' },
+          styleConfig: null,
+          dataConfig: null,
+        },
+      ],
+      completeness: {
+        ...pageContext.completeness,
+        blocks: { total: 1, included: 1, truncated: false },
+      },
+    } satisfies AiPageContextResponseDto;
+    generation.getInputData.mockReturnValueOnce({
+      pageId: 'page-1',
+      pageContextFingerprint: fingerprintAiPageContext(original),
+    });
+    // The fresh context has no blocks, so operation anchors are now invalid.
+
+    await expect(
+      handler.execute(new ConfirmAiModificationPlanCommand('user-1', 'generation-1')),
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(planValidator.validate).not.toHaveBeenCalled();
+    expect(planExecutor.execute).not.toHaveBeenCalled();
+    expect(applyGenerationHandler.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects a truncated current Page context before any write', async () => {
+    planValidator.validate.mockReturnValue({
+      status: 'PLAN_READY',
+      pageId: 'page-1',
+      operations: [{ type: 'INSERT_BLOCKS' }],
+    });
+    getAiPageContextHandler.execute.mockResolvedValue({
+      ...pageContext,
+      completeness: { ...pageContext.completeness, textTruncated: true },
+    });
+
+    await expect(
+      handler.execute(new ConfirmAiModificationPlanCommand('user-1', 'generation-1')),
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(planExecutor.execute).not.toHaveBeenCalled();
+    expect(applyGenerationHandler.execute).not.toHaveBeenCalled();
+  });
+
+  it.each([AiGenerationStatus.APPLIED, AiGenerationStatus.DISCARDED])(
+    'rejects %s after acquiring the generation lock without executing operations',
+    async (status) => {
+      generation.getStatus.mockReturnValueOnce(status);
+
+      await expect(
+        handler.execute(new ConfirmAiModificationPlanCommand('user-1', 'generation-1')),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      expect(generationRepository.findByIdAndUserIdForUpdate).toHaveBeenCalledWith(
+        'generation-1', 'user-1', context,
+      );
+      expect(getAiPageContextHandler.execute).not.toHaveBeenCalled();
+      expect(pageContextLock.lock).not.toHaveBeenCalled();
+      expect(planExecutor.execute).not.toHaveBeenCalled();
+      expect(applyGenerationHandler.execute).not.toHaveBeenCalled();
+    },
+  );
+
+  it('does not read or execute a plan when acquiring the Page context lock fails', async () => {
+    pageContextLock.lock.mockRejectedValueOnce(new Error('database lock failure'));
+
+    await expect(
+      handler.execute(new ConfirmAiModificationPlanCommand('user-1', 'generation-1')),
+    ).rejects.toThrow('database lock failure');
+
+    expect(getAiPageContextHandler.execute).not.toHaveBeenCalled();
+    expect(planValidator.validate).not.toHaveBeenCalled();
     expect(planExecutor.execute).not.toHaveBeenCalled();
     expect(applyGenerationHandler.execute).not.toHaveBeenCalled();
   });

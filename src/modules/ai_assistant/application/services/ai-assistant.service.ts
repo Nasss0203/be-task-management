@@ -1,13 +1,10 @@
 import {
   BadGatewayException,
   BadRequestException,
-  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
-import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { AI_ASSISTANT_TYPES } from '../../ai-assistant.types';
@@ -25,6 +22,7 @@ import { PAGE_COMPOSITION_CAPABILITY } from '../constants/page-composition.const
 import { AiGenerationResponseDto } from '../dto/response/ai-generation.response.dto';
 import type { AiRuntimePort } from '../ports/ai-runtime.port';
 import { PageCompositionDraftValidator } from './page-composition-draft-validator.service';
+import { AiConversationAccessService } from './ai-conversation-access.service';
 
 export interface SubmitAiRequestParams {
   requestId: string;
@@ -35,6 +33,7 @@ export interface SubmitAiRequestParams {
   input: Record<string, unknown>;
   context?: Record<string, unknown>;
   metadata?: Record<string, unknown>;
+  shareToken?: string;
 }
 
 @Injectable()
@@ -52,7 +51,8 @@ export class AiAssistantService {
     private readonly runtime: AiRuntimePort,
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly unitOfWork: UnitOfWork,
-    private readonly authorizationService: AuthorizationService,
+    @Inject(AI_ASSISTANT_TYPES.services.AiConversationAccess)
+    private readonly accessService: AiConversationAccessService,
     private readonly pageCompositionDraftValidator: PageCompositionDraftValidator,
   ) {}
 
@@ -76,20 +76,11 @@ export class AiAssistantService {
 
     const workspaceId = conversation.getWorkspaceId();
 
-    if (workspaceId) {
-      const allowed = await this.authorizationService.authorize({
-        userId: params.userId,
-        permissions: [PERMISSIONS.WORKSPACE_READ],
-        target: {
-          type: 'workspace',
-          id: workspaceId,
-        },
-      });
-
-      if (!allowed) {
-        throw new ForbiddenException('Workspace access denied');
-      }
-    }
+    await this.accessService.assertCanRead(
+      conversation,
+      params.userId,
+      params.shareToken,
+    );
 
     const generationId = await this.unitOfWork.runInTransaction(
       async (context) => {
@@ -175,6 +166,8 @@ export class AiAssistantService {
             content: this.getAssistantMessageContent(outputData),
             metadata: {
               requestId: params.requestId,
+              generationId,
+              capability: params.capability,
               ...(result.provider ? { provider: result.provider } : {}),
               ...(result.model ? { model: result.model } : {}),
             },

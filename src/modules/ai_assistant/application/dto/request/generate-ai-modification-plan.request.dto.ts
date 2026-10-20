@@ -8,4 +8,8 @@ export class GenerateAiModificationPlanRequestDto {
   @IsOptional()
   @IsUUID()
   requestId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  conversationId?: string;
 }

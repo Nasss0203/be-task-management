@@ -1,7 +1,7 @@
 import type { AddDatabaseViewToBlockHandler } from 'src/modules/content/application/commands/page-block/add-database-view-to-block/add-database-view-to-block.handler';
 import type { CreatePageBlockHandler } from 'src/modules/content/application/commands/page-block/create-page-block/create-page-block.handler';
 import type { CreatePageHandler } from 'src/modules/content/application/commands/page/create-page/create-page.handler';
-import { PageBlockType } from 'src/modules/content/domain/entities/page-block.entity';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 
 import type { AddPropertyOptionHandler } from 'src/modules/database/application/commands/add-property-option/add-property-option.handler';
 import type { AddPropertyHandler } from 'src/modules/database/application/commands/add-property/add-property.handler';

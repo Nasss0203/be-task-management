@@ -61,10 +61,23 @@ export class TypeOrmAiConversationRepository implements AiConversationRepository
       });
     }
 
-    if (options.cursor) {
-      query.andWhere('conversation.created_at < :cursor', {
-        cursor: new Date(options.cursor),
+    if (options.scope !== undefined) {
+      query.andWhere('conversation.scope = :scope', { scope: options.scope });
+    }
+    if (options.pageId !== undefined) {
+      query.andWhere('conversation.page_id = :pageId', {
+        pageId: options.pageId,
       });
+    }
+
+    if (options.cursor) {
+      query.andWhere(
+        '(conversation.created_at, conversation.id) < (:cursorDate, :cursorId)',
+        {
+          cursorDate: options.cursor.createdAt,
+          cursorId: options.cursor.id,
+        },
+      );
     }
 
     const entities = await query

@@ -1,0 +1,21 @@
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+
+export class ListAiGenerationsRequestDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  shareToken?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(256)
+  cursor?: string;
+}

@@ -1,5 +1,9 @@
 import { NotFoundException } from '@nestjs/common';
 import type { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
+import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
+import type { GetAiPageContextHandler } from './queries/get-ai-page-context/get-ai-page-context.handler';
+import type { AiModificationPlanValidatorService } from './services/ai-modification-plan-validator.service';
+import { AiConversationAccessService } from './services/ai-conversation-access.service';
 import { ArchiveConversationCommand } from './commands/archive-conversation/archive-conversation.command';
 import { ArchiveConversationHandler } from './commands/archive-conversation/archive-conversation.handler';
 import { RecordAiUsageCommand } from './commands/record-ai-usage/record-ai-usage.command';
@@ -12,6 +16,7 @@ import { ListConversationsHandler } from './queries/list-conversations/list-conv
 import { ListConversationsQuery } from './queries/list-conversations/list-conversations.query';
 import { AiConversation } from '../domain/aggregates/ai-conversation/ai-conversation.aggregate';
 import type { AiConversationRepository } from '../domain/repositories/ai-conversation.repository';
+import type { AiMessageRepository } from '../domain/repositories/ai-message.repository';
 import type { AiGenerationRepository } from '../domain/repositories/ai-generation.repository';
 import type { AiUsageRepository } from '../domain/repositories/ai-usage.repository';
 
@@ -20,7 +25,16 @@ const authorizationService = {
 } as unknown as AuthorizationService;
 
 const createConversation = (userId = 'user-1') =>
-  AiConversation.create({ id: 'conversation-1', userId });
+  AiConversation.create({
+    id: 'conversation-1',
+    userId,
+    workspaceId: 'workspace-1',
+  });
+
+const accessService = new AiConversationAccessService(
+  { findById: jest.fn() } as unknown as PageRepository,
+  authorizationService,
+);
 
 describe('AI Assistant application authorization', () => {
   beforeEach(() => jest.clearAllMocks());
@@ -30,10 +44,7 @@ describe('AI Assistant application authorization', () => {
     const repository = {
       findByIdAndUserId,
     } as unknown as AiConversationRepository;
-    const handler = new GetConversationHandler(
-      repository,
-      authorizationService,
-    );
+    const handler = new GetConversationHandler(repository, accessService);
 
     await expect(
       handler.execute(new GetConversationQuery('user-2', 'conversation-1')),
@@ -50,13 +61,23 @@ describe('AI Assistant application authorization', () => {
     } as unknown as AiConversationRepository;
     const handler = new ListConversationsHandler(
       repository,
-      authorizationService,
+      {
+        findFirstUserContentsByConversationIds: jest.fn().mockResolvedValue(
+          new Map([['conversation-1', '  Plan   the   release\nchecklist  ']]),
+        ),
+      } as unknown as AiMessageRepository,
+      accessService,
     );
 
     const result = await handler.execute(new ListConversationsQuery('user-1'));
 
-    expect(findByUserId).toHaveBeenCalledWith('user-1', {});
-    expect(result).toHaveLength(1);
+    expect(findByUserId).toHaveBeenCalledWith('user-1', {
+      limit: 31,
+      cursor: undefined,
+    });
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].title).toBe('Plan the release checklist');
+    expect(result.nextCursor).toBeNull();
   });
 
   it('does not archive a conversation owned by another user', async () => {
@@ -66,10 +87,7 @@ describe('AI Assistant application authorization', () => {
       findByIdAndUserId,
       save,
     } as unknown as AiConversationRepository;
-    const handler = new ArchiveConversationHandler(
-      repository,
-      authorizationService,
-    );
+    const handler = new ArchiveConversationHandler(repository, accessService);
 
     await expect(
       handler.execute(
@@ -107,7 +125,12 @@ describe('AI Assistant application authorization', () => {
     const repository = {
       findByIdAndUserId,
     } as unknown as AiGenerationRepository;
-    const handler = new GetGenerationHandler(repository, authorizationService);
+    const handler = new GetGenerationHandler(
+      repository,
+      authorizationService,
+      { execute: jest.fn() } as unknown as GetAiPageContextHandler,
+      { validate: jest.fn() } as unknown as AiModificationPlanValidatorService,
+    );
 
     await expect(
       handler.execute(new GetGenerationQuery('user-2', 'generation-1')),

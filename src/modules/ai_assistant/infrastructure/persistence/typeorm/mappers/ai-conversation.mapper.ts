@@ -7,6 +7,8 @@ export class AiConversationMapper {
       id: entity.id,
       userId: entity.userId,
       workspaceId: entity.workspaceId,
+      scope: entity.scope,
+      pageId: entity.pageId,
       title: entity.title,
       status: entity.status,
       createdAt: entity.createdAt,
@@ -19,6 +21,8 @@ export class AiConversationMapper {
     entity.id = conversation.getId();
     entity.userId = conversation.getUserId();
     entity.workspaceId = conversation.getWorkspaceId();
+    entity.scope = conversation.getScope();
+    entity.pageId = conversation.getPageId();
     entity.title = conversation.getTitle();
     entity.status = conversation.getStatus();
     entity.createdAt = conversation.getCreatedAt();

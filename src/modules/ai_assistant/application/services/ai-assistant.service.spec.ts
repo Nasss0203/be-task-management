@@ -1,11 +1,18 @@
-import { ServiceUnavailableException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import type { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
+import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { AiConversation } from '../../domain/aggregates/ai-conversation/ai-conversation.aggregate';
 import type { AiGeneration } from '../../domain/aggregates/ai-generation/ai-generation.aggregate';
 import type { AiMessage } from '../../domain/entities/ai-message.entity';
 import type { AiUsage } from '../../domain/entities/ai-usage.entity';
 import { AiGenerationStatus } from '../../domain/enums/ai-generation-status.enum';
+import { AiConversationScope } from '../../domain/enums/ai-conversation-scope.enum';
+import { AiConversationStatus } from '../../domain/enums/ai-conversation-status.enum';
 import { AiMessageRole } from '../../domain/enums/ai-message-role.enum';
 import type { AiConversationRepository } from '../../domain/repositories/ai-conversation.repository';
 import type { AiGenerationRepository } from '../../domain/repositories/ai-generation.repository';
@@ -16,6 +23,7 @@ import { PAGE_COMPOSITION_CAPABILITY } from '../constants/page-composition.const
 import type { AiRuntimePort } from '../ports/ai-runtime.port';
 import { PAGE_COMPOSITION_SCHEMA_VERSION } from '../types/page-composition-draft';
 import { AiAssistantService } from './ai-assistant.service';
+import { AiConversationAccessService } from './ai-conversation-access.service';
 import { PageCompositionDraftValidator } from './page-composition-draft-validator.service';
 
 const request = {
@@ -33,6 +41,7 @@ function createFixture(runtimeExecute: jest.Mock) {
   const conversation = AiConversation.create({
     id: 'conversation-1',
     userId: 'user-1',
+    workspaceId: 'workspace-1',
   });
   let generation: AiGeneration | undefined;
   const savedMessageRoles: AiMessageRole[] = [];
@@ -47,6 +56,8 @@ function createFixture(runtimeExecute: jest.Mock) {
   });
   const findGeneration = jest.fn(() => Promise.resolve(generation ?? null));
   const saveUsage = jest.fn((usage: AiUsage) => Promise.resolve(usage));
+  const findPage = jest.fn();
+  const authorize = jest.fn().mockResolvedValue(true);
   const runInTransaction = jest.fn(
     async (callback: (context: unknown) => Promise<unknown>) =>
       await callback({}),
@@ -71,15 +82,19 @@ function createFixture(runtimeExecute: jest.Mock) {
     {
       runInTransaction,
     } as unknown as UnitOfWork,
-    {
-      authorize: jest.fn().mockResolvedValue(true),
-    } as unknown as AuthorizationService,
+    new AiConversationAccessService(
+      { findById: findPage } as unknown as PageRepository,
+      { authorize } as unknown as AuthorizationService,
+    ),
     new PageCompositionDraftValidator(),
   );
   return {
     service,
+    findPage,
+    authorize,
     getGeneration: () => generation,
     findConversation,
+    findGeneration,
     saveMessage,
     savedMessageRoles,
     saveGeneration,
@@ -89,6 +104,163 @@ function createFixture(runtimeExecute: jest.Mock) {
 }
 
 describe('AiAssistantService', () => {
+  it('links assistant history metadata to the completed generation for reload', async () => {
+    const fixture = createFixture(
+      jest.fn().mockResolvedValue({
+        output: { text: 'Taskmanly helps teams.' },
+        provider: 'ollama',
+        model: 'qwen',
+      }),
+    );
+    const generation = await fixture.service.submit({
+      ...request,
+      capability: 'writing.improve',
+    });
+    const assistantMessage = fixture.saveMessage.mock.calls
+      .map(([message]) => message)
+      .find((message) => message.getRole() === AiMessageRole.ASSISTANT);
+    expect(assistantMessage?.getMetadata()).toEqual(
+      expect.objectContaining({
+        requestId: request.requestId,
+        generationId: generation.id,
+        capability: 'writing.improve',
+      }),
+    );
+  });
+
+  it.each(['success', 'failure'])(
+    'does not recreate history when a running request finishes with %s after deletion',
+    async (outcome) => {
+      let finish!: (value: unknown) => void;
+      let fail!: (error: Error) => void;
+      const runtimeResult = new Promise((resolve, reject) => {
+        finish = resolve;
+        fail = reject;
+      });
+      let markStarted!: () => void;
+      const started = new Promise<void>((resolve) => {
+        markStarted = resolve;
+      });
+      const fixture = createFixture(
+        jest.fn(() => {
+          markStarted();
+          return runtimeResult;
+        }),
+      );
+      fixture.findConversation.mockResolvedValue(
+        AiConversation.create({
+          id: 'conversation-1',
+          userId: 'user-1',
+          workspaceId: 'workspace-1',
+          scope: AiConversationScope.PAGE,
+          pageId: 'page-1',
+        }),
+      );
+      fixture.findPage.mockResolvedValue({
+        getId: () => 'page-1',
+        getWorkspaceId: () => 'workspace-1',
+        getDeletedAt: () => null,
+      });
+      const submitted = fixture.service.submit(request);
+      await started;
+      // The Page -> Conversation -> Generation FK cascade has removed the row.
+      fixture.findGeneration.mockResolvedValue(null);
+      const result = expect(submitted).rejects;
+      if (outcome === 'success') {
+        finish({
+          output: { text: 'Late answer' },
+          provider: 'ollama',
+          model: 'test',
+          usage: { promptTokens: 1, completionTokens: 1, totalTokens: 2 },
+        });
+        await result.toBeInstanceOf(NotFoundException);
+      } else {
+        fail(new Error('Runtime failed after Page deletion'));
+        await result.toThrow('Runtime failed after Page deletion');
+      }
+      expect(fixture.saveGeneration).toHaveBeenCalledTimes(1);
+      expect(fixture.savedMessageRoles).toEqual([AiMessageRole.USER]);
+      expect(fixture.saveUsage).not.toHaveBeenCalled();
+    },
+  );
+
+  it('allows PAGE writing using page permission and preserves its resolved workspace', async () => {
+    const runtime = jest.fn().mockResolvedValue({ output: { text: 'Hi' } });
+    const fixture = createFixture(runtime);
+    fixture.findConversation.mockResolvedValue(
+      AiConversation.create({
+        id: 'conversation-1',
+        userId: 'user-1',
+        workspaceId: 'workspace-1',
+        scope: AiConversationScope.PAGE,
+        pageId: 'page-1',
+      }),
+    );
+    fixture.findPage.mockResolvedValue({
+      getId: () => 'page-1',
+      getWorkspaceId: () => 'workspace-1',
+      getDeletedAt: () => null,
+    });
+    fixture.authorize.mockImplementation(
+      async ({ target, shareToken }) =>
+        target.type === 'page' && shareToken === 'token',
+    );
+    const result = await fixture.service.submit({
+      ...request,
+      shareToken: 'token',
+    });
+    expect(result.workspace_id).toBe('workspace-1');
+    expect(runtime).toHaveBeenCalledTimes(1);
+    expect(fixture.authorize).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects PAGE submit after access is revoked before persistence or runtime', async () => {
+    const runtime = jest.fn();
+    const fixture = createFixture(runtime);
+    fixture.findConversation.mockResolvedValue(
+      AiConversation.create({
+        id: 'conversation-1',
+        userId: 'user-1',
+        workspaceId: 'workspace-1',
+        scope: AiConversationScope.PAGE,
+        pageId: 'page-1',
+      }),
+    );
+    fixture.findPage.mockResolvedValue({
+      getId: () => 'page-1',
+      getWorkspaceId: () => 'workspace-1',
+      getDeletedAt: () => null,
+    });
+    fixture.authorize.mockResolvedValue(false);
+    await expect(fixture.service.submit(request)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+    expect(fixture.runInTransaction).not.toHaveBeenCalled();
+    expect(runtime).not.toHaveBeenCalled();
+  });
+
+  it('keeps existing LEGACY conversations usable by their owner', async () => {
+    const fixture = createFixture(
+      jest.fn().mockResolvedValue({ output: { text: 'Hi' } }),
+    );
+    fixture.findConversation.mockResolvedValue(
+      AiConversation.restore({
+        id: 'conversation-1',
+        userId: 'user-1',
+        workspaceId: null,
+        title: null,
+        status: AiConversationStatus.ACTIVE,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }),
+    );
+    await expect(fixture.service.submit(request)).resolves.toMatchObject({
+      status: 'COMPLETED',
+      workspace_id: null,
+    });
+    expect(fixture.authorize).not.toHaveBeenCalled();
+  });
+
   it('rejects page modification planning through generic submit before persistence or runtime', async () => {
     const runtimeExecute = jest.fn();
     const fixture = createFixture(runtimeExecute);

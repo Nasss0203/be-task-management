@@ -38,7 +38,7 @@ export class AiGenerationOrmEntity {
   @ManyToOne(
     () => AiConversationOrmEntity,
     (conversation) => conversation.generations,
-    { nullable: true, onDelete: 'SET NULL' },
+    { nullable: true, onDelete: 'CASCADE' },
   )
   @JoinColumn({ name: 'conversation_id' })
   conversation: AiConversationOrmEntity | null;

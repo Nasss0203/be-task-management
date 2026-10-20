@@ -132,6 +132,10 @@
     {
       "file": "1792200000000-BackfillOfficialMarketplaceReleases.ts",
       "sha256": "d1afa66f86c82eab79dd1546285e18e7cb994431ee9b67914ff4de725b67a00b"
+    },
+    {
+      "file": "1792300000000-AddAiConversationScope.ts",
+      "sha256": "42448b94ee30ce31bdf73c90e077f8c428f9e20e9e83c51f1c893f05044e8a76"
     }
   ]
 }
