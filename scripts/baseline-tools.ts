@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { execFile } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
@@ -131,6 +131,16 @@ async function main() {
       try {
         const guard = join(directory, 'guard.sql');
         writeFileSync(guard, bootstrapGuard(config.PGDATABASE!));
+        // A CRLF checkout (core.autocrlf) would store \r inside function
+        // bodies and fail post-verification, so always apply LF SQL.
+        const schema = join(directory, 'schema.sql');
+        writeFileSync(
+          schema,
+          readFileSync(join(baselineDirectory(), 'schema.sql'), 'utf8').replace(
+            /\r\n/g,
+            '\n',
+          ),
+        );
         // One connection and one transaction; guard and DDL cannot be separated.
         // Native psql parses the original restrict/unrestrict metacommands.
         await execute(
@@ -143,7 +153,7 @@ async function main() {
             '--file',
             guard,
             '--file',
-            join(baselineDirectory(), 'schema.sql'),
+            schema,
           ],
           {
             env: postgresEnvironment(db, false),
