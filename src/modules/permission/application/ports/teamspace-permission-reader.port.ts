@@ -1,5 +1,5 @@
-import { TeamspaceRole } from 'src/modules/workspace/domain/enums/teamspace-role.enum';
-import { TeamspaceVisibility } from 'src/modules/workspace/domain/enums/teamspace-visibility.enum';
+import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role.enum';
+import { TeamspaceVisibility } from 'src/modules/teamspace/domain/enums/teamspace-visibility.enum';
 
 export interface TeamspacePermissionResource {
   id: string;

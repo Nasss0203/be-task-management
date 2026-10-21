@@ -8,8 +8,8 @@ import {
   TeamspacePermissionSubject,
 } from 'src/modules/permission/application/ports/teamspace-permission-reader.port';
 
-import { TeamspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
-import { TeamspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
+import { TeamspaceMemberOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
+import { TeamspaceOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
 import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 
 @Injectable()

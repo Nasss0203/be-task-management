@@ -63,8 +63,8 @@ import { PageTemplateDatabaseOrmEntity } from 'src/modules/template/infrastructu
 import { PageTemplateVersionOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-version.orm-entity';
 import { PageTemplateOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 import { TemplateVersionAssetOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/template-version-asset.orm-entity';
-import { TeamspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
-import { TeamspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
+import { TeamspaceMemberOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
+import { TeamspaceOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
 import { WorkspaceInviteOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-invite.orm-entity';
 import { WorkspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-member.orm-entity';
 import { WorkspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace.orm-entity';

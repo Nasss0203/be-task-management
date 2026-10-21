@@ -27,6 +27,7 @@ import { PermissionModule } from './modules/permission/permission.module';
 import { StripeWebhookModule } from './modules/stripe-webhook/stripe-webhook.module';
 import { TemplateModule } from './modules/template/template.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
+import { TeamspaceModule } from './modules/teamspace/teamspace.module';
 import { QueueModule } from './shared/infrastructure/queue/queue.module';
 
 @Module({
@@ -56,6 +57,7 @@ import { QueueModule } from './shared/infrastructure/queue/queue.module';
     DatabaseModule,
     IdentityModule,
     WorkspaceModule,
+    TeamspaceModule,
     PermissionModule,
     ContentModule,
     TemplateModule,

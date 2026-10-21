@@ -1,4 +1,4 @@
-import { TeamspaceRole } from 'src/modules/workspace/domain/enums/teamspace-role.enum';
+import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role.enum';
 
 import { PERMISSIONS, PermissionCode } from '../permissions/permission-code';
 

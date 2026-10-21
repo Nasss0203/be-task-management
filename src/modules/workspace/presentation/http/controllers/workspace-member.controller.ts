@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
   Param,
   Patch,
   Post,
@@ -16,6 +17,7 @@ import { RequirePermissions } from 'src/common/decorator/require-permissions.dec
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
+import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import { AddWorkspaceMemberCommand } from 'src/modules/workspace/application/commands/workspace-member/add-workspace-member/add-workspace-member.command';
 import { AddWorkspaceMemberHandler } from 'src/modules/workspace/application/commands/workspace-member/add-workspace-member/add-workspace-member.handler';
 import { DeleteWorkspaceMemberCommand } from 'src/modules/workspace/application/commands/workspace-member/delete-workspace-member/delete-workspace-member.command';
@@ -37,10 +39,15 @@ import { type IAuth } from 'src/types/auth';
 @ReadRateLimit()
 export class WorkspaceMemberController {
   constructor(
+    @Inject(WORKSPACE_TYPES.applications.AddWorkspaceMemberHandler)
     private readonly addWorkspaceMemberHandler: AddWorkspaceMemberHandler,
+    @Inject(WORKSPACE_TYPES.applications.UpdateWorkspaceMemberRoleHandler)
     private readonly updateWorkspaceMemberRoleHandler: UpdateWorkspaceMemberRoleHandler,
+    @Inject(WORKSPACE_TYPES.applications.DeleteWorkspaceMemberHandler)
     private readonly deleteWorkspaceMemberHandler: DeleteWorkspaceMemberHandler,
+    @Inject(WORKSPACE_TYPES.applications.ListWorkspaceMembersHandler)
     private readonly listWorkspaceMembersHandler: ListWorkspaceMembersHandler,
+    @Inject(WORKSPACE_TYPES.applications.ListWorkspacePeopleHandler)
     private readonly listWorkspacePeopleHandler: ListWorkspacePeopleHandler,
   ) {}
 
