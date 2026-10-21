@@ -57,6 +57,22 @@ After cloning, run `npm install` once: it registers the git merge driver that me
 `migration-review-manifest.json` when two branches both generated migrations. Do
 not run Prettier or ESLint `--fix` on generated migrations; their bytes are hashed.
 
+#### Rebuild a local database from the baseline
+
+If `migration:run` or `migration:generate` lists pre-baseline migrations that are
+missing or extra, that local database was built from another migration history and
+cannot be migrated safely. Keep it as a backup and switch to a fresh database
+(PostgreSQL 18 server and `psql`; `task_manly_v2` itself is refused as a bootstrap
+target). In Git Bash, with your own database user:
+
+```bash
+"C:/Program Files/PostgreSQL/18/bin/psql.exe" -U postgres -h localhost -c "CREATE DATABASE task_manly_v2_local OWNER your_db_user"
+DB_NAME=task_manly_v2_local BASELINE_BOOTSTRAP_CONFIRM=EMPTY_DATABASE npm run baseline:bootstrap -- --expect-host=localhost --expect-port=5432 --expect-database=task_manly_v2_local --apply
+```
+
+Then set `DB_NAME=task_manly_v2_local` in `.env` and run `npm run migration:run`,
+`npm run seed:billing`, `npm run seed:template-categories` and `npm run seed:super-admin`.
+
 The PostgreSQL integration test uses a separate, empty database named by
 `MIGRATION_TEST_DB_NAME` (ending in `_test`). It refuses the configured `DB_NAME` and
 cleans up its test schema afterward. Example in PowerShell:

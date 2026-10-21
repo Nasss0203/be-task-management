@@ -158,7 +158,13 @@ async function main() {
       const proof = await verifyBaseline(db, rows, names);
       if (rows.length || proof.errors.length)
         throw new Error(
-          'Baseline restore committed but post-verification failed; stop for investigation, do not reset or rerun bootstrap',
+          'Baseline restore committed but post-verification failed; stop for investigation, do not reset or rerun bootstrap\n' +
+            [
+              ...(rows.length
+                ? [`${rows.length} migration history rows exist`]
+                : []),
+              ...proof.errors,
+            ].join('\n'),
         );
       console.log(
         'Baseline schema restored and verified. Zero historical migrations inserted; incremental migrations have not run.',

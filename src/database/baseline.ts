@@ -279,6 +279,20 @@ export function baselineLineage(
     incremental,
   };
 }
+/** Names the first differing line so a schema mismatch can be investigated. */
+export function firstSchemaDifference(
+  expected: string,
+  actual: string,
+): string {
+  const want = comparableReviewedSchema(expected).split('\n');
+  const got = comparableReviewedSchema(actual).split('\n');
+  const line = want.findIndex((text, index) => text !== got[index]);
+  if (line < 0)
+    return got.length > want.length
+      ? `Extra line ${want.length + 1}: ${got[want.length]}`
+      : 'No line differs after normalization.';
+  return `First difference at line ${line + 1}: expected "${want[line]}", found "${got[line] ?? '<end of dump>'}"`;
+}
 /** Legacy migrations executed on only one side, ignoring ids and execution order. */
 export function legacyHistoryDiff(legacy: HistoryRow[], frozen: HistoryRow[]) {
   const actual = new Set(legacy.map((row) => row.name));
@@ -343,8 +357,15 @@ export async function verifyBaseline(
     actualHash !== checkpoint.schemaSha256 &&
     !equivalentBaseline &&
     !equivalentReviewedCheckpoint
-  )
-    errors.push('Live schema differs from the reviewed baseline/checkpoint');
+  ) {
+    const expectedSql = readFileSync(
+      join(baselineDirectory(), checkpoint.schemaFile ?? 'schema.sql'),
+      'utf8',
+    );
+    errors.push(
+      `Live schema differs from the reviewed baseline/checkpoint. ${firstSchemaDifference(expectedSql, liveSchema)}`,
+    );
+  }
   // pg_dump and history queries use separate read-only snapshots; fail on any
   // observed concurrent history change, and require a maintenance window for DDL.
   const latest = await migrationHistory(db);

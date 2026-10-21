@@ -139,7 +139,7 @@ async function inspect(db: DataSource, allowOutOfOrder = false) {
           : []),
         sameLegacy
           ? '  Only ids or order differ, which is accepted for localhost databases only.'
-          : '  This database predates the baseline with a different schema. Back up any data you need, then recreate it from the baseline (docs/database-baseline.md).',
+          : '  This database was built from another migration history. Keep it as a backup and rebuild from the baseline: see "Rebuild a local database from the baseline" in README.md.',
       ].join('\n'),
     );
   const applied = lineage.incremental.map((row) => row.name);

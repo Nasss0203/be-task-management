@@ -8,6 +8,7 @@ import {
   canonicalSchema,
   checkpointEvidenceGaps,
   checkpointFor,
+  firstSchemaDifference,
   legacyHistoryDiff,
   loadBaseline,
   schemaHash,
@@ -260,5 +261,18 @@ describe('legacyHistoryDiff', () => {
         frozen,
       ),
     ).toEqual({ missing: ['B1786791565431'], extra: ['Local1789000000000'] });
+  });
+});
+
+describe('firstSchemaDifference', () => {
+  it('names the first line that differs', () => {
+    expect(
+      firstSchemaDifference(
+        'CREATE TABLE a ();\nCREATE TABLE b ();\n',
+        'CREATE TABLE a ();\nCOMMENT ON SCHEMA public IS NULL;\n',
+      ),
+    ).toBe(
+      'First difference at line 2: expected "CREATE TABLE b ();", found "COMMENT ON SCHEMA public IS NULL;"',
+    );
   });
 });
