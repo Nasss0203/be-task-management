@@ -8,6 +8,7 @@ import {
   canonicalSchema,
   checkpointEvidenceGaps,
   checkpointFor,
+  legacyHistoryDiff,
   loadBaseline,
   schemaHash,
 } from './baseline';
@@ -232,5 +233,32 @@ describe('Actual ADD PAID checkpoint and Pricing retry', () => {
     } finally {
       connect.mockRestore();
     }
+  });
+});
+
+describe('legacyHistoryDiff', () => {
+  const row = (id: number, name: string): HistoryRow => ({
+    id,
+    timestamp: name.slice(-13),
+    name,
+  });
+  const frozen = [row(1, 'A1786788580541'), row(4, 'B1786791565431')];
+
+  it('ignores ids and execution order', () => {
+    expect(
+      legacyHistoryDiff(
+        [row(7, 'B1786791565431'), row(8, 'A1786788580541')],
+        frozen,
+      ),
+    ).toEqual({ missing: [], extra: [] });
+  });
+
+  it('lists legacy migrations executed on only one side', () => {
+    expect(
+      legacyHistoryDiff(
+        [row(1, 'A1786788580541'), row(2, 'Local1789000000000')],
+        frozen,
+      ),
+    ).toEqual({ missing: ['B1786791565431'], extra: ['Local1789000000000'] });
   });
 });

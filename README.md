@@ -42,7 +42,9 @@ migrations (for example teammates' migrations after a merge), so after a merge o
 transaction for each migration and TypeORM's `migrations` history table. Neither
 command requires `migration:prepare` or `migration:preflight`.
 
-Both commands verify baseline history and reviewed migration integrity. Existing
+Both commands verify baseline history and reviewed migration integrity. On a
+localhost database, pre-baseline history only needs the same legacy migrations;
+row ids and order may differ between developers' machines. Existing
 schema checkpoints are checked when available. New states without a checkpoint
 verify history and PostgreSQL version; use the optional `migration:audit` for deeper
 checks. Review the generated `up()` and `down()` SQL before committing. `DROP TABLE`,

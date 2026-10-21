@@ -279,6 +279,15 @@ export function baselineLineage(
     incremental,
   };
 }
+/** Legacy migrations executed on only one side, ignoring ids and execution order. */
+export function legacyHistoryDiff(legacy: HistoryRow[], frozen: HistoryRow[]) {
+  const actual = new Set(legacy.map((row) => row.name));
+  const expected = new Set(frozen.map((row) => row.name));
+  return {
+    missing: [...expected].filter((name) => !actual.has(name)),
+    extra: [...actual].filter((name) => !expected.has(name)),
+  };
+}
 export function checkpointFor(names: string[], manifest: BaselineManifest) {
   return manifest.checkpoints.find(
     (checkpoint) =>

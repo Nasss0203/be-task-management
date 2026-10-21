@@ -16,6 +16,7 @@ import {
   activeMigrationNames,
   baselineLineage,
   checkpointFor,
+  legacyHistoryDiff,
   loadBaseline,
   verifyBaseline,
 } from '../src/database/baseline';
@@ -120,8 +121,27 @@ async function inspect(db: DataSource, allowOutOfOrder = false) {
   const rows = await migrationHistory(db);
   const baseline = loadBaseline();
   const lineage = baselineLineage(rows, baseline);
-  if (!lineage.valid)
-    throw new Error('Migration history differs from the frozen baseline.');
+  // The frozen history records one machine's ids and order. Another developer's
+  // local database only needs to have executed the same legacy migrations.
+  const diff = legacyHistoryDiff(lineage.legacy, baseline.legacyHistory);
+  const sameLegacy = !diff.missing.length && !diff.extra.length;
+  if (!lineage.valid && !(sameLegacy && isLocalDatabase(db.options)))
+    throw new Error(
+      [
+        `Migration history before the baseline (timestamp <= ${baseline.cutoff}) differs from the frozen baseline.`,
+        ...(diff.missing.length
+          ? [`  Not executed in this database: ${diff.missing.join(', ')}`]
+          : []),
+        ...(diff.extra.length
+          ? [
+              `  Executed here but not in the baseline: ${diff.extra.join(', ')}`,
+            ]
+          : []),
+        sameLegacy
+          ? '  Only ids or order differ, which is accepted for localhost databases only.'
+          : '  This database predates the baseline with a different schema. Back up any data you need, then recreate it from the baseline (docs/database-baseline.md).',
+      ].join('\n'),
+    );
   const applied = lineage.incremental.map((row) => row.name);
   const outOfOrder = applied.some((name, index) => names[index] !== name);
   if (
@@ -147,7 +167,9 @@ async function inspect(db: DataSource, allowOutOfOrder = false) {
       ),
   );
   if (integrity.length) throw new Error(integrity.join('\n'));
-  if (checkpointFor(applied, baseline)) {
+  // verifyBaseline requires the exact frozen history, so a local database
+  // accepted above with different ids falls back to the lighter check below.
+  if (lineage.valid && checkpointFor(applied, baseline)) {
     const verified = await verifyBaseline(db, rows, names);
     if (verified.errors.length) throw new Error(verified.errors.join('\n'));
   } else {
