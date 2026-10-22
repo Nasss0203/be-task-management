@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity';
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import type { Repository } from 'typeorm';
 import { EntityManager } from 'typeorm';
@@ -164,6 +165,36 @@ export class TypeOrmPageBlockRepository implements PageBlockRepository {
     qb.orderBy('block.deleted_at', 'DESC');
     const orms = await qb.getMany();
     return orms.map((orm) => PageBlockMapper.toDomain(orm));
+  }
+
+  async findDatabaseViewBlocksByPageIds(
+    pageIds: string[],
+    context?: PersistenceContext,
+  ): Promise<PageBlock[]> {
+    if (pageIds.length === 0) {
+      return [];
+    }
+
+    const orms = await this.resolveRepo(context)
+      .createQueryBuilder('block')
+      .withDeleted()
+      .where('block.page_id IN (:...pageIds)', { pageIds })
+      .andWhere('block.type = :type', { type: PageBlockType.DATABASE_VIEW })
+      .orderBy('block.deleted_at', 'DESC', 'NULLS FIRST')
+      .getMany();
+
+    return orms.map((orm) => PageBlockMapper.toDomain(orm));
+  }
+
+  async deletePermanently(
+    ids: string[],
+    context?: PersistenceContext,
+  ): Promise<void> {
+    if (ids.length === 0) {
+      return;
+    }
+
+    await this.resolveRepo(context).delete(ids);
   }
 
   async save(

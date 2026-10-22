@@ -26,6 +26,7 @@ import type {
 } from 'src/modules/marketplace/application/ports/template-distribution.port';
 import { TemplateEntitlementSource } from 'src/modules/marketplace/domain/enums/template-entitlement-source.enum';
 import { TemplateOfferType } from 'src/modules/marketplace/domain/enums/template-offer-type.enum';
+import { TemplatePreviewMode } from 'src/modules/marketplace/domain/enums/template-preview-mode.enum';
 import type { TemplateMarketplaceReleaseRepository } from 'src/modules/marketplace/domain/repositories/template-marketplace-release.repository';
 import { TemplateDemoConfig } from 'src/modules/marketplace/domain/value-objects/template-demo-config.vo';
 import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
@@ -131,9 +132,10 @@ export class GetTemplateVersionThumbnailHandler {
     }
 
     /*
-     * 4b. Paid content: a public screenshot of a paid version would expose
-     * the content buyers pay for. Visitors get the separate demo's
-     * screenshot instead, or nothing (the client falls back to cover_url).
+     * 4b. Paid content: visitors see the version on sale only when the
+     * creator chose to picture it (Screenshot or Limited preview). Otherwise
+     * they get the separate demo's screenshot, or nothing (the client falls
+     * back to cover_url).
      */
     const assetVersionId = isPublicPublished
       ? await this.resolvePublicThumbnailVersionId(
@@ -208,9 +210,23 @@ export class GetTemplateVersionThumbnailHandler {
     if (!isPaidContent) return version.getId();
     if (await this.canSeePaidContent(template, userId)) return version.getId();
 
-    // Only a separate, fully public demo version is safe to picture.
-    const demoVersionId = listing?.getDemoVersionId();
     const demoConfig = TemplateDemoConfig.tryParse(listing?.getDemoConfig());
+
+    // Older paid releases stay hidden; only the version on sale is pictured.
+    const isLimitedPreview =
+      listing?.getPreviewMode() === TemplatePreviewMode.INTERACTIVE &&
+      demoConfig !== 'INVALID' &&
+      demoConfig?.isLimited() === true;
+    if (
+      version.getId() === listing?.getPublishedVersionId() &&
+      (listing.getPreviewMode() === TemplatePreviewMode.IMAGE ||
+        isLimitedPreview)
+    ) {
+      return version.getId();
+    }
+
+    // Otherwise only a separate, fully public demo version is safe to picture.
+    const demoVersionId = listing?.getDemoVersionId();
     const isSeparateFullDemo =
       Boolean(demoVersionId) &&
       demoVersionId !== listing?.getPublishedVersionId() &&

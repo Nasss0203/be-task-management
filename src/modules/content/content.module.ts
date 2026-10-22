@@ -27,6 +27,9 @@ import { FindPageBlockByPageHandler } from './application/queries/page-block/fin
 import { FindDeletedPagesHandler } from './application/queries/page/find-deleted-pages/find-deleted-pages.handler';
 import { FindPageByIdHandler } from './application/queries/page/find-page-by-id/find-page-by-id.handler';
 import { FindPageByWorkspaceHandler } from './application/queries/page/find-page-by-workspace/find-page-by-workspace.handler';
+import { FindDatabasesByWorkspaceHandler } from './application/queries/page-database/find-databases-by-workspace/find-databases-by-workspace.handler';
+import { PermanentlyDeletePageDatabaseHandler } from './application/commands/page-database/permanently-delete-page-database/permanently-delete-page-database.handler';
+import { RestorePageDatabaseHandler } from './application/commands/page-database/restore-page-database/restore-page-database.handler';
 import { ResolveBookmarkMetadataHandler } from './application/queries/resolve-bookmark-metadata/resolve-bookmark-metadata.handler';
 
 import { ContentPageProvisioningService } from './application/services/content-page-provisioning.service';
@@ -196,6 +199,18 @@ const pageHandlers = [
   {
     provide: CONTENT_TYPES.applications.FindPageByWorkspaceHandler,
     useClass: FindPageByWorkspaceHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.FindDatabasesByWorkspaceHandler,
+    useClass: FindDatabasesByWorkspaceHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.RestorePageDatabaseHandler,
+    useClass: RestorePageDatabaseHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.PermanentlyDeletePageDatabaseHandler,
+    useClass: PermanentlyDeletePageDatabaseHandler,
   },
   {
     provide: CONTENT_TYPES.applications.FindDeletedPagesHandler,

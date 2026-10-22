@@ -7,6 +7,13 @@ export const CONTENT_TYPES = {
   applications: {
     CreatePageHandler: Symbol.for('CreatePageHandler'),
     FindPageByWorkspaceHandler: Symbol.for('FindPageByWorkspaceHandler'),
+    FindDatabasesByWorkspaceHandler: Symbol.for(
+      'FindDatabasesByWorkspaceHandler',
+    ),
+    RestorePageDatabaseHandler: Symbol.for('RestorePageDatabaseHandler'),
+    PermanentlyDeletePageDatabaseHandler: Symbol.for(
+      'PermanentlyDeletePageDatabaseHandler',
+    ),
     FindDeletedPagesHandler: Symbol.for('FindDeletedPagesHandler'),
     FindPageByIdHandler: Symbol.for('FindPageByIdHandler'),
     UpdatePageHandler: Symbol.for('UpdatePageHandler'),

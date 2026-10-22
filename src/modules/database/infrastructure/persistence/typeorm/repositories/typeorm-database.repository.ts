@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
 
@@ -77,11 +77,43 @@ export class TypeOrmDatabaseRepository implements DatabaseRepository {
     return entities.map((entity) => DatabaseMapper.toDomain(entity));
   }
 
+  async findByPageIds(
+    pageIds: string[],
+    context?: PersistenceContext,
+  ): Promise<Database[]> {
+    if (pageIds.length === 0) {
+      return [];
+    }
+
+    const repository = this.getDatabaseRepository(context);
+
+    const entities = await repository.find({
+      where: {
+        pageId: In(pageIds),
+      },
+      relations: {
+        properties: {
+          options: true,
+        },
+      },
+      order: {
+        name: 'ASC',
+        id: 'ASC',
+      },
+    });
+
+    return entities.map((entity) => DatabaseMapper.toDomain(entity));
+  }
+
   async save(database: Database, context?: PersistenceContext): Promise<void> {
     const repository = this.getDatabaseRepository(context);
     const entity = DatabaseMapper.toOrm(database);
 
     await repository.save(entity);
+  }
+
+  async delete(id: string, context?: PersistenceContext): Promise<void> {
+    await this.getDatabaseRepository(context).delete(id);
   }
 
   async deleteProperty(

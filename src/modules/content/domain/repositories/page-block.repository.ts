@@ -31,6 +31,12 @@ export interface PageBlockRepository {
     pageId?: string,
     context?: PersistenceContext,
   ): Promise<PageBlock[]>;
+  /** Includes soft-deleted blocks. */
+  findDatabaseViewBlocksByPageIds(
+    pageIds: string[],
+    context?: PersistenceContext,
+  ): Promise<PageBlock[]>;
+  deletePermanently(ids: string[], context?: PersistenceContext): Promise<void>;
   save(pageBlock: PageBlock, context?: PersistenceContext): Promise<PageBlock>;
   saveMany(
     pageBlocks: PageBlock[],

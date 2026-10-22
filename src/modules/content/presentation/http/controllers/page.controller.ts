@@ -53,6 +53,12 @@ import { FindPageByIdHandler } from 'src/modules/content/application/queries/pag
 import { FindPageByIdQuery } from 'src/modules/content/application/queries/page/find-page-by-id/find-page-by-id.query';
 import { FindPageByWorkspaceHandler } from 'src/modules/content/application/queries/page/find-page-by-workspace/find-page-by-workspace.handler';
 import { FindPageByWorkspaceQuery } from 'src/modules/content/application/queries/page/find-page-by-workspace/find-page-by-workspace.query';
+import { FindDatabasesByWorkspaceHandler } from 'src/modules/content/application/queries/page-database/find-databases-by-workspace/find-databases-by-workspace.handler';
+import { FindDatabasesByWorkspaceQuery } from 'src/modules/content/application/queries/page-database/find-databases-by-workspace/find-databases-by-workspace.query';
+import { PermanentlyDeletePageDatabaseCommand } from 'src/modules/content/application/commands/page-database/permanently-delete-page-database/permanently-delete-page-database.command';
+import { PermanentlyDeletePageDatabaseHandler } from 'src/modules/content/application/commands/page-database/permanently-delete-page-database/permanently-delete-page-database.handler';
+import { RestorePageDatabaseCommand } from 'src/modules/content/application/commands/page-database/restore-page-database/restore-page-database.command';
+import { RestorePageDatabaseHandler } from 'src/modules/content/application/commands/page-database/restore-page-database/restore-page-database.handler';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
@@ -66,6 +72,15 @@ export class PageController {
 
     @Inject(CONTENT_TYPES.applications.FindPageByWorkspaceHandler)
     private readonly findPageByWorkspaceHandler: FindPageByWorkspaceHandler,
+
+    @Inject(CONTENT_TYPES.applications.FindDatabasesByWorkspaceHandler)
+    private readonly findDatabasesByWorkspaceHandler: FindDatabasesByWorkspaceHandler,
+
+    @Inject(CONTENT_TYPES.applications.RestorePageDatabaseHandler)
+    private readonly restorePageDatabaseHandler: RestorePageDatabaseHandler,
+
+    @Inject(CONTENT_TYPES.applications.PermanentlyDeletePageDatabaseHandler)
+    private readonly permanentlyDeletePageDatabaseHandler: PermanentlyDeletePageDatabaseHandler,
 
     @Inject(CONTENT_TYPES.applications.FindDeletedPagesHandler)
     private readonly findDeletedPagesHandler: FindDeletedPagesHandler,
@@ -179,6 +194,64 @@ export class PageController {
     return this.findPageByWorkspaceHandler.execute(
       new FindPageByWorkspaceQuery(workspaceId, auth.id),
     );
+  }
+
+  @ResponseMessage('Find databases by workspace')
+  @Get('workspace/:workspaceId/databases')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
+  @RequirePermissions(PERMISSIONS.PAGE_READ)
+  async findDatabases(
+    @Param('workspaceId') workspaceId: string,
+    @Auth() auth: IAuth,
+  ) {
+    return this.findDatabasesByWorkspaceHandler.execute(
+      new FindDatabasesByWorkspaceQuery(workspaceId, auth.id, false),
+    );
+  }
+
+  @ResponseMessage('Find deleted databases by workspace')
+  @Get('workspace/:workspaceId/databases/trash')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
+  @RequirePermissions(PERMISSIONS.PAGE_READ)
+  async findDeletedDatabases(
+    @Param('workspaceId') workspaceId: string,
+    @Auth() auth: IAuth,
+  ) {
+    return this.findDatabasesByWorkspaceHandler.execute(
+      new FindDatabasesByWorkspaceQuery(workspaceId, auth.id, true),
+    );
+  }
+
+  @Patch(':pageId/databases/:databaseId/restore')
+  @StrictWriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
+  @ResponseMessage('Restore database')
+  async restoreDatabase(
+    @Param('pageId', ParseUUIDPipe) pageId: string,
+    @Param('databaseId', ParseUUIDPipe) databaseId: string,
+  ) {
+    await this.restorePageDatabaseHandler.execute(
+      new RestorePageDatabaseCommand(pageId, databaseId),
+    );
+
+    return { success: true };
+  }
+
+  @Delete(':pageId/databases/:databaseId')
+  @StrictWriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
+  @ResponseMessage('Permanently delete database')
+  async permanentlyDeleteDatabase(
+    @Param('pageId', ParseUUIDPipe) pageId: string,
+    @Param('databaseId', ParseUUIDPipe) databaseId: string,
+  ) {
+    await this.permanentlyDeletePageDatabaseHandler.execute(
+      new PermanentlyDeletePageDatabaseCommand(pageId, databaseId),
+    );
+
+    return { success: true };
   }
 
   @Get(':pageId')
