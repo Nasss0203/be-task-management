@@ -1,5 +1,6 @@
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import {
   ActivityAction,
@@ -29,6 +30,10 @@ describe('DeleteWorkspaceMemberHandler', () => {
     findByUserId: jest.fn(),
   };
 
+  const mockTeamspaceOwnershipGuard = {
+    assertCanRemoveWorkspaceMember: jest.fn(),
+  };
+
   const mockManager = {} as EntityManager;
   const mockUow = {
     runInTransaction: jest
@@ -53,6 +58,8 @@ describe('DeleteWorkspaceMemberHandler', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockTeamspaceOwnershipGuard.assertCanRemoveWorkspaceMember.mockReset();
+    mockTeamspaceOwnershipGuard.assertCanRemoveWorkspaceMember.mockResolvedValue(undefined);
     mockUserProfilePreferenceService.getLastActiveWorkspace.mockResolvedValue(
       null,
     );
@@ -68,6 +75,10 @@ describe('DeleteWorkspaceMemberHandler', () => {
         {
           provide: WORKSPACE_TYPES.repositories.WorkspaceRepository,
           useValue: mockWorkspaceRepository,
+        },
+        {
+          provide: WORKSPACE_TYPES.ports.TeamspaceOwnershipGuard,
+          useValue: mockTeamspaceOwnershipGuard,
         },
         {
           provide: PERSISTENCE_TYPES.UnitOfWork,
@@ -123,6 +134,11 @@ describe('DeleteWorkspaceMemberHandler', () => {
     );
 
     expect(mockUow.runInTransaction).toHaveBeenCalled();
+    expect(mockTeamspaceOwnershipGuard.assertCanRemoveWorkspaceMember).toHaveBeenCalledWith(
+      'ws-1',
+      'member-1',
+      mockManager,
+    );
     expect(
       mockWorkspaceMemberRepository.deleteByWorkspaceAndUser,
     ).toHaveBeenCalledWith('ws-1', 'user-1', mockManager);
@@ -177,6 +193,7 @@ describe('DeleteWorkspaceMemberHandler', () => {
     expect(
       mockWorkspaceMemberRepository.deleteByWorkspaceAndUser,
     ).not.toHaveBeenCalled();
+    expect(mockTeamspaceOwnershipGuard.assertCanRemoveWorkspaceMember).not.toHaveBeenCalled();
     expect(mockCreateActivityService.create).not.toHaveBeenCalled();
     expect(
       mockUserProfilePreferenceService.updateLastActiveWorkspace,
@@ -265,5 +282,86 @@ describe('DeleteWorkspaceMemberHandler', () => {
     expect(
       mockUserProfilePreferenceService.updateLastActiveWorkspace,
     ).toHaveBeenCalledWith('user-1', null, mockManager);
+  });
+
+  const member = (id: string, userId: string, role: WorkspaceRole) =>
+    WorkspaceMember.restore({
+      id,
+      workspaceId: 'ws-1',
+      userId,
+      membershipType: WorkspaceMembershipType.MEMBER,
+      role,
+      joinedAt: new Date(),
+      lastOpenedAt: null,
+    });
+
+  it('returns 409 without deleting when a Teamspace would lose its last owner', async () => {
+    mockWorkspaceMemberRepository.findByWorkspaceAndUser
+      .mockResolvedValueOnce(member('member-1', 'user-1', WorkspaceRole.MEMBER))
+      .mockResolvedValueOnce(member('actor-1', 'actor-1', WorkspaceRole.OWNER));
+    mockTeamspaceOwnershipGuard.assertCanRemoveWorkspaceMember.mockRejectedValueOnce(
+      new ConflictException('Cannot remove the last Teamspace owner'),
+    );
+
+    await expect(
+      handler.execute(new DeleteWorkspaceMemberCommand('ws-1', 'user-1', 'actor-1')),
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(mockWorkspaceMemberRepository.deleteByWorkspaceAndUser).not.toHaveBeenCalled();
+    expect(mockCreateActivityService.create).not.toHaveBeenCalled();
+  });
+
+  it('allows removal when other Teamspace owners remain or the member owns none', async () => {
+    for (const userId of ['owner-with-peers', 'no-teamspace']) {
+      mockWorkspaceMemberRepository.findByWorkspaceAndUser
+        .mockResolvedValueOnce(member(`member-${userId}`, userId, WorkspaceRole.MEMBER))
+        .mockResolvedValueOnce(member('actor-1', 'actor-1', WorkspaceRole.OWNER));
+      await handler.execute(new DeleteWorkspaceMemberCommand('ws-1', userId, 'actor-1'));
+    }
+
+    expect(mockWorkspaceMemberRepository.deleteByWorkspaceAndUser).toHaveBeenCalledTimes(2);
+    expect(mockTeamspaceOwnershipGuard.assertCanRemoveWorkspaceMember).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not partially delete membership when one of several Teamspaces has a last owner', async () => {
+    mockWorkspaceMemberRepository.findByWorkspaceAndUser
+      .mockResolvedValueOnce(member('member-1', 'user-1', WorkspaceRole.MEMBER))
+      .mockResolvedValueOnce(member('actor-1', 'actor-1', WorkspaceRole.OWNER));
+    mockTeamspaceOwnershipGuard.assertCanRemoveWorkspaceMember.mockRejectedValueOnce(
+      new ConflictException('Cannot remove the last Teamspace owner'),
+    );
+
+    await expect(
+      handler.execute(new DeleteWorkspaceMemberCommand('ws-1', 'user-1', 'actor-1')),
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(mockWorkspaceMemberRepository.deleteByWorkspaceAndUser).not.toHaveBeenCalled();
+    expect(mockUserProfilePreferenceService.updateLastActiveWorkspace).not.toHaveBeenCalled();
+  });
+
+  it('preserves not-found and authorization errors before the guard', async () => {
+    mockWorkspaceMemberRepository.findByWorkspaceAndUser.mockResolvedValueOnce(null);
+    await expect(
+      handler.execute(new DeleteWorkspaceMemberCommand('ws-1', 'missing', 'actor-1')),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    mockWorkspaceMemberRepository.findByWorkspaceAndUser
+      .mockResolvedValueOnce(member('member-1', 'user-1', WorkspaceRole.MEMBER))
+      .mockResolvedValueOnce(member('actor-1', 'actor-1', WorkspaceRole.MEMBER));
+    await expect(
+      handler.execute(new DeleteWorkspaceMemberCommand('ws-1', 'user-1', 'actor-1')),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(mockTeamspaceOwnershipGuard.assertCanRemoveWorkspaceMember).not.toHaveBeenCalled();
+  });
+
+  it('propagates a guard database error and never deletes the member', async () => {
+    mockWorkspaceMemberRepository.findByWorkspaceAndUser
+      .mockResolvedValueOnce(member('member-1', 'user-1', WorkspaceRole.MEMBER))
+      .mockResolvedValueOnce(member('actor-1', 'actor-1', WorkspaceRole.OWNER));
+    const error = new Error('database unavailable');
+    mockTeamspaceOwnershipGuard.assertCanRemoveWorkspaceMember.mockRejectedValueOnce(error);
+
+    await expect(
+      handler.execute(new DeleteWorkspaceMemberCommand('ws-1', 'user-1', 'actor-1')),
+    ).rejects.toBe(error);
+    expect(mockWorkspaceMemberRepository.deleteByWorkspaceAndUser).not.toHaveBeenCalled();
   });
 });

@@ -16,6 +16,7 @@ import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 import type { WorkspaceRepository } from 'src/modules/workspace/domain/repositories/workspace.repository';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
+import type { TeamspaceOwnershipGuard } from 'src/modules/workspace/application/ports/teamspace-ownership-guard.port';
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { type UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
@@ -31,6 +32,9 @@ export class DeleteWorkspaceMemberHandler {
 
     @Inject(WORKSPACE_TYPES.repositories.WorkspaceRepository)
     private readonly workspaceRepository: WorkspaceRepository,
+
+    @Inject(WORKSPACE_TYPES.ports.TeamspaceOwnershipGuard)
+    private readonly teamspaceOwnershipGuard: TeamspaceOwnershipGuard,
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
@@ -109,6 +113,12 @@ export class DeleteWorkspaceMemberHandler {
           return;
         }
       }
+
+      await this.teamspaceOwnershipGuard.assertCanRemoveWorkspaceMember(
+        command.workspaceId,
+        targetMember.getId(),
+        manager,
+      );
 
       await this.workspaceMemberRepository.deleteByWorkspaceAndUser(
         command.workspaceId,

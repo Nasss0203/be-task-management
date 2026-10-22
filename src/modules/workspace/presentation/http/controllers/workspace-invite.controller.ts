@@ -17,7 +17,6 @@ import { RequirePermissions } from 'src/common/decorator/require-permissions.dec
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
-import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import { AcceptWorkspaceInviteCommand } from 'src/modules/workspace/application/commands/workspace-invite/accept-workspace-invite/accept-workspace-invite.command';
 import { AcceptWorkspaceInviteHandler } from 'src/modules/workspace/application/commands/workspace-invite/accept-workspace-invite/accept-workspace-invite.handler';
 import { CreateWorkspaceInviteLinkCommand } from 'src/modules/workspace/application/commands/workspace-invite/create-workspace-invite-link/create-workspace-invite-link.command';
@@ -42,6 +41,7 @@ import { GetPendingWorkspaceInvitesHandler } from 'src/modules/workspace/applica
 import { GetPendingWorkspaceInvitesQuery } from 'src/modules/workspace/application/queries/workspace-invite/get-pending-workspace-invites/get-pending-workspace-invites.query';
 import { SearchInviteUsersHandler } from 'src/modules/workspace/application/queries/workspace-invite/search-invite-users/search-invite-users.handler';
 import { SearchInviteUsersQuery } from 'src/modules/workspace/application/queries/workspace-invite/search-invite-users/search-invite-users.query';
+import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import { type IAuth } from 'src/types/auth';
 @Controller('workspace-invites')
 export class WorkspaceInviteController {

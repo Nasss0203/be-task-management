@@ -8,6 +8,7 @@ import { getDataSourceToken } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TeamspaceModule } from 'src/modules/teamspace/teamspace.module';
+import { CreateDefaultWorkspaceHandler } from './application/commands/workspace/create-default-workspace/create-default-workspace.handler';
 import { WorkspaceModule } from './workspace.module';
 import { WORKSPACE_TYPES } from './workspace.types';
 
@@ -34,29 +35,26 @@ describe('Workspace application DI', () => {
 
     expect(module.get(WorkspaceModule)).toBeDefined();
     expect(module.get(TeamspaceModule)).toBeDefined();
-    for (const featureModule of [WorkspaceModule, TeamspaceModule]) {
-      const feature = module.select(featureModule);
-      const providers = Reflect.getMetadata(
-        MODULE_METADATA.PROVIDERS,
-        featureModule,
-      ) as Provider[];
-      for (const provider of providers) {
-        if (
-          typeof provider === 'object' &&
-          provider !== null &&
-          'provide' in provider &&
-          'useExisting' in provider
-        ) {
-          expect(feature.get(provider.provide, { strict: true })).toBe(
-            feature.get(provider.useExisting, { strict: true }),
-          );
-        }
-      }
+    for (const token of Object.values(WORKSPACE_TYPES.applications)) {
+      expect(
+        module.select(WorkspaceModule).get(token, { strict: true }),
+      ).toBeDefined();
     }
+    expect(
+      module
+        .select(WorkspaceModule)
+        .get(CreateDefaultWorkspaceHandler, { strict: true }),
+    ).toBe(
+      module
+        .select(WorkspaceModule)
+        .get(WORKSPACE_TYPES.applications.CreateDefaultWorkspaceHandler, {
+          strict: true,
+        }),
+    );
     await module.close();
   });
 
-  it('aliases every controller token to its one class provider', async () => {
+  it('provides every handler once by Symbol and keeps only the required class alias', async () => {
     const tokens = Object.values(WORKSPACE_TYPES.applications);
     const providers = Reflect.getMetadata(
       MODULE_METADATA.PROVIDERS,
@@ -66,20 +64,38 @@ describe('Workspace application DI', () => {
       MODULE_METADATA.CONTROLLERS,
       WorkspaceModule,
     ) as Array<new (...args: unknown[]) => unknown>;
-    const aliases = providers.filter(
-      (provider): provider is { provide: symbol; useExisting: new () => unknown } =>
+    const applications = providers.filter(
+      (
+        provider,
+      ): provider is { provide: symbol; useClass: new () => unknown } =>
         typeof provider === 'object' &&
         provider !== null &&
         'provide' in provider &&
-        'useExisting' in provider &&
+        'useClass' in provider &&
         tokens.includes(provider.provide as symbol),
     );
 
-    expect(aliases).toHaveLength(tokens.length);
-    for (const alias of aliases) {
-      expect(providers.filter((provider) => provider === alias.useExisting)).toHaveLength(1);
-      expect(aliases.filter((candidate) => candidate.provide === alias.provide)).toHaveLength(1);
+    expect(applications).toHaveLength(tokens.length);
+    for (const application of applications) {
+      expect(
+        providers.filter((provider) => provider === application.useClass),
+      ).toHaveLength(0);
+      expect(
+        applications.filter(
+          (candidate) => candidate.provide === application.provide,
+        ),
+      ).toHaveLength(1);
     }
+    expect(
+      providers.filter(
+        (provider) =>
+          typeof provider === 'object' &&
+          provider !== null &&
+          'provide' in provider &&
+          provider.provide === CreateDefaultWorkspaceHandler &&
+          'useExisting' in provider,
+      ),
+    ).toHaveLength(1);
 
     const declaredTokens = controllers.flatMap((controller) => {
       const dependencies = Reflect.getMetadata(
@@ -88,25 +104,28 @@ describe('Workspace application DI', () => {
       ) as Array<{ index: number; param: symbol }>;
       return dependencies.map(({ param }) => param);
     });
-    expect(declaredTokens).toHaveLength(tokens.length);
-    expect(new Set(declaredTokens)).toEqual(new Set(tokens));
+    const controllerTokens = tokens.filter(
+      (token) =>
+        token !== WORKSPACE_TYPES.applications.CreateDefaultWorkspaceHandler,
+    );
+    expect(declaredTokens).toHaveLength(controllerTokens.length);
+    expect(new Set(declaredTokens)).toEqual(new Set(controllerTokens));
 
     const module = await Test.createTestingModule({
       controllers,
       providers: [
-        ...aliases.map(({ useExisting }) => ({
-          provide: useExisting,
+        ...controllerTokens.map((provide) => ({
+          provide,
           useValue: { execute: jest.fn() },
         })),
-        ...aliases,
       ],
     }).compile();
 
     for (const controller of controllers) {
       expect(module.get(controller)).toBeDefined();
     }
-    for (const alias of aliases) {
-      expect(module.get(alias.provide)).toBe(module.get(alias.useExisting));
+    for (const token of controllerTokens) {
+      expect(module.get(token)).toBeDefined();
     }
   });
 });

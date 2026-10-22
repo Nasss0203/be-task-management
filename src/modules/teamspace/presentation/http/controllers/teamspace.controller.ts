@@ -1,12 +1,26 @@
-import { Body, Controller, Get, Inject, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import { AddTeamspaceMemberCommand } from 'src/modules/teamspace/application/commands/teamspace/add-teamspace-member/add-teamspace-member.command';
 import { AddTeamspaceMemberHandler } from 'src/modules/teamspace/application/commands/teamspace/add-teamspace-member/add-teamspace-member.handler';
 
 import { CreateTeamspaceCommand } from 'src/modules/teamspace/application/commands/teamspace/create-teamspace/create-teamspace.command';
 import { CreateTeamspaceHandler } from 'src/modules/teamspace/application/commands/teamspace/create-teamspace/create-teamspace.handler';
+import { UpdateTeamspaceMemberRoleCommand } from 'src/modules/teamspace/application/commands/teamspace/update-teamspace-member-role/update-teamspace-member-role.command';
+import { UpdateTeamspaceMemberRoleHandler } from 'src/modules/teamspace/application/commands/teamspace/update-teamspace-member-role/update-teamspace-member-role.handler';
 import { AddTeamspaceMemberDto } from 'src/modules/teamspace/application/dto/teamspace/add-teamspace-member.dto';
 import { CreateTeamspaceDto } from 'src/modules/teamspace/application/dto/teamspace/create-teamspace.dto';
+import { UpdateTeamspaceMemberRoleDto } from 'src/modules/teamspace/application/dto/teamspace/update-teamspace-member-role.dto';
+import { TeamspaceMemberResponseDto } from 'src/modules/teamspace/application/dto/teamspace/response/teamspace-member.response.dto';
 import { GetTeamspaceMembersHandler } from 'src/modules/teamspace/application/queries/teamspace/get-teamspace-members/get-teamspace-members.handler';
 import { GetTeamspaceMembersQuery } from 'src/modules/teamspace/application/queries/teamspace/get-teamspace-members/get-teamspace-members.query';
 import { GetTeamspacesHandler } from 'src/modules/teamspace/application/queries/teamspace/get-teamspaces/get-teamspaces.handler';
@@ -25,6 +39,8 @@ export class TeamspaceController {
     private readonly addTeamspaceMemberHandler: AddTeamspaceMemberHandler,
     @Inject(TEAMSPACE_TYPES.applications.GetTeamspaceMembersHandler)
     private readonly getTeamspaceMembersHandler: GetTeamspaceMembersHandler,
+    @Inject(TEAMSPACE_TYPES.applications.UpdateTeamspaceMemberRoleHandler)
+    private readonly updateTeamspaceMemberRoleHandler: UpdateTeamspaceMemberRoleHandler,
   ) {}
 
   @Post()
@@ -69,5 +85,23 @@ export class TeamspaceController {
     return this.getTeamspaceMembersHandler.execute(
       new GetTeamspaceMembersQuery(teamspaceId, auth.id),
     );
+  }
+
+  @Patch(':teamspaceId/members/:memberId/role')
+  async updateMemberRole(
+    @Param('teamspaceId', ParseUUIDPipe) teamspaceId: string,
+    @Param('memberId', ParseUUIDPipe) memberId: string,
+    @Body() dto: UpdateTeamspaceMemberRoleDto,
+    @Auth() auth: IAuth,
+  ): Promise<TeamspaceMemberResponseDto> {
+    const member = await this.updateTeamspaceMemberRoleHandler.execute(
+      new UpdateTeamspaceMemberRoleCommand(
+        teamspaceId,
+        memberId,
+        dto.role_name,
+        auth.id,
+      ),
+    );
+    return TeamspaceMemberResponseDto.fromDomain(member);
   }
 }

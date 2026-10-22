@@ -5,8 +5,15 @@ export const TEAMSPACE_TYPES = {
   },
   applications: {
     CreateTeamspaceHandler: Symbol('CreateTeamspaceHandler'),
-    GetTeamspacesHandler: Symbol('GetTeamspacesHandler'),
     AddTeamspaceMemberHandler: Symbol('AddTeamspaceMemberHandler'),
+    UpdateTeamspaceMemberRoleHandler: Symbol(
+      'UpdateTeamspaceMemberRoleHandler',
+    ),
+    GetTeamspacesHandler: Symbol('GetTeamspacesHandler'),
     GetTeamspaceMembersHandler: Symbol('GetTeamspaceMembersHandler'),
+  },
+  ports: {
+    // TS-1.2
+    TeamspaceMembershipLock: Symbol('TeamspaceMembershipLock'),
   },
 } as const;

@@ -14,6 +14,7 @@ export const PERMISSIONS = {
 
   TEAMSPACE_MEMBER_READ: 'teamspace.member.read',
   TEAMSPACE_MEMBER_ADD: 'teamspace.member.add',
+  TEAMSPACE_MEMBER_UPDATE: 'teamspace.member.update',
   TEAMSPACE_MEMBER_REMOVE: 'teamspace.member.remove',
 
   PAGE_CREATE: 'page.create',

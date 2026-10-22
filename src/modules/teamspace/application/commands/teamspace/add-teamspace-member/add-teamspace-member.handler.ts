@@ -20,6 +20,10 @@ import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-w
 
 import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
+import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role.enum';
+import { TeamspacePermissionPolicy } from 'src/modules/permission/domain/policies/teamspace-permission.policy';
+import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
+import type { TeamspaceMembershipLock } from '../../../ports/teamspace-membership-lock.port';
 import { AddTeamspaceMemberCommand } from './add-teamspace-member.command';
 
 @Injectable()
@@ -33,6 +37,9 @@ export class AddTeamspaceMemberHandler {
 
     @Inject(WORKSPACE_TYPES.repositories.WorkspaceMemberRepository)
     private readonly workspaceMemberRepo: WorkspaceMemberRepository,
+
+    @Inject(TEAMSPACE_TYPES.ports.TeamspaceMembershipLock)
+    private readonly membershipLock: TeamspaceMembershipLock,
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
@@ -55,7 +62,26 @@ export class AddTeamspaceMemberHandler {
         'You do not have permission to add members to this teamspace',
       );
     }
+    if (
+      command.role === TeamspaceRole.OWNER &&
+      !(await this.authorizationService.authorize({
+        userId: command.userId,
+        permissions: [PERMISSIONS.TEAMSPACE_MEMBER_UPDATE],
+        target: { type: 'teamspace', id: command.teamspaceId },
+      }))
+    ) {
+      throw new ForbiddenException(
+        'You do not have permission to appoint teamspace owners',
+      );
+    }
     return this.uow.runInTransaction(async (manager) => {
+      await this.membershipLock.lockForMembershipChange(
+        command.workspaceMemberId,
+        command.teamspaceId,
+        command.userId,
+        manager,
+      );
+
       /**
        * 1. Teamspace phải tồn tại.
        */
@@ -66,6 +92,43 @@ export class AddTeamspaceMemberHandler {
 
       if (!teamspace) {
         throw new NotFoundException('Teamspace not found');
+      }
+
+      const actor = await this.workspaceMemberRepo.findByWorkspaceAndUser(
+        teamspace.getWorkspaceId(),
+        command.userId,
+        manager,
+      );
+      const actorTeamspaceMember = actor
+        ? await this.teamspaceMemberRepo.findByTeamspaceAndWorkspaceMember(
+            command.teamspaceId,
+            actor.getId(),
+            manager,
+          )
+        : null;
+      const actorRole =
+        actor?.getRole() === WorkspaceRole.OWNER
+          ? TeamspaceRole.OWNER
+          : actorTeamspaceMember?.getRoleName();
+      const requiredPermissions =
+        command.role === TeamspaceRole.OWNER
+          ? [
+              PERMISSIONS.TEAMSPACE_MEMBER_ADD,
+              PERMISSIONS.TEAMSPACE_MEMBER_UPDATE,
+            ]
+          : [PERMISSIONS.TEAMSPACE_MEMBER_ADD];
+      if (
+        !actor ||
+        actor.isGuest() ||
+        !actorRole ||
+        !TeamspacePermissionPolicy.hasAllPermissions(
+          actorRole,
+          requiredPermissions,
+        )
+      ) {
+        throw new ForbiddenException(
+          'You do not have permission to add members to this teamspace',
+        );
       }
 
       /**

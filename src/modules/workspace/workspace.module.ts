@@ -36,6 +36,7 @@ import { WorkspaceOrmEntity } from './infrastructure/persistence/typeorm/entitie
 import { TypeOrmWorkspaceInviteRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-workspace-invite.repository';
 import { TypeOrmWorkspaceMemberRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-workspace-member.repository';
 import { TypeOrmWorkspaceRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-workspace.repository';
+import { TypeOrmTeamspaceOwnershipGuard } from './infrastructure/persistence/typeorm/adapters/typeorm-teamspace-ownership.guard';
 import { WorkspaceInviteController } from './presentation/http/controllers/workspace-invite.controller';
 import { WorkspaceMemberController } from './presentation/http/controllers/workspace-member.controller';
 import { WorkspacesController } from './presentation/http/controllers/workspace.controller';
@@ -68,137 +69,122 @@ import { WorkspaceSoftDeleteService } from './application/services/workspace-sof
     WorkspaceInviteController,
   ],
   providers: [
-    CreateDefaultWorkspaceHandler,
-    CreateWorkspaceHandler,
-    UpdateWorkspaceHandler,
-    UpdateWorkspaceLayoutModeHandler,
-    SelectWorkspaceHandler,
-    SoftDeleteWorkspaceHandler,
-    RestoreWorkspaceHandler,
-    RemoveWorkspaceFromTrashHandler,
-    ListWorkspacesHandler,
-    ListWorkspaceStartersHandler,
-    GetWorkspaceHandler,
-    GetWorkspaceAccessHandler,
-    GetWorkspaceOverviewHandler,
-    ListDeletedWorkspacesHandler,
-    InviteWorkspaceMemberHandler,
-    AcceptWorkspaceInviteHandler,
-    DeclineWorkspaceInviteHandler,
-    CreateWorkspaceInviteLinkHandler,
-    RevokeWorkspaceInviteHandler,
-    ResendWorkspaceInviteHandler,
-    SearchInviteUsersHandler,
-    AddWorkspaceMemberHandler,
-    UpdateWorkspaceMemberRoleHandler,
-    DeleteWorkspaceMemberHandler,
     WorkspaceSoftDeleteService,
-    ListWorkspaceMembersHandler,
-    ListWorkspacePeopleHandler,
-    GetPendingWorkspaceInvitesHandler,
+    {
+      provide: WORKSPACE_TYPES.applications.CreateDefaultWorkspaceHandler,
+      useClass: CreateDefaultWorkspaceHandler,
+    },
+    {
+      provide: CreateDefaultWorkspaceHandler,
+      useExisting: WORKSPACE_TYPES.applications.CreateDefaultWorkspaceHandler,
+    },
     {
       provide: WORKSPACE_TYPES.applications.CreateWorkspaceHandler,
-      useExisting: CreateWorkspaceHandler,
+      useClass: CreateWorkspaceHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.ListWorkspacesHandler,
-      useExisting: ListWorkspacesHandler,
+      useClass: ListWorkspacesHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.ListWorkspaceStartersHandler,
-      useExisting: ListWorkspaceStartersHandler,
+      useClass: ListWorkspaceStartersHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.GetWorkspaceHandler,
-      useExisting: GetWorkspaceHandler,
+      useClass: GetWorkspaceHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.GetWorkspaceAccessHandler,
-      useExisting: GetWorkspaceAccessHandler,
+      useClass: GetWorkspaceAccessHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.ListDeletedWorkspacesHandler,
-      useExisting: ListDeletedWorkspacesHandler,
+      useClass: ListDeletedWorkspacesHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.GetWorkspaceOverviewHandler,
-      useExisting: GetWorkspaceOverviewHandler,
+      useClass: GetWorkspaceOverviewHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.UpdateWorkspaceHandler,
-      useExisting: UpdateWorkspaceHandler,
+      useClass: UpdateWorkspaceHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.UpdateWorkspaceLayoutModeHandler,
-      useExisting: UpdateWorkspaceLayoutModeHandler,
+      useClass: UpdateWorkspaceLayoutModeHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.SoftDeleteWorkspaceHandler,
-      useExisting: SoftDeleteWorkspaceHandler,
+      useClass: SoftDeleteWorkspaceHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.RestoreWorkspaceHandler,
-      useExisting: RestoreWorkspaceHandler,
+      useClass: RestoreWorkspaceHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.RemoveWorkspaceFromTrashHandler,
-      useExisting: RemoveWorkspaceFromTrashHandler,
+      useClass: RemoveWorkspaceFromTrashHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.SelectWorkspaceHandler,
-      useExisting: SelectWorkspaceHandler,
+      useClass: SelectWorkspaceHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.InviteWorkspaceMemberHandler,
-      useExisting: InviteWorkspaceMemberHandler,
+      useClass: InviteWorkspaceMemberHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.AcceptWorkspaceInviteHandler,
-      useExisting: AcceptWorkspaceInviteHandler,
+      useClass: AcceptWorkspaceInviteHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.DeclineWorkspaceInviteHandler,
-      useExisting: DeclineWorkspaceInviteHandler,
+      useClass: DeclineWorkspaceInviteHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.CreateWorkspaceInviteLinkHandler,
-      useExisting: CreateWorkspaceInviteLinkHandler,
+      useClass: CreateWorkspaceInviteLinkHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.SearchInviteUsersHandler,
-      useExisting: SearchInviteUsersHandler,
+      useClass: SearchInviteUsersHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.RevokeWorkspaceInviteHandler,
-      useExisting: RevokeWorkspaceInviteHandler,
+      useClass: RevokeWorkspaceInviteHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.ResendWorkspaceInviteHandler,
-      useExisting: ResendWorkspaceInviteHandler,
+      useClass: ResendWorkspaceInviteHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.GetPendingWorkspaceInvitesHandler,
-      useExisting: GetPendingWorkspaceInvitesHandler,
+      useClass: GetPendingWorkspaceInvitesHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.AddWorkspaceMemberHandler,
-      useExisting: AddWorkspaceMemberHandler,
+      useClass: AddWorkspaceMemberHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.UpdateWorkspaceMemberRoleHandler,
-      useExisting: UpdateWorkspaceMemberRoleHandler,
+      useClass: UpdateWorkspaceMemberRoleHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.DeleteWorkspaceMemberHandler,
-      useExisting: DeleteWorkspaceMemberHandler,
+      useClass: DeleteWorkspaceMemberHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.ListWorkspaceMembersHandler,
-      useExisting: ListWorkspaceMembersHandler,
+      useClass: ListWorkspaceMembersHandler,
     },
     {
       provide: WORKSPACE_TYPES.applications.ListWorkspacePeopleHandler,
-      useExisting: ListWorkspacePeopleHandler,
+      useClass: ListWorkspacePeopleHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.ports.TeamspaceOwnershipGuard,
+      useClass: TypeOrmTeamspaceOwnershipGuard,
     },
     {
       provide: WORKSPACE_TYPES.repositories.WorkspaceRepository,
