@@ -18,6 +18,8 @@ import { AddTeamspaceMemberHandler } from 'src/modules/teamspace/application/com
 
 import { CreateTeamspaceCommand } from 'src/modules/teamspace/application/commands/teamspace/create-teamspace/create-teamspace.command';
 import { CreateTeamspaceHandler } from 'src/modules/teamspace/application/commands/teamspace/create-teamspace/create-teamspace.handler';
+import { LeaveTeamspaceCommand } from 'src/modules/teamspace/application/commands/teamspace/leave-teamspace/leave-teamspace.command';
+import { LeaveTeamspaceHandler } from 'src/modules/teamspace/application/commands/teamspace/leave-teamspace/leave-teamspace.handler';
 import { RemoveTeamspaceMemberCommand } from 'src/modules/teamspace/application/commands/teamspace/remove-teamspace-member/remove-teamspace-member.command';
 import { RemoveTeamspaceMemberHandler } from 'src/modules/teamspace/application/commands/teamspace/remove-teamspace-member/remove-teamspace-member.handler';
 import { UpdateTeamspaceMemberRoleCommand } from 'src/modules/teamspace/application/commands/teamspace/update-teamspace-member-role/update-teamspace-member-role.command';
@@ -48,6 +50,8 @@ export class TeamspaceController {
     private readonly updateTeamspaceMemberRoleHandler: UpdateTeamspaceMemberRoleHandler,
     @Inject(TEAMSPACE_TYPES.applications.RemoveTeamspaceMemberHandler)
     private readonly removeTeamspaceMemberHandler: RemoveTeamspaceMemberHandler,
+    @Inject(TEAMSPACE_TYPES.applications.LeaveTeamspaceHandler)
+    private readonly leaveTeamspaceHandler: LeaveTeamspaceHandler,
   ) {}
 
   @Post()
@@ -121,6 +125,17 @@ export class TeamspaceController {
   ): Promise<void> {
     await this.removeTeamspaceMemberHandler.execute(
       new RemoveTeamspaceMemberCommand(teamspaceId, memberId, auth.id),
+    );
+  }
+
+  @Post(':teamspaceId/leave')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async leaveTeamspace(
+    @Param('teamspaceId', ParseUUIDPipe) teamspaceId: string,
+    @Auth() auth: IAuth,
+  ): Promise<void> {
+    await this.leaveTeamspaceHandler.execute(
+      new LeaveTeamspaceCommand(teamspaceId, auth.id),
     );
   }
 }
