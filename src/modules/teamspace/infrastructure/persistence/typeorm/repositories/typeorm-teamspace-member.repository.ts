@@ -108,6 +108,12 @@ export class TypeOrmTeamspaceMemberRepository implements TeamspaceMemberReposito
     });
   }
 
+  async deleteById(id: string, context?: PersistenceContext): Promise<boolean> {
+    const repository = this.getRepository(context);
+    const result = await repository.delete({ id });
+    return result.affected === 1;
+  }
+
   private getRepository(
     context?: PersistenceContext,
   ): Repository<TeamspaceMemberOrmEntity> {

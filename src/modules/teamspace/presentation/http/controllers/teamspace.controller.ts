@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Inject,
   Param,
   ParseUUIDPipe,
@@ -15,6 +18,8 @@ import { AddTeamspaceMemberHandler } from 'src/modules/teamspace/application/com
 
 import { CreateTeamspaceCommand } from 'src/modules/teamspace/application/commands/teamspace/create-teamspace/create-teamspace.command';
 import { CreateTeamspaceHandler } from 'src/modules/teamspace/application/commands/teamspace/create-teamspace/create-teamspace.handler';
+import { RemoveTeamspaceMemberCommand } from 'src/modules/teamspace/application/commands/teamspace/remove-teamspace-member/remove-teamspace-member.command';
+import { RemoveTeamspaceMemberHandler } from 'src/modules/teamspace/application/commands/teamspace/remove-teamspace-member/remove-teamspace-member.handler';
 import { UpdateTeamspaceMemberRoleCommand } from 'src/modules/teamspace/application/commands/teamspace/update-teamspace-member-role/update-teamspace-member-role.command';
 import { UpdateTeamspaceMemberRoleHandler } from 'src/modules/teamspace/application/commands/teamspace/update-teamspace-member-role/update-teamspace-member-role.handler';
 import { AddTeamspaceMemberDto } from 'src/modules/teamspace/application/dto/teamspace/add-teamspace-member.dto';
@@ -41,6 +46,8 @@ export class TeamspaceController {
     private readonly getTeamspaceMembersHandler: GetTeamspaceMembersHandler,
     @Inject(TEAMSPACE_TYPES.applications.UpdateTeamspaceMemberRoleHandler)
     private readonly updateTeamspaceMemberRoleHandler: UpdateTeamspaceMemberRoleHandler,
+    @Inject(TEAMSPACE_TYPES.applications.RemoveTeamspaceMemberHandler)
+    private readonly removeTeamspaceMemberHandler: RemoveTeamspaceMemberHandler,
   ) {}
 
   @Post()
@@ -103,5 +110,17 @@ export class TeamspaceController {
       ),
     );
     return TeamspaceMemberResponseDto.fromDomain(member);
+  }
+
+  @Delete(':teamspaceId/members/:memberId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeMember(
+    @Param('teamspaceId', ParseUUIDPipe) teamspaceId: string,
+    @Param('memberId', ParseUUIDPipe) memberId: string,
+    @Auth() auth: IAuth,
+  ): Promise<void> {
+    await this.removeTeamspaceMemberHandler.execute(
+      new RemoveTeamspaceMemberCommand(teamspaceId, memberId, auth.id),
+    );
   }
 }

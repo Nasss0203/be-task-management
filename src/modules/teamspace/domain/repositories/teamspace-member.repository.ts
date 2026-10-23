@@ -35,4 +35,6 @@ export interface TeamspaceMemberRepository {
     workspaceMemberId: string,
     context?: PersistenceContext,
   ): Promise<void>;
+
+  deleteById(id: string, context?: PersistenceContext): Promise<boolean>;
 }

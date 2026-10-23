@@ -9,6 +9,7 @@ export const TEAMSPACE_TYPES = {
     UpdateTeamspaceMemberRoleHandler: Symbol(
       'UpdateTeamspaceMemberRoleHandler',
     ),
+    RemoveTeamspaceMemberHandler: Symbol('RemoveTeamspaceMemberHandler'),
     GetTeamspacesHandler: Symbol('GetTeamspacesHandler'),
     GetTeamspaceMembersHandler: Symbol('GetTeamspaceMembersHandler'),
   },

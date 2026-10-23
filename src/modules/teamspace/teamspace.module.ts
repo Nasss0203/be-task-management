@@ -5,6 +5,7 @@ import { PermissionModule } from 'src/modules/permission/permission.module';
 import { WorkspaceModule } from 'src/modules/workspace/workspace.module';
 import { AddTeamspaceMemberHandler } from './application/commands/teamspace/add-teamspace-member/add-teamspace-member.handler';
 import { CreateTeamspaceHandler } from './application/commands/teamspace/create-teamspace/create-teamspace.handler';
+import { RemoveTeamspaceMemberHandler } from './application/commands/teamspace/remove-teamspace-member/remove-teamspace-member.handler';
 import { UpdateTeamspaceMemberRoleHandler } from './application/commands/teamspace/update-teamspace-member-role/update-teamspace-member-role.handler';
 import { GetTeamspaceMembersHandler } from './application/queries/teamspace/get-teamspace-members/get-teamspace-members.handler';
 import { GetTeamspacesHandler } from './application/queries/teamspace/get-teamspaces/get-teamspaces.handler';
@@ -36,6 +37,10 @@ import { TEAMSPACE_TYPES } from './teamspace.types';
     {
       provide: TEAMSPACE_TYPES.applications.UpdateTeamspaceMemberRoleHandler,
       useClass: UpdateTeamspaceMemberRoleHandler,
+    },
+    {
+      provide: TEAMSPACE_TYPES.applications.RemoveTeamspaceMemberHandler,
+      useClass: RemoveTeamspaceMemberHandler,
     },
     {
       provide: TEAMSPACE_TYPES.applications.GetTeamspacesHandler,
