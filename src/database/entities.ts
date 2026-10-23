@@ -64,6 +64,8 @@ import { PageTemplateVersionOrmEntity } from 'src/modules/template/infrastructur
 import { PageTemplateOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 import { TemplateVersionAssetOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/template-version-asset.orm-entity';
 import { TeamspaceMemberOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
+import { TeamspaceInvitationOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace-invitation.orm-entity';
+import { TeamspaceInviteLinkOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace-invite-link.orm-entity';
 import { TeamspaceOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
 import { WorkspaceInviteOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-invite.orm-entity';
 import { WorkspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-member.orm-entity';
@@ -94,6 +96,8 @@ export const DATABASE_ENTITIES = [
   DatabaseViewPropertyOrmEntity,
   TeamspaceOrmEntity,
   TeamspaceMemberOrmEntity,
+  TeamspaceInvitationOrmEntity,
+  TeamspaceInviteLinkOrmEntity,
   PageFavoriteOrmEntity,
   // Billing
   BillingFeatureOrmEntity,

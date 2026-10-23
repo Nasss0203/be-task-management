@@ -99,6 +99,10 @@ export class Teamspace {
     return this.visibility;
   }
 
+  canJoinWithoutInvitation(): boolean {
+    return this.visibility === TeamspaceVisibility.OPEN && this.deletedAt === null;
+  }
+
   getCreatedBy(): string {
     return this.createdBy;
   }

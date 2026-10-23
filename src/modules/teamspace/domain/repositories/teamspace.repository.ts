@@ -23,4 +23,12 @@ export interface TeamspaceRepository {
     userId: string,
     context?: PersistenceContext,
   ): Promise<Teamspace[]>;
+
+  findOpenByWorkspaceAndUser(
+    workspaceId: string,
+    userId: string,
+    limit: number,
+    offset: number,
+    context?: PersistenceContext,
+  ): Promise<{ items: Array<{ teamspace: Teamspace; isMember: boolean }>; total: number }>;
 }

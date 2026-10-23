@@ -162,4 +162,49 @@ export class TypeOrmTeamspaceRepository implements TeamspaceRepository {
       },
     });
   }
+
+  async findOpenByWorkspaceAndUser(
+    workspaceId: string,
+    userId: string,
+    limit: number,
+    offset: number,
+    context?: PersistenceContext,
+  ): Promise<{ items: Array<{ teamspace: Teamspace; isMember: boolean }>; total: number }> {
+    const query = this.getRepo(context)
+      .createQueryBuilder('teamspace')
+      .innerJoin(
+        'workspace_members',
+        'workspace_member',
+        `workspace_member.workspace_id = teamspace.workspace_id
+         AND workspace_member.user_id = :userId
+         AND workspace_member.membership_type = :membershipType`,
+        { userId, membershipType: WorkspaceMembershipType.MEMBER },
+      )
+      .leftJoin(
+        'teamspace_members',
+        'teamspace_member',
+        `teamspace_member.teamspace_id = teamspace.id
+         AND teamspace_member.workspace_member_id = workspace_member.id`,
+      )
+      .where('teamspace.workspace_id = :workspaceId', { workspaceId })
+      .andWhere('teamspace.visibility = :visibility', { visibility: TeamspaceVisibility.OPEN })
+      .andWhere('teamspace.deleted_at IS NULL');
+
+    const total = await query.clone().getCount();
+    const { entities, raw } = await query
+      .addSelect('teamspace_member.id', 'membership_id')
+      .orderBy('teamspace.created_at', 'ASC')
+      .addOrderBy('teamspace.id', 'ASC')
+      .skip(offset)
+      .take(limit)
+      .getRawAndEntities();
+
+    return {
+      items: entities.map((entity, index) => ({
+        teamspace: TeamspaceMapper.toDomain(entity),
+        isMember: raw[index]?.membership_id !== null && raw[index]?.membership_id !== undefined,
+      })),
+      total,
+    };
+  }
 }
