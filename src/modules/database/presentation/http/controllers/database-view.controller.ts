@@ -30,6 +30,9 @@ import { CreateDatabaseViewRequest } from '../requests/create-database-view.requ
 import { RenameDatabaseViewRequest } from '../requests/rename-database-view.request';
 import { SetViewPropertyVisibilityRequest } from '../requests/set-view-property-visibility.request';
 import { SetViewPropertyWidthRequest } from '../requests/set-view-property-width.request';
+import { SetViewSortsCommand } from 'src/modules/database/application/commands/set-view-sorts/set-view-sorts.command';
+import { SetViewSortsHandler } from 'src/modules/database/application/commands/set-view-sorts/set-view-sorts.handler';
+import { SetViewSortsRequest } from '../requests/set-view-sorts.request';
 
 @Controller('databases/:databaseId/views')
 export class DatabaseViewController {
@@ -41,6 +44,7 @@ export class DatabaseViewController {
     private readonly getDatabaseViewHandler: GetDatabaseViewHandler,
     private readonly setViewPropertyVisibilityHandler: SetViewPropertyVisibilityHandler,
     private readonly setViewPropertyWidthHandler: SetViewPropertyWidthHandler,
+    private readonly setViewSortsHandler: SetViewSortsHandler,
   ) {}
 
   @Post()
@@ -125,6 +129,19 @@ export class DatabaseViewController {
         propertyId,
         request.width,
       ),
+    );
+  }
+
+  @Patch(':viewId/sorts')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+  async setSorts(
+    @Param('databaseId') databaseId: string,
+    @Param('viewId') viewId: string,
+    @Body() request: SetViewSortsRequest,
+  ) {
+    return this.setViewSortsHandler.execute(
+      new SetViewSortsCommand(databaseId, viewId, request.sorts),
     );
   }
 

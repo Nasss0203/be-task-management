@@ -1,5 +1,6 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -20,6 +21,12 @@ export class DatabaseRowOrmEntity {
     type: 'uuid',
   })
   databaseId: string;
+
+  @CreateDateColumn({
+    name: 'created_at',
+    type: 'timestamptz',
+  })
+  createdAt: Date;
 
   @ManyToOne(() => DatabaseOrmEntity, {
     onDelete: 'CASCADE',

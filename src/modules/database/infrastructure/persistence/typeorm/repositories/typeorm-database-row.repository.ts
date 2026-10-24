@@ -58,6 +58,7 @@ export class TypeOrmDatabaseRowRepository implements DatabaseRowRepository {
         values: true,
       },
       order: {
+        createdAt: 'ASC',
         id: 'ASC',
       },
       ...(options?.limit !== undefined

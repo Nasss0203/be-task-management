@@ -1,6 +1,16 @@
 import { DatabaseViewType } from '../../enums/database-view-type.enum';
 import { DatabaseViewPropertyNotFoundException } from '../../exceptions/database-view-property-not-found.exception';
+import { InvalidDatabaseViewSortException } from '../../exceptions/invalid-database-view-sort.exception';
 import { DatabaseViewProperty } from './database-view-property.entity';
+
+export const MAX_DATABASE_VIEW_SORTS = 5;
+
+export type DatabaseViewSortDirection = 'asc' | 'desc';
+
+export interface DatabaseViewSort {
+  propertyId: string;
+  direction: DatabaseViewSortDirection;
+}
 
 interface CreateDatabaseViewProps {
   id: string;
@@ -17,6 +27,7 @@ interface RestoreDatabaseViewProps {
   type: DatabaseViewType;
   position: string;
   properties?: DatabaseViewProperty[];
+  sorts?: DatabaseViewSort[];
 }
 
 interface AddDatabaseViewPropertyProps {
@@ -35,6 +46,7 @@ export class DatabaseView {
     private readonly type: DatabaseViewType,
     private position: string,
     private readonly properties: DatabaseViewProperty[],
+    private sorts: DatabaseViewSort[],
   ) {}
 
   static create(props: CreateDatabaseViewProps): DatabaseView {
@@ -51,6 +63,7 @@ export class DatabaseView {
       props.type,
       props.position,
       [],
+      [],
     );
   }
 
@@ -62,6 +75,7 @@ export class DatabaseView {
       props.type,
       props.position,
       props.properties ?? [],
+      props.sorts ?? [],
     );
   }
 
@@ -87,6 +101,41 @@ export class DatabaseView {
 
   getProperties(): readonly DatabaseViewProperty[] {
     return this.properties;
+  }
+
+  getSorts(): readonly DatabaseViewSort[] {
+    return this.sorts;
+  }
+
+  setSorts(sorts: readonly DatabaseViewSort[]): void {
+    if (sorts.length > MAX_DATABASE_VIEW_SORTS) {
+      throw new InvalidDatabaseViewSortException(
+        `A view can have at most ${MAX_DATABASE_VIEW_SORTS} sorts`,
+      );
+    }
+
+    const propertyIds = new Set<string>();
+
+    for (const sort of sorts) {
+      if (sort.direction !== 'asc' && sort.direction !== 'desc') {
+        throw new InvalidDatabaseViewSortException(
+          'Sort direction must be asc or desc',
+        );
+      }
+
+      if (propertyIds.has(sort.propertyId)) {
+        throw new InvalidDatabaseViewSortException(
+          'A property can only be sorted once per view',
+        );
+      }
+
+      propertyIds.add(sort.propertyId);
+    }
+
+    this.sorts = sorts.map(({ propertyId, direction }) => ({
+      propertyId,
+      direction,
+    }));
   }
 
   rename(name: string): void {

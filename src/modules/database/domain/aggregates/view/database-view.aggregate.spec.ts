@@ -1,5 +1,6 @@
 import { DatabaseViewType } from '../../enums/database-view-type.enum';
 import { DatabaseViewPropertyNotFoundException } from '../../exceptions/database-view-property-not-found.exception';
+import { InvalidDatabaseViewSortException } from '../../exceptions/invalid-database-view-sort.exception';
 import { DatabaseView } from './database-view.aggregate';
 
 describe('DatabaseView', () => {
@@ -40,5 +41,47 @@ describe('DatabaseView', () => {
     expect(() => view.setPropertyVisibility('other-property', false)).toThrow(
       DatabaseViewPropertyNotFoundException,
     );
+  });
+
+  it('stores sorts in the given order and can clear them', () => {
+    const view = createView('table-view');
+
+    view.setSorts([
+      { propertyId: 'date', direction: 'asc' },
+      { propertyId: 'priority', direction: 'desc' },
+    ]);
+
+    expect(view.getSorts()).toEqual([
+      { propertyId: 'date', direction: 'asc' },
+      { propertyId: 'priority', direction: 'desc' },
+    ]);
+
+    view.setSorts([]);
+
+    expect(view.getSorts()).toEqual([]);
+  });
+
+  it('rejects duplicate properties, invalid directions and too many sorts', () => {
+    const view = createView('table-view');
+
+    expect(() =>
+      view.setSorts([
+        { propertyId: 'date', direction: 'asc' },
+        { propertyId: 'date', direction: 'desc' },
+      ]),
+    ).toThrow(InvalidDatabaseViewSortException);
+
+    expect(() =>
+      view.setSorts([{ propertyId: 'date', direction: 'up' as 'asc' }]),
+    ).toThrow(InvalidDatabaseViewSortException);
+
+    expect(() =>
+      view.setSorts(
+        ['a', 'b', 'c', 'd', 'e', 'f'].map((propertyId) => ({
+          propertyId,
+          direction: 'asc' as const,
+        })),
+      ),
+    ).toThrow(InvalidDatabaseViewSortException);
   });
 });
