@@ -11,22 +11,39 @@ export const TEAMSPACE_TYPES = {
     UpdateTeamspaceMemberRoleHandler: Symbol(
       'UpdateTeamspaceMemberRoleHandler',
     ),
+    UpdateTeamspaceHandler: Symbol('UpdateTeamspaceHandler'),
     RemoveTeamspaceMemberHandler: Symbol('RemoveTeamspaceMemberHandler'),
     LeaveTeamspaceHandler: Symbol('LeaveTeamspaceHandler'),
     InviteTeamspaceMemberHandler: Symbol('InviteTeamspaceMemberHandler'),
-    AcceptTeamspaceInvitationHandler: Symbol('AcceptTeamspaceInvitationHandler'),
-    DeclineTeamspaceInvitationHandler: Symbol('DeclineTeamspaceInvitationHandler'),
-    GetMyTeamspaceInvitationsHandler: Symbol('GetMyTeamspaceInvitationsHandler'),
+    AcceptTeamspaceInvitationHandler: Symbol(
+      'AcceptTeamspaceInvitationHandler',
+    ),
+    DeclineTeamspaceInvitationHandler: Symbol(
+      'DeclineTeamspaceInvitationHandler',
+    ),
+    GetMyTeamspaceInvitationsHandler: Symbol(
+      'GetMyTeamspaceInvitationsHandler',
+    ),
     ListTeamspaceInvitationsHandler: Symbol('ListTeamspaceInvitationsHandler'),
-    RevokeTeamspaceInvitationHandler: Symbol('RevokeTeamspaceInvitationHandler'),
-    ResendTeamspaceInvitationHandler: Symbol('ResendTeamspaceInvitationHandler'),
-    CreateTeamspaceInviteLinkHandler: Symbol('CreateTeamspaceInviteLinkHandler'),
+    RevokeTeamspaceInvitationHandler: Symbol(
+      'RevokeTeamspaceInvitationHandler',
+    ),
+    ResendTeamspaceInvitationHandler: Symbol(
+      'ResendTeamspaceInvitationHandler',
+    ),
+    CreateTeamspaceInviteLinkHandler: Symbol(
+      'CreateTeamspaceInviteLinkHandler',
+    ),
     JoinTeamspaceByLinkHandler: Symbol('JoinTeamspaceByLinkHandler'),
-    RevokeTeamspaceInviteLinkHandler: Symbol('RevokeTeamspaceInviteLinkHandler'),
+    RevokeTeamspaceInviteLinkHandler: Symbol(
+      'RevokeTeamspaceInviteLinkHandler',
+    ),
     ListTeamspaceInviteLinksHandler: Symbol('ListTeamspaceInviteLinksHandler'),
     JoinTeamspaceHandler: Symbol('JoinTeamspaceHandler'),
     DiscoverTeamspacesHandler: Symbol('DiscoverTeamspacesHandler'),
-    UpdateTeamspaceJoinSettingsHandler: Symbol('UpdateTeamspaceJoinSettingsHandler'),
+    UpdateTeamspaceJoinSettingsHandler: Symbol(
+      'UpdateTeamspaceJoinSettingsHandler',
+    ),
     GetTeamspacesHandler: Symbol('GetTeamspacesHandler'),
     GetTeamspaceMembersHandler: Symbol('GetTeamspaceMembersHandler'),
   },
