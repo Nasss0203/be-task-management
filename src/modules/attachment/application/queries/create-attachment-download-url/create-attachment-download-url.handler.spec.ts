@@ -106,6 +106,7 @@ describe('CreateAttachmentDownloadUrlHandler', () => {
     expect(createDownloadUrl).toHaveBeenCalledWith({
       key: 'key',
       fileName: 'file.pdf',
+      contentType: 'application/pdf',
     });
   });
 });
