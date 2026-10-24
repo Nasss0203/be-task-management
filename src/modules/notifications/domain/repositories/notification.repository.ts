@@ -36,6 +36,7 @@ export interface FindMyNotificationsRepositoryInput {
   type?: NotificationType;
   workspaceId?: string;
   cursor?: Date;
+  cursorId?: string;
   limit?: number;
 }
 
@@ -56,6 +57,10 @@ export interface NotificationRepository {
     input: SaveNotificationInput,
     context?: PersistenceContext,
   ): Promise<NotificationModel>;
+
+  insertNotificationIfAbsent(
+    input: SaveNotificationInput & { id: string },
+  ): Promise<NotificationModel | null>;
 
   findMyNotifications(
     input: FindMyNotificationsRepositoryInput,

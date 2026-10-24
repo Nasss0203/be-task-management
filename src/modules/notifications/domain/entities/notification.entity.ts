@@ -7,6 +7,7 @@ export const NotificationSourceType = {
   SYSTEM: 'system',
   ACCOUNT: 'account',
   WORKSPACE: 'workspace',
+  TEAMSPACE: 'teamspace',
   PAGE: 'page',
   PAGE_BLOCK: 'page_block',
   COMMENT: 'comment',
@@ -27,6 +28,7 @@ export const NotificationType = {
   WORKSPACE_INVITE_ACCEPTED: 'workspace.invite_accepted',
   WORKSPACE_MEMBER_JOINED: 'workspace.member_joined',
   WORKSPACE_MEMBER_REMOVED: 'workspace.member_removed',
+  TEAMSPACE_INVITATION_RECEIVED: 'teamspace.invitation_received',
 
   PAGE_ACCESS_REQUESTED: 'page.access.requested',
   PAGE_ACCESS_APPROVED: 'page.access.approved',

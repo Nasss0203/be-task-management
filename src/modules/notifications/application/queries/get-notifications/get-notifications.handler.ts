@@ -27,10 +27,9 @@ export class GetNotificationsHandler {
         sourceId: query.filters.sourceId,
         type: query.filters.type,
         workspaceId: query.filters.workspaceId,
-        cursor: query.filters.cursor
-          ? new Date(query.filters.cursor)
-          : undefined,
-        limit: query.filters.limit ? Number(query.filters.limit) : 30,
+        cursor: query.filters.cursor,
+        cursorId: query.filters.cursorId,
+        limit: query.filters.limit ?? 30,
       },
     );
 

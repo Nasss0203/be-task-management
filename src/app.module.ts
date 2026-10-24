@@ -29,6 +29,7 @@ import { TemplateModule } from './modules/template/template.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
 import { TeamspaceModule } from './modules/teamspace/teamspace.module';
 import { QueueModule } from './shared/infrastructure/queue/queue.module';
+import { OutboxModule } from './shared/infrastructure/outbox/outbox.module';
 
 @Module({
   imports: [
@@ -73,6 +74,7 @@ import { QueueModule } from './shared/infrastructure/queue/queue.module';
     AdminModule,
 
     QueueModule,
+    OutboxModule,
     StripeWebhookModule,
   ],
   controllers: [AppController],

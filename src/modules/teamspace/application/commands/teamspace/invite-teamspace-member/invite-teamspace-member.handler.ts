@@ -5,6 +5,8 @@ import { AuthorizationService } from 'src/modules/permission/application/service
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { TeamspacePermissionPolicy } from 'src/modules/permission/domain/policies/teamspace-permission.policy';
 import { TeamspaceInvitationResponseDto } from 'src/modules/teamspace/application/dto/teamspace/response/teamspace-invitation.response.dto';
+import { TEAMSPACE_INVITATION_LIFETIME_MS } from 'src/modules/teamspace/application/services/teamspace-invitation-policy';
+import { rethrowInvitationPendingUniqueConflict } from 'src/modules/teamspace/application/services/teamspace-invitation-unique-conflict';
 import { TeamspaceInvitation } from 'src/modules/teamspace/domain/entities/teamspace-invitation.entity';
 import { TeamspaceInvitationStatus } from 'src/modules/teamspace/domain/enums/teamspace-invitation-status.enum';
 import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role.enum';
@@ -17,6 +19,7 @@ import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/rep
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
+import { TEAMSPACE_INVITATION_DELIVERY_OUTBOX, type TeamspaceInvitationDeliveryOutbox } from 'src/shared/infrastructure/outbox/teamspace-invitation-delivery.port';
 import type { TeamspaceMembershipLock } from '../../../ports/teamspace-membership-lock.port';
 import { InviteTeamspaceMemberCommand } from './invite-teamspace-member.command';
 
@@ -36,6 +39,8 @@ export class InviteTeamspaceMemberHandler {
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
     private readonly authorizationService: AuthorizationService,
+    @Inject(TEAMSPACE_INVITATION_DELIVERY_OUTBOX)
+    private readonly deliveryOutbox: TeamspaceInvitationDeliveryOutbox,
   ) {}
 
   async execute(command: InviteTeamspaceMemberCommand): Promise<TeamspaceInvitationResponseDto> {
@@ -50,59 +55,67 @@ export class InviteTeamspaceMemberHandler {
       throw new ForbiddenException('You do not have permission to invite teamspace members');
     }
 
-    const invitation = await this.uow.runInTransaction(async (context) => {
-      await this.membershipLock.lockForMembershipChange(
-        command.workspaceMemberId, command.teamspaceId, command.userId, context,
-      );
+    let invitation: TeamspaceInvitation;
+    try {
+      invitation = await this.uow.runInTransaction(async (context) => {
+        await this.membershipLock.lockForMembershipChange(
+          command.workspaceMemberId, command.teamspaceId, command.userId, context,
+        );
 
-      const teamspace = await this.teamspaceRepo.findById(command.teamspaceId, context);
-      if (!teamspace) throw new NotFoundException('Teamspace not found');
+        const teamspace = await this.teamspaceRepo.findById(command.teamspaceId, context);
+        if (!teamspace) throw new NotFoundException('Teamspace not found');
 
-      const actor = await this.workspaceMemberRepo.findByWorkspaceAndUser(
-        teamspace.getWorkspaceId(), command.userId, context,
-      );
-      const actorTeamspaceMember = actor
-        ? await this.memberRepo.findByTeamspaceAndWorkspaceMember(
-            command.teamspaceId, actor.getId(), context,
-          )
-        : null;
-      const actorRole = actor?.getRole() === WorkspaceRole.OWNER
-        ? TeamspaceRole.OWNER
-        : actorTeamspaceMember?.getRoleName();
-      if (!actor || actor.isGuest() || !actorRole ||
-        !TeamspacePermissionPolicy.hasPermission(actorRole, PERMISSIONS.TEAMSPACE_MEMBER_ADD)) {
-        throw new ForbiddenException('You do not have permission to invite teamspace members');
-      }
-
-      const target = await this.workspaceMemberRepo.findById(command.workspaceMemberId, context);
-      if (!target || target.getWorkspaceId() !== teamspace.getWorkspaceId()) {
-        throw new NotFoundException('Workspace member not found');
-      }
-      if (target.isGuest()) {
-        throw new ForbiddenException('Guest memberships cannot be invited to a teamspace');
-      }
-      if (await this.memberRepo.exists(command.teamspaceId, target.getId(), context)) {
-        throw new ConflictException('Workspace member already belongs to teamspace');
-      }
-
-      const pending = await this.invitationRepo.findPendingByTeamspaceAndWorkspaceMember(
-        command.teamspaceId, target.getId(), context,
-      );
-      if (pending) {
-        if (pending.getEffectiveStatus() === TeamspaceInvitationStatus.PENDING) {
-          throw new ConflictException('A pending teamspace invitation already exists');
+        const actor = await this.workspaceMemberRepo.findByWorkspaceAndUser(
+          teamspace.getWorkspaceId(), command.userId, context,
+        );
+        const actorTeamspaceMember = actor
+          ? await this.memberRepo.findByTeamspaceAndWorkspaceMember(
+              command.teamspaceId, actor.getId(), context,
+            )
+          : null;
+        const actorRole = actor?.getRole() === WorkspaceRole.OWNER
+          ? TeamspaceRole.OWNER
+          : actorTeamspaceMember?.getRoleName();
+        if (!actor || actor.isGuest() || !actorRole ||
+          !TeamspacePermissionPolicy.hasPermission(actorRole, PERMISSIONS.TEAMSPACE_MEMBER_ADD)) {
+          throw new ForbiddenException('You do not have permission to invite teamspace members');
         }
-        pending.expire();
-        await this.invitationRepo.save(pending, context);
-      }
 
-      return this.invitationRepo.save(TeamspaceInvitation.create({
-        teamspaceId: command.teamspaceId,
-        workspaceMemberId: target.getId(),
-        invitedBy: command.userId,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      }), context);
-    });
+        const target = await this.workspaceMemberRepo.findById(command.workspaceMemberId, context);
+        if (!target || target.getWorkspaceId() !== teamspace.getWorkspaceId()) {
+          throw new NotFoundException('Workspace member not found');
+        }
+        if (target.isGuest()) {
+          throw new ForbiddenException('Guest memberships cannot be invited to a teamspace');
+        }
+        if (await this.memberRepo.exists(command.teamspaceId, target.getId(), context)) {
+          throw new ConflictException('Workspace member already belongs to teamspace');
+        }
+
+        const pending = await this.invitationRepo.findPendingByTeamspaceAndWorkspaceMemberForUpdate(
+          command.teamspaceId, target.getId(), context,
+        );
+        const now = new Date();
+        if (pending) {
+          if (pending.getEffectiveStatus(now) === TeamspaceInvitationStatus.PENDING) {
+            throw new ConflictException('A pending teamspace invitation already exists');
+          }
+          pending.expire(now);
+          await this.invitationRepo.save(pending, context);
+        }
+
+        const created = await this.invitationRepo.save(TeamspaceInvitation.create({
+          teamspaceId: command.teamspaceId,
+          workspaceMemberId: target.getId(),
+          invitedBy: command.userId,
+          expiresAt: new Date(now.getTime() + TEAMSPACE_INVITATION_LIFETIME_MS),
+        }), context);
+        await this.deliveryOutbox.enqueue(created.getId(), context);
+        return created;
+      });
+    } catch (error) {
+      rethrowInvitationPendingUniqueConflict(error);
+    }
 
     return TeamspaceInvitationResponseDto.fromDomain(invitation);
   }

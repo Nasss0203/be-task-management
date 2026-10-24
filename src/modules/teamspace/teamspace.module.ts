@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseModule } from 'src/database/database.module';
+import { OutboxModule } from 'src/shared/infrastructure/outbox/outbox.module';
 import { PermissionModule } from 'src/modules/permission/permission.module';
 import { WorkspaceModule } from 'src/modules/workspace/workspace.module';
 import { AddTeamspaceMemberHandler } from './application/commands/teamspace/add-teamspace-member/add-teamspace-member.handler';
@@ -8,6 +9,8 @@ import { AcceptTeamspaceInvitationHandler } from './application/commands/teamspa
 import { CreateTeamspaceHandler } from './application/commands/teamspace/create-teamspace/create-teamspace.handler';
 import { CreateTeamspaceInviteLinkHandler } from './application/commands/teamspace/create-teamspace-invite-link/create-teamspace-invite-link.handler';
 import { DeclineTeamspaceInvitationHandler } from './application/commands/teamspace/decline-teamspace-invitation/decline-teamspace-invitation.handler';
+import { ResendTeamspaceInvitationHandler } from './application/commands/teamspace/resend-teamspace-invitation/resend-teamspace-invitation.handler';
+import { RevokeTeamspaceInvitationHandler } from './application/commands/teamspace/revoke-teamspace-invitation/revoke-teamspace-invitation.handler';
 import { InviteTeamspaceMemberHandler } from './application/commands/teamspace/invite-teamspace-member/invite-teamspace-member.handler';
 import { JoinTeamspaceByLinkHandler } from './application/commands/teamspace/join-teamspace-by-link/join-teamspace-by-link.handler';
 import { JoinTeamspaceHandler } from './application/commands/teamspace/join-teamspace/join-teamspace.handler';
@@ -20,6 +23,7 @@ import { DiscoverTeamspacesHandler } from './application/queries/teamspace/disco
 import { GetTeamspaceMembersHandler } from './application/queries/teamspace/get-teamspace-members/get-teamspace-members.handler';
 import { GetMyTeamspaceInvitationsHandler } from './application/queries/teamspace/get-my-teamspace-invitations/get-my-teamspace-invitations.handler';
 import { ListTeamspaceInviteLinksHandler } from './application/queries/teamspace/list-teamspace-invite-links/list-teamspace-invite-links.handler';
+import { ListTeamspaceInvitationsHandler } from './application/queries/teamspace/list-teamspace-invitations/list-teamspace-invitations.handler';
 import { GetTeamspacesHandler } from './application/queries/teamspace/get-teamspaces/get-teamspaces.handler';
 import { TypeOrmTeamspaceMembershipLock } from './infrastructure/persistence/typeorm/adapters/typeorm-teamspace-membership-lock.adapter';
 import { TeamspaceMemberOrmEntity } from './infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
@@ -39,6 +43,7 @@ import { TEAMSPACE_TYPES } from './teamspace.types';
     WorkspaceModule,
     PermissionModule,
     DatabaseModule,
+    OutboxModule,
   ],
   controllers: [TeamspaceController],
   providers: [
@@ -77,6 +82,18 @@ import { TEAMSPACE_TYPES } from './teamspace.types';
     {
       provide: TEAMSPACE_TYPES.applications.GetMyTeamspaceInvitationsHandler,
       useClass: GetMyTeamspaceInvitationsHandler,
+    },
+    {
+      provide: TEAMSPACE_TYPES.applications.ListTeamspaceInvitationsHandler,
+      useClass: ListTeamspaceInvitationsHandler,
+    },
+    {
+      provide: TEAMSPACE_TYPES.applications.RevokeTeamspaceInvitationHandler,
+      useClass: RevokeTeamspaceInvitationHandler,
+    },
+    {
+      provide: TEAMSPACE_TYPES.applications.ResendTeamspaceInvitationHandler,
+      useClass: ResendTeamspaceInvitationHandler,
     },
     {
       provide: TEAMSPACE_TYPES.applications.CreateTeamspaceInviteLinkHandler,

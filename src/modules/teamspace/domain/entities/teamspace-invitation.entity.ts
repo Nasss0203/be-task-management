@@ -8,7 +8,7 @@ export class TeamspaceInvitation {
     private readonly workspaceMemberId: string,
     private readonly invitedBy: string | null,
     private status: TeamspaceInvitationStatus,
-    private readonly expiresAt: Date,
+    private expiresAt: Date,
     private acceptedAt: Date | null,
     private readonly createdAt: Date,
     private updatedAt: Date,
@@ -75,6 +75,14 @@ export class TeamspaceInvitation {
       : this.status;
   }
 
+  isExpired(now = new Date()): boolean {
+    return this.getEffectiveStatus(now) === TeamspaceInvitationStatus.EXPIRED;
+  }
+
+  canAccept(now = new Date()): boolean {
+    return this.getEffectiveStatus(now) === TeamspaceInvitationStatus.PENDING;
+  }
+
   accept(now = new Date()): void {
     this.ensurePending(now);
     this.status = TeamspaceInvitationStatus.ACCEPTED;
@@ -89,10 +97,23 @@ export class TeamspaceInvitation {
   }
 
   expire(now = new Date()): void {
-    if (this.getEffectiveStatus(now) !== TeamspaceInvitationStatus.EXPIRED) {
+    if (this.status !== TeamspaceInvitationStatus.PENDING || !this.isExpired(now)) {
       throw new Error('Invitation is not expired');
     }
     this.status = TeamspaceInvitationStatus.EXPIRED;
+    this.updatedAt = now;
+  }
+
+  revoke(now = new Date()): void {
+    this.ensurePending(now);
+    this.status = TeamspaceInvitationStatus.REVOKED;
+    this.updatedAt = now;
+  }
+
+  renew(expiresAt: Date, now = new Date()): void {
+    this.ensurePending(now);
+    if (expiresAt <= now) throw new Error('Invitation expiration must be in the future');
+    this.expiresAt = expiresAt;
     this.updatedAt = now;
   }
 

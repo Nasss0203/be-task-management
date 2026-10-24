@@ -25,6 +25,10 @@ import { CreateTeamspaceInviteLinkCommand } from 'src/modules/teamspace/applicat
 import { CreateTeamspaceInviteLinkHandler } from 'src/modules/teamspace/application/commands/teamspace/create-teamspace-invite-link/create-teamspace-invite-link.handler';
 import { DeclineTeamspaceInvitationCommand } from 'src/modules/teamspace/application/commands/teamspace/decline-teamspace-invitation/decline-teamspace-invitation.command';
 import { DeclineTeamspaceInvitationHandler } from 'src/modules/teamspace/application/commands/teamspace/decline-teamspace-invitation/decline-teamspace-invitation.handler';
+import { ResendTeamspaceInvitationCommand } from 'src/modules/teamspace/application/commands/teamspace/resend-teamspace-invitation/resend-teamspace-invitation.command';
+import { ResendTeamspaceInvitationHandler } from 'src/modules/teamspace/application/commands/teamspace/resend-teamspace-invitation/resend-teamspace-invitation.handler';
+import { RevokeTeamspaceInvitationCommand } from 'src/modules/teamspace/application/commands/teamspace/revoke-teamspace-invitation/revoke-teamspace-invitation.command';
+import { RevokeTeamspaceInvitationHandler } from 'src/modules/teamspace/application/commands/teamspace/revoke-teamspace-invitation/revoke-teamspace-invitation.handler';
 import { InviteTeamspaceMemberCommand } from 'src/modules/teamspace/application/commands/teamspace/invite-teamspace-member/invite-teamspace-member.command';
 import { InviteTeamspaceMemberHandler } from 'src/modules/teamspace/application/commands/teamspace/invite-teamspace-member/invite-teamspace-member.handler';
 import { JoinTeamspaceByLinkCommand } from 'src/modules/teamspace/application/commands/teamspace/join-teamspace-by-link/join-teamspace-by-link.command';
@@ -48,18 +52,22 @@ import { DiscoverTeamspacesDto } from 'src/modules/teamspace/application/dto/tea
 import { JoinTeamspaceByLinkDto } from 'src/modules/teamspace/application/dto/teamspace/join-teamspace-by-link.dto';
 import { UpdateTeamspaceMemberRoleDto } from 'src/modules/teamspace/application/dto/teamspace/update-teamspace-member-role.dto';
 import { TeamspaceMemberResponseDto } from 'src/modules/teamspace/application/dto/teamspace/response/teamspace-member.response.dto';
-import { TeamspaceInvitationResponseDto } from 'src/modules/teamspace/application/dto/teamspace/response/teamspace-invitation.response.dto';
+import { MyTeamspaceInvitationResponseDto, TeamspaceInvitationResponseDto } from 'src/modules/teamspace/application/dto/teamspace/response/teamspace-invitation.response.dto';
 import { CreatedTeamspaceInviteLinkResponseDto, TeamspaceInviteLinkResponseDto } from 'src/modules/teamspace/application/dto/teamspace/response/teamspace-invite-link.response.dto';
 import { DiscoverTeamspacesResponseDto } from 'src/modules/teamspace/application/dto/teamspace/response/discover-teamspaces.response.dto';
 import { TeamspaceResponseDto } from 'src/modules/teamspace/application/dto/teamspace/response/teamspace.response.dto';
 import { UpdateTeamspaceJoinSettingsDto } from 'src/modules/teamspace/application/dto/teamspace/update-teamspace-join-settings.dto';
 import { InviteTeamspaceMemberDto } from 'src/modules/teamspace/application/dto/teamspace/invite-teamspace-member.dto';
+import { ListTeamspaceInvitationsDto } from 'src/modules/teamspace/application/dto/teamspace/list-teamspace-invitations.dto';
+import { ListTeamspaceInvitationsResponseDto } from 'src/modules/teamspace/application/dto/teamspace/response/teamspace-invitation-management.response.dto';
 import { GetMyTeamspaceInvitationsHandler } from 'src/modules/teamspace/application/queries/teamspace/get-my-teamspace-invitations/get-my-teamspace-invitations.handler';
 import { GetMyTeamspaceInvitationsQuery } from 'src/modules/teamspace/application/queries/teamspace/get-my-teamspace-invitations/get-my-teamspace-invitations.query';
 import { DiscoverTeamspacesHandler } from 'src/modules/teamspace/application/queries/teamspace/discover-teamspaces/discover-teamspaces.handler';
 import { DiscoverTeamspacesQuery } from 'src/modules/teamspace/application/queries/teamspace/discover-teamspaces/discover-teamspaces.query';
 import { ListTeamspaceInviteLinksHandler } from 'src/modules/teamspace/application/queries/teamspace/list-teamspace-invite-links/list-teamspace-invite-links.handler';
 import { ListTeamspaceInviteLinksQuery } from 'src/modules/teamspace/application/queries/teamspace/list-teamspace-invite-links/list-teamspace-invite-links.query';
+import { ListTeamspaceInvitationsHandler } from 'src/modules/teamspace/application/queries/teamspace/list-teamspace-invitations/list-teamspace-invitations.handler';
+import { ListTeamspaceInvitationsQuery } from 'src/modules/teamspace/application/queries/teamspace/list-teamspace-invitations/list-teamspace-invitations.query';
 import { GetTeamspaceMembersHandler } from 'src/modules/teamspace/application/queries/teamspace/get-teamspace-members/get-teamspace-members.handler';
 import { GetTeamspaceMembersQuery } from 'src/modules/teamspace/application/queries/teamspace/get-teamspace-members/get-teamspace-members.query';
 import { GetTeamspacesHandler } from 'src/modules/teamspace/application/queries/teamspace/get-teamspaces/get-teamspaces.handler';
@@ -92,6 +100,12 @@ export class TeamspaceController {
     private readonly declineTeamspaceInvitationHandler: DeclineTeamspaceInvitationHandler,
     @Inject(TEAMSPACE_TYPES.applications.GetMyTeamspaceInvitationsHandler)
     private readonly getMyTeamspaceInvitationsHandler: GetMyTeamspaceInvitationsHandler,
+    @Inject(TEAMSPACE_TYPES.applications.ListTeamspaceInvitationsHandler)
+    private readonly listTeamspaceInvitationsHandler: ListTeamspaceInvitationsHandler,
+    @Inject(TEAMSPACE_TYPES.applications.RevokeTeamspaceInvitationHandler)
+    private readonly revokeTeamspaceInvitationHandler: RevokeTeamspaceInvitationHandler,
+    @Inject(TEAMSPACE_TYPES.applications.ResendTeamspaceInvitationHandler)
+    private readonly resendTeamspaceInvitationHandler: ResendTeamspaceInvitationHandler,
     @Inject(TEAMSPACE_TYPES.applications.CreateTeamspaceInviteLinkHandler)
     private readonly createTeamspaceInviteLinkHandler: CreateTeamspaceInviteLinkHandler,
     @Inject(TEAMSPACE_TYPES.applications.JoinTeamspaceByLinkHandler)
@@ -123,7 +137,7 @@ export class TeamspaceController {
   }
 
   @Get()
-  findAll(@Query('workspaceId') workspaceId: string, @Auth() auth: IAuth) {
+  findAll(@Query('workspaceId', ParseUUIDPipe) workspaceId: string, @Auth() auth: IAuth) {
     return this.getTeamspacesHandler.execute(
       new GetTeamspacesQuery(auth.id, workspaceId),
     );
@@ -131,7 +145,7 @@ export class TeamspaceController {
 
   @Post(':teamspaceId/members')
   async addMember(
-    @Param('teamspaceId') teamspaceId: string,
+    @Param('teamspaceId', ParseUUIDPipe) teamspaceId: string,
     @Body() dto: AddTeamspaceMemberDto,
     @Auth() auth: IAuth,
   ) {
@@ -146,7 +160,7 @@ export class TeamspaceController {
   }
 
   @Get(':teamspaceId/members')
-  findMembers(@Param('teamspaceId') teamspaceId: string, @Auth() auth: IAuth) {
+  findMembers(@Param('teamspaceId', ParseUUIDPipe) teamspaceId: string, @Auth() auth: IAuth) {
     return this.getTeamspaceMembersHandler.execute(
       new GetTeamspaceMembersQuery(teamspaceId, auth.id),
     );
@@ -205,8 +219,19 @@ export class TeamspaceController {
     );
   }
 
+  @Get(':teamspaceId/invitations')
+  async listInvitations(
+    @Param('teamspaceId', ParseUUIDPipe) teamspaceId: string,
+    @Query() query: ListTeamspaceInvitationsDto,
+    @Auth() auth: IAuth,
+  ): Promise<ListTeamspaceInvitationsResponseDto> {
+    return this.listTeamspaceInvitationsHandler.execute(
+      new ListTeamspaceInvitationsQuery(teamspaceId, auth.id, query.page ?? 1, query.limit ?? 20, query.status),
+    );
+  }
+
   @Get('invitations/me')
-  async getMyInvitations(@Auth() auth: IAuth): Promise<TeamspaceInvitationResponseDto[]> {
+  async getMyInvitations(@Auth() auth: IAuth): Promise<MyTeamspaceInvitationResponseDto[]> {
     return this.getMyTeamspaceInvitationsHandler.execute(
       new GetMyTeamspaceInvitationsQuery(auth.id),
     );
@@ -229,6 +254,29 @@ export class TeamspaceController {
   ): Promise<TeamspaceInvitationResponseDto> {
     return this.declineTeamspaceInvitationHandler.execute(
       new DeclineTeamspaceInvitationCommand(invitationId, auth.id),
+    );
+  }
+
+  @Post('invitations/:invitationId/revoke')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async revokeInvitation(
+    @Param('invitationId', ParseUUIDPipe) invitationId: string,
+    @Auth() auth: IAuth,
+  ): Promise<void> {
+    await this.revokeTeamspaceInvitationHandler.execute(
+      new RevokeTeamspaceInvitationCommand(invitationId, auth.id),
+    );
+  }
+
+  @Post('invitations/:invitationId/resend')
+  @HttpCode(HttpStatus.OK)
+  @InviteRateLimit()
+  async resendInvitation(
+    @Param('invitationId', ParseUUIDPipe) invitationId: string,
+    @Auth() auth: IAuth,
+  ): Promise<TeamspaceInvitationResponseDto> {
+    return this.resendTeamspaceInvitationHandler.execute(
+      new ResendTeamspaceInvitationCommand(invitationId, auth.id),
     );
   }
 

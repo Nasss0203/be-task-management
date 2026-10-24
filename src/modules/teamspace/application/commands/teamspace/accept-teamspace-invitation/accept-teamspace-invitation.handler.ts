@@ -49,7 +49,7 @@ export class AcceptTeamspaceInvitationHandler {
         initial.getWorkspaceMemberId(), initial.getTeamspaceId(), command.userId, context,
       );
 
-      const invitation = await this.invitationRepo.findById(command.invitationId, context);
+      const invitation = await this.invitationRepo.findByIdForUpdate(command.invitationId, context);
       if (!invitation || invitation.getWorkspaceMemberId() !== initialRecipient.getId() ||
         invitation.getTeamspaceId() !== initial.getTeamspaceId()) {
         throw new NotFoundException('Teamspace invitation not found');

@@ -1,5 +1,6 @@
 import { TEAMSPACE_TYPES } from 'src/modules/teamspace/teamspace.types';
-import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import { QueryFailedError } from 'typeorm';
 
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
@@ -18,6 +19,7 @@ import { generateSlug } from 'src/utils';
 
 import { TeamspaceResponseDto } from '../../../dto/teamspace/response/teamspace.response.dto';
 import { CreateTeamspaceCommand } from './create-teamspace.command';
+import type { TeamspaceMembershipLock } from '../../../ports/teamspace-membership-lock.port';
 
 @Injectable()
 export class CreateTeamspaceHandler {
@@ -33,12 +35,16 @@ export class CreateTeamspaceHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly unitOfWork: UnitOfWork,
+
+    @Inject(TEAMSPACE_TYPES.ports.TeamspaceMembershipLock)
+    private readonly membershipLock: TeamspaceMembershipLock,
   ) {}
 
   async execute(
     command: CreateTeamspaceCommand,
   ): Promise<TeamspaceResponseDto> {
-    return this.unitOfWork.runInTransaction(async (context) => {
+    try {
+      return await this.unitOfWork.runInTransaction(async (context) => {
       const workspaceMember =
         await this.workspaceMemberRepository.findByWorkspaceAndUser(
           command.workspaceId,
@@ -47,6 +53,14 @@ export class CreateTeamspaceHandler {
         );
 
       if (!workspaceMember || workspaceMember.isGuest()) {
+        throw new ForbiddenException('User is not a member of this workspace');
+      }
+
+      await this.membershipLock.lockForCreation(workspaceMember.getId(), command.workspaceId, context);
+      const currentMember = await this.workspaceMemberRepository.findByWorkspaceAndUser(
+        command.workspaceId, command.userId, context,
+      );
+      if (!currentMember || currentMember.getId() !== workspaceMember.getId() || currentMember.isGuest()) {
         throw new ForbiddenException('User is not a member of this workspace');
       }
 
@@ -88,6 +102,15 @@ export class CreateTeamspaceHandler {
       await this.teamspaceMemberRepository.save(owner, context);
 
       return TeamspaceResponseDto.fromDomain(savedTeamspace);
-    });
+      });
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        const driverError = error.driverError as { code?: string; constraint?: string };
+        if (driverError.code === '23505' && driverError.constraint === 'UQ_teamspaces_workspace_slug') {
+          throw new ConflictException('Teamspace slug already exists');
+        }
+      }
+      throw error;
+    }
   }
 }

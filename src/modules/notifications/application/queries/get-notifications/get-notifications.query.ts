@@ -2,11 +2,8 @@ import { FindMyNotificationsRepositoryInput } from '../../../domain/repositories
 
 type GetNotificationsFilters = Omit<
   FindMyNotificationsRepositoryInput,
-  'receiverId' | 'cursor' | 'limit'
-> & {
-  cursor?: string;
-  limit?: string;
-};
+  'receiverId'
+>;
 
 export class GetNotificationsQuery {
   constructor(

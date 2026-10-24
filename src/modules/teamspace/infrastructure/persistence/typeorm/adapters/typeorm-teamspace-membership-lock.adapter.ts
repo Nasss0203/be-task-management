@@ -9,6 +9,31 @@ import { EntityManager } from 'typeorm';
 
 @Injectable()
 export class TypeOrmTeamspaceMembershipLock implements TeamspaceMembershipLock {
+  async lockForCreation(
+    workspaceMemberId: string,
+    workspaceId: string,
+    context: PersistenceContext,
+  ): Promise<void> {
+    const manager = context as EntityManager;
+    if (!manager.queryRunner?.isTransactionActive) {
+      throw new Error('Teamspace creation lock requires an active transaction');
+    }
+    const member = await manager.query<Array<{ id: string }>>(
+      `SELECT id FROM workspace_members WHERE id = $1 AND workspace_id = $2 FOR UPDATE`,
+      [workspaceMemberId, workspaceId],
+    );
+    if (member.length === 0) throw new NotFoundException('Workspace member not found');
+    await this.lockActiveWorkspace(workspaceId, manager);
+  }
+
+  private async lockActiveWorkspace(workspaceId: string, manager: EntityManager): Promise<void> {
+    const workspace = await manager.query<Array<{ id: string }>>(
+      `SELECT id FROM workspaces WHERE id = $1 AND deleted_at IS NULL FOR SHARE`,
+      [workspaceId],
+    );
+    if (workspace.length === 0) throw new NotFoundException('Workspace not found');
+  }
+
   async lockForMembershipChange(
     workspaceMemberId: string,
     teamspaceId: string,
@@ -59,6 +84,8 @@ export class TypeOrmTeamspaceMembershipLock implements TeamspaceMembershipLock {
     if (!actor || !currentActor || currentActor.id !== actor.id) {
       throw new ForbiddenException('Actor workspace membership changed');
     }
+
+    await this.lockActiveWorkspace(teamspace.workspace_id, manager);
 
     const locked = await manager.query<Array<{ id: string }>>(
       `SELECT id FROM teamspaces WHERE id = $1 AND workspace_id = $2 AND deleted_at IS NULL FOR UPDATE`,

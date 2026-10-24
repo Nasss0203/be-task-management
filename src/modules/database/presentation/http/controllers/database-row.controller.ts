@@ -12,9 +12,11 @@ export class DatabaseRowController {
   constructor(
     private readonly createDatabaseRowHandler: CreateDatabaseRowHandler,
     private readonly getDatabaseRowsHandler: GetDatabaseRowsHandler,
-  ) { }
+  ) {}
 
   @Post()
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
   async createRow(@Param('databaseId') databaseId: string) {
     const row = await this.createDatabaseRowHandler.execute(
       new CreateDatabaseRowCommand(databaseId),
@@ -28,6 +30,8 @@ export class DatabaseRowController {
   }
 
   @Get()
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
   async getRows(@Param('databaseId') databaseId: string) {
     const rows = await this.getDatabaseRowsHandler.execute(
       new GetDatabaseRowsQuery(databaseId),

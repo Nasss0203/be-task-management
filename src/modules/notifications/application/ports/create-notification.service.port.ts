@@ -32,4 +32,9 @@ export interface CreateNotificationService {
     input: CreateNotificationServiceInput,
     context?: PersistenceContext,
   ): Promise<NotificationModel>;
+
+  createNotificationOnce(
+    deliveryId: string,
+    input: CreateNotificationServiceInput,
+  ): Promise<NotificationModel | null>;
 }

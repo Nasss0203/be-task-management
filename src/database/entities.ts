@@ -70,6 +70,7 @@ import { TeamspaceOrmEntity } from 'src/modules/teamspace/infrastructure/persist
 import { WorkspaceInviteOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-invite.orm-entity';
 import { WorkspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-member.orm-entity';
 import { WorkspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace.orm-entity';
+import { OutboxDeliveryOrmEntity } from 'src/shared/infrastructure/outbox/outbox-delivery.orm-entity';
 
 export const DATABASE_ENTITIES = [
   User,
@@ -98,6 +99,7 @@ export const DATABASE_ENTITIES = [
   TeamspaceMemberOrmEntity,
   TeamspaceInvitationOrmEntity,
   TeamspaceInviteLinkOrmEntity,
+  OutboxDeliveryOrmEntity,
   PageFavoriteOrmEntity,
   // Billing
   BillingFeatureOrmEntity,

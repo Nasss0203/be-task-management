@@ -164,6 +164,18 @@
     {
       "file": "1792429159192-UpdateSchema.ts",
       "sha256": "f97b519920e5389aa96cfb015b70f07bd43961f7cea057f548c83a190ca09220"
+    },
+    {
+      "file": "1792500000000-CreateTeamspaceInvitations.ts",
+      "sha256": "8e9ce2c6f969bfc38bc6c3808c5a38ef2eb4ccbc7e5208a4d2c88da67ae4ab8b"
+    },
+    {
+      "file": "1792500000001-CreateTeamspaceInviteLinks.ts",
+      "sha256": "04eabc6511636af6e1f4b57b1f2343478f3e283998c4f4479474636e40068f06"
+    },
+    {
+      "file": "1792500000002-CreateOutboxDeliveries.ts",
+      "sha256": "93d525366576bff9acf6d16c670cea553c918a097f057c5361b175f64aac6fe3"
     }
   ]
 }

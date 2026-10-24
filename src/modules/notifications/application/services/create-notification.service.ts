@@ -62,6 +62,39 @@ export class CreateNotificationServiceImpl implements CreateNotificationService 
       context,
     );
 
+    this.emitCreated(notification);
+
+    return notification;
+  }
+
+  async createNotificationOnce(
+    deliveryId: string,
+    input: CreateNotificationServiceInput,
+  ): Promise<NotificationModel | null> {
+    if (!input.receiverId || !input.title?.trim()) {
+      throw new BadRequestException('Notification recipient and title are required');
+    }
+    const notification = await this.notificationRepository.insertNotificationIfAbsent({
+      id: deliveryId,
+      receiverId: input.receiverId,
+      senderType: input.senderType ?? NotificationSenderType.SYSTEM,
+      actorId: input.actorId ?? null,
+      sourceType: input.sourceType ?? NotificationSourceType.SYSTEM,
+      sourceId: input.sourceId ?? null,
+      workspaceId: input.workspaceId ?? null,
+      type: input.type,
+      title: input.title.trim(),
+      message: input.message ?? null,
+      actionUrl: input.actionUrl ?? null,
+      metadata: input.metadata ?? null,
+      readAt: null,
+      archivedAt: null,
+    });
+    if (notification) this.emitCreated(notification);
+    return notification;
+  }
+
+  private emitCreated(notification: NotificationModel): void {
     this.eventEmitter.emit(NOTIFICATION_CREATED_EVENT, {
       recipientUserId: notification.receiverId,
       notification: {
@@ -88,7 +121,5 @@ export class CreateNotificationServiceImpl implements CreateNotificationService 
         createdAt: notification.createdAt,
       },
     });
-
-    return notification;
   }
 }

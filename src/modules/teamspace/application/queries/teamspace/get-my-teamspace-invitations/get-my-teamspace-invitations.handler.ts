@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { TeamspaceInvitationResponseDto } from 'src/modules/teamspace/application/dto/teamspace/response/teamspace-invitation.response.dto';
+import { MyTeamspaceInvitationResponseDto } from 'src/modules/teamspace/application/dto/teamspace/response/teamspace-invitation.response.dto';
 import type { TeamspaceInvitationRepository } from 'src/modules/teamspace/domain/repositories/teamspace-invitation.repository';
 import { TEAMSPACE_TYPES } from 'src/modules/teamspace/teamspace.types';
 import { GetMyTeamspaceInvitationsQuery } from './get-my-teamspace-invitations.query';
@@ -11,8 +11,8 @@ export class GetMyTeamspaceInvitationsHandler {
     private readonly invitationRepo: TeamspaceInvitationRepository,
   ) {}
 
-  async execute(query: GetMyTeamspaceInvitationsQuery): Promise<TeamspaceInvitationResponseDto[]> {
+  async execute(query: GetMyTeamspaceInvitationsQuery): Promise<MyTeamspaceInvitationResponseDto[]> {
     const invitations = await this.invitationRepo.findByRecipientUserId(query.userId);
-    return invitations.map(TeamspaceInvitationResponseDto.fromDomain);
+    return invitations.map(MyTeamspaceInvitationResponseDto.fromRecipientView);
   }
 }

@@ -3,6 +3,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/adapters/handlebars.ad
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { join } from 'path';
+import { existsSync } from 'fs';
 import { MailController } from './presentation/http/controllers/mail.controller';
 import { MailService } from './application/services/mail.service';
 import { MAIL_TYPES } from './mail.types';
@@ -33,14 +34,9 @@ import { SmtpMailSender } from './infrastructure/providers/smtp-mail.sender';
         },
         // preview: true,
         template: {
-          dir: join(
-            process.cwd(),
-            'src',
-            'modules',
-            'mail',
-            'infrastructure',
-            'templates',
-          ),
+          dir: existsSync(join(process.cwd(), 'src', 'modules', 'mail', 'infrastructure', 'templates'))
+            ? join(process.cwd(), 'src', 'modules', 'mail', 'infrastructure', 'templates')
+            : join(process.cwd(), 'dist', 'modules', 'mail', 'infrastructure', 'templates'),
           adapter: new HandlebarsAdapter(),
           options: {
             strict: true,

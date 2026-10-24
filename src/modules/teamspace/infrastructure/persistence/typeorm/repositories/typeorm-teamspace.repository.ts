@@ -56,12 +56,11 @@ export class TypeOrmTeamspaceRepository implements TeamspaceRepository {
   ): Promise<Teamspace | null> {
     const repository = this.getRepo(context);
 
-    const orm = await repository.findOne({
-      where: {
-        id,
-        deletedAt: IsNull(),
-      },
-    });
+    const orm = await repository.createQueryBuilder('teamspace')
+      .innerJoin('teamspace.workspace', 'workspace', 'workspace.deleted_at IS NULL')
+      .where('teamspace.id = :id', { id })
+      .andWhere('teamspace.deleted_at IS NULL')
+      .getOne();
 
     return orm ? TeamspaceMapper.toDomain(orm) : null;
   }
@@ -72,15 +71,12 @@ export class TypeOrmTeamspaceRepository implements TeamspaceRepository {
   ): Promise<Teamspace[]> {
     const repository = this.getRepo(context);
 
-    const entities = await repository.find({
-      where: {
-        workspaceId,
-        deletedAt: IsNull(),
-      },
-      order: {
-        createdAt: 'ASC',
-      },
-    });
+    const entities = await repository.createQueryBuilder('teamspace')
+      .innerJoin('teamspace.workspace', 'workspace', 'workspace.deleted_at IS NULL')
+      .where('teamspace.workspaceId = :workspaceId', { workspaceId })
+      .andWhere('teamspace.deleted_at IS NULL')
+      .orderBy('teamspace.createdAt', 'ASC')
+      .getMany();
 
     return entities.map((entity) => TeamspaceMapper.toDomain(entity));
   }
@@ -121,6 +117,8 @@ export class TypeOrmTeamspaceRepository implements TeamspaceRepository {
       .where('teamspace.workspace_id = :workspaceId', {
         workspaceId,
       })
+
+      .innerJoin('teamspace.workspace', 'workspace', 'workspace.deleted_at IS NULL')
 
       .andWhere('teamspace.deleted_at IS NULL')
 
@@ -187,6 +185,7 @@ export class TypeOrmTeamspaceRepository implements TeamspaceRepository {
          AND teamspace_member.workspace_member_id = workspace_member.id`,
       )
       .where('teamspace.workspace_id = :workspaceId', { workspaceId })
+      .innerJoin('teamspace.workspace', 'workspace', 'workspace.deleted_at IS NULL')
       .andWhere('teamspace.visibility = :visibility', { visibility: TeamspaceVisibility.OPEN })
       .andWhere('teamspace.deleted_at IS NULL');
 

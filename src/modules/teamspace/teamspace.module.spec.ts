@@ -9,18 +9,65 @@ import { DATABASE_ENTITIES } from 'src/database/entities';
 import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
 import { WorkspaceModule } from 'src/modules/workspace/workspace.module';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
+import { TEAMSPACE_INVITATION_DELIVERY_OUTBOX } from 'src/shared/infrastructure/outbox/teamspace-invitation-delivery.port';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
-import { AddTeamspaceMemberHandler } from './application/commands/teamspace/add-teamspace-member/add-teamspace-member.handler';
-import { CreateTeamspaceHandler } from './application/commands/teamspace/create-teamspace/create-teamspace.handler';
+import { InviteTeamspaceMemberHandler } from './application/commands/teamspace/invite-teamspace-member/invite-teamspace-member.handler';
 import { UpdateTeamspaceMemberRoleHandler } from './application/commands/teamspace/update-teamspace-member-role/update-teamspace-member-role.handler';
-import { GetTeamspaceMembersHandler } from './application/queries/teamspace/get-teamspace-members/get-teamspace-members.handler';
-import { GetTeamspacesHandler } from './application/queries/teamspace/get-teamspaces/get-teamspaces.handler';
+import { TeamspaceInvitationOrmEntity } from './infrastructure/persistence/typeorm/entities/teamspace-invitation.orm-entity';
+import { TeamspaceInviteLinkOrmEntity } from './infrastructure/persistence/typeorm/entities/teamspace-invite-link.orm-entity';
 import { TeamspaceMemberOrmEntity } from './infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
 import { TeamspaceOrmEntity } from './infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
 import { TypeOrmTeamspaceMembershipLock } from './infrastructure/persistence/typeorm/adapters/typeorm-teamspace-membership-lock.adapter';
 import { TeamspaceController } from './presentation/http/controllers/teamspace.controller';
 import { TeamspaceModule } from './teamspace.module';
 import { TEAMSPACE_TYPES } from './teamspace.types';
+
+type ApplicationProvider = {
+  provide: symbol;
+  useClass: abstract new (...args: never[]) => unknown;
+};
+
+const TEAMSPACE_ENTITIES = [
+  TeamspaceOrmEntity,
+  TeamspaceMemberOrmEntity,
+  TeamspaceInvitationOrmEntity,
+  TeamspaceInviteLinkOrmEntity,
+];
+
+const applicationTokens: symbol[] = Object.values(TEAMSPACE_TYPES.applications);
+
+function moduleProviders(): Provider[] {
+  return Reflect.getMetadata(
+    MODULE_METADATA.PROVIDERS,
+    TeamspaceModule,
+  ) as Provider[];
+}
+
+// Read from the module itself so new handlers are covered without editing this spec.
+function applicationProviders(): ApplicationProvider[] {
+  return moduleProviders().filter(
+    (provider): provider is ApplicationProvider =>
+      typeof provider === 'object' &&
+      provider !== null &&
+      'provide' in provider &&
+      'useClass' in provider &&
+      applicationTokens.includes(provider.provide as symbol),
+  );
+}
+
+/** Dependencies the handlers get from other modules (Workspace, Persistence, Permission, Outbox). */
+const externalDependencies: Provider[] = [
+  {
+    provide: WORKSPACE_TYPES.repositories.WorkspaceMemberRepository,
+    useValue: {},
+  },
+  { provide: PERSISTENCE_TYPES.UnitOfWork, useValue: {} },
+  { provide: AuthorizationService, useValue: {} },
+  {
+    provide: TEAMSPACE_INVITATION_DELIVERY_OUTBOX,
+    useValue: { enqueue: jest.fn() },
+  },
+];
 
 describe('Teamspace module extraction', () => {
   it('registers the controller once without adding a WorkspaceModule cycle', () => {
@@ -40,163 +87,95 @@ describe('Teamspace module extraction', () => {
     expect(controllers).toEqual([TeamspaceController]);
     expect(workspaceControllers).not.toContain(TeamspaceController);
     expect(workspaceImports).not.toContain(TeamspaceModule);
-    expect(
-      DATABASE_ENTITIES.filter((entity) => entity === TeamspaceOrmEntity),
-    ).toHaveLength(1);
-    expect(
-      DATABASE_ENTITIES.filter((entity) => entity === TeamspaceMemberOrmEntity),
-    ).toHaveLength(1);
+    for (const entity of TEAMSPACE_ENTITIES) {
+      expect(
+        DATABASE_ENTITIES.filter((registered) => registered === entity),
+      ).toHaveLength(1);
+    }
   });
 
-  it('resolves all five handlers through their DI contracts', async () => {
+  it('resolves every handler through its DI contract', async () => {
+    const applications = applicationProviders();
     const module = await Test.createTestingModule({
       providers: [
-        {
-          provide: TEAMSPACE_TYPES.applications.CreateTeamspaceHandler,
-          useClass: CreateTeamspaceHandler,
-        },
-        {
-          provide: TEAMSPACE_TYPES.applications.AddTeamspaceMemberHandler,
-          useClass: AddTeamspaceMemberHandler,
-        },
-        {
-          provide:
-            TEAMSPACE_TYPES.applications.UpdateTeamspaceMemberRoleHandler,
-          useClass: UpdateTeamspaceMemberRoleHandler,
-        },
-        {
-          provide: TEAMSPACE_TYPES.applications.GetTeamspacesHandler,
-          useClass: GetTeamspacesHandler,
-        },
-        {
-          provide: TEAMSPACE_TYPES.applications.GetTeamspaceMembersHandler,
-          useClass: GetTeamspaceMembersHandler,
-        },
-        {
-          provide: TEAMSPACE_TYPES.repositories.TeamspaceRepository,
+        ...applications,
+        ...Object.values(TEAMSPACE_TYPES.repositories).map((token) => ({
+          provide: token,
           useValue: {},
-        },
-        {
-          provide: TEAMSPACE_TYPES.repositories.TeamspaceMemberRepository,
-          useValue: {},
-        },
-        {
-          provide: WORKSPACE_TYPES.repositories.WorkspaceMemberRepository,
-          useValue: {},
-        },
-        { provide: PERSISTENCE_TYPES.UnitOfWork, useValue: {} },
-        { provide: AuthorizationService, useValue: {} },
+        })),
         {
           provide: TEAMSPACE_TYPES.ports.TeamspaceMembershipLock,
           useValue: { lockForMembershipChange: jest.fn() },
         },
+        ...externalDependencies,
       ],
     }).compile();
 
-    for (const token of Object.values(TEAMSPACE_TYPES.applications)) {
-      expect(module.get(token)).toBeDefined();
+    expect(applications).toHaveLength(applicationTokens.length);
+    for (const { provide, useClass } of applications) {
+      expect(module.get(provide)).toBeInstanceOf(useClass);
     }
   });
 
   it('uses one Symbol provider per handler and injects controller tokens', async () => {
-    const tokens = Object.values(TEAMSPACE_TYPES.applications);
-    const providers = Reflect.getMetadata(
-      MODULE_METADATA.PROVIDERS,
-      TeamspaceModule,
-    ) as Provider[];
-    const applications = providers.filter(
-      (
-        provider,
-      ): provider is { provide: symbol; useClass: new () => unknown } =>
-        typeof provider === 'object' &&
-        provider !== null &&
-        'provide' in provider &&
-        'useClass' in provider &&
-        tokens.includes(provider.provide as symbol),
-    );
+    const applications = applicationProviders();
+    const providers = moduleProviders();
     const dependencies = Reflect.getMetadata(
       SELF_DECLARED_DEPS_METADATA,
       TeamspaceController,
     ) as Array<{ index: number; param: symbol }>;
 
-    expect(applications).toHaveLength(5);
-    expect(applications.map(({ useClass }) => useClass)).toEqual([
-      CreateTeamspaceHandler,
-      AddTeamspaceMemberHandler,
-      UpdateTeamspaceMemberRoleHandler,
-      GetTeamspacesHandler,
-      GetTeamspaceMembersHandler,
-    ]);
-    expect(
-      [...dependencies]
-        .sort((left, right) => left.index - right.index)
-        .map(({ param }) => param),
-    ).toEqual([
-      TEAMSPACE_TYPES.applications.CreateTeamspaceHandler,
-      TEAMSPACE_TYPES.applications.GetTeamspacesHandler,
-      TEAMSPACE_TYPES.applications.AddTeamspaceMemberHandler,
-      TEAMSPACE_TYPES.applications.GetTeamspaceMembersHandler,
-      TEAMSPACE_TYPES.applications.UpdateTeamspaceMemberRoleHandler,
-    ]);
-    for (const application of applications) {
-      expect(
-        providers.filter((provider) => provider === application.useClass),
-      ).toHaveLength(0);
-      expect(
-        applications.filter(
-          (provider) => provider.provide === application.provide,
-        ),
-      ).toHaveLength(1);
+    const provided = applications.map(({ provide }) => provide);
+    expect(provided).toHaveLength(applicationTokens.length);
+    expect(new Set(provided)).toEqual(new Set(applicationTokens));
+
+    for (const { provide, useClass } of applications) {
+      // Symbol('CreateTeamspaceHandler') must be wired to CreateTeamspaceHandler.
+      expect(useClass.name).toBe(provide.description);
+      // Handlers are only reachable through their token, never as a bare class.
+      expect(providers).not.toContain(useClass);
     }
+
+    const injected = dependencies.map(({ param }) => param);
+    expect(injected).toHaveLength(applicationTokens.length);
+    expect(new Set(injected)).toEqual(new Set(applicationTokens));
 
     const module = await Test.createTestingModule({
       controllers: [TeamspaceController],
-      providers: [
-        ...applications.map(({ provide }) => ({
-          provide,
-          useValue: { execute: jest.fn() },
-        })),
-      ],
+      providers: applications.map(({ provide }) => ({
+        provide,
+        useValue: { execute: jest.fn() },
+      })),
     }).compile();
 
     expect(module.get(TeamspaceController)).toBeDefined();
-    for (const application of applications) {
-      expect(module.get(application.provide)).toBeDefined();
-    }
   });
 
-  it('resolves the real lock adapter, handlers, and controller', async () => {
-    const providers = Reflect.getMetadata(
-      MODULE_METADATA.PROVIDERS,
-      TeamspaceModule,
-    ) as Provider[];
+  it('resolves the real lock adapter, repositories, handlers, and controller', async () => {
     const module = await Test.createTestingModule({
       controllers: [TeamspaceController],
       providers: [
-        ...providers,
-        { provide: getRepositoryToken(TeamspaceOrmEntity), useValue: {} },
-        { provide: getRepositoryToken(TeamspaceMemberOrmEntity), useValue: {} },
-        {
-          provide: WORKSPACE_TYPES.repositories.WorkspaceMemberRepository,
+        ...moduleProviders(),
+        ...TEAMSPACE_ENTITIES.map((entity) => ({
+          provide: getRepositoryToken(entity),
           useValue: {},
-        },
-        { provide: PERSISTENCE_TYPES.UnitOfWork, useValue: {} },
-        { provide: AuthorizationService, useValue: {} },
+        })),
+        ...externalDependencies,
       ],
     }).compile();
 
     expect(
       module.get(TEAMSPACE_TYPES.ports.TeamspaceMembershipLock),
     ).toBeInstanceOf(TypeOrmTeamspaceMembershipLock);
-    expect(
-      module.get(TEAMSPACE_TYPES.repositories.TeamspaceRepository),
-    ).toBeDefined();
-    expect(
-      module.get(TEAMSPACE_TYPES.repositories.TeamspaceMemberRepository),
-    ).toBeDefined();
+    for (const token of Object.values(TEAMSPACE_TYPES.repositories)) {
+      expect(module.get(token)).toBeDefined();
+    }
     expect(
       module.get(TEAMSPACE_TYPES.applications.UpdateTeamspaceMemberRoleHandler),
     ).toBeInstanceOf(UpdateTeamspaceMemberRoleHandler);
+    expect(
+      module.get(TEAMSPACE_TYPES.applications.InviteTeamspaceMemberHandler),
+    ).toBeInstanceOf(InviteTeamspaceMemberHandler);
     expect(module.get(TeamspaceController)).toBeDefined();
   });
 });

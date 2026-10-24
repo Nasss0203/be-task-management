@@ -11,6 +11,7 @@ export type SendEmailTemplateInput = {
   to: string;
   from?: string;
   subject: string;
+  text?: string;
   template: string;
   context?: Record<string, unknown>;
 };
@@ -43,6 +44,7 @@ export class MailService {
     to,
     from,
     subject,
+    text,
     template,
     context,
   }: SendEmailTemplateInput): Promise<void> {
@@ -51,6 +53,7 @@ export class MailService {
         to,
         from: from ?? `"Nass" <${process.env.USER_EMAIL}>`,
         subject,
+        ...(text ? { text } : {}),
         template,
         context,
       });
@@ -99,6 +102,34 @@ export class MailService {
         expiredAt: '7 ngày kể từ lúc nhận email',
         year: new Date().getFullYear(),
         appName: 'Task Management',
+      },
+    });
+  }
+
+  async sendTeamspaceInvitation(input: {
+    to: string;
+    recipientName: string;
+    inviterName: string;
+    teamspaceName: string;
+    workspaceName: string;
+    invitationUrl: string;
+    expiresAt: Date;
+  }): Promise<void> {
+    await this.sendEmailTemplates({
+      to: input.to,
+      from: process.env.FROM_EMAIL?.trim() || undefined,
+      subject: 'Lời mời tham gia Teamspace trên Taskmanly',
+      template: 'teamspace-invitation',
+      text: `Xin chào ${input.recipientName},\n\n${input.inviterName} đã mời bạn tham gia Teamspace "${input.teamspaceName}" trong Workspace "${input.workspaceName}".\n\nĐăng nhập Taskmanly để xem và phản hồi lời mời: ${input.invitationUrl}\n\nLời mời có hiệu lực đến ${input.expiresAt.toISOString()} (UTC).`,
+      context: {
+        recipientName: input.recipientName,
+        inviterName: input.inviterName,
+        teamspaceName: input.teamspaceName,
+        workspaceName: input.workspaceName,
+        invitationUrl: input.invitationUrl,
+        expiresAt: input.expiresAt.toISOString(),
+        year: new Date().getFullYear(),
+        appName: 'Taskmanly',
       },
     });
   }

@@ -13,6 +13,7 @@ import { TemplateVersion } from '../../../../domain/aggregates/template-version/
 import { TemplateVisibility } from '../../../../domain/enums/template-visibility.enum';
 import type { PageTemplateRepository } from '../../../../domain/repositories/page-template.repository';
 import type { TemplateListingRepository } from '../../../../../marketplace/domain/repositories/template-listing.repository';
+import type { TemplateMarketplaceReleaseRepository } from '../../../../../marketplace/domain/repositories/template-marketplace-release.repository';
 import type { TemplateVersionRepository } from '../../../../domain/repositories/template-version.repository';
 import type { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
@@ -28,7 +29,11 @@ describe('Listing management category responses', () => {
     save: jest.fn(),
   };
   const authorization = { authorize: jest.fn() };
-  const versions = { findById: jest.fn() };
+  const versions = { findById: jest.fn(), findByIdForUpdate: jest.fn() };
+  const releases = {
+    existsByTemplateAndVersion: jest.fn(),
+    insertIfAbsent: jest.fn(),
+  };
   const templatePort = templates as unknown as PageTemplateRepository;
   const listingPort = listings as unknown as TemplateListingRepository;
   const auth = authorization as unknown as AuthorizationService;
@@ -72,6 +77,9 @@ describe('Listing management category responses', () => {
     templates.findById.mockResolvedValue(template);
     templates.findByIdForUpdate.mockResolvedValue(template);
     versions.findById.mockResolvedValue(version);
+    // Publishing locks the selected version row (findByIdForUpdate).
+    versions.findByIdForUpdate.mockResolvedValue(version);
+    releases.existsByTemplateAndVersion.mockResolvedValue(false);
     listings.findByTemplateId.mockResolvedValue(listing);
     listings.findCategoriesByTemplateIds.mockResolvedValue(
       new Map([['t1', [inactive]]]),
@@ -121,9 +129,15 @@ describe('Listing management category responses', () => {
       versions as unknown as TemplateVersionRepository,
       uow,
       auth,
+      releases as unknown as TemplateMarketplaceReleaseRepository,
     );
     const published = await publish.execute(
       new PublishTemplateListingCommand('t1', 'creator'),
+    );
+    // The first publish of a version records its release in the same transaction.
+    expect(releases.insertIfAbsent).toHaveBeenCalledWith(
+      expect.anything(),
+      context,
     );
     const unpublish = new UnpublishTemplateListingHandler(
       templatePort,
