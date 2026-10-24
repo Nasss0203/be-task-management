@@ -78,6 +78,25 @@ describe('AttachmentController', () => {
     );
   });
 
+  it('decodes UTF-8 file names that Multer read as latin1', async () => {
+    uploadExecute.mockResolvedValue({ id: 'att-1' });
+    const utf8Name = 'Kế hoạch triển khai.pdf';
+    const file = {
+      originalname: Buffer.from(utf8Name, 'utf8').toString('latin1'),
+      mimetype: 'application/pdf',
+      size: 1024,
+      buffer: Buffer.from('pdf'),
+    } as Express.Multer.File;
+
+    await controller.upload('ws-1', {}, file, { id: 'user-1' } as IAuth);
+
+    expect(uploadExecute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        file: expect.objectContaining({ originalName: utf8Name }),
+      }),
+    );
+  });
+
   it('delegates task listing', async () => {
     getByTaskExecute.mockResolvedValue([{ id: 'att-1' }]);
 
