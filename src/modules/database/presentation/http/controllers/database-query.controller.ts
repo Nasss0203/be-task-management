@@ -1,14 +1,20 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch } from '@nestjs/common';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 
+import { RenameDatabaseCommand } from 'src/modules/database/application/commands/rename-database/rename-database.command';
+import { RenameDatabaseHandler } from 'src/modules/database/application/commands/rename-database/rename-database.handler';
 import { GetDatabaseHandler } from 'src/modules/database/application/queries/get-database/get-database.handler';
 import { GetDatabaseQuery } from 'src/modules/database/application/queries/get-database/get-database.query';
+import { RenameDatabaseRequest } from '../requests/rename-database.request';
 
 @Controller('databases')
 export class DatabaseQueryController {
-  constructor(private readonly getDatabaseHandler: GetDatabaseHandler) {}
+  constructor(
+    private readonly getDatabaseHandler: GetDatabaseHandler,
+    private readonly renameDatabaseHandler: RenameDatabaseHandler,
+  ) {}
 
   @Get(':databaseId')
   @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
@@ -39,5 +45,17 @@ export class DatabaseQueryController {
         })),
       })),
     };
+  }
+
+  @Patch(':databaseId')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+  async renameDatabase(
+    @Param('databaseId') databaseId: string,
+    @Body() request: RenameDatabaseRequest,
+  ) {
+    return this.renameDatabaseHandler.execute(
+      new RenameDatabaseCommand(databaseId, request.name),
+    );
   }
 }

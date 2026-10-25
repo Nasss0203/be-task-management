@@ -35,6 +35,7 @@ interface RestoreDatabaseViewProps {
   properties?: DatabaseViewProperty[];
   sorts?: DatabaseViewSort[];
   filters?: DatabaseViewFilter[];
+  groupBy?: string | null;
 }
 
 interface AddDatabaseViewPropertyProps {
@@ -55,6 +56,7 @@ export class DatabaseView {
     private readonly properties: DatabaseViewProperty[],
     private sorts: DatabaseViewSort[],
     private filters: DatabaseViewFilter[],
+    private groupBy: string | null,
   ) {}
 
   static create(props: CreateDatabaseViewProps): DatabaseView {
@@ -73,6 +75,7 @@ export class DatabaseView {
       [],
       [],
       [],
+      null,
     );
   }
 
@@ -86,6 +89,7 @@ export class DatabaseView {
       props.properties ?? [],
       props.sorts ?? [],
       props.filters ?? [],
+      props.groupBy ?? null,
     );
   }
 
@@ -150,6 +154,14 @@ export class DatabaseView {
 
   getFilters(): readonly DatabaseViewFilter[] {
     return this.filters;
+  }
+
+  getGroupBy(): string | null {
+    return this.groupBy;
+  }
+
+  setGroupBy(propertyId: string | null): void {
+    this.groupBy = propertyId;
   }
 
   setFilters(filters: readonly DatabaseViewFilter[]): void {

@@ -36,6 +36,9 @@ import { SetViewSortsRequest } from '../requests/set-view-sorts.request';
 import { SetViewFiltersCommand } from 'src/modules/database/application/commands/set-view-filters/set-view-filters.command';
 import { SetViewFiltersHandler } from 'src/modules/database/application/commands/set-view-filters/set-view-filters.handler';
 import { SetViewFiltersRequest } from '../requests/set-view-filters.request';
+import { SetViewGroupCommand } from 'src/modules/database/application/commands/set-view-group/set-view-group.command';
+import { SetViewGroupHandler } from 'src/modules/database/application/commands/set-view-group/set-view-group.handler';
+import { SetViewGroupRequest } from '../requests/set-view-group.request';
 
 @Controller('databases/:databaseId/views')
 export class DatabaseViewController {
@@ -49,6 +52,7 @@ export class DatabaseViewController {
     private readonly setViewPropertyWidthHandler: SetViewPropertyWidthHandler,
     private readonly setViewSortsHandler: SetViewSortsHandler,
     private readonly setViewFiltersHandler: SetViewFiltersHandler,
+    private readonly setViewGroupHandler: SetViewGroupHandler,
   ) {}
 
   @Post()
@@ -159,6 +163,19 @@ export class DatabaseViewController {
   ) {
     return this.setViewFiltersHandler.execute(
       new SetViewFiltersCommand(databaseId, viewId, request.filters),
+    );
+  }
+
+  @Patch(':viewId/group')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+  async setGroup(
+    @Param('databaseId') databaseId: string,
+    @Param('viewId') viewId: string,
+    @Body() request: SetViewGroupRequest,
+  ) {
+    return this.setViewGroupHandler.execute(
+      new SetViewGroupCommand(databaseId, viewId, request.propertyId ?? null),
     );
   }
 

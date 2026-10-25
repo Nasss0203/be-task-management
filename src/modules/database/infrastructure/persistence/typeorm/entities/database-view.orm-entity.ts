@@ -55,6 +55,13 @@ export class DatabaseViewOrmEntity {
   })
   filters: DatabaseViewFilter[];
 
+  @Column({
+    name: 'group_by',
+    type: 'uuid',
+    nullable: true,
+  })
+  groupBy: string | null;
+
   @ManyToOne(() => DatabaseOrmEntity, {
     onDelete: 'CASCADE',
   })

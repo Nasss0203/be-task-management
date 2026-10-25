@@ -15,6 +15,7 @@ export class DatabaseViewDetailDto {
   properties: DatabaseViewPropertyDto[];
   sorts: DatabaseViewSort[];
   filters: DatabaseViewFilter[];
+  groupBy: string | null;
 
   static fromDomain(view: DatabaseView): DatabaseViewDetailDto {
     const properties = [...view.getProperties()]
@@ -30,6 +31,7 @@ export class DatabaseViewDetailDto {
       properties,
       sorts: [...view.getSorts()],
       filters: [...view.getFilters()],
+      groupBy: view.getGroupBy(),
     };
   }
 }

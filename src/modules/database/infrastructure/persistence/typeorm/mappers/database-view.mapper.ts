@@ -25,6 +25,7 @@ export class DatabaseViewMapper {
       properties,
       sorts: orm.sorts ?? [],
       filters: orm.filters ?? [],
+      groupBy: orm.groupBy ?? null,
     });
   }
 
@@ -38,6 +39,7 @@ export class DatabaseViewMapper {
     orm.position = view.getPosition();
     orm.sorts = [...view.getSorts()];
     orm.filters = [...view.getFilters()];
+    orm.groupBy = view.getGroupBy();
 
     orm.properties = view.getProperties().map((property) => {
       const propertyOrm = new DatabaseViewPropertyOrmEntity();
