@@ -39,6 +39,9 @@ import { SetViewFiltersRequest } from '../requests/set-view-filters.request';
 import { SetViewGroupCommand } from 'src/modules/database/application/commands/set-view-group/set-view-group.command';
 import { SetViewGroupHandler } from 'src/modules/database/application/commands/set-view-group/set-view-group.handler';
 import { SetViewGroupRequest } from '../requests/set-view-group.request';
+import { ReorderViewPropertiesCommand } from 'src/modules/database/application/commands/reorder-view-properties/reorder-view-properties.command';
+import { ReorderViewPropertiesHandler } from 'src/modules/database/application/commands/reorder-view-properties/reorder-view-properties.handler';
+import { ReorderViewPropertiesRequest } from '../requests/reorder-view-properties.request';
 
 @Controller('databases/:databaseId/views')
 export class DatabaseViewController {
@@ -53,6 +56,7 @@ export class DatabaseViewController {
     private readonly setViewSortsHandler: SetViewSortsHandler,
     private readonly setViewFiltersHandler: SetViewFiltersHandler,
     private readonly setViewGroupHandler: SetViewGroupHandler,
+    private readonly reorderViewPropertiesHandler: ReorderViewPropertiesHandler,
   ) {}
 
   @Post()
@@ -163,6 +167,19 @@ export class DatabaseViewController {
   ) {
     return this.setViewFiltersHandler.execute(
       new SetViewFiltersCommand(databaseId, viewId, request.filters),
+    );
+  }
+
+  @Patch(':viewId/properties/order')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+  async reorderProperties(
+    @Param('databaseId') databaseId: string,
+    @Param('viewId') viewId: string,
+    @Body() request: ReorderViewPropertiesRequest,
+  ) {
+    return this.reorderViewPropertiesHandler.execute(
+      new ReorderViewPropertiesCommand(databaseId, viewId, request.propertyIds),
     );
   }
 

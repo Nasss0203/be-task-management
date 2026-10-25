@@ -78,6 +78,23 @@ describe('DatabaseView', () => {
     ]);
   });
 
+  it('reorders every property and rejects partial or unknown lists', () => {
+    const view = createView('table-view');
+    view.addProperty({ id: 'second', propertyId: 'second-property', position: '1' });
+
+    view.reorderProperties(['second-property', propertyId]);
+
+    expect(
+      view.getProperties().map((item) => [item.getPropertyId(), item.getPosition()]),
+    ).toEqual([
+      [propertyId, '1'],
+      ['second-property', '0'],
+    ]);
+    expect(() => view.reorderProperties([propertyId])).toThrow();
+    expect(() => view.reorderProperties([propertyId, 'ghost'])).toThrow();
+    expect(() => view.reorderProperties([propertyId, propertyId])).toThrow();
+  });
+
   it('rejects more than ten filters', () => {
     const view = createView('table-view');
 

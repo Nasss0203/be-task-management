@@ -58,6 +58,7 @@ export class TypeOrmDatabaseRowRepository implements DatabaseRowRepository {
         values: true,
       },
       order: {
+        position: 'ASC',
         createdAt: 'ASC',
         id: 'ASC',
       },
@@ -69,6 +70,32 @@ export class TypeOrmDatabaseRowRepository implements DatabaseRowRepository {
     });
 
     return entities.map((entity) => DatabaseRowMapper.toDomain(entity));
+  }
+
+  async findMaxPosition(
+    databaseId: string,
+    context?: PersistenceContext,
+  ): Promise<number | null> {
+    const result = await this.getRowRepository(context)
+      .createQueryBuilder('row')
+      .select('MAX(row.position)', 'max')
+      .where('row.databaseId = :databaseId', { databaseId })
+      .getRawOne<{ max: number | string | null }>();
+
+    return result?.max === null || result?.max === undefined
+      ? null
+      : Number(result.max);
+  }
+
+  async updatePositions(
+    positions: { id: string; position: number }[],
+    context?: PersistenceContext,
+  ): Promise<void> {
+    const repository = this.getRowRepository(context);
+
+    for (const { id, position } of positions) {
+      await repository.update({ id }, { position });
+    }
   }
 
   async save(row: DatabaseRow, context?: PersistenceContext): Promise<void> {

@@ -10,6 +10,7 @@ export class DatabaseRowMapper {
 
     orm.id = domain.getId();
     orm.databaseId = domain.getDatabaseId();
+    orm.position = domain.getPosition();
 
     orm.values = domain.getValues().map((value) => {
       const valueOrm = this.valueToOrm(value);
@@ -29,6 +30,7 @@ export class DatabaseRowMapper {
       id: orm.id,
       databaseId: orm.databaseId,
       values,
+      position: Number(orm.position ?? 0),
     });
   }
 

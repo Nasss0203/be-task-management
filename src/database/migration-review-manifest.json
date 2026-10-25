@@ -196,6 +196,10 @@
     {
       "file": "1792913071019-UpdateSchema.ts",
       "sha256": "5cacd6d250ab26990a0fcf7160f74303ab6884cb4c2871567ed6a2e547c27131"
+    },
+    {
+      "file": "1792915329668-UpdateSchema.ts",
+      "sha256": "fcbd2c8d3ba08964ac34a29d331c51c1d4fb6d93eb3975be151714e04f7c328a"
     }
   ]
 }

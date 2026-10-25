@@ -25,6 +25,7 @@ export class DatabaseRowController {
     return {
       id: row.getId(),
       databaseId: row.getDatabaseId(),
+      position: row.getPosition(),
       values: row.getValues(),
     };
   }
@@ -40,6 +41,7 @@ export class DatabaseRowController {
     return rows.map((row) => ({
       id: row.getId(),
       databaseId: row.getDatabaseId(),
+      position: row.getPosition(),
 
       values: row.getValues().map((value) => ({
         id: value.getId(),

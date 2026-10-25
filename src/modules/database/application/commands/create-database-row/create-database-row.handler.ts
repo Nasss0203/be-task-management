@@ -35,9 +35,15 @@ export class CreateDatabaseRowHandler {
       throw new NotFoundException('Database not found');
     }
 
+    const maxPosition = await this.databaseRowRepository.findMaxPosition(
+      database.getId(),
+      context,
+    );
+
     const row = DatabaseRow.create({
       id: randomUUID(),
       databaseId: database.getId(),
+      position: (maxPosition ?? 0) + 1,
     });
 
     // Like Notion, a STATUS property always has a value: start at its first option.

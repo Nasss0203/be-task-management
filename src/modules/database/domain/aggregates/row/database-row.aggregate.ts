@@ -7,12 +7,14 @@ import { DateRowValue, RowValueData } from './row-value.type';
 interface CreateDatabaseRowParams {
   id: string;
   databaseId: string;
+  position?: number;
 }
 
 interface RestoreDatabaseRowParams {
   id: string;
   databaseId: string;
   values: RowValue[];
+  position?: number;
 }
 
 export class DatabaseRow {
@@ -22,20 +24,38 @@ export class DatabaseRow {
     readonly id: string,
     readonly databaseId: string,
     values: RowValue[],
+    private position: number,
   ) {
     this.values = [...values];
   }
 
   static create(params: CreateDatabaseRowParams): DatabaseRow {
-    return new DatabaseRow(params.id, params.databaseId, []);
+    return new DatabaseRow(params.id, params.databaseId, [], params.position ?? 0);
   }
 
   static restore(params: RestoreDatabaseRowParams): DatabaseRow {
-    return new DatabaseRow(params.id, params.databaseId, params.values);
+    return new DatabaseRow(
+      params.id,
+      params.databaseId,
+      params.values,
+      params.position ?? 0,
+    );
   }
 
   getId(): string {
     return this.id;
+  }
+
+  getPosition(): number {
+    return this.position;
+  }
+
+  moveTo(position: number): void {
+    if (!Number.isFinite(position)) {
+      throw new Error('Row position must be a finite number');
+    }
+
+    this.position = position;
   }
 
   getDatabaseId(): string {

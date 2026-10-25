@@ -22,6 +22,12 @@ export class DatabaseRowOrmEntity {
   })
   databaseId: string;
 
+  @Column({
+    type: 'double precision',
+    default: 0,
+  })
+  position: number;
+
   @CreateDateColumn({
     name: 'created_at',
     type: 'timestamptz',

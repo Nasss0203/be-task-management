@@ -20,6 +20,16 @@ export interface DatabaseRowRepository {
     context?: PersistenceContext,
   ): Promise<number>;
 
+  findMaxPosition(
+    databaseId: string,
+    context?: PersistenceContext,
+  ): Promise<number | null>;
+
+  updatePositions(
+    positions: { id: string; position: number }[],
+    context?: PersistenceContext,
+  ): Promise<void>;
+
   save(row: DatabaseRow, context?: PersistenceContext): Promise<void>;
 
   delete(id: string, context?: PersistenceContext): Promise<void>;

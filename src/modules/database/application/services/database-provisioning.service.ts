@@ -149,7 +149,7 @@ export class DatabaseProvisioningService implements DatabaseProvisioningPort {
       properties,
     });
 
-    const rows = snapshot.rows.map((rowSnapshot) => {
+    const rows = snapshot.rows.map((rowSnapshot, rowIndex) => {
       const rowId = this.createLiveId(rowSnapshot.sourceId);
       result.rowIdMap.set(rowSnapshot.sourceId, rowId);
 
@@ -181,6 +181,7 @@ export class DatabaseProvisioningService implements DatabaseProvisioningPort {
         id: rowId,
         databaseId,
         values,
+        position: rowIndex + 1,
       });
     });
 

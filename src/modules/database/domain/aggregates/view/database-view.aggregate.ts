@@ -6,6 +6,7 @@ import {
 import { DatabaseViewType } from '../../enums/database-view-type.enum';
 import { DatabaseViewPropertyNotFoundException } from '../../exceptions/database-view-property-not-found.exception';
 import { InvalidDatabaseViewFilterException } from '../../exceptions/invalid-database-view-filter.exception';
+import { InvalidDatabaseViewPropertyOrderException } from '../../exceptions/invalid-database-view-property-order.exception';
 import { InvalidDatabaseViewSortException } from '../../exceptions/invalid-database-view-sort.exception';
 import { DatabaseViewProperty } from './database-view-property.entity';
 
@@ -229,6 +230,24 @@ export class DatabaseView {
     }
 
     property.setVisible(visible);
+  }
+
+  reorderProperties(propertyIds: readonly string[]): void {
+    const byPropertyId = new Map(
+      this.properties.map((item) => [item.getPropertyId(), item]),
+    );
+
+    if (
+      propertyIds.length !== this.properties.length ||
+      new Set(propertyIds).size !== propertyIds.length ||
+      propertyIds.some((propertyId) => !byPropertyId.has(propertyId))
+    ) {
+      throw new InvalidDatabaseViewPropertyOrderException();
+    }
+
+    propertyIds.forEach((propertyId, index) =>
+      byPropertyId.get(propertyId)!.changePosition(String(index)),
+    );
   }
 
   setPropertyWidth(propertyId: string, width: number | null): void {

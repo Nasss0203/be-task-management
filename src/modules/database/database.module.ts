@@ -19,6 +19,8 @@ import { SetViewPropertyWidthHandler } from './application/commands/set-view-pro
 import { RenameDatabaseHandler } from './application/commands/rename-database/rename-database.handler';
 import { SetViewFiltersHandler } from './application/commands/set-view-filters/set-view-filters.handler';
 import { SetViewGroupHandler } from './application/commands/set-view-group/set-view-group.handler';
+import { ReorderViewPropertiesHandler } from './application/commands/reorder-view-properties/reorder-view-properties.handler';
+import { MoveDatabaseRowHandler } from './application/commands/move-database-row/move-database-row.handler';
 import { SetViewSortsHandler } from './application/commands/set-view-sorts/set-view-sorts.handler';
 import { UpdatePropertyOptionHandler } from './application/commands/update-property-option/update-property-option.handler';
 import { GetDatabaseRowsHandler } from './application/queries/get-database-rows/get-database-rows.handler';
@@ -94,6 +96,8 @@ import { DatabaseController } from './presentation/http/controllers/database.con
     SetViewFiltersHandler,
     RenameDatabaseHandler,
     SetViewGroupHandler,
+    ReorderViewPropertiesHandler,
+    MoveDatabaseRowHandler,
     {
       provide: DATABASE_TYPES.repositories.DatabaseRepository,
       useClass: TypeOrmDatabaseRepository,
