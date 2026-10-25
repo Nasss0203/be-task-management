@@ -38,7 +38,7 @@ export class ListPageFavoritesHandler {
      *
      * findById hiện tại của project đang lấy active Page.
      */
-    return pages
+    const activePages = pages
       .filter((page): page is NonNullable<typeof page> => page !== null)
       .filter((page) => {
         if (!query.workspaceId) {
@@ -46,7 +46,26 @@ export class ListPageFavoritesHandler {
         }
 
         return page.getWorkspaceId() === query.workspaceId;
-      })
+      });
+
+    /**
+     * 4. Chỉ giữ Page user còn xem được trong sidebar
+     * (bỏ Page của Teamspace đã archive hoặc user đã rời).
+     */
+    const workspaceIds = [
+      ...new Set(activePages.map((page) => page.getWorkspaceId())),
+    ];
+    const accessible = await Promise.all(
+      workspaceIds.map((workspaceId) =>
+        this.pageRepo.findAccessibleByWorkspace(workspaceId, query.userId),
+      ),
+    );
+    const accessibleIds = new Set(
+      accessible.flat().map((page) => page.getId()),
+    );
+
+    return activePages
+      .filter((page) => accessibleIds.has(page.getId()))
       .map((page) => PageResponseDto.fromDomain(page));
   }
 }

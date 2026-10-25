@@ -10,6 +10,13 @@ import { EntityManager, In } from 'typeorm';
 import { PageOrmEntity } from '../entities/page.orm-entity';
 import { PageMapper } from '../mappers/page.mapper';
 
+// Pages of an archived (soft-deleted) teamspace stay hidden until it is restored.
+const ACTIVE_TEAMSPACE_CONDITION = `NOT EXISTS (
+  SELECT 1 FROM teamspaces archived_teamspace
+  WHERE archived_teamspace.id = page.teamspace_id
+    AND archived_teamspace.deleted_at IS NOT NULL
+)`;
+
 @Injectable()
 export class TypeOrmPageRepository implements PageRepository {
   async lockGlobalSubdomainAllocation(
@@ -196,6 +203,7 @@ export class TypeOrmPageRepository implements PageRepository {
         },
       )
 
+      .andWhere(ACTIVE_TEAMSPACE_CONDITION)
       .distinct(true)
       .orderBy('page.created_at', 'ASC');
 
@@ -249,6 +257,7 @@ export class TypeOrmPageRepository implements PageRepository {
           ownerRole: WorkspaceRole.OWNER,
         },
       )
+      .andWhere(ACTIVE_TEAMSPACE_CONDITION)
       .distinct(true)
       .orderBy('page.deleted_at', 'DESC');
 

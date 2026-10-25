@@ -1,5 +1,5 @@
 import { MailerModule } from '@nestjs-modules/mailer';
-import { HandlebarsAdapter } from '@nestjs-modules/mailer/adapters/handlebars.adapter';
+import { HandlebarsTemplateAdapter } from './infrastructure/handlebars-template.adapter';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { join } from 'path';
@@ -37,7 +37,7 @@ import { SmtpMailSender } from './infrastructure/providers/smtp-mail.sender';
           dir: existsSync(join(process.cwd(), 'src', 'modules', 'mail', 'infrastructure', 'templates'))
             ? join(process.cwd(), 'src', 'modules', 'mail', 'infrastructure', 'templates')
             : join(process.cwd(), 'dist', 'modules', 'mail', 'infrastructure', 'templates'),
-          adapter: new HandlebarsAdapter(),
+          adapter: new HandlebarsTemplateAdapter(),
           options: {
             strict: true,
           },
