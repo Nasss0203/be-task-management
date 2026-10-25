@@ -47,6 +47,12 @@ import { UpdateTeamspaceMemberRoleCommand } from 'src/modules/teamspace/applicat
 import { UpdateTeamspaceMemberRoleHandler } from 'src/modules/teamspace/application/commands/teamspace/update-teamspace-member-role/update-teamspace-member-role.handler';
 import { UpdateTeamspaceCommand } from 'src/modules/teamspace/application/commands/teamspace/update-teamspace/update-teamspace.command';
 import { UpdateTeamspaceHandler } from 'src/modules/teamspace/application/commands/teamspace/update-teamspace/update-teamspace.handler';
+import { ArchiveTeamspaceCommand } from 'src/modules/teamspace/application/commands/teamspace/archive-teamspace/archive-teamspace.command';
+import { ArchiveTeamspaceHandler } from 'src/modules/teamspace/application/commands/teamspace/archive-teamspace/archive-teamspace.handler';
+import { RestoreTeamspaceCommand } from 'src/modules/teamspace/application/commands/teamspace/restore-teamspace/restore-teamspace.command';
+import { RestoreTeamspaceHandler } from 'src/modules/teamspace/application/commands/teamspace/restore-teamspace/restore-teamspace.handler';
+import { GetArchivedTeamspacesHandler } from 'src/modules/teamspace/application/queries/teamspace/get-archived-teamspaces/get-archived-teamspaces.handler';
+import { GetArchivedTeamspacesQuery } from 'src/modules/teamspace/application/queries/teamspace/get-archived-teamspaces/get-archived-teamspaces.query';
 import { AddTeamspaceMemberDto } from 'src/modules/teamspace/application/dto/teamspace/add-teamspace-member.dto';
 import { CreateTeamspaceInviteLinkDto } from 'src/modules/teamspace/application/dto/teamspace/create-teamspace-invite-link.dto';
 import { CreateTeamspaceDto } from 'src/modules/teamspace/application/dto/teamspace/create-teamspace.dto';
@@ -131,6 +137,12 @@ export class TeamspaceController {
     private readonly updateTeamspaceJoinSettingsHandler: UpdateTeamspaceJoinSettingsHandler,
     @Inject(TEAMSPACE_TYPES.applications.UpdateTeamspaceHandler)
     private readonly updateTeamspaceHandler: UpdateTeamspaceHandler,
+    @Inject(TEAMSPACE_TYPES.applications.ArchiveTeamspaceHandler)
+    private readonly archiveTeamspaceHandler: ArchiveTeamspaceHandler,
+    @Inject(TEAMSPACE_TYPES.applications.RestoreTeamspaceHandler)
+    private readonly restoreTeamspaceHandler: RestoreTeamspaceHandler,
+    @Inject(TEAMSPACE_TYPES.applications.GetArchivedTeamspacesHandler)
+    private readonly getArchivedTeamspacesHandler: GetArchivedTeamspacesHandler,
   ) {}
 
   @Post()
@@ -154,6 +166,37 @@ export class TeamspaceController {
   ) {
     return this.getTeamspacesHandler.execute(
       new GetTeamspacesQuery(auth.id, workspaceId),
+    );
+  }
+
+  @Get('archived')
+  findArchived(
+    @Query('workspaceId', ParseUUIDPipe) workspaceId: string,
+    @Auth() auth: IAuth,
+  ): Promise<TeamspaceResponseDto[]> {
+    return this.getArchivedTeamspacesHandler.execute(
+      new GetArchivedTeamspacesQuery(auth.id, workspaceId),
+    );
+  }
+
+  @Post(':teamspaceId/archive')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async archive(
+    @Param('teamspaceId', ParseUUIDPipe) teamspaceId: string,
+    @Auth() auth: IAuth,
+  ): Promise<void> {
+    await this.archiveTeamspaceHandler.execute(
+      new ArchiveTeamspaceCommand(teamspaceId, auth.id),
+    );
+  }
+
+  @Post(':teamspaceId/restore')
+  restore(
+    @Param('teamspaceId', ParseUUIDPipe) teamspaceId: string,
+    @Auth() auth: IAuth,
+  ): Promise<TeamspaceResponseDto> {
+    return this.restoreTeamspaceHandler.execute(
+      new RestoreTeamspaceCommand(teamspaceId, auth.id),
     );
   }
 

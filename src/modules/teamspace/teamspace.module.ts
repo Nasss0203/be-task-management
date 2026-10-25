@@ -20,6 +20,9 @@ import { RevokeTeamspaceInviteLinkHandler } from './application/commands/teamspa
 import { UpdateTeamspaceJoinSettingsHandler } from './application/commands/teamspace/update-teamspace-join-settings/update-teamspace-join-settings.handler';
 import { UpdateTeamspaceMemberRoleHandler } from './application/commands/teamspace/update-teamspace-member-role/update-teamspace-member-role.handler';
 import { UpdateTeamspaceHandler } from './application/commands/teamspace/update-teamspace/update-teamspace.handler';
+import { ArchiveTeamspaceHandler } from './application/commands/teamspace/archive-teamspace/archive-teamspace.handler';
+import { RestoreTeamspaceHandler } from './application/commands/teamspace/restore-teamspace/restore-teamspace.handler';
+import { GetArchivedTeamspacesHandler } from './application/queries/teamspace/get-archived-teamspaces/get-archived-teamspaces.handler';
 import { DiscoverTeamspacesHandler } from './application/queries/teamspace/discover-teamspaces/discover-teamspaces.handler';
 import { GetMyTeamspaceInvitationsHandler } from './application/queries/teamspace/get-my-teamspace-invitations/get-my-teamspace-invitations.handler';
 import { GetTeamspaceMembersHandler } from './application/queries/teamspace/get-teamspace-members/get-teamspace-members.handler';
@@ -64,6 +67,18 @@ import { TEAMSPACE_TYPES } from './teamspace.types';
     {
       provide: TEAMSPACE_TYPES.applications.UpdateTeamspaceHandler,
       useClass: UpdateTeamspaceHandler,
+    },
+    {
+      provide: TEAMSPACE_TYPES.applications.ArchiveTeamspaceHandler,
+      useClass: ArchiveTeamspaceHandler,
+    },
+    {
+      provide: TEAMSPACE_TYPES.applications.RestoreTeamspaceHandler,
+      useClass: RestoreTeamspaceHandler,
+    },
+    {
+      provide: TEAMSPACE_TYPES.applications.GetArchivedTeamspacesHandler,
+      useClass: GetArchivedTeamspacesHandler,
     },
     {
       provide: TEAMSPACE_TYPES.applications.UpdateTeamspaceMemberRoleHandler,

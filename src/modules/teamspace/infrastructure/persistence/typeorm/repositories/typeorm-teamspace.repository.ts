@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, IsNull, Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 import { Teamspace } from 'src/modules/teamspace/domain/aggregates/teamspace/teamspace.aggregate';
 import type { TeamspaceRepository } from 'src/modules/teamspace/domain/repositories/teamspace.repository';
 
+import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role.enum';
 import { TeamspaceVisibility } from 'src/modules/teamspace/domain/enums/teamspace-visibility.enum';
 import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
@@ -152,13 +153,65 @@ export class TypeOrmTeamspaceRepository implements TeamspaceRepository {
   ): Promise<boolean> {
     const repository = this.getRepo(context);
 
+    // Archived rows still hold UQ_teamspaces_workspace_slug.
     return repository.exists({
-      where: {
-        workspaceId,
-        slug,
-        deletedAt: IsNull(),
-      },
+      where: { workspaceId, slug },
+      withDeleted: true,
     });
+  }
+
+  async findArchivedManageableByUser(
+    userId: string,
+    filter: { workspaceId?: string; teamspaceId?: string },
+    context?: PersistenceContext,
+  ): Promise<Teamspace[]> {
+    const query = this.getRepo(context)
+      .createQueryBuilder('teamspace')
+      .withDeleted()
+      .innerJoin(
+        'teamspace.workspace',
+        'workspace',
+        'workspace.deleted_at IS NULL',
+      )
+      .innerJoin(
+        'workspace_members',
+        'workspace_member',
+        `workspace_member.workspace_id = teamspace.workspace_id
+         AND workspace_member.user_id = :userId
+         AND workspace_member.membership_type = :membershipType`,
+        { userId, membershipType: WorkspaceMembershipType.MEMBER },
+      )
+      .leftJoin(
+        'teamspace_members',
+        'teamspace_member',
+        `teamspace_member.teamspace_id = teamspace.id
+         AND teamspace_member.workspace_member_id = workspace_member.id`,
+      )
+      .where('teamspace.deleted_at IS NOT NULL')
+      .andWhere(
+        '(workspace_member.role_name = :workspaceOwner OR teamspace_member.role_name = :teamspaceOwner)',
+        {
+          workspaceOwner: WorkspaceRole.OWNER,
+          teamspaceOwner: TeamspaceRole.OWNER,
+        },
+      );
+
+    if (filter.workspaceId) {
+      query.andWhere('teamspace.workspace_id = :workspaceId', {
+        workspaceId: filter.workspaceId,
+      });
+    }
+    if (filter.teamspaceId) {
+      query.andWhere('teamspace.id = :teamspaceId', {
+        teamspaceId: filter.teamspaceId,
+      });
+    }
+
+    const entities = await query
+      .orderBy('teamspace.deleted_at', 'DESC')
+      .getMany();
+
+    return entities.map((entity) => TeamspaceMapper.toDomain(entity));
   }
 
   async findOpenByWorkspaceAndUser(

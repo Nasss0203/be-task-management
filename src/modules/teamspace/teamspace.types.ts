@@ -45,6 +45,9 @@ export const TEAMSPACE_TYPES = {
       'UpdateTeamspaceJoinSettingsHandler',
     ),
     GetTeamspacesHandler: Symbol('GetTeamspacesHandler'),
+    ArchiveTeamspaceHandler: Symbol('ArchiveTeamspaceHandler'),
+    RestoreTeamspaceHandler: Symbol('RestoreTeamspaceHandler'),
+    GetArchivedTeamspacesHandler: Symbol('GetArchivedTeamspacesHandler'),
     GetTeamspaceMembersHandler: Symbol('GetTeamspaceMembersHandler'),
   },
   ports: {
