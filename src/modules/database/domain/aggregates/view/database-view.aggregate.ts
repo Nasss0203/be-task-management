@@ -1,5 +1,11 @@
+import {
+  MAX_DATABASE_VIEW_FILTERS,
+  VALUELESS_OPERATORS,
+  type DatabaseViewFilter,
+} from '../../constants/database-view-filter.constant';
 import { DatabaseViewType } from '../../enums/database-view-type.enum';
 import { DatabaseViewPropertyNotFoundException } from '../../exceptions/database-view-property-not-found.exception';
+import { InvalidDatabaseViewFilterException } from '../../exceptions/invalid-database-view-filter.exception';
 import { InvalidDatabaseViewSortException } from '../../exceptions/invalid-database-view-sort.exception';
 import { DatabaseViewProperty } from './database-view-property.entity';
 
@@ -28,6 +34,7 @@ interface RestoreDatabaseViewProps {
   position: string;
   properties?: DatabaseViewProperty[];
   sorts?: DatabaseViewSort[];
+  filters?: DatabaseViewFilter[];
 }
 
 interface AddDatabaseViewPropertyProps {
@@ -47,6 +54,7 @@ export class DatabaseView {
     private position: string,
     private readonly properties: DatabaseViewProperty[],
     private sorts: DatabaseViewSort[],
+    private filters: DatabaseViewFilter[],
   ) {}
 
   static create(props: CreateDatabaseViewProps): DatabaseView {
@@ -64,6 +72,7 @@ export class DatabaseView {
       props.position,
       [],
       [],
+      [],
     );
   }
 
@@ -76,6 +85,7 @@ export class DatabaseView {
       props.position,
       props.properties ?? [],
       props.sorts ?? [],
+      props.filters ?? [],
     );
   }
 
@@ -135,6 +145,24 @@ export class DatabaseView {
     this.sorts = sorts.map(({ propertyId, direction }) => ({
       propertyId,
       direction,
+    }));
+  }
+
+  getFilters(): readonly DatabaseViewFilter[] {
+    return this.filters;
+  }
+
+  setFilters(filters: readonly DatabaseViewFilter[]): void {
+    if (filters.length > MAX_DATABASE_VIEW_FILTERS) {
+      throw new InvalidDatabaseViewFilterException(
+        `A view can have at most ${MAX_DATABASE_VIEW_FILTERS} filters`,
+      );
+    }
+
+    this.filters = filters.map(({ propertyId, operator, value }) => ({
+      propertyId,
+      operator,
+      value: VALUELESS_OPERATORS.has(operator) ? null : (value ?? null),
     }));
   }
 

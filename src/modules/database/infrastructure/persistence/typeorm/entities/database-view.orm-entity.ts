@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 
 import type { DatabaseViewSort } from '../../../../domain/aggregates/view/database-view.aggregate';
+import type { DatabaseViewFilter } from '../../../../domain/constants/database-view-filter.constant';
 import { DatabaseViewType } from '../../../../domain/enums/database-view-type.enum';
 import { DatabaseViewPropertyOrmEntity } from './database-view-property.orm-entity';
 import { DatabaseOrmEntity } from './database.orm-entity';
@@ -47,6 +48,12 @@ export class DatabaseViewOrmEntity {
     default: () => "'[]'",
   })
   sorts: DatabaseViewSort[];
+
+  @Column({
+    type: 'jsonb',
+    default: () => "'[]'",
+  })
+  filters: DatabaseViewFilter[];
 
   @ManyToOne(() => DatabaseOrmEntity, {
     onDelete: 'CASCADE',

@@ -1,5 +1,6 @@
 import { DatabaseViewType } from '../../enums/database-view-type.enum';
 import { DatabaseViewPropertyNotFoundException } from '../../exceptions/database-view-property-not-found.exception';
+import { InvalidDatabaseViewFilterException } from '../../exceptions/invalid-database-view-filter.exception';
 import { InvalidDatabaseViewSortException } from '../../exceptions/invalid-database-view-sort.exception';
 import { DatabaseView } from './database-view.aggregate';
 
@@ -59,6 +60,35 @@ describe('DatabaseView', () => {
     view.setSorts([]);
 
     expect(view.getSorts()).toEqual([]);
+  });
+
+  it('stores several filters on one property and drops values of valueless operators', () => {
+    const view = createView('table-view');
+
+    view.setFilters([
+      { propertyId: 'points', operator: 'gt', value: 3 },
+      { propertyId: 'points', operator: 'lt', value: 10 },
+      { propertyId: 'name', operator: 'is_empty', value: 'ignored' },
+    ]);
+
+    expect(view.getFilters()).toEqual([
+      { propertyId: 'points', operator: 'gt', value: 3 },
+      { propertyId: 'points', operator: 'lt', value: 10 },
+      { propertyId: 'name', operator: 'is_empty', value: null },
+    ]);
+  });
+
+  it('rejects more than ten filters', () => {
+    const view = createView('table-view');
+
+    expect(() =>
+      view.setFilters(
+        Array.from({ length: 11 }, (_, index) => ({
+          propertyId: `p${index}`,
+          operator: 'is_empty',
+        })),
+      ),
+    ).toThrow(InvalidDatabaseViewFilterException);
   });
 
   it('rejects duplicate properties, invalid directions and too many sorts', () => {

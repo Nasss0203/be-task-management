@@ -33,6 +33,9 @@ import { SetViewPropertyWidthRequest } from '../requests/set-view-property-width
 import { SetViewSortsCommand } from 'src/modules/database/application/commands/set-view-sorts/set-view-sorts.command';
 import { SetViewSortsHandler } from 'src/modules/database/application/commands/set-view-sorts/set-view-sorts.handler';
 import { SetViewSortsRequest } from '../requests/set-view-sorts.request';
+import { SetViewFiltersCommand } from 'src/modules/database/application/commands/set-view-filters/set-view-filters.command';
+import { SetViewFiltersHandler } from 'src/modules/database/application/commands/set-view-filters/set-view-filters.handler';
+import { SetViewFiltersRequest } from '../requests/set-view-filters.request';
 
 @Controller('databases/:databaseId/views')
 export class DatabaseViewController {
@@ -45,6 +48,7 @@ export class DatabaseViewController {
     private readonly setViewPropertyVisibilityHandler: SetViewPropertyVisibilityHandler,
     private readonly setViewPropertyWidthHandler: SetViewPropertyWidthHandler,
     private readonly setViewSortsHandler: SetViewSortsHandler,
+    private readonly setViewFiltersHandler: SetViewFiltersHandler,
   ) {}
 
   @Post()
@@ -142,6 +146,19 @@ export class DatabaseViewController {
   ) {
     return this.setViewSortsHandler.execute(
       new SetViewSortsCommand(databaseId, viewId, request.sorts),
+    );
+  }
+
+  @Patch(':viewId/filters')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+  async setFilters(
+    @Param('databaseId') databaseId: string,
+    @Param('viewId') viewId: string,
+    @Body() request: SetViewFiltersRequest,
+  ) {
+    return this.setViewFiltersHandler.execute(
+      new SetViewFiltersCommand(databaseId, viewId, request.filters),
     );
   }
 

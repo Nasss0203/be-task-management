@@ -2,6 +2,7 @@ import {
   DatabaseView,
   type DatabaseViewSort,
 } from '../../domain/aggregates/view/database-view.aggregate';
+import type { DatabaseViewFilter } from '../../domain/constants/database-view-filter.constant';
 import { DatabaseViewType } from '../../domain/enums/database-view-type.enum';
 import { DatabaseViewPropertyDto } from './database-view-property.dto';
 
@@ -13,6 +14,7 @@ export class DatabaseViewDetailDto {
   position: string;
   properties: DatabaseViewPropertyDto[];
   sorts: DatabaseViewSort[];
+  filters: DatabaseViewFilter[];
 
   static fromDomain(view: DatabaseView): DatabaseViewDetailDto {
     const properties = [...view.getProperties()]
@@ -27,6 +29,7 @@ export class DatabaseViewDetailDto {
       position: view.getPosition(),
       properties,
       sorts: [...view.getSorts()],
+      filters: [...view.getFilters()],
     };
   }
 }
