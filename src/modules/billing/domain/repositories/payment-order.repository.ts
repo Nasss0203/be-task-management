@@ -1,8 +1,30 @@
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
+import type { BillingInterval } from '../constants/billing-interval.constant';
+import type { BillingProvider } from '../constants/billing-provider.constant';
+import type { PaymentOrderStatus } from '../constants/payment-order-status.constant';
 import { PaymentOrder } from '../entities/payment-order.entity';
 
+export interface PaymentOrderHistoryItem {
+  id: string;
+  orderCode: string;
+  planCode: string;
+  planName: string;
+  billingInterval: BillingInterval;
+  provider: BillingProvider;
+  amount: number;
+  currency: string;
+  status: PaymentOrderStatus;
+  paidAt: Date | null;
+  createdAt: Date;
+}
+
 export interface PaymentOrderRepository {
+  findHistoryByWorkspaceId(
+    workspaceId: string,
+    limit: number,
+  ): Promise<PaymentOrderHistoryItem[]>;
+
   lockWorkspace(
     workspaceId: string,
     context: PersistenceContext,

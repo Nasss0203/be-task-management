@@ -24,6 +24,7 @@ describe('DeleteWorkspaceMemberHandler', () => {
     findByWorkspaceAndUser: jest.fn(),
     findByWorkspace: jest.fn(),
     deleteByWorkspaceAndUser: jest.fn(),
+    lockMembersForUpdate: jest.fn(),
   };
 
   const mockWorkspaceRepository = {
@@ -350,6 +351,51 @@ describe('DeleteWorkspaceMemberHandler', () => {
       handler.execute(new DeleteWorkspaceMemberCommand('ws-1', 'user-1', 'actor-1')),
     ).rejects.toBeInstanceOf(ForbiddenException);
     expect(mockTeamspaceOwnershipGuard.assertCanRemoveWorkspaceMember).not.toHaveBeenCalled();
+  });
+
+  it('lets an owner remove another owner after locking both memberships', async () => {
+    mockWorkspaceMemberRepository.findByWorkspaceAndUser
+      .mockResolvedValueOnce(member('owner-2', 'user-2', WorkspaceRole.OWNER))
+      .mockResolvedValueOnce(member('actor-1', 'actor-1', WorkspaceRole.OWNER));
+
+    await handler.execute(new DeleteWorkspaceMemberCommand('ws-1', 'user-2', 'actor-1'));
+
+    expect(mockWorkspaceMemberRepository.lockMembersForUpdate).toHaveBeenCalledWith(
+      'ws-1',
+      ['user-2', 'actor-1'],
+      mockManager,
+    );
+    expect(
+      mockWorkspaceMemberRepository.lockMembersForUpdate.mock.invocationCallOrder[0],
+    ).toBeLessThan(
+      mockWorkspaceMemberRepository.findByWorkspaceAndUser.mock.invocationCallOrder[0],
+    );
+    expect(mockWorkspaceMemberRepository.deleteByWorkspaceAndUser).toHaveBeenCalledWith(
+      'ws-1',
+      'user-2',
+      mockManager,
+    );
+  });
+
+  it('rejects an actor whose own owner membership was removed concurrently', async () => {
+    mockWorkspaceMemberRepository.findByWorkspaceAndUser
+      .mockResolvedValueOnce(member('owner-2', 'user-2', WorkspaceRole.OWNER))
+      .mockResolvedValueOnce(null);
+
+    await expect(
+      handler.execute(new DeleteWorkspaceMemberCommand('ws-1', 'user-2', 'actor-1')),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(mockWorkspaceMemberRepository.deleteByWorkspaceAndUser).not.toHaveBeenCalled();
+  });
+
+  it('does not take member locks for a self leave', async () => {
+    mockWorkspaceMemberRepository.findByWorkspaceAndUser.mockResolvedValueOnce(
+      member('member-1', 'user-1', WorkspaceRole.MEMBER),
+    );
+
+    await handler.execute(new DeleteWorkspaceMemberCommand('ws-1', 'user-1', 'user-1'));
+
+    expect(mockWorkspaceMemberRepository.lockMembersForUpdate).not.toHaveBeenCalled();
   });
 
   it('propagates a guard database error and never deletes the member', async () => {

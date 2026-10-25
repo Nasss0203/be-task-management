@@ -24,6 +24,9 @@ export class WorkspaceOrmEntity {
   @Column({ type: 'varchar', length: 255, unique: true })
   slug: string;
 
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  icon: string | null;
+
   @Column({
     type: 'enum',
     enum: WorkspaceLayoutMode,

@@ -50,6 +50,16 @@ export class DeleteWorkspaceMemberHandler {
 
   async execute(command: DeleteWorkspaceMemberCommand): Promise<void> {
     return this.uow.runInTransaction(async (manager) => {
+      const isSelfLeave = command.actorId === command.userId;
+
+      if (!isSelfLeave) {
+        await this.workspaceMemberRepository.lockMembersForUpdate(
+          command.workspaceId,
+          [command.userId, command.actorId],
+          manager,
+        );
+      }
+
       const targetMember =
         await this.workspaceMemberRepository.findByWorkspaceAndUser(
           command.workspaceId,
@@ -60,8 +70,6 @@ export class DeleteWorkspaceMemberHandler {
       if (!targetMember) {
         throw new NotFoundException('Member not found in workspace');
       }
-
-      const isSelfLeave = command.actorId === command.userId;
 
       if (!isSelfLeave) {
         const actorMember =
@@ -78,12 +86,6 @@ export class DeleteWorkspaceMemberHandler {
         if (actorMember.getRole() !== WorkspaceRole.OWNER) {
           throw new ForbiddenException(
             'Only admin or owner can remove members',
-          );
-        }
-
-        if (targetMember.getRole() === WorkspaceRole.OWNER) {
-          throw new ForbiddenException(
-            'Admins cannot remove Owners or other Admins',
           );
         }
       }

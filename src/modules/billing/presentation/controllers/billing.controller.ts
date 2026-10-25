@@ -38,7 +38,10 @@ import { ListBillingPlansHandler } from '../../application/queries/plan/list-bil
 import { ListBillingPlansQuery } from '../../application/queries/plan/list-billing-plans/list-billing-plans.query';
 import { GetWorkspaceSubscriptionHandler } from '../../application/queries/subscription/get-workspace-subscription/get-workspace-subscription.handler';
 import { GetWorkspaceSubscriptionQuery } from '../../application/queries/subscription/get-workspace-subscription/get-workspace-subscription.query';
+import { ListWorkspacePaymentOrdersHandler } from '../../application/queries/payment/list-workspace-payment-orders/list-workspace-payment-orders.handler';
+import { ListWorkspacePaymentOrdersQuery } from '../../application/queries/payment/list-workspace-payment-orders/list-workspace-payment-orders.query';
 import { BILLING_TYPES } from '../../billing.types';
+import type { PaymentOrderHistoryItem } from '../../domain/repositories/payment-order.repository';
 
 @Controller('billing')
 export class BillingController {
@@ -54,6 +57,9 @@ export class BillingController {
 
     @Inject(BILLING_TYPES.applications.GetWorkspaceSubscriptionHandler)
     private readonly getWorkspaceSubscriptionHandler: GetWorkspaceSubscriptionHandler,
+
+    @Inject(BILLING_TYPES.applications.ListWorkspacePaymentOrdersHandler)
+    private readonly listWorkspacePaymentOrdersHandler: ListWorkspacePaymentOrdersHandler,
 
     private readonly configService: ConfigService,
   ) {}
@@ -79,6 +85,22 @@ export class BillingController {
   ): Promise<WorkspaceSubscriptionResponseDto> {
     return this.getWorkspaceSubscriptionHandler.execute(
       new GetWorkspaceSubscriptionQuery(workspaceId),
+    );
+  }
+
+  @Get('workspaces/:workspaceId/payment-orders')
+  @ReadRateLimit()
+  @WorkspaceContext({
+    source: 'param',
+    key: 'workspaceId',
+  })
+  @RequirePermissions(PERMISSIONS.WORKSPACE_UPDATE)
+  @ResponseMessage('Get workspace payment history successfully')
+  listWorkspacePaymentOrders(
+    @Param('workspaceId') workspaceId: string,
+  ): Promise<PaymentOrderHistoryItem[]> {
+    return this.listWorkspacePaymentOrdersHandler.execute(
+      new ListWorkspacePaymentOrdersQuery(workspaceId),
     );
   }
 

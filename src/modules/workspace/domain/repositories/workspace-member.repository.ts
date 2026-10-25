@@ -48,6 +48,12 @@ export interface WorkspaceMemberRepository {
     context?: PersistenceContext,
   ): Promise<void>;
 
+  lockMembersForUpdate(
+    workspaceId: string,
+    userIds: string[],
+    context?: PersistenceContext,
+  ): Promise<void>;
+
   deleteByWorkspaceAndUserIfWorkspaceDeleted(
     workspaceId: string,
     userId: string,

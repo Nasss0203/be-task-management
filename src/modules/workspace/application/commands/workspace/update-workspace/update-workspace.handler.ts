@@ -25,6 +25,10 @@ export class UpdateWorkspaceHandler {
 
     workspace.rename(command.dto.name ?? workspace.getName());
 
+    if (command.dto.icon !== undefined) {
+      workspace.changeIcon(command.dto.icon);
+    }
+
     const updated = await this.workspaceRepository.save(workspace);
 
     return WorkspaceResponseDto.fromDomain(updated);

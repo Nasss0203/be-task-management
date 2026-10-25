@@ -17,6 +17,9 @@ export const BILLING_TYPES = {
     ProcessStripeWebhookHandler: Symbol('BillingProcessStripeWebhookHandler'),
     GetBillingPaymentStatusHandler: Symbol('GetBillingPaymentStatusHandler'),
     GetWorkspaceSubscriptionHandler: Symbol('GetWorkspaceSubscriptionHandler'),
+    ListWorkspacePaymentOrdersHandler: Symbol(
+      'ListWorkspacePaymentOrdersHandler',
+    ),
   },
 
   services: {

@@ -12,6 +12,9 @@ export const IDENTITY_TYPES = {
   applications: {
     SearchUsersHandler: Symbol('SearchUsersHandler'),
   },
+  ports: {
+    AvatarStorage: Symbol('IdentityAvatarStorage'),
+  },
 };
 
 // Public identity contracts used by shared guards and other bounded contexts.
