@@ -55,6 +55,8 @@ import { TypeOrmPagePublicationRepository } from './infrastructure/persistence/t
 import { TypeOrmPageRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page.repository';
 import { TypeOrmPublishedSiteRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-published-site.repository';
 import { TypeOrmPublicSiteNavigationReader } from './infrastructure/persistence/typeorm/readers/typeorm-public-site-navigation.reader';
+import { TypeOrmPageSearchReader } from './infrastructure/persistence/typeorm/readers/typeorm-page-search.reader';
+import { SearchPagesHandler } from './application/queries/page/search-pages/search-pages.handler';
 
 import { CreatePageEditRequestHandler } from './application/commands/page-edit-request/create-page-edit-request/create-page-edit-request.handler';
 
@@ -439,6 +441,14 @@ const ports = [
   {
     provide: CONTENT_TYPES.ports.PublicSiteNavigationReader,
     useClass: TypeOrmPublicSiteNavigationReader,
+  },
+  {
+    provide: CONTENT_TYPES.ports.PageSearchReader,
+    useClass: TypeOrmPageSearchReader,
+  },
+  {
+    provide: CONTENT_TYPES.applications.SearchPagesHandler,
+    useClass: SearchPagesHandler,
   },
   {
     provide: CONTENT_TYPES.bookmarkMetadataFetcher,

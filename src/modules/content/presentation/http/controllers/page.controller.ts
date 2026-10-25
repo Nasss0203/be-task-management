@@ -59,6 +59,8 @@ import { PermanentlyDeletePageDatabaseCommand } from 'src/modules/content/applic
 import { PermanentlyDeletePageDatabaseHandler } from 'src/modules/content/application/commands/page-database/permanently-delete-page-database/permanently-delete-page-database.handler';
 import { RestorePageDatabaseCommand } from 'src/modules/content/application/commands/page-database/restore-page-database/restore-page-database.command';
 import { RestorePageDatabaseHandler } from 'src/modules/content/application/commands/page-database/restore-page-database/restore-page-database.handler';
+import { SearchPagesHandler } from 'src/modules/content/application/queries/page/search-pages/search-pages.handler';
+import { SearchPagesQuery } from 'src/modules/content/application/queries/page/search-pages/search-pages.query';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
@@ -72,6 +74,9 @@ export class PageController {
 
     @Inject(CONTENT_TYPES.applications.FindPageByWorkspaceHandler)
     private readonly findPageByWorkspaceHandler: FindPageByWorkspaceHandler,
+
+    @Inject(CONTENT_TYPES.applications.SearchPagesHandler)
+    private readonly searchPagesHandler: SearchPagesHandler,
 
     @Inject(CONTENT_TYPES.applications.FindDatabasesByWorkspaceHandler)
     private readonly findDatabasesByWorkspaceHandler: FindDatabasesByWorkspaceHandler,
@@ -193,6 +198,20 @@ export class PageController {
   ) {
     return this.findPageByWorkspaceHandler.execute(
       new FindPageByWorkspaceQuery(workspaceId, auth.id),
+    );
+  }
+
+  @ResponseMessage('Search pages in workspace')
+  @Get('workspace/:workspaceId/search')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
+  @RequirePermissions(PERMISSIONS.PAGE_READ)
+  async search(
+    @Param('workspaceId') workspaceId: string,
+    @Query('q') q: string | undefined,
+    @Auth() auth: IAuth,
+  ) {
+    return this.searchPagesHandler.execute(
+      new SearchPagesQuery(workspaceId, auth.id, typeof q === 'string' ? q : ''),
     );
   }
 
