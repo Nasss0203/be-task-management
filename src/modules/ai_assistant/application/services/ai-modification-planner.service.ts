@@ -28,6 +28,7 @@ import { GetAiPageContextHandler } from '../queries/get-ai-page-context/get-ai-p
 import { GetAiPageContextQuery } from '../queries/get-ai-page-context/get-ai-page-context.query';
 import type { AiModificationPlan } from '../types/ai-modification-plan';
 import { AiConversationAccessService } from './ai-conversation-access.service';
+import { isSupportedModification } from './ai-modification-operation.policy';
 import { AiModificationPlanValidatorService } from './ai-modification-plan-validator.service';
 import {
   fingerprintAiPageContext,
@@ -39,6 +40,9 @@ export interface GenerateAiModificationPlanParams {
   userId: string;
   pageId: string;
   instruction: string;
+  // The user's own wording, kept for history when `instruction` is the
+  // editing clause extracted from it (Page reference removed).
+  originalInstruction?: string;
   conversationId?: string;
   shareToken?: string;
 }
@@ -86,6 +90,13 @@ export class AiModificationPlannerService {
       );
     }
 
+    if (!isSupportedModification(params.instruction)) {
+      throw new UnprocessableEntityException({
+        status: 'UNSUPPORTED_OPERATION',
+        message: 'Unsupported AI modification operation',
+      });
+    }
+
     // The context query enforces PAGE_READ for the current user/share token.
     const pageContext = await this.getAiPageContextHandler.execute(
       new GetAiPageContextQuery(
@@ -104,6 +115,9 @@ export class AiModificationPlannerService {
     }
 
     const workspaceId = pageContext.page.workspaceId;
+    const historyInstruction = params.originalInstruction?.trim()
+      ? params.originalInstruction
+      : params.instruction;
     const { conversationId, generationId } =
       await this.unitOfWork.runInTransaction(async (context) => {
         let conversation: AiConversation;
@@ -138,7 +152,7 @@ export class AiModificationPlannerService {
               workspaceId,
               scope: AiConversationScope.PAGE,
               pageId: pageContext.page.id,
-              title: params.instruction.trim().slice(0, 255),
+              title: historyInstruction.trim().slice(0, 255),
             }),
             context,
           );
@@ -164,7 +178,7 @@ export class AiModificationPlannerService {
           AiMessage.create({
             conversationId: conversation.getId(),
             role: AiMessageRole.USER,
-            content: params.instruction,
+            content: historyInstruction,
             metadata: {
               capability: AI_MODIFICATION_PLAN_CAPABILITY,
               generationId: generation.getId(),

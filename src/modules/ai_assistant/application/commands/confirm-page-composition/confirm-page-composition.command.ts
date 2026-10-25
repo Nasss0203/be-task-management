@@ -4,5 +4,6 @@ export class ConfirmPageCompositionCommand {
     public readonly generationId: string,
     public readonly teamspaceId?: string | null,
     public readonly parentPageId?: string | null,
+    public readonly shareToken?: string,
   ) {}
 }

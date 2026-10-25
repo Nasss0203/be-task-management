@@ -19,6 +19,10 @@ import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-w
 import { AI_ASSISTANT_TYPES } from '../../../ai-assistant.types';
 import { AiGenerationStatus } from '../../../domain/enums/ai-generation-status.enum';
 import type { AiGenerationRepository } from '../../../domain/repositories/ai-generation.repository';
+import type { AiConversationRepository } from '../../../domain/repositories/ai-conversation.repository';
+import { AiConversationScope } from '../../../domain/enums/ai-conversation-scope.enum';
+import { AiConversationAccessService } from '../../services/ai-conversation-access.service';
+import type { AiPageContextTransactionLocker } from '../../services/ai-page-context-transaction-lock.port';
 
 import { PAGE_COMPOSITION_CAPABILITY } from '../../constants/page-composition.constant';
 import type { AiGenerationResponseDto } from '../../dto/response/ai-generation.response.dto';
@@ -57,6 +61,15 @@ export class ConfirmPageCompositionHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly unitOfWork: UnitOfWork,
+
+    @Inject(AI_ASSISTANT_TYPES.repositories.AiConversationRepository)
+    private readonly conversationRepository: AiConversationRepository,
+
+    @Inject(AI_ASSISTANT_TYPES.services.AiConversationAccess)
+    private readonly conversationAccess: AiConversationAccessService,
+
+    @Inject(AI_ASSISTANT_TYPES.ports.PageContextTransactionLocker)
+    private readonly pageContextLock: AiPageContextTransactionLocker,
   ) {}
 
   async execute(
@@ -71,7 +84,7 @@ export class ConfirmPageCompositionHandler {
           context,
         );
 
-      if (!generation) {
+      if (!generation || generation.getUserId() !== command.userId) {
         throw new NotFoundException('AI generation not found');
       }
 
@@ -92,6 +105,48 @@ export class ConfirmPageCompositionHandler {
       if (!workspaceId) {
         throw new BadRequestException(
           'Page composition generation requires a workspace',
+        );
+      }
+
+      const conversationId = generation.getConversationId();
+      if (conversationId !== null) {
+        const conversation =
+          await this.conversationRepository.findByIdAndUserId(
+            conversationId,
+            command.userId,
+            context,
+          );
+        if (!conversation || conversation.getUserId() !== command.userId) {
+          throw new NotFoundException('AI conversation not found');
+        }
+        if (workspaceId !== conversation.getWorkspaceId()) {
+          throw new ForbiddenException(
+            'AI generation workspace does not match conversation',
+          );
+        }
+        if (conversation.getScope() === AiConversationScope.PAGE) {
+          const pageId = conversation.getPageId();
+          if (!pageId) {
+            throw new ForbiddenException(
+              'AI conversation is missing its page scope',
+            );
+          }
+          // Reuse the existing Page/permission locks before fresh authorization.
+          // Keep them until execution and APPLIED commit or roll back together.
+          await this.pageContextLock.lock(pageId, context, command.userId);
+        }
+        await this.conversationAccess.assertCanRead(
+          conversation,
+          command.userId,
+          command.shareToken,
+          context,
+        );
+      } else {
+        // Older unlinked drafts follow the same workspace-read policy as GET
+        // and Discard; destination PAGE_CREATE never substitutes for reading.
+        await this.conversationAccess.assertWorkspaceRead(
+          command.userId,
+          workspaceId,
         );
       }
 

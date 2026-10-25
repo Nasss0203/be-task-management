@@ -49,15 +49,29 @@ export class AiModificationPlanExecutor {
     return this.unitOfWork.runInTransaction(async (context) => {
       const createdBlockIds: string[] = [];
       const createdRowIds: string[] = [];
+      /*
+       * Each insert lands right after its anchor block, so a later operation
+       * naming the same anchor would end up above an earlier one. Continue
+       * after the blocks already inserted there to keep the plan order.
+       */
+      const lastInsertedAfter = new Map<string, string>();
 
       for (const operation of params.plan.operations) {
         switch (operation.type) {
           case 'INSERT_BLOCKS': {
+            const anchor = operation.afterBlockId
+              ? `${operation.parentBlockId ?? ''}:${operation.afterBlockId}`
+              : null;
             const blockIds = await this.executeInsertBlocks(
               params.userId,
               params.plan.pageId,
-              operation,
+              anchor && lastInsertedAfter.has(anchor)
+                ? { ...operation, afterBlockId: lastInsertedAfter.get(anchor)! }
+                : operation,
             );
+            if (anchor && blockIds.length > 0) {
+              lastInsertedAfter.set(anchor, blockIds[blockIds.length - 1]);
+            }
 
             createdBlockIds.push(...blockIds);
             break;

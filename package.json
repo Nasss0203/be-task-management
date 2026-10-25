@@ -11,7 +11,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
-    "dev:stripe": "stripe listen --all-snapshot --forward-to http://127.0.0.1:8080/api/v1/billing/webhooks/stripe",
+    "dev:stripe": "stripe listen --forward-to http://127.0.0.1:8080/api/v1/billing/webhooks/stripe",
     "dev": "concurrently -k -n BACKEND,STRIPE \"npm run start:dev\" \"npm run dev:stripe\"",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",

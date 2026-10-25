@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
@@ -28,6 +28,8 @@ export class AiPageContextTransactionLockService implements AiPageContextTransac
       throw new Error('AI Page context locks require an active transaction');
     }
 
+    await this.lockPageHierarchy(pageId, manager);
+
     const referencedDatabases = `
       SELECT d.id
       FROM databases d
@@ -53,7 +55,6 @@ export class AiPageContextTransactionLockService implements AiPageContextTransac
     `;
 
     const lockQueries = [
-      'SELECT id FROM pages WHERE id = $1 FOR UPDATE',
       'SELECT id FROM page_blocks WHERE page_id = $1 ORDER BY id FOR UPDATE',
       `SELECT id FROM databases WHERE id IN (${referencedDatabases}) ORDER BY id FOR UPDATE`,
       `SELECT id FROM database_properties WHERE id IN (${properties}) ORDER BY id FOR UPDATE`,
@@ -107,6 +108,55 @@ export class AiPageContextTransactionLockService implements AiPageContextTransac
       await manager.query(
         sql,
         sql.includes('$2') ? [pageId, userId] : [pageId],
+      );
+    }
+  }
+
+  private async lockPageHierarchy(
+    pageId: string,
+    manager: EntityManager,
+  ): Promise<void> {
+    // Discover first, then lock root -> leaf. Never take SHARE on the target
+    // before upgrading to UPDATE: two Confirms would deadlock on that upgrade.
+    const hierarchySql = `
+      WITH RECURSIVE ancestors AS (
+        SELECT id, parent_page_id, ARRAY[id] AS path
+        FROM pages WHERE id = $1 AND deleted_at IS NULL
+        UNION ALL
+        SELECT parent.id, parent.parent_page_id, child.path || parent.id
+        FROM pages parent JOIN ancestors child ON parent.id = child.parent_page_id
+        WHERE parent.deleted_at IS NULL AND NOT parent.id = ANY(child.path)
+      )
+      SELECT id, parent_page_id FROM ancestors ORDER BY cardinality(path) DESC
+    `;
+    type PageAncestor = { id: string; parent_page_id: string | null };
+    const ancestors = await manager.query<PageAncestor[]>(hierarchySql, [
+      pageId,
+    ]);
+    if (ancestors.length && ancestors[0].parent_page_id !== null) {
+      throw new ConflictException(
+        'Page hierarchy changed; regenerate the preview',
+      );
+    }
+    for (const ancestor of ancestors) {
+      const rows = await manager.query<{ id: string }[]>(
+        `SELECT id FROM pages WHERE id = $1 AND deleted_at IS NULL FOR ${ancestor.id === pageId ? 'UPDATE' : 'SHARE'}`,
+        [ancestor.id],
+      );
+      if (!rows.length) {
+        throw new ConflictException(
+          'Page hierarchy changed; regenerate the preview',
+        );
+      }
+    }
+    // A move could commit between discovery and acquiring an ancestor lock.
+    // Abort rather than authorizing against an unlocked replacement ancestor.
+    const lockedAncestors = await manager.query<PageAncestor[]>(hierarchySql, [
+      pageId,
+    ]);
+    if (JSON.stringify(ancestors) !== JSON.stringify(lockedAncestors)) {
+      throw new ConflictException(
+        'Page hierarchy changed; regenerate the preview',
       );
     }
   }

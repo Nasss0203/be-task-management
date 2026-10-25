@@ -6,8 +6,17 @@ import {
 
 import { PageIntentExtractionService } from '../resolution/page-intent-extraction.service';
 import { PageReferenceResolver } from '../resolution/page-reference-resolver.service';
-import type { PageInstructionPlanningResult } from '../resolution/page-instruction-planning.types';
+import type {
+  PageInstructionPlanningResult,
+  PlanningResolutionMethod,
+} from '../resolution/page-instruction-planning.types';
 import { AiModificationPlannerService } from './ai-modification-planner.service';
+import { isSupportedModification } from './ai-modification-operation.policy';
+
+type ModifyPageIntent = Extract<
+  Awaited<ReturnType<PageIntentExtractionService['extract']>>['result'],
+  { intent: 'MODIFY_PAGE' }
+>;
 
 export interface PlanPageInstructionInput {
   userId: string;
@@ -17,6 +26,12 @@ export interface PlanPageInstructionInput {
   currentPageId?: string;
   selectedPageId?: string;
   conversationId?: string;
+  /**
+   * Page of the PAGE conversation sent with an Ask (chat nhiều lượt). A draft
+   * for another Page then opens a new PAGE conversation instead of failing.
+   * Callers that omit it keep the strict same-Page requirement.
+   */
+  conversationPageId?: string;
   shareToken?: string;
 }
 
@@ -47,7 +62,13 @@ export class AiPageInstructionPlannerService {
       throw new BadRequestException('Invalid AI page instruction request');
     }
 
-    const extracted = await this.extractionService.extract(input.instruction);
+    const extracted =
+      input.currentPageId === undefined
+        ? await this.extractionService.extract(input.instruction)
+        : await this.extractionService.extract(
+            input.instruction,
+            input.currentPageId,
+          );
     const intent = extracted.result;
     if (intent.intent === 'OTHER') {
       return { status: 'NOT_A_PAGE_MODIFICATION', intent };
@@ -67,15 +88,28 @@ export class AiPageInstructionPlannerService {
       throw new BadGatewayException('AI page instruction is invalid');
     }
 
+    const unresolved =
+      intent.needsClarification || intent.referenceType === 'UNRESOLVED';
+    // The name the AI service took from this source is data (M1b, hướng A).
+    // Without any name yet, the original is checked once real names are known.
+    const extractedNames =
+      intent.referenceType === 'TITLE' && intent.pageReference
+        ? [intent.pageReference]
+        : [];
     if (
-      intent.needsClarification ||
-      intent.referenceType === 'UNRESOLVED'
+      !isSupportedModification(intent.instruction) ||
+      (!unresolved &&
+        !isSupportedModification(input.instruction, extractedNames))
     ) {
-      return {
+      return { status: 'UNSUPPORTED_OPERATION', intent, reason: 'INSERT_ONLY' };
+    }
+
+    if (unresolved) {
+      return this.planFromSentence(input, intent, {
         status: 'NEEDS_CLARIFICATION',
         reason: 'UNRESOLVED_PAGE',
         intent,
-      };
+      });
     }
 
     if (
@@ -109,7 +143,13 @@ export class AiPageInstructionPlannerService {
           });
 
     if (resolution.status === 'NOT_FOUND') {
-      return { status: 'PAGE_NOT_FOUND', intent };
+      // The extracted name may be unaccented or carry extra words.
+      return intent.referenceType === 'TITLE'
+        ? this.planFromSentence(input, intent, {
+            status: 'PAGE_NOT_FOUND',
+            intent,
+          })
+        : { status: 'PAGE_NOT_FOUND', intent };
     }
     if (resolution.status === 'AMBIGUOUS') {
       if (input.selectedPageId) {
@@ -135,11 +175,59 @@ export class AiPageInstructionPlannerService {
     );
   }
 
+  /**
+   * M1b: look for real Page names in the user's own words. A match is only
+   * ever offered for selection; the planner runs after an explicit choice.
+   */
+  private async planFromSentence(
+    input: PlanPageInstructionInput,
+    intent: ModifyPageIntent,
+    noMatch: PageInstructionPlanningResult,
+  ): Promise<PageInstructionPlanningResult> {
+    const found = await this.pageReferenceResolver.resolveFromSentence({
+      userId: input.userId,
+      workspaceId: input.workspaceId,
+      instruction: input.instruction,
+      shareToken: input.shareToken,
+    });
+    if (found.status === 'NOT_FOUND') return noMatch;
+    if (found.status === 'TOO_MANY') {
+      return {
+        status: 'NEEDS_CLARIFICATION',
+        reason: 'UNRESOLVED_PAGE',
+        intent,
+      };
+    }
+    // Deciding admission check: only names of real, readable Pages are data.
+    // Runs before any candidate is shown and before any draft is generated.
+    if (
+      !isSupportedModification(
+        input.instruction,
+        found.candidates.map((candidate) => candidate.title),
+      )
+    ) {
+      return { status: 'UNSUPPORTED_OPERATION', intent, reason: 'INSERT_ONLY' };
+    }
+    if (input.selectedPageId) {
+      const selected = found.candidates.find(
+        (candidate) => candidate.pageId === input.selectedPageId,
+      );
+      if (!selected) return { status: 'PAGE_NOT_FOUND', intent };
+      return this.createPlan(input, intent, selected, found.resolutionMethod);
+    }
+    return {
+      status: 'AMBIGUOUS_PAGE',
+      intent,
+      candidates: found.candidates,
+      resolutionMethod: found.resolutionMethod,
+    };
+  }
+
   private async createPlan(
     input: PlanPageInstructionInput,
-    intent: Extract<Awaited<ReturnType<PageIntentExtractionService['extract']>>['result'], { intent: 'MODIFY_PAGE' }>,
+    intent: ModifyPageIntent,
     page: import('../resolution/page-resolution.types').PageResolutionCandidate,
-    resolutionMethod: 'CURRENT_CONTEXT' | 'EXACT_TITLE',
+    resolutionMethod: PlanningResolutionMethod,
   ): Promise<PageInstructionPlanningResult> {
 
     // The resolver has already checked PAGE_READ and workspace boundaries.
@@ -149,7 +237,14 @@ export class AiPageInstructionPlannerService {
       requestId: input.requestId,
       pageId: page.pageId,
       instruction: intent.instruction,
-      conversationId: input.conversationId,
+      originalInstruction: input.instruction,
+      // A conversation of another Page is not reused: the planner opens a new
+      // PAGE conversation, so the old one is never written to.
+      conversationId:
+        input.conversationPageId !== undefined &&
+        input.conversationPageId !== page.pageId
+          ? undefined
+          : input.conversationId,
       shareToken: input.shareToken,
     });
 

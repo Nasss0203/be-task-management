@@ -52,6 +52,8 @@ import { ListConversationsHandler } from '../../../application/queries/list-conv
 import { ListConversationsQuery } from '../../../application/queries/list-conversations/list-conversations.query';
 
 import { AiAssistantService } from '../../../application/services/ai-assistant.service';
+import { AiAskService } from '../../../application/services/ai-ask.service';
+import { AskAiRequestDto } from '../../../application/dto/request/ask-ai.request.dto';
 import { AiModificationPlannerService } from '../../../application/services/ai-modification-planner.service';
 import { AiPageInstructionPlannerService } from '../../../application/services/ai-page-instruction-planner.service';
 
@@ -73,7 +75,24 @@ export class AiAssistantController {
     private readonly pageReferenceResolver: PageReferenceResolver,
     private readonly pageIntentExtractionService: PageIntentExtractionService,
     private readonly aiPageInstructionPlannerService: AiPageInstructionPlannerService,
+    private readonly aiAskService: AiAskService,
   ) {}
+
+  @Post('ask')
+  @WriteRateLimit()
+  @ResponseMessage('AI request processed')
+  ask(
+    @Auth() auth: IAuth,
+    @Body() dto: AskAiRequestDto,
+    @Query('shareToken') shareToken?: string,
+  ) {
+    return this.aiAskService.ask({
+      ...dto,
+      userId: auth.id,
+      requestId: dto.requestId ?? randomUUID(),
+      shareToken,
+    });
+  }
 
   /**
    * Phase 3: extract natural-language target, resolve an authorized Page,
@@ -103,7 +122,10 @@ export class AiAssistantController {
   @Post('pages/extract-intent')
   @WriteRateLimit()
   @ResponseMessage('AI page intent extracted')
-  extractPageIntent(@Auth() _auth: IAuth, @Body() dto: ExtractAiPageIntentRequestDto) {
+  extractPageIntent(
+    @Auth() _auth: IAuth,
+    @Body() dto: ExtractAiPageIntentRequestDto,
+  ) {
     return this.pageIntentExtractionService.extract(dto.instruction);
   }
 
@@ -295,9 +317,10 @@ export class AiAssistantController {
   discardGeneration(
     @Auth() auth: IAuth,
     @Param('generationId') generationId: string,
+    @Query('shareToken') shareToken?: string,
   ) {
     return this.discardGenerationHandler.execute(
-      new DiscardGenerationCommand(auth.id, generationId),
+      new DiscardGenerationCommand(auth.id, generationId, shareToken),
     );
   }
 }

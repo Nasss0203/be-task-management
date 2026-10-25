@@ -31,6 +31,9 @@ import { ListConversationGenerationsHandler } from './application/queries/list-c
 import { ListConversationsHandler } from './application/queries/list-conversations/list-conversations.handler';
 
 import { AiAssistantService } from './application/services/ai-assistant.service';
+import { AiSubmitAuthorizationLock } from './application/services/ai-submit-authorization-lock.port';
+import { AiSubmitAuthorizationLockService } from './infrastructure/persistence/typeorm/ai-submit-authorization-lock.service';
+import { AiAskService } from './application/services/ai-ask.service';
 import { AiConversationAccessService } from './application/services/ai-conversation-access.service';
 import { PageCompositionDraftValidator } from './application/services/page-composition-draft-validator.service';
 import { PageCompositionExecutor } from './application/services/page-composition-executor.service';
@@ -115,6 +118,11 @@ import { AiPageInstructionPlannerService } from './application/services/ai-page-
 
     AiAssistantService,
     {
+      provide: AiSubmitAuthorizationLock,
+      useClass: AiSubmitAuthorizationLockService,
+    },
+    AiAskService,
+    {
       provide: AI_ASSISTANT_TYPES.services.AiConversationAccess,
       useClass: AiConversationAccessService,
     },
@@ -129,6 +137,10 @@ import { AiPageInstructionPlannerService } from './application/services/ai-page-
     },
     {
       provide: AI_ASSISTANT_TYPES.ports.PageIntentExtractor,
+      useExisting: AI_ASSISTANT_TYPES.runtime.AiRuntime,
+    },
+    {
+      provide: AI_ASSISTANT_TYPES.ports.AiIntent,
       useExisting: AI_ASSISTANT_TYPES.runtime.AiRuntime,
     },
     {

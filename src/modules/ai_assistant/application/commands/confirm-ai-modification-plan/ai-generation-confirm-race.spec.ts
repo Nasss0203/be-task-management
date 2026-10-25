@@ -1,3 +1,7 @@
+import { AiConversationAccessService } from '../../services/ai-conversation-access.service';
+import type { AiConversationRepository } from '../../../domain/repositories/ai-conversation.repository';
+import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
+import { Page } from 'src/modules/content/domain/aggregates/page/page.aggregate';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
@@ -121,11 +125,39 @@ describe('AI generation Confirm concurrency', () => {
       executor as unknown as AiModificationPlanExecutor,
       new ApplyGenerationHandler(generationRepository),
       unitOfWork,
-      { lock: jest.fn().mockResolvedValue(undefined) } as unknown as AiPageContextTransactionLocker,
+      {
+        lock: jest.fn().mockResolvedValue(undefined),
+      } as unknown as AiPageContextTransactionLocker,
     );
     const discard = new DiscardGenerationHandler(
       generationRepository,
       unitOfWork,
+      {} as AiConversationRepository,
+      new AiConversationAccessService(
+        {
+          findById: jest
+            .fn()
+            .mockResolvedValue(
+              new Page(
+                'page-1',
+                'workspace-1',
+                'Page',
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                'user-1',
+                new Date(),
+                new Date(),
+              ),
+            ),
+        } as unknown as PageRepository,
+        {
+          authorize: jest.fn().mockResolvedValue(true),
+        } as unknown as AuthorizationService,
+      ),
     );
 
     return {
@@ -192,9 +224,7 @@ describe('AI generation Confirm concurrency', () => {
     await expect(first).resolves.toMatchObject({
       generation: { status: AiGenerationStatus.APPLIED },
     });
-    await expect(second).rejects.toBeInstanceOf(
-      ConflictException,
-    );
+    await expect(second).rejects.toBeInstanceOf(ConflictException);
     expect(fixture.executor.execute).toHaveBeenCalledTimes(1);
     expect(fixture.save).toHaveBeenCalledTimes(1);
     expect(fixture.generation.getStatus()).toBe(AiGenerationStatus.APPLIED);

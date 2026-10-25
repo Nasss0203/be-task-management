@@ -1,6 +1,8 @@
 import {
   BadGatewayException,
   BadRequestException,
+  ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -23,6 +25,7 @@ import { AiGenerationResponseDto } from '../dto/response/ai-generation.response.
 import type { AiRuntimePort } from '../ports/ai-runtime.port';
 import { PageCompositionDraftValidator } from './page-composition-draft-validator.service';
 import { AiConversationAccessService } from './ai-conversation-access.service';
+import { AiSubmitAuthorizationLock } from './ai-submit-authorization-lock.port';
 
 export interface SubmitAiRequestParams {
   requestId: string;
@@ -54,6 +57,7 @@ export class AiAssistantService {
     @Inject(AI_ASSISTANT_TYPES.services.AiConversationAccess)
     private readonly accessService: AiConversationAccessService,
     private readonly pageCompositionDraftValidator: PageCompositionDraftValidator,
+    private readonly authorizationLock: AiSubmitAuthorizationLock,
   ) {}
 
   async submit(
@@ -123,6 +127,7 @@ export class AiAssistantService {
       },
     );
 
+    let failureCode = 'AI_RUNTIME_ERROR';
     try {
       const result = await this.runtime.execute({
         requestId: params.requestId,
@@ -132,21 +137,80 @@ export class AiAssistantService {
         context: params.context,
       });
 
-      const outputData = this.resolveOutputData(
-        params.capability,
-        result.output,
-      );
-
+      failureCode = 'AI_COMPLETION_ERROR';
       return await this.unitOfWork.runInTransaction(async (context) => {
-        const generation = await this.generationRepository.findByIdAndUserId(
-          generationId,
-          params.userId,
-          context,
-        );
+        const generation =
+          await this.generationRepository.findByIdAndUserIdForUpdate(
+            generationId,
+            params.userId,
+            context,
+          );
 
-        if (!generation) {
+        if (!generation || generation.getUserId() !== params.userId) {
           throw new NotFoundException('AI generation not found');
         }
+
+        if (generation.getStatus() !== AiGenerationStatus.PROCESSING) {
+          throw new ConflictException('AI generation is no longer processing');
+        }
+        failureCode = 'AI_ACCESS_REVOKED';
+        const currentConversation =
+          await this.conversationRepository.findByIdAndUserId(
+            params.conversationId,
+            params.userId,
+            context,
+          );
+        if (
+          !currentConversation ||
+          currentConversation.getUserId() !== params.userId
+        ) {
+          throw new NotFoundException('AI conversation not found');
+        }
+        await this.authorizationLock.lock(
+          currentConversation,
+          context,
+          params.userId,
+        );
+        // Read again after locking: a concurrent scope update may have won first.
+        const freshConversation =
+          await this.conversationRepository.findByIdAndUserId(
+            params.conversationId,
+            params.userId,
+            context,
+          );
+        if (
+          !freshConversation ||
+          freshConversation.getUserId() !== params.userId
+        ) {
+          throw new NotFoundException('AI conversation not found');
+        }
+        if (
+          generation.getConversationId() !== params.conversationId ||
+          freshConversation.getId() !== params.conversationId ||
+          generation.getWorkspaceId() !== freshConversation.getWorkspaceId() ||
+          freshConversation.getWorkspaceId() !== workspaceId ||
+          freshConversation.getScope() !== conversation.getScope() ||
+          freshConversation.getPageId() !== conversation.getPageId() ||
+          currentConversation.getScope() !== freshConversation.getScope() ||
+          currentConversation.getPageId() !== freshConversation.getPageId() ||
+          currentConversation.getWorkspaceId() !==
+            freshConversation.getWorkspaceId()
+        ) {
+          throw new ForbiddenException(
+            'AI generation conversation scope changed',
+          );
+        }
+        await this.accessService.assertCanRead(
+          freshConversation,
+          params.userId,
+          params.shareToken,
+          context,
+        );
+        failureCode = 'AI_COMPLETION_ERROR';
+        const outputData = this.resolveOutputData(
+          params.capability,
+          result.output,
+        );
 
         generation.complete({
           outputData,
@@ -205,16 +269,22 @@ export class AiAssistantService {
     } catch (error: unknown) {
       try {
         await this.unitOfWork.runInTransaction(async (context) => {
-          const generation = await this.generationRepository.findByIdAndUserId(
-            generationId,
-            params.userId,
-            context,
-          );
+          const generation =
+            await this.generationRepository.findByIdAndUserIdForUpdate(
+              generationId,
+              params.userId,
+              context,
+            );
 
-          if (generation?.getStatus() === AiGenerationStatus.PROCESSING) {
+          if (
+            generation?.getUserId() === params.userId &&
+            generation.getStatus() === AiGenerationStatus.PROCESSING
+          ) {
             generation.fail(
-              'AI_RUNTIME_ERROR',
-              error instanceof Error ? error.message : 'AI runtime failed',
+              failureCode,
+              failureCode === 'AI_ACCESS_REVOKED'
+                ? 'AI completion access is no longer available'
+                : 'AI request failed',
             );
 
             await this.generationRepository.save(generation, context);
@@ -250,6 +320,15 @@ export class AiAssistantService {
 
     if (typeof output.text === 'string' && output.text.trim()) {
       return output.text;
+    }
+
+    // The draft itself is shown by the preview card; history keeps a summary.
+    if (output.type === 'PAGE_COMPOSITION') {
+      const page = output.page as { title?: unknown } | undefined;
+      const title = typeof page?.title === 'string' ? page.title.trim() : '';
+      return title
+        ? `Đã tạo bản nháp trang "${title}". Trang chỉ được tạo sau khi bạn xác nhận.`
+        : 'Đã tạo bản nháp trang mới. Trang chỉ được tạo sau khi bạn xác nhận.';
     }
 
     return JSON.stringify(output);

@@ -11,6 +11,8 @@ import { AuthorizationService } from 'src/modules/permission/application/service
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 
 import { AI_ASSISTANT_TYPES } from '../../../ai-assistant.types';
+import type { AiConversationRepository } from '../../../domain/repositories/ai-conversation.repository';
+import { AiConversationAccessService } from '../../services/ai-conversation-access.service';
 import { AiGenerationStatus } from '../../../domain/enums/ai-generation-status.enum';
 import type { AiGenerationRepository } from '../../../domain/repositories/ai-generation.repository';
 
@@ -32,6 +34,10 @@ export class GetGenerationHandler {
     private readonly authorizationService: AuthorizationService,
     private readonly getAiPageContextHandler: GetAiPageContextHandler,
     private readonly planValidator: AiModificationPlanValidatorService,
+    @Inject(AI_ASSISTANT_TYPES.repositories.AiConversationRepository)
+    private readonly conversationRepository: AiConversationRepository,
+    @Inject(AI_ASSISTANT_TYPES.services.AiConversationAccess)
+    private readonly conversationAccessService: AiConversationAccessService,
   ) {}
 
   async execute(query: GetGenerationQuery): Promise<AiGenerationResponseDto> {
@@ -40,8 +46,29 @@ export class GetGenerationHandler {
       query.userId,
     );
 
-    if (!generation) {
+    if (!generation || generation.getUserId() !== query.userId) {
       throw new NotFoundException('AI generation not found');
+    }
+
+    const conversationId = generation.getConversationId();
+    if (conversationId !== null) {
+      const conversation = await this.conversationRepository.findByIdAndUserId(
+        conversationId,
+        query.userId,
+      );
+      if (!conversation || conversation.getUserId() !== query.userId) {
+        throw new NotFoundException('AI conversation not found');
+      }
+      if (generation.getWorkspaceId() !== conversation.getWorkspaceId()) {
+        throw new ForbiddenException(
+          'AI generation workspace does not match conversation',
+        );
+      }
+      await this.conversationAccessService.assertCanRead(
+        conversation,
+        query.userId,
+        query.shareToken,
+      );
     }
 
     if (generation.getCapability() === AI_MODIFICATION_PLAN_CAPABILITY) {
@@ -57,7 +84,7 @@ export class GetGenerationHandler {
         );
       }
 
-      const pageId = (inputData as Record<string, unknown>).pageId;
+      const pageId = inputData.pageId;
 
       if (typeof pageId !== 'string' || pageId.trim().length === 0) {
         throw new InternalServerErrorException(
@@ -95,10 +122,7 @@ export class GetGenerationHandler {
       } catch (error) {
         if (!(error instanceof BadGatewayException)) throw error;
         try {
-          assertAiPageContextFresh(
-            (inputData as Record<string, unknown>).pageContextFingerprint,
-            context,
-          );
+          assertAiPageContextFresh(inputData.pageContextFingerprint, context);
         } catch (staleError) {
           if (staleError instanceof ConflictException) {
             // The draft was validated when persisted, but its old anchors may
@@ -113,7 +137,7 @@ export class GetGenerationHandler {
 
     const workspaceId = generation.getWorkspaceId();
 
-    if (workspaceId) {
+    if (conversationId === null && workspaceId) {
       const allowed = await this.authorizationService.authorize({
         userId: query.userId,
         permissions: [PERMISSIONS.WORKSPACE_READ],

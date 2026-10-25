@@ -10,10 +10,12 @@ export class PageIntentExtractionService {
     private readonly extractor: PageIntentExtractor,
   ) {}
 
-  extract(instruction: string) {
+  extract(instruction: string, currentPageId?: string) {
     if (typeof instruction !== 'string' || !instruction.trim() || instruction.length > 4000) {
       throw new BadRequestException('AI page instruction must be 1-4000 characters');
     }
-    return this.extractor.extract(instruction);
+    return currentPageId === undefined
+      ? this.extractor.extract(instruction)
+      : this.extractor.extract(instruction, currentPageId);
   }
 }

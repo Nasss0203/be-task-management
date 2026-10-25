@@ -1,3 +1,4 @@
+import { withPagePermissionWriteLock } from 'src/shared/infrastructure/persistence/page-permission-write-lock';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -50,12 +51,16 @@ export class TypeOrmPageShareSettingRepository implements PageShareSettingReposi
     setting: PageShareSetting,
     context?: PersistenceContext,
   ): Promise<PageShareSetting> {
-    const repo = this.resolveRepo(context);
-
-    const orm = PageShareSettingMapper.toOrm(setting);
-
-    const saved = await repo.save(orm);
-
-    return PageShareSettingMapper.toDomain(saved);
+    const manager = context ? (context as EntityManager) : this.repo.manager;
+    return withPagePermissionWriteLock(
+      manager,
+      setting.getPageId(),
+      async (transaction) => {
+        const saved = await transaction
+          .getRepository(PageShareSettingOrmEntity)
+          .save(PageShareSettingMapper.toOrm(setting));
+        return PageShareSettingMapper.toDomain(saved);
+      },
+    );
   }
 }

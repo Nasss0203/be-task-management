@@ -83,6 +83,7 @@ describe('ConfirmGenerationHandler', () => {
         generationId: 'generation-1',
         teamspaceId: 'teamspace-1',
         parentPageId: 'parent-page-1',
+        shareToken: 'share-token',
       }),
     );
 

@@ -9,11 +9,18 @@ import type { Page } from 'src/modules/content/domain/aggregates/page/page.aggre
 import { AI_ASSISTANT_TYPES } from '../../ai-assistant.types';
 import { AiConversationAccessService } from '../services/ai-conversation-access.service';
 import type { PageResolutionReader } from './page-resolution.port';
-import type {
-  PageResolutionCandidate,
-  PageResolutionResult,
-  ResolvePageReferenceInput,
+import {
+  MAX_SENTENCE_CANDIDATES,
+  type PageResolutionCandidate,
+  type PageResolutionResult,
+  type ResolvePageFromSentenceInput,
+  type ResolvePageReferenceInput,
+  type SentencePageResolutionResult,
 } from './page-resolution.types';
+import { findPageTitlesInSentence } from './page-title-sentence-matcher';
+
+// More textual matches than this are not worth authorizing one by one.
+const MAX_SENTENCE_MATCHES_TO_AUTHORIZE = 25;
 
 @Injectable()
 export class PageReferenceResolver {
@@ -71,6 +78,43 @@ export class PageReferenceResolver {
       page: this.toCandidate(page),
       resolutionMethod: 'CURRENT_CONTEXT',
       confidence: 1,
+    };
+  }
+
+  async resolveFromSentence(
+    input: ResolvePageFromSentenceInput,
+  ): Promise<SentencePageResolutionResult> {
+    if (!input.userId?.trim() || !input.workspaceId?.trim()) {
+      throw new BadRequestException('User and workspace are required');
+    }
+    const pages = await this.reader.findAccessibleInWorkspace(
+      input.userId,
+      input.workspaceId,
+    );
+    const matchedIds = findPageTitlesInSentence(
+      input.instruction,
+      pages.map((page) => ({ id: page.getId(), title: page.getTitle() })),
+    );
+    if (matchedIds.length > MAX_SENTENCE_MATCHES_TO_AUTHORIZE) {
+      return { status: 'TOO_MANY', candidates: [] };
+    }
+
+    // Authorize every candidate before revealing even its title.
+    const permitted = await Promise.all(
+      matchedIds.map((pageId) => this.getAuthorizedPage(input, pageId)),
+    );
+    const candidates = permitted
+      .filter((page): page is Page => page !== null)
+      .map((page) => this.toCandidate(page));
+
+    if (candidates.length === 0) return { status: 'NOT_FOUND', candidates: [] };
+    if (candidates.length > MAX_SENTENCE_CANDIDATES) {
+      return { status: 'TOO_MANY', candidates: [] };
+    }
+    return {
+      status: 'CANDIDATES',
+      candidates,
+      resolutionMethod: 'TITLE_IN_SENTENCE',
     };
   }
 

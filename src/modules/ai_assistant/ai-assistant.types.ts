@@ -1,5 +1,6 @@
 export const AI_ASSISTANT_TYPES = {
   ports: {
+    AiIntent: Symbol('AiIntent'),
     PageResolutionReader: Symbol('PageResolutionReader'),
     PageIntentExtractor: Symbol('PageIntentExtractor'),
     PageContextTransactionLocker: Symbol('PageContextTransactionLocker'),

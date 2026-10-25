@@ -30,3 +30,23 @@ export type PageResolutionResult =
       status: 'NOT_FOUND';
       candidates: [];
     };
+
+/** M1b: a real Page title found next to "trang"/"page" in the sentence. */
+export const MAX_SENTENCE_CANDIDATES = 5;
+
+export interface ResolvePageFromSentenceInput {
+  userId: string;
+  workspaceId: string;
+  instruction: string;
+  shareToken?: string;
+}
+
+/** Never resolves directly: every candidate needs an explicit user choice. */
+export type SentencePageResolutionResult =
+  | {
+      status: 'CANDIDATES';
+      candidates: PageResolutionCandidate[];
+      resolutionMethod: 'TITLE_IN_SENTENCE';
+    }
+  | { status: 'TOO_MANY'; candidates: [] }
+  | { status: 'NOT_FOUND'; candidates: [] };

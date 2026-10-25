@@ -70,3 +70,69 @@ describe('PageReferenceResolver Phase 1', () => {
     expect(await resolver.resolve({ ...input, currentPageId: 'page-1' })).toEqual({ status: 'NOT_FOUND', candidates: [] });
   });
 });
+
+describe('PageReferenceResolver.resolveFromSentence (M1b)', () => {
+  const input = { userId: 'user-1', workspaceId: 'workspace-1', shareToken: 'share' };
+  const subMan = page('sub-man', 'sub man');
+  const meeting = page('meeting', 'Hội họp tuần');
+  const secret = page('secret', 'Bí mật');
+  const findAccessibleInWorkspace = jest.fn();
+  const getReadablePage = jest.fn();
+  const resolver = new PageReferenceResolver(
+    { findAccessibleInWorkspace } as unknown as PageResolutionReader,
+    { getReadablePage } as unknown as AiConversationAccessService,
+  );
+  const byId = new Map([subMan, meeting, secret].map((p) => [p.getId(), p]));
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    findAccessibleInWorkspace.mockResolvedValue([subMan, meeting, secret]);
+    getReadablePage.mockImplementation(async (_user: string, id: string) => {
+      if (id === 'secret') throw new ForbiddenException();
+      return byId.get(id);
+    });
+  });
+
+  it('offers a real Page named in the sentence, never resolving it directly', async () => {
+    const result = await resolver.resolveFromSentence({
+      ...input, instruction: 'thêm checklist vào trang hoi hop tuan',
+    });
+    expect(result).toEqual({
+      status: 'CANDIDATES', resolutionMethod: 'TITLE_IN_SENTENCE',
+      candidates: [{ pageId: 'meeting', workspaceId: 'workspace-1', title: 'Hội họp tuần', parentPageId: null, teamspaceId: null }],
+    });
+    expect(findAccessibleInWorkspace).toHaveBeenCalledWith('user-1', 'workspace-1');
+    expect(getReadablePage).toHaveBeenCalledWith('user-1', 'meeting', 'share');
+  });
+
+  it('does not reveal a matched Page the user cannot read', async () => {
+    expect(await resolver.resolveFromSentence({
+      ...input, instruction: 'thêm checklist vào trang Bí mật',
+    })).toEqual({ status: 'NOT_FOUND', candidates: [] });
+  });
+
+  it('finds nothing without a Page name next to trang/page', async () => {
+    expect(await resolver.resolveFromSentence({
+      ...input, instruction: 'thêm checklist vào trang Q4',
+    })).toEqual({ status: 'NOT_FOUND', candidates: [] });
+    expect(getReadablePage).not.toHaveBeenCalled();
+  });
+
+  it('asks for a clearer name above five readable candidates', async () => {
+    const many = Array.from({ length: 6 }, (_, i) => page(`same-${i}`, 'Notes'));
+    findAccessibleInWorkspace.mockResolvedValue(many);
+    getReadablePage.mockImplementation(async (_user: string, id: string) => many.find((p) => p.getId() === id));
+    expect(await resolver.resolveFromSentence({
+      ...input, instruction: 'thêm checklist vào trang Notes',
+    })).toEqual({ status: 'TOO_MANY', candidates: [] });
+  });
+
+  it('does not authorize an unbounded number of textual matches', async () => {
+    const many = Array.from({ length: 26 }, (_, i) => page(`same-${i}`, 'Notes'));
+    findAccessibleInWorkspace.mockResolvedValue(many);
+    expect(await resolver.resolveFromSentence({
+      ...input, instruction: 'thêm checklist vào trang Notes',
+    })).toEqual({ status: 'TOO_MANY', candidates: [] });
+    expect(getReadablePage).not.toHaveBeenCalled();
+  });
+});

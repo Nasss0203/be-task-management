@@ -1,3 +1,4 @@
+import { withPagePermissionWriteLock } from 'src/shared/infrastructure/persistence/page-permission-write-lock';
 import { Injectable } from '@nestjs/common';
 
 import { DataSource, EntityManager, Repository } from 'typeorm';
@@ -36,13 +37,19 @@ export class TypeOrmPageShareRepository implements PageShareRepository {
     pageShare: PageShare,
     context?: PersistenceContext,
   ): Promise<PageShare> {
-    const repository = this.resolveRepository(context);
-
-    const orm = PageShareMapper.toOrm(pageShare);
-
-    const saved = await repository.save(orm);
-
-    return PageShareMapper.toDomain(saved);
+    const manager = context
+      ? (context as EntityManager)
+      : this.dataSource.manager;
+    return withPagePermissionWriteLock(
+      manager,
+      pageShare.getPageId(),
+      async (transaction) => {
+        const saved = await transaction
+          .getRepository(PageShareOrmEntity)
+          .save(PageShareMapper.toOrm(pageShare));
+        return PageShareMapper.toDomain(saved);
+      },
+    );
   }
 
   async findById(
@@ -92,7 +99,7 @@ export class TypeOrmPageShareRepository implements PageShareRepository {
       },
     });
 
-    return rows.map(PageShareMapper.toDomain);
+    return rows.map((row) => PageShareMapper.toDomain(row));
   }
 
   async findByUserId(
@@ -112,7 +119,7 @@ export class TypeOrmPageShareRepository implements PageShareRepository {
       },
     });
 
-    return entities.map(PageShareMapper.toDomain);
+    return entities.map((entity) => PageShareMapper.toDomain(entity));
   }
 
   async findDetailsByPageId(
@@ -182,11 +189,14 @@ export class TypeOrmPageShareRepository implements PageShareRepository {
     userId: string,
     context?: PersistenceContext,
   ): Promise<void> {
-    const repository = this.resolveRepository(context);
-
-    await repository.delete({
-      page_id: pageId,
-      user_id: userId,
+    const manager = context
+      ? (context as EntityManager)
+      : this.dataSource.manager;
+    await withPagePermissionWriteLock(manager, pageId, async (transaction) => {
+      await transaction.getRepository(PageShareOrmEntity).delete({
+        page_id: pageId,
+        user_id: userId,
+      });
     });
   }
 

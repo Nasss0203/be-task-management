@@ -60,6 +60,7 @@ export class ConfirmGenerationHandler {
             command.generationId,
             command.teamspaceId ?? null,
             command.parentPageId ?? null,
+            command.shareToken,
           ),
         );
 

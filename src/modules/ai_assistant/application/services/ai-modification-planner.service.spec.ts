@@ -16,6 +16,30 @@ import { AiModificationPlannerService } from './ai-modification-planner.service'
 import { fingerprintAiPageContext } from './ai-page-context-fingerprint';
 
 describe('AiModificationPlannerService', () => {
+  it.each([
+    'Xóa heading',
+    'Sửa heading',
+    'Rename page',
+    'Dịch toàn bộ trang',
+    'Thêm checklist rồi xóa block',
+  ])(
+    'blocks unsupported dedicated planner input before persistence/runtime: %s',
+    async (instruction) => {
+      const f = createService();
+      const execute = jest.spyOn(f.runtime, 'execute');
+      const save = jest.spyOn(f.generationRepository, 'save');
+      await expect(
+        f.service.generate({
+          userId: 'user-1',
+          pageId: 'page-1',
+          requestId: 'r',
+          instruction,
+        }),
+      ).rejects.toThrow('Unsupported AI modification operation');
+      expect(execute).not.toHaveBeenCalled();
+      expect(save).not.toHaveBeenCalled();
+    },
+  );
   it('rejects truncated context before persisting a draft or calling the model', async () => {
     const context = makeContext();
     context.completeness.textTruncated = true;
@@ -368,6 +392,27 @@ describe('AiModificationPlannerService', () => {
     expect(userMessage.getMetadata().generationId).toBe(result.generationId);
     expect(assistantMessage.getMetadata().generationId).toBe(result.generationId);
     expect(userMessage.getConversationId()).toBe(result.conversationId);
+  });
+
+  it('keeps the original wording in history while planning with the extracted instruction', async () => {
+    const f = createService();
+    const original = 'add checklist vào trang "Release Plan" nhé';
+    await f.service.generate({
+      requestId: 'original-1',
+      userId: 'user-1',
+      pageId: 'page-1',
+      instruction: 'Thêm một release note.',
+      originalInstruction: original,
+    });
+    const conversation = (f.conversationRepository.save as jest.Mock).mock.calls[0][0];
+    const userMessage = (f.messageRepository.save as jest.Mock).mock.calls[0][0];
+    const generation = (f.generationRepository.save as jest.Mock).mock.calls[0][0];
+    expect(conversation.getTitle()).toBe(original);
+    expect(userMessage.getContent()).toBe(original);
+    expect(generation.getInputData().instruction).toBe('Thêm một release note.');
+    expect(f.runtime.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ content: 'Thêm một release note.' }),
+    );
   });
 
   it('rejects a conversation belonging to another page before persisting history', async () => {

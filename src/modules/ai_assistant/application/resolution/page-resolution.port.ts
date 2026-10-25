@@ -7,4 +7,7 @@ export interface PageResolutionReader {
     workspaceId: string,
     title: string,
   ): Promise<Page[]>;
+
+  /** M1b: live Pages of the workspace whose titles may appear in a sentence. */
+  findAccessibleInWorkspace(userId: string, workspaceId: string): Promise<Page[]>;
 }

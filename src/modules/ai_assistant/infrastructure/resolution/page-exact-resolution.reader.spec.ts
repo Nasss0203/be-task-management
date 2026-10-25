@@ -23,5 +23,9 @@ describe('PageExactResolutionReader', () => {
     );
     expect(result.map((candidate) => candidate.getId())).toEqual(['one']);
     expect(findAccessibleByWorkspace).toHaveBeenCalledWith('workspace-1', 'user-1');
+
+    // M1b reads the same scoped list, without deleted or foreign Pages.
+    const all = await reader.findAccessibleInWorkspace('user-1', 'workspace-1');
+    expect(all.map((candidate) => candidate.getId())).toEqual(['one', 'four']);
   });
 });

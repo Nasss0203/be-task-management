@@ -10,7 +10,10 @@ import { SetRowValueHandler } from 'src/modules/database/application/commands/se
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 
-import type { AiModificationPlanReady } from '../types/ai-modification-plan';
+import type {
+  AiInsertBlocksOperation,
+  AiModificationPlanReady,
+} from '../types/ai-modification-plan';
 
 import { AiModificationPlanExecutor } from './ai-modification-plan-executor.service';
 
@@ -168,6 +171,52 @@ describe('AiModificationPlanExecutor', () => {
       createdBlockIds: ['block-a', 'block-b', 'block-c'],
       createdRowIds: [],
     });
+  });
+
+  it('keeps plan order when several operations insert after the same block', async () => {
+    createPageBlockHandler.execute.mockImplementation(
+      (command: CreatePageBlockCommand) =>
+        Promise.resolve({
+          id: `created-${String((command.input.content as { text: string }).text)}`,
+        }),
+    );
+    const insert = (
+      text: string,
+      afterBlockId: string | null,
+    ): AiInsertBlocksOperation => ({
+      type: 'INSERT_BLOCKS',
+      parentBlockId: null,
+      afterBlockId,
+      blocks: [{ type: PageBlockType.TODO, content: { text, checked: false } }],
+    });
+    const plan: AiModificationPlanReady = {
+      schemaVersion: 1,
+      type: 'AI_MODIFICATION_PLAN',
+      pageId: 'page-1',
+      status: 'PLAN_READY',
+      summary: 'Checklist',
+      operations: [
+        insert('1', 'tasks-heading'),
+        insert('other', 'other-block'),
+        insert('2', 'tasks-heading'),
+        insert('end', null),
+        insert('3', 'tasks-heading'),
+      ],
+    };
+
+    await executor.execute({ userId: 'user-1', plan });
+
+    const anchors = createPageBlockHandler.execute.mock.calls.map(
+      ([command]: [CreatePageBlockCommand]) => command.input.afterBlockId,
+    );
+    // "1", "2", "3" follow each other instead of ending up as 3, 2, 1.
+    expect(anchors).toEqual([
+      'tasks-heading',
+      'other-block',
+      'created-1',
+      null,
+      'created-2',
+    ]);
   });
 
   it('creates database rows and sets every row value using the transaction context', async () => {

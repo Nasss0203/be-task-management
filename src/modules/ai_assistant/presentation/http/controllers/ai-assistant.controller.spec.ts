@@ -15,6 +15,7 @@ import { ListConversationGenerationsHandler } from '../../../application/queries
 import { ListConversationsHandler } from '../../../application/queries/list-conversations/list-conversations.handler';
 
 import { AiAssistantService } from '../../../application/services/ai-assistant.service';
+import { AiAskService } from '../../../application/services/ai-ask.service';
 import { AiModificationPlannerService } from '../../../application/services/ai-modification-planner.service';
 import { AiPageInstructionPlannerService } from '../../../application/services/ai-page-instruction-planner.service';
 import { PageReferenceResolver } from '../../../application/resolution/page-reference-resolver.service';
@@ -47,6 +48,7 @@ describe('AiAssistantController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AiAssistantController],
       providers: [
+        { provide: AiAskService, useValue: { ask: jest.fn() } },
         {
           provide: CreateConversationHandler,
           useValue: {
@@ -108,8 +110,14 @@ describe('AiAssistantController', () => {
           },
         },
         { provide: PageReferenceResolver, useValue: { resolve: pageResolve } },
-        { provide: PageIntentExtractionService, useValue: { extract: extractIntent } },
-        { provide: AiPageInstructionPlannerService, useValue: { generate: planPageInstruction } },
+        {
+          provide: PageIntentExtractionService,
+          useValue: { extract: extractIntent },
+        },
+        {
+          provide: AiPageInstructionPlannerService,
+          useValue: { generate: planPageInstruction },
+        },
         {
           provide: ConfirmGenerationHandler,
           useValue: {
@@ -163,18 +171,19 @@ describe('AiAssistantController', () => {
         userId: 'actor-1',
         requestId: expect.stringMatching(
           /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
-        ),
+        ) as unknown as string,
       }),
     );
   });
 
   it('only extracts intent without invoking page resolution or planner', async () => {
     extractIntent.mockResolvedValue({ result: { intent: 'OTHER' } });
-    await controller.extractPageIntent(
-      { id: 'user-1' } as IAuth,
-      { instruction: 'Thêm heading vào page Release 2.0' },
+    await controller.extractPageIntent({ id: 'user-1' } as IAuth, {
+      instruction: 'Thêm heading vào page Release 2.0',
+    });
+    expect(extractIntent).toHaveBeenCalledWith(
+      'Thêm heading vào page Release 2.0',
     );
-    expect(extractIntent).toHaveBeenCalledWith('Thêm heading vào page Release 2.0');
     expect(pageResolve).not.toHaveBeenCalled();
     expect(modificationPlannerGenerate).not.toHaveBeenCalled();
   });
@@ -187,8 +196,11 @@ describe('AiAssistantController', () => {
       'share-token',
     );
     expect(pageResolve).toHaveBeenCalledWith({
-      userId: 'user-1', workspaceId: 'workspace-1', title: 'Release 2.0',
-      currentPageId: undefined, shareToken: 'share-token',
+      userId: 'user-1',
+      workspaceId: 'workspace-1',
+      title: 'Release 2.0',
+      currentPageId: undefined,
+      shareToken: 'share-token',
     });
   });
 
@@ -300,7 +312,7 @@ describe('AiAssistantController', () => {
       expect(modificationPlannerGenerate).toHaveBeenCalledWith({
         requestId: expect.stringMatching(
           /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
-        ),
+        ) as unknown as string,
         userId: 'user-1',
         pageId: 'page-1',
         instruction: 'Thêm task mới.',
@@ -327,4 +339,23 @@ describe('AiAssistantController', () => {
       ).rejects.toBe(error);
     });
   });
+  it.each([undefined, 'share-token-1'])(
+    'forwards authenticated Discard identity and optional token %s',
+    async (token) => {
+      discardGenerationExecute.mockResolvedValue({ status: 'DISCARDED' });
+      const result = await controller.discardGeneration(
+        { id: 'actor-1' } as IAuth,
+        'generation-1',
+        token,
+      );
+      expect(discardGenerationExecute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: 'actor-1',
+          generationId: 'generation-1',
+          shareToken: token,
+        }),
+      );
+      expect(result).toEqual({ status: 'DISCARDED' });
+    },
+  );
 });

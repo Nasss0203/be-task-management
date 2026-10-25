@@ -16,19 +16,27 @@ export class PageExactResolutionReader implements PageResolutionReader {
     workspaceId: string,
     title: string,
   ): Promise<Page[]> {
-    // Reuse Content's workspace/teamspace-scoped reader; never search all pages.
     // A later optimization can push the exact-title predicate into this query.
+    const pages = await this.findAccessibleInWorkspace(userId, workspaceId);
+    const normalizedTitle = this.normalizeTitle(title);
+
+    return pages.filter(
+      (page) => this.normalizeTitle(page.getTitle()) === normalizedTitle,
+    );
+  }
+
+  async findAccessibleInWorkspace(
+    userId: string,
+    workspaceId: string,
+  ): Promise<Page[]> {
+    // Reuse Content's workspace/teamspace-scoped reader; never search all pages.
     const pages = await this.pageRepository.findAccessibleByWorkspace(
       workspaceId,
       userId,
     );
-    const normalizedTitle = this.normalizeTitle(title);
-
     return pages.filter(
       (page) =>
-        page.getDeletedAt() === null &&
-        page.getWorkspaceId() === workspaceId &&
-        this.normalizeTitle(page.getTitle()) === normalizedTitle,
+        page.getDeletedAt() === null && page.getWorkspaceId() === workspaceId,
     );
   }
 

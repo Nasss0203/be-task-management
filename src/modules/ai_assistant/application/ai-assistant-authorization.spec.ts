@@ -62,9 +62,13 @@ describe('AI Assistant application authorization', () => {
     const handler = new ListConversationsHandler(
       repository,
       {
-        findFirstUserContentsByConversationIds: jest.fn().mockResolvedValue(
-          new Map([['conversation-1', '  Plan   the   release\nchecklist  ']]),
-        ),
+        findFirstUserContentsByConversationIds: jest
+          .fn()
+          .mockResolvedValue(
+            new Map([
+              ['conversation-1', '  Plan   the   release\nchecklist  '],
+            ]),
+          ),
       } as unknown as AiMessageRepository,
       accessService,
     );
@@ -130,6 +134,8 @@ describe('AI Assistant application authorization', () => {
       authorizationService,
       { execute: jest.fn() } as unknown as GetAiPageContextHandler,
       { validate: jest.fn() } as unknown as AiModificationPlanValidatorService,
+      {} as AiConversationRepository,
+      accessService,
     );
 
     await expect(

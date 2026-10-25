@@ -1,115 +1,137 @@
 import { randomUUID } from 'node:crypto';
-import dataSource from 'src/database/data-source';
-import type { QueryRunner } from 'typeorm';
 import { AiPageContextTransactionLockService } from './ai-page-context-transaction-lock.service';
+import {
+  AiPageLockPostgresFixture,
+  describePostgres,
+} from './ai-page-lock-postgres.fixture';
 
-/**
- * Opt-in PostgreSQL integration test against ONLY the Phase 5 disposable Page.
- * Every trial write is rolled back; the fixture's contents are never changed.
- *
- * RUN_AI_PAGE_LOCK_PG_E2E=1 npx jest ai-page-context-transaction-lock.postgres --runInBand
- */
-const describePostgres =
-  process.env.RUN_AI_PAGE_LOCK_PG_E2E === '1' ? describe : describe.skip;
-
-describePostgres('AI Page Context PostgreSQL row-lock integration', () => {
-  const pageId = '027228db-8fcb-437e-b6c1-eb276fb44ffe';
+describePostgres('AI Page context PostgreSQL row locks', () => {
+  const fixture = new AiPageLockPostgresFixture();
   const service = new AiPageContextTransactionLockService();
-  let holder: QueryRunner;
-  let writer: QueryRunner;
-  let block: { id: string; type: string; created_by: string };
+  beforeAll(async () => fixture.initialize());
+  beforeEach(async () => fixture.reset());
+  afterAll(async () => fixture.destroy());
 
-  beforeAll(async () => {
-    await dataSource.initialize();
-    holder = dataSource.createQueryRunner();
-    writer = dataSource.createQueryRunner();
-    await Promise.all([holder.connect(), writer.connect()]);
-    const blocks = (await holder.query(
-      'SELECT id, type, created_by FROM page_blocks WHERE page_id = $1 AND deleted_at IS NULL ORDER BY id LIMIT 1',
-      [pageId],
-    )) as (typeof block)[];
-    if (blocks.length !== 1) {
-      throw new Error(
-        'Missing the dedicated Phase 5 disposable Page block fixture',
-      );
-    }
-    block = blocks[0];
+  it('blocks ordinary Page/block edits and FK-backed block INSERT, then releases locks', async () => {
+    await fixture.holder.startTransaction();
+    await service.lock(fixture.pageId, fixture.holder.manager, fixture.userId);
+    await fixture.expectBlocked((writer) =>
+      writer.query('UPDATE pages SET title=title WHERE id=$1', [
+        fixture.pageId,
+      ]),
+    );
+    await fixture.expectBlocked((writer) =>
+      writer.query('UPDATE page_blocks SET title=title WHERE id=$1', [
+        fixture.blockId,
+      ]),
+    );
+    await fixture.expectBlocked((writer) =>
+      writer.query('INSERT INTO page_blocks(id,page_id) VALUES ($1,$2)', [
+        randomUUID(),
+        fixture.pageId,
+      ]),
+    );
+    await fixture.holder.rollbackTransaction();
+    await fixture.writer.startTransaction();
+    await fixture.writer.query("SET LOCAL lock_timeout = '200ms'");
+    await fixture.writer.query(
+      'UPDATE page_blocks SET title=title WHERE id=$1',
+      [fixture.blockId],
+    );
+    await fixture.writer.rollbackTransaction();
   });
 
-  afterAll(async () => {
-    if (writer?.isTransactionActive) await writer.rollbackTransaction();
-    if (holder?.isTransactionActive) await holder.rollbackTransaction();
-    if (writer) await writer.release();
-    if (holder) await holder.release();
-    if (dataSource.isInitialized) await dataSource.destroy();
-  });
-
-  async function expectWriteBlocked(sql: string, params: unknown[]) {
-    await writer.startTransaction();
+  it('waits for existing block edits before reading the fingerprint', async () => {
+    await fixture.writer.startTransaction();
+    await fixture.writer.query(
+      'UPDATE page_blocks SET title=title WHERE id=$1',
+      [fixture.blockId],
+    );
+    await fixture.holder.startTransaction();
+    const pending = service.lock(
+      fixture.pageId,
+      fixture.holder.manager,
+      fixture.userId,
+    );
     try {
-      await writer.query("SET LOCAL lock_timeout = '300ms'");
-      await expect(writer.query(sql, params)).rejects.toMatchObject({
-        code: '55P03',
-      });
+      await fixture.waitForBlockedWriter();
     } finally {
-      await writer.rollbackTransaction();
-    }
-  }
-
-  it('blocks ordinary Page update, existing block update and new block insert', async () => {
-    await holder.startTransaction();
-    try {
-      await service.lock(pageId, holder.manager, block.created_by);
-
-      await expectWriteBlocked('UPDATE pages SET title = title WHERE id = $1', [
-        pageId,
-      ]);
-      await expectWriteBlocked(
-        'UPDATE page_blocks SET title = title WHERE id = $1',
-        [block.id],
-      );
-      await expectWriteBlocked(
-        'INSERT INTO page_blocks (id, page_id, type, order_index, created_by) VALUES ($1, $2, $3, $4, $5)',
-        [randomUUID(), pageId, block.type, 10000000, block.created_by],
-      );
-    } finally {
-      await holder.rollbackTransaction();
-    }
-
-    // Confirm released its lock. A normal writer can now proceed and roll back.
-    await writer.startTransaction();
-    try {
-      await writer.query("SET LOCAL lock_timeout = '300ms'");
-      await writer.query('UPDATE page_blocks SET title = title WHERE id = $1', [
-        block.id,
-      ]);
-    } finally {
-      await writer.rollbackTransaction();
-    }
-  });
-
-  it('waits for an in-flight existing-block edit before reading the Page context', async () => {
-    await writer.startTransaction();
-    await writer.query('UPDATE page_blocks SET title = title WHERE id = $1', [
-      block.id,
-    ]);
-
-    await holder.startTransaction();
-    let lockCompleted = false;
-    const pending = service.lock(pageId, holder.manager, block.created_by).then(() => {
-      lockCompleted = true;
-    });
-
-    try {
-      // Page itself is not updated by this writer; the child row must still
-      // block context locking, not only Page metadata or block INSERT.
-      await new Promise((resolve) => setTimeout(resolve, 120));
-      expect(lockCompleted).toBe(false);
-    } finally {
-      await writer.rollbackTransaction();
+      await fixture.writer.rollbackTransaction();
       await pending;
-      await holder.rollbackTransaction();
+      await fixture.holder.rollbackTransaction();
     }
-    expect(lockCompleted).toBe(true);
+  });
+
+  it('holds hierarchy stable, including ancestors that have no permission row yet', async () => {
+    await fixture.holder.startTransaction();
+    await service.lock(fixture.pageId, fixture.holder.manager, fixture.userId);
+    await fixture.expectBlocked((writer) =>
+      writer.query('UPDATE pages SET parent_page_id=$1 WHERE id=$2', [
+        fixture.unrelatedId,
+        fixture.ancestorId,
+      ]),
+    );
+    await fixture.expectBlocked((writer) =>
+      writer.query('UPDATE pages SET deleted_at=now() WHERE id=$1', [
+        fixture.rootId,
+      ]),
+    );
+    await fixture.holder.rollbackTransaction();
+  });
+
+  it('serializes overlapping ancestor/descendant Confirms without a lock upgrade deadlock', async () => {
+    await fixture.holder.startTransaction();
+    await service.lock(fixture.pageId, fixture.holder.manager, fixture.userId);
+    await fixture.writer.startTransaction();
+    const pending = service.lock(
+      fixture.ancestorId,
+      fixture.writer.manager,
+      fixture.userId,
+    );
+    const [{ pid }] = await fixture.holder.manager.query<{ pid: number }[]>(
+      'SELECT pg_backend_pid() AS pid',
+    );
+    let blocked = false;
+    try {
+      const deadline = Date.now() + 1500;
+      while (Date.now() < deadline) {
+        const rows = await fixture.source.query<{ pid: number }[]>(
+          'SELECT pid FROM pg_stat_activity WHERE $1=ANY(pg_blocking_pids(pid))',
+          [pid],
+        );
+        if (rows.length) {
+          blocked = true;
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      expect(blocked).toBe(true);
+    } finally {
+      await fixture.holder.rollbackTransaction();
+      await pending;
+      await fixture.writer.rollbackTransaction();
+    }
+  });
+
+  it('allows sibling Confirms in parallel while sharing only ancestor locks', async () => {
+    const sibling = randomUUID();
+    await fixture.source.query(
+      `INSERT INTO pages(id,parent_page_id,workspace_id,teamspace_id,title,created_by)
+      VALUES ($1,$2,$3,$4,'Sibling fixture',$5)`,
+      [
+        sibling,
+        fixture.ancestorId,
+        fixture.workspaceId,
+        fixture.teamspaceId,
+        fixture.creatorId,
+      ],
+    );
+    await fixture.holder.startTransaction();
+    await service.lock(fixture.pageId, fixture.holder.manager, fixture.userId);
+    await fixture.writer.startTransaction();
+    await fixture.writer.query("SET LOCAL lock_timeout = '200ms'");
+    await service.lock(sibling, fixture.writer.manager, fixture.userId);
+    await fixture.writer.rollbackTransaction();
+    await fixture.holder.rollbackTransaction();
   });
 });

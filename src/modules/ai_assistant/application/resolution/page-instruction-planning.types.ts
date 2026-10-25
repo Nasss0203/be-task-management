@@ -2,8 +2,19 @@ import type { GenerateAiModificationPlanResult } from '../services/ai-modificati
 import type { PageIntentExtraction } from './page-intent.types';
 import type { PageResolutionCandidate } from './page-resolution.types';
 
+/** TITLE_IN_SENTENCE only follows an explicit user choice (M1b). */
+export type PlanningResolutionMethod =
+  | 'CURRENT_CONTEXT'
+  | 'EXACT_TITLE'
+  | 'TITLE_IN_SENTENCE';
+
 /** Non-planning results never create an AI Generation or change a Page. */
 export type PageInstructionPlanningResult =
+  | {
+      status: 'UNSUPPORTED_OPERATION';
+      intent: PageIntentExtraction;
+      reason: 'INSERT_ONLY';
+    }
   | {
       status: 'NOT_A_PAGE_MODIFICATION';
       intent: PageIntentExtraction;
@@ -18,15 +29,17 @@ export type PageInstructionPlanningResult =
       intent: PageIntentExtraction;
     }
   | {
+      // The user must pick one: duplicate exact titles, or M1b sentence matches.
       status: 'AMBIGUOUS_PAGE';
       intent: PageIntentExtraction;
       candidates: PageResolutionCandidate[];
+      resolutionMethod?: 'TITLE_IN_SENTENCE';
     }
   | {
       status: 'PLAN_GENERATED';
       intent: PageIntentExtraction;
       page: PageResolutionCandidate;
-      resolutionMethod: 'CURRENT_CONTEXT' | 'EXACT_TITLE';
+      resolutionMethod: PlanningResolutionMethod;
       plan: Extract<GenerateAiModificationPlanResult, { status: 'PLAN_READY' }>;
     }
   | {
@@ -34,6 +47,6 @@ export type PageInstructionPlanningResult =
       status: 'PLAN_NEEDS_MORE_CONTEXT';
       intent: PageIntentExtraction;
       page: PageResolutionCandidate;
-      resolutionMethod: 'CURRENT_CONTEXT' | 'EXACT_TITLE';
+      resolutionMethod: PlanningResolutionMethod;
       plan: Extract<GenerateAiModificationPlanResult, { status: 'NEED_MORE_CONTEXT' }>;
     };

@@ -19,6 +19,16 @@ import type {
 } from '../../application/ports/ai-runtime.port';
 import type { PageIntentExtractor } from '../../application/resolution/page-intent.port';
 import type { PageIntentResult } from '../../application/resolution/page-intent.types';
+import {
+  AI_INTENTS,
+  WRITING_ACTIONS,
+} from '../../application/ports/ai-intent.port';
+import type {
+  AiIntentPort,
+  AiIntentRequest,
+  AiIntentResult,
+} from '../../application/ports/ai-intent.port';
+import { hasSourceBackedCurrentPage } from '../../application/services/ai-modification-operation.policy';
 
 type WritingAction =
   | 'IMPROVE'
@@ -81,16 +91,64 @@ const WRITING_CAPABILITIES: Record<string, WritingAction> = {
 };
 
 @Injectable()
-export class FastApiAiRuntimeAdapter implements AiRuntimePort, PageIntentExtractor {
+export class FastApiAiRuntimeAdapter
+  implements AiRuntimePort, PageIntentExtractor, AiIntentPort
+{
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {}
 
-  async extract(instruction: string): Promise<PageIntentResult> {
+  async classify(request: AiIntentRequest): Promise<AiIntentResult> {
+    const raw = await this.post<unknown>('/internal/v1/intent', request);
+    const invalid = () =>
+      new BadGatewayException('AI service returned an invalid response');
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw invalid();
+    const envelope = raw as Record<string, unknown>;
+    if (
+      Object.keys(envelope).sort().join(',') !== 'model,provider,result' ||
+      typeof envelope.provider !== 'string' ||
+      !envelope.provider.trim() ||
+      typeof envelope.model !== 'string' ||
+      !envelope.model.trim() ||
+      !envelope.result ||
+      typeof envelope.result !== 'object' ||
+      Array.isArray(envelope.result)
+    )
+      throw invalid();
+    const result = envelope.result as Record<string, unknown>;
+    if (
+      Object.keys(result).sort().join(',') !==
+        'intent,language,needsClarification,writingAction' ||
+      !AI_INTENTS.some((value) => value === result.intent) ||
+      typeof result.needsClarification !== 'boolean' ||
+      (result.intent === 'UNCLEAR' && !result.needsClarification)
+    )
+      throw invalid();
+    if (result.intent === 'WRITING') {
+      if (!WRITING_ACTIONS.some((value) => value === result.writingAction))
+        throw invalid();
+      if (result.writingAction !== 'TRANSLATE' && result.language !== null)
+        throw invalid();
+      if (
+        result.language !== null &&
+        (typeof result.language !== 'string' ||
+          !result.language.trim() ||
+          result.language.length > 100)
+      )
+        throw invalid();
+    } else if (result.writingAction !== null || result.language !== null)
+      throw invalid();
+    return raw as AiIntentResult;
+  }
+
+  async extract(
+    instruction: string,
+    currentPageId?: string,
+  ): Promise<PageIntentResult> {
     const raw: unknown = await this.post<unknown>(
       '/internal/v1/page-intent',
-      { instruction },
+      { instruction, ...(currentPageId ? { currentPageId } : {}) },
     );
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
       throw new BadGatewayException('AI service returned an invalid response');
@@ -124,7 +182,7 @@ export class FastApiAiRuntimeAdapter implements AiRuntimePort, PageIntentExtract
           ) && !needsClarification;
       } else if (referenceType === 'CURRENT_PAGE') {
         valid = valid && pageReference === null && !needsClarification
-          && /(?:page này|trang này|trang hiện tại|page hiện tại|this page|current page)/iu.test(instruction);
+          && hasSourceBackedCurrentPage(instruction, currentPageId);
       } else if (referenceType === 'UNRESOLVED') {
         valid = valid && pageReference === null && needsClarification === true;
       } else {
