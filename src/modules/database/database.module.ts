@@ -24,6 +24,8 @@ import { MoveDatabaseRowHandler } from './application/commands/move-database-row
 import { SetViewSortsHandler } from './application/commands/set-view-sorts/set-view-sorts.handler';
 import { UpdatePropertyOptionHandler } from './application/commands/update-property-option/update-property-option.handler';
 import { GetDatabaseRowsHandler } from './application/queries/get-database-rows/get-database-rows.handler';
+import { GetDatabasePeopleHandler } from './application/queries/get-database-people/get-database-people.handler';
+import { TypeOrmDatabasePeopleReader } from './infrastructure/persistence/typeorm/readers/typeorm-database-people.reader';
 import { GetDatabaseViewHandler } from './application/queries/get-database-view/get-database-view.handler';
 import { GetDatabaseViewsHandler } from './application/queries/get-database-views/get-database-views.handler';
 import { GetDatabaseHandler } from './application/queries/get-database/get-database.handler';
@@ -98,6 +100,11 @@ import { DatabaseController } from './presentation/http/controllers/database.con
     SetViewGroupHandler,
     ReorderViewPropertiesHandler,
     MoveDatabaseRowHandler,
+    GetDatabasePeopleHandler,
+    {
+      provide: DATABASE_TYPES.ports.DatabasePeopleReader,
+      useClass: TypeOrmDatabasePeopleReader,
+    },
     {
       provide: DATABASE_TYPES.repositories.DatabaseRepository,
       useClass: TypeOrmDatabaseRepository,

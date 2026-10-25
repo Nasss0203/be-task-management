@@ -23,6 +23,7 @@ import { isAccessLevelAtLeast } from 'src/modules/content/domain/constants/resou
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { type UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { PageEditRequestDto } from '../../../dto/page-edit-request/page-edit-request.dto';
+import { PageEditRequestNotifier } from '../../../services/page-edit-request-notifier.service';
 
 @Injectable()
 export class ApprovePageEditRequestHandler {
@@ -37,12 +38,14 @@ export class ApprovePageEditRequestHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly unitOfWork: UnitOfWork,
+
+    private readonly notifier: PageEditRequestNotifier,
   ) {}
 
   async execute(
     command: ApprovePageEditRequestCommand,
   ): Promise<PageEditRequestDto> {
-    return this.unitOfWork.runInTransaction(async (manager) => {
+    const saved = await this.unitOfWork.runInTransaction(async (manager) => {
       /**
        * 1. Tìm request.
        */
@@ -135,7 +138,11 @@ export class ApprovePageEditRequestHandler {
         manager,
       );
 
-      return PageEditRequestDto.fromDomain(savedRequest);
+      return savedRequest;
     });
+
+    await this.notifier.notifyReviewed(saved, command.userId);
+
+    return PageEditRequestDto.fromDomain(saved);
   }
 }

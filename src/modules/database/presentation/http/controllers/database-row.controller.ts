@@ -6,12 +6,14 @@ import { CreateDatabaseRowCommand } from 'src/modules/database/application/comma
 import { CreateDatabaseRowHandler } from 'src/modules/database/application/commands/create-database-row/create-database-row.handler';
 import { GetDatabaseRowsHandler } from 'src/modules/database/application/queries/get-database-rows/get-database-rows.handler';
 import { GetDatabaseRowsQuery } from 'src/modules/database/application/queries/get-database-rows/get-database-rows.query';
+import { GetDatabasePeopleHandler } from 'src/modules/database/application/queries/get-database-people/get-database-people.handler';
 
 @Controller('databases/:databaseId/rows')
 export class DatabaseRowController {
   constructor(
     private readonly createDatabaseRowHandler: CreateDatabaseRowHandler,
     private readonly getDatabaseRowsHandler: GetDatabaseRowsHandler,
+    private readonly getDatabasePeopleHandler: GetDatabasePeopleHandler,
   ) {}
 
   @Post()
@@ -28,6 +30,14 @@ export class DatabaseRowController {
       position: row.getPosition(),
       values: row.getValues(),
     };
+  }
+
+  /** Names for Person cells, readable by anyone who can read the rows. */
+  @Get('people')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
+  getPeople(@Param('databaseId') databaseId: string) {
+    return this.getDatabasePeopleHandler.execute(databaseId);
   }
 
   @Get()

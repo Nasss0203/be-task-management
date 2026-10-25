@@ -34,6 +34,10 @@ export const NotificationType = {
   PAGE_ACCESS_APPROVED: 'page.access.approved',
   PAGE_ACCESS_REJECTED: 'page.access.rejected',
 
+  PAGE_EDIT_REQUESTED: 'page.edit.requested',
+  PAGE_EDIT_APPROVED: 'page.edit.approved',
+  PAGE_EDIT_REJECTED: 'page.edit.rejected',
+
   COMMENT_MENTIONED: 'comment.mentioned',
   COMMENT_REPLIED: 'comment.replied',
 } as const;

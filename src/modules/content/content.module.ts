@@ -38,6 +38,7 @@ import { PageBlockOrderingService } from './application/services/page-block-orde
 import { PagePublicationTreeService } from './application/services/page-publication-tree.service';
 import { PublicSubdomainAllocatorService } from './application/services/public-subdomain-allocator.service';
 import { PublicationHierarchySynchronizerService } from './application/services/publication-hierarchy-synchronizer.service';
+import { PageEditRequestNotifier } from './application/services/page-edit-request-notifier.service';
 import { PublicationAvailabilityService } from './application/services/publication-availability.service';
 import { ListPagePublicationsHandler } from './application/queries/page-publication/list-page-publications/list-page-publications.handler';
 
@@ -427,6 +428,7 @@ const applicationServices = [
   PublicationHierarchySynchronizerService,
   PageBlockOrderingService,
   PageShareLinkTokenService,
+  PageEditRequestNotifier,
 ];
 
 const ports = [

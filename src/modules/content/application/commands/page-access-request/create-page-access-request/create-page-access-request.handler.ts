@@ -31,6 +31,9 @@ import { PageAccessRequest } from '../../../../domain/entities/page-access-reque
 import type { PageAccessRequestRepository } from '../../../../domain/repositories/page-access-request.repository';
 import type { PageShareLinkRepository } from '../../../../domain/repositories/page-share-link.repository';
 import type { PageRepository } from '../../../../domain/repositories/page.repository';
+import type { PagePublicationRepository } from '../../../../domain/repositories/page-publication.repository';
+import type { PublishedSiteRepository } from '../../../../domain/repositories/published-site.repository';
+import { PublicationAvailabilityService } from '../../../services/publication-availability.service';
 
 import { CreatePageAccessRequestCommand } from './create-page-access-request.command';
 
@@ -81,17 +84,36 @@ export class CreatePageAccessRequestHandler {
     private readonly authorizationService: AuthorizationService,
 
     private readonly pageShareLinkTokenService: PageShareLinkTokenService,
+
+    @Inject(CONTENT_TYPES.repositories.PublishedSiteRepository)
+    private readonly sites: PublishedSiteRepository,
+
+    @Inject(CONTENT_TYPES.repositories.PagePublicationRepository)
+    private readonly publications: PagePublicationRepository,
+
+    private readonly availability: PublicationAvailabilityService,
   ) {}
 
   async execute(
     command: CreatePageAccessRequestCommand,
   ): Promise<CreatePageAccessRequestResult> {
     /**
-     * 1. Verify Share Link token.
+     * 1. Verify nguồn của request:
+     *
+     * - Share Link token (xin quyền xem), hoặc
+     * - Published site bật Allow updates (xin quyền sửa).
      */
-    const verified = this.pageShareLinkTokenService.verify(command.token);
+    const fromSite = Boolean(command.site);
 
-    if (!verified) {
+    if (command.site) {
+      await this.assertEditableOnSite(command.pageId, command.site);
+    }
+
+    const verified = command.token
+      ? this.pageShareLinkTokenService.verify(command.token)
+      : null;
+
+    if (!fromSite && !verified) {
       throw new ForbiddenException('Invalid share link');
     }
 
@@ -114,58 +136,61 @@ export class CreatePageAccessRequestHandler {
           throw new NotFoundException('Page not found');
         }
 
-        /**
-         * 3. Kiểm tra PageShareLink.
-         */
-        const shareLink = await this.pageShareLinkRepository.findById(
-          verified.linkId,
-          manager,
-        );
-
-        if (!shareLink) {
-          throw new NotFoundException('Share link not found');
-        }
-
-        if (shareLink.getRevokedAt()) {
-          throw new GoneException('Share link has been revoked');
-        }
-
-        const expiresAt = shareLink.getExpiresAt();
-
-        if (expiresAt && expiresAt.getTime() <= Date.now()) {
-          throw new GoneException('Share link has expired');
-        }
-
-        /**
-         * Token của Page A không được dùng
-         * để Request Access Page B.
-         */
-        if (shareLink.getPageId() !== command.pageId) {
-          throw new ForbiddenException(
-            'Share link does not belong to this page',
+        if (verified) {
+          /**
+           * 3. Kiểm tra PageShareLink.
+           */
+          const shareLink = await this.pageShareLinkRepository.findById(
+            verified.linkId,
+            manager,
           );
-        }
 
-        /**
-         * 4. Request Access chỉ dùng khi:
-         *
-         * Only people invited
-         * linkAccessLevel = null
-         */
-        const setting = await this.pageGeneralAccessReader.findByPageId(
-          command.pageId,
-        );
+          if (!shareLink) {
+            throw new NotFoundException('Share link not found');
+          }
 
-        const linkAccessLevel = setting?.linkAccessLevel ?? null;
+          if (shareLink.getRevokedAt()) {
+            throw new GoneException('Share link has been revoked');
+          }
 
-        if (linkAccessLevel !== null) {
-          throw new ConflictException(
-            'Access request is not required while link access is enabled',
+          const expiresAt = shareLink.getExpiresAt();
+
+          if (expiresAt && expiresAt.getTime() <= Date.now()) {
+            throw new GoneException('Share link has expired');
+          }
+
+          /**
+           * Token của Page A không được dùng
+           * để Request Access Page B.
+           */
+          if (shareLink.getPageId() !== command.pageId) {
+            throw new ForbiddenException(
+              'Share link does not belong to this page',
+            );
+          }
+
+          /**
+           * 4. Request Access chỉ dùng khi:
+           *
+           * Only people invited
+           * linkAccessLevel = null
+           */
+          const setting = await this.pageGeneralAccessReader.findByPageId(
+            command.pageId,
           );
+
+          const linkAccessLevel = setting?.linkAccessLevel ?? null;
+
+          if (linkAccessLevel !== null) {
+            throw new ConflictException(
+              'Access request is not required while link access is enabled',
+            );
+          }
         }
 
         /**
-         * 5. Nếu user đã có quyền đọc Page
+         * 5. Nếu user đã có quyền cần xin
+         * (xem với Share Link, sửa với published site)
          * thì không cần Request Access.
          *
          * Không truyền shareToken.
@@ -173,7 +198,9 @@ export class CreatePageAccessRequestHandler {
         const alreadyHasAccess = await this.authorizationService.authorize({
           userId: command.userId,
 
-          permissions: [PERMISSIONS.PAGE_READ],
+          permissions: [
+            fromSite ? PERMISSIONS.PAGE_UPDATE : PERMISSIONS.PAGE_READ,
+          ],
 
           target: {
             type: 'page',
@@ -247,6 +274,39 @@ export class CreatePageAccessRequestHandler {
       status: result.status,
       createdAt: result.createdAt,
     };
+  }
+
+  /**
+   * Page phải đang được publish trên site
+   * bật Allow updates, đúng tại path đó.
+   */
+  private async assertEditableOnSite(
+    pageId: string,
+    site: { subdomain: string; path: string },
+  ): Promise<void> {
+    const publishedSite = await this.sites.findActiveBySubdomain(
+      site.subdomain,
+    );
+
+    if (!publishedSite) {
+      throw new NotFoundException('Published site not found');
+    }
+
+    if (!publishedSite.getAllowUpdates()) {
+      throw new ForbiddenException('This site does not allow updates');
+    }
+
+    const publication = await this.publications.findActiveBySiteAndPath(
+      publishedSite.getId(),
+      site.path,
+    );
+    const resolved = publication
+      ? await this.availability.resolve(publishedSite, publication)
+      : null;
+
+    if (resolved?.page.getId() !== pageId) {
+      throw new NotFoundException('Published page not found');
+    }
   }
 
   /**

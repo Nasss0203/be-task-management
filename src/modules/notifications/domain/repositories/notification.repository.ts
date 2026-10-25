@@ -52,6 +52,12 @@ export type UpdatePageAccessRequestNotificationStatusRepositoryInput = {
   accessLevel?: string;
 };
 
+export type UpdatePageEditRequestNotificationStatusRepositoryInput = {
+  editRequestId: string;
+  status: string;
+  reviewerId: string;
+};
+
 export interface NotificationRepository {
   saveNotification(
     input: SaveNotificationInput,
@@ -79,6 +85,11 @@ export interface NotificationRepository {
 
   updatePageAccessRequestNotificationStatus(
     input: UpdatePageAccessRequestNotificationStatusRepositoryInput,
+    context?: PersistenceContext,
+  ): Promise<number>;
+
+  updatePageEditRequestNotificationStatus(
+    input: UpdatePageEditRequestNotificationStatusRepositoryInput,
     context?: PersistenceContext,
   ): Promise<number>;
 

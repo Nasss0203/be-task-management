@@ -13,6 +13,7 @@ import {
   SaveNotificationInput,
   UpdateInviteNotificationStatusRepositoryInput,
   UpdatePageAccessRequestNotificationStatusRepositoryInput,
+  UpdatePageEditRequestNotificationStatusRepositoryInput,
 } from '../../../../domain/repositories/notification.repository';
 import { Notification } from '../entities/notification.orm-entity';
 import { NotificationMapper } from '../mappers/notification.mapper';
@@ -250,6 +251,29 @@ export class TypeOrmNotificationRepository implements NotificationRepository {
     const savedNotifications = await repo.save(updatedNotifications);
 
     return savedNotifications.length;
+  }
+
+  async updatePageEditRequestNotificationStatus(
+    input: UpdatePageEditRequestNotificationStatusRepositoryInput,
+    context?: PersistenceContext,
+  ): Promise<number> {
+    const result = await this.getRepo(context)
+      .createQueryBuilder()
+      .update()
+      .set({
+        metadata: () =>
+          `COALESCE(metadata, '{}'::jsonb) || jsonb_build_object('status', CAST(:status AS text), 'reviewerId', CAST(:reviewerId AS text))`,
+      })
+      .where('type = :type', { type: NotificationType.PAGE_EDIT_REQUESTED })
+      .andWhere("metadata ->> 'editRequestId' = :editRequestId")
+      .setParameters({
+        status: input.status,
+        reviewerId: input.reviewerId,
+        editRequestId: input.editRequestId,
+      })
+      .execute();
+
+    return result.affected ?? 0;
   }
 
   async markAllAsRead(
