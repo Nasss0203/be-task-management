@@ -32,7 +32,7 @@ export class PublishedSitesController {
   @Post(':siteId/publications')
   @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'resource', type: 'page', key: 'page_id' })
-  @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
+  @RequirePermissions(PERMISSIONS.PAGE_PUBLISH)
   publish(
     @Param('siteId', ParseUUIDPipe) siteId: string,
     @Body() dto: PublishPageToSiteDto,
