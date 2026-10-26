@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
 import {
   TeamspacePermissionReader,
@@ -8,8 +8,8 @@ import {
   TeamspacePermissionSubject,
 } from 'src/modules/permission/application/ports/teamspace-permission-reader.port';
 
-import { TeamspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
-import { TeamspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
+import { TeamspaceMemberOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
+import { TeamspaceOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
 import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 
 @Injectable()
@@ -25,17 +25,12 @@ export class TypeOrmTeamspacePermissionReader implements TeamspacePermissionRead
   async findTeamspace(
     teamspaceId: string,
   ): Promise<TeamspacePermissionResource | null> {
-    const teamspace = await this.teamspaceRepository.findOne({
-      where: {
-        id: teamspaceId,
-        deletedAt: IsNull(),
-      },
-      select: {
-        id: true,
-        workspaceId: true,
-        visibility: true,
-      },
-    });
+    const teamspace = await this.teamspaceRepository.createQueryBuilder('teamspace')
+      .innerJoin('teamspace.workspace', 'workspace', 'workspace.deleted_at IS NULL')
+      .select(['teamspace.id', 'teamspace.workspaceId', 'teamspace.visibility'])
+      .where('teamspace.id = :teamspaceId', { teamspaceId })
+      .andWhere('teamspace.deleted_at IS NULL')
+      .getOne();
 
     if (!teamspace) {
       return null;

@@ -83,7 +83,7 @@ export class PublishPageToSiteHandler {
           if (
             !(await this.authorization.authorize({
               userId: command.userId,
-              permissions: [PERMISSIONS.PAGE_UPDATE],
+              permissions: [PERMISSIONS.PAGE_PUBLISH],
               target: { type: 'page', id: pageId },
             }))
           ) {

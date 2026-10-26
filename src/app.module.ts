@@ -27,7 +27,9 @@ import { PermissionModule } from './modules/permission/permission.module';
 import { StripeWebhookModule } from './modules/stripe-webhook/stripe-webhook.module';
 import { TemplateModule } from './modules/template/template.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
+import { TeamspaceModule } from './modules/teamspace/teamspace.module';
 import { QueueModule } from './shared/infrastructure/queue/queue.module';
+import { OutboxModule } from './shared/infrastructure/outbox/outbox.module';
 
 @Module({
   imports: [
@@ -56,6 +58,7 @@ import { QueueModule } from './shared/infrastructure/queue/queue.module';
     DatabaseModule,
     IdentityModule,
     WorkspaceModule,
+    TeamspaceModule,
     PermissionModule,
     ContentModule,
     TemplateModule,
@@ -71,6 +74,7 @@ import { QueueModule } from './shared/infrastructure/queue/queue.module';
     AdminModule,
 
     QueueModule,
+    OutboxModule,
     StripeWebhookModule,
   ],
   controllers: [AppController],

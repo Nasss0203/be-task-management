@@ -84,7 +84,7 @@ export class UpdatePagePublicationSettingsHandler {
           command.allowUpdates !== undefined &&
           !(await this.authorization.authorize({
             userId: command.actorId,
-            permissions: [PERMISSIONS.PAGE_UPDATE],
+            permissions: [PERMISSIONS.PAGE_PUBLISH],
             target: { type: 'page', id: site.getRootPageId() },
           }))
         )

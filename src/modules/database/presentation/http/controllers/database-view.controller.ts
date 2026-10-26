@@ -30,6 +30,18 @@ import { CreateDatabaseViewRequest } from '../requests/create-database-view.requ
 import { RenameDatabaseViewRequest } from '../requests/rename-database-view.request';
 import { SetViewPropertyVisibilityRequest } from '../requests/set-view-property-visibility.request';
 import { SetViewPropertyWidthRequest } from '../requests/set-view-property-width.request';
+import { SetViewSortsCommand } from 'src/modules/database/application/commands/set-view-sorts/set-view-sorts.command';
+import { SetViewSortsHandler } from 'src/modules/database/application/commands/set-view-sorts/set-view-sorts.handler';
+import { SetViewSortsRequest } from '../requests/set-view-sorts.request';
+import { SetViewFiltersCommand } from 'src/modules/database/application/commands/set-view-filters/set-view-filters.command';
+import { SetViewFiltersHandler } from 'src/modules/database/application/commands/set-view-filters/set-view-filters.handler';
+import { SetViewFiltersRequest } from '../requests/set-view-filters.request';
+import { SetViewGroupCommand } from 'src/modules/database/application/commands/set-view-group/set-view-group.command';
+import { SetViewGroupHandler } from 'src/modules/database/application/commands/set-view-group/set-view-group.handler';
+import { SetViewGroupRequest } from '../requests/set-view-group.request';
+import { ReorderViewPropertiesCommand } from 'src/modules/database/application/commands/reorder-view-properties/reorder-view-properties.command';
+import { ReorderViewPropertiesHandler } from 'src/modules/database/application/commands/reorder-view-properties/reorder-view-properties.handler';
+import { ReorderViewPropertiesRequest } from '../requests/reorder-view-properties.request';
 
 @Controller('databases/:databaseId/views')
 export class DatabaseViewController {
@@ -41,9 +53,15 @@ export class DatabaseViewController {
     private readonly getDatabaseViewHandler: GetDatabaseViewHandler,
     private readonly setViewPropertyVisibilityHandler: SetViewPropertyVisibilityHandler,
     private readonly setViewPropertyWidthHandler: SetViewPropertyWidthHandler,
-  ) { }
+    private readonly setViewSortsHandler: SetViewSortsHandler,
+    private readonly setViewFiltersHandler: SetViewFiltersHandler,
+    private readonly setViewGroupHandler: SetViewGroupHandler,
+    private readonly reorderViewPropertiesHandler: ReorderViewPropertiesHandler,
+  ) {}
 
   @Post()
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
   async createView(
     @Param('databaseId') databaseId: string,
     @Body() request: CreateDatabaseViewRequest,
@@ -54,6 +72,8 @@ export class DatabaseViewController {
   }
 
   @Get()
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
   async getViews(@Param('databaseId') databaseId: string) {
     return this.getDatabaseViewsHandler.execute(
       new GetDatabaseViewsQuery(databaseId),
@@ -61,6 +81,8 @@ export class DatabaseViewController {
   }
 
   @Get(':viewId')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
   async getView(
     @Param('databaseId') databaseId: string,
     @Param('viewId') viewId: string,
@@ -71,6 +93,8 @@ export class DatabaseViewController {
   }
 
   @Patch(':viewId')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   async renameView(
     @Param('databaseId') databaseId: string,
     @Param('viewId') viewId: string,
@@ -82,6 +106,8 @@ export class DatabaseViewController {
   }
 
   @Patch(':viewId/properties/:propertyId/visibility')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   async setPropertyVisibility(
     @Param('databaseId') databaseId: string,
     @Param('viewId') viewId: string,
@@ -99,6 +125,9 @@ export class DatabaseViewController {
   }
 
   @Patch(':viewId/properties/:propertyId/width')
+  // Added after the database authorization fix; same rule as the visibility toggle.
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   async setPropertyWidth(
     @Param('databaseId') databaseId: string,
     @Param('viewId') viewId: string,
@@ -115,7 +144,61 @@ export class DatabaseViewController {
     );
   }
 
+  @Patch(':viewId/sorts')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+  async setSorts(
+    @Param('databaseId') databaseId: string,
+    @Param('viewId') viewId: string,
+    @Body() request: SetViewSortsRequest,
+  ) {
+    return this.setViewSortsHandler.execute(
+      new SetViewSortsCommand(databaseId, viewId, request.sorts),
+    );
+  }
+
+  @Patch(':viewId/filters')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+  async setFilters(
+    @Param('databaseId') databaseId: string,
+    @Param('viewId') viewId: string,
+    @Body() request: SetViewFiltersRequest,
+  ) {
+    return this.setViewFiltersHandler.execute(
+      new SetViewFiltersCommand(databaseId, viewId, request.filters),
+    );
+  }
+
+  @Patch(':viewId/properties/order')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+  async reorderProperties(
+    @Param('databaseId') databaseId: string,
+    @Param('viewId') viewId: string,
+    @Body() request: ReorderViewPropertiesRequest,
+  ) {
+    return this.reorderViewPropertiesHandler.execute(
+      new ReorderViewPropertiesCommand(databaseId, viewId, request.propertyIds),
+    );
+  }
+
+  @Patch(':viewId/group')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+  async setGroup(
+    @Param('databaseId') databaseId: string,
+    @Param('viewId') viewId: string,
+    @Body() request: SetViewGroupRequest,
+  ) {
+    return this.setViewGroupHandler.execute(
+      new SetViewGroupCommand(databaseId, viewId, request.propertyId ?? null),
+    );
+  }
+
   @Delete(':viewId')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async deleteView(
     @Param('databaseId') databaseId: string,
     @Param('viewId') viewId: string,

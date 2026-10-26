@@ -36,6 +36,7 @@ import { WorkspaceOrmEntity } from './infrastructure/persistence/typeorm/entitie
 import { TypeOrmWorkspaceInviteRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-workspace-invite.repository';
 import { TypeOrmWorkspaceMemberRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-workspace-member.repository';
 import { TypeOrmWorkspaceRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-workspace.repository';
+import { TypeOrmTeamspaceOwnershipGuard } from './infrastructure/persistence/typeorm/adapters/typeorm-teamspace-ownership.guard';
 import { WorkspaceInviteController } from './presentation/http/controllers/workspace-invite.controller';
 import { WorkspaceMemberController } from './presentation/http/controllers/workspace-member.controller';
 import { WorkspacesController } from './presentation/http/controllers/workspace.controller';
@@ -43,18 +44,9 @@ import { WORKSPACE_TYPES } from './workspace.types';
 
 import { DatabaseModule } from 'src/database/database.module';
 import { PermissionModule } from '../permission/permission.module';
-import { AddTeamspaceMemberHandler } from './application/commands/teamspace/add-teamspace-member/add-teamspace-member.handler';
-import { CreateTeamspaceHandler } from './application/commands/teamspace/create-teamspace/create-teamspace.handler';
 import { SelectWorkspaceHandler } from './application/commands/workspace/select-workspace/select-workspace.handler';
-import { GetTeamspaceMembersHandler } from './application/queries/teamspace/get-teamspace-members/get-teamspace-members.handler';
-import { GetTeamspacesHandler } from './application/queries/teamspace/get-teamspaces/get-teamspaces.handler';
 import { GetPendingWorkspaceInvitesHandler } from './application/queries/workspace-invite/get-pending-workspace-invites/get-pending-workspace-invites.handler';
 import { WorkspaceSoftDeleteService } from './application/services/workspace-soft-delete.service';
-import { TeamspaceMemberOrmEntity } from './infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
-import { TeamspaceOrmEntity } from './infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
-import { TypeOrmTeamspaceMemberRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-teamspace-member.repository';
-import { TypeOrmTeamspaceRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-teamspace.repository';
-import { TeamspaceController } from './presentation/http/controllers/teamspace.controller';
 
 @Module({
   imports: [
@@ -62,8 +54,6 @@ import { TeamspaceController } from './presentation/http/controllers/teamspace.c
       WorkspaceOrmEntity,
       WorkspaceMemberOrmEntity,
       WorkspaceInviteOrmEntity,
-      TeamspaceOrmEntity,
-      TeamspaceMemberOrmEntity,
     ]),
     forwardRef(() => ContentModule),
     forwardRef(() => ActivityModule),
@@ -77,41 +67,125 @@ import { TeamspaceController } from './presentation/http/controllers/teamspace.c
     WorkspacesController,
     WorkspaceMemberController,
     WorkspaceInviteController,
-    TeamspaceController,
   ],
   providers: [
-    CreateDefaultWorkspaceHandler,
-    CreateWorkspaceHandler,
-    UpdateWorkspaceHandler,
-    UpdateWorkspaceLayoutModeHandler,
-    SelectWorkspaceHandler,
-    SoftDeleteWorkspaceHandler,
-    RestoreWorkspaceHandler,
-    RemoveWorkspaceFromTrashHandler,
-    ListWorkspacesHandler,
-    ListWorkspaceStartersHandler,
-    GetWorkspaceHandler,
-    GetWorkspaceAccessHandler,
-    GetWorkspaceOverviewHandler,
-    ListDeletedWorkspacesHandler,
-    InviteWorkspaceMemberHandler,
-    AcceptWorkspaceInviteHandler,
-    DeclineWorkspaceInviteHandler,
-    CreateWorkspaceInviteLinkHandler,
-    RevokeWorkspaceInviteHandler,
-    ResendWorkspaceInviteHandler,
-    SearchInviteUsersHandler,
-    AddWorkspaceMemberHandler,
-    UpdateWorkspaceMemberRoleHandler,
-    DeleteWorkspaceMemberHandler,
     WorkspaceSoftDeleteService,
-    ListWorkspaceMembersHandler,
-    ListWorkspacePeopleHandler,
-    CreateTeamspaceHandler,
-    GetTeamspacesHandler,
-    AddTeamspaceMemberHandler,
-    GetTeamspaceMembersHandler,
-    GetPendingWorkspaceInvitesHandler,
+    {
+      provide: WORKSPACE_TYPES.applications.CreateDefaultWorkspaceHandler,
+      useClass: CreateDefaultWorkspaceHandler,
+    },
+    {
+      provide: CreateDefaultWorkspaceHandler,
+      useExisting: WORKSPACE_TYPES.applications.CreateDefaultWorkspaceHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.CreateWorkspaceHandler,
+      useClass: CreateWorkspaceHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.ListWorkspacesHandler,
+      useClass: ListWorkspacesHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.ListWorkspaceStartersHandler,
+      useClass: ListWorkspaceStartersHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.GetWorkspaceHandler,
+      useClass: GetWorkspaceHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.GetWorkspaceAccessHandler,
+      useClass: GetWorkspaceAccessHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.ListDeletedWorkspacesHandler,
+      useClass: ListDeletedWorkspacesHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.GetWorkspaceOverviewHandler,
+      useClass: GetWorkspaceOverviewHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.UpdateWorkspaceHandler,
+      useClass: UpdateWorkspaceHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.UpdateWorkspaceLayoutModeHandler,
+      useClass: UpdateWorkspaceLayoutModeHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.SoftDeleteWorkspaceHandler,
+      useClass: SoftDeleteWorkspaceHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.RestoreWorkspaceHandler,
+      useClass: RestoreWorkspaceHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.RemoveWorkspaceFromTrashHandler,
+      useClass: RemoveWorkspaceFromTrashHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.SelectWorkspaceHandler,
+      useClass: SelectWorkspaceHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.InviteWorkspaceMemberHandler,
+      useClass: InviteWorkspaceMemberHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.AcceptWorkspaceInviteHandler,
+      useClass: AcceptWorkspaceInviteHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.DeclineWorkspaceInviteHandler,
+      useClass: DeclineWorkspaceInviteHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.CreateWorkspaceInviteLinkHandler,
+      useClass: CreateWorkspaceInviteLinkHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.SearchInviteUsersHandler,
+      useClass: SearchInviteUsersHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.RevokeWorkspaceInviteHandler,
+      useClass: RevokeWorkspaceInviteHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.ResendWorkspaceInviteHandler,
+      useClass: ResendWorkspaceInviteHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.GetPendingWorkspaceInvitesHandler,
+      useClass: GetPendingWorkspaceInvitesHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.AddWorkspaceMemberHandler,
+      useClass: AddWorkspaceMemberHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.UpdateWorkspaceMemberRoleHandler,
+      useClass: UpdateWorkspaceMemberRoleHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.DeleteWorkspaceMemberHandler,
+      useClass: DeleteWorkspaceMemberHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.ListWorkspaceMembersHandler,
+      useClass: ListWorkspaceMembersHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.applications.ListWorkspacePeopleHandler,
+      useClass: ListWorkspacePeopleHandler,
+    },
+    {
+      provide: WORKSPACE_TYPES.ports.TeamspaceOwnershipGuard,
+      useClass: TypeOrmTeamspaceOwnershipGuard,
+    },
     {
       provide: WORKSPACE_TYPES.repositories.WorkspaceRepository,
       useClass: TypeOrmWorkspaceRepository,
@@ -123,14 +197,6 @@ import { TeamspaceController } from './presentation/http/controllers/teamspace.c
     {
       provide: WORKSPACE_TYPES.repositories.WorkspaceInviteRepository,
       useClass: TypeOrmWorkspaceInviteRepository,
-    },
-    {
-      provide: WORKSPACE_TYPES.repositories.TeamspaceRepository,
-      useClass: TypeOrmTeamspaceRepository,
-    },
-    {
-      provide: WORKSPACE_TYPES.repositories.TeamspaceMemberRepository,
-      useClass: TypeOrmTeamspaceMemberRepository,
     },
   ],
   exports: [

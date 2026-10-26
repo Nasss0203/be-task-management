@@ -17,6 +17,7 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
 import { type UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 
 import { PageEditRequestDto } from '../../../dto/page-edit-request/page-edit-request.dto';
+import { PageEditRequestNotifier } from '../../../services/page-edit-request-notifier.service';
 import { RejectPageEditRequestCommand } from './reject-page-edit-request.command';
 
 @Injectable()
@@ -29,12 +30,14 @@ export class RejectPageEditRequestHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly unitOfWork: UnitOfWork,
+
+    private readonly notifier: PageEditRequestNotifier,
   ) {}
 
   async execute(
     command: RejectPageEditRequestCommand,
   ): Promise<PageEditRequestDto> {
-    return this.unitOfWork.runInTransaction(async (manager) => {
+    const saved = await this.unitOfWork.runInTransaction(async (manager) => {
       /**
        * 1. Tìm edit request.
        */
@@ -92,7 +95,11 @@ export class RejectPageEditRequestHandler {
         manager,
       );
 
-      return PageEditRequestDto.fromDomain(savedRequest);
+      return savedRequest;
     });
+
+    await this.notifier.notifyReviewed(saved, command.userId);
+
+    return PageEditRequestDto.fromDomain(saved);
   }
 }

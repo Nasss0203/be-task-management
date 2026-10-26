@@ -30,6 +30,8 @@ async function bootstrap() {
   const reflector = app.get(Reflector);
   const httpAdapterHost = app.get(HttpAdapterHost);
 
+  app.enableShutdownHooks();
+
   app.set('trust proxy', 1);
 
   app.useGlobalPipes(

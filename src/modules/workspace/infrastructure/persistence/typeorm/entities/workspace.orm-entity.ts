@@ -9,7 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { WorkspaceLayoutMode } from '../../../../domain/enums/workspace-layout-mode.enum';
-import { TeamspaceOrmEntity } from './teamspace.orm-entity';
+import { TeamspaceOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
 import { WorkspaceMemberOrmEntity } from './workspace-member.orm-entity';
 
 @Entity('workspaces')
@@ -23,6 +23,9 @@ export class WorkspaceOrmEntity {
 
   @Column({ type: 'varchar', length: 255, unique: true })
   slug: string;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  icon: string | null;
 
   @Column({
     type: 'enum',

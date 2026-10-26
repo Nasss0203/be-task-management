@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
   Param,
   Patch,
   Post,
@@ -17,6 +18,7 @@ import { RequirePermissions } from 'src/common/decorator/require-permissions.dec
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
+import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import { type IAuth } from 'src/types/auth';
 
 import { WorkspaceOverviewResponseDto } from 'src/modules/workspace/application/dto/workspace/response/workspace-overview.response.dto';
@@ -41,9 +43,9 @@ import { GetWorkspaceHandler } from 'src/modules/workspace/application/queries/w
 import { GetWorkspaceQuery } from 'src/modules/workspace/application/queries/workspace/get-workspace/get-workspace.query';
 import { ListDeletedWorkspacesHandler } from 'src/modules/workspace/application/queries/workspace/list-deleted-workspaces/list-deleted-workspaces.handler';
 import { ListDeletedWorkspacesQuery } from 'src/modules/workspace/application/queries/workspace/list-deleted-workspaces/list-deleted-workspaces.query';
+import { ListWorkspaceStartersHandler } from 'src/modules/workspace/application/queries/workspace/list-workspace-starters/list-workspace-starters.handler';
 import { ListWorkspacesHandler } from 'src/modules/workspace/application/queries/workspace/list-workspaces/list-workspaces.handler';
 import { ListWorkspacesQuery } from 'src/modules/workspace/application/queries/workspace/list-workspaces/list-workspaces.query';
-import { ListWorkspaceStartersHandler } from 'src/modules/workspace/application/queries/workspace/list-workspace-starters/list-workspace-starters.handler';
 
 import { CreateWorkspaceCommand } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.command';
 import { CreateWorkspaceHandler } from 'src/modules/workspace/application/commands/workspace/create-workspace/create-workspace.handler';
@@ -55,18 +57,31 @@ import { CreateWorkspaceDto } from 'src/modules/workspace/application/dto/worksp
 @ReadRateLimit()
 export class WorkspacesController {
   constructor(
+    @Inject(WORKSPACE_TYPES.applications.CreateWorkspaceHandler)
     private readonly createWorkspaceHandler: CreateWorkspaceHandler,
+    @Inject(WORKSPACE_TYPES.applications.ListWorkspacesHandler)
     private readonly listWorkspacesHandler: ListWorkspacesHandler,
+    @Inject(WORKSPACE_TYPES.applications.ListWorkspaceStartersHandler)
     private readonly listWorkspaceStartersHandler: ListWorkspaceStartersHandler,
+    @Inject(WORKSPACE_TYPES.applications.GetWorkspaceHandler)
     private readonly getWorkspaceHandler: GetWorkspaceHandler,
+    @Inject(WORKSPACE_TYPES.applications.GetWorkspaceAccessHandler)
     private readonly getWorkspaceAccessHandler: GetWorkspaceAccessHandler,
+    @Inject(WORKSPACE_TYPES.applications.ListDeletedWorkspacesHandler)
     private readonly listDeletedWorkspacesHandler: ListDeletedWorkspacesHandler,
+    @Inject(WORKSPACE_TYPES.applications.GetWorkspaceOverviewHandler)
     private readonly getWorkspaceOverviewHandler: GetWorkspaceOverviewHandler,
+    @Inject(WORKSPACE_TYPES.applications.UpdateWorkspaceHandler)
     private readonly updateWorkspaceHandler: UpdateWorkspaceHandler,
+    @Inject(WORKSPACE_TYPES.applications.UpdateWorkspaceLayoutModeHandler)
     private readonly updateWorkspaceLayoutModeHandler: UpdateWorkspaceLayoutModeHandler,
+    @Inject(WORKSPACE_TYPES.applications.SoftDeleteWorkspaceHandler)
     private readonly softDeleteWorkspaceHandler: SoftDeleteWorkspaceHandler,
+    @Inject(WORKSPACE_TYPES.applications.RestoreWorkspaceHandler)
     private readonly restoreWorkspaceHandler: RestoreWorkspaceHandler,
+    @Inject(WORKSPACE_TYPES.applications.RemoveWorkspaceFromTrashHandler)
     private readonly removeWorkspaceFromTrashHandler: RemoveWorkspaceFromTrashHandler,
+    @Inject(WORKSPACE_TYPES.applications.SelectWorkspaceHandler)
     private readonly selectWorkspaceHandler: SelectWorkspaceHandler,
   ) {}
 

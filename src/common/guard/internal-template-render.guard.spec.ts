@@ -20,14 +20,15 @@ describe('InternalTemplateRenderGuard', () => {
     } as unknown as ExecutionContext;
   }
 
-  function createGuard(configuredSecret: string | undefined = secret) {
+  // null (not undefined) means "not configured": undefined would fall back to the default.
+  function createGuard(configuredSecret: string | null = secret) {
     const configService = {
       getOrThrow: jest.fn((key: string) => {
         if (key !== 'TEMPLATE_RENDER_INTERNAL_KEY') {
           throw new Error(`Unexpected config key: ${key}`);
         }
 
-        if (configuredSecret === undefined) {
+        if (configuredSecret === null) {
           throw new Error(
             'Configuration key "TEMPLATE_RENDER_INTERNAL_KEY" does not exist',
           );
@@ -81,8 +82,18 @@ describe('InternalTemplateRenderGuard', () => {
   });
 
   it('fails when server configuration is missing', () => {
-    const guard = createGuard(undefined);
+    const guard = createGuard(null);
 
-    expect(() => guard.canActivate(createContext(secret))).toThrow();
+    expect(() => guard.canActivate(createContext(secret))).toThrow(
+      'does not exist',
+    );
+  });
+
+  it('fails closed when the configured key is empty', () => {
+    const guard = createGuard('');
+
+    expect(() => guard.canActivate(createContext(secret))).toThrow(
+      'must not be empty',
+    );
   });
 });

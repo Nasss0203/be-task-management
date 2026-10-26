@@ -148,6 +148,20 @@ export class PageBlock {
   getDataConfig(): PageBlockJson {
     return this.dataConfig;
   }
+  getReferencedDatabaseId(): string | null {
+    const config = this.dataConfig;
+
+    if (
+      this.type !== PageBlockType.DATABASE_VIEW ||
+      !config ||
+      Array.isArray(config) ||
+      typeof config.database_id !== 'string'
+    ) {
+      return null;
+    }
+
+    return config.database_id;
+  }
   getCreatedBy(): string {
     return this.createdBy;
   }

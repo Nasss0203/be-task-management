@@ -16,8 +16,16 @@ import { RenamePropertyHandler } from './application/commands/rename-property/re
 import { SetRowValueHandler } from './application/commands/set-row-value/set-row-value.handler';
 import { SetViewPropertyVisibilityHandler } from './application/commands/set-view-property-visibility/set-view-property-visibility.handler';
 import { SetViewPropertyWidthHandler } from './application/commands/set-view-property-width/set-view-property-width.handler';
+import { RenameDatabaseHandler } from './application/commands/rename-database/rename-database.handler';
+import { SetViewFiltersHandler } from './application/commands/set-view-filters/set-view-filters.handler';
+import { SetViewGroupHandler } from './application/commands/set-view-group/set-view-group.handler';
+import { ReorderViewPropertiesHandler } from './application/commands/reorder-view-properties/reorder-view-properties.handler';
+import { MoveDatabaseRowHandler } from './application/commands/move-database-row/move-database-row.handler';
+import { SetViewSortsHandler } from './application/commands/set-view-sorts/set-view-sorts.handler';
 import { UpdatePropertyOptionHandler } from './application/commands/update-property-option/update-property-option.handler';
 import { GetDatabaseRowsHandler } from './application/queries/get-database-rows/get-database-rows.handler';
+import { GetDatabasePeopleHandler } from './application/queries/get-database-people/get-database-people.handler';
+import { TypeOrmDatabasePeopleReader } from './infrastructure/persistence/typeorm/readers/typeorm-database-people.reader';
 import { GetDatabaseViewHandler } from './application/queries/get-database-view/get-database-view.handler';
 import { GetDatabaseViewsHandler } from './application/queries/get-database-views/get-database-views.handler';
 import { GetDatabaseHandler } from './application/queries/get-database/get-database.handler';
@@ -86,6 +94,17 @@ import { DatabaseController } from './presentation/http/controllers/database.con
     GetDatabaseViewHandler,
     SetViewPropertyVisibilityHandler,
     SetViewPropertyWidthHandler,
+    SetViewSortsHandler,
+    SetViewFiltersHandler,
+    RenameDatabaseHandler,
+    SetViewGroupHandler,
+    ReorderViewPropertiesHandler,
+    MoveDatabaseRowHandler,
+    GetDatabasePeopleHandler,
+    {
+      provide: DATABASE_TYPES.ports.DatabasePeopleReader,
+      useClass: TypeOrmDatabasePeopleReader,
+    },
     {
       provide: DATABASE_TYPES.repositories.DatabaseRepository,
       useClass: TypeOrmDatabaseRepository,

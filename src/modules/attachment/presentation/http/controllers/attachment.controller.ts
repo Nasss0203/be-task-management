@@ -83,7 +83,7 @@ export class AttachmentController {
     return this.uploadAttachmentHandler.execute(
       new UploadAttachmentCommand(
         {
-          originalName: file.originalname,
+          originalName: Buffer.from(file.originalname, 'latin1').toString('utf8'),
           reportedMimeType: file.mimetype,
           size: file.size,
           buffer: file.buffer,

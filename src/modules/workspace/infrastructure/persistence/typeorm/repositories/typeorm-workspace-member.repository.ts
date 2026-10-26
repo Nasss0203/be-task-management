@@ -195,6 +195,17 @@ export class TypeOrmWorkspaceMemberRepository implements WorkspaceMemberReposito
     await repo.delete({ workspaceId, userId });
   }
 
+  async lockMembersForUpdate(
+    workspaceId: string,
+    userIds: string[],
+    context?: PersistenceContext,
+  ): Promise<void> {
+    await this.getRepo(context).query(
+      `SELECT id FROM workspace_members WHERE workspace_id = $1 AND user_id = ANY($2::uuid[]) ORDER BY id FOR UPDATE`,
+      [workspaceId, userIds],
+    );
+  }
+
   async deleteByWorkspaceAndUserIfWorkspaceDeleted(
     workspaceId: string,
     userId: string,

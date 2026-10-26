@@ -8,6 +8,7 @@ import { ProcessSepayPgIpnHandler } from './application/commands/webhook/process
 import { ProcessSepayWebhookHandler } from './application/commands/webhook/process-sepay-webhook/process-sepay-webhook.handler';
 import { ProcessStripeWebhookHandler } from './application/commands/webhook/process-stripe-webhook/process-stripe-webhook.handler';
 import { GetBillingPaymentStatusHandler } from './application/queries/payment/get-billing-payment-status/get-billing-payment-status.handler';
+import { ListWorkspacePaymentOrdersHandler } from './application/queries/payment/list-workspace-payment-orders/list-workspace-payment-orders.handler';
 import { ListBillingPlansHandler } from './application/queries/plan/list-billing-plans/list-billing-plans.handler';
 import { GetWorkspaceSubscriptionHandler } from './application/queries/subscription/get-workspace-subscription/get-workspace-subscription.handler';
 import { BillingPaymentSettlementService } from './application/services/billing-payment-settlement.service';
@@ -114,6 +115,10 @@ import { SepayWebhookController } from './presentation/controllers/sepay-webhook
     {
       provide: BILLING_TYPES.applications.GetWorkspaceSubscriptionHandler,
       useClass: GetWorkspaceSubscriptionHandler,
+    },
+    {
+      provide: BILLING_TYPES.applications.ListWorkspacePaymentOrdersHandler,
+      useClass: ListWorkspacePaymentOrdersHandler,
     },
   ],
   exports: [

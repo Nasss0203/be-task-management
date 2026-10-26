@@ -14,12 +14,15 @@ export const PERMISSIONS = {
 
   TEAMSPACE_MEMBER_READ: 'teamspace.member.read',
   TEAMSPACE_MEMBER_ADD: 'teamspace.member.add',
+  TEAMSPACE_MEMBER_UPDATE: 'teamspace.member.update',
   TEAMSPACE_MEMBER_REMOVE: 'teamspace.member.remove',
 
   PAGE_CREATE: 'page.create',
   PAGE_READ: 'page.read',
   PAGE_UPDATE: 'page.update',
   PAGE_DELETE: 'page.delete',
+  /** Publish to the web; only from workspace/teamspace roles, never from a page share. */
+  PAGE_PUBLISH: 'page.publish',
 
   PAGE_BLOCK_CREATE: 'page_block.create',
   PAGE_BLOCK_READ: 'page_block.read',

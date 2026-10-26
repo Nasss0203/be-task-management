@@ -81,7 +81,9 @@
         "policy": "single-new-table-v1",
         "generator": "scripts/migration-tools.ts",
         "evidence": "static-generator-format-and-live-orm-diff",
-        "tables": ["template_purchases"]
+        "tables": [
+          "template_purchases"
+        ]
       }
     },
     {
@@ -100,7 +102,9 @@
         "policy": "single-new-table-v1",
         "generator": "scripts/migration-tools.ts",
         "evidence": "static-generator-format-and-live-orm-diff",
-        "tables": ["marketplace_webhook_events"]
+        "tables": [
+          "marketplace_webhook_events"
+        ]
       }
     },
     {
@@ -164,6 +168,38 @@
     {
       "file": "1792429159192-UpdateSchema.ts",
       "sha256": "f97b519920e5389aa96cfb015b70f07bd43961f7cea057f548c83a190ca09220"
+    },
+    {
+      "file": "1792500000000-CreateTeamspaceInvitations.ts",
+      "sha256": "8e9ce2c6f969bfc38bc6c3808c5a38ef2eb4ccbc7e5208a4d2c88da67ae4ab8b"
+    },
+    {
+      "file": "1792500000001-CreateTeamspaceInviteLinks.ts",
+      "sha256": "04eabc6511636af6e1f4b57b1f2343478f3e283998c4f4479474636e40068f06"
+    },
+    {
+      "file": "1792500000002-CreateOutboxDeliveries.ts",
+      "sha256": "eef4c1aa1fcdf0085b8a758cdce05fe865baa5d0c54c3f552ab207149a06cdfa"
+    },
+    {
+      "file": "1792871101859-UpdateSchema.ts",
+      "sha256": "782b3be18010ec224ef54b211c08e34a0d57aa36793ce6bf31c5ab3e413b1d0a"
+    },
+    {
+      "file": "1792874952503-UpdateSchema.ts",
+      "sha256": "21d944609b58a119ee3b323c92b047c1968d88aed9f300fc1c144309eed1e2ea"
+    },
+    {
+      "file": "1792910799027-UpdateSchema.ts",
+      "sha256": "21930425293cfdf9574cb124105740aa10ee2a2022a5feac903fe4f405cb6284"
+    },
+    {
+      "file": "1792913071019-UpdateSchema.ts",
+      "sha256": "5cacd6d250ab26990a0fcf7160f74303ab6884cb4c2871567ed6a2e547c27131"
+    },
+    {
+      "file": "1792915329668-UpdateSchema.ts",
+      "sha256": "fcbd2c8d3ba08964ac34a29d331c51c1d4fb6d93eb3975be151714e04f7c328a"
     }
   ]
 }

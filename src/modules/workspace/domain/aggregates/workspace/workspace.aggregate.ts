@@ -17,6 +17,7 @@ type RestoreWorkspaceParams = {
   id: string;
   name: string;
   slug: string;
+  icon?: string | null;
   layoutMode: WorkspaceLayoutMode;
   createdAt: Date;
   updatedAt: Date;
@@ -36,6 +37,7 @@ export class Workspace {
     private deletedAt: Date | null,
     private deletedBy: string | null,
     private readonly createdBy: string | null,
+    private icon: string | null = null,
   ) {}
 
   static create(params: CreateWorkspaceParams): Workspace {
@@ -65,6 +67,7 @@ export class Workspace {
       params.deletedAt,
       params.deletedBy,
       params.createdBy,
+      params.icon ?? null,
     );
   }
 
@@ -82,6 +85,10 @@ export class Workspace {
 
   getLayoutMode(): WorkspaceLayoutMode {
     return this.layoutMode;
+  }
+
+  getIcon(): string | null {
+    return this.icon;
   }
 
   getCreatedAt(): Date {
@@ -106,6 +113,11 @@ export class Workspace {
 
   rename(name: string): void {
     this.name = name;
+    this.touch();
+  }
+
+  changeIcon(icon: string | null): void {
+    this.icon = icon;
     this.touch();
   }
 

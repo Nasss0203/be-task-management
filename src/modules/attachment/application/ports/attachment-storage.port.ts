@@ -27,5 +27,6 @@ export interface AttachmentStoragePort {
   createDownloadUrl(input: {
     key: string;
     fileName: string;
+    contentType?: string;
   }): Promise<{ downloadUrl: string; expiresIn: number }>;
 }

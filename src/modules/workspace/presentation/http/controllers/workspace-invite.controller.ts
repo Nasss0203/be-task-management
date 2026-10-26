@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Inject,
   Param,
   Post,
   Query,
@@ -40,17 +41,26 @@ import { GetPendingWorkspaceInvitesHandler } from 'src/modules/workspace/applica
 import { GetPendingWorkspaceInvitesQuery } from 'src/modules/workspace/application/queries/workspace-invite/get-pending-workspace-invites/get-pending-workspace-invites.query';
 import { SearchInviteUsersHandler } from 'src/modules/workspace/application/queries/workspace-invite/search-invite-users/search-invite-users.handler';
 import { SearchInviteUsersQuery } from 'src/modules/workspace/application/queries/workspace-invite/search-invite-users/search-invite-users.query';
+import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import { type IAuth } from 'src/types/auth';
 @Controller('workspace-invites')
 export class WorkspaceInviteController {
   constructor(
+    @Inject(WORKSPACE_TYPES.applications.InviteWorkspaceMemberHandler)
     private readonly inviteWorkspaceMemberHandler: InviteWorkspaceMemberHandler,
+    @Inject(WORKSPACE_TYPES.applications.AcceptWorkspaceInviteHandler)
     private readonly acceptWorkspaceInviteHandler: AcceptWorkspaceInviteHandler,
+    @Inject(WORKSPACE_TYPES.applications.DeclineWorkspaceInviteHandler)
     private readonly declineWorkspaceInviteHandler: DeclineWorkspaceInviteHandler,
+    @Inject(WORKSPACE_TYPES.applications.CreateWorkspaceInviteLinkHandler)
     private readonly createWorkspaceInviteLinkHandler: CreateWorkspaceInviteLinkHandler,
+    @Inject(WORKSPACE_TYPES.applications.SearchInviteUsersHandler)
     private readonly searchInviteUsersHandler: SearchInviteUsersHandler,
+    @Inject(WORKSPACE_TYPES.applications.RevokeWorkspaceInviteHandler)
     private readonly revokeWorkspaceInviteHandler: RevokeWorkspaceInviteHandler,
+    @Inject(WORKSPACE_TYPES.applications.ResendWorkspaceInviteHandler)
     private readonly resendWorkspaceInviteHandler: ResendWorkspaceInviteHandler,
+    @Inject(WORKSPACE_TYPES.applications.GetPendingWorkspaceInvitesHandler)
     private readonly getPendingWorkspaceInvitesHandler: GetPendingWorkspaceInvitesHandler,
   ) {}
 

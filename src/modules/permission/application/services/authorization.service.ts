@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { TeamspaceRole } from 'src/modules/workspace/domain/enums/teamspace-role.enum';
-import { TeamspaceVisibility } from 'src/modules/workspace/domain/enums/teamspace-visibility.enum';
+import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role.enum';
+import { TeamspaceVisibility } from 'src/modules/teamspace/domain/enums/teamspace-visibility.enum';
 import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import {

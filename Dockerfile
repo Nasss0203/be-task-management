@@ -38,7 +38,6 @@ ENV PORT=8080
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY package*.json ./
-COPY src/modules/mail/templates ./src/modules/mail/templates
 
 EXPOSE 8080
 

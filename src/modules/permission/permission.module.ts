@@ -4,8 +4,8 @@ import { PageShareLinkTokenService } from 'src/shared/security/page-share-link-t
 import { PageBlockOrmEntity } from '../content/infrastructure/persistence/typeorm/entities/page-block.orm-entity';
 import { PageShareLinkOrmEntity } from '../content/infrastructure/persistence/typeorm/entities/page-share-link.orm-entity';
 import { PageOrmEntity } from '../content/infrastructure/persistence/typeorm/entities/page.orm-entity';
-import { TeamspaceMemberOrmEntity } from '../workspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
-import { TeamspaceOrmEntity } from '../workspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
+import { TeamspaceMemberOrmEntity } from '../teamspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
+import { TeamspaceOrmEntity } from '../teamspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
 import { WorkspaceMemberOrmEntity } from '../workspace/infrastructure/persistence/typeorm/entities/workspace-member.orm-entity';
 import { AuthorizationService } from './application/services/authorization.service';
 import { EffectivePageAccessService } from './application/services/effective-page-access.service';

@@ -7,5 +7,6 @@ export const DATABASE_TYPES = {
   ports: {
     DatabaseProvisioning: Symbol('DatabaseProvisioning'),
     DatabaseSnapshotReader: Symbol('DatabaseSnapshotReader'),
+    DatabasePeopleReader: Symbol('DatabasePeopleReader'),
   },
 } as const;

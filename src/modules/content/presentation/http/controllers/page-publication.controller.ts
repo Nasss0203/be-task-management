@@ -62,7 +62,7 @@ export class PagePublicationController {
     type: 'page',
     key: 'pageId',
   })
-  @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
+  @RequirePermissions(PERMISSIONS.PAGE_PUBLISH)
   @ResponseMessage('Publish page')
   publish(
     @Param('pageId') pageId: string,
@@ -81,7 +81,7 @@ export class PagePublicationController {
 
   @Get(':pageId/publications')
   @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
-  @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
+  @RequirePermissions(PERMISSIONS.PAGE_PUBLISH)
   @ResponseMessage('List page publications')
   listPublications(@Param('pageId') pageId: string) {
     return this.listPagePublicationsHandler.execute(pageId);
@@ -93,7 +93,7 @@ export class PagePublicationController {
     type: 'page',
     key: 'pageId',
   })
-  @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
+  @RequirePermissions(PERMISSIONS.PAGE_PUBLISH)
   @ResponseMessage('Get page publication')
   getPublication(
     @Param('pageId') pageId: string,
@@ -107,7 +107,7 @@ export class PagePublicationController {
   @Patch(':pageId/publication/settings')
   @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
-  @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
+  @RequirePermissions(PERMISSIONS.PAGE_PUBLISH)
   @ResponseMessage('Update page publication settings')
   updateSettings(
     @Param('pageId') pageId: string,
@@ -129,7 +129,7 @@ export class PagePublicationController {
   @Patch(':pageId/publication/visibility')
   @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
-  @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
+  @RequirePermissions(PERMISSIONS.PAGE_PUBLISH)
   @ResponseMessage('Update child page visibility')
   updateVisibility(
     @Param('pageId') pageId: string,
@@ -150,7 +150,7 @@ export class PagePublicationController {
     type: 'page',
     key: 'pageId',
   })
-  @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
+  @RequirePermissions(PERMISSIONS.PAGE_PUBLISH)
   @ResponseMessage('Unpublish page')
   unpublish(
     @Param('pageId') pageId: string,
@@ -169,7 +169,7 @@ export class PagePublicationController {
     type: 'page',
     key: 'pageId',
   })
-  @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
+  @RequirePermissions(PERMISSIONS.PAGE_PUBLISH)
   @ResponseMessage('Republish page')
   republish(
     @Param('pageId') pageId: string,

@@ -27,6 +27,9 @@ import { FindPageBlockByPageHandler } from './application/queries/page-block/fin
 import { FindDeletedPagesHandler } from './application/queries/page/find-deleted-pages/find-deleted-pages.handler';
 import { FindPageByIdHandler } from './application/queries/page/find-page-by-id/find-page-by-id.handler';
 import { FindPageByWorkspaceHandler } from './application/queries/page/find-page-by-workspace/find-page-by-workspace.handler';
+import { FindDatabasesByWorkspaceHandler } from './application/queries/page-database/find-databases-by-workspace/find-databases-by-workspace.handler';
+import { PermanentlyDeletePageDatabaseHandler } from './application/commands/page-database/permanently-delete-page-database/permanently-delete-page-database.handler';
+import { RestorePageDatabaseHandler } from './application/commands/page-database/restore-page-database/restore-page-database.handler';
 import { ResolveBookmarkMetadataHandler } from './application/queries/resolve-bookmark-metadata/resolve-bookmark-metadata.handler';
 
 import { ContentPageProvisioningService } from './application/services/content-page-provisioning.service';
@@ -35,6 +38,7 @@ import { PageBlockOrderingService } from './application/services/page-block-orde
 import { PagePublicationTreeService } from './application/services/page-publication-tree.service';
 import { PublicSubdomainAllocatorService } from './application/services/public-subdomain-allocator.service';
 import { PublicationHierarchySynchronizerService } from './application/services/publication-hierarchy-synchronizer.service';
+import { PageEditRequestNotifier } from './application/services/page-edit-request-notifier.service';
 import { PublicationAvailabilityService } from './application/services/publication-availability.service';
 import { ListPagePublicationsHandler } from './application/queries/page-publication/list-page-publications/list-page-publications.handler';
 
@@ -52,6 +56,8 @@ import { TypeOrmPagePublicationRepository } from './infrastructure/persistence/t
 import { TypeOrmPageRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page.repository';
 import { TypeOrmPublishedSiteRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-published-site.repository';
 import { TypeOrmPublicSiteNavigationReader } from './infrastructure/persistence/typeorm/readers/typeorm-public-site-navigation.reader';
+import { TypeOrmPageSearchReader } from './infrastructure/persistence/typeorm/readers/typeorm-page-search.reader';
+import { SearchPagesHandler } from './application/queries/page/search-pages/search-pages.handler';
 
 import { CreatePageEditRequestHandler } from './application/commands/page-edit-request/create-page-edit-request/create-page-edit-request.handler';
 
@@ -196,6 +202,18 @@ const pageHandlers = [
   {
     provide: CONTENT_TYPES.applications.FindPageByWorkspaceHandler,
     useClass: FindPageByWorkspaceHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.FindDatabasesByWorkspaceHandler,
+    useClass: FindDatabasesByWorkspaceHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.RestorePageDatabaseHandler,
+    useClass: RestorePageDatabaseHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.PermanentlyDeletePageDatabaseHandler,
+    useClass: PermanentlyDeletePageDatabaseHandler,
   },
   {
     provide: CONTENT_TYPES.applications.FindDeletedPagesHandler,
@@ -410,6 +428,7 @@ const applicationServices = [
   PublicationHierarchySynchronizerService,
   PageBlockOrderingService,
   PageShareLinkTokenService,
+  PageEditRequestNotifier,
 ];
 
 const ports = [
@@ -424,6 +443,14 @@ const ports = [
   {
     provide: CONTENT_TYPES.ports.PublicSiteNavigationReader,
     useClass: TypeOrmPublicSiteNavigationReader,
+  },
+  {
+    provide: CONTENT_TYPES.ports.PageSearchReader,
+    useClass: TypeOrmPageSearchReader,
+  },
+  {
+    provide: CONTENT_TYPES.applications.SearchPagesHandler,
+    useClass: SearchPagesHandler,
   },
   {
     provide: CONTENT_TYPES.bookmarkMetadataFetcher,

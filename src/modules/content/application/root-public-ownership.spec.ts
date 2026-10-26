@@ -731,7 +731,7 @@ describe('root-owned public sites', () => {
     expect(enabled.allow_updates).toBe(true);
     expect(authorize).toHaveBeenLastCalledWith({
       userId: 'user',
-      permissions: ['page.update'],
+      permissions: ['page.publish'],
       target: { type: 'page', id: homeA.getId() },
     });
     expect(sites.size).toBe(2);
@@ -750,7 +750,7 @@ describe('root-owned public sites', () => {
     expect(disabled.allow_updates).toBe(false);
     expect(authorize).toHaveBeenLastCalledWith({
       userId: 'user',
-      permissions: ['page.update'],
+      permissions: ['page.publish'],
       target: { type: 'page', id: homeA.getId() },
     });
     expect(sites.get(siteAId)?.getAllowUpdates()).toBe(false);
@@ -806,7 +806,7 @@ describe('root-owned public sites', () => {
     ).rejects.toBeInstanceOf(ForbiddenException);
     expect(authorizeSiteManagement).toHaveBeenLastCalledWith({
       userId: 'child-editor',
-      permissions: ['page.update'],
+      permissions: ['page.publish'],
       target: { type: 'page', id: homeA.getId() },
     });
     expect(sites.get(siteAId)?.getAllowUpdates()).toBe(false);

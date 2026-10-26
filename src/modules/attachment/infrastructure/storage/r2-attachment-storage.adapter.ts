@@ -43,6 +43,7 @@ export class R2AttachmentStorageAdapter {
   createDownloadUrl(input: {
     key: string;
     fileName: string;
+    contentType?: string;
   }): Promise<{ downloadUrl: string; expiresIn: number }> {
     return this.storageService.createDownloadUrl(input);
   }

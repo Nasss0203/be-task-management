@@ -8,8 +8,8 @@
     "webpackConfigPath": "webpack.config.js",
     "assets": [
       {
-        "include": "modules/mail/templates/**/*",
-        "outDir": "dist/templates"
+        "include": "modules/mail/infrastructure/templates/**/*.hbs",
+        "outDir": "dist"
       }
     ],
     "watchAssets": true

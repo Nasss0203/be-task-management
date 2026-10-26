@@ -16,6 +16,7 @@ import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 import type { WorkspaceRepository } from 'src/modules/workspace/domain/repositories/workspace.repository';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
+import type { TeamspaceOwnershipGuard } from 'src/modules/workspace/application/ports/teamspace-ownership-guard.port';
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { type UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
@@ -32,6 +33,9 @@ export class DeleteWorkspaceMemberHandler {
     @Inject(WORKSPACE_TYPES.repositories.WorkspaceRepository)
     private readonly workspaceRepository: WorkspaceRepository,
 
+    @Inject(WORKSPACE_TYPES.ports.TeamspaceOwnershipGuard)
+    private readonly teamspaceOwnershipGuard: TeamspaceOwnershipGuard,
+
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
 
@@ -46,6 +50,16 @@ export class DeleteWorkspaceMemberHandler {
 
   async execute(command: DeleteWorkspaceMemberCommand): Promise<void> {
     return this.uow.runInTransaction(async (manager) => {
+      const isSelfLeave = command.actorId === command.userId;
+
+      if (!isSelfLeave) {
+        await this.workspaceMemberRepository.lockMembersForUpdate(
+          command.workspaceId,
+          [command.userId, command.actorId],
+          manager,
+        );
+      }
+
       const targetMember =
         await this.workspaceMemberRepository.findByWorkspaceAndUser(
           command.workspaceId,
@@ -56,8 +70,6 @@ export class DeleteWorkspaceMemberHandler {
       if (!targetMember) {
         throw new NotFoundException('Member not found in workspace');
       }
-
-      const isSelfLeave = command.actorId === command.userId;
 
       if (!isSelfLeave) {
         const actorMember =
@@ -74,12 +86,6 @@ export class DeleteWorkspaceMemberHandler {
         if (actorMember.getRole() !== WorkspaceRole.OWNER) {
           throw new ForbiddenException(
             'Only admin or owner can remove members',
-          );
-        }
-
-        if (targetMember.getRole() === WorkspaceRole.OWNER) {
-          throw new ForbiddenException(
-            'Admins cannot remove Owners or other Admins',
           );
         }
       }
@@ -109,6 +115,12 @@ export class DeleteWorkspaceMemberHandler {
           return;
         }
       }
+
+      await this.teamspaceOwnershipGuard.assertCanRemoveWorkspaceMember(
+        command.workspaceId,
+        targetMember.getId(),
+        manager,
+      );
 
       await this.workspaceMemberRepository.deleteByWorkspaceAndUser(
         command.workspaceId,

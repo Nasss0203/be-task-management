@@ -3,10 +3,19 @@ export const CONTENT_TYPES = {
     PageProvisioning: Symbol.for('PageProvisioning'),
     PageSnapshotReader: Symbol.for('PageSnapshotReader'),
     PublicSiteNavigationReader: Symbol.for('PublicSiteNavigationReader'),
+    PageSearchReader: Symbol.for('PageSearchReader'),
   },
   applications: {
     CreatePageHandler: Symbol.for('CreatePageHandler'),
+    SearchPagesHandler: Symbol.for('SearchPagesHandler'),
     FindPageByWorkspaceHandler: Symbol.for('FindPageByWorkspaceHandler'),
+    FindDatabasesByWorkspaceHandler: Symbol.for(
+      'FindDatabasesByWorkspaceHandler',
+    ),
+    RestorePageDatabaseHandler: Symbol.for('RestorePageDatabaseHandler'),
+    PermanentlyDeletePageDatabaseHandler: Symbol.for(
+      'PermanentlyDeletePageDatabaseHandler',
+    ),
     FindDeletedPagesHandler: Symbol.for('FindDeletedPagesHandler'),
     FindPageByIdHandler: Symbol.for('FindPageByIdHandler'),
     UpdatePageHandler: Symbol.for('UpdatePageHandler'),

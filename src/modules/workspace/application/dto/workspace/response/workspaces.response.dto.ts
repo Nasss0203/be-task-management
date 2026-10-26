@@ -9,6 +9,8 @@ export class WorkspaceResponseDto {
 
   slug: string;
 
+  icon: string | null;
+
   layoutMode: WorkspaceLayoutMode;
 
   createdAt: Date;
@@ -26,6 +28,7 @@ export class WorkspaceResponseDto {
       id: workspace.getId(),
       name: workspace.getName(),
       slug: workspace.getSlug(),
+      icon: workspace.getIcon(),
       layoutMode: workspace.getLayoutMode(),
       createdAt: workspace.getCreatedAt(),
       updatedAt: workspace.getUpdatedAt(),

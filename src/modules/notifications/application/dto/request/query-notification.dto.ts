@@ -1,4 +1,14 @@
-import { IsBooleanString, IsIn, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsBooleanString,
+  IsDate,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
 import {
   NotificationSourceType,
   NotificationType,
@@ -6,7 +16,7 @@ import {
 
 export class QueryNotificationDto {
   @IsOptional()
-  @IsString()
+  @IsIn(['human', 'system'])
   category?: 'human' | 'system';
 
   @IsOptional()
@@ -22,18 +32,28 @@ export class QueryNotificationDto {
   type?: NotificationType;
 
   @IsOptional()
-  @IsString()
+  @IsUUID()
   sourceId?: string;
 
   @IsOptional()
-  @IsString()
+  @IsUUID()
   workspaceId?: string;
 
+  /** Legacy: createdAt of the last item of the previous page. Prefer cursorId. */
   @IsOptional()
-  @IsString()
-  cursor?: string;
+  @Type(() => Date)
+  @IsDate()
+  cursor?: Date;
+
+  /** id of the last item of the previous page (keyset pagination). */
+  @IsOptional()
+  @IsUUID()
+  cursorId?: string;
 
   @IsOptional()
-  @IsString()
-  limit?: string;
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number;
 }

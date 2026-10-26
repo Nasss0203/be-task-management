@@ -15,6 +15,7 @@ import { PageEditRequest } from '../../../../domain/entities/page-edit-request.e
 import type { PageEditRequestRepository } from '../../../../domain/repositories/page-edit-request.repository';
 
 import { PageEditRequestDto } from '../../../dto/page-edit-request/page-edit-request.dto';
+import { PageEditRequestNotifier } from '../../../services/page-edit-request-notifier.service';
 
 import type { PageSharePermissionReader } from 'src/modules/permission/application/ports/page-share-permission-reader.port';
 
@@ -30,6 +31,8 @@ export class CreatePageEditRequestHandler {
 
     @Inject(PERMISSION_TYPES.ports.PageSharePermissionReader)
     private readonly pageSharePermissionReader: PageSharePermissionReader,
+
+    private readonly notifier: PageEditRequestNotifier,
   ) {}
 
   async execute(
@@ -75,7 +78,12 @@ export class CreatePageEditRequestHandler {
         effectiveShare.shareId,
       );
 
+    /**
+     * Gửi lại request đang PENDING: notifier chỉ tạo
+     * notification nếu reviewer chưa nhận (request cũ).
+     */
     if (existingPending) {
+      await this.notifier.notifyReviewers(existingPending);
       return PageEditRequestDto.fromDomain(existingPending);
     }
 
@@ -88,6 +96,8 @@ export class CreatePageEditRequestHandler {
     });
 
     const saved = await this.pageEditRequestRepository.save(editRequest);
+
+    await this.notifier.notifyReviewers(saved);
 
     return PageEditRequestDto.fromDomain(saved);
   }

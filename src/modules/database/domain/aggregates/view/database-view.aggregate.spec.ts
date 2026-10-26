@@ -1,5 +1,7 @@
 import { DatabaseViewType } from '../../enums/database-view-type.enum';
 import { DatabaseViewPropertyNotFoundException } from '../../exceptions/database-view-property-not-found.exception';
+import { InvalidDatabaseViewFilterException } from '../../exceptions/invalid-database-view-filter.exception';
+import { InvalidDatabaseViewSortException } from '../../exceptions/invalid-database-view-sort.exception';
 import { DatabaseView } from './database-view.aggregate';
 
 describe('DatabaseView', () => {
@@ -40,5 +42,93 @@ describe('DatabaseView', () => {
     expect(() => view.setPropertyVisibility('other-property', false)).toThrow(
       DatabaseViewPropertyNotFoundException,
     );
+  });
+
+  it('stores sorts in the given order and can clear them', () => {
+    const view = createView('table-view');
+
+    view.setSorts([
+      { propertyId: 'date', direction: 'asc' },
+      { propertyId: 'priority', direction: 'desc' },
+    ]);
+
+    expect(view.getSorts()).toEqual([
+      { propertyId: 'date', direction: 'asc' },
+      { propertyId: 'priority', direction: 'desc' },
+    ]);
+
+    view.setSorts([]);
+
+    expect(view.getSorts()).toEqual([]);
+  });
+
+  it('stores several filters on one property and drops values of valueless operators', () => {
+    const view = createView('table-view');
+
+    view.setFilters([
+      { propertyId: 'points', operator: 'gt', value: 3 },
+      { propertyId: 'points', operator: 'lt', value: 10 },
+      { propertyId: 'name', operator: 'is_empty', value: 'ignored' },
+    ]);
+
+    expect(view.getFilters()).toEqual([
+      { propertyId: 'points', operator: 'gt', value: 3 },
+      { propertyId: 'points', operator: 'lt', value: 10 },
+      { propertyId: 'name', operator: 'is_empty', value: null },
+    ]);
+  });
+
+  it('reorders every property and rejects partial or unknown lists', () => {
+    const view = createView('table-view');
+    view.addProperty({ id: 'second', propertyId: 'second-property', position: '1' });
+
+    view.reorderProperties(['second-property', propertyId]);
+
+    expect(
+      view.getProperties().map((item) => [item.getPropertyId(), item.getPosition()]),
+    ).toEqual([
+      [propertyId, '1'],
+      ['second-property', '0'],
+    ]);
+    expect(() => view.reorderProperties([propertyId])).toThrow();
+    expect(() => view.reorderProperties([propertyId, 'ghost'])).toThrow();
+    expect(() => view.reorderProperties([propertyId, propertyId])).toThrow();
+  });
+
+  it('rejects more than ten filters', () => {
+    const view = createView('table-view');
+
+    expect(() =>
+      view.setFilters(
+        Array.from({ length: 11 }, (_, index) => ({
+          propertyId: `p${index}`,
+          operator: 'is_empty',
+        })),
+      ),
+    ).toThrow(InvalidDatabaseViewFilterException);
+  });
+
+  it('rejects duplicate properties, invalid directions and too many sorts', () => {
+    const view = createView('table-view');
+
+    expect(() =>
+      view.setSorts([
+        { propertyId: 'date', direction: 'asc' },
+        { propertyId: 'date', direction: 'desc' },
+      ]),
+    ).toThrow(InvalidDatabaseViewSortException);
+
+    expect(() =>
+      view.setSorts([{ propertyId: 'date', direction: 'up' as 'asc' }]),
+    ).toThrow(InvalidDatabaseViewSortException);
+
+    expect(() =>
+      view.setSorts(
+        ['a', 'b', 'c', 'd', 'e', 'f'].map((propertyId) => ({
+          propertyId,
+          direction: 'asc' as const,
+        })),
+      ),
+    ).toThrow(InvalidDatabaseViewSortException);
   });
 });

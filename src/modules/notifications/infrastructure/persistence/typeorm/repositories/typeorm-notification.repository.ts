@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { EntityManager, IsNull, Repository } from 'typeorm';
+import type { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import {
   NotificationModel,
   NotificationType,
@@ -12,6 +13,7 @@ import {
   SaveNotificationInput,
   UpdateInviteNotificationStatusRepositoryInput,
   UpdatePageAccessRequestNotificationStatusRepositoryInput,
+  UpdatePageEditRequestNotificationStatusRepositoryInput,
 } from '../../../../domain/repositories/notification.repository';
 import { Notification } from '../entities/notification.orm-entity';
 import { NotificationMapper } from '../mappers/notification.mapper';
@@ -42,6 +44,21 @@ export class TypeOrmNotificationRepository implements NotificationRepository {
     return NotificationMapper.toModel(saved);
   }
 
+  async insertNotificationIfAbsent(
+    input: SaveNotificationInput & { id: string },
+  ): Promise<NotificationModel | null> {
+    const result = await this.repo.createQueryBuilder()
+      .insert()
+      .into(Notification)
+      .values(NotificationMapper.toEntity(input) as unknown as QueryDeepPartialEntity<Notification>)
+      .orIgnore()
+      .returning('id')
+      .execute();
+    if (result.raw.length === 0) return null;
+    const inserted = await this.repo.findOneByOrFail({ id: input.id });
+    return NotificationMapper.toModel(inserted);
+  }
+
   async findMyNotifications(
     input: FindMyNotificationsRepositoryInput,
     context?: PersistenceContext,
@@ -57,6 +74,7 @@ export class TypeOrmNotificationRepository implements NotificationRepository {
       })
       .andWhere('notification.archivedAt IS NULL')
       .orderBy('notification.createdAt', 'DESC')
+      .addOrderBy('notification.id', 'DESC')
       .take(limit);
 
     if (input.unreadOnly) {
@@ -70,6 +88,7 @@ export class TypeOrmNotificationRepository implements NotificationRepository {
           NotificationType.WORKSPACE_INVITE_ACCEPTED,
           NotificationType.WORKSPACE_MEMBER_JOINED,
           NotificationType.WORKSPACE_MEMBER_REMOVED,
+          NotificationType.TEAMSPACE_INVITATION_RECEIVED,
           NotificationType.PAGE_ACCESS_REQUESTED,
           NotificationType.PAGE_ACCESS_APPROVED,
           NotificationType.PAGE_ACCESS_REJECTED,
@@ -113,7 +132,23 @@ export class TypeOrmNotificationRepository implements NotificationRepository {
       });
     }
 
-    if (input.cursor) {
+    if (input.cursorId) {
+      // Compare against the stored µs timestamp; a JS Date cursor is truncated to ms and can skip rows.
+      // Scoped to the receiver, so another user's id yields an empty page instead of leaking data.
+      // Single-column subquery: TypeORM reorders multi-column entity selects by metadata.
+      const cursorCreatedAt = qb
+        .subQuery()
+        .select('cursor_row.created_at')
+        .from(Notification, 'cursor_row')
+        .where('cursor_row.id = :cursorId')
+        .andWhere('cursor_row.receiverId = :receiverId')
+        .getQuery();
+
+      qb.andWhere(
+        `(notification.createdAt, notification.id) < (${cursorCreatedAt}, CAST(:cursorId AS uuid))`,
+        { cursorId: input.cursorId },
+      );
+    } else if (input.cursor) {
       qb.andWhere('notification.createdAt < :cursor', {
         cursor: input.cursor,
       });
@@ -216,6 +251,29 @@ export class TypeOrmNotificationRepository implements NotificationRepository {
     const savedNotifications = await repo.save(updatedNotifications);
 
     return savedNotifications.length;
+  }
+
+  async updatePageEditRequestNotificationStatus(
+    input: UpdatePageEditRequestNotificationStatusRepositoryInput,
+    context?: PersistenceContext,
+  ): Promise<number> {
+    const result = await this.getRepo(context)
+      .createQueryBuilder()
+      .update()
+      .set({
+        metadata: () =>
+          `COALESCE(metadata, '{}'::jsonb) || jsonb_build_object('status', CAST(:status AS text), 'reviewerId', CAST(:reviewerId AS text))`,
+      })
+      .where('type = :type', { type: NotificationType.PAGE_EDIT_REQUESTED })
+      .andWhere("metadata ->> 'editRequestId' = :editRequestId")
+      .setParameters({
+        status: input.status,
+        reviewerId: input.reviewerId,
+        editRequestId: input.editRequestId,
+      })
+      .execute();
+
+    return result.affected ?? 0;
   }
 
   async markAllAsRead(

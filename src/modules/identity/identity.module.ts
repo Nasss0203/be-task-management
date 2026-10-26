@@ -22,6 +22,7 @@ import { RegisterAuthHandler } from './application/commands/register-auth/regist
 import { GetProfileAuthHandler } from './application/queries/get-profile-auth/get-profile-auth.handler';
 import { GetUserProfileHandler } from './application/queries/get-user-profile/get-user-profile.handler';
 import { SearchUsersHandler } from './application/queries/user/search-users/search-users.handler';
+import { AccountService } from './application/services/account.service';
 import { AuthService } from './application/services/auth.service';
 import { FindUserServiceImpl } from './application/services/find-user.service';
 import { IssueAuthTokenServiceImpl } from './application/services/issue-auth-token.service';
@@ -36,6 +37,7 @@ import { TypeOrmRefreshTokenRepository } from './infrastructure/persistence/type
 import { TypeOrmUserAuthIdentityRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-user-auth-identity.repository';
 import { TypeOrmUserProfileRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-user-profile.repository';
 import { TypeOrmUserRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-user.repository';
+import { CloudinaryAvatarStorageAdapter } from './infrastructure/storage/cloudinary-avatar-storage.adapter';
 import { AuthController } from './presentation/http/controllers/auth.controller';
 import { RefreshTokenController } from './presentation/http/controllers/refresh-token.controller';
 import { UserProfilesController } from './presentation/http/controllers/user-profiles.controller';
@@ -73,6 +75,11 @@ import { UsersController } from './presentation/http/controllers/users.controlle
   ],
   providers: [
     AuthService,
+    AccountService,
+    {
+      provide: IDENTITY_TYPES.ports.AvatarStorage,
+      useClass: CloudinaryAvatarStorageAdapter,
+    },
     GetProfileAuthHandler,
     GoogleAuthHandler,
     IssueAuthTokenServiceImpl,

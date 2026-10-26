@@ -36,6 +36,7 @@ export interface FindMyNotificationsRepositoryInput {
   type?: NotificationType;
   workspaceId?: string;
   cursor?: Date;
+  cursorId?: string;
   limit?: number;
 }
 
@@ -51,11 +52,21 @@ export type UpdatePageAccessRequestNotificationStatusRepositoryInput = {
   accessLevel?: string;
 };
 
+export type UpdatePageEditRequestNotificationStatusRepositoryInput = {
+  editRequestId: string;
+  status: string;
+  reviewerId: string;
+};
+
 export interface NotificationRepository {
   saveNotification(
     input: SaveNotificationInput,
     context?: PersistenceContext,
   ): Promise<NotificationModel>;
+
+  insertNotificationIfAbsent(
+    input: SaveNotificationInput & { id: string },
+  ): Promise<NotificationModel | null>;
 
   findMyNotifications(
     input: FindMyNotificationsRepositoryInput,
@@ -74,6 +85,11 @@ export interface NotificationRepository {
 
   updatePageAccessRequestNotificationStatus(
     input: UpdatePageAccessRequestNotificationStatusRepositoryInput,
+    context?: PersistenceContext,
+  ): Promise<number>;
+
+  updatePageEditRequestNotificationStatus(
+    input: UpdatePageEditRequestNotificationStatusRepositoryInput,
     context?: PersistenceContext,
   ): Promise<number>;
 

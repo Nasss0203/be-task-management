@@ -71,7 +71,14 @@ export class PageAccessRequestController {
     user: IAuth,
   ): Promise<CreatePageAccessRequestResult> {
     return this.createPageAccessRequestHandler.execute(
-      new CreatePageAccessRequestCommand(user.id, pageId, body.token),
+      new CreatePageAccessRequestCommand(
+        user.id,
+        pageId,
+        body.token,
+        body.subdomain && body.path
+          ? { subdomain: body.subdomain, path: body.path }
+          : undefined,
+      ),
     );
   }
 

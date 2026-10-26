@@ -9,7 +9,15 @@ export interface DatabaseRepository {
     context?: PersistenceContext,
   ): Promise<Database[]>;
 
+  findByPageIds(
+    pageIds: string[],
+    context?: PersistenceContext,
+  ): Promise<Database[]>;
+
   save(database: Database, context?: PersistenceContext): Promise<void>;
+
+  /** Rows, views and properties are removed by FK cascade. */
+  delete(id: string, context?: PersistenceContext): Promise<void>;
 
   deleteProperty(
     propertyId: string,
