@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { isAllowedFrontendOrigin } from './common/config/frontend-origin.config';
 import { ErrorCode } from './common/constants/error-code.constant';
@@ -50,6 +51,13 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformInterceptor(reflector));
   app.useGlobalFilters(new HttpExceptionFilter(httpAdapterHost));
   // app.useGlobalGuards(new JwtAuthGuard(reflector));
+
+  app.use(
+    helmet({
+      // FE (another origin) loads images served by the API, e.g. template thumbnails
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
 
   app.use(cookieParser());
 
