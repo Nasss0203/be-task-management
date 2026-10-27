@@ -12,6 +12,7 @@ import { DeletePageBlockHandler } from './application/commands/page-block/delete
 import { MovePageBlockHandler } from './application/commands/page-block/move-page-block/move-page-block.handler';
 import { ReorderPageBlockHandler } from './application/commands/page-block/reorder-page-block/reorder-page-block.handler';
 import { RestorePageBlockHandler } from './application/commands/page-block/restore-page-block/restore-page-block.handler';
+import { DuplicatePageBlockHandler } from './application/commands/page-block/duplicate-page-block/duplicate-page-block.handler';
 import { UpdatePageBlockHandler } from './application/commands/page-block/update-page-block/update-page-block.handler';
 import { CreatePageHandler } from './application/commands/page/create-page/create-page.handler';
 import { DeletePageHandler } from './application/commands/page/delete-page/delete-page.handler';
@@ -266,6 +267,10 @@ const pageBlockHandlers = [
   {
     provide: CONTENT_TYPES.applications.RestorePageBlockHandler,
     useClass: RestorePageBlockHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.DuplicatePageBlockHandler,
+    useClass: DuplicatePageBlockHandler,
   },
   {
     provide: CONTENT_TYPES.applications.FindPageBlockByPageHandler,

@@ -37,6 +37,7 @@ export const CONTENT_TYPES = {
     MovePageBlockHandler: Symbol.for('MovePageBlockHandler'),
     DeletePageBlockHandler: Symbol.for('DeletePageBlockHandler'),
     RestorePageBlockHandler: Symbol.for('RestorePageBlockHandler'),
+    DuplicatePageBlockHandler: Symbol.for('DuplicatePageBlockHandler'),
     AddPageFavoriteHandler: Symbol.for('AddPageFavoriteHandler'),
     RemovePageFavoriteHandler: Symbol.for('RemovePageFavoriteHandler'),
     ListPageFavoritesHandler: Symbol.for('ListPageFavoritesHandler'),

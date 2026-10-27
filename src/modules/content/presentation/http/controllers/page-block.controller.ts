@@ -26,6 +26,8 @@ import { CreatePageBlockCommand } from 'src/modules/content/application/commands
 import { CreatePageBlockHandler } from 'src/modules/content/application/commands/page-block/create-page-block/create-page-block.handler';
 import { DeletePageBlockCommand } from 'src/modules/content/application/commands/page-block/delete-page-block/delete-page-block.command';
 import { DeletePageBlockHandler } from 'src/modules/content/application/commands/page-block/delete-page-block/delete-page-block.handler';
+import { DuplicatePageBlockCommand } from 'src/modules/content/application/commands/page-block/duplicate-page-block/duplicate-page-block.command';
+import { DuplicatePageBlockHandler } from 'src/modules/content/application/commands/page-block/duplicate-page-block/duplicate-page-block.handler';
 import { MovePageBlockCommand } from 'src/modules/content/application/commands/page-block/move-page-block/move-page-block.command';
 import { MovePageBlockHandler } from 'src/modules/content/application/commands/page-block/move-page-block/move-page-block.handler';
 import { ReorderPageBlockCommand } from 'src/modules/content/application/commands/page-block/reorder-page-block/reorder-page-block.command';
@@ -88,6 +90,9 @@ export class PageBlockController {
 
     @Inject(CONTENT_TYPES.applications.RestorePageBlockHandler)
     private readonly restorePageBlockHandler: RestorePageBlockHandler,
+
+    @Inject(CONTENT_TYPES.applications.DuplicatePageBlockHandler)
+    private readonly duplicatePageBlockHandler: DuplicatePageBlockHandler,
 
     private readonly resolveBookmarkMetadataHandler: ResolveBookmarkMetadataHandler,
   ) {}
@@ -248,6 +253,20 @@ export class PageBlockController {
       new RestorePageBlockCommand(blockId),
     );
     return { success: true };
+  }
+
+  @Post(':blockId/duplicate')
+  @WriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'blockId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
+  @ResponseMessage('Duplicate page block')
+  duplicate(
+    @Param('blockId', ParseUUIDPipe) blockId: string,
+    @Auth() auth: IAuth,
+  ): Promise<PageBlockResponseDto> {
+    return this.duplicatePageBlockHandler.execute(
+      new DuplicatePageBlockCommand(blockId, auth.id),
+    );
   }
 
   @Post('bookmark/metadata')
