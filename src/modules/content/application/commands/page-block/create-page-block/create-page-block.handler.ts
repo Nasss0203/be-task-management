@@ -13,6 +13,8 @@ import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity
 
 import { canContainChildren } from 'src/modules/content/domain/policies/page-block-container.policy';
 
+import { isAllowedEmbedContent } from 'src/modules/content/domain/policies/page-block-embed.policy';
+
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
 
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
@@ -48,6 +50,10 @@ export class CreatePageBlockHandler {
         dataConfig,
         isOpen,
       } = command.input;
+
+      if (!isAllowedEmbedContent(type, content)) {
+        throw new BadRequestException('Unsupported embed URL');
+      }
 
       const parentBlockId = command.input.parentBlockId ?? null;
 

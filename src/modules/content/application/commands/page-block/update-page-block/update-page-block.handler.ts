@@ -1,8 +1,15 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/response/page-block.response.dto';
 
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
+
+import { isAllowedEmbedContent } from 'src/modules/content/domain/policies/page-block-embed.policy';
 
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
 
@@ -29,6 +36,17 @@ export class UpdatePageBlockHandler {
 
       if (!block) {
         throw new NotFoundException('Page block not found');
+      }
+
+      const nextType = command.updates.type ?? block.getType();
+      // content: null clears the field, so only undefined keeps the current value
+      const nextContent =
+        command.updates.content !== undefined
+          ? command.updates.content
+          : block.getContent();
+
+      if (!isAllowedEmbedContent(nextType, nextContent)) {
+        throw new BadRequestException('Unsupported embed URL');
       }
 
       if (command.updates.type !== undefined) {
