@@ -14,11 +14,13 @@ import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity
 import { canContainChildren } from 'src/modules/content/domain/policies/page-block-container.policy';
 
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
+import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { CreatePageBlockCommand } from './create-page-block.command';
+import type { PageActivityRecorder } from 'src/modules/content/application/ports/page-activity-recorder.port';
 
 @Injectable()
 export class CreatePageBlockHandler {
@@ -28,6 +30,10 @@ export class CreatePageBlockHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+    @Inject(CONTENT_TYPES.repositories.PageRepository)
+    private readonly pageRepo: PageRepository,
+    @Inject(CONTENT_TYPES.ports.PageActivityRecorder)
+    private readonly activity: PageActivityRecorder,
   ) {}
 
   async execute(
@@ -148,6 +154,16 @@ export class CreatePageBlockHandler {
 
       const savedBlock = await this.pageBlockRepo.save(block, context);
 
+      await this.pageRepo.touch(pageId, context);
+      await this.activity.record(
+        {
+          actorId: command.input.createdBy,
+          pageId,
+          blockId: savedBlock.getId(),
+          action: 'PAGE_BLOCK_CREATED',
+        },
+        context,
+      );
       return PageBlockResponseDto.fromDomain(savedBlock);
     });
   }

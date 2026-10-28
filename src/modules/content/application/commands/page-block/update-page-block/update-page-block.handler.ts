@@ -5,11 +5,13 @@ import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/r
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
+import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { UpdatePageBlockCommand } from './update-page-block.command';
+import type { PageActivityRecorder } from 'src/modules/content/application/ports/page-activity-recorder.port';
 
 @Injectable()
 export class UpdatePageBlockHandler {
@@ -19,6 +21,10 @@ export class UpdatePageBlockHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+    @Inject(CONTENT_TYPES.repositories.PageRepository)
+    private readonly pageRepo: PageRepository,
+    @Inject(CONTENT_TYPES.ports.PageActivityRecorder)
+    private readonly activity: PageActivityRecorder,
   ) {}
 
   async execute(
@@ -49,6 +55,16 @@ export class UpdatePageBlockHandler {
 
       const updatedBlock = await this.pageBlockRepo.save(block, context);
 
+      await this.pageRepo.touch(block.getPageId(), context);
+      await this.activity.record(
+        {
+          actorId: command.actorId,
+          pageId: block.getPageId(),
+          blockId: block.getId(),
+          action: 'PAGE_BLOCK_UPDATED',
+        },
+        context,
+      );
       return PageBlockResponseDto.fromDomain(updatedBlock);
     });
   }

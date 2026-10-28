@@ -9,6 +9,14 @@ export class AiModificationPlanPreviewCountsResponseDto {
   operations: number;
   blocks: number;
   databaseRows: number;
+  /** SET_TODO_CHECKED operations (kế hoạch tích to-do). */
+  todoUpdates: number;
+
+  /** SET_BLOCK_TEXT operations. */
+  blockEdits: number;
+
+  /** DELETE_BLOCK operations (their nested blocks are not counted). */
+  blockDeletes: number;
 }
 
 export class AiModificationPlanPreviewResponseDto {
@@ -33,6 +41,9 @@ export class AiModificationPlanPreviewResponseDto {
           operations: 0,
           blocks: 0,
           databaseRows: 0,
+          todoUpdates: 0,
+          blockEdits: 0,
+          blockDeletes: 0,
         },
         operations: [],
         contextRequests: plan.contextRequests,
@@ -64,6 +75,15 @@ export class AiModificationPlanPreviewResponseDto {
         operations: plan.operations.length,
         blocks,
         databaseRows,
+        todoUpdates: plan.operations.filter(
+          (operation) => operation.type === 'SET_TODO_CHECKED',
+        ).length,
+        blockEdits: plan.operations.filter(
+          (operation) => operation.type === 'SET_BLOCK_TEXT',
+        ).length,
+        blockDeletes: plan.operations.filter(
+          (operation) => operation.type === 'DELETE_BLOCK',
+        ).length,
       },
       operations: plan.operations,
     };

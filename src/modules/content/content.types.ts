@@ -3,6 +3,7 @@ export const CONTENT_TYPES = {
     PageProvisioning: Symbol.for('PageProvisioning'),
     PageSnapshotReader: Symbol.for('PageSnapshotReader'),
     PublicSiteNavigationReader: Symbol.for('PublicSiteNavigationReader'),
+    PageActivityRecorder: Symbol.for('PageActivityRecorder'),
   },
   applications: {
     CreatePageHandler: Symbol.for('CreatePageHandler'),

@@ -4,5 +4,7 @@ export class MovePageBlockCommand {
   constructor(
     public readonly blockId: string,
     public readonly dto: MovePageBlockDto,
+    // Who made the change, for the activity log; absent for system work.
+    public readonly actorId?: string,
   ) {}
 }

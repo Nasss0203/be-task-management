@@ -25,6 +25,10 @@ import { IdentityModule } from '../identity/identity.module';
       useClass: TypeOrmActivityRepository,
     },
   ],
-  exports: [ACTIVITY_TYPES.services.CreateActivityService],
+  exports: [
+    ACTIVITY_TYPES.services.CreateActivityService,
+    // Content records Page edits through it (merged per burst).
+    ACTIVITY_TYPES.repositories.ActivityRepository,
+  ],
 })
 export class ActivityModule {}

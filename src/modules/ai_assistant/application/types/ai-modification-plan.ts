@@ -94,9 +94,55 @@ export interface AiInsertBlocksOperation {
   blocks: AiModificationBlockInput[];
 }
 
+export interface AiSetTodoCheckedOperation {
+  type: 'SET_TODO_CHECKED';
+
+  /** Existing TODO block from AiPageContext. */
+  blockId: string;
+
+  /**
+   * Shown in the draft only. Must equal the block's current text, so this
+   * operation can never rename a to-do.
+   */
+  text: string;
+  checked: boolean;
+}
+
+export interface AiSetBlockTextOperation {
+  type: 'SET_BLOCK_TEXT';
+
+  /** Existing TEXT, HEADER, QUOTE, TODO or TOGGLE block from AiPageContext. */
+  blockId: string;
+
+  /** Must equal the block's current text (draft and Apply). */
+  oldText: string;
+
+  /** Replaces only content.text; at most 2000 characters. */
+  newText: string;
+}
+
+export interface AiDeleteBlockOperation {
+  type: 'DELETE_BLOCK';
+
+  /** Existing TEXT, HEADER, QUOTE, TODO or TOGGLE block from AiPageContext. */
+  blockId: string;
+
+  /** Must equal the block's current text (draft and Apply). */
+  text: string;
+
+  /**
+   * Blocks nested in it, deleted with it. Must match the page, so a block
+   * nested after the draft is never deleted unseen.
+   */
+  childCount: number;
+}
+
 export type AiModificationOperation =
   | AiCreateDatabaseRowsOperation
-  | AiInsertBlocksOperation;
+  | AiInsertBlocksOperation
+  | AiSetTodoCheckedOperation
+  | AiSetBlockTextOperation
+  | AiDeleteBlockOperation;
 
 export interface AiModificationContextRequest {
   /**

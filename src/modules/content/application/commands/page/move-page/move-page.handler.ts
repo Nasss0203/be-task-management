@@ -19,6 +19,7 @@ import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-w
 import { MovePageCommand } from './move-page.command';
 import { PublicSubdomainAllocatorService } from '../../../services/public-subdomain-allocator.service';
 import { PublicationHierarchySynchronizerService } from '../../../services/publication-hierarchy-synchronizer.service';
+import type { PageActivityRecorder } from 'src/modules/content/application/ports/page-activity-recorder.port';
 
 @Injectable()
 export class MovePageHandler {
@@ -32,6 +33,8 @@ export class MovePageHandler {
     private readonly authorizationService: AuthorizationService,
     private readonly subdomains: PublicSubdomainAllocatorService,
     private readonly publicationHierarchy: PublicationHierarchySynchronizerService,
+    @Inject(CONTENT_TYPES.ports.PageActivityRecorder)
+    private readonly activity: PageActivityRecorder,
   ) {}
 
   async execute(command: MovePageCommand): Promise<void> {
@@ -245,6 +248,15 @@ export class MovePageHandler {
         publicSubdomain,
       );
       await this.publicationHierarchy.execute(plan, manager);
+      await this.activity.record(
+        {
+          actorId: command.userId,
+          pageId: command.pageId,
+          action: 'PAGE_UPDATED',
+          kind: 'MOVED',
+        },
+        manager,
+      );
     });
   }
 }

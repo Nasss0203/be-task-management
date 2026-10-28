@@ -6,6 +6,7 @@ import type { PageRepository } from 'src/modules/content/domain/repositories/pag
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { DeletePageCommand } from './delete-page.command';
+import type { PageActivityRecorder } from 'src/modules/content/application/ports/page-activity-recorder.port';
 
 @Injectable()
 export class DeletePageHandler {
@@ -15,6 +16,8 @@ export class DeletePageHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+    @Inject(CONTENT_TYPES.ports.PageActivityRecorder)
+    private readonly activity: PageActivityRecorder,
   ) {}
 
   async execute(command: DeletePageCommand): Promise<void> {
@@ -36,6 +39,14 @@ export class DeletePageHandler {
       await this.pageRepo.softDeleteHierarchy(
         command.pageId,
         command.userId,
+        manager,
+      );
+      await this.activity.record(
+        {
+          actorId: command.userId,
+          pageId: command.pageId,
+          action: 'PAGE_DELETED',
+        },
         manager,
       );
     });

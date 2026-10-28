@@ -76,17 +76,22 @@ describe('PageReferenceResolver.resolveFromSentence (M1b)', () => {
   const subMan = page('sub-man', 'sub man');
   const meeting = page('meeting', 'Hội họp tuần');
   const secret = page('secret', 'Bí mật');
-  const findAccessibleInWorkspace = jest.fn();
+  const findAccessibleTitlesInWorkspace = jest.fn();
   const getReadablePage = jest.fn();
   const resolver = new PageReferenceResolver(
-    { findAccessibleInWorkspace } as unknown as PageResolutionReader,
+    { findAccessibleTitlesInWorkspace } as unknown as PageResolutionReader,
     { getReadablePage } as unknown as AiConversationAccessService,
   );
   const byId = new Map([subMan, meeting, secret].map((p) => [p.getId(), p]));
+  // M1: the reader returns only id and title.
+  const titled = (pages: Page[]) =>
+    pages.map((p) => ({ id: p.getId(), title: p.getTitle() }));
 
   beforeEach(() => {
     jest.clearAllMocks();
-    findAccessibleInWorkspace.mockResolvedValue([subMan, meeting, secret]);
+    findAccessibleTitlesInWorkspace.mockResolvedValue(
+      titled([subMan, meeting, secret]),
+    );
     getReadablePage.mockImplementation(async (_user: string, id: string) => {
       if (id === 'secret') throw new ForbiddenException();
       return byId.get(id);
@@ -101,7 +106,10 @@ describe('PageReferenceResolver.resolveFromSentence (M1b)', () => {
       status: 'CANDIDATES', resolutionMethod: 'TITLE_IN_SENTENCE',
       candidates: [{ pageId: 'meeting', workspaceId: 'workspace-1', title: 'Hội họp tuần', parentPageId: null, teamspaceId: null }],
     });
-    expect(findAccessibleInWorkspace).toHaveBeenCalledWith('user-1', 'workspace-1');
+    expect(findAccessibleTitlesInWorkspace).toHaveBeenCalledWith(
+      'user-1',
+      'workspace-1',
+    );
     expect(getReadablePage).toHaveBeenCalledWith('user-1', 'meeting', 'share');
   });
 
@@ -120,7 +128,7 @@ describe('PageReferenceResolver.resolveFromSentence (M1b)', () => {
 
   it('asks for a clearer name above five readable candidates', async () => {
     const many = Array.from({ length: 6 }, (_, i) => page(`same-${i}`, 'Notes'));
-    findAccessibleInWorkspace.mockResolvedValue(many);
+    findAccessibleTitlesInWorkspace.mockResolvedValue(titled(many));
     getReadablePage.mockImplementation(async (_user: string, id: string) => many.find((p) => p.getId() === id));
     expect(await resolver.resolveFromSentence({
       ...input, instruction: 'thêm checklist vào trang Notes',
@@ -129,7 +137,7 @@ describe('PageReferenceResolver.resolveFromSentence (M1b)', () => {
 
   it('does not authorize an unbounded number of textual matches', async () => {
     const many = Array.from({ length: 26 }, (_, i) => page(`same-${i}`, 'Notes'));
-    findAccessibleInWorkspace.mockResolvedValue(many);
+    findAccessibleTitlesInWorkspace.mockResolvedValue(titled(many));
     expect(await resolver.resolveFromSentence({
       ...input, instruction: 'thêm checklist vào trang Notes',
     })).toEqual({ status: 'TOO_MANY', candidates: [] });

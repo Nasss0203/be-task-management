@@ -7,6 +7,9 @@ import { ArchiveConversationHandler } from '../../../application/commands/archiv
 
 import { CreateConversationHandler } from '../../../application/commands/create-conversation/create-conversation.handler';
 import { DiscardGenerationHandler } from '../../../application/commands/discard-generation/discard-generation.handler';
+import { UndoAiModificationPlanCommand } from '../../../application/commands/undo-ai-modification-plan/undo-ai-modification-plan.command';
+
+import { UndoAiModificationPlanHandler } from '../../../application/commands/undo-ai-modification-plan/undo-ai-modification-plan.handler';
 
 import { GetConversationHandler } from '../../../application/queries/get-conversation/get-conversation.handler';
 import { GetGenerationHandler } from '../../../application/queries/get-generation/get-generation.handler';
@@ -33,6 +36,7 @@ describe('AiAssistantController', () => {
   const listConversationGenerationsExecute = jest.fn();
   const getGenerationExecute = jest.fn();
   const discardGenerationExecute = jest.fn();
+  const undoGenerationExecute = jest.fn();
 
   const aiAssistantSubmit = jest.fn();
   const modificationPlannerGenerate = jest.fn();
@@ -101,6 +105,12 @@ describe('AiAssistantController', () => {
           provide: DiscardGenerationHandler,
           useValue: {
             execute: discardGenerationExecute,
+          },
+        },
+        {
+          provide: UndoAiModificationPlanHandler,
+          useValue: {
+            execute: undoGenerationExecute,
           },
         },
         {
@@ -339,6 +349,21 @@ describe('AiAssistantController', () => {
       ).rejects.toBe(error);
     });
   });
+  it.each([undefined, 'share-token-1'])(
+    'forwards authenticated Undo identity and optional token %s (kế hoạch xoá block)',
+    async (token) => {
+      undoGenerationExecute.mockResolvedValue({ restoredBlockIds: ['a'] });
+      const result = await controller.undoGeneration(
+        { id: 'actor-1' } as IAuth,
+        'generation-1',
+        token,
+      );
+      expect(undoGenerationExecute).toHaveBeenCalledWith(
+        new UndoAiModificationPlanCommand('actor-1', 'generation-1', token),
+      );
+      expect(result).toEqual({ restoredBlockIds: ['a'] });
+    },
+  );
   it.each([undefined, 'share-token-1'])(
     'forwards authenticated Discard identity and optional token %s',
     async (token) => {

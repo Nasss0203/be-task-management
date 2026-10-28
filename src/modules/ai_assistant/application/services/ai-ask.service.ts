@@ -21,6 +21,7 @@ import { AiConversationAccessService } from './ai-conversation-access.service';
 import { AiPageInstructionPlannerService } from './ai-page-instruction-planner.service';
 import { resolveWritingSource } from './ai-writing-source';
 import type { PageInstructionPlanningResult } from '../resolution/page-instruction-planning.types';
+import type { UnsupportedModificationDetail } from './ai-modification-operation.policy';
 
 /** Chat nhiều lượt: the draft lives in another conversation than the one sent. */
 function conversationSwitch(
@@ -30,17 +31,65 @@ function conversationSwitch(
   return sent && sent !== used ? { conversationSwitched: true } : {};
 }
 
+/** Names what was refused, so the user knows how to rephrase (kế hoạch sửa nhỏ, D3). */
+function unsupportedMessage(detail?: UnsupportedModificationDetail): string {
+  switch (detail?.kind) {
+    case 'BLOCKED_WORD':
+      return detail.pageAction
+        ? `Hiện tại AI chưa làm được "${detail.term}": AI chỉ thay đổi nội dung bên trong trang.`
+        : `Hiện tại AI chưa làm được "${detail.term}". Nếu "${detail.term}" là nội dung cần thêm hoặc chữ mới, hãy đặt nó trong ngoặc kép.`;
+
+    case 'PUNCTUATION':
+      return `Hãy viết yêu cầu thành một câu lệnh, không dùng dấu "${detail.term}".`;
+
+    case 'MIXED':
+      return 'Mỗi câu chỉ một loại việc: hãy gửi riêng từng yêu cầu.';
+
+    case 'BULK':
+      return 'AI chỉ xoá từng block được nêu tên (tối đa 10 block mỗi câu), không xoá hàng loạt.';
+
+    default:
+      return 'Hiện tại AI chỉ thêm block, thêm dòng database, tích / bỏ tích to-do, sửa chữ hoặc xoá block có chữ. Mỗi câu chỉ một loại việc, hãy gửi từng yêu cầu riêng.';
+  }
+}
+
+/** M2: "bạn sửa hôm qua", "bạn sửa gần đây nhất có "release" trong tên". */
+function activityLabel(
+  intent: PageInstructionPlanningResult['intent'],
+): string | null {
+  if (intent?.referenceType !== 'ACTIVITY') return null;
+  const { relative, days, titleHint } = intent.activity;
+  const when = {
+    LATEST: 'gần đây nhất',
+    TODAY: 'hôm nay',
+    YESTERDAY: 'hôm qua',
+    N_DAYS_AGO: `${days} ngày trước`,
+    LAST_WEEK: 'tuần trước',
+    RECENT: 'gần đây',
+  }[relative];
+  return `bạn sửa ${when}${titleHint ? ` có "${titleHint}" trong tên` : ''}`;
+}
+
 /** Tells the user what went wrong finding the Page and how to phrase a retry. */
 function pageResolutionMessage(
   planning: PageInstructionPlanningResult,
 ): string {
   const name = planning.intent?.pageReference?.trim();
+  const activity = activityLabel(planning.intent);
   switch (planning.status) {
     case 'PAGE_NOT_FOUND':
+      if (activity)
+        return `Không thấy trang nào ${activity} mà bạn còn quyền truy cập. Hãy ghi tên trang, ví dụ: thêm checklist vào trang "Kế hoạch Q4".`;
       return name
         ? `Không tìm thấy trang "${name}" mà bạn có quyền truy cập trong workspace này. Kiểm tra lại tên trang.`
         : 'Không tìm thấy trang mà bạn có quyền truy cập trong workspace này. Kiểm tra lại tên trang.';
     case 'AMBIGUOUS_PAGE':
+      // M2: always confirmed, even a single Page.
+      if (planning.resolutionMethod === 'ACTIVITY' && activity) {
+        return planning.candidates.length === 1
+          ? `Trang ${activity} là "${planning.candidates[0].title}". Chọn trang để tiếp tục:`
+          : `Các trang ${activity}. Chọn một trang:`;
+      }
       if (planning.resolutionMethod === 'TITLE_IN_SENTENCE') {
         return planning.candidates.length === 1
           ? `Ý bạn là trang "${planning.candidates[0].title}"? Chọn trang để tiếp tục:`
@@ -50,8 +99,10 @@ function pageResolutionMessage(
         ? `Có nhiều trang tên "${name}". Chọn trang bạn muốn sửa:`
         : 'Có nhiều trang trùng tên. Chọn trang bạn muốn sửa:';
     case 'UNSUPPORTED_OPERATION':
-      return 'Hiện tại chỉ hỗ trợ thêm block hoặc thêm dòng database.';
+      return unsupportedMessage(planning.detail);
     case 'NEEDS_CLARIFICATION':
+      if (planning.reason === 'MISSING_CHECKLIST_ITEMS')
+        return `Checklist gồm những mục nào? Gửi lại cả câu kèm các mục, ví dụ: thêm checklist gồm in tài liệu, đặt phòng vào trang "${planning.pageTitle || name || 'Kế hoạch Q4'}".`;
       return planning.reason === 'UNCLEAR_INTENT'
         ? 'Bạn muốn thay đổi gì trên trang? Hãy mô tả rõ nội dung cần thêm.'
         : 'Bạn muốn sửa trang nào? Ghi tên trang trong ngoặc kép, ví dụ: Thêm checklist vào trang "Kế hoạch Q4".';

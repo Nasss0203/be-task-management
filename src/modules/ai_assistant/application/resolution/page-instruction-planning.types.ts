@@ -1,3 +1,4 @@
+import type { UnsupportedModificationDetail } from '../services/ai-modification-operation.policy';
 import type { GenerateAiModificationPlanResult } from '../services/ai-modification-planner.service';
 import type { PageIntentExtraction } from './page-intent.types';
 import type { PageResolutionCandidate } from './page-resolution.types';
@@ -6,7 +7,9 @@ import type { PageResolutionCandidate } from './page-resolution.types';
 export type PlanningResolutionMethod =
   | 'CURRENT_CONTEXT'
   | 'EXACT_TITLE'
-  | 'TITLE_IN_SENTENCE';
+  | 'TITLE_IN_SENTENCE'
+  // M2: like TITLE_IN_SENTENCE, only after the user picked the Page.
+  | 'ACTIVITY';
 
 /** Non-planning results never create an AI Generation or change a Page. */
 export type PageInstructionPlanningResult =
@@ -14,6 +17,8 @@ export type PageInstructionPlanningResult =
       status: 'UNSUPPORTED_OPERATION';
       intent: PageIntentExtraction;
       reason: 'INSERT_ONLY';
+      /** Why it was refused; only chooses the reply (kế hoạch sửa nhỏ, D3). */
+      detail?: UnsupportedModificationDetail;
     }
   | {
       status: 'NOT_A_PAGE_MODIFICATION';
@@ -21,8 +26,16 @@ export type PageInstructionPlanningResult =
     }
   | {
       status: 'NEEDS_CLARIFICATION';
-      reason: 'UNCLEAR_INTENT' | 'UNRESOLVED_PAGE' | 'MISSING_CURRENT_PAGE';
+      reason:
+        | 'UNCLEAR_INTENT'
+        | 'UNRESOLVED_PAGE'
+        | 'MISSING_CURRENT_PAGE'
+
+        // gp02: "thêm checklist" with neither items nor a topic.
+        | 'MISSING_CHECKLIST_ITEMS';
       intent: PageIntentExtraction;
+      /** MISSING_CHECKLIST_ITEMS: the one real, readable Page title found. */
+      pageTitle?: string;
     }
   | {
       status: 'PAGE_NOT_FOUND';
@@ -33,7 +46,7 @@ export type PageInstructionPlanningResult =
       status: 'AMBIGUOUS_PAGE';
       intent: PageIntentExtraction;
       candidates: PageResolutionCandidate[];
-      resolutionMethod?: 'TITLE_IN_SENTENCE';
+      resolutionMethod?: 'TITLE_IN_SENTENCE' | 'ACTIVITY';
     }
   | {
       status: 'PLAN_GENERATED';

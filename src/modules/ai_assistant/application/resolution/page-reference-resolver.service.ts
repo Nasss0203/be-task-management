@@ -10,14 +10,22 @@ import { AI_ASSISTANT_TYPES } from '../../ai-assistant.types';
 import { AiConversationAccessService } from '../services/ai-conversation-access.service';
 import type { PageResolutionReader } from './page-resolution.port';
 import {
+  DEFAULT_TIME_ZONE,
+  isTimeZone,
+  MAX_ACTIVITY_CANDIDATES,
   MAX_SENTENCE_CANDIDATES,
+  type ActivityPageResolutionResult,
   type PageResolutionCandidate,
+  type ResolvePageFromActivityInput,
   type PageResolutionResult,
   type ResolvePageFromSentenceInput,
   type ResolvePageReferenceInput,
   type SentencePageResolutionResult,
 } from './page-resolution.types';
-import { findPageTitlesInSentence } from './page-title-sentence-matcher';
+import {
+  findPageTitlesInSentence,
+  normalizeForTitleMatch,
+} from './page-title-sentence-matcher';
 
 // More textual matches than this are not worth authorizing one by one.
 const MAX_SENTENCE_MATCHES_TO_AUTHORIZE = 25;
@@ -87,14 +95,11 @@ export class PageReferenceResolver {
     if (!input.userId?.trim() || !input.workspaceId?.trim()) {
       throw new BadRequestException('User and workspace are required');
     }
-    const pages = await this.reader.findAccessibleInWorkspace(
+    const pages = await this.reader.findAccessibleTitlesInWorkspace(
       input.userId,
       input.workspaceId,
     );
-    const matchedIds = findPageTitlesInSentence(
-      input.instruction,
-      pages.map((page) => ({ id: page.getId(), title: page.getTitle() })),
-    );
+    const matchedIds = findPageTitlesInSentence(input.instruction, pages);
     if (matchedIds.length > MAX_SENTENCE_MATCHES_TO_AUTHORIZE) {
       return { status: 'TOO_MANY', candidates: [] };
     }
@@ -116,6 +121,59 @@ export class PageReferenceResolver {
       candidates,
       resolutionMethod: 'TITLE_IN_SENTENCE',
     };
+  }
+
+  /**
+   * M2: Pages the user edited in the time named. Never resolves directly:
+   * the user confirms even a single candidate (kế hoạch M2, B5).
+   */
+  async resolveFromActivity(
+    input: ResolvePageFromActivityInput,
+  ): Promise<ActivityPageResolutionResult> {
+    if (!input.userId?.trim() || !input.workspaceId?.trim()) {
+      throw new BadRequestException('User and workspace are required');
+    }
+    const timeZone = await this.chooseTimeZone(input.userId, input.timeZone);
+    const edited = await this.reader.findRecentlyEditedPages(
+      input.userId,
+      input.workspaceId,
+      {
+        relative: input.activity.relative,
+        days: input.activity.days,
+        timeZone,
+        now: input.now,
+      },
+    );
+    const hint = input.activity.titleHint
+      ? ` ${normalizeForTitleMatch(input.activity.titleHint)} `
+      : null;
+    const wanted =
+      input.activity.relative === 'LATEST' ? 1 : MAX_ACTIVITY_CANDIDATES;
+
+    const candidates: PageResolutionCandidate[] = [];
+    for (const edit of edited) {
+      // "trang release tôi sửa": whole words of the title, marks ignored.
+      if (hint && !` ${normalizeForTitleMatch(edit.title)} `.includes(hint)) {
+        continue;
+      }
+      const page = await this.getAuthorizedPage(input, edit.id);
+      if (!page) continue;
+      candidates.push(this.toCandidate(page));
+      if (candidates.length === wanted) break;
+    }
+    return candidates.length > 0
+      ? { status: 'CANDIDATES', candidates, resolutionMethod: 'ACTIVITY' }
+      : { status: 'NOT_FOUND', candidates: [] };
+  }
+
+  /** The request's zone, else the profile's, else Việt Nam (§11 #7). */
+  private async chooseTimeZone(
+    userId: string,
+    requested?: string | null,
+  ): Promise<string> {
+    if (requested && isTimeZone(requested)) return requested;
+    const saved = await this.reader.findProfileTimeZone(userId);
+    return saved && isTimeZone(saved) ? saved : DEFAULT_TIME_ZONE;
   }
 
   private async getAuthorizedPage(

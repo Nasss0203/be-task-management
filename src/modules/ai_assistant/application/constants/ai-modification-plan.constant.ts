@@ -16,7 +16,16 @@ export const AI_MODIFICATION_PLAN_STATUSES = [
 export const AI_MODIFICATION_OPERATION_TYPES = [
   'CREATE_DATABASE_ROWS',
   'INSERT_BLOCKS',
+  // Kế hoạch tích to-do: only the checkbox of an existing TODO changes.
+  'SET_TODO_CHECKED',
+  // Kế hoạch sửa chữ block: only the text of an existing block changes.
+  'SET_BLOCK_TEXT',
+  // Kế hoạch xoá block: soft-deletes one block and everything nested in it.
+  'DELETE_BLOCK',
 ] as const;
+
+/** SET_BLOCK_TEXT: the longest new text a block may get. */
+export const AI_MODIFICATION_MAX_BLOCK_TEXT_LENGTH = 2000;
 
 export const AI_MODIFICATION_SUPPORTED_BLOCK_TYPES = [
   PageBlockType.TEXT,

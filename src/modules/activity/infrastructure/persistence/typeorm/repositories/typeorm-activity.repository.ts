@@ -7,6 +7,7 @@ import {
   ActivityRepository,
   FindActivityFilters,
   FindActivityResult,
+  PageEditActivityInput,
   SaveActivityInput,
 } from '../../../../domain/repositories/activity.repository';
 import { Activity } from '../entities/activity.orm-entity';
@@ -36,6 +37,50 @@ export class TypeOrmActivityRepository implements ActivityRepository {
     const saved = await repo.save(entity);
 
     return ActivityMapper.toModel(saved);
+  }
+
+  async recordPageEdit(
+    input: PageEditActivityInput,
+    windowMs: number,
+    context?: PersistenceContext,
+  ): Promise<void> {
+    const repo = this.getRepo(context);
+    // created_at is a timestamp without time zone in the session's zone, so
+    // the window is measured with localtimestamp, never with a JS Date.
+    const refreshed = await repo.query<unknown[]>(
+      `UPDATE activities SET created_at = localtimestamp
+        WHERE id = (
+          SELECT id FROM activities
+           WHERE actor_id = $1
+             AND action = $2
+             AND entity_type IN ('PAGE', 'PAGE_BLOCK')
+             AND COALESCE(metadata ->> 'pageId', entity_id::text) = $3
+             AND created_at >= localtimestamp - $4 * interval '1 millisecond'
+           ORDER BY created_at DESC
+           LIMIT 1)
+        RETURNING id`,
+      [input.actorId, input.action, input.pageId, windowMs],
+    );
+    // The postgres driver answers UPDATE with [rows, affected count].
+    const rows = Array.isArray(refreshed[0]) ? refreshed[0] : refreshed;
+    if (rows.length > 0) return;
+
+    const [page] = await repo.query<{ workspace_id: string }[]>(
+      'SELECT workspace_id FROM pages WHERE id = $1',
+      [input.pageId],
+    );
+    if (!page) return;
+    await this.save(
+      {
+        workspaceId: page.workspace_id,
+        entityType: input.entityType,
+        entityId: input.entityId,
+        actorId: input.actorId,
+        action: input.action,
+        metadata: input.metadata,
+      },
+      context,
+    );
   }
 
   async findMany(filters: FindActivityFilters): Promise<FindActivityResult> {

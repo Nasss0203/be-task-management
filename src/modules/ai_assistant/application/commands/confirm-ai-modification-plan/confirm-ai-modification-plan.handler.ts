@@ -190,6 +190,50 @@ export class ConfirmAiModificationPlanHandler {
         }
       }
 
+      // SET_TODO_CHECKED / SET_BLOCK_TEXT edit an existing block:
+      // PAGE_BLOCK_UPDATE, as in the editor.
+      const requiresBlockUpdate = plan.operations.some(
+        (operation) =>
+          operation.type === 'SET_TODO_CHECKED' ||
+          operation.type === 'SET_BLOCK_TEXT',
+      );
+      if (requiresBlockUpdate) {
+        const allowed = await this.authorizationService.authorize({
+          userId: command.userId,
+          permissions: [PERMISSIONS.PAGE_BLOCK_UPDATE],
+          target: {
+            type: 'page',
+            id: pageContext.page.id,
+          },
+          shareToken: command.shareToken,
+        });
+        if (!allowed) {
+          throw new ForbiddenException(
+            'You do not have permission to update blocks on this page',
+          );
+        }
+      }
+
+      // DELETE_BLOCK removes existing blocks: PAGE_BLOCK_DELETE, as in the editor.
+      const requiresBlockDelete = plan.operations.some(
+        (operation) => operation.type === 'DELETE_BLOCK',
+      );
+      if (requiresBlockDelete) {
+        const allowed = await this.authorizationService.authorize({
+          userId: command.userId,
+          permissions: [PERMISSIONS.PAGE_BLOCK_DELETE],
+          target: {
+            type: 'page',
+            id: pageContext.page.id,
+          },
+          shareToken: command.shareToken,
+        });
+        if (!allowed) {
+          throw new ForbiddenException(
+            'You do not have permission to delete blocks on this page',
+          );
+        }
+      }
       const requiresDatabaseUpdate = plan.operations.some(
         (operation) => operation.type === 'CREATE_DATABASE_ROWS',
       );

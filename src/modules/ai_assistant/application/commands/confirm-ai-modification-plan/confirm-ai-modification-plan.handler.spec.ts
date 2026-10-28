@@ -519,6 +519,118 @@ describe('ConfirmAiModificationPlanHandler', () => {
     expect(applyGenerationHandler.execute).not.toHaveBeenCalled();
   });
 
+  describe('SET_TODO_CHECKED (kế hoạch tích to-do)', () => {
+    const tickPlan = {
+      schemaVersion: 1,
+      type: 'AI_MODIFICATION_PLAN',
+      pageId: 'page-1',
+      status: 'PLAN_READY',
+      summary: 'Tích 1 to-do: Gửi email',
+      operations: [
+        {
+          type: 'SET_TODO_CHECKED',
+          blockId: 'todo-1',
+          text: 'Gửi email',
+          checked: true,
+        },
+      ],
+    };
+    const blockUpdate = (shareToken?: string) => ({
+      userId: 'user-1',
+      permissions: [PERMISSIONS.PAGE_BLOCK_UPDATE],
+      target: { type: 'page', id: 'page-1' },
+      shareToken,
+    });
+
+    it('requires block update permission, not block creation', async () => {
+      planValidator.validate.mockReturnValue(tickPlan);
+      await handler.execute(
+        new ConfirmAiModificationPlanCommand('user-1', 'generation-1'),
+      );
+      expect(authorizationService.authorize).toHaveBeenCalledTimes(1);
+      expect(authorizationService.authorize).toHaveBeenCalledWith(
+        blockUpdate(),
+      );
+      expect(planExecutor.execute).toHaveBeenCalled();
+    });
+
+    it('rejects when block update permission is denied', async () => {
+      planValidator.validate.mockReturnValue(tickPlan);
+      authorizationService.authorize.mockResolvedValue(false);
+      await expect(
+        handler.execute(
+          new ConfirmAiModificationPlanCommand(
+            'user-1',
+            'generation-1',
+            'share-token',
+          ),
+        ),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(authorizationService.authorize).toHaveBeenCalledWith(
+        blockUpdate('share-token'),
+      );
+      expect(planExecutor.execute).not.toHaveBeenCalled();
+      expect(applyGenerationHandler.execute).not.toHaveBeenCalled();
+    });
+  });
+
+  it('requires block update permission for a text edit (kế hoạch sửa chữ block)', async () => {
+    planValidator.validate.mockReturnValue({
+      schemaVersion: 1,
+      type: 'AI_MODIFICATION_PLAN',
+      pageId: 'page-1',
+      status: 'PLAN_READY',
+      summary: 'Sửa 1 block',
+      operations: [
+        {
+          type: 'SET_BLOCK_TEXT',
+          blockId: 'block-1',
+          oldText: 'A',
+          newText: 'B',
+        },
+      ],
+    });
+    authorizationService.authorize.mockResolvedValue(false);
+    await expect(
+      handler.execute(
+        new ConfirmAiModificationPlanCommand('user-1', 'generation-1'),
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(authorizationService.authorize).toHaveBeenCalledWith({
+      userId: 'user-1',
+      permissions: [PERMISSIONS.PAGE_BLOCK_UPDATE],
+      target: { type: 'page', id: 'page-1' },
+      shareToken: undefined,
+    });
+    expect(planExecutor.execute).not.toHaveBeenCalled();
+  });
+
+  it('requires block delete permission for a delete (kế hoạch xoá block)', async () => {
+    planValidator.validate.mockReturnValue({
+      schemaVersion: 1,
+      type: 'AI_MODIFICATION_PLAN',
+      pageId: 'page-1',
+      status: 'PLAN_READY',
+      summary: 'Xoá 1 block',
+      operations: [
+        { type: 'DELETE_BLOCK', blockId: 'block-1', text: 'A', childCount: 0 },
+      ],
+    });
+    authorizationService.authorize.mockResolvedValue(false);
+    await expect(
+      handler.execute(
+        new ConfirmAiModificationPlanCommand('user-1', 'generation-1'),
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(authorizationService.authorize).toHaveBeenCalledWith({
+      userId: 'user-1',
+      permissions: [PERMISSIONS.PAGE_BLOCK_DELETE],
+      target: { type: 'page', id: 'page-1' },
+      shareToken: undefined,
+    });
+    expect(planExecutor.execute).not.toHaveBeenCalled();
+  });
+
   it('does not apply the generation when executor fails', async () => {
     const plan = {
       schemaVersion: 1 as const,

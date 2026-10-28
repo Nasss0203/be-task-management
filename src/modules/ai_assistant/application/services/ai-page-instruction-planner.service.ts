@@ -6,17 +6,38 @@ import {
 
 import { PageIntentExtractionService } from '../resolution/page-intent-extraction.service';
 import { PageReferenceResolver } from '../resolution/page-reference-resolver.service';
+import { endsWithExactPageTitle } from '../resolution/page-title-sentence-matcher';
 import type {
   PageInstructionPlanningResult,
   PlanningResolutionMethod,
 } from '../resolution/page-instruction-planning.types';
 import { AiModificationPlannerService } from './ai-modification-planner.service';
-import { isSupportedModification } from './ai-modification-operation.policy';
+import {
+  explainUnsupportedModification,
+  isBareChecklistRequest,
+  isSupportedActivityModification,
+  isSupportedModification,
+} from './ai-modification-operation.policy';
 
 type ModifyPageIntent = Extract<
   Awaited<ReturnType<PageIntentExtractionService['extract']>>['result'],
   { intent: 'MODIFY_PAGE' }
 >;
+
+/** gp02: ask for the items rather than let the planner invent or copy them. */
+function missingChecklistItems(
+  intent: ModifyPageIntent,
+  titles: readonly string[],
+): PageInstructionPlanningResult {
+  // The example in the reply names the Page only when it is a single real title.
+  const [pageTitle, ...others] = [...new Set(titles)];
+  return {
+    status: 'NEEDS_CLARIFICATION',
+    reason: 'MISSING_CHECKLIST_ITEMS',
+    intent,
+    ...(pageTitle && !others.length ? { pageTitle } : {}),
+  };
+}
 
 export interface PlanPageInstructionInput {
   userId: string;
@@ -33,6 +54,8 @@ export interface PlanPageInstructionInput {
    */
   conversationPageId?: string;
   shareToken?: string;
+  /** M2: the browser's zone from the Ask request (§11 #7). */
+  timeZone?: string | null;
 }
 
 /**
@@ -87,6 +110,9 @@ export class AiPageInstructionPlannerService {
     ) {
       throw new BadGatewayException('AI page instruction is invalid');
     }
+    if (intent.referenceType === 'ACTIVITY') {
+      return this.planFromActivity(input, intent);
+    }
 
     const unresolved =
       intent.needsClarification || intent.referenceType === 'UNRESOLVED';
@@ -101,7 +127,15 @@ export class AiPageInstructionPlannerService {
       (!unresolved &&
         !isSupportedModification(input.instruction, extractedNames))
     ) {
-      return { status: 'UNSUPPORTED_OPERATION', intent, reason: 'INSERT_ONLY' };
+      return {
+        status: 'UNSUPPORTED_OPERATION',
+        intent,
+        reason: 'INSERT_ONLY',
+        detail: explainUnsupportedModification(
+          input.instruction,
+          extractedNames,
+        ),
+      };
     }
 
     if (unresolved) {
@@ -159,6 +193,10 @@ export class AiPageInstructionPlannerService {
         if (!selected) return { status: 'PAGE_NOT_FOUND', intent };
         return this.createPlan(input, intent, selected, 'EXACT_TITLE');
       }
+      const titles = resolution.candidates.map((candidate) => candidate.title);
+      if (isBareChecklistRequest(input.instruction, titles)) {
+        return missingChecklistItems(intent, titles);
+      }
       return {
         status: 'AMBIGUOUS_PAGE',
         intent,
@@ -176,8 +214,8 @@ export class AiPageInstructionPlannerService {
   }
 
   /**
-   * M1b: look for real Page names in the user's own words. A match is only
-   * ever offered for selection; the planner runs after an explicit choice.
+   * M1b: look for real Page names in the user's own words. A match is offered
+   * for selection, unless the sentence ends with exactly one real title.
    */
   private async planFromSentence(
     input: PlanPageInstructionInput,
@@ -200,13 +238,17 @@ export class AiPageInstructionPlannerService {
     }
     // Deciding admission check: only names of real, readable Pages are data.
     // Runs before any candidate is shown and before any draft is generated.
-    if (
-      !isSupportedModification(
-        input.instruction,
-        found.candidates.map((candidate) => candidate.title),
-      )
-    ) {
-      return { status: 'UNSUPPORTED_OPERATION', intent, reason: 'INSERT_ONLY' };
+    const titles = found.candidates.map((candidate) => candidate.title);
+    if (!isSupportedModification(input.instruction, titles)) {
+      return {
+        status: 'UNSUPPORTED_OPERATION',
+        intent,
+        reason: 'INSERT_ONLY',
+        detail: explainUnsupportedModification(input.instruction, titles),
+      };
+    }
+    if (isBareChecklistRequest(input.instruction, titles)) {
+      return missingChecklistItems(intent, titles);
     }
     if (input.selectedPageId) {
       const selected = found.candidates.find(
@@ -214,6 +256,21 @@ export class AiPageInstructionPlannerService {
       );
       if (!selected) return { status: 'PAGE_NOT_FOUND', intent };
       return this.createPlan(input, intent, selected, found.resolutionMethod);
+    }
+    // "… trong trang sub man" names one real Page exactly: nothing to choose.
+    // The title now comes from the user's words, so the intent is resolved.
+    const [only] = found.candidates;
+    if (
+      found.candidates.length === 1 &&
+      endsWithExactPageTitle(input.instruction, only.title)
+    ) {
+      const resolved: ModifyPageIntent = {
+        ...intent,
+        referenceType: 'TITLE',
+        pageReference: only.title,
+        needsClarification: false,
+      };
+      return this.createPlan(input, resolved, only, 'EXACT_TITLE');
     }
     return {
       status: 'AMBIGUOUS_PAGE',
@@ -223,12 +280,64 @@ export class AiPageInstructionPlannerService {
     };
   }
 
+  /**
+   * M2: "… vào trang tôi sửa hôm qua". The Page comes from the user's own
+   * activities and is always confirmed by the user (kế hoạch M2, B5).
+   */
+  private async planFromActivity(
+    input: PlanPageInstructionInput,
+    intent: Extract<ModifyPageIntent, { referenceType: 'ACTIVITY' }>,
+  ): Promise<PageInstructionPlanningResult> {
+    // B7: the activity words after "trang" are the target, never an edit;
+    // the edit clause itself passes the usual admission.
+    if (
+      !isSupportedActivityModification(input.instruction, intent.instruction)
+    ) {
+      return {
+        status: 'UNSUPPORTED_OPERATION',
+        intent,
+        reason: 'INSERT_ONLY',
+        detail: explainUnsupportedModification(intent.instruction),
+      };
+    }
+    if (isBareChecklistRequest(intent.instruction)) {
+      return missingChecklistItems(intent, []);
+    }
+    const found = await this.pageReferenceResolver.resolveFromActivity({
+      userId: input.userId,
+      workspaceId: input.workspaceId,
+      activity: intent.activity,
+      timeZone: input.timeZone,
+      shareToken: input.shareToken,
+    });
+    if (found.status === 'NOT_FOUND')
+      return { status: 'PAGE_NOT_FOUND', intent };
+    if (input.selectedPageId) {
+      // Only a Page that is still among the user's edits may be planned.
+      const selected = found.candidates.find(
+        (candidate) => candidate.pageId === input.selectedPageId,
+      );
+      if (!selected) return { status: 'PAGE_NOT_FOUND', intent };
+      return this.createPlan(input, intent, selected, 'ACTIVITY');
+    }
+    return {
+      status: 'AMBIGUOUS_PAGE',
+      intent,
+      candidates: found.candidates,
+      resolutionMethod: 'ACTIVITY',
+    };
+  }
+
   private async createPlan(
     input: PlanPageInstructionInput,
     intent: ModifyPageIntent,
     page: import('../resolution/page-resolution.types').PageResolutionCandidate,
     resolutionMethod: PlanningResolutionMethod,
   ): Promise<PageInstructionPlanningResult> {
+    // Only the real title is data here, never a name the AI service extracted.
+    if (isBareChecklistRequest(input.instruction, [page.title])) {
+      return missingChecklistItems(intent, [page.title]);
+    }
 
     // The resolver has already checked PAGE_READ and workspace boundaries.
     // The existing planner loads fresh authorized Page Context again.

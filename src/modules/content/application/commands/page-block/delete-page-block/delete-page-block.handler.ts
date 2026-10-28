@@ -7,10 +7,12 @@ import {
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageBlock } from 'src/modules/content/domain/entities/page-block.entity';
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
+import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { DeletePageBlockCommand } from './delete-page-block.command';
+import type { PageActivityRecorder } from 'src/modules/content/application/ports/page-activity-recorder.port';
 
 const PAGE_BLOCK_SUBTREE_GUARD_LIMIT = 10000;
 
@@ -21,6 +23,10 @@ export class DeletePageBlockHandler {
     private readonly pageBlockRepo: PageBlockRepository,
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+    @Inject(CONTENT_TYPES.repositories.PageRepository)
+    private readonly pageRepo: PageRepository,
+    @Inject(CONTENT_TYPES.ports.PageActivityRecorder)
+    private readonly activity: PageActivityRecorder,
   ) {}
 
   async execute(command: DeletePageBlockCommand): Promise<void> {
@@ -36,6 +42,16 @@ export class DeletePageBlockHandler {
       });
 
       await this.pageBlockRepo.saveMany(subtree, context);
+      await this.pageRepo.touch(block.getPageId(), context);
+      await this.activity.record(
+        {
+          actorId: command.userId,
+          pageId: block.getPageId(),
+          blockId: block.getId(),
+          action: 'PAGE_BLOCK_DELETED',
+        },
+        context,
+      );
     });
   }
 

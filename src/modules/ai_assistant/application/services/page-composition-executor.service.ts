@@ -111,6 +111,7 @@ export class PageCompositionExecutor {
         await this.createDatabases(page.id, params.draft.databases, context);
 
       await this.attachDatabaseViews(
+        params.userId,
         params.draft.blocks,
         blockIds,
         databaseIds,
@@ -250,6 +251,7 @@ export class PageCompositionExecutor {
   }
 
   private async attachDatabaseViews(
+    userId: string,
     blocks: PageCompositionBlockDraft[],
     blockIds: Map<string, string>,
     databaseIds: Map<string, string>,
@@ -289,10 +291,11 @@ export class PageCompositionExecutor {
       }
 
       await this.addDatabaseViewToBlockHandler.execute(
-        new AddDatabaseViewToBlockCommand(blockId, {
-          database_id: databaseId,
-          view_id: viewId,
-        }),
+        new AddDatabaseViewToBlockCommand(
+          blockId,
+          { database_id: databaseId, view_id: viewId },
+          userId,
+        ),
       );
     }
   }

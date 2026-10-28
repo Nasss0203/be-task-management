@@ -61,6 +61,7 @@ import { AiModificationPlanExecutor } from './application/services/ai-modificati
 import { AiModificationPlannerService } from './application/services/ai-modification-planner.service';
 
 import { ConfirmAiModificationPlanHandler } from './application/commands/confirm-ai-modification-plan/confirm-ai-modification-plan.handler';
+import { UndoAiModificationPlanHandler } from './application/commands/undo-ai-modification-plan/undo-ai-modification-plan.handler';
 
 import { ConfirmGenerationHandler } from './application/commands/confirm-generation/confirm-generation.handler';
 import { PageReferenceResolver } from './application/resolution/page-reference-resolver.service';
@@ -104,6 +105,7 @@ import { AiPageInstructionPlannerService } from './application/services/ai-page-
     ConfirmGenerationHandler,
     ConfirmPageCompositionHandler,
     ConfirmAiModificationPlanHandler,
+    UndoAiModificationPlanHandler,
 
     ListConversationsHandler,
     GetConversationHandler,

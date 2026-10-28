@@ -25,6 +25,7 @@ describe('ApplyPagePresetHandler', () => {
     pageBlockRepo as never,
     pageProvisioning as never,
     uow as never,
+    { record: jest.fn(() => Promise.resolve()) } as never,
   );
 
   beforeEach(() => jest.clearAllMocks());

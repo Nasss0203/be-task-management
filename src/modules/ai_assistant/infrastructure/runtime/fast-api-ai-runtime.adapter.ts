@@ -90,6 +90,43 @@ const WRITING_CAPABILITIES: Record<string, WritingAction> = {
   'writing.continue': 'CONTINUE',
 };
 
+const ACTIVITY_RELATIVES = new Set([
+  'LATEST',
+  'TODAY',
+  'YESTERDAY',
+  'N_DAYS_AGO',
+  'LAST_WEEK',
+  'RECENT',
+]);
+
+/** M2: words of the user's own sentence only; NestJS computes the dates. */
+function isPageActivity(value: unknown, instruction: string): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const activity = value as Record<string, unknown>;
+  if (Object.keys(activity).sort().join(',') !== 'days,relative,titleHint')
+    return false;
+  const { relative, days, titleHint } = activity;
+  const nDays =
+    typeof days === 'number' &&
+    Number.isInteger(days) &&
+    days >= 1 &&
+    days <= 30;
+  return (
+    typeof relative === 'string' &&
+    ACTIVITY_RELATIVES.has(relative) &&
+    (relative === 'N_DAYS_AGO' ? nDays : days === null) &&
+    (titleHint === null ||
+      (typeof titleHint === 'string' &&
+        !!titleHint.trim() &&
+        titleHint.length <= 255 &&
+        // A hint is the user's own words, never invented by the service.
+        instruction
+          .normalize('NFC')
+          .toLocaleLowerCase('vi')
+          .includes(titleHint.normalize('NFC').toLocaleLowerCase('vi'))))
+  );
+}
+
 @Injectable()
 export class FastApiAiRuntimeAdapter
   implements AiRuntimePort, PageIntentExtractor, AiIntentPort
@@ -164,8 +201,14 @@ export class FastApiAiRuntimeAdapter
       throw new BadGatewayException('AI service returned an invalid response');
     }
     const result = value as Record<string, unknown>;
-    const validKeys = Object.keys(result).sort().join(',') ===
-      'instruction,intent,needsClarification,pageReference,referenceType';
+    // M2: only an ACTIVITY result carries the sixth key, "activity".
+    const keys = Object.keys(result).sort().join(',');
+    const validKeys =
+      result.referenceType === 'ACTIVITY'
+        ? keys ===
+          'activity,instruction,intent,needsClarification,pageReference,referenceType'
+        : keys ===
+          'instruction,intent,needsClarification,pageReference,referenceType';
     const intent = result.intent;
     const referenceType = result.referenceType;
     const needsClarification = result.needsClarification;
@@ -185,6 +228,12 @@ export class FastApiAiRuntimeAdapter
           && hasSourceBackedCurrentPage(instruction, currentPageId);
       } else if (referenceType === 'UNRESOLVED') {
         valid = valid && pageReference === null && needsClarification === true;
+      } else if (referenceType === 'ACTIVITY') {
+        valid =
+          valid &&
+          pageReference === null &&
+          needsClarification === false &&
+          isPageActivity(result.activity, instruction);
       } else {
         valid = false;
       }

@@ -18,7 +18,8 @@ describe('AiPageInstructionPlannerService', () => {
     userId: 'actor-1',
     workspaceId: 'workspace-1',
     requestId: 'request-1',
-    instruction: 'Thêm checklist vào page Release 2.0',
+    // A topic keeps this a plannable request (a bare checklist asks for items).
+    instruction: 'Thêm checklist QA vào page Release 2.0',
     currentPageId: 'wrong-page',
     shareToken: 'share-token',
   };
@@ -223,6 +224,126 @@ describe('AiPageInstructionPlannerService', () => {
     expect(plan).not.toHaveBeenCalled();
   });
 
+  describe('gp02: a checklist with neither items nor a topic', () => {
+    const missingItems = {
+      status: 'NEEDS_CLARIFICATION',
+      reason: 'MISSING_CHECKLIST_ITEMS',
+    };
+
+    it('asks for the items once the named Page is real, before planning', async () => {
+      const subMan = { ...candidate, pageId: 'sub-man', title: 'sub man' };
+      extract.mockResolvedValue({
+        result: { ...intent, pageReference: 'sub man' },
+      });
+      resolve.mockResolvedValue({
+        status: 'RESOLVED',
+        page: subMan,
+        resolutionMethod: 'EXACT_TITLE',
+        confidence: 1,
+      });
+      expect(
+        await service.generate({
+          ...input,
+          instruction: 'thêm checklist vào trang sub man',
+        }),
+      ).toMatchObject(missingItems);
+      expect(plan).not.toHaveBeenCalled();
+    });
+
+    it('asks for the items before offering same-named Pages', async () => {
+      const subMan = { ...candidate, pageId: 'sub-man', title: 'sub man' };
+      extract.mockResolvedValue({
+        result: { ...intent, pageReference: 'sub man' },
+      });
+      resolve.mockResolvedValue({
+        status: 'AMBIGUOUS',
+        candidates: [subMan, { ...subMan, pageId: 'sub-man-2' }],
+      });
+      expect(
+        await service.generate({
+          ...input,
+          instruction: 'thêm checklist vào trang sub man',
+        }),
+      ).toMatchObject(missingItems);
+    });
+
+    it('asks for the items once the sentence names a real Page', async () => {
+      const subMan = { ...candidate, pageId: 'sub-man', title: 'sub man' };
+      extract.mockResolvedValue({
+        result: {
+          ...intent,
+          referenceType: 'UNRESOLVED',
+          pageReference: null,
+          needsClarification: true,
+        },
+      });
+      resolveFromSentence.mockResolvedValue({
+        status: 'CANDIDATES',
+        candidates: [subMan],
+        resolutionMethod: 'TITLE_IN_SENTENCE',
+      });
+      // The reply's example names the real Page even though none was extracted.
+      expect(
+        await service.generate({
+          ...input,
+          instruction: 'thêm checklist vào trang sub man',
+        }),
+      ).toMatchObject({ ...missingItems, pageTitle: 'sub man' });
+      expect(plan).not.toHaveBeenCalled();
+    });
+
+    it('names no Page when the sentence matches several', async () => {
+      const subMan = { ...candidate, pageId: 'sub-man', title: 'sub man' };
+      const man = { ...candidate, pageId: 'man', title: 'man' };
+      extract.mockResolvedValue({
+        result: {
+          ...intent,
+          referenceType: 'UNRESOLVED',
+          pageReference: null,
+          needsClarification: true,
+        },
+      });
+      resolveFromSentence.mockResolvedValue({
+        status: 'CANDIDATES',
+        candidates: [subMan, man],
+        resolutionMethod: 'TITLE_IN_SENTENCE',
+      });
+      const result = await service.generate({
+        ...input,
+        instruction: 'thêm checklist vào trang sub man',
+      });
+      expect(result).toMatchObject(missingItems);
+      expect(result).not.toHaveProperty('pageTitle');
+    });
+
+    it('asks for the items on the open Page', async () => {
+      extract.mockResolvedValue({
+        result: {
+          ...intent,
+          referenceType: 'CURRENT_PAGE',
+          pageReference: null,
+        },
+      });
+      expect(
+        await service.generate({ ...input, instruction: 'thêm checklist' }),
+      ).toMatchObject(missingItems);
+      expect(plan).not.toHaveBeenCalled();
+    });
+
+    it('still plans a checklist with listed items', async () => {
+      extract.mockResolvedValue({
+        result: { ...intent, pageReference: 'sub man' },
+      });
+      expect(
+        await service.generate({
+          ...input,
+          instruction:
+            'thêm checklist gồm in tài liệu, đặt phòng vào trang sub man',
+        }),
+      ).toMatchObject({ status: 'PLAN_GENERATED' });
+    });
+  });
+
   it.each([
     [{ intent: 'OTHER', referenceType: 'UNRESOLVED', pageReference: null, instruction: null, needsClarification: false }, 'NOT_A_PAGE_MODIFICATION'],
     [{ intent: 'UNCLEAR', referenceType: 'UNRESOLVED', pageReference: null, instruction: null, needsClarification: true }, 'NEEDS_CLARIFICATION'],
@@ -304,30 +425,66 @@ describe('AiPageInstructionPlannerService', () => {
       const subMan = { ...candidate, pageId: 'sub-man', title: 'sub man' };
       const subManFound = { status: 'CANDIDATES', candidates: [subMan], resolutionMethod: 'TITLE_IN_SENTENCE' };
 
-      it('admits an unquoted real Page name and offers it', async () => {
-        extract.mockResolvedValue({ result: { ...unresolved, instruction: 'add a QA checklist' } });
+      it('admits an unquoted real Page name and plans on it when it ends the sentence', async () => {
+        extract.mockResolvedValue({
+          result: { ...unresolved, instruction: 'add a QA checklist' },
+        });
         resolveFromSentence.mockResolvedValue(subManFound);
-        expect(await service.generate({ ...input, instruction: 'add a QA checklist to sub man page' }))
-          .toMatchObject({ status: 'AMBIGUOUS_PAGE', candidates: [subMan] });
+        plan.mockResolvedValue({ pageId: 'sub-man', status: 'PLAN_READY' });
+        expect(
+          await service.generate({
+            ...input,
+            instruction: 'add a QA checklist to sub man page',
+          }),
+        ).toMatchObject({
+          status: 'PLAN_GENERATED',
+          resolutionMethod: 'EXACT_TITLE',
+          // The frontend only trusts EXACT_TITLE on a resolved intent.
+          intent: {
+            referenceType: 'TITLE',
+            pageReference: 'sub man',
+            needsClarification: false,
+          },
+        });
+        expect(plan).toHaveBeenCalledWith(
+          expect.objectContaining({ pageId: 'sub-man' }),
+        );
+      });
+
+      it.each([
+        // Other marks, or a name that does not end the sentence: still a choice.
+        ['xoá gửi email trong trang Sub Mán', subMan],
+        ['xoá Doanh số nhóm B trong trang hoi hop tuan', meeting],
+      ])('offers %s for a choice', async (instruction, page) => {
+        extract.mockResolvedValue({
+          result: { ...unresolved, instruction: 'xoá gửi email' },
+        });
+        resolveFromSentence.mockResolvedValue({
+          ...subManFound,
+          candidates: [page],
+        });
+        expect(await service.generate({ ...input, instruction })).toMatchObject(
+          { status: 'AMBIGUOUS_PAGE', candidates: [page] },
+        );
         expect(plan).not.toHaveBeenCalled();
       });
 
       it('admits the extracted name before resolution', async () => {
         extract.mockResolvedValue({ result: { ...intent, pageReference: 'sub man', instruction: 'thêm checklist' } });
-        expect(await service.generate({ ...input, instruction: 'thêm checklist vào trang sub man' }))
+        expect(await service.generate({ ...input, instruction: 'thêm checklist QA vào trang sub man' }))
           .toMatchObject({ status: 'PLAN_GENERATED' });
       });
 
       it.each([
-        // An operation outside the name is still rejected.
-        'xoá checklist trong trang sub man',
+        // An operation outside the name is still rejected, and named (D3).
+        ['xoá checklist trong trang sub man', { kind: 'GENERIC' }],
         // Leftover words outside the real name must be safe words.
-        'thêm checklist vào trang sub man cho buổi họp',
-      ])('rejects %s before showing candidates or planning', async (instruction) => {
+        ['thêm checklist vào trang sub man cho buổi họp', { kind: 'GENERIC' }],
+      ])('rejects %s before showing candidates or planning', async (instruction, detail) => {
         extract.mockResolvedValue({ result: { ...unresolved, instruction: 'thêm checklist' } });
         resolveFromSentence.mockResolvedValue(subManFound);
         expect(await service.generate({ ...input, instruction, selectedPageId: 'sub-man' }))
-          .toEqual({ status: 'UNSUPPORTED_OPERATION', intent: { ...unresolved, instruction: 'thêm checklist' }, reason: 'INSERT_ONLY' });
+          .toEqual({ status: 'UNSUPPORTED_OPERATION', intent: { ...unresolved, instruction: 'thêm checklist' }, reason: 'INSERT_ONLY', detail });
         expect(plan).not.toHaveBeenCalled();
       });
 

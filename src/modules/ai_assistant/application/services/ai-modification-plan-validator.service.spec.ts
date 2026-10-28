@@ -694,6 +694,165 @@ describe('AiModificationPlanValidatorService', () => {
     );
   });
 
+  describe('DELETE_BLOCK (kế hoạch xoá block)', () => {
+    const remove = (operation: Record<string, unknown> = {}) => ({
+      type: 'DELETE_BLOCK',
+      blockId: 'block-toggle',
+      text: 'Details',
+      childCount: 1,
+      ...operation,
+    });
+    const plan = (...operations: Record<string, unknown>[]) => ({
+      schemaVersion: 1,
+      type: 'AI_MODIFICATION_PLAN',
+      pageId: 'page-1',
+      status: 'PLAN_READY',
+      summary: 'Xoá 1 block',
+      operations,
+    });
+
+    it('accepts a toggle with the right number of nested blocks', () => {
+      expect(validator.validate(plan(remove()), context)).toEqual(
+        plan(remove()),
+      );
+    });
+
+    it.each([
+      [remove({ blockId: 'missing' }), 'not available'],
+      [remove({ text: 'Other' }), 'does not match'],
+      // A block nested after the draft must not be deleted unseen.
+      [remove({ childCount: 0 }), 'childCount'],
+      [remove({ childCount: -1 }), 'childCount'],
+      [remove({ extra: true }), 'unsupported field'],
+    ])('rejects %j', (operation, message) => {
+      expect(() => validator.validate(plan(operation), context)).toThrow(
+        new RegExp(message, 'i'),
+      );
+    });
+
+    it('rejects deleting a block nested in another deleted block', () => {
+      expect(() =>
+        validator.validate(
+          plan(
+            remove(),
+            remove({
+              blockId: 'block-child',
+              text: 'Existing child',
+              childCount: 0,
+            }),
+          ),
+          context,
+        ),
+      ).toThrow(/nested/);
+    });
+  });
+
+  describe('SET_BLOCK_TEXT (kế hoạch sửa chữ block)', () => {
+    const edit = (operation: Record<string, unknown> = {}) => ({
+      type: 'SET_BLOCK_TEXT',
+      blockId: 'block-root',
+      oldText: 'Release 1.0',
+      newText: 'Release 1.1',
+      ...operation,
+    });
+    const plan = (...operations: Record<string, unknown>[]) => ({
+      schemaVersion: 1,
+      type: 'AI_MODIFICATION_PLAN',
+      pageId: 'page-1',
+      status: 'PLAN_READY',
+      summary: 'Sửa 1 block',
+      operations,
+    });
+
+    it('accepts a text change of a block of the page', () => {
+      expect(validator.validate(plan(edit()), context)).toEqual(plan(edit()));
+    });
+
+    it.each([
+      [edit({ blockId: 'missing' }), 'not available'],
+      // oldText guards against a stale or invented text.
+      [edit({ oldText: 'Release 0.9' }), 'does not match'],
+      [edit({ newText: 'Release 1.0' }), 'not changed'],
+      [edit({ newText: '   ' }), 'newText'],
+      [edit({ newText: 'x'.repeat(2001) }), '2000'],
+      [edit({ content: { text: 'x' } }), 'unsupported field'],
+    ])('rejects %j', (operation, message) => {
+      expect(() => validator.validate(plan(operation), context)).toThrow(
+        new RegExp(message, 'i'),
+      );
+    });
+
+    it('rejects two changes of the same block in one plan', () => {
+      expect(() =>
+        validator.validate(plan(edit(), edit({ newText: 'Other' })), context),
+      ).toThrow(/more than once/);
+    });
+  });
+
+  describe('SET_TODO_CHECKED (kế hoạch tích to-do)', () => {
+    const todo = {
+      id: 'block-todo',
+      parentBlockId: null,
+      type: PageBlockType.TODO,
+      orderIndex: 2,
+      title: null,
+      content: { text: 'Gửi email', checked: false },
+      styleConfig: null,
+      dataConfig: null,
+    };
+    const tick = (operation: Record<string, unknown> = {}) => ({
+      type: 'SET_TODO_CHECKED',
+      blockId: 'block-todo',
+      text: 'Gửi email',
+      checked: true,
+      ...operation,
+    });
+    const plan = (...operations: Record<string, unknown>[]) => ({
+      schemaVersion: 1,
+      type: 'AI_MODIFICATION_PLAN',
+      pageId: 'page-1',
+      status: 'PLAN_READY',
+      summary: 'Tích 1 to-do: Gửi email',
+      operations,
+    });
+
+    beforeEach(() => {
+      context.blocks.push(todo);
+    });
+
+    it.each([true, false])(
+      'accepts checked=%s for a to-do of the page',
+      (checked) => {
+        expect(validator.validate(plan(tick({ checked })), context)).toEqual(
+          plan(tick({ checked })),
+        );
+      },
+    );
+
+    it.each([
+      [tick({ blockId: 'missing' }), 'not available'],
+      [tick({ blockId: 'block-root', text: 'Release 1.0' }), 'is not a to-do'],
+      // text is only shown; it never renames the to-do.
+      [tick({ text: 'Gửi email cho sếp' }), 'text does not match'],
+      [tick({ checked: 'yes' }), 'checked must be a boolean'],
+      [tick({ content: { text: 'x' } }), 'unsupported field'],
+      [
+        { type: 'SET_TODO_CHECKED', blockId: 'block-todo', checked: true },
+        'text',
+      ],
+    ])('rejects %j', (operation, message) => {
+      expect(() => validator.validate(plan(operation), context)).toThrow(
+        new RegExp(message, 'i'),
+      );
+    });
+
+    it('rejects the same to-do twice in one plan', () => {
+      expect(() => validator.validate(plan(tick(), tick()), context)).toThrow(
+        /more than once/,
+      );
+    });
+  });
+
   it('rejects unsupported operation types', () => {
     const input = {
       schemaVersion: 1,
@@ -708,7 +867,7 @@ describe('AiModificationPlanValidatorService', () => {
 
       operations: [
         {
-          type: 'DELETE_BLOCK',
+          type: 'MOVE_BLOCK',
 
           blockId: 'block-root',
         },
@@ -716,7 +875,7 @@ describe('AiModificationPlanValidatorService', () => {
     };
 
     expect(() => validator.validate(input, context)).toThrow(
-      'Unsupported AI modification operation type: DELETE_BLOCK',
+      'Unsupported AI modification operation type: MOVE_BLOCK',
     );
   });
 

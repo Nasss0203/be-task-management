@@ -30,6 +30,8 @@ import { FindPageByWorkspaceHandler } from './application/queries/page/find-page
 import { ResolveBookmarkMetadataHandler } from './application/queries/resolve-bookmark-metadata/resolve-bookmark-metadata.handler';
 
 import { ContentPageProvisioningService } from './application/services/content-page-provisioning.service';
+import { ActivityPageActivityRecorder } from './infrastructure/activity/page-activity.recorder';
+import { ActivityModule } from '../activity/activity.module';
 import { ContentPageSnapshotReaderService } from './application/services/content-page-snapshot-reader.service';
 import { PageBlockOrderingService } from './application/services/page-block-ordering.service';
 import { PagePublicationTreeService } from './application/services/page-publication-tree.service';
@@ -414,6 +416,10 @@ const applicationServices = [
 
 const ports = [
   {
+    provide: CONTENT_TYPES.ports.PageActivityRecorder,
+    useClass: ActivityPageActivityRecorder,
+  },
+  {
     provide: CONTENT_TYPES.ports.PageProvisioning,
     useClass: ContentPageProvisioningService,
   },
@@ -450,6 +456,7 @@ const ports = [
     PermissionModule,
     NotificationsModule,
     forwardRef(() => WorkspaceModule),
+    forwardRef(() => ActivityModule),
   ],
 
   controllers: [
@@ -492,6 +499,7 @@ const ports = [
   ],
 
   exports: [
+    CONTENT_TYPES.ports.PageActivityRecorder,
     CONTENT_TYPES.ports.PageProvisioning,
     CONTENT_TYPES.ports.PageSnapshotReader,
     CONTENT_TYPES.repositories.PageRepository,
@@ -499,6 +507,10 @@ const ports = [
 
     CONTENT_TYPES.applications.CreatePageHandler,
     CONTENT_TYPES.applications.CreatePageBlockHandler,
+    // AI "tích to-do" drafts update the checkbox of an existing block.
+    CONTENT_TYPES.applications.UpdatePageBlockHandler,
+    // AI "xoá block" drafts soft-delete existing blocks.
+    CONTENT_TYPES.applications.DeletePageBlockHandler,
     CONTENT_TYPES.applications.AddDatabaseViewToBlockHandler,
 
     CONTENT_TYPES.applications.FindPageByIdHandler,

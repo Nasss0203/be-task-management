@@ -19,6 +19,7 @@ import { PageResponseDto } from '../../../dto/page/response/page.response.dto';
 import { DuplicatePageCommand } from './duplicate-page.command';
 import { PagePublicationTreeService } from '../../../services/page-publication-tree.service';
 import { PublicSubdomainAllocatorService } from '../../../services/public-subdomain-allocator.service';
+import type { PageActivityRecorder } from 'src/modules/content/application/ports/page-activity-recorder.port';
 
 @Injectable()
 export class DuplicatePageHandler {
@@ -33,6 +34,8 @@ export class DuplicatePageHandler {
     private readonly uow: UnitOfWork,
     private readonly publicationTree: PagePublicationTreeService,
     private readonly subdomains: PublicSubdomainAllocatorService,
+    @Inject(CONTENT_TYPES.ports.PageActivityRecorder)
+    private readonly activity: PageActivityRecorder,
   ) {}
 
   async execute(command: DuplicatePageCommand): Promise<PageResponseDto> {
@@ -82,6 +85,14 @@ export class DuplicatePageHandler {
       });
 
       const savedPage = await this.pageRepo.save(duplicatedPage, manager);
+      await this.activity.record(
+        {
+          actorId: command.userId,
+          pageId: savedPage.getId(),
+          action: 'PAGE_CREATED',
+        },
+        manager,
+      );
       await this.publicationTree.inheritNewPage(
         savedPage,
         command.userId,

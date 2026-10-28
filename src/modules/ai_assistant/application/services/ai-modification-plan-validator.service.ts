@@ -4,6 +4,7 @@ import { PropertyType } from 'src/modules/database/domain/enums/property-type.en
 
 import {
   AI_MODIFICATION_CONTEXT_REQUEST_REASONS,
+  AI_MODIFICATION_MAX_BLOCK_TEXT_LENGTH,
   AI_MODIFICATION_OPERATION_TYPES,
   AI_MODIFICATION_PLAN_SCHEMA_VERSION,
   AI_MODIFICATION_PLAN_STATUSES,
@@ -27,6 +28,9 @@ import {
   type AiModificationContextRequest,
   type AiModificationOperation,
   type AiModificationPlan,
+  type AiDeleteBlockOperation,
+  type AiSetBlockTextOperation,
+  type AiSetTodoCheckedOperation,
 } from '../types/ai-modification-plan';
 
 @Injectable()
@@ -121,6 +125,27 @@ export class AiModificationPlanValidatorService {
         this.fail('PLAN_READY must contain at least one operation');
       }
 
+      const changedBlockIds = validatedOperations.flatMap((operation) =>
+        operation.type === 'SET_TODO_CHECKED' ||
+        operation.type === 'SET_BLOCK_TEXT' ||
+        operation.type === 'DELETE_BLOCK'
+          ? [operation.blockId]
+          : [],
+      );
+      if (new Set(changedBlockIds).size !== changedBlockIds.length) {
+        this.fail('A block is changed more than once in one plan');
+      }
+      const deletedBlockIds = validatedOperations.flatMap((operation) =>
+        operation.type === 'DELETE_BLOCK' ? [operation.blockId] : [],
+      );
+      for (const blockId of deletedBlockIds) {
+        const nested = this.nestedBlockIds(context, blockId);
+        if (deletedBlockIds.some((other) => nested.includes(other))) {
+          this.fail(
+            `Block ${blockId} is deleted with a block nested in it; one operation removes both`,
+          );
+        }
+      }
       return {
         schemaVersion: AI_MODIFICATION_PLAN_SCHEMA_VERSION,
 
@@ -200,7 +225,168 @@ export class AiModificationPlanValidatorService {
 
       case 'INSERT_BLOCKS':
         return this.validateInsertBlocksOperation(operation, context, index);
+
+      case 'SET_TODO_CHECKED':
+        return this.validateSetTodoCheckedOperation(operation, context, index);
+
+      case 'SET_BLOCK_TEXT':
+        return this.validateSetBlockTextOperation(operation, context, index);
+
+      case 'DELETE_BLOCK':
+        return this.validateDeleteBlockOperation(operation, context, index);
     }
+  }
+
+  private validateDeleteBlockOperation(
+    operation: Record<string, unknown>,
+    context: AiPageContextResponseDto,
+    index: number,
+  ): AiDeleteBlockOperation {
+    const path = `operations[${index}]`;
+    this.assertExactKeys(
+      operation,
+      ['type', 'blockId', 'text', 'childCount'],
+      path,
+    );
+    const blockId = this.requireNonEmptyString(
+      operation.blockId,
+      `${path}.blockId`,
+    );
+    const text = this.requireNonEmptyString(operation.text, `${path}.text`);
+    const childCount = operation.childCount;
+    if (
+      typeof childCount !== 'number' ||
+      !Number.isInteger(childCount) ||
+      childCount < 0
+    ) {
+      this.fail(`${path}.childCount must be an integer >= 0`);
+    }
+    const block = this.findBlock(context, blockId);
+    if (!block) {
+      this.fail(
+        `Block ${blockId} is not available in the authorized AI page context`,
+      );
+    }
+    if (!this.isSupportedBlockType(block.type)) {
+      this.fail(`Block ${blockId} cannot be deleted by the assistant`);
+    }
+    const content = block.content as Record<string, unknown> | null;
+    if (content?.text !== text) {
+      this.fail(`Block ${blockId} text does not match the current page`);
+    }
+
+    // A block nested after the draft must never be deleted unseen.
+    if (this.nestedBlockIds(context, blockId).length !== childCount) {
+      this.fail(`Block ${blockId} childCount does not match the current page`);
+    }
+    return { type: 'DELETE_BLOCK', blockId, text, childCount };
+  }
+
+  private nestedBlockIds(
+    context: AiPageContextResponseDto,
+    blockId: string,
+  ): string[] {
+    const found: string[] = [];
+    const pending = [blockId];
+    while (pending.length > 0) {
+      const parent = pending.pop();
+      for (const block of context.blocks) {
+        if (block.parentBlockId === parent) {
+          found.push(block.id);
+          pending.push(block.id);
+        }
+      }
+    }
+    return found;
+  }
+
+  private validateSetBlockTextOperation(
+    operation: Record<string, unknown>,
+    context: AiPageContextResponseDto,
+    index: number,
+  ): AiSetBlockTextOperation {
+    const path = `operations[${index}]`;
+    this.assertExactKeys(
+      operation,
+      ['type', 'blockId', 'oldText', 'newText'],
+      path,
+    );
+    const blockId = this.requireNonEmptyString(
+      operation.blockId,
+      `${path}.blockId`,
+    );
+    const oldText = this.requireNonEmptyString(
+      operation.oldText,
+      `${path}.oldText`,
+    );
+    const newText = this.requireNonEmptyString(
+      operation.newText,
+      `${path}.newText`,
+    );
+    if (newText.length > AI_MODIFICATION_MAX_BLOCK_TEXT_LENGTH) {
+      this.fail(
+        `${path}.newText must be at most ${AI_MODIFICATION_MAX_BLOCK_TEXT_LENGTH} characters`,
+      );
+    }
+    const block = this.findBlock(context, blockId);
+    if (!block) {
+      this.fail(
+        `Block ${blockId} is not available in the authorized AI page context`,
+      );
+    }
+    if (!this.isSupportedBlockType(block.type)) {
+      this.fail(`Block ${blockId} has no editable text`);
+    }
+    const content = block.content as Record<string, unknown> | null;
+    if (content?.text !== oldText) {
+      this.fail(`Block ${blockId} text does not match the current page`);
+    }
+    if (newText === oldText) {
+      this.fail(`Block ${blockId} text is not changed`);
+    }
+    return { type: 'SET_BLOCK_TEXT', blockId, oldText, newText };
+  }
+
+  private validateSetTodoCheckedOperation(
+    operation: Record<string, unknown>,
+    context: AiPageContextResponseDto,
+    index: number,
+  ): AiSetTodoCheckedOperation {
+    const path = `operations[${index}]`;
+    this.assertExactKeys(
+      operation,
+      ['type', 'blockId', 'text', 'checked'],
+      path,
+    );
+    const blockId = this.requireNonEmptyString(
+      operation.blockId,
+      `${path}.blockId`,
+    );
+    const text = this.requireNonEmptyString(operation.text, `${path}.text`);
+    if (typeof operation.checked !== 'boolean') {
+      this.fail(`${path}.checked must be a boolean`);
+    }
+    const block = this.findBlock(context, blockId);
+    if (!block) {
+      this.fail(
+        `To-do ${blockId} is not available in the authorized AI page context`,
+      );
+    }
+    if (block.type !== PageBlockType.TODO) {
+      this.fail(`Block ${blockId} is not a to-do`);
+    }
+
+    // text is only shown in the draft; it must never rename the to-do.
+    const content = block.content as Record<string, unknown> | null;
+    if (content?.text !== text) {
+      this.fail(`To-do ${blockId} text does not match the current page`);
+    }
+    return {
+      type: 'SET_TODO_CHECKED',
+      blockId,
+      text,
+      checked: operation.checked,
+    };
   }
 
   private validateCreateDatabaseRowsOperation(

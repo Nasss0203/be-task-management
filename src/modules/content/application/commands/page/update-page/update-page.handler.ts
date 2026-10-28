@@ -7,6 +7,7 @@ import type { PageRepository } from 'src/modules/content/domain/repositories/pag
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { UpdatePageCommand } from './update-page.command';
+import type { PageActivityRecorder } from 'src/modules/content/application/ports/page-activity-recorder.port';
 
 @Injectable()
 export class UpdatePageHandler {
@@ -16,6 +17,8 @@ export class UpdatePageHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+    @Inject(CONTENT_TYPES.ports.PageActivityRecorder)
+    private readonly activity: PageActivityRecorder,
   ) {}
 
   async execute(command: UpdatePageCommand): Promise<PageResponseDto> {
@@ -41,6 +44,14 @@ export class UpdatePageHandler {
       });
 
       const updatedPage = await this.pageRepo.save(page, manager);
+      await this.activity.record(
+        {
+          actorId: command.actorId,
+          pageId: command.pageId,
+          action: 'PAGE_UPDATED',
+        },
+        manager,
+      );
 
       return PageResponseDto.fromDomain(updatedPage);
     });
