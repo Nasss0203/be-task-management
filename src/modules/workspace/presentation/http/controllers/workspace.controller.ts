@@ -152,8 +152,8 @@ export class WorkspacesController {
 
   @Patch(':workspaceId/select')
   @WriteRateLimit()
-  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
-  @RequirePermissions(PERMISSIONS.WORKSPACE_READ)
+  // Không đòi WORKSPACE_READ: Guest (chỉ có page được share) cũng chọn được workspace.
+  // Handler tự kiểm tra người dùng thuộc workspace (Member hoặc Guest).
   @ResponseMessage('Workspace selected')
   async selectWorkspace(
     @Param('workspaceId') workspaceId: string,

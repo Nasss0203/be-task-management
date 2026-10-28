@@ -4,5 +4,7 @@ export class CreatePageAccessRequestCommand {
     public readonly pageId: string,
     public readonly token?: string,
     public readonly site?: { subdomain: string; path: string },
+    /** `edit`: xin quyền sửa (site luôn là sửa). Mặc định xin quyền xem. */
+    public readonly intent: 'view' | 'edit' = 'view',
   ) {}
 }

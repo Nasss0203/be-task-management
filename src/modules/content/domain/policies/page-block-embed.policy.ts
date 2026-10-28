@@ -15,6 +15,10 @@ const ALLOWED_EMBED_HOSTS = new Set([
   'gist.github.com',
   'twitter.com',
   'x.com',
+  'vimeo.com',
+  'player.vimeo.com',
+  'loom.com',
+  'open.spotify.com',
 ]);
 
 export function isAllowedEmbedUrl(url: unknown): boolean {

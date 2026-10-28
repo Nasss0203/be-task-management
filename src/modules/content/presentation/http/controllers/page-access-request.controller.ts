@@ -78,6 +78,7 @@ export class PageAccessRequestController {
         body.subdomain && body.path
           ? { subdomain: body.subdomain, path: body.path }
           : undefined,
+        body.intent,
       ),
     );
   }

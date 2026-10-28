@@ -14,6 +14,10 @@ describe('page-block-embed.policy', () => {
       'https://gist.github.com/user/123',
       'https://twitter.com/user/status/1',
       'https://x.com/user/status/1',
+      'https://vimeo.com/76979871',
+      'https://player.vimeo.com/video/76979871',
+      'https://www.loom.com/share/abc123',
+      'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC',
     ])('accepts %s', (url) => {
       expect(isAllowedEmbedUrl(url)).toBe(true);
     });
@@ -22,6 +26,7 @@ describe('page-block-embed.policy', () => {
       'http://figma.com/file/abc',
       'https://evil.com',
       'https://evilfigma.com/file/abc',
+      'https://spotify.com/track/1',
       'https://figma.com.evil.com/file/abc',
       'javascript:alert(1)',
       'https://google.com/search?q=x',
