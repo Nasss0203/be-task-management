@@ -15,6 +15,7 @@ import { BillingWebhookEventOrmEntity } from 'src/modules/billing/infrastructure
 import { PaymentOrderOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/payment-order.orm-entity';
 import { PaymentTransactionOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/payment-transaction.orm-entity';
 import { WorkspaceSubscriptionOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/workspace-subscription.orm-entity';
+import { CommentOrmEntity } from 'src/modules/comments/infrastructure/persistence/typeorm/entities/comment.orm-entity';
 import { PageAccessRequestOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-access-request.orm-entity';
 import { PageBlockOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-block.orm-entity';
 import { PageEditRequestOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-edit-request.orm-entity';
@@ -49,9 +50,13 @@ import { TemplateListingOrmEntity } from 'src/modules/marketplace/infrastructure
 import { TemplateMarketplaceReleaseOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-marketplace-release.orm-entity';
 import { TemplatePurchaseOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-purchase.orm-entity';
 import { TemplateReviewOrmEntity } from 'src/modules/marketplace/infrastructure/persistence/typeorm/entities/template-review.orm-entity';
-import { Mention } from 'src/modules/mentions/infrastructure/persistence/typeorm/entities/mention.orm-entity';
+import { MentionOrmEntity } from 'src/modules/mentions/infrastructure/persistence/typeorm/entities/mention.orm-entity';
 import { Notification } from 'src/modules/notifications/infrastructure/persistence/typeorm/entities/notification.orm-entity';
 import { Permission } from 'src/modules/permission/infrastructure/persistence/typeorm/entities/legacy-permission.orm-entity';
+import { TeamspaceInvitationOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace-invitation.orm-entity';
+import { TeamspaceInviteLinkOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace-invite-link.orm-entity';
+import { TeamspaceMemberOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
+import { TeamspaceOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
 import { PageTemplateBlockOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-block.orm-entity';
 import { PageTemplateDatabasePropertyOptionOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database-property-option.orm-entity';
 import { PageTemplateDatabasePropertyOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-database-property.orm-entity';
@@ -63,10 +68,6 @@ import { PageTemplateDatabaseOrmEntity } from 'src/modules/template/infrastructu
 import { PageTemplateVersionOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template-version.orm-entity';
 import { PageTemplateOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/page-template.orm-entity';
 import { TemplateVersionAssetOrmEntity } from 'src/modules/template/infrastructure/persistence/typeorm/entities/template-version-asset.orm-entity';
-import { TeamspaceMemberOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace-member.orm-entity';
-import { TeamspaceInvitationOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace-invitation.orm-entity';
-import { TeamspaceInviteLinkOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace-invite-link.orm-entity';
-import { TeamspaceOrmEntity } from 'src/modules/teamspace/infrastructure/persistence/typeorm/entities/teamspace.orm-entity';
 import { WorkspaceInviteOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-invite.orm-entity';
 import { WorkspaceMemberOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace-member.orm-entity';
 import { WorkspaceOrmEntity } from 'src/modules/workspace/infrastructure/persistence/typeorm/entities/workspace.orm-entity';
@@ -85,7 +86,7 @@ export const DATABASE_ENTITIES = [
   WorkspaceInviteOrmEntity,
   AttachmentOrmEntity,
   Activity,
-  Mention,
+  MentionOrmEntity,
   Notification,
   // V2
   DatabasePropertyOrmEntity,
@@ -150,4 +151,5 @@ export const DATABASE_ENTITIES = [
   TemplateLikeOrmEntity,
   TemplateReviewOrmEntity,
   CreatorProfileOrmEntity,
+  CommentOrmEntity,
 ];
