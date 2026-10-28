@@ -1,0 +1,120 @@
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Comment } from 'src/modules/comments/domain/aggregates/comment/comment.aggregate';
+import { CommentTargetType } from 'src/modules/comments/domain/enums/comment-target-type.enum';
+import { SyncMentionsService } from 'src/modules/mentions/application/services/sync-mentions.service';
+import { MentionEntityType } from 'src/modules/mentions/domain/enums/mention-entity-type.enum';
+import { MentionSourceType } from 'src/modules/mentions/domain/enums/mention-source-type.enum';
+import { mentionTokensToText } from 'src/modules/mentions/domain/mention-token';
+import type { CreateNotificationService } from 'src/modules/notifications/application/ports/create-notification.service.port';
+import {
+  NotificationSenderType,
+  NotificationSourceType,
+  NotificationType,
+} from 'src/modules/notifications/domain/entities/notification.entity';
+import { NOTIFICATION_TYPES } from 'src/modules/notifications/notifications.types';
+import { CommentAuthorService } from './comment-author.service';
+
+const MENTION_ENTITY: Record<CommentTargetType, MentionEntityType> = {
+  [CommentTargetType.PAGE]: MentionEntityType.PAGE,
+  [CommentTargetType.PAGE_BLOCK]: MentionEntityType.PAGE_BLOCK,
+  [CommentTargetType.DATABASE_ROW]: MentionEntityType.DATABASE_ROW,
+};
+
+const MESSAGE_MAX_LENGTH = 140;
+
+/**
+ * Link mở đúng chỗ của comment:
+ * block → cuộn tới block (`#block-…`); task → mở drawer của row (`?row=…`); page → page.
+ */
+export function commentActionUrl(comment: Comment): string {
+  const pageUrl = `/page/${comment.getPageId()}`;
+
+  switch (comment.getTargetType()) {
+    case CommentTargetType.PAGE_BLOCK:
+      return `${pageUrl}#block-${comment.getTargetId()}`;
+    case CommentTargetType.DATABASE_ROW:
+      return `${pageUrl}?row=${comment.getTargetId()}`;
+    default:
+      return pageUrl;
+  }
+}
+
+/** Mention và thông báo trả lời sau khi lưu comment. Lỗi chỉ ghi log, không làm hỏng việc lưu. */
+@Injectable()
+export class CommentNotificationService {
+  private readonly logger = new Logger(CommentNotificationService.name);
+
+  constructor(
+    private readonly syncMentions: SyncMentionsService,
+    @Inject(NOTIFICATION_TYPES.services.CreateNotificationService)
+    private readonly notifications: CreateNotificationService,
+    private readonly authors: CommentAuthorService,
+  ) {}
+
+  async afterSave(
+    comment: Comment,
+    actorId: string,
+    parent: Comment | null = null,
+  ): Promise<void> {
+    try {
+      const mentioned = await this.syncMentions.sync({
+        workspaceId: comment.getWorkspaceId(),
+        pageId: comment.getPageId(),
+        actorId,
+        sourceType: MentionSourceType.COMMENT,
+        sourceId: comment.getId(),
+        entityType: MENTION_ENTITY[comment.getTargetType()],
+        entityId: comment.getTargetId(),
+        body: comment.getBody(),
+        actionUrl: commentActionUrl(comment),
+      });
+
+      const parentAuthorId = parent?.getAuthorId();
+
+      // Đã được báo "mentioned" thì không báo thêm "replied"
+      if (
+        parentAuthorId &&
+        parentAuthorId !== actorId &&
+        !mentioned.includes(parentAuthorId)
+      ) {
+        await this.notifyReply(comment, actorId, parentAuthorId);
+      }
+    } catch (error) {
+      this.logger.error(
+        `Comment ${comment.getId()} saved but notifications failed`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
+
+  private async notifyReply(
+    comment: Comment,
+    actorId: string,
+    receiverId: string,
+  ): Promise<void> {
+    const authors = await this.authors.findAuthors([actorId]);
+    const actorName = authors.get(actorId)?.username ?? 'Someone';
+    const text = mentionTokensToText(comment.getBody());
+
+    await this.notifications.createNotification({
+      receiverId,
+      senderType: NotificationSenderType.USER,
+      actorId,
+      sourceType: NotificationSourceType.COMMENT,
+      sourceId: comment.getId(),
+      workspaceId: comment.getWorkspaceId(),
+      type: NotificationType.COMMENT_REPLIED,
+      title: `${actorName} replied to your comment`,
+      message:
+        text.length > MESSAGE_MAX_LENGTH
+          ? `${text.slice(0, MESSAGE_MAX_LENGTH - 1)}…`
+          : text,
+      actionUrl: commentActionUrl(comment),
+      metadata: {
+        pageId: comment.getPageId(),
+        targetType: comment.getTargetType(),
+        targetId: comment.getTargetId(),
+      },
+    });
+  }
+}

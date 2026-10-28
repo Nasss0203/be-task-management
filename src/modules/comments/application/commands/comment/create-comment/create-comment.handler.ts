@@ -10,6 +10,7 @@ import type { CommentRepository } from 'src/modules/comments/domain/repositories
 import type { CommentTargetResolver } from '../../../ports/comment-target-resolver.port';
 import { CommentResponseDto } from '../../../dto/comment/response/comment.response.dto';
 import { CommentAuthorService } from '../../../services/comment-author.service';
+import { CommentNotificationService } from '../../../services/comment-notification.service';
 import { CreateCommentCommand } from './create-comment.command';
 
 @Injectable()
@@ -20,6 +21,7 @@ export class CreateCommentHandler {
     @Inject(COMMENT_TYPES.ports.CommentTargetResolver)
     private readonly targets: CommentTargetResolver,
     private readonly authors: CommentAuthorService,
+    private readonly commentNotifications: CommentNotificationService,
   ) {}
 
   async execute(command: CreateCommentCommand): Promise<CommentResponseDto> {
@@ -32,8 +34,10 @@ export class CreateCommentHandler {
       throw new NotFoundException('Comment target not found');
     }
 
+    let parent: Comment | null = null;
+
     if (command.parentCommentId) {
-      const parent = await this.commentRepo.findById(command.parentCommentId);
+      parent = await this.commentRepo.findById(command.parentCommentId);
 
       if (
         !parent ||
@@ -60,6 +64,8 @@ export class CreateCommentHandler {
         body: command.body,
       }),
     );
+
+    await this.commentNotifications.afterSave(saved, command.authorId, parent);
 
     const authors = await this.authors.findAuthors([command.authorId]);
 

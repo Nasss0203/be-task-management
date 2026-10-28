@@ -1,6 +1,8 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { IdentityModule } from '../identity/identity.module';
+import { MentionsModule } from '../mentions/mentions.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { PermissionModule } from '../permission/permission.module';
 import { CreateCommentHandler } from './application/commands/comment/create-comment/create-comment.handler';
 import { DeleteCommentHandler } from './application/commands/comment/delete-comment/delete-comment.handler';
@@ -8,6 +10,7 @@ import { UpdateCommentHandler } from './application/commands/comment/update-comm
 import { CountBlockCommentsHandler } from './application/queries/comment/count-block-comments/count-block-comments.handler';
 import { ListCommentsHandler } from './application/queries/comment/list-comments/list-comments.handler';
 import { CommentAuthorService } from './application/services/comment-author.service';
+import { CommentNotificationService } from './application/services/comment-notification.service';
 import { COMMENT_TYPES } from './comments.types';
 import { SqlCommentTargetResolver } from './infrastructure/persistence/typeorm/adapters/sql-comment-target-resolver.adapter';
 import { CommentOrmEntity } from './infrastructure/persistence/typeorm/entities/comment.orm-entity';
@@ -19,6 +22,8 @@ import { CommentController } from './presentation/http/controllers/comment.contr
     TypeOrmModule.forFeature([CommentOrmEntity]),
     forwardRef(() => IdentityModule),
     PermissionModule,
+    MentionsModule,
+    NotificationsModule,
   ],
   controllers: [CommentController],
   providers: [
@@ -31,6 +36,7 @@ import { CommentController } from './presentation/http/controllers/comment.contr
       useClass: SqlCommentTargetResolver,
     },
     CommentAuthorService,
+    CommentNotificationService,
     CreateCommentHandler,
     UpdateCommentHandler,
     DeleteCommentHandler,

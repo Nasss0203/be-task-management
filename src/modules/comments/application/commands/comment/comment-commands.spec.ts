@@ -7,6 +7,7 @@ import { Comment } from 'src/modules/comments/domain/aggregates/comment/comment.
 import { CommentTargetType } from 'src/modules/comments/domain/enums/comment-target-type.enum';
 import type { CommentRepository } from 'src/modules/comments/domain/repositories/comment.repository';
 import { CommentAuthorService } from '../../services/comment-author.service';
+import { CommentNotificationService } from '../../services/comment-notification.service';
 import type { CommentTargetResolver } from '../../ports/comment-target-resolver.port';
 import { ListCommentsHandler } from '../../queries/comment/list-comments/list-comments.handler';
 import { ListCommentsQuery } from '../../queries/comment/list-comments/list-comments.query';
@@ -75,11 +76,20 @@ function setup(existing: Comment[] = []) {
   } as unknown as CommentAuthorService;
 
   const repo = commentRepo as unknown as CommentRepository;
+  const notifier = { afterSave: jest.fn(() => Promise.resolve()) };
+  const commentNotifications =
+    notifier as unknown as CommentNotificationService;
 
   return {
     commentRepo,
-    create: new CreateCommentHandler(repo, targets, authors),
-    update: new UpdateCommentHandler(repo, authors),
+    notifier,
+    create: new CreateCommentHandler(
+      repo,
+      targets,
+      authors,
+      commentNotifications,
+    ),
+    update: new UpdateCommentHandler(repo, authors, commentNotifications),
     remove: new DeleteCommentHandler(repo),
     list: new ListCommentsHandler(repo, authors),
   };
@@ -157,7 +167,7 @@ describe('comment commands', () => {
     const root = comment('c-root');
     const reply = comment('c-reply', { parentCommentId: 'c-root' });
     const otherPage = comment('c-other', { targetId: 'page-2' });
-    const { create } = setup([root, reply, otherPage]);
+    const { create, notifier } = setup([root, reply, otherPage]);
 
     await expect(
       create.execute(
@@ -170,6 +180,13 @@ describe('comment commands', () => {
         ),
       ),
     ).resolves.toMatchObject({ parent_comment_id: 'c-root' });
+
+    // Báo cho tác giả comment gốc (và đồng bộ mention) sau khi lưu
+    expect(notifier.afterSave).toHaveBeenCalledWith(
+      expect.objectContaining({}),
+      'user-2',
+      root,
+    );
 
     await expect(
       create.execute(
