@@ -16,6 +16,7 @@ import type { PageBlockRepository } from 'src/modules/content/domain/repositorie
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import { UpdatePageBlockCommand } from './update-page-block.command';
 
 @Injectable()
@@ -47,6 +48,25 @@ export class UpdatePageBlockHandler {
 
       if (!isAllowedEmbedContent(nextType, nextContent)) {
         throw new BadRequestException('Unsupported embed URL');
+      }
+
+      // Đổi view mặc định của block database thì được, đổi sang database khác thì không
+      if (
+        command.updates.dataConfig !== undefined &&
+        block.getType() === PageBlockType.DATABASE_VIEW &&
+        nextType === PageBlockType.DATABASE_VIEW
+      ) {
+        const nextConfig = command.updates.dataConfig;
+        const nextDatabaseId =
+          nextConfig && !Array.isArray(nextConfig)
+            ? nextConfig.database_id
+            : undefined;
+
+        if (nextDatabaseId !== block.getReferencedDatabaseId()) {
+          throw new BadRequestException(
+            'A database view cannot point to another database',
+          );
+        }
       }
 
       if (command.updates.type !== undefined) {
