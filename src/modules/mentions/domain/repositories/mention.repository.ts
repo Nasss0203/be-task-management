@@ -12,4 +12,10 @@ export interface MentionRepository {
   ): Promise<Mention[]>;
 
   deleteByIds(ids: string[], context?: PersistenceContext): Promise<void>;
+
+  deleteBySources(
+    sourceType: MentionSourceType,
+    sourceIds: string[],
+    context?: PersistenceContext,
+  ): Promise<void>;
 }

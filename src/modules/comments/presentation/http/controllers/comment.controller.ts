@@ -20,9 +20,12 @@ import { CreateCommentCommand } from 'src/modules/comments/application/commands/
 import { CreateCommentHandler } from 'src/modules/comments/application/commands/comment/create-comment/create-comment.handler';
 import { DeleteCommentCommand } from 'src/modules/comments/application/commands/comment/delete-comment/delete-comment.command';
 import { DeleteCommentHandler } from 'src/modules/comments/application/commands/comment/delete-comment/delete-comment.handler';
+import { ResolveCommentCommand } from 'src/modules/comments/application/commands/comment/resolve-comment/resolve-comment.command';
+import { ResolveCommentHandler } from 'src/modules/comments/application/commands/comment/resolve-comment/resolve-comment.handler';
 import { UpdateCommentCommand } from 'src/modules/comments/application/commands/comment/update-comment/update-comment.command';
 import { UpdateCommentHandler } from 'src/modules/comments/application/commands/comment/update-comment/update-comment.handler';
 import { CreateCommentRequestDto } from 'src/modules/comments/application/dto/comment/request/create-comment.request.dto';
+import { ResolveCommentRequestDto } from 'src/modules/comments/application/dto/comment/request/resolve-comment.request.dto';
 import { UpdateCommentRequestDto } from 'src/modules/comments/application/dto/comment/request/update-comment.request.dto';
 import { CommentResponseDto } from 'src/modules/comments/application/dto/comment/response/comment.response.dto';
 import { CountBlockCommentsHandler } from 'src/modules/comments/application/queries/comment/count-block-comments/count-block-comments.handler';
@@ -41,6 +44,7 @@ export class CommentController {
     private readonly deleteCommentHandler: DeleteCommentHandler,
     private readonly listCommentsHandler: ListCommentsHandler,
     private readonly countBlockCommentsHandler: CountBlockCommentsHandler,
+    private readonly resolveCommentHandler: ResolveCommentHandler,
   ) {}
 
   @Get('page/:pageId/comments/block-counts')
@@ -170,6 +174,21 @@ export class CommentController {
   ): Promise<CommentResponseDto> {
     return this.updateCommentHandler.execute(
       new UpdateCommentCommand(commentId, auth.id, dto.body),
+    );
+  }
+
+  @Patch('comments/:commentId/resolved')
+  @WriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'comment', key: 'commentId' })
+  @RequirePermissions(PERMISSIONS.PAGE_COMMENT_CREATE)
+  @ResponseMessage('Resolve comment')
+  resolveComment(
+    @Param('commentId', ParseUUIDPipe) commentId: string,
+    @Body() dto: ResolveCommentRequestDto,
+    @Auth() auth: IAuth,
+  ): Promise<CommentResponseDto> {
+    return this.resolveCommentHandler.execute(
+      new ResolveCommentCommand(commentId, auth.id, dto.resolved),
     );
   }
 

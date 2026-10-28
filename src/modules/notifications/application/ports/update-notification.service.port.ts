@@ -1,4 +1,5 @@
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
+import { NotificationSourceType } from '../../domain/entities/notification.entity';
 import { WorkspaceInviteStatus } from 'src/modules/workspace/domain/enums/workspace-invite-status.enum';
 
 export type UpdateInviteNotificationStatusServiceInput = {
@@ -17,6 +18,12 @@ export interface UpdateNotificationService {
   markAsRead(
     notificationId: string,
     userId: string,
+    context?: PersistenceContext,
+  ): Promise<number>;
+
+  archiveBySources(
+    sourceType: NotificationSourceType,
+    sourceIds: string[],
     context?: PersistenceContext,
   ): Promise<number>;
 }

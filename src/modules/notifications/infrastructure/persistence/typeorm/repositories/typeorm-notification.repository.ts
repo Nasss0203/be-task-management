@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
-import { EntityManager, IsNull, Repository } from 'typeorm';
+import { EntityManager, In, IsNull, Repository } from 'typeorm';
 import type { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import {
   NotificationModel,
+  NotificationSourceType,
   NotificationType,
 } from '../../../../domain/entities/notification.entity';
 import {
@@ -47,10 +48,15 @@ export class TypeOrmNotificationRepository implements NotificationRepository {
   async insertNotificationIfAbsent(
     input: SaveNotificationInput & { id: string },
   ): Promise<NotificationModel | null> {
-    const result = await this.repo.createQueryBuilder()
+    const result = await this.repo
+      .createQueryBuilder()
       .insert()
       .into(Notification)
-      .values(NotificationMapper.toEntity(input) as unknown as QueryDeepPartialEntity<Notification>)
+      .values(
+        NotificationMapper.toEntity(
+          input,
+        ) as unknown as QueryDeepPartialEntity<Notification>,
+      )
       .orIgnore()
       .returning('id')
       .execute();
@@ -314,6 +320,21 @@ export class TypeOrmNotificationRepository implements NotificationRepository {
       .andWhere('read_at IS NULL')
       .andWhere('archived_at IS NULL')
       .execute();
+
+    return result.affected ?? 0;
+  }
+
+  async archiveBySources(
+    sourceType: NotificationSourceType,
+    sourceIds: string[],
+    context?: PersistenceContext,
+  ): Promise<number> {
+    if (sourceIds.length === 0) return 0;
+
+    const result = await this.getRepo(context).update(
+      { sourceType, sourceId: In(sourceIds), archivedAt: IsNull() },
+      { archivedAt: () => 'CURRENT_TIMESTAMP' },
+    );
 
     return result.affected ?? 0;
   }

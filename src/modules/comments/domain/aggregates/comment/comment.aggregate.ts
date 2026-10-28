@@ -95,6 +95,13 @@ export class Comment {
     this.updatedAt = this.editedAt;
   }
 
+  /** Đánh dấu thread đã xong (chỉ comment gốc) hoặc mở lại. */
+  setResolved(resolved: boolean, userId: string): void {
+    this.resolvedAt = resolved ? new Date() : null;
+    this.resolvedBy = resolved ? userId : null;
+    this.updatedAt = new Date();
+  }
+
   softDelete(): void {
     this.deletedAt = new Date();
   }

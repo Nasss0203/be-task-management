@@ -6,6 +6,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { PermissionModule } from '../permission/permission.module';
 import { CreateCommentHandler } from './application/commands/comment/create-comment/create-comment.handler';
 import { DeleteCommentHandler } from './application/commands/comment/delete-comment/delete-comment.handler';
+import { ResolveCommentHandler } from './application/commands/comment/resolve-comment/resolve-comment.handler';
 import { UpdateCommentHandler } from './application/commands/comment/update-comment/update-comment.handler';
 import { CountBlockCommentsHandler } from './application/queries/comment/count-block-comments/count-block-comments.handler';
 import { ListCommentsHandler } from './application/queries/comment/list-comments/list-comments.handler';
@@ -40,6 +41,7 @@ import { CommentController } from './presentation/http/controllers/comment.contr
     CreateCommentHandler,
     UpdateCommentHandler,
     DeleteCommentHandler,
+    ResolveCommentHandler,
     ListCommentsHandler,
     CountBlockCommentsHandler,
   ],

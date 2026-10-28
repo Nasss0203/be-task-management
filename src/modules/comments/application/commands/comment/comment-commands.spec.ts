@@ -15,6 +15,8 @@ import { CreateCommentCommand } from './create-comment/create-comment.command';
 import { CreateCommentHandler } from './create-comment/create-comment.handler';
 import { DeleteCommentCommand } from './delete-comment/delete-comment.command';
 import { DeleteCommentHandler } from './delete-comment/delete-comment.handler';
+import { ResolveCommentCommand } from './resolve-comment/resolve-comment.command';
+import { ResolveCommentHandler } from './resolve-comment/resolve-comment.handler';
 import { UpdateCommentCommand } from './update-comment/update-comment.command';
 import { UpdateCommentHandler } from './update-comment/update-comment.handler';
 
@@ -76,7 +78,10 @@ function setup(existing: Comment[] = []) {
   } as unknown as CommentAuthorService;
 
   const repo = commentRepo as unknown as CommentRepository;
-  const notifier = { afterSave: jest.fn(() => Promise.resolve()) };
+  const notifier = {
+    afterSave: jest.fn(() => Promise.resolve()),
+    afterDelete: jest.fn(() => Promise.resolve()),
+  };
   const commentNotifications =
     notifier as unknown as CommentNotificationService;
 
@@ -90,7 +95,8 @@ function setup(existing: Comment[] = []) {
       commentNotifications,
     ),
     update: new UpdateCommentHandler(repo, authors, commentNotifications),
-    remove: new DeleteCommentHandler(repo),
+    remove: new DeleteCommentHandler(repo, commentNotifications),
+    resolve: new ResolveCommentHandler(repo, authors),
     list: new ListCommentsHandler(repo, authors),
   };
 }
@@ -232,6 +238,38 @@ describe('comment commands', () => {
 
     await remove.execute(new DeleteCommentCommand('c-1', 'user-1'));
     expect(own.isDeleted()).toBe(true);
+  });
+
+  it('cleans up mentions and notifications of a deleted root and its replies', async () => {
+    const root = comment('c-root');
+    const reply = comment('c-reply', { parentCommentId: 'c-root' });
+    const other = comment('c-other');
+    const { remove, notifier } = setup([root, reply, other]);
+
+    await remove.execute(new DeleteCommentCommand('c-root', 'user-1'));
+
+    expect(notifier.afterDelete).toHaveBeenCalledWith(['c-root', 'c-reply']);
+  });
+
+  it('lets any commenter resolve and reopen a thread, but not a reply', async () => {
+    const root = comment('c-root', { authorId: 'user-1' });
+    const reply = comment('c-reply', { parentCommentId: 'c-root' });
+    const { resolve } = setup([root, reply]);
+
+    const resolved = await resolve.execute(
+      new ResolveCommentCommand('c-root', 'user-2', true),
+    );
+    expect(resolved.resolved_at).toBeInstanceOf(Date);
+    expect(root.getResolvedBy()).toBe('user-2');
+
+    const reopened = await resolve.execute(
+      new ResolveCommentCommand('c-root', 'user-1', false),
+    );
+    expect(reopened.resolved_at).toBeNull();
+
+    await expect(
+      resolve.execute(new ResolveCommentCommand('c-reply', 'user-1', true)),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('hides replies whose root comment was deleted', async () => {

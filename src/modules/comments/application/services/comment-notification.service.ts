@@ -5,7 +5,10 @@ import { SyncMentionsService } from 'src/modules/mentions/application/services/s
 import { MentionEntityType } from 'src/modules/mentions/domain/enums/mention-entity-type.enum';
 import { MentionSourceType } from 'src/modules/mentions/domain/enums/mention-source-type.enum';
 import { mentionTokensToText } from 'src/modules/mentions/domain/mention-token';
+import type { MentionRepository } from 'src/modules/mentions/domain/repositories/mention.repository';
+import { MENTION_TYPES } from 'src/modules/mentions/mentions.types';
 import type { CreateNotificationService } from 'src/modules/notifications/application/ports/create-notification.service.port';
+import type { UpdateNotificationService } from 'src/modules/notifications/application/ports/update-notification.service.port';
 import {
   NotificationSenderType,
   NotificationSourceType,
@@ -49,6 +52,10 @@ export class CommentNotificationService {
     @Inject(NOTIFICATION_TYPES.services.CreateNotificationService)
     private readonly notifications: CreateNotificationService,
     private readonly authors: CommentAuthorService,
+    @Inject(MENTION_TYPES.repositories.MentionRepository)
+    private readonly mentionRepo: MentionRepository,
+    @Inject(NOTIFICATION_TYPES.services.UpdateNotificationService)
+    private readonly notificationUpdates: UpdateNotificationService,
   ) {}
 
   async afterSave(
@@ -82,6 +89,25 @@ export class CommentNotificationService {
     } catch (error) {
       this.logger.error(
         `Comment ${comment.getId()} saved but notifications failed`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
+
+  /** Comment đã xóa: bỏ mention và ẩn thông báo trỏ tới nó (mention, trả lời). */
+  async afterDelete(commentIds: string[]): Promise<void> {
+    try {
+      await this.mentionRepo.deleteBySources(
+        MentionSourceType.COMMENT,
+        commentIds,
+      );
+      await this.notificationUpdates.archiveBySources(
+        NotificationSourceType.COMMENT,
+        commentIds,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Comments ${commentIds.join(', ')} deleted but cleanup failed`,
         error instanceof Error ? error.stack : String(error),
       );
     }

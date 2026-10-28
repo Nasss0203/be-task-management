@@ -103,4 +103,11 @@ export interface NotificationRepository {
     receiverId: string,
     context?: PersistenceContext,
   ): Promise<number>;
+
+  /** Ẩn mọi thông báo của các nguồn (vd comment đã xóa) khỏi hộp thư. */
+  archiveBySources(
+    sourceType: NotificationSourceType,
+    sourceIds: string[],
+    context?: PersistenceContext,
+  ): Promise<number>;
 }

@@ -56,7 +56,8 @@ export class TypeOrmCommentRepository implements CommentRepository {
     targetType: CommentTargetType,
     context?: PersistenceContext,
   ): Promise<Record<string, number>> {
-    // Trả lời của comment gốc đã xóa không hiện nên cũng không đếm (khớp ListCommentsHandler)
+    // Trả lời của comment gốc đã xóa không hiện nên cũng không đếm (khớp ListCommentsHandler).
+    // Thread đã resolve (gốc có resolved_at) bị ẩn mặc định nên cũng không đếm.
     // withDeleted để join thấy được comment gốc đã xóa; tự lọc comment đã xóa ở dưới
     const rows = await this.getRepo(context)
       .createQueryBuilder('comment')
@@ -74,6 +75,8 @@ export class TypeOrmCommentRepository implements CommentRepository {
       .andWhere(
         '(comment.parent_comment_id IS NULL OR parent.deleted_at IS NULL)',
       )
+      // Gốc không có parent; trả lời không bao giờ có resolved_at
+      .andWhere('comment.resolved_at IS NULL AND parent.resolved_at IS NULL')
       .groupBy('comment.target_id')
       .getRawMany<{ targetId: string; count: number }>();
 

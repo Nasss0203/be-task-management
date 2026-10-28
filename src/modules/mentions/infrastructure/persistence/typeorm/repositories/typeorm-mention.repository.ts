@@ -52,4 +52,14 @@ export class TypeOrmMentionRepository implements MentionRepository {
 
     await this.getRepo(context).delete({ id: In(ids) });
   }
+
+  async deleteBySources(
+    sourceType: MentionSourceType,
+    sourceIds: string[],
+    context?: PersistenceContext,
+  ): Promise<void> {
+    if (sourceIds.length === 0) return;
+
+    await this.getRepo(context).delete({ sourceType, sourceId: In(sourceIds) });
+  }
 }
