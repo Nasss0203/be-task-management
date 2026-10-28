@@ -1,3 +1,3 @@
-export class ListPageCommentsQuery {
+export class CountBlockCommentsQuery {
   constructor(public readonly pageId: string) {}
 }

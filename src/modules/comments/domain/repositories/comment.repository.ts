@@ -12,4 +12,11 @@ export interface CommentRepository {
     targetId: string,
     context?: PersistenceContext,
   ): Promise<Comment[]>;
+
+  /** Số comment đang hiện của từng target cùng loại trong một page (vd mọi block của page). */
+  countVisibleByPage(
+    pageId: string,
+    targetType: CommentTargetType,
+    context?: PersistenceContext,
+  ): Promise<Record<string, number>>;
 }

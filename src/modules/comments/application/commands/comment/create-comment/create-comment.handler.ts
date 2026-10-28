@@ -6,10 +6,8 @@ import {
 } from '@nestjs/common';
 import { COMMENT_TYPES } from 'src/modules/comments/comments.types';
 import { Comment } from 'src/modules/comments/domain/aggregates/comment/comment.aggregate';
-import { CommentTargetType } from 'src/modules/comments/domain/enums/comment-target-type.enum';
 import type { CommentRepository } from 'src/modules/comments/domain/repositories/comment.repository';
-import { CONTENT_TYPES } from 'src/modules/content/content.types';
-import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
+import type { CommentTargetResolver } from '../../../ports/comment-target-resolver.port';
 import { CommentResponseDto } from '../../../dto/comment/response/comment.response.dto';
 import { CommentAuthorService } from '../../../services/comment-author.service';
 import { CreateCommentCommand } from './create-comment.command';
@@ -19,16 +17,19 @@ export class CreateCommentHandler {
   constructor(
     @Inject(COMMENT_TYPES.repositories.CommentRepository)
     private readonly commentRepo: CommentRepository,
-    @Inject(CONTENT_TYPES.repositories.PageRepository)
-    private readonly pageRepo: PageRepository,
+    @Inject(COMMENT_TYPES.ports.CommentTargetResolver)
+    private readonly targets: CommentTargetResolver,
     private readonly authors: CommentAuthorService,
   ) {}
 
   async execute(command: CreateCommentCommand): Promise<CommentResponseDto> {
-    const page = await this.pageRepo.findById(command.pageId);
+    const target = await this.targets.resolve(
+      command.targetType,
+      command.targetId,
+    );
 
-    if (!page || page.getDeletedAt()) {
-      throw new NotFoundException('Page not found');
+    if (!target) {
+      throw new NotFoundException('Comment target not found');
     }
 
     if (command.parentCommentId) {
@@ -37,8 +38,8 @@ export class CreateCommentHandler {
       if (
         !parent ||
         parent.isDeleted() ||
-        parent.getTargetType() !== CommentTargetType.PAGE ||
-        parent.getTargetId() !== command.pageId
+        parent.getTargetType() !== command.targetType ||
+        parent.getTargetId() !== command.targetId
       ) {
         throw new NotFoundException('Parent comment not found');
       }
@@ -50,10 +51,10 @@ export class CreateCommentHandler {
 
     const saved = await this.commentRepo.save(
       Comment.create({
-        workspaceId: page.getWorkspaceId(),
-        pageId: command.pageId,
-        targetType: CommentTargetType.PAGE,
-        targetId: command.pageId,
+        workspaceId: target.workspaceId,
+        pageId: target.pageId,
+        targetType: command.targetType,
+        targetId: command.targetId,
         parentCommentId: command.parentCommentId,
         authorId: command.authorId,
         body: command.body,

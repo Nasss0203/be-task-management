@@ -6,10 +6,10 @@ import {
 import { Comment } from 'src/modules/comments/domain/aggregates/comment/comment.aggregate';
 import { CommentTargetType } from 'src/modules/comments/domain/enums/comment-target-type.enum';
 import type { CommentRepository } from 'src/modules/comments/domain/repositories/comment.repository';
-import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import { CommentAuthorService } from '../../services/comment-author.service';
-import { ListPageCommentsHandler } from '../../queries/comment/list-page-comments/list-page-comments.handler';
-import { ListPageCommentsQuery } from '../../queries/comment/list-page-comments/list-page-comments.query';
+import type { CommentTargetResolver } from '../../ports/comment-target-resolver.port';
+import { ListCommentsHandler } from '../../queries/comment/list-comments/list-comments.handler';
+import { ListCommentsQuery } from '../../queries/comment/list-comments/list-comments.query';
 import { CreateCommentCommand } from './create-comment/create-comment.command';
 import { CreateCommentHandler } from './create-comment/create-comment.handler';
 import { DeleteCommentCommand } from './delete-comment/delete-comment.command';
@@ -51,15 +51,21 @@ function setup(existing: Comment[] = []) {
     ),
     findByTarget: jest.fn(() => Promise.resolve(existing)),
   };
-  const pageRepo = {
-    findById: jest.fn((id: string) =>
-      Promise.resolve(
-        id === 'page-1'
-          ? { getWorkspaceId: () => 'ws-1', getDeletedAt: () => null }
-          : null,
-      ),
-    ),
+  const locations: Record<string, { pageId: string; workspaceId: string }> = {
+    [`${CommentTargetType.PAGE}:page-1`]: {
+      pageId: 'page-1',
+      workspaceId: 'ws-1',
+    },
+    [`${CommentTargetType.DATABASE_ROW}:row-1`]: {
+      pageId: 'page-db',
+      workspaceId: 'ws-1',
+    },
   };
+  const targets = {
+    resolve: jest.fn((type: CommentTargetType, id: string) =>
+      Promise.resolve(locations[`${type}:${id}`] ?? null),
+    ),
+  } as unknown as CommentTargetResolver;
   const authors = {
     findAuthors: jest.fn((ids: string[]) =>
       Promise.resolve(
@@ -72,14 +78,10 @@ function setup(existing: Comment[] = []) {
 
   return {
     commentRepo,
-    create: new CreateCommentHandler(
-      repo,
-      pageRepo as unknown as PageRepository,
-      authors,
-    ),
+    create: new CreateCommentHandler(repo, targets, authors),
     update: new UpdateCommentHandler(repo, authors),
     remove: new DeleteCommentHandler(repo),
-    list: new ListPageCommentsHandler(repo, authors),
+    list: new ListCommentsHandler(repo, authors),
   };
 }
 
@@ -88,7 +90,12 @@ describe('comment commands', () => {
     const { create, commentRepo } = setup();
 
     const result = await create.execute(
-      new CreateCommentCommand('page-1', 'user-1', 'Hello'),
+      new CreateCommentCommand(
+        CommentTargetType.PAGE,
+        'page-1',
+        'user-1',
+        'Hello',
+      ),
     );
 
     const saved = commentRepo.save.mock.calls[0][0];
@@ -103,7 +110,46 @@ describe('comment commands', () => {
     const { create } = setup();
 
     await expect(
-      create.execute(new CreateCommentCommand('page-x', 'user-1', 'Hi')),
+      create.execute(
+        new CreateCommentCommand(
+          CommentTargetType.PAGE,
+          'page-x',
+          'user-1',
+          'Hi',
+        ),
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('stores a row comment under the page that holds the database', async () => {
+    const pageComment = comment('c-page');
+    const { create, commentRepo } = setup([pageComment]);
+
+    await create.execute(
+      new CreateCommentCommand(
+        CommentTargetType.DATABASE_ROW,
+        'row-1',
+        'user-1',
+        'On it',
+      ),
+    );
+
+    const saved = commentRepo.save.mock.calls[0][0];
+    expect(saved.getTargetType()).toBe(CommentTargetType.DATABASE_ROW);
+    expect(saved.getTargetId()).toBe('row-1');
+    expect(saved.getPageId()).toBe('page-db');
+
+    // Không trả lời chéo sang comment của target khác
+    await expect(
+      create.execute(
+        new CreateCommentCommand(
+          CommentTargetType.DATABASE_ROW,
+          'row-1',
+          'user-1',
+          'x',
+          'c-page',
+        ),
+      ),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
@@ -115,19 +161,37 @@ describe('comment commands', () => {
 
     await expect(
       create.execute(
-        new CreateCommentCommand('page-1', 'user-2', 'ok', 'c-root'),
+        new CreateCommentCommand(
+          CommentTargetType.PAGE,
+          'page-1',
+          'user-2',
+          'ok',
+          'c-root',
+        ),
       ),
     ).resolves.toMatchObject({ parent_comment_id: 'c-root' });
 
     await expect(
       create.execute(
-        new CreateCommentCommand('page-1', 'user-2', 'deep', 'c-reply'),
+        new CreateCommentCommand(
+          CommentTargetType.PAGE,
+          'page-1',
+          'user-2',
+          'deep',
+          'c-reply',
+        ),
       ),
     ).rejects.toBeInstanceOf(BadRequestException);
 
     await expect(
       create.execute(
-        new CreateCommentCommand('page-1', 'user-2', 'x', 'c-other'),
+        new CreateCommentCommand(
+          CommentTargetType.PAGE,
+          'page-1',
+          'user-2',
+          'x',
+          'c-other',
+        ),
       ),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
@@ -159,7 +223,9 @@ describe('comment commands', () => {
     const reply = comment('c-reply', { parentCommentId: 'c-root' });
     const { list } = setup([root, reply, orphan]);
 
-    const result = await list.execute(new ListPageCommentsQuery('page-1'));
+    const result = await list.execute(
+      new ListCommentsQuery(CommentTargetType.PAGE, 'page-1'),
+    );
 
     expect(result.map((item) => item.id)).toEqual(['c-root', 'c-reply']);
   });

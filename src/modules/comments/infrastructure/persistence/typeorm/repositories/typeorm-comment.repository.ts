@@ -50,4 +50,33 @@ export class TypeOrmCommentRepository implements CommentRepository {
 
     return rows.map((row) => CommentMapper.toDomain(row));
   }
+
+  async countVisibleByPage(
+    pageId: string,
+    targetType: CommentTargetType,
+    context?: PersistenceContext,
+  ): Promise<Record<string, number>> {
+    // Trả lời của comment gốc đã xóa không hiện nên cũng không đếm (khớp ListCommentsHandler)
+    // withDeleted để join thấy được comment gốc đã xóa; tự lọc comment đã xóa ở dưới
+    const rows = await this.getRepo(context)
+      .createQueryBuilder('comment')
+      .withDeleted()
+      .leftJoin(
+        CommentOrmEntity,
+        'parent',
+        'parent.id = comment.parent_comment_id',
+      )
+      .select('comment.target_id', 'targetId')
+      .addSelect('COUNT(*)::int', 'count')
+      .where('comment.page_id = :pageId', { pageId })
+      .andWhere('comment.target_type = :targetType', { targetType })
+      .andWhere('comment.deleted_at IS NULL')
+      .andWhere(
+        '(comment.parent_comment_id IS NULL OR parent.deleted_at IS NULL)',
+      )
+      .groupBy('comment.target_id')
+      .getRawMany<{ targetId: string; count: number }>();
+
+    return Object.fromEntries(rows.map((row) => [row.targetId, row.count]));
+  }
 }
