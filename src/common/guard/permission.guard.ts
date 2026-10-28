@@ -172,11 +172,12 @@ export class PermissionGuard implements CanActivate {
         };
 
       /**
-       * Database là nội dung của Page,
+       * Database và comment là nội dung của Page,
        * nên kế thừa quyền của Page chứa nó.
        */
       case 'database':
       case 'database_row':
+      case 'comment':
         if (!req.authorizationPageId) {
           throw new ForbiddenException('Authorization resource id not found');
         }

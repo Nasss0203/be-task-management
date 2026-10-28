@@ -29,6 +29,11 @@ export const PERMISSIONS = {
   PAGE_BLOCK_UPDATE: 'page_block.update',
   PAGE_BLOCK_DELETE: 'page_block.delete',
 
+  // Comment trên page, block và row database của page
+  PAGE_COMMENT_READ: 'page.comment.read',
+  /** Viết, trả lời, sửa / xóa comment của chính mình. */
+  PAGE_COMMENT_CREATE: 'page.comment.create',
+
   // Page Share
   PAGE_SHARE_READ: 'page.share.read',
   PAGE_SHARE_ADD: 'page.share.add',

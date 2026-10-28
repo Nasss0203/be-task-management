@@ -69,6 +69,14 @@ const WORKSPACE_LOOKUPS: Record<WorkspaceResourceType, WorkspaceLookup> = {
       WHERE r.id = $1
     `,
   },
+  comment: {
+    paramKeys: ['commentId'],
+    query: `
+      SELECT workspace_id AS "workspaceId", page_id AS "pageId"
+      FROM comments
+      WHERE id = $1 AND deleted_at IS NULL
+    `,
+  },
 };
 
 @Injectable()

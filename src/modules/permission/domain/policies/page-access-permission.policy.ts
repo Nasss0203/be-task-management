@@ -8,11 +8,12 @@ import {
 const VIEWER_PERMISSIONS: readonly PermissionCode[] = [
   PERMISSIONS.PAGE_READ,
   PERMISSIONS.PAGE_BLOCK_READ,
+  PERMISSIONS.PAGE_COMMENT_READ,
 ];
 
 const COMMENTER_PERMISSIONS: readonly PermissionCode[] = [
   ...VIEWER_PERMISSIONS,
-  // PAGE_COMMENT_* sẽ thêm khi có Comment module
+  PERMISSIONS.PAGE_COMMENT_CREATE,
 ];
 
 const EDITOR_PERMISSIONS: readonly PermissionCode[] = [

@@ -81,6 +81,24 @@ export class Comment {
     );
   }
 
+  isReply(): boolean {
+    return this.parentCommentId !== null;
+  }
+
+  isDeleted(): boolean {
+    return this.deletedAt !== null;
+  }
+
+  edit(body: string): void {
+    this.body = body;
+    this.editedAt = new Date();
+    this.updatedAt = this.editedAt;
+  }
+
+  softDelete(): void {
+    this.deletedAt = new Date();
+  }
+
   getId(): string {
     return this.id;
   }

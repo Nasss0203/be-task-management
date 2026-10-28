@@ -8,7 +8,8 @@ export type WorkspaceResourceType =
   | 'page_block'
   | 'attachment'
   | 'database'
-  | 'database_row';
+  | 'database_row'
+  | 'comment';
 
 export type WorkspaceContextMeta =
   | { source: 'param' | 'body' | 'query'; key: string }
