@@ -1,9 +1,11 @@
-import { Body, Controller, Delete, Param, Patch } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { ChangeDatabaseRowParentCommand } from 'src/modules/database/application/commands/change-database-row-parent/change-database-row-parent.command';
 import { ChangeDatabaseRowParentHandler } from 'src/modules/database/application/commands/change-database-row-parent/change-database-row-parent.handler';
+import { GetDatabaseRowHandler } from 'src/modules/database/application/queries/get-database-row/get-database-row.handler';
+import { GetDatabaseRowQuery } from 'src/modules/database/application/queries/get-database-row/get-database-row.query';
 import { DeleteDatabaseRowCommand } from 'src/modules/database/application/commands/delete-database-row/delete-database-row.command';
 import { DeleteDatabaseRowHandler } from 'src/modules/database/application/commands/delete-database-row/delete-database-row.handler';
 import { MoveDatabaseRowCommand } from 'src/modules/database/application/commands/move-database-row/move-database-row.command';
@@ -17,7 +19,15 @@ export class DatabaseRowResourceController {
     private readonly deleteDatabaseRowHandler: DeleteDatabaseRowHandler,
     private readonly moveDatabaseRowHandler: MoveDatabaseRowHandler,
     private readonly changeDatabaseRowParentHandler: ChangeDatabaseRowParentHandler,
+    private readonly getDatabaseRowHandler: GetDatabaseRowHandler,
   ) {}
+
+  @Get(':rowId')
+  @WorkspaceContext({ source: 'resource', type: 'database_row', key: 'rowId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
+  getRow(@Param('rowId') rowId: string) {
+    return this.getDatabaseRowHandler.execute(new GetDatabaseRowQuery(rowId));
+  }
 
   @Delete(':rowId')
   @WorkspaceContext({ source: 'resource', type: 'database_row', key: 'rowId' })

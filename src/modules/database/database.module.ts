@@ -20,6 +20,7 @@ import { RenameDatabaseHandler } from './application/commands/rename-database/re
 import { SetViewFiltersHandler } from './application/commands/set-view-filters/set-view-filters.handler';
 import { SetViewGroupHandler } from './application/commands/set-view-group/set-view-group.handler';
 import { ReorderViewPropertiesHandler } from './application/commands/reorder-view-properties/reorder-view-properties.handler';
+import { GetDatabaseRowHandler } from './application/queries/get-database-row/get-database-row.handler';
 import { ChangeDatabaseRowParentHandler } from './application/commands/change-database-row-parent/change-database-row-parent.handler';
 import { MoveDatabaseRowHandler } from './application/commands/move-database-row/move-database-row.handler';
 import { SetViewSortsHandler } from './application/commands/set-view-sorts/set-view-sorts.handler';
@@ -102,6 +103,7 @@ import { DatabaseController } from './presentation/http/controllers/database.con
     ReorderViewPropertiesHandler,
     MoveDatabaseRowHandler,
     ChangeDatabaseRowParentHandler,
+    GetDatabaseRowHandler,
     GetDatabasePeopleHandler,
     {
       provide: DATABASE_TYPES.ports.DatabasePeopleReader,
