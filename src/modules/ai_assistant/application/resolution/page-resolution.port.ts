@@ -14,6 +14,12 @@ export interface RecentEditsQuery {
   now?: Date;
 }
 
+/** M4: where a Page is: its ancestors' titles (any order) and its teamspace. */
+export interface PagePlace {
+  ancestorTitles: string[];
+  teamspaceName: string | null;
+}
+
 /** A Page the user edited, from activities (kế hoạch ghi activity). */
 export interface RecentlyEditedPage extends TitledPage {
   lastEditedAt: Date;
@@ -42,4 +48,7 @@ export interface PageResolutionReader {
 
   /** The zone saved on the user's profile, if any (§11 #7). */
   findProfileTimeZone(userId: string): Promise<string | null>;
+
+  /** M4: ancestors and teamspace of each Page; only used to compare. */
+  findPagePlaces(pageIds: string[]): Promise<Map<string, PagePlace>>;
 }

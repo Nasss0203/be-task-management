@@ -68,6 +68,9 @@ import { PageReferenceResolver } from './application/resolution/page-reference-r
 import { PageExactResolutionReader } from './infrastructure/resolution/page-exact-resolution.reader';
 import { PageIntentExtractionService } from './application/resolution/page-intent-extraction.service';
 import { AiPageInstructionPlannerService } from './application/services/ai-page-instruction-planner.service';
+import { PageEmbeddingIndexer } from './application/embedding/page-embedding-indexer.service';
+import { PageEmbeddingSearch } from './application/embedding/page-embedding-search.service';
+import { PageEmbeddingSqlStore } from './infrastructure/embedding/page-embedding.store';
 
 @Module({
   imports: [
@@ -117,6 +120,8 @@ import { AiPageInstructionPlannerService } from './application/services/ai-page-
     PageReferenceResolver,
     PageIntentExtractionService,
     AiPageInstructionPlannerService,
+    PageEmbeddingIndexer,
+    PageEmbeddingSearch,
 
     AiAssistantService,
     {
@@ -144,6 +149,14 @@ import { AiPageInstructionPlannerService } from './application/services/ai-page-
     {
       provide: AI_ASSISTANT_TYPES.ports.AiIntent,
       useExisting: AI_ASSISTANT_TYPES.runtime.AiRuntime,
+    },
+    {
+      provide: AI_ASSISTANT_TYPES.ports.TextEmbedder,
+      useExisting: AI_ASSISTANT_TYPES.runtime.AiRuntime,
+    },
+    {
+      provide: AI_ASSISTANT_TYPES.ports.PageEmbeddingStore,
+      useClass: PageEmbeddingSqlStore,
     },
     {
       provide: AI_ASSISTANT_TYPES.ports.PageContextTransactionLocker,

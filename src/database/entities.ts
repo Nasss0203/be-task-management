@@ -5,6 +5,8 @@ import { AiGenerationOrmEntity } from 'src/modules/ai_assistant/infrastructure/p
 import { AiMessageOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-message.orm-entity';
 import { AiToolCallOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-tool-call.orm-entity';
 import { AiUsageOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-usage.orm-entity';
+import { PageEmbeddingOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/page-embedding.orm-entity';
+import { PageIndexStateOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/page-index-state.orm-entity';
 import { AttachmentOrmEntity } from 'src/modules/attachment/infrastructure/persistence/typeorm/entities/attachment.orm-entity';
 import { BillingFeatureOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/billing-feature.orm-entity';
 import { BillingPlanFeatureOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/billing-plan-feature.orm-entity';
@@ -144,4 +146,6 @@ export const DATABASE_ENTITIES = [
   TemplateLikeOrmEntity,
   TemplateReviewOrmEntity,
   CreatorProfileOrmEntity,
+  PageEmbeddingOrmEntity,
+  PageIndexStateOrmEntity,
 ];

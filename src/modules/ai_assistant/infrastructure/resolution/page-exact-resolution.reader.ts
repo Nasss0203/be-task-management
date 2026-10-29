@@ -5,6 +5,7 @@ import type { Page } from 'src/modules/content/domain/aggregates/page/page.aggre
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import {
   MAX_RECENT_EDITED_PAGES,
+  type PagePlace,
   type PageResolutionReader,
   type RecentEditsQuery,
   type RecentlyEditedPage,
@@ -118,5 +119,46 @@ export class PageExactResolutionReader implements PageResolutionReader {
       { timezone: string | null }[]
     >('SELECT timezone FROM user_profiles WHERE user_id = $1', [userId]);
     return profile?.timezone ?? null;
+  }
+
+  async findPagePlaces(pageIds: string[]): Promise<Map<string, PagePlace>> {
+    if (pageIds.length === 0) return new Map();
+    // Ancestors at any depth (at most 20 levels), live Pages only.
+    const ancestors = await this.dataSource.query<
+      { page_id: string; title: string }[]
+    >(
+      `WITH RECURSIVE chain AS (
+         SELECT id AS page_id, parent_page_id AS ancestor_id, 1 AS depth
+           FROM pages WHERE id = ANY($1::uuid[])
+         UNION ALL
+         SELECT chain.page_id, parent.parent_page_id, chain.depth + 1
+           FROM chain JOIN pages parent ON parent.id = chain.ancestor_id
+          WHERE chain.depth < 20
+       )
+       SELECT chain.page_id, ancestor.title
+         FROM chain JOIN pages ancestor ON ancestor.id = chain.ancestor_id
+        WHERE ancestor.deleted_at IS NULL`,
+      [pageIds],
+    );
+    const teamspaces = await this.dataSource.query<
+      { id: string; name: string | null }[]
+    >(
+      `SELECT page.id, teamspace.name
+         FROM pages page
+         LEFT JOIN teamspaces teamspace
+           ON teamspace.id = page.teamspace_id AND teamspace.deleted_at IS NULL
+        WHERE page.id = ANY($1::uuid[])`,
+      [pageIds],
+    );
+    const places = new Map<string, PagePlace>(
+      teamspaces.map((row) => [
+        row.id,
+        { ancestorTitles: [], teamspaceName: row.name },
+      ]),
+    );
+    for (const row of ancestors) {
+      places.get(row.page_id)?.ancestorTitles.push(row.title);
+    }
+    return places;
   }
 }

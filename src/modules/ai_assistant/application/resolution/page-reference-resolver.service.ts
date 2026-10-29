@@ -8,15 +8,19 @@ import {
 import type { Page } from 'src/modules/content/domain/aggregates/page/page.aggregate';
 import { AI_ASSISTANT_TYPES } from '../../ai-assistant.types';
 import { AiConversationAccessService } from '../services/ai-conversation-access.service';
+import type { PageScope } from './page-intent.types';
 import type { PageResolutionReader } from './page-resolution.port';
 import {
   DEFAULT_TIME_ZONE,
   isTimeZone,
   MAX_ACTIVITY_CANDIDATES,
   MAX_SENTENCE_CANDIDATES,
+  MAX_SIMILAR_CANDIDATES,
   type ActivityPageResolutionResult,
   type PageResolutionCandidate,
   type ResolvePageFromActivityInput,
+  type ResolveSimilarTitlesInput,
+  type SimilarTitleResolutionResult,
   type PageResolutionResult,
   type ResolvePageFromSentenceInput,
   type ResolvePageReferenceInput,
@@ -26,9 +30,24 @@ import {
   findPageTitlesInSentence,
   normalizeForTitleMatch,
 } from './page-title-sentence-matcher';
+import {
+  SIMILAR_TITLE_THRESHOLD,
+  similarTitleScorer,
+} from './page-title-similarity';
 
 // More textual matches than this are not worth authorizing one by one.
 const MAX_SENTENCE_MATCHES_TO_AUTHORIZE = 25;
+
+/** Same title: NFC and any case, else the same words without marks. */
+function sameName(typed: string, title: string): boolean {
+  const exact = (text: string) =>
+    text.normalize('NFC').trim().toLocaleLowerCase('vi');
+  return (
+    exact(typed) === exact(title) ||
+    (!!normalizeForTitleMatch(typed) &&
+      normalizeForTitleMatch(typed) === normalizeForTitleMatch(title))
+  );
+}
 
 @Injectable()
 export class PageReferenceResolver {
@@ -121,6 +140,81 @@ export class PageReferenceResolver {
       candidates,
       resolutionMethod: 'TITLE_IN_SENTENCE',
     };
+  }
+
+  /**
+   * M4: the candidates that are in the place the user named: under an
+   * ancestor Page with that title (any depth) and / or in that teamspace.
+   * Ancestor titles are only compared, never returned.
+   */
+  async filterByScope(
+    candidates: PageResolutionCandidate[],
+    scope: PageScope,
+  ): Promise<PageResolutionCandidate[]> {
+    if (candidates.length === 0) return [];
+    const places = await this.reader.findPagePlaces(
+      candidates.map((candidate) => candidate.pageId),
+    );
+    // "dự án A" / "project A": the ancestor may be titled "A" or "Dự án A".
+    const parentNames = scope.parentTitle
+      ? [
+          scope.parentTitle,
+          scope.parentTitle.replace(/^\s*(?:dự án|du an|project)\s+/iu, ''),
+        ]
+      : [];
+    return candidates.filter((candidate) => {
+      const place = places.get(candidate.pageId);
+      if (!place) return false;
+      const underParent =
+        !scope.parentTitle ||
+        place.ancestorTitles.some((title) =>
+          parentNames.some((name) => sameName(name, title)),
+        );
+      const inTeamspace =
+        !scope.teamspaceName ||
+        (place.teamspaceName !== null &&
+          sameName(scope.teamspaceName, place.teamspaceName));
+      return underParent && inTeamspace;
+    });
+  }
+
+  /**
+   * M3: real titles close to a typed name that matched nothing exactly.
+   * Never resolves directly: the user confirms even a single suggestion.
+   */
+  async resolveSimilarTitles(
+    input: ResolveSimilarTitlesInput,
+  ): Promise<SimilarTitleResolutionResult> {
+    if (!input.userId?.trim() || !input.workspaceId?.trim()) {
+      throw new BadRequestException('User and workspace are required');
+    }
+    const pages = await this.reader.findAccessibleTitlesInWorkspace(
+      input.userId,
+      input.workspaceId,
+    );
+    const score = similarTitleScorer(input.title);
+    const ranked = pages
+      .map((page) => ({
+        page,
+        score: score(page.title),
+      }))
+      .filter(({ score }) => score >= SIMILAR_TITLE_THRESHOLD)
+      .sort(
+        (a, b) =>
+          b.score - a.score || a.page.title.localeCompare(b.page.title, 'vi'),
+      );
+
+    // Authorize before revealing even a title (luật cứng #6).
+    const candidates: PageResolutionCandidate[] = [];
+    for (const { page: titled } of ranked) {
+      const page = await this.getAuthorizedPage(input, titled.id);
+      if (!page) continue;
+      candidates.push(this.toCandidate(page));
+      if (candidates.length === MAX_SIMILAR_CANDIDATES) break;
+    }
+    return candidates.length > 0
+      ? { status: 'CANDIDATES', candidates, resolutionMethod: 'FUZZY_TITLE' }
+      : { status: 'NOT_FOUND', candidates: [] };
   }
 
   /**

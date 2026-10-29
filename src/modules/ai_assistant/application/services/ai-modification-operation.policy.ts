@@ -387,6 +387,16 @@ const ACTIVITY_TARGET_EN =
   /^ (?:to|in|on|into) (?:the )?(?:\S+ ){0,6}?page (?:that )?i (?:(?:last|just|recently) )*(?:edited|updated|changed|modified|worked on)(?: (?:most recently|last|today|yesterday|last week|recently|lately|\d{1,2} days? ago))?$/u;
 
 /**
+ * "… nhé", "… ạ", "… please" with their marks: "ạ" folds to "a", which would
+ * otherwise cut the last word of a name such as "Dự án A".
+ */
+function withoutPoliteTail(source: string): string {
+  return source
+    .normalize('NFC')
+    .replace(/(?:[\s,]+(?:nhé|nha|ạ|please))*[\s.!?]*$/iu, '');
+}
+
+/**
  * The sentence is exactly the edit clause plus "trang … tôi sửa <time>". The
  * activity words name the Page (they hold "sửa", which is no edit here); the
  * edit clause passes the usual admission.
@@ -397,10 +407,7 @@ export function isSupportedActivityModification(
 ): boolean {
   const fold = (text: string) =>
     foldInstruction(text).replace(/\s+/gu, ' ').trim();
-  const text = fold(source).replace(
-    /(?:[\s,]+(?:nhe|nha|a|please))*[\s.!?]*$/u,
-    '',
-  );
+  const text = fold(withoutPoliteTail(source));
   const edit = fold(instruction);
   if (!edit || !text.startsWith(edit)) return false;
   const target = text.slice(edit.length);
@@ -409,6 +416,66 @@ export function isSupportedActivityModification(
     (ACTIVITY_TARGET_VI.test(target) || ACTIVITY_TARGET_EN.test(target)) &&
     isSupportedModification(instruction)
   );
+}
+
+// M6 (kế hoạch tìm theo mô tả, G1, G5): "… vào trang về <mô tả>", "Sửa trang
+// dùng để <mô tả>: <việc>". The same cues as the AI service's rules, folded.
+const DESCRIPTION_CUE_VI =
+  '(?:dung de|dung cho|de|noi ve|viet ve|ve|ghi lai|ghi chep|ghi|theo doi|lien quan (?:den|toi)|chuyen ve)';
+const DESCRIPTION_CUE_EN =
+  '(?:about|for|on|covering|used for|that (?:covers|tracks|is about)|where (?:we|i) (?:track|keep|write down|write))';
+
+/**
+ * The sentence is exactly the edit clause and "trang <cue> <mô tả>", in either
+ * order. The description names the Page (it may hold "xoá", which is no edit
+ * here); the edit clause passes the usual admission.
+ */
+export function isSupportedDescriptionModification(
+  source: string,
+  instruction: string,
+  description: string,
+): boolean {
+  const fold = (text: string) =>
+    foldInstruction(text).replace(/\s+/gu, ' ').trim();
+  const text = fold(withoutPoliteTail(source));
+  const edit = escapeRegExp(fold(withoutPoliteTail(instruction)));
+  const named = fold(description);
+  if (!edit || !named || /\b(?:trang|page)\b/u.test(named)) return false;
+  const what = escapeRegExp(named);
+  const shapes = [
+    `^${edit} (?:vao|trong|o|tren|tai|cho) trang ${DESCRIPTION_CUE_VI} ${what}$`,
+    `^(?:(?:hay|vui long) )?(?:sua|chinh sua|chinh|cap nhat) trang ${DESCRIPTION_CUE_VI} ${what} ?[:,;] ${edit}$`,
+    `^${edit} (?:to|in|on|into) the page ${DESCRIPTION_CUE_EN} ${what}$`,
+    `^(?:please )?(?:edit|update) the page ${DESCRIPTION_CUE_EN} ${what} ?[:,;] ${edit}$`,
+  ];
+  return (
+    shapes.some((shape) => new RegExp(shape, 'u').test(text)) &&
+    isSupportedModification(instruction)
+  );
+}
+
+/**
+ * M4 (kế hoạch lọc theo cấu trúc, E4): the sentence without its place
+ * ("… trong trang Dự án A", "… thuộc Dự án A", "… in the Marketing
+ * teamspace"). The place names an ancestor Page or a teamspace, never an
+ * edit. Null when the sentence does not end with that place.
+ */
+export function withoutPageScope(
+  source: string,
+  scope: { parentTitle: string | null; teamspaceName: string | null },
+): string | null {
+  const name = scope.parentTitle ?? scope.teamspaceName;
+  if (!name) return null;
+  const fold = (text: string) =>
+    foldInstruction(text).replace(/\s+/gu, ' ').trim();
+  const text = fold(withoutPoliteTail(source));
+  const quote = '["\'“”‘’`]?';
+  const place = new RegExp(
+    ` (?:(?:trong|cua|thuoc) (?:(?:trang|du an|teamspace) )?|(?:in|of|under|inside) (?:the )?(?:(?:project|teamspace) )?)${quote}${escapeRegExp(fold(name))}${quote}(?: (?:page|project|teamspace))?$`,
+    'u',
+  );
+  const match = place.exec(text);
+  return match ? text.slice(0, match.index) : null;
 }
 
 /** Why a request was refused; it never changes what is refused (kế hoạch sửa nhỏ, D3). */

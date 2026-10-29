@@ -8,10 +8,16 @@ describe('AiPageInstructionPlannerService', () => {
   const extract = jest.fn();
   const resolve = jest.fn();
   const resolveFromSentence = jest.fn();
+  // M3 has its own spec (page-similar-title-resolution.spec); nothing is close here.
+  const resolveSimilarTitles = jest.fn();
   const plan = jest.fn();
   const service = new AiPageInstructionPlannerService(
     { extract } as unknown as PageIntentExtractionService,
-    { resolve, resolveFromSentence } as unknown as PageReferenceResolver,
+    {
+      resolve,
+      resolveFromSentence,
+      resolveSimilarTitles,
+    } as unknown as PageReferenceResolver,
     { generate: plan } as unknown as AiModificationPlannerService,
   );
   const input = {
@@ -46,6 +52,10 @@ describe('AiPageInstructionPlannerService', () => {
       resolutionMethod: 'EXACT_TITLE', confidence: 1,
     });
     resolveFromSentence.mockResolvedValue({ status: 'NOT_FOUND', candidates: [] });
+    resolveSimilarTitles.mockResolvedValue({
+      status: 'NOT_FOUND',
+      candidates: [],
+    });
     plan.mockResolvedValue({
       pageId: 'page-1', status: 'PLAN_READY',
       generationId: 'generation-1', conversationId: 'conversation-1',

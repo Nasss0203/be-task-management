@@ -13,6 +13,13 @@ export interface PageActivity {
   titleHint: string | null;
 }
 
+/** M4: where the titled Page is; there is no project entity (kế hoạch M4, E1). */
+export interface PageScope {
+  /** An ancestor Page's title at any depth; "dự án A" also tries "A". */
+  parentTitle: string | null;
+  teamspaceName: string | null;
+}
+
 export type PageIntentExtraction =
   | {
       intent: 'MODIFY_PAGE';
@@ -20,6 +27,8 @@ export type PageIntentExtraction =
       pageReference: string | null;
       instruction: string;
       needsClarification: boolean;
+      /** Only on a TITLE the AI service's rules placed (M4). */
+      scope?: PageScope;
     }
   | {
       // Only the AI service's rules return it; the user always confirms the Page.
@@ -29,6 +38,16 @@ export type PageIntentExtraction =
       instruction: string;
       needsClarification: false;
       activity: PageActivity;
+    }
+  | {
+      // M6: only the AI service's rules return it; the user always picks the Page.
+      intent: 'MODIFY_PAGE';
+      referenceType: 'DESCRIPTION';
+      pageReference: null;
+      instruction: string;
+      needsClarification: false;
+      /** What the Page is for, in the user's own words. */
+      description: string;
     }
   | {
       intent: 'OTHER' | 'UNCLEAR';

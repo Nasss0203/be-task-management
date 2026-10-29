@@ -164,6 +164,10 @@
     {
       "file": "1792429159192-UpdateSchema.ts",
       "sha256": "f97b519920e5389aa96cfb015b70f07bd43961f7cea057f548c83a190ca09220"
+    },
+    {
+      "file": "1792430000000-CreatePageEmbeddings.ts",
+      "sha256": "c29052d935d48c695f5538babfc6cb4db800e1d4cfe0e59b1712a6677302bdb3"
     }
   ]
 }

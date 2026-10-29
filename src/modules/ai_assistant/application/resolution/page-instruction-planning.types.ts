@@ -9,7 +9,11 @@ export type PlanningResolutionMethod =
   | 'EXACT_TITLE'
   | 'TITLE_IN_SENTENCE'
   // M2: like TITLE_IN_SENTENCE, only after the user picked the Page.
-  | 'ACTIVITY';
+  | 'ACTIVITY'
+  // M3: a title close to the typed name, also only after the user picked it.
+  | 'FUZZY_TITLE'
+  // M6: a Page close to a description, also only after the user picked it.
+  | 'SEMANTIC';
 
 /** Non-planning results never create an AI Generation or change a Page. */
 export type PageInstructionPlanningResult =
@@ -46,7 +50,13 @@ export type PageInstructionPlanningResult =
       status: 'AMBIGUOUS_PAGE';
       intent: PageIntentExtraction;
       candidates: PageResolutionCandidate[];
-      resolutionMethod?: 'TITLE_IN_SENTENCE' | 'ACTIVITY';
+      resolutionMethod?:
+        | 'TITLE_IN_SENTENCE'
+        | 'ACTIVITY'
+        | 'FUZZY_TITLE'
+        | 'SEMANTIC';
+      /** M4: no candidate is in the place the user named; all are offered. */
+      scopeUnmatched?: true;
     }
   | {
       status: 'PLAN_GENERATED';
@@ -61,5 +71,8 @@ export type PageInstructionPlanningResult =
       intent: PageIntentExtraction;
       page: PageResolutionCandidate;
       resolutionMethod: PlanningResolutionMethod;
-      plan: Extract<GenerateAiModificationPlanResult, { status: 'NEED_MORE_CONTEXT' }>;
+      plan: Extract<
+        GenerateAiModificationPlanResult,
+        { status: 'NEED_MORE_CONTEXT' }
+      >;
     };

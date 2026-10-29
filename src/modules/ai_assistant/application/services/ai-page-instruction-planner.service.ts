@@ -2,11 +2,23 @@ import {
   BadGatewayException,
   BadRequestException,
   Injectable,
+  Logger,
+  Optional,
 } from '@nestjs/common';
 
+import {
+  DESCRIBED_PAGE_SEARCH_LIMIT,
+  describedPageMatches,
+} from '../embedding/described-page-candidates';
+import {
+  PageEmbeddingSearch,
+  type PageEmbeddingMatch,
+} from '../embedding/page-embedding-search.service';
 import { PageIntentExtractionService } from '../resolution/page-intent-extraction.service';
 import { PageReferenceResolver } from '../resolution/page-reference-resolver.service';
 import { endsWithExactPageTitle } from '../resolution/page-title-sentence-matcher';
+import type { PageScope } from '../resolution/page-intent.types';
+import type { PageResolutionCandidate } from '../resolution/page-resolution.types';
 import type {
   PageInstructionPlanningResult,
   PlanningResolutionMethod,
@@ -16,6 +28,8 @@ import {
   explainUnsupportedModification,
   isBareChecklistRequest,
   isSupportedActivityModification,
+  isSupportedDescriptionModification,
+  withoutPageScope,
   isSupportedModification,
 } from './ai-modification-operation.policy';
 
@@ -65,10 +79,14 @@ export interface PlanPageInstructionInput {
  */
 @Injectable()
 export class AiPageInstructionPlannerService {
+  private readonly logger = new Logger(AiPageInstructionPlannerService.name);
+
   constructor(
     private readonly extractionService: PageIntentExtractionService,
     private readonly pageReferenceResolver: PageReferenceResolver,
     private readonly modificationPlanner: AiModificationPlannerService,
+    // M6: without it, no Page is looked for by description.
+    @Optional() private readonly pageSearch?: PageEmbeddingSearch,
   ) {}
 
   async generate(
@@ -104,14 +122,14 @@ export class AiPageInstructionPlannerService {
       };
     }
 
-    if (
-      typeof intent.instruction !== 'string' ||
-      !intent.instruction.trim()
-    ) {
+    if (typeof intent.instruction !== 'string' || !intent.instruction.trim()) {
       throw new BadGatewayException('AI page instruction is invalid');
     }
     if (intent.referenceType === 'ACTIVITY') {
       return this.planFromActivity(input, intent);
+    }
+    if (intent.referenceType === 'DESCRIPTION') {
+      return this.planFromDescription(input, intent);
     }
 
     const unresolved =
@@ -122,17 +140,22 @@ export class AiPageInstructionPlannerService {
       intent.referenceType === 'TITLE' && intent.pageReference
         ? [intent.pageReference]
         : [];
+    // M4 (E4): the place ("… trong trang Dự án A") names, it never edits.
+    const scope = intent.referenceType === 'TITLE' ? intent.scope : undefined;
+    const admitted = scope
+      ? withoutPageScope(input.instruction, scope)
+      : input.instruction;
     if (
       !isSupportedModification(intent.instruction) ||
-      (!unresolved &&
-        !isSupportedModification(input.instruction, extractedNames))
+      admitted === null ||
+      (!unresolved && !isSupportedModification(admitted, extractedNames))
     ) {
       return {
         status: 'UNSUPPORTED_OPERATION',
         intent,
         reason: 'INSERT_ONLY',
         detail: explainUnsupportedModification(
-          input.instruction,
+          admitted ?? input.instruction,
           extractedNames,
         ),
       };
@@ -146,10 +169,7 @@ export class AiPageInstructionPlannerService {
       });
     }
 
-    if (
-      intent.referenceType === 'CURRENT_PAGE' &&
-      !input.currentPageId
-    ) {
+    if (intent.referenceType === 'CURRENT_PAGE' && !input.currentPageId) {
       return {
         status: 'NEEDS_CLARIFICATION',
         reason: 'MISSING_CURRENT_PAGE',
@@ -158,7 +178,9 @@ export class AiPageInstructionPlannerService {
     }
 
     if (input.selectedPageId && intent.referenceType !== 'TITLE') {
-      throw new BadRequestException('Selected Page requires an explicit Page title');
+      throw new BadRequestException(
+        'Selected Page requires an explicit Page title',
+      );
     }
 
     const resolution =
@@ -176,6 +198,16 @@ export class AiPageInstructionPlannerService {
             shareToken: input.shareToken,
           });
 
+    if (scope && resolution.status !== 'NOT_FOUND') {
+      return this.planInScope(
+        input,
+        intent,
+        scope,
+        resolution.status === 'RESOLVED'
+          ? [resolution.page]
+          : resolution.candidates,
+      );
+    }
     if (resolution.status === 'NOT_FOUND') {
       // The extracted name may be unaccented or carry extra words.
       return intent.referenceType === 'TITLE'
@@ -204,12 +236,18 @@ export class AiPageInstructionPlannerService {
       };
     }
 
-    if (input.selectedPageId && resolution.page.pageId !== input.selectedPageId) {
+    if (
+      input.selectedPageId &&
+      resolution.page.pageId !== input.selectedPageId
+    ) {
       return { status: 'PAGE_NOT_FOUND', intent };
     }
 
     return this.createPlan(
-      input, intent, resolution.page, resolution.resolutionMethod,
+      input,
+      intent,
+      resolution.page,
+      resolution.resolutionMethod,
     );
   }
 
@@ -228,7 +266,9 @@ export class AiPageInstructionPlannerService {
       instruction: input.instruction,
       shareToken: input.shareToken,
     });
-    if (found.status === 'NOT_FOUND') return noMatch;
+    if (found.status === 'NOT_FOUND') {
+      return this.planFromSimilarTitles(input, intent, noMatch);
+    }
     if (found.status === 'TOO_MANY') {
       return {
         status: 'NEEDS_CLARIFICATION',
@@ -238,20 +278,30 @@ export class AiPageInstructionPlannerService {
     }
     // Deciding admission check: only names of real, readable Pages are data.
     // Runs before any candidate is shown and before any draft is generated.
+    // M4: without the place, which was already admitted as a name.
     const titles = found.candidates.map((candidate) => candidate.title);
-    if (!isSupportedModification(input.instruction, titles)) {
+    const scope = intent.referenceType === 'TITLE' ? intent.scope : undefined;
+    const source = scope
+      ? (withoutPageScope(input.instruction, scope) ?? input.instruction)
+      : input.instruction;
+    const names =
+      scope && intent.pageReference
+        ? [...titles, intent.pageReference]
+        : titles;
+    if (!isSupportedModification(source, names)) {
       return {
         status: 'UNSUPPORTED_OPERATION',
         intent,
         reason: 'INSERT_ONLY',
-        detail: explainUnsupportedModification(input.instruction, titles),
+        detail: explainUnsupportedModification(source, names),
       };
     }
     if (isBareChecklistRequest(input.instruction, titles)) {
       return missingChecklistItems(intent, titles);
     }
+    const candidates = await this.narrowToScope(intent, found.candidates);
     if (input.selectedPageId) {
-      const selected = found.candidates.find(
+      const selected = candidates.find(
         (candidate) => candidate.pageId === input.selectedPageId,
       );
       if (!selected) return { status: 'PAGE_NOT_FOUND', intent };
@@ -259,9 +309,11 @@ export class AiPageInstructionPlannerService {
     }
     // "… trong trang sub man" names one real Page exactly: nothing to choose.
     // The title now comes from the user's words, so the intent is resolved.
-    const [only] = found.candidates;
+    // With a place (M4) the sentence ends with the place, not the target.
+    const [only] = candidates;
     if (
-      found.candidates.length === 1 &&
+      candidates.length === 1 &&
+      !(intent.referenceType === 'TITLE' && intent.scope) &&
       endsWithExactPageTitle(input.instruction, only.title)
     ) {
       const resolved: ModifyPageIntent = {
@@ -275,9 +327,109 @@ export class AiPageInstructionPlannerService {
     return {
       status: 'AMBIGUOUS_PAGE',
       intent,
-      candidates: found.candidates,
+      candidates,
       resolutionMethod: found.resolutionMethod,
     };
+  }
+
+  /**
+   * M3: the typed name matched no real title, not even in the sentence.
+   * Close titles are offered for a choice, never planned before it.
+   */
+  private async planFromSimilarTitles(
+    input: PlanPageInstructionInput,
+    intent: ModifyPageIntent,
+    noMatch: PageInstructionPlanningResult,
+  ): Promise<PageInstructionPlanningResult> {
+    if (intent.referenceType !== 'TITLE' || !intent.pageReference) {
+      return noMatch;
+    }
+    const similar = await this.pageReferenceResolver.resolveSimilarTitles({
+      userId: input.userId,
+      workspaceId: input.workspaceId,
+      title: intent.pageReference,
+      shareToken: input.shareToken,
+    });
+    if (similar.status === 'NOT_FOUND') {
+      // M6 (G4): the model may take a whole description for a name.
+      return this.planFromDescribedPages(
+        input,
+        intent,
+        intent.pageReference,
+        noMatch,
+      );
+    }
+    // The typed name was already admitted as data (M1b, hướng A).
+    if (isBareChecklistRequest(input.instruction, [intent.pageReference])) {
+      return missingChecklistItems(intent, []);
+    }
+    const candidates = await this.narrowToScope(intent, similar.candidates);
+    if (input.selectedPageId) {
+      const selected = candidates.find(
+        (candidate) => candidate.pageId === input.selectedPageId,
+      );
+      if (!selected) return { status: 'PAGE_NOT_FOUND', intent };
+      return this.createPlan(input, intent, selected, 'FUZZY_TITLE');
+    }
+    return {
+      status: 'AMBIGUOUS_PAGE',
+      intent,
+      candidates,
+      resolutionMethod: 'FUZZY_TITLE',
+    };
+  }
+
+  /**
+   * M4 (E3): Pages with the exact title, narrowed to the place the user
+   * named. One left: no choice is needed. Otherwise the user picks, and if
+   * the place matched none, every Page with the title is offered.
+   */
+  private async planInScope(
+    input: PlanPageInstructionInput,
+    intent: ModifyPageIntent,
+    scope: PageScope,
+    candidates: PageResolutionCandidate[],
+  ): Promise<PageInstructionPlanningResult> {
+    const inScope = await this.pageReferenceResolver.filterByScope(
+      candidates,
+      scope,
+    );
+    const offered = inScope.length > 0 ? inScope : candidates;
+    if (input.selectedPageId) {
+      const selected = offered.find(
+        (candidate) => candidate.pageId === input.selectedPageId,
+      );
+      if (!selected) return { status: 'PAGE_NOT_FOUND', intent };
+      return this.createPlan(input, intent, selected, 'EXACT_TITLE');
+    }
+    const titles = offered.map((candidate) => candidate.title);
+    const withoutPlace =
+      withoutPageScope(input.instruction, scope) ?? input.instruction;
+    if (isBareChecklistRequest(withoutPlace, titles)) {
+      return missingChecklistItems(intent, titles);
+    }
+    if (inScope.length === 1) {
+      return this.createPlan(input, intent, inScope[0], 'EXACT_TITLE');
+    }
+    return {
+      status: 'AMBIGUOUS_PAGE',
+      intent,
+      candidates: offered,
+      ...(inScope.length === 0 ? { scopeUnmatched: true as const } : {}),
+    };
+  }
+
+  /** M4: sentence or close-title candidates in the named place, if any are. */
+  private async narrowToScope(
+    intent: ModifyPageIntent,
+    candidates: PageResolutionCandidate[],
+  ): Promise<PageResolutionCandidate[]> {
+    if (intent.referenceType !== 'TITLE' || !intent.scope) return candidates;
+    const inScope = await this.pageReferenceResolver.filterByScope(
+      candidates,
+      intent.scope,
+    );
+    return inScope.length > 0 ? inScope : candidates;
   }
 
   /**
@@ -325,6 +477,117 @@ export class AiPageInstructionPlannerService {
       intent,
       candidates: found.candidates,
       resolutionMethod: 'ACTIVITY',
+    };
+  }
+
+  /**
+   * M6: "… vào trang về <mô tả>". A sentence that ends with one real title
+   * still goes by that title (G4); otherwise the Pages closest to the
+   * description are offered.
+   */
+  private async planFromDescription(
+    input: PlanPageInstructionInput,
+    intent: Extract<ModifyPageIntent, { referenceType: 'DESCRIPTION' }>,
+  ): Promise<PageInstructionPlanningResult> {
+    // G5: the description names the Page, never an edit; the edit clause
+    // itself passes the usual admission.
+    if (
+      !isSupportedDescriptionModification(
+        input.instruction,
+        intent.instruction,
+        intent.description,
+      )
+    ) {
+      return {
+        status: 'UNSUPPORTED_OPERATION',
+        intent,
+        reason: 'INSERT_ONLY',
+        detail: explainUnsupportedModification(intent.instruction),
+      };
+    }
+    if (isBareChecklistRequest(intent.instruction)) {
+      return missingChecklistItems(intent, []);
+    }
+    const found = await this.pageReferenceResolver.resolveFromSentence({
+      userId: input.userId,
+      workspaceId: input.workspaceId,
+      instruction: input.instruction,
+      shareToken: input.shareToken,
+    });
+    if (found.status === 'CANDIDATES' && found.candidates.length === 1) {
+      const [only] = found.candidates;
+      if (endsWithExactPageTitle(input.instruction, only.title)) {
+        if (input.selectedPageId && input.selectedPageId !== only.pageId)
+          return { status: 'PAGE_NOT_FOUND', intent };
+        const named: ModifyPageIntent = {
+          intent: 'MODIFY_PAGE',
+          referenceType: 'TITLE',
+          pageReference: only.title,
+          instruction: intent.instruction,
+          needsClarification: false,
+        };
+        return this.createPlan(input, named, only, 'EXACT_TITLE');
+      }
+    }
+    return this.planFromDescribedPages(input, intent, intent.description, {
+      status: 'PAGE_NOT_FOUND',
+      intent,
+    });
+  }
+
+  /**
+   * M6 (G3, G5): Pages close to the words, always picked by the user. No
+   * vectors, or no AI service to embed the words, ends as before.
+   */
+  private async planFromDescribedPages(
+    input: PlanPageInstructionInput,
+    intent: ModifyPageIntent,
+    description: string,
+    noMatch: PageInstructionPlanningResult,
+  ): Promise<PageInstructionPlanningResult> {
+    if (!this.pageSearch) return noMatch;
+    let matches: PageEmbeddingMatch[];
+    try {
+      matches = describedPageMatches(
+        await this.pageSearch.search({
+          userId: input.userId,
+          workspaceId: input.workspaceId,
+          query: description,
+          limit: DESCRIBED_PAGE_SEARCH_LIMIT,
+          shareToken: input.shareToken,
+        }),
+      );
+    } catch (error) {
+      this.logger.warn(
+        `described_page_search_failed reason=${error instanceof Error ? error.constructor.name : 'unknown'}`,
+      );
+      return noMatch;
+    }
+    const candidates = await this.narrowToScope(
+      intent,
+      matches.map((match) => match.page),
+    );
+    if (!candidates.length) return noMatch;
+    // The typed name was already admitted as data (M1b, hướng A).
+    if (
+      intent.referenceType === 'TITLE' &&
+      intent.pageReference &&
+      isBareChecklistRequest(input.instruction, [intent.pageReference])
+    ) {
+      return missingChecklistItems(intent, []);
+    }
+    if (input.selectedPageId) {
+      const selected = candidates.find(
+        (candidate) => candidate.pageId === input.selectedPageId,
+      );
+      if (!selected) return { status: 'PAGE_NOT_FOUND', intent };
+      return this.createPlan(input, intent, selected, 'SEMANTIC');
+    }
+    return {
+      status: 'AMBIGUOUS_PAGE',
+      intent,
+      candidates,
+      resolutionMethod: 'SEMANTIC',
     };
   }
 

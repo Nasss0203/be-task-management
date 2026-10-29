@@ -53,6 +53,26 @@ export type SentencePageResolutionResult =
   | { status: 'TOO_MANY'; candidates: [] }
   | { status: 'NOT_FOUND'; candidates: [] };
 
+/** M3: at most this many close titles are offered (kế hoạch tên gần đúng, C3). */
+export const MAX_SIMILAR_CANDIDATES = 5;
+
+export interface ResolveSimilarTitlesInput {
+  userId: string;
+  workspaceId: string;
+  /** The name the user typed, which matched no title exactly. */
+  title: string;
+  shareToken?: string;
+}
+
+/** Never resolves directly: every suggestion needs an explicit user choice. */
+export type SimilarTitleResolutionResult =
+  | {
+      status: 'CANDIDATES';
+      candidates: PageResolutionCandidate[];
+      resolutionMethod: 'FUZZY_TITLE';
+    }
+  | { status: 'NOT_FOUND'; candidates: [] };
+
 /** M2: at most this many Pages the user edited are offered (LATEST offers 1). */
 export const MAX_ACTIVITY_CANDIDATES = 5;
 /** plan-v2 §11 #7: used when neither the request nor the profile has a zone. */

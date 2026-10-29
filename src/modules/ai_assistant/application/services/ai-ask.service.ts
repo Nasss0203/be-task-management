@@ -80,6 +80,8 @@ function pageResolutionMessage(
     case 'PAGE_NOT_FOUND':
       if (activity)
         return `Không thấy trang nào ${activity} mà bạn còn quyền truy cập. Hãy ghi tên trang, ví dụ: thêm checklist vào trang "Kế hoạch Q4".`;
+      if (planning.intent?.referenceType === 'DESCRIPTION')
+        return `Không tìm thấy trang nào gần với mô tả "${planning.intent.description}" mà bạn có quyền truy cập. Hãy ghi tên trang, ví dụ: thêm checklist vào trang "Kế hoạch Q4".`;
       return name
         ? `Không tìm thấy trang "${name}" mà bạn có quyền truy cập trong workspace này. Kiểm tra lại tên trang.`
         : 'Không tìm thấy trang mà bạn có quyền truy cập trong workspace này. Kiểm tra lại tên trang.';
@@ -89,6 +91,38 @@ function pageResolutionMessage(
         return planning.candidates.length === 1
           ? `Trang ${activity} là "${planning.candidates[0].title}". Chọn trang để tiếp tục:`
           : `Các trang ${activity}. Chọn một trang:`;
+      }
+      // M4: no Page with the title is in the place the user named.
+      if (
+        planning.scopeUnmatched &&
+        planning.intent.referenceType === 'TITLE'
+      ) {
+        const scope = planning.intent.scope;
+        const place = scope?.parentTitle
+          ? `"${scope.parentTitle}"`
+          : `teamspace "${scope?.teamspaceName ?? ''}"`;
+        return `Không có trang "${name}" nào trong ${place}. Chọn một trang:`;
+      }
+      // M6: Pages close to a description, always picked by the user.
+      if (planning.resolutionMethod === 'SEMANTIC') {
+        const described =
+          planning.intent.referenceType === 'DESCRIPTION'
+            ? planning.intent.description
+            : name;
+        const typed =
+          planning.intent.referenceType === 'DESCRIPTION'
+            ? ''
+            : 'Không có trang nào tên như vậy. ';
+        return planning.candidates.length === 1
+          ? `${typed}Trang gần với mô tả "${described}" là "${planning.candidates[0].title}". Chọn trang để tiếp tục:`
+          : `${typed}Các trang gần với mô tả "${described}". Chọn một trang:`;
+      }
+      // M3: the typed name matched nothing; close titles need a choice.
+      if (planning.resolutionMethod === 'FUZZY_TITLE') {
+        const typed = name ? `Không có trang "${name}". ` : '';
+        return planning.candidates.length === 1
+          ? `${typed}Ý bạn là trang "${planning.candidates[0].title}"? Chọn trang để tiếp tục:`
+          : `${typed}Có phải một trong các trang này? Chọn một trang:`;
       }
       if (planning.resolutionMethod === 'TITLE_IN_SENTENCE') {
         return planning.candidates.length === 1

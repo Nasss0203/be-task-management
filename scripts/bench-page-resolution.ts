@@ -13,6 +13,10 @@ import source from '../src/database/data-source';
 import { PageOrmEntity } from '../src/modules/content/infrastructure/persistence/typeorm/entities/page.orm-entity';
 import { TypeOrmPageRepository } from '../src/modules/content/infrastructure/persistence/typeorm/repositories/typeorm-page.repository';
 import { findPageTitlesInSentence } from '../src/modules/ai_assistant/application/resolution/page-title-sentence-matcher';
+import {
+  SIMILAR_TITLE_THRESHOLD,
+  titleSimilarity,
+} from '../src/modules/ai_assistant/application/resolution/page-title-similarity';
 import { PageExactResolutionReader } from '../src/modules/ai_assistant/infrastructure/resolution/page-exact-resolution.reader';
 
 const PAGES = 5000;
@@ -150,7 +154,7 @@ async function main(): Promise<void> {
     const repository = new TypeOrmPageRepository(
       manager.getRepository(PageOrmEntity),
     );
-    const reader = new PageExactResolutionReader(repository);
+    const reader = new PageExactResolutionReader(repository, source);
 
     await measure(
       'exact title "Hội họp tuần"',
@@ -186,6 +190,19 @@ async function main(): Promise<void> {
           findPageTitlesInSentence(
             sentence,
             await reader.findAccessibleTitlesInWorkspace(userId, workspaceId),
+          ).length,
+      );
+    }
+    // M3: every title scored against a typed name that matched nothing.
+    for (const typed of ['relese 2', 'Hoi hp tuan', 'xyz abc']) {
+      await measure(
+        `similar titles: ${typed}`,
+        async () =>
+          (
+            await reader.findAccessibleTitlesInWorkspace(userId, workspaceId)
+          ).filter(
+            (page) =>
+              titleSimilarity(typed, page.title) >= SIMILAR_TITLE_THRESHOLD,
           ).length,
       );
     }

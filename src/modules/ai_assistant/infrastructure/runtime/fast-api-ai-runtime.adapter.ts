@@ -13,6 +13,11 @@ import { firstValueFrom } from 'rxjs';
 import { AI_MODIFICATION_PLAN_CAPABILITY } from '../../application/constants/ai-modification-plan.constant';
 import { PAGE_COMPOSITION_CAPABILITY } from '../../application/constants/page-composition.constant';
 import type {
+  EmbeddingBatch,
+  EmbeddingKind,
+  TextEmbedder,
+} from '../../application/embedding/page-embedding.port';
+import type {
   AiRuntimePort,
   AiRuntimeRequest,
   AiRuntimeResult,
@@ -99,6 +104,38 @@ const ACTIVITY_RELATIVES = new Set([
   'RECENT',
 ]);
 
+/** M4: names from the user's own sentence; at least one place. */
+function isPageScope(value: unknown, instruction: string): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const scope = value as Record<string, unknown>;
+  if (Object.keys(scope).sort().join(',') !== 'parentTitle,teamspaceName')
+    return false;
+  const sentence = instruction.normalize('NFC').toLocaleLowerCase('vi');
+  const named = (name: unknown) =>
+    typeof name === 'string' &&
+    !!name.trim() &&
+    name.length <= 255 &&
+    sentence.includes(name.normalize('NFC').toLocaleLowerCase('vi'));
+  return (
+    (scope.parentTitle === null || named(scope.parentTitle)) &&
+    (scope.teamspaceName === null || named(scope.teamspaceName)) &&
+    (scope.parentTitle !== null || scope.teamspaceName !== null)
+  );
+}
+
+/** M6: the description is the user's own words, never invented by the service. */
+function isPageDescription(value: unknown, instruction: string): boolean {
+  return (
+    typeof value === 'string' &&
+    !!value.trim() &&
+    value.length <= 255 &&
+    instruction
+      .normalize('NFC')
+      .toLocaleLowerCase('vi')
+      .includes(value.normalize('NFC').toLocaleLowerCase('vi'))
+  );
+}
+
 /** M2: words of the user's own sentence only; NestJS computes the dates. */
 function isPageActivity(value: unknown, instruction: string): boolean {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -129,7 +166,7 @@ function isPageActivity(value: unknown, instruction: string): boolean {
 
 @Injectable()
 export class FastApiAiRuntimeAdapter
-  implements AiRuntimePort, PageIntentExtractor, AiIntentPort
+  implements AiRuntimePort, PageIntentExtractor, AiIntentPort, TextEmbedder
 {
   constructor(
     private readonly httpService: HttpService,
@@ -179,6 +216,43 @@ export class FastApiAiRuntimeAdapter
     return raw as AiIntentResult;
   }
 
+  /** M5 (F6): one unit vector per text; anything else is refused whole. */
+  async embed(kind: EmbeddingKind, texts: string[]): Promise<EmbeddingBatch> {
+    const raw: unknown = await this.post<unknown>('/internal/v1/embeddings', {
+      kind,
+      texts,
+    });
+    const invalid = () =>
+      new BadGatewayException('AI service returned an invalid response');
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw invalid();
+    const response = raw as Record<string, unknown>;
+    const { model, dimensions, embeddings } = response;
+    if (
+      Object.keys(response).sort().join(',') !==
+        'dimensions,embeddings,model' ||
+      typeof model !== 'string' ||
+      !model.trim() ||
+      !Number.isInteger(dimensions) ||
+      (dimensions as number) <= 0 ||
+      !Array.isArray(embeddings) ||
+      embeddings.length !== texts.length ||
+      !embeddings.every(
+        (vector) =>
+          Array.isArray(vector) &&
+          vector.length === dimensions &&
+          vector.every(
+            (value) => typeof value === 'number' && Number.isFinite(value),
+          ),
+      )
+    )
+      throw invalid();
+    return {
+      model,
+      dimensions: dimensions as number,
+      embeddings: embeddings as number[][],
+    };
+  }
+
   async extract(
     instruction: string,
     currentPageId?: string,
@@ -201,14 +275,18 @@ export class FastApiAiRuntimeAdapter
       throw new BadGatewayException('AI service returned an invalid response');
     }
     const result = value as Record<string, unknown>;
-    // M2: only an ACTIVITY result carries the sixth key, "activity".
+    // M2: only an ACTIVITY result carries the sixth key, "activity"; M4: only
+    // a TITLE result may carry "scope"; M6: only a DESCRIPTION, "description".
     const keys = Object.keys(result).sort().join(',');
+    const base =
+      'instruction,intent,needsClarification,pageReference,referenceType';
     const validKeys =
       result.referenceType === 'ACTIVITY'
-        ? keys ===
-          'activity,instruction,intent,needsClarification,pageReference,referenceType'
-        : keys ===
-          'instruction,intent,needsClarification,pageReference,referenceType';
+        ? keys === `activity,${base}`
+        : result.referenceType === 'DESCRIPTION'
+          ? keys === `description,${base}`
+          : keys === base ||
+            (result.referenceType === 'TITLE' && keys === `${base},scope`);
     const intent = result.intent;
     const referenceType = result.referenceType;
     const needsClarification = result.needsClarification;
@@ -222,7 +300,8 @@ export class FastApiAiRuntimeAdapter
         valid = valid && typeof pageReference === 'string' && !!pageReference.trim()
           && instruction.normalize('NFC').toLocaleLowerCase('vi').includes(
             pageReference.normalize('NFC').toLocaleLowerCase('vi'),
-          ) && !needsClarification;
+          ) && !needsClarification
+          && (result.scope === undefined || isPageScope(result.scope, instruction));
       } else if (referenceType === 'CURRENT_PAGE') {
         valid = valid && pageReference === null && !needsClarification
           && hasSourceBackedCurrentPage(instruction, currentPageId);
@@ -234,6 +313,12 @@ export class FastApiAiRuntimeAdapter
           pageReference === null &&
           needsClarification === false &&
           isPageActivity(result.activity, instruction);
+      } else if (referenceType === 'DESCRIPTION') {
+        valid =
+          valid &&
+          pageReference === null &&
+          needsClarification === false &&
+          isPageDescription(result.description, instruction);
       } else {
         valid = false;
       }
