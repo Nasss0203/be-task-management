@@ -1,7 +1,13 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
 import { DATABASE_TYPES } from '../../../database.types';
+import { DatabaseRowDto } from '../../dto/database-row.dto';
 
 import { DatabaseRow } from '../../../domain/aggregates/row/database-row.aggregate';
 import { RowValue } from '../../../domain/aggregates/row/row-value.entity';
@@ -25,7 +31,7 @@ export class CreateDatabaseRowHandler {
   async execute(
     command: CreateDatabaseRowCommand,
     context?: PersistenceContext,
-  ): Promise<DatabaseRow> {
+  ): Promise<DatabaseRowDto> {
     const database = await this.databaseRepository.findById(
       command.databaseId,
       context,
@@ -33,6 +39,19 @@ export class CreateDatabaseRowHandler {
 
     if (!database) {
       throw new NotFoundException('Database not found');
+    }
+
+    if (command.parentRowId) {
+      const parent = await this.databaseRowRepository.findById(
+        command.parentRowId,
+        context,
+      );
+
+      if (!parent || parent.getDatabaseId() !== database.getId()) {
+        throw new BadRequestException(
+          'Parent row must belong to the same database',
+        );
+      }
     }
 
     const maxPosition = await this.databaseRowRepository.findMaxPosition(
@@ -44,9 +63,9 @@ export class CreateDatabaseRowHandler {
       id: randomUUID(),
       databaseId: database.getId(),
       position: (maxPosition ?? 0) + 1,
+      parentRowId: command.parentRowId,
     });
 
-    // Like Notion, a STATUS property always has a value: start at its first option.
     for (const property of database.getProperties()) {
       const option =
         property.getType() === PropertyType.STATUS
@@ -55,13 +74,18 @@ export class CreateDatabaseRowHandler {
       if (option) {
         row.setValue(
           property,
-          new RowValue(randomUUID(), row.getId(), property.getId(), option.getId()),
+          new RowValue(
+            randomUUID(),
+            row.getId(),
+            property.getId(),
+            option.getId(),
+          ),
         );
       }
     }
 
     await this.databaseRowRepository.save(row, context);
 
-    return row;
+    return DatabaseRowDto.fromDomain(row);
   }
 }

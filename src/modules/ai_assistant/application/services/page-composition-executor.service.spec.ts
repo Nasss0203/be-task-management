@@ -877,7 +877,7 @@ describe('PageCompositionExecutor', () => {
       });
 
     fixture.createDatabaseRowExecute.mockResolvedValue({
-      getId: jest.fn().mockReturnValue('row-1'),
+      id: 'row-1',
     });
 
     fixture.setRowValueExecute.mockResolvedValue({});
@@ -1035,7 +1035,7 @@ describe('PageCompositionExecutor', () => {
       });
 
     fixture.createDatabaseRowExecute.mockResolvedValue({
-      getId: jest.fn().mockReturnValue('row-1'),
+      id: 'row-1',
     });
 
     fixture.setRowValueExecute.mockResolvedValue({});

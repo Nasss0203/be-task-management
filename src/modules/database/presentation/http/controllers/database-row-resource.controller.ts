@@ -2,10 +2,13 @@ import { Body, Controller, Delete, Param, Patch } from '@nestjs/common';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
+import { ChangeDatabaseRowParentCommand } from 'src/modules/database/application/commands/change-database-row-parent/change-database-row-parent.command';
+import { ChangeDatabaseRowParentHandler } from 'src/modules/database/application/commands/change-database-row-parent/change-database-row-parent.handler';
 import { DeleteDatabaseRowCommand } from 'src/modules/database/application/commands/delete-database-row/delete-database-row.command';
 import { DeleteDatabaseRowHandler } from 'src/modules/database/application/commands/delete-database-row/delete-database-row.handler';
 import { MoveDatabaseRowCommand } from 'src/modules/database/application/commands/move-database-row/move-database-row.command';
 import { MoveDatabaseRowHandler } from 'src/modules/database/application/commands/move-database-row/move-database-row.handler';
+import { ChangeDatabaseRowParentRequest } from '../requests/change-database-row-parent.request';
 import { MoveDatabaseRowRequest } from '../requests/move-database-row.request';
 
 @Controller('database-rows')
@@ -13,6 +16,7 @@ export class DatabaseRowResourceController {
   constructor(
     private readonly deleteDatabaseRowHandler: DeleteDatabaseRowHandler,
     private readonly moveDatabaseRowHandler: MoveDatabaseRowHandler,
+    private readonly changeDatabaseRowParentHandler: ChangeDatabaseRowParentHandler,
   ) {}
 
   @Delete(':rowId')
@@ -41,6 +45,18 @@ export class DatabaseRowResourceController {
         request.previousRowId ?? null,
         request.nextRowId ?? null,
       ),
+    );
+  }
+
+  @Patch(':rowId/parent')
+  @WorkspaceContext({ source: 'resource', type: 'database_row', key: 'rowId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+  async changeParent(
+    @Param('rowId') rowId: string,
+    @Body() request: ChangeDatabaseRowParentRequest,
+  ) {
+    return this.changeDatabaseRowParentHandler.execute(
+      new ChangeDatabaseRowParentCommand(rowId, request.parentRowId),
     );
   }
 }
