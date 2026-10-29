@@ -3,18 +3,28 @@ import { PersistenceContext } from 'src/shared/infrastructure/persistence/persis
 
 export interface PageBlockRepository {
   findById(id: string, context?: PersistenceContext): Promise<PageBlock | null>;
+  /** The page's own content: blocks inside tasks (`row_id`) are left out. */
   findByPageId(
     pageId: string,
     context?: PersistenceContext,
   ): Promise<PageBlock[]>;
+  /** Content of one task (database row). */
+  findByRowId(
+    rowId: string,
+    context?: PersistenceContext,
+  ): Promise<PageBlock[]>;
+  /** Counts the page's own content, like `findByPageId`. */
   countByPageId(pageId: string, context?: PersistenceContext): Promise<number>;
+  /** Siblings share page, task (`rowId`, null for page content) and parent. */
   findActiveSiblings(
     pageId: string,
+    rowId: string | null,
     parentBlockId: string | null,
     context?: PersistenceContext,
   ): Promise<PageBlock[]>;
   findLastSibling(
     pageId: string,
+    rowId: string | null,
     parentBlockId: string | null,
     context?: PersistenceContext,
   ): Promise<PageBlock | null>;
@@ -44,6 +54,7 @@ export interface PageBlockRepository {
   ): Promise<PageBlock[]>;
   shiftSiblingOrderIndexes(
     pageId: string,
+    rowId: string | null,
     parentBlockId: string | null,
     fromOrderIndex: number,
     context?: PersistenceContext,

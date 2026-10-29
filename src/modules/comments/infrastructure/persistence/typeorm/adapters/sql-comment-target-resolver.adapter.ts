@@ -14,7 +14,7 @@ const TARGET_QUERIES: Record<CommentTargetType, string> = {
     WHERE p.id = $1 AND p.deleted_at IS NULL
   `,
   [CommentTargetType.PAGE_BLOCK]: `
-    SELECT p.id AS "pageId", p.workspace_id AS "workspaceId"
+    SELECT p.id AS "pageId", p.workspace_id AS "workspaceId", pb.row_id AS "rowId"
     FROM page_blocks pb
     INNER JOIN pages p ON p.id = pb.page_id
     WHERE pb.id = $1 AND pb.deleted_at IS NULL AND p.deleted_at IS NULL

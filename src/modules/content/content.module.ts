@@ -25,6 +25,7 @@ import { ListPagePresetsHandler } from './application/queries/page/list-page-pre
 import { FindDeletedPageBlocksHandler } from './application/queries/page-block/find-deleted-page-blocks/find-deleted-page-blocks.handler';
 import { FindPageBlockByIdHandler } from './application/queries/page-block/find-page-block-by-id/find-page-block-by-id.handler';
 import { FindPageBlockByPageHandler } from './application/queries/page-block/find-page-block-by-page/find-page-block-by-page.handler';
+import { FindPageBlockByRowHandler } from './application/queries/page-block/find-page-block-by-row/find-page-block-by-row.handler';
 import { FindDeletedPagesHandler } from './application/queries/page/find-deleted-pages/find-deleted-pages.handler';
 import { FindPageByIdHandler } from './application/queries/page/find-page-by-id/find-page-by-id.handler';
 import { FindPageByWorkspaceHandler } from './application/queries/page/find-page-by-workspace/find-page-by-workspace.handler';
@@ -36,6 +37,7 @@ import { ResolveBookmarkMetadataHandler } from './application/queries/resolve-bo
 import { ContentPageProvisioningService } from './application/services/content-page-provisioning.service';
 import { ContentPageSnapshotReaderService } from './application/services/content-page-snapshot-reader.service';
 import { PageBlockOrderingService } from './application/services/page-block-ordering.service';
+import { PageBlockRowScopeService } from './application/services/page-block-row-scope.service';
 import { PagePublicationTreeService } from './application/services/page-publication-tree.service';
 import { PublicSubdomainAllocatorService } from './application/services/public-subdomain-allocator.service';
 import { PublicationHierarchySynchronizerService } from './application/services/publication-hierarchy-synchronizer.service';
@@ -277,6 +279,10 @@ const pageBlockHandlers = [
     useClass: FindPageBlockByPageHandler,
   },
   {
+    provide: CONTENT_TYPES.applications.FindPageBlockByRowHandler,
+    useClass: FindPageBlockByRowHandler,
+  },
+  {
     provide: CONTENT_TYPES.applications.FindPageBlockByIdHandler,
     useClass: FindPageBlockByIdHandler,
   },
@@ -432,6 +438,7 @@ const applicationServices = [
   PublicSubdomainAllocatorService,
   PublicationHierarchySynchronizerService,
   PageBlockOrderingService,
+  PageBlockRowScopeService,
   PageShareLinkTokenService,
   PageEditRequestNotifier,
 ];

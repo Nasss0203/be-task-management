@@ -4,6 +4,8 @@ import { CommentTargetType } from '../../domain/enums/comment-target-type.enum';
 export interface CommentTargetLocation {
   pageId: string;
   workspaceId: string;
+  /** Block nằm trong nội dung task: id của task (row) đó. */
+  rowId?: string | null;
 }
 
 export interface CommentTargetResolver {

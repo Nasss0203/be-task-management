@@ -15,15 +15,28 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { DatabaseRowOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-row.orm-entity';
 import { PageOrmEntity } from './page.orm-entity';
 
 @Entity('page_blocks')
 @Index('IDX_PAGE_BLOCKS_PAGE_ID', ['page_id'])
 @Index('IDX_PAGE_BLOCKS_DELETED_AT', ['deleted_at'])
 @Index('IDX_PAGE_BLOCKS_PARENT_BLOCK_ID', ['parent_block_id'])
-@Index('UQ_PAGE_BLOCKS_ROOT_ORDER_ACTIVE', ['page_id', 'order_index'], {
+@Index('IDX_PAGE_BLOCKS_ROW_PARENT_ORDER', [
+  'row_id',
+  'parent_block_id',
+  'order_index',
+])
+// Root blocks are ordered per page for the page's content, per task for a task's content.
+@Index('UQ_PAGE_BLOCKS_PAGE_ROOT_ORDER_ACTIVE', ['page_id', 'order_index'], {
   unique: true,
-  where: '"parent_block_id" IS NULL AND "deleted_at" IS NULL',
+  where:
+    '"parent_block_id" IS NULL AND "row_id" IS NULL AND "deleted_at" IS NULL',
+})
+@Index('UQ_PAGE_BLOCKS_ROW_ROOT_ORDER_ACTIVE', ['row_id', 'order_index'], {
+  unique: true,
+  where:
+    '"parent_block_id" IS NULL AND "row_id" IS NOT NULL AND "deleted_at" IS NULL',
 })
 @Index(
   'UQ_PAGE_BLOCKS_CHILD_ORDER_ACTIVE',
@@ -51,6 +64,17 @@ export class PageBlockOrmEntity {
     nullable: true,
   })
   parent_block_id: string | null;
+
+  /** Task (database row) whose content this block is; null for page content. */
+  @Column({ type: 'uuid', nullable: true })
+  row_id: string | null;
+
+  @ManyToOne(() => DatabaseRowOrmEntity, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'row_id' })
+  row?: DatabaseRowOrmEntity | null;
 
   @ManyToOne(() => PageBlockOrmEntity, {
     nullable: true,

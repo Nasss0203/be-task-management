@@ -4,7 +4,7 @@ import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
-import type { Repository } from 'typeorm';
+import type { Repository, SelectQueryBuilder } from 'typeorm';
 import { EntityManager } from 'typeorm';
 import { PageBlockOrmEntity } from '../entities/page-block.orm-entity';
 import { PageBlockMapper } from '../mappers/page-block.mapper';
@@ -39,9 +39,30 @@ export class TypeOrmPageBlockRepository implements PageBlockRepository {
     pageId: string,
     context?: PersistenceContext,
   ): Promise<PageBlock[]> {
-    const orms = await this.resolveRepo(context)
-      .createQueryBuilder('block')
-      .where('block.page_id = :pageId', { pageId })
+    return this.findTree(
+      this.resolveRepo(context)
+        .createQueryBuilder('block')
+        .where('block.page_id = :pageId', { pageId })
+        .andWhere('block.row_id IS NULL'),
+    );
+  }
+
+  async findByRowId(
+    rowId: string,
+    context?: PersistenceContext,
+  ): Promise<PageBlock[]> {
+    return this.findTree(
+      this.resolveRepo(context)
+        .createQueryBuilder('block')
+        .where('block.row_id = :rowId', { rowId }),
+    );
+  }
+
+  /** Active blocks, root blocks first, each level by order_index. */
+  private async findTree(
+    qb: SelectQueryBuilder<PageBlockOrmEntity>,
+  ): Promise<PageBlock[]> {
+    const orms = await qb
       .andWhere('block.deleted_at IS NULL')
       .orderBy(
         'CASE WHEN block.parent_block_id IS NULL THEN 0 ELSE 1 END',
@@ -55,15 +76,22 @@ export class TypeOrmPageBlockRepository implements PageBlockRepository {
     return orms.map((orm) => PageBlockMapper.toDomain(orm));
   }
 
-  async findActiveSiblings(
+  /** Narrows `qb` to the active siblings under `parentBlockId` in one page or task. */
+  private whereSiblings(
+    qb: SelectQueryBuilder<PageBlockOrmEntity>,
     pageId: string,
+    rowId: string | null,
     parentBlockId: string | null,
-    context?: PersistenceContext,
-  ): Promise<PageBlock[]> {
-    const qb = this.resolveRepo(context)
-      .createQueryBuilder('block')
-      .where('block.page_id = :pageId', { pageId })
-      .andWhere('block.deleted_at IS NULL');
+  ): SelectQueryBuilder<PageBlockOrmEntity> {
+    qb.where('block.page_id = :pageId', { pageId }).andWhere(
+      'block.deleted_at IS NULL',
+    );
+
+    if (rowId === null) {
+      qb.andWhere('block.row_id IS NULL');
+    } else {
+      qb.andWhere('block.row_id = :rowId', { rowId });
+    }
 
     if (parentBlockId === null) {
       qb.andWhere('block.parent_block_id IS NULL');
@@ -73,7 +101,21 @@ export class TypeOrmPageBlockRepository implements PageBlockRepository {
       });
     }
 
-    const orms = await qb
+    return qb;
+  }
+
+  async findActiveSiblings(
+    pageId: string,
+    rowId: string | null,
+    parentBlockId: string | null,
+    context?: PersistenceContext,
+  ): Promise<PageBlock[]> {
+    const orms = await this.whereSiblings(
+      this.resolveRepo(context).createQueryBuilder('block'),
+      pageId,
+      rowId,
+      parentBlockId,
+    )
       .orderBy('block.order_index', 'ASC')
       .addOrderBy('block.created_at', 'ASC')
       .getMany();
@@ -83,23 +125,16 @@ export class TypeOrmPageBlockRepository implements PageBlockRepository {
 
   async findLastSibling(
     pageId: string,
+    rowId: string | null,
     parentBlockId: string | null,
     context?: PersistenceContext,
   ): Promise<PageBlock | null> {
-    const qb = this.resolveRepo(context)
-      .createQueryBuilder('block')
-      .where('block.page_id = :pageId', { pageId })
-      .andWhere('block.deleted_at IS NULL');
-
-    if (parentBlockId === null) {
-      qb.andWhere('block.parent_block_id IS NULL');
-    } else {
-      qb.andWhere('block.parent_block_id = :parentBlockId', {
-        parentBlockId,
-      });
-    }
-
-    const orm = await qb
+    const orm = await this.whereSiblings(
+      this.resolveRepo(context).createQueryBuilder('block'),
+      pageId,
+      rowId,
+      parentBlockId,
+    )
       .orderBy('block.order_index', 'DESC')
       .addOrderBy('block.created_at', 'DESC')
       .getOne();
@@ -129,6 +164,7 @@ export class TypeOrmPageBlockRepository implements PageBlockRepository {
     return this.resolveRepo(context)
       .createQueryBuilder('block')
       .where('block.page_id = :pageId', { pageId })
+      .andWhere('block.row_id IS NULL')
       .andWhere('block.deleted_at IS NULL')
       .getCount();
   }
@@ -219,29 +255,21 @@ export class TypeOrmPageBlockRepository implements PageBlockRepository {
   }
   async shiftSiblingOrderIndexes(
     pageId: string,
+    rowId: string | null,
     parentBlockId: string | null,
     fromOrderIndex: number,
     context?: PersistenceContext,
   ): Promise<void> {
     const repo = this.resolveRepo(context);
 
-    const qb = repo
-      .createQueryBuilder('block')
-      .where('block.page_id = :pageId', {
-        pageId,
-      })
-      .andWhere('block.deleted_at IS NULL')
-      .andWhere('block.order_index >= :fromOrderIndex', {
-        fromOrderIndex,
-      });
-
-    if (parentBlockId === null) {
-      qb.andWhere('block.parent_block_id IS NULL');
-    } else {
-      qb.andWhere('block.parent_block_id = :parentBlockId', {
-        parentBlockId,
-      });
-    }
+    const qb = this.whereSiblings(
+      repo.createQueryBuilder('block'),
+      pageId,
+      rowId,
+      parentBlockId,
+    ).andWhere('block.order_index >= :fromOrderIndex', {
+      fromOrderIndex,
+    });
 
     /**
      * Quan trọng:

@@ -30,6 +30,7 @@ export const CONTENT_TYPES = {
     CreatePageBlockHandler: Symbol.for('CreatePageBlockHandler'),
     AddDatabaseViewToBlockHandler: Symbol.for('AddDatabaseViewToBlockHandler'),
     FindPageBlockByPageHandler: Symbol.for('FindPageBlockByPageHandler'),
+    FindPageBlockByRowHandler: Symbol.for('FindPageBlockByRowHandler'),
     FindPageBlockByIdHandler: Symbol.for('FindPageBlockByIdHandler'),
     FindDeletedPageBlocksHandler: Symbol.for('FindDeletedPageBlocksHandler'),
     UpdatePageBlockHandler: Symbol.for('UpdatePageBlockHandler'),

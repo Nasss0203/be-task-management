@@ -91,6 +91,7 @@ export class MovePageBlockHandler {
   ): Promise<PageBlock[]> {
     const siblings = await this.pageBlockRepo.findActiveSiblings(
       source.getPageId(),
+      source.getRowId(),
       source.getParentBlockId(),
       context,
     );
@@ -118,6 +119,7 @@ export class MovePageBlockHandler {
   ): Promise<PageBlock[]> {
     const oldSiblings = await this.pageBlockRepo.findActiveSiblings(
       source.getPageId(),
+      source.getRowId(),
       source.getParentBlockId(),
       context,
     );
@@ -139,8 +141,10 @@ export class MovePageBlockHandler {
       context,
     );
 
+    // A block stays in its own content: a task's blocks never move to the page.
     const targetSiblings = await this.pageBlockRepo.findActiveSiblings(
       source.getPageId(),
+      source.getRowId(),
       targetParentBlockId,
       context,
     );
@@ -188,6 +192,12 @@ export class MovePageBlockHandler {
     if (targetParent.getPageId() !== source.getPageId()) {
       throw new BadRequestException(
         'Target parent page block belongs to another page',
+      );
+    }
+
+    if (targetParent.getRowId() !== source.getRowId()) {
+      throw new BadRequestException(
+        'Target parent page block belongs to other content',
       );
     }
 

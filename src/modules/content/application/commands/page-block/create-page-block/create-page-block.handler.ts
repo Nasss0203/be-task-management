@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 
 import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/response/page-block.response.dto';
+import { PageBlockRowScopeService } from 'src/modules/content/application/services/page-block-row-scope.service';
 
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 
@@ -30,6 +31,8 @@ export class CreatePageBlockHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+
+    private readonly rowScope: PageBlockRowScopeService,
   ) {}
 
   async execute(
@@ -56,6 +59,13 @@ export class CreatePageBlockHandler {
       }
 
       const parentBlockId = command.input.parentBlockId ?? null;
+      const rowId = command.input.rowId ?? null;
+
+      this.rowScope.assertTypeAllowed(rowId, type);
+
+      if (rowId) {
+        await this.rowScope.assertRowOnPage(rowId, pageId, context);
+      }
 
       const afterBlockId = command.input.afterBlockId ?? null;
 
@@ -72,6 +82,12 @@ export class CreatePageBlockHandler {
         if (parent.getPageId() !== pageId) {
           throw new BadRequestException(
             'Parent page block belongs to another page',
+          );
+        }
+
+        if (parent.getRowId() !== rowId) {
+          throw new BadRequestException(
+            'Parent page block belongs to other content',
           );
         }
 
@@ -100,7 +116,10 @@ export class CreatePageBlockHandler {
           );
         }
 
-        if (afterBlock.getParentBlockId() !== parentBlockId) {
+        if (
+          afterBlock.getParentBlockId() !== parentBlockId ||
+          afterBlock.getRowId() !== rowId
+        ) {
           throw new BadRequestException(
             'Previous page block belongs to another parent',
           );
@@ -110,6 +129,7 @@ export class CreatePageBlockHandler {
 
         await this.pageBlockRepo.shiftSiblingOrderIndexes(
           pageId,
+          rowId,
           parentBlockId,
           orderIndex,
           context,
@@ -117,6 +137,7 @@ export class CreatePageBlockHandler {
       } else {
         const lastSibling = await this.pageBlockRepo.findLastSibling(
           pageId,
+          rowId,
           parentBlockId,
           context,
         );
@@ -129,6 +150,7 @@ export class CreatePageBlockHandler {
        */
       const block = PageBlock.create({
         pageId,
+        rowId,
         parentBlockId,
 
         type,

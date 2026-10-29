@@ -15,6 +15,8 @@ import {
   NotificationType,
 } from 'src/modules/notifications/domain/entities/notification.entity';
 import { NOTIFICATION_TYPES } from 'src/modules/notifications/notifications.types';
+import { COMMENT_TYPES } from '../../comments.types';
+import type { CommentTargetResolver } from '../ports/comment-target-resolver.port';
 import { CommentAuthorService } from './comment-author.service';
 
 const MENTION_ENTITY: Record<CommentTargetType, MentionEntityType> = {
@@ -27,14 +29,20 @@ const MESSAGE_MAX_LENGTH = 140;
 
 /**
  * Link mở đúng chỗ của comment:
- * block → cuộn tới block (`#block-…`); task → mở drawer của row (`?row=…`); page → page.
+ * block → cuộn tới block (`#block-…`), block trong task thì mở drawer task trước (`?row=…#block-…`);
+ * task → mở drawer của row (`?row=…`); page → page.
  */
-export function commentActionUrl(comment: Comment): string {
+export function commentActionUrl(
+  comment: Comment,
+  blockRowId: string | null = null,
+): string {
   const pageUrl = `/page/${comment.getPageId()}`;
 
   switch (comment.getTargetType()) {
     case CommentTargetType.PAGE_BLOCK:
-      return `${pageUrl}#block-${comment.getTargetId()}`;
+      return blockRowId
+        ? `${pageUrl}?row=${blockRowId}#block-${comment.getTargetId()}`
+        : `${pageUrl}#block-${comment.getTargetId()}`;
     case CommentTargetType.DATABASE_ROW:
       return `${pageUrl}?row=${comment.getTargetId()}`;
     default:
@@ -56,6 +64,8 @@ export class CommentNotificationService {
     private readonly mentionRepo: MentionRepository,
     @Inject(NOTIFICATION_TYPES.services.UpdateNotificationService)
     private readonly notificationUpdates: UpdateNotificationService,
+    @Inject(COMMENT_TYPES.ports.CommentTargetResolver)
+    private readonly targets: CommentTargetResolver,
   ) {}
 
   async afterSave(
@@ -64,6 +74,7 @@ export class CommentNotificationService {
     parent: Comment | null = null,
   ): Promise<void> {
     try {
+      const actionUrl = await this.actionUrl(comment);
       const mentioned = await this.syncMentions.sync({
         workspaceId: comment.getWorkspaceId(),
         pageId: comment.getPageId(),
@@ -73,7 +84,7 @@ export class CommentNotificationService {
         entityType: MENTION_ENTITY[comment.getTargetType()],
         entityId: comment.getTargetId(),
         body: comment.getBody(),
-        actionUrl: commentActionUrl(comment),
+        actionUrl,
       });
 
       const parentAuthorId = parent?.getAuthorId();
@@ -84,7 +95,7 @@ export class CommentNotificationService {
         parentAuthorId !== actorId &&
         !mentioned.includes(parentAuthorId)
       ) {
-        await this.notifyReply(comment, actorId, parentAuthorId);
+        await this.notifyReply(comment, actorId, parentAuthorId, actionUrl);
       }
     } catch (error) {
       this.logger.error(
@@ -113,10 +124,25 @@ export class CommentNotificationService {
     }
   }
 
+  /** Comment trên block cần biết block có nằm trong task không để link mở drawer task. */
+  private async actionUrl(comment: Comment): Promise<string> {
+    if (comment.getTargetType() !== CommentTargetType.PAGE_BLOCK) {
+      return commentActionUrl(comment);
+    }
+
+    const target = await this.targets.resolve(
+      comment.getTargetType(),
+      comment.getTargetId(),
+    );
+
+    return commentActionUrl(comment, target?.rowId ?? null);
+  }
+
   private async notifyReply(
     comment: Comment,
     actorId: string,
     receiverId: string,
+    actionUrl: string,
   ): Promise<void> {
     const authors = await this.authors.findAuthors([actorId]);
     const actorName = authors.get(actorId)?.username ?? 'Someone';
@@ -135,7 +161,7 @@ export class CommentNotificationService {
         text.length > MESSAGE_MAX_LENGTH
           ? `${text.slice(0, MESSAGE_MAX_LENGTH - 1)}…`
           : text,
-      actionUrl: commentActionUrl(comment),
+      actionUrl,
       metadata: {
         pageId: comment.getPageId(),
         targetType: comment.getTargetType(),

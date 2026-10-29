@@ -6,13 +6,13 @@ import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-w
 import { DuplicatePageBlockCommand } from './duplicate-page-block.command';
 import { DuplicatePageBlockHandler } from './duplicate-page-block.handler';
 
-function block(
+function blockParams(
   id: string,
   type: PageBlockType,
   parentBlockId: string | null,
   orderIndex: number,
-): PageBlock {
-  return PageBlock.restore({
+) {
+  return {
     id,
     pageId: 'page-1',
     parentBlockId,
@@ -32,8 +32,19 @@ function block(
     updatedAt: new Date(),
     deletedAt: null,
     deletedBy: null,
-  });
+  };
 }
+
+function block(
+  id: string,
+  type: PageBlockType,
+  parentBlockId: string | null,
+  orderIndex: number,
+): PageBlock {
+  return PageBlock.restore(blockParams(id, type, parentBlockId, orderIndex));
+}
+
+const toggleParams = () => blockParams('toggle', PageBlockType.TEXT, null, 2);
 
 // toggle > (a, b > c), plus sibling x after toggle
 const toggle = block('toggle', PageBlockType.TOGGLE, null, 2);
@@ -76,6 +87,7 @@ describe('DuplicatePageBlockHandler', () => {
     expect(pageBlockRepo.shiftSiblingOrderIndexes).toHaveBeenCalledWith(
       'page-1',
       null,
+      null,
       3,
       'ctx',
     );
@@ -115,6 +127,30 @@ describe('DuplicatePageBlockHandler', () => {
     const [toggleCopy] = savedBlocks(pageBlockRepo.save);
 
     expect(toggleCopy.getContent()).not.toBe(toggle.getContent());
+  });
+
+  it('keeps a copy of a task block inside that task', async () => {
+    const taskBlock = PageBlock.restore({
+      ...toggleParams(),
+      id: 'task-text',
+      rowId: 'row-1',
+    });
+    const { handler, pageBlockRepo } = setup(taskBlock);
+    const findByRowId = jest.fn().mockResolvedValue([taskBlock]);
+    Object.assign(pageBlockRepo, { findByRowId });
+
+    await handler.execute(new DuplicatePageBlockCommand('task-text', 'user-2'));
+
+    expect(findByRowId).toHaveBeenCalledWith('row-1', 'ctx');
+    expect(pageBlockRepo.findByPageId).not.toHaveBeenCalled();
+    expect(pageBlockRepo.shiftSiblingOrderIndexes).toHaveBeenCalledWith(
+      'page-1',
+      'row-1',
+      null,
+      3,
+      'ctx',
+    );
+    expect(savedBlocks(pageBlockRepo.save)[0].getRowId()).toBe('row-1');
   });
 
   it('throws when the block does not exist', async () => {

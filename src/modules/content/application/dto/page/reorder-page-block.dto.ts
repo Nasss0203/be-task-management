@@ -25,6 +25,11 @@ export class ReorderPageBlockDto {
   @IsUUID()
   parent_block_id?: string | null;
 
+  /** Reorders inside this task's content instead of the page's. */
+  @IsOptional()
+  @IsUUID()
+  row_id?: string | null;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ReorderPageBlockItemDto)

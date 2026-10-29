@@ -7,6 +7,7 @@ import {
 import { ReorderPageBlockDto } from 'src/modules/content/application/dto/page/reorder-page-block.dto';
 import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/response/page-block.response.dto';
 import { PageBlockOrderingService } from 'src/modules/content/application/services/page-block-ordering.service';
+import { PageBlockRowScopeService } from 'src/modules/content/application/services/page-block-row-scope.service';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity';
 import { canContainChildren } from 'src/modules/content/domain/policies/page-block-container.policy';
@@ -24,6 +25,7 @@ export class ReorderPageBlockHandler {
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
     private readonly ordering: PageBlockOrderingService,
+    private readonly rowScope: PageBlockRowScopeService,
   ) {}
 
   async execute(
@@ -31,15 +33,26 @@ export class ReorderPageBlockHandler {
   ): Promise<PageBlockResponseDto[]> {
     return this.uow.runInTransaction(async (context) => {
       const parentBlockId = command.dto.parent_block_id ?? null;
+      const rowId = command.dto.row_id ?? null;
+
+      if (rowId) {
+        await this.rowScope.assertRowOnPage(
+          rowId,
+          command.dto.page_id,
+          context,
+        );
+      }
 
       await this.assertValidSiblingScopeParent(
         command.dto.page_id,
+        rowId,
         parentBlockId,
         context,
       );
 
       const blocks = await this.pageBlockRepo.findActiveSiblings(
         command.dto.page_id,
+        rowId,
         parentBlockId,
         context,
       );
@@ -64,6 +77,7 @@ export class ReorderPageBlockHandler {
 
   private async assertValidSiblingScopeParent(
     pageId: string,
+    rowId: string | null,
     parentBlockId: string | null,
     context?: PersistenceContext,
   ): Promise<void> {
@@ -80,6 +94,12 @@ export class ReorderPageBlockHandler {
     if (parent.getPageId() !== pageId) {
       throw new BadRequestException(
         'Parent page block belongs to another page',
+      );
+    }
+
+    if (parent.getRowId() !== rowId) {
+      throw new BadRequestException(
+        'Parent page block belongs to other content',
       );
     }
 

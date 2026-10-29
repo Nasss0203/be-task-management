@@ -37,19 +37,23 @@ export class DuplicatePageBlockHandler {
       }
 
       const pageId = source.getPageId();
+      const rowId = source.getRowId();
       const parentBlockId = source.getParentBlockId();
       const orderIndex = source.getOrderIndex() + 1;
 
       // Make room right after the source block, same as create with afterBlockId
       await this.pageBlockRepo.shiftSiblingOrderIndexes(
         pageId,
+        rowId,
         parentBlockId,
         orderIndex,
         context,
       );
 
-      // findByPageId already sorts by order_index
-      const blocks = await this.pageBlockRepo.findByPageId(pageId, context);
+      // Both sort by order_index; the copy stays in the source's page or task content
+      const blocks = rowId
+        ? await this.pageBlockRepo.findByRowId(rowId, context)
+        : await this.pageBlockRepo.findByPageId(pageId, context);
 
       const childrenMap = new Map<string, PageBlock[]>();
 
@@ -73,6 +77,7 @@ export class DuplicatePageBlockHandler {
         const saved = await this.pageBlockRepo.save(
           PageBlock.create({
             pageId,
+            rowId,
             parentBlockId: newParentId,
             type: block.getType(),
             title: block.getTitle(),

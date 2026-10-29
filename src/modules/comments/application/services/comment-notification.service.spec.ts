@@ -23,5 +23,8 @@ describe('commentActionUrl', () => {
     expect(commentActionUrl(at(CommentTargetType.DATABASE_ROW, 'row-1'))).toBe(
       '/page/page-1?row=row-1',
     );
+    expect(
+      commentActionUrl(at(CommentTargetType.PAGE_BLOCK, 'block-1'), 'row-1'),
+    ).toBe('/page/page-1?row=row-1#block-block-1');
   });
 });

@@ -50,6 +50,14 @@ export class UpdatePageBlockHandler {
         throw new BadRequestException('Unsupported embed URL');
       }
 
+      // "Turn into" must not slip a database into a task's content
+      if (
+        block.getRowId() !== null &&
+        nextType === PageBlockType.DATABASE_VIEW
+      ) {
+        throw new BadRequestException('A task cannot contain a database view');
+      }
+
       // Đổi view mặc định của block database thì được, đổi sang database khác thì không
       if (
         command.updates.dataConfig !== undefined &&

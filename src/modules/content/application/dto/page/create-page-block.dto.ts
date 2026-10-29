@@ -19,6 +19,11 @@ export class CreatePageBlockDto {
   @IsUUID()
   parent_block_id?: string | null;
 
+  /** Adds the block to this task's content instead of the page's. */
+  @IsOptional()
+  @IsUUID()
+  row_id?: string | null;
+
   @IsOptional()
   @IsUUID()
   after_block_id?: string | null;

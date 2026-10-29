@@ -49,6 +49,8 @@ import { FindDeletedPageBlocksQuery } from 'src/modules/content/application/quer
 import { FindPageBlockByIdHandler } from 'src/modules/content/application/queries/page-block/find-page-block-by-id/find-page-block-by-id.handler';
 import { FindPageBlockByIdQuery } from 'src/modules/content/application/queries/page-block/find-page-block-by-id/find-page-block-by-id.query';
 import { FindPageBlockByPageHandler } from 'src/modules/content/application/queries/page-block/find-page-block-by-page/find-page-block-by-page.handler';
+import { FindPageBlockByRowHandler } from 'src/modules/content/application/queries/page-block/find-page-block-by-row/find-page-block-by-row.handler';
+import { FindPageBlockByRowQuery } from 'src/modules/content/application/queries/page-block/find-page-block-by-row/find-page-block-by-row.query';
 import { FindPageBlockByPageQuery } from 'src/modules/content/application/queries/page-block/find-page-block-by-page/find-page-block-by-page.query';
 import { ResolveBookmarkMetadataHandler } from 'src/modules/content/application/queries/resolve-bookmark-metadata/resolve-bookmark-metadata.handler';
 import { ResolveBookmarkMetadataQuery } from 'src/modules/content/application/queries/resolve-bookmark-metadata/resolve-bookmark-metadata.query';
@@ -78,6 +80,9 @@ export class PageBlockController {
 
     @Inject(CONTENT_TYPES.applications.FindPageBlockByPageHandler)
     private readonly findPageBlockByPageHandler: FindPageBlockByPageHandler,
+
+    @Inject(CONTENT_TYPES.applications.FindPageBlockByRowHandler)
+    private readonly findPageBlockByRowHandler: FindPageBlockByRowHandler,
 
     @Inject(CONTENT_TYPES.applications.FindPageBlockByIdHandler)
     private readonly findPageBlockByIdHandler: FindPageBlockByIdHandler,
@@ -109,6 +114,7 @@ export class PageBlockController {
     return this.createPageBlockHandler.execute(
       new CreatePageBlockCommand({
         pageId: createPageBlockDto.page_id,
+        rowId: createPageBlockDto.row_id,
         parentBlockId: createPageBlockDto.parent_block_id,
         afterBlockId: createPageBlockDto.after_block_id,
         type: createPageBlockDto.type,
@@ -135,6 +141,19 @@ export class PageBlockController {
   ): Promise<PageBlockResponseDto[]> {
     return this.findPageBlockByPageHandler.execute(
       new FindPageBlockByPageQuery(pageId),
+    );
+  }
+
+  /** A task's content; readable by whoever can read the page holding its database. */
+  @Get('row/:rowId')
+  @WorkspaceContext({ source: 'resource', type: 'database_row', key: 'rowId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
+  @ResponseMessage('Find page blocks by database row')
+  findAllByRowId(
+    @Param('rowId', ParseUUIDPipe) rowId: string,
+  ): Promise<PageBlockResponseDto[]> {
+    return this.findPageBlockByRowHandler.execute(
+      new FindPageBlockByRowQuery(rowId),
     );
   }
 
