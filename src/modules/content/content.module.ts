@@ -38,6 +38,9 @@ import { ResolveBookmarkMetadataHandler } from './application/queries/resolve-bo
 import { ContentPageProvisioningService } from './application/services/content-page-provisioning.service';
 import { ContentPageSnapshotReaderService } from './application/services/content-page-snapshot-reader.service';
 import { PageBlockColumnCleanupService } from './application/services/page-block-column-cleanup.service';
+import { PageBlockFormService } from './application/services/page-block-form.service';
+import { SubmitFormResponseHandler } from './application/commands/form/submit-form-response/submit-form-response.handler';
+import { FormController } from './presentation/http/controllers/form.controller';
 import { PageBlockOrderingService } from './application/services/page-block-ordering.service';
 import { PageBlockRowScopeService } from './application/services/page-block-row-scope.service';
 import { PagePublicationTreeService } from './application/services/page-publication-tree.service';
@@ -445,6 +448,7 @@ const applicationServices = [
   PublicationHierarchySynchronizerService,
   PageBlockOrderingService,
   PageBlockColumnCleanupService,
+  PageBlockFormService,
   PageBlockRowScopeService,
   PageShareLinkTokenService,
   PageEditRequestNotifier,
@@ -510,9 +514,11 @@ const ports = [
     PublishedSitesController,
     WorkspacePublishedSitesController,
     PublicPageController,
+    FormController,
   ],
 
   providers: [
+    SubmitFormResponseHandler,
     ListPagePublicationsHandler,
     UpdatePagePublicationSettingsHandler,
     UpdatePageVisibilityHandler,

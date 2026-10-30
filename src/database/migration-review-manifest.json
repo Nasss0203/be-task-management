@@ -216,6 +216,14 @@
     {
       "file": "1793267426776-add-column-block-types.ts",
       "sha256": "1d2fa56ee44ff5380b62e06fad24f80cbd5f68faa502327f1eb7df53ebb32079"
+    },
+    {
+      "file": "1793356440793-add-section-block-type.ts",
+      "sha256": "aa98ffd032051a610d3f4de74560e2bcf8402e1b0c0604b65ec4a2741c50003f"
+    },
+    {
+      "file": "1793358260017-add-form-field-block-type.ts",
+      "sha256": "a8e5c0ccbcd1fd1a58546aea509df0bb8a1d41ebb89f142d4af53e38f2a0e55b"
     }
   ]
 }

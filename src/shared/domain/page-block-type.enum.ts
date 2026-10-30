@@ -31,4 +31,8 @@ export enum PageBlockType {
   COLUMN_LIST = 'COLUMN_LIST',
   /** One column of a COLUMN_LIST; `style_config.width_ratio` sets its share of the row. */
   COLUMN = 'COLUMN',
+
+  SECTION = 'SECTION',
+
+  FORM_FIELD = 'FORM_FIELD',
 }

@@ -65,6 +65,12 @@ export class MovePageBlockHandler {
 
       const isSameParent = currentParentBlockId === targetParentBlockId;
 
+      if (source.getType() === PageBlockType.FORM_FIELD && !isSameParent) {
+        throw new BadRequestException(
+          'A question can only be reordered within its form',
+        );
+      }
+
       if (isSameParent) {
         const updatedBlocks = await this.moveWithinSameParent(
           source,

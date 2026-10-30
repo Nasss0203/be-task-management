@@ -19,8 +19,9 @@ import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-w
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import {
   assertCanContain,
-  assertValidColumnStyle,
+  assertValidLayoutStyle,
 } from 'src/modules/content/domain/policies/page-block-container.policy';
+import { PageBlockFormService } from 'src/modules/content/application/services/page-block-form.service';
 import { UpdatePageBlockCommand } from './update-page-block.command';
 
 @Injectable()
@@ -31,6 +32,8 @@ export class UpdatePageBlockHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+
+    private readonly forms: PageBlockFormService,
   ) {}
 
   async execute(
@@ -75,7 +78,42 @@ export class UpdatePageBlockHandler {
         assertCanContain(parent?.getType() ?? null, nextType);
       }
 
-      assertValidColumnStyle(nextType, command.updates.styleConfig);
+      assertValidLayoutStyle(nextType, command.updates.styleConfig);
+
+      if (nextType === PageBlockType.SECTION) {
+        await this.forms.assertValidSectionForm(
+          {
+            pageId: block.getPageId(),
+            sectionId: block.getId(),
+            current: block.getDataConfig(),
+            next: command.updates.dataConfig,
+          },
+          context,
+        );
+      }
+
+      if (
+        nextType === PageBlockType.FORM_FIELD &&
+        (command.updates.dataConfig !== undefined ||
+          nextType !== block.getType())
+      ) {
+        const parentBlockId = block.getParentBlockId();
+        const parent = parentBlockId
+          ? await this.pageBlockRepo.findById(parentBlockId, context)
+          : null;
+
+        if (!parent) {
+          throw new BadRequestException('A question must sit in a form');
+        }
+
+        await this.forms.assertValidFormField(
+          parent,
+          command.updates.dataConfig !== undefined
+            ? command.updates.dataConfig
+            : block.getDataConfig(),
+          context,
+        );
+      }
 
       // "Turn into" must not slip a database into a task's content
       if (

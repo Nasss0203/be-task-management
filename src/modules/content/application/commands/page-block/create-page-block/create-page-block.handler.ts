@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 
 import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/response/page-block.response.dto';
+import { PageBlockFormService } from 'src/modules/content/application/services/page-block-form.service';
 import { PageBlockRowScopeService } from 'src/modules/content/application/services/page-block-row-scope.service';
 
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
@@ -14,7 +15,7 @@ import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity
 
 import {
   assertCanContain,
-  assertValidColumnStyle,
+  assertValidLayoutStyle,
   MAX_COLUMNS,
 } from 'src/modules/content/domain/policies/page-block-container.policy';
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
@@ -38,6 +39,8 @@ export class CreatePageBlockHandler {
     private readonly uow: UnitOfWork,
 
     private readonly rowScope: PageBlockRowScopeService,
+
+    private readonly forms: PageBlockFormService,
   ) {}
 
   async execute(
@@ -74,7 +77,14 @@ export class CreatePageBlockHandler {
 
       const afterBlockId = command.input.afterBlockId ?? null;
 
-      assertValidColumnStyle(type, styleConfig);
+      assertValidLayoutStyle(type, styleConfig);
+
+      if (type === PageBlockType.SECTION) {
+        await this.forms.assertValidSectionForm(
+          { pageId, sectionId: null, current: null, next: dataConfig },
+          context,
+        );
+      }
 
       if (!parentBlockId) {
         assertCanContain(null, type);
@@ -101,6 +111,10 @@ export class CreatePageBlockHandler {
         }
 
         assertCanContain(parent.getType(), type);
+
+        if (type === PageBlockType.FORM_FIELD) {
+          await this.forms.assertValidFormField(parent, dataConfig, context);
+        }
 
         if (type === PageBlockType.COLUMN) {
           const columns = await this.pageBlockRepo.findActiveChildren(

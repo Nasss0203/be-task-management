@@ -6,7 +6,16 @@ const PAGE_BLOCK_CONTAINER_TYPES = new Set<PageBlockType>([
   PageBlockType.TOGGLE,
   PageBlockType.COLUMN_LIST,
   PageBlockType.COLUMN,
+  PageBlockType.SECTION,
 ]);
+
+export const SECTION_TONES = [
+  'default',
+  'info',
+  'success',
+  'warning',
+  'danger',
+] as const;
 
 export const MIN_COLUMNS = 2;
 export const MAX_COLUMNS = 5;
@@ -35,12 +44,20 @@ export function canContain(
     return false;
   }
 
+  if (childType === PageBlockType.FORM_FIELD) {
+    return parentType === PageBlockType.SECTION;
+  }
+
   if (parentType === null) {
     return true;
   }
 
   if (parentType === PageBlockType.COLUMN) {
     return childType !== PageBlockType.COLUMN_LIST;
+  }
+
+  if (parentType === PageBlockType.SECTION) {
+    return childType !== PageBlockType.SECTION;
   }
 
   return canContainChildren(parentType);
@@ -57,12 +74,30 @@ export function assertCanContain(
   }
 }
 
-/** A column's width is a share of its row, kept between 10% and 90%. */
-export function assertValidColumnStyle(
+export function assertValidLayoutStyle(
   type: PageBlockType,
   styleConfig: PageBlockStyleConfig | undefined,
 ): void {
-  if (type !== PageBlockType.COLUMN || !styleConfig) {
+  if (!styleConfig) {
+    return;
+  }
+
+  if (type === PageBlockType.SECTION) {
+    const tone = styleConfig.tone;
+
+    if (
+      tone !== undefined &&
+      !SECTION_TONES.includes(tone as (typeof SECTION_TONES)[number])
+    ) {
+      throw new BadRequestException(
+        `tone must be one of ${SECTION_TONES.join(', ')}`,
+      );
+    }
+
+    return;
+  }
+
+  if (type !== PageBlockType.COLUMN) {
     return;
   }
 

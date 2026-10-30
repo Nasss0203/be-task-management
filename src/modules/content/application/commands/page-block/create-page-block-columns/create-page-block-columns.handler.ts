@@ -141,6 +141,8 @@ export class CreatePageBlockColumnsHandler {
         throw new BadRequestException('Columns cannot be put into columns');
       }
 
+      assertCanContain(PageBlockType.COLUMN, block.getType());
+
       blocks.push(block);
     }
 

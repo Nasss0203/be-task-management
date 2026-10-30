@@ -3,6 +3,7 @@ import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
+import type { PageBlockFormService } from 'src/modules/content/application/services/page-block-form.service';
 import { UpdatePageBlockCommand } from './update-page-block.command';
 import { UpdatePageBlockHandler } from './update-page-block.handler';
 
@@ -38,6 +39,7 @@ describe('UpdatePageBlockHandler for database views', () => {
       {
         runInTransaction: (work: (context: unknown) => unknown) => work({}),
       } as unknown as UnitOfWork,
+      {} as PageBlockFormService,
     );
 
     return { handler, repo };
