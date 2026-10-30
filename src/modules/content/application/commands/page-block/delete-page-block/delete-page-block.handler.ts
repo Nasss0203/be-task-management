@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { PageBlockColumnCleanupService } from 'src/modules/content/application/services/page-block-column-cleanup.service';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageBlock } from 'src/modules/content/domain/entities/page-block.entity';
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
@@ -21,6 +22,7 @@ export class DeletePageBlockHandler {
     private readonly pageBlockRepo: PageBlockRepository,
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+    private readonly columnCleanup: PageBlockColumnCleanupService,
   ) {}
 
   async execute(command: DeletePageBlockCommand): Promise<void> {
@@ -36,6 +38,12 @@ export class DeletePageBlockHandler {
       });
 
       await this.pageBlockRepo.saveMany(subtree, context);
+
+      await this.columnCleanup.tidy(
+        block.getParentBlockId(),
+        command.userId,
+        context,
+      );
     });
   }
 

@@ -212,6 +212,10 @@
     {
       "file": "1793261142779-UpdateSchema.ts",
       "sha256": "28663c87bc03f113caff636ba2a13517e097c52391d5cea860933c802ffe2269"
+    },
+    {
+      "file": "1793267426776-add-column-block-types.ts",
+      "sha256": "1d2fa56ee44ff5380b62e06fad24f80cbd5f68faa502327f1eb7df53ebb32079"
     }
   ]
 }

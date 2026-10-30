@@ -13,6 +13,7 @@ import { MovePageBlockHandler } from './application/commands/page-block/move-pag
 import { ReorderPageBlockHandler } from './application/commands/page-block/reorder-page-block/reorder-page-block.handler';
 import { RestorePageBlockHandler } from './application/commands/page-block/restore-page-block/restore-page-block.handler';
 import { DuplicatePageBlockHandler } from './application/commands/page-block/duplicate-page-block/duplicate-page-block.handler';
+import { CreatePageBlockColumnsHandler } from './application/commands/page-block/create-page-block-columns/create-page-block-columns.handler';
 import { UpdatePageBlockHandler } from './application/commands/page-block/update-page-block/update-page-block.handler';
 import { CreatePageHandler } from './application/commands/page/create-page/create-page.handler';
 import { DeletePageHandler } from './application/commands/page/delete-page/delete-page.handler';
@@ -36,6 +37,7 @@ import { ResolveBookmarkMetadataHandler } from './application/queries/resolve-bo
 
 import { ContentPageProvisioningService } from './application/services/content-page-provisioning.service';
 import { ContentPageSnapshotReaderService } from './application/services/content-page-snapshot-reader.service';
+import { PageBlockColumnCleanupService } from './application/services/page-block-column-cleanup.service';
 import { PageBlockOrderingService } from './application/services/page-block-ordering.service';
 import { PageBlockRowScopeService } from './application/services/page-block-row-scope.service';
 import { PagePublicationTreeService } from './application/services/page-publication-tree.service';
@@ -275,6 +277,10 @@ const pageBlockHandlers = [
     useClass: DuplicatePageBlockHandler,
   },
   {
+    provide: CONTENT_TYPES.applications.CreatePageBlockColumnsHandler,
+    useClass: CreatePageBlockColumnsHandler,
+  },
+  {
     provide: CONTENT_TYPES.applications.FindPageBlockByPageHandler,
     useClass: FindPageBlockByPageHandler,
   },
@@ -438,6 +444,7 @@ const applicationServices = [
   PublicSubdomainAllocatorService,
   PublicationHierarchySynchronizerService,
   PageBlockOrderingService,
+  PageBlockColumnCleanupService,
   PageBlockRowScopeService,
   PageShareLinkTokenService,
   PageEditRequestNotifier,

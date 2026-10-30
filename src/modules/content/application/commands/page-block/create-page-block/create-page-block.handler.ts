@@ -12,7 +12,12 @@ import { CONTENT_TYPES } from 'src/modules/content/content.types';
 
 import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity';
 
-import { canContainChildren } from 'src/modules/content/domain/policies/page-block-container.policy';
+import {
+  assertCanContain,
+  assertValidColumnStyle,
+  MAX_COLUMNS,
+} from 'src/modules/content/domain/policies/page-block-container.policy';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 
 import { isAllowedEmbedContent } from 'src/modules/content/domain/policies/page-block-embed.policy';
 
@@ -69,7 +74,11 @@ export class CreatePageBlockHandler {
 
       const afterBlockId = command.input.afterBlockId ?? null;
 
-      if (parentBlockId) {
+      assertValidColumnStyle(type, styleConfig);
+
+      if (!parentBlockId) {
+        assertCanContain(null, type);
+      } else {
         const parent = await this.pageBlockRepo.findById(
           parentBlockId,
           context,
@@ -91,10 +100,19 @@ export class CreatePageBlockHandler {
           );
         }
 
-        if (!canContainChildren(parent.getType())) {
-          throw new BadRequestException(
-            `Block type ${parent.getType()} cannot contain children`,
+        assertCanContain(parent.getType(), type);
+
+        if (type === PageBlockType.COLUMN) {
+          const columns = await this.pageBlockRepo.findActiveChildren(
+            parent.getId(),
+            context,
           );
+
+          if (columns.length >= MAX_COLUMNS) {
+            throw new BadRequestException(
+              `A column row holds at most ${MAX_COLUMNS} columns`,
+            );
+          }
         }
       }
 

@@ -57,6 +57,9 @@ import { ResolveBookmarkMetadataQuery } from 'src/modules/content/application/qu
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
+import { CreatePageBlockColumnsDto } from 'src/modules/content/application/dto/page/create-page-block-columns.dto';
+import { CreatePageBlockColumnsCommand } from 'src/modules/content/application/commands/page-block/create-page-block-columns/create-page-block-columns.command';
+import { CreatePageBlockColumnsHandler } from 'src/modules/content/application/commands/page-block/create-page-block-columns/create-page-block-columns.handler';
 import { ResolveBookmarkMetadataRequest } from '../requests/resolve-bookmark-metadata.request';
 
 @Controller('pageBlock')
@@ -98,6 +101,9 @@ export class PageBlockController {
 
     @Inject(CONTENT_TYPES.applications.DuplicatePageBlockHandler)
     private readonly duplicatePageBlockHandler: DuplicatePageBlockHandler,
+
+    @Inject(CONTENT_TYPES.applications.CreatePageBlockColumnsHandler)
+    private readonly createPageBlockColumnsHandler: CreatePageBlockColumnsHandler,
 
     private readonly resolveBookmarkMetadataHandler: ResolveBookmarkMetadataHandler,
   ) {}
@@ -205,9 +211,10 @@ export class PageBlockController {
   move(
     @Param('blockId', ParseUUIDPipe) blockId: string,
     @Body() movePageBlockDto: MovePageBlockDto,
+    @Auth() auth: IAuth,
   ): Promise<PageBlockResponseDto> {
     return this.movePageBlockHandler.execute(
-      new MovePageBlockCommand(blockId, movePageBlockDto),
+      new MovePageBlockCommand(blockId, movePageBlockDto, auth.id),
     );
   }
 
@@ -285,6 +292,21 @@ export class PageBlockController {
   ): Promise<PageBlockResponseDto> {
     return this.duplicatePageBlockHandler.execute(
       new DuplicatePageBlockCommand(blockId, auth.id),
+    );
+  }
+
+  /** Sets 2–5 blocks side by side in a new column row (drag to a block's edge, "2 columns"). */
+  @Post('columns')
+  @WriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'page_id' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+  @ResponseMessage('Create page block columns')
+  createColumns(
+    @Body() dto: CreatePageBlockColumnsDto,
+    @Auth() auth: IAuth,
+  ): Promise<PageBlockResponseDto> {
+    return this.createPageBlockColumnsHandler.execute(
+      new CreatePageBlockColumnsCommand(dto.page_id, dto.block_ids, auth.id),
     );
   }
 

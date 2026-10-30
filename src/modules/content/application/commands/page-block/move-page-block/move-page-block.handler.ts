@@ -5,10 +5,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/response/page-block.response.dto';
+import { PageBlockColumnCleanupService } from 'src/modules/content/application/services/page-block-column-cleanup.service';
 import { PageBlockOrderingService } from 'src/modules/content/application/services/page-block-ordering.service';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageBlock } from 'src/modules/content/domain/entities/page-block.entity';
-import { canContainChildren } from 'src/modules/content/domain/policies/page-block-container.policy';
+import {
+  assertCanContain,
+  MAX_COLUMNS,
+} from 'src/modules/content/domain/policies/page-block-container.policy';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
@@ -25,6 +30,7 @@ export class MovePageBlockHandler {
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
     private readonly ordering: PageBlockOrderingService,
+    private readonly columnCleanup: PageBlockColumnCleanupService,
   ) {}
 
   async execute(command: MovePageBlockCommand): Promise<PageBlockResponseDto> {
@@ -75,6 +81,13 @@ export class MovePageBlockHandler {
         source,
         targetParentBlockId,
         command.dto.target_order_index,
+        context,
+      );
+
+      // Leaving a column may empty it, or leave its row with a single column.
+      await this.columnCleanup.tidy(
+        currentParentBlockId,
+        command.userId,
         context,
       );
 
@@ -131,16 +144,6 @@ export class MovePageBlockHandler {
       (block) => block.getId() !== source.getId(),
     );
 
-    sourceFromOldSiblings.changeOrder(
-      this.ordering.nextTemporaryOrder([...oldSiblings, sourceFromOldSiblings]),
-    );
-    await this.pageBlockRepo.save(sourceFromOldSiblings, context);
-
-    await this.ordering.persistSequentialBlockOrder(
-      oldRemainingSiblings,
-      context,
-    );
-
     // A block stays in its own content: a task's blocks never move to the page.
     const targetSiblings = await this.pageBlockRepo.findActiveSiblings(
       source.getPageId(),
@@ -149,6 +152,8 @@ export class MovePageBlockHandler {
       context,
     );
 
+    // Leave the old parent first: parking the block among its old siblings
+    // could collide with the temporary orders used to renumber them.
     sourceFromOldSiblings.moveToParent(targetParentBlockId);
     sourceFromOldSiblings.changeOrder(
       this.ordering.nextTemporaryOrder([
@@ -157,6 +162,11 @@ export class MovePageBlockHandler {
       ]),
     );
     await this.pageBlockRepo.save(sourceFromOldSiblings, context);
+
+    await this.ordering.persistSequentialBlockOrder(
+      oldRemainingSiblings,
+      context,
+    );
 
     const targetOrdering = this.insertAt(
       targetSiblings,
@@ -173,6 +183,7 @@ export class MovePageBlockHandler {
     context?: PersistenceContext,
   ): Promise<PageBlock | null> {
     if (targetParentBlockId === null) {
+      assertCanContain(null, source.getType());
       return null;
     }
 
@@ -201,10 +212,22 @@ export class MovePageBlockHandler {
       );
     }
 
-    if (!canContainChildren(targetParent.getType())) {
-      throw new BadRequestException(
-        `Block type ${targetParent.getType()} cannot contain children`,
+    assertCanContain(targetParent.getType(), source.getType());
+
+    if (
+      source.getType() === PageBlockType.COLUMN &&
+      source.getParentBlockId() !== targetParent.getId()
+    ) {
+      const columns = await this.pageBlockRepo.findActiveChildren(
+        targetParent.getId(),
+        context,
       );
+
+      if (columns.length >= MAX_COLUMNS) {
+        throw new BadRequestException(
+          `A column row holds at most ${MAX_COLUMNS} columns`,
+        );
+      }
     }
 
     return targetParent;

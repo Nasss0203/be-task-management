@@ -26,4 +26,9 @@ export enum PageBlockType {
   MERMAID = 'MERMAID',
   BUTTON = 'BUTTON',
   TOGGLE = 'TOGGLE',
+
+  /** A row of 2–5 columns; its only children are COLUMN blocks. */
+  COLUMN_LIST = 'COLUMN_LIST',
+  /** One column of a COLUMN_LIST; `style_config.width_ratio` sets its share of the row. */
+  COLUMN = 'COLUMN',
 }

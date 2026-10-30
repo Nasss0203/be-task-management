@@ -17,6 +17,10 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
 
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
+import {
+  assertCanContain,
+  assertValidColumnStyle,
+} from 'src/modules/content/domain/policies/page-block-container.policy';
 import { UpdatePageBlockCommand } from './update-page-block.command';
 
 @Injectable()
@@ -49,6 +53,29 @@ export class UpdatePageBlockHandler {
       if (!isAllowedEmbedContent(nextType, nextContent)) {
         throw new BadRequestException('Unsupported embed URL');
       }
+
+      // Columns are built with POST /pageBlock/columns, never by "Turn into"
+      if (nextType !== block.getType()) {
+        const structural = [PageBlockType.COLUMN_LIST, PageBlockType.COLUMN];
+
+        if (
+          structural.includes(nextType) ||
+          structural.includes(block.getType())
+        ) {
+          throw new BadRequestException(
+            'Columns cannot be turned into another block type',
+          );
+        }
+
+        const parentBlockId = block.getParentBlockId();
+        const parent = parentBlockId
+          ? await this.pageBlockRepo.findById(parentBlockId, context)
+          : null;
+
+        assertCanContain(parent?.getType() ?? null, nextType);
+      }
+
+      assertValidColumnStyle(nextType, command.updates.styleConfig);
 
       // "Turn into" must not slip a database into a task's content
       if (
