@@ -81,7 +81,13 @@ export class CreatePageBlockHandler {
 
       if (type === PageBlockType.SECTION) {
         await this.forms.assertValidSectionForm(
-          { pageId, sectionId: null, current: null, next: dataConfig },
+          {
+            pageId,
+            sectionId: null,
+            current: null,
+            next: dataConfig,
+            userId: createdBy,
+          },
           context,
         );
       }
@@ -114,6 +120,7 @@ export class CreatePageBlockHandler {
 
         if (type === PageBlockType.FORM_FIELD) {
           await this.forms.assertValidFormField(parent, dataConfig, context);
+          await this.forms.assertColumnFree(parent, dataConfig, context);
         }
 
         if (type === PageBlockType.COLUMN) {

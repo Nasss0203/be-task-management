@@ -72,6 +72,21 @@ export class SubmitFormResponseHandler {
 
         const content = (child.getContent() ?? {}) as Record<string, unknown>;
         const label = typeof content.label === 'string' ? content.label : '';
+        const condition = field.showWhen;
+        const conditionHolds =
+          condition &&
+          properties
+            .get(condition.propertyId)
+            ?.getOptions()
+            .some((option) => option.getId() === condition.optionId);
+
+        const optionRule = field.optionConditions;
+        const sourceOptions = optionRule
+          ? properties
+              .get(optionRule.propertyId)
+              ?.getOptions()
+              .map((option) => option.getId())
+          : undefined;
 
         return [
           {
@@ -79,6 +94,20 @@ export class SubmitFormResponseHandler {
             label: label || property.getName(),
             required: field.required,
             type: property.getType(),
+            showWhen: conditionHolds ? condition : null,
+            optionIds: property.getOptions().map((option) => option.getId()),
+            // A mapping to a deleted option must not hide the option for good.
+            optionConditions:
+              optionRule && sourceOptions
+                ? {
+                    propertyId: optionRule.propertyId,
+                    options: Object.fromEntries(
+                      Object.entries(optionRule.options).filter(([, source]) =>
+                        sourceOptions.includes(source),
+                      ),
+                    ),
+                  }
+                : null,
           },
         ];
       });
@@ -92,6 +121,18 @@ export class SubmitFormResponseHandler {
       for (const [propertyId, value] of Object.entries(answers)) {
         await this.setRowValue.execute(
           new SetRowValueCommand(row.id, propertyId, value as RowValueData),
+          context,
+        );
+      }
+
+      if (
+        form.respondentPropertyId &&
+        properties.has(form.respondentPropertyId)
+      ) {
+        await this.setRowValue.execute(
+          new SetRowValueCommand(row.id, form.respondentPropertyId, [
+            command.userId,
+          ]),
           context,
         );
       }

@@ -19,5 +19,6 @@ export class UpdatePageBlockCommand {
       dataConfig?: PageBlockJson;
       isOpen?: boolean;
     },
+    public readonly userId: string,
   ) {}
 }

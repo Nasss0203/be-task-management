@@ -225,20 +225,25 @@ export class PageBlockController {
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updatePageBlockDto: UpdatePageBlockDto,
+    @Auth() auth: IAuth,
   ) {
     return this.updatePageBlockHandler.execute(
-      new UpdatePageBlockCommand(id, {
-        type: updatePageBlockDto.type,
-        title: updatePageBlockDto.title,
-        positionX: updatePageBlockDto.position_x,
-        positionY: updatePageBlockDto.position_y,
-        width: updatePageBlockDto.width,
-        height: updatePageBlockDto.height,
-        content: updatePageBlockDto.content,
-        styleConfig: updatePageBlockDto.style_config,
-        dataConfig: updatePageBlockDto.data_config,
-        isOpen: updatePageBlockDto.is_open,
-      }),
+      new UpdatePageBlockCommand(
+        id,
+        {
+          type: updatePageBlockDto.type,
+          title: updatePageBlockDto.title,
+          positionX: updatePageBlockDto.position_x,
+          positionY: updatePageBlockDto.position_y,
+          width: updatePageBlockDto.width,
+          height: updatePageBlockDto.height,
+          content: updatePageBlockDto.content,
+          styleConfig: updatePageBlockDto.style_config,
+          dataConfig: updatePageBlockDto.data_config,
+          isOpen: updatePageBlockDto.is_open,
+        },
+        auth.id,
+      ),
     );
   }
 

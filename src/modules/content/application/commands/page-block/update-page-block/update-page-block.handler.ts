@@ -87,6 +87,7 @@ export class UpdatePageBlockHandler {
             sectionId: block.getId(),
             current: block.getDataConfig(),
             next: command.updates.dataConfig,
+            userId: command.userId,
           },
           context,
         );

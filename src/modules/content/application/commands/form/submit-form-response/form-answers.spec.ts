@@ -16,6 +16,99 @@ const questions = [
   question('agree', PropertyType.CHECKBOX),
 ];
 
+describe('cleanFormAnswers with option_conditions', () => {
+  const team: FormQuestion = {
+    propertyId: 'team',
+    label: 'Team',
+    required: true,
+    type: PropertyType.SELECT,
+  };
+  const skills: FormQuestion = {
+    propertyId: 'skills',
+    label: 'Skills',
+    required: true,
+    type: PropertyType.MULTI_SELECT,
+    optionIds: ['react', 'node', 'git'],
+    optionConditions: {
+      propertyId: 'team',
+      options: { react: 'fe', node: 'be' },
+    },
+  };
+
+  it('keeps only the options of the chosen answer and untied ones', () => {
+    expect(
+      cleanFormAnswers([team, skills], {
+        team: 'be',
+        skills: ['react', 'node', 'git'],
+      }),
+    ).toEqual({ team: 'be', skills: ['node', 'git'] });
+  });
+
+  it('requires an answer among the options of the chosen answer', () => {
+    expect(() =>
+      cleanFormAnswers([team, skills], { team: 'fe', skills: ['node'] }),
+    ).toThrow('"Skills" is required');
+  });
+
+  it('skips the question when the chosen answer has no options', () => {
+    const tied = {
+      ...skills,
+      optionIds: ['react'],
+    };
+
+    expect(cleanFormAnswers([team, tied], { team: 'be' })).toEqual({
+      team: 'be',
+    });
+  });
+});
+
+describe('cleanFormAnswers with show_when', () => {
+  const team: FormQuestion = {
+    propertyId: 'team',
+    label: 'Team',
+    required: true,
+    type: PropertyType.SELECT,
+  };
+  const skills: FormQuestion = {
+    propertyId: 'skills',
+    label: 'Skills',
+    required: true,
+    type: PropertyType.TEXT,
+    showWhen: { propertyId: 'team', optionId: 'fe' },
+  };
+
+  it('requires a shown question', () => {
+    expect(() => cleanFormAnswers([team, skills], { team: 'fe' })).toThrow(
+      '"Skills" is required',
+    );
+  });
+
+  it('skips and drops a hidden question', () => {
+    expect(
+      cleanFormAnswers([team, skills], { team: 'be', skills: 'React' }),
+    ).toEqual({ team: 'be' });
+  });
+
+  it('hides a question whose source is hidden too', () => {
+    const next: FormQuestion = {
+      ...skills,
+      propertyId: 'next',
+      label: 'Next',
+      showWhen: { propertyId: 'skills', optionId: 'x' },
+    };
+
+    expect(
+      cleanFormAnswers([team, skills, next], { team: 'be', next: 'y' }),
+    ).toEqual({ team: 'be' });
+  });
+
+  it('ignores a condition on a later question', () => {
+    expect(() => cleanFormAnswers([skills, team], { team: 'be' })).toThrow(
+      '"Skills" is required',
+    );
+  });
+});
+
 describe('cleanFormAnswers', () => {
   it('keeps answered questions, trims text and drops empty optional ones', () => {
     expect(

@@ -13,6 +13,7 @@ interface CreateDatabaseParams {
   titlePropertyId: string;
   assigneePropertyId: string;
   dueDatePropertyId: string;
+  titleOnly?: boolean;
 }
 interface RestoreDatabaseParams {
   id: string;
@@ -72,8 +73,11 @@ export class Database {
     );
 
     database.addProperty(titleProperty);
-    database.addProperty(assigneeProperty);
-    database.addProperty(dueDateProperty);
+
+    if (!params.titleOnly) {
+      database.addProperty(assigneeProperty);
+      database.addProperty(dueDateProperty);
+    }
 
     return database;
   }

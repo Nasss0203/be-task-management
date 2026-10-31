@@ -49,9 +49,11 @@ describe('UpdatePageBlockHandler for database views', () => {
     const { handler } = setup();
 
     const result = await handler.execute(
-      new UpdatePageBlockCommand('block', {
-        dataConfig: { database_id: 'db', view_id: 'board' },
-      }),
+      new UpdatePageBlockCommand(
+        'block',
+        { dataConfig: { database_id: 'db', view_id: 'board' } },
+        'owner',
+      ),
     );
 
     expect(result.data_config).toEqual({ database_id: 'db', view_id: 'board' });
@@ -62,9 +64,11 @@ describe('UpdatePageBlockHandler for database views', () => {
 
     await expect(
       handler.execute(
-        new UpdatePageBlockCommand('block', {
-          dataConfig: { database_id: 'other', view_id: 'x' },
-        }),
+        new UpdatePageBlockCommand(
+          'block',
+          { dataConfig: { database_id: 'other', view_id: 'x' } },
+          'owner',
+        ),
       ),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(repo.save).not.toHaveBeenCalled();

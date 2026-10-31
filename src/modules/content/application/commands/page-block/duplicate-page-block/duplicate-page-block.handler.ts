@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/response/page-block.response.dto';
 
@@ -10,6 +15,7 @@ import type { PageBlockRepository } from 'src/modules/content/domain/repositorie
 
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { DuplicatePageBlockCommand } from './duplicate-page-block.command';
 
@@ -34,6 +40,11 @@ export class DuplicatePageBlockHandler {
 
       if (!source) {
         throw new NotFoundException('Page block not found');
+      }
+
+      // A copy would share the column and overwrite the original's answer
+      if (source.getType() === PageBlockType.FORM_FIELD) {
+        throw new BadRequestException('A question cannot be duplicated');
       }
 
       const pageId = source.getPageId();

@@ -6,6 +6,12 @@ export interface FormQuestion {
   label: string;
   required: boolean;
   type: PropertyType;
+  showWhen?: { propertyId: string; optionId: string } | null;
+  optionIds?: string[];
+  optionConditions?: {
+    propertyId: string;
+    options: Record<string, string>;
+  } | null;
 }
 
 const MAX_TEXT_LENGTH = 5000;
@@ -71,9 +77,34 @@ export function cleanFormAnswers(
   }
 
   const cleaned: Record<string, unknown> = {};
+  const earlier = new Set<string>();
 
   for (const question of questions) {
-    const value = answers[question.propertyId];
+    const condition = question.showWhen;
+    // A condition on a later question can never be met, so it is ignored.
+    const applies = condition && earlier.has(condition.propertyId);
+    const optionRule = question.optionConditions;
+    const optionRuleApplies = optionRule && earlier.has(optionRule.propertyId);
+    earlier.add(question.propertyId);
+
+    if (applies && cleaned[condition.propertyId] !== condition.optionId) {
+      continue;
+    }
+
+    let value = answers[question.propertyId];
+
+    if (optionRuleApplies) {
+      const sourceAnswer = cleaned[optionRule.propertyId];
+      const allowed = (question.optionIds ?? []).filter((id) =>
+        [undefined, sourceAnswer].includes(optionRule.options[id]),
+      );
+
+      if (sourceAnswer === undefined || allowed.length === 0) continue;
+
+      if (Array.isArray(value)) {
+        value = value.filter((id) => allowed.includes(id as string));
+      }
+    }
 
     if (isEmpty(value, question.type)) {
       if (question.required) {

@@ -40,6 +40,7 @@ import { ContentPageSnapshotReaderService } from './application/services/content
 import { PageBlockColumnCleanupService } from './application/services/page-block-column-cleanup.service';
 import { PageBlockFormService } from './application/services/page-block-form.service';
 import { SubmitFormResponseHandler } from './application/commands/form/submit-form-response/submit-form-response.handler';
+import { GetFormStructureHandler } from './application/queries/form/get-form-structure/get-form-structure.handler';
 import { FormController } from './presentation/http/controllers/form.controller';
 import { PageBlockOrderingService } from './application/services/page-block-ordering.service';
 import { PageBlockRowScopeService } from './application/services/page-block-row-scope.service';
@@ -519,6 +520,7 @@ const ports = [
 
   providers: [
     SubmitFormResponseHandler,
+    GetFormStructureHandler,
     ListPagePublicationsHandler,
     UpdatePagePublicationSettingsHandler,
     UpdatePageVisibilityHandler,
