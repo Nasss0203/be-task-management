@@ -93,6 +93,11 @@ export interface PageEmbeddingStore {
   findStored(pageId: string): Promise<StoredPageEmbedding[]>;
   savePage(save: SavePageEmbeddings): Promise<void>;
   removePage(pageId: string): Promise<void>;
+  /** M7 (H3): a live block of that Page, read again for an excerpt. */
+  loadBlock(
+    pageId: string,
+    blockId: string,
+  ): Promise<PageEmbeddingSourceBlock | null>;
   findWorkspaceVectors(
     workspaceId: string,
     model: string,

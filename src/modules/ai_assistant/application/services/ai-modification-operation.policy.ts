@@ -90,10 +90,20 @@ function isFreeData(text: string): boolean {
 // "items": a "checklist gồm" list, which may continue after "và".
 type InsertionClause = 'closed' | 'items';
 
+/**
+ * M8 (kế hoạch ngữ cảnh RAG, I6): with a source named ("… dựa trên trang Bug
+ * tracker"), the words after the inserted object say what to take from it
+ * ("checklist các bug blocker"); they are data, as "checklist gồm …" items.
+ */
+export interface ModificationAdmission {
+  itemsFromSource?: boolean;
+}
+
 function insertionClause(
   part: string,
   allowFreeData: boolean,
   afterItems: boolean,
+  itemsFromSource = false,
 ): InsertionClause | null {
   const clause = part.replace(INSERT, '').trim();
   const object = OBJECT.exec(clause);
@@ -109,6 +119,7 @@ function insertionClause(
   )
     return 'closed';
   if (!allowFreeData) return null;
+  if (itemsFromSource && object && isFreeData(remainder)) return 'closed';
   const objectName = object?.[0].trim() ?? '';
   if (object && LABEL_OBJECT.test(objectName) && isFreeData(remainder))
     return 'closed';
@@ -339,6 +350,7 @@ export function isBareChecklistRequest(
 export function isSupportedModification(
   source: string,
   pageNames: readonly string[] = [],
+  admission: ModificationAdmission = {},
 ): boolean {
   const quotesClosed = dropUnclosedQuotes(source);
   const masked = maskQuotedText(quotesClosed);
@@ -373,7 +385,12 @@ export function isSupportedModification(
   // Arbitrary prose that contains verbs should be explicitly quoted as data.
   let previous: InsertionClause | null = 'closed';
   for (const part of body.split(/\s+(?:va|and|roi|then|sau do)\s+/u)) {
-    previous = insertionClause(part, allowFreeData, previous === 'items');
+    previous = insertionClause(
+      part,
+      allowFreeData,
+      previous === 'items',
+      admission.itemsFromSource,
+    );
     if (!previous) return false;
   }
   return true;
@@ -404,6 +421,7 @@ function withoutPoliteTail(source: string): string {
 export function isSupportedActivityModification(
   source: string,
   instruction: string,
+  admission: ModificationAdmission = {},
 ): boolean {
   const fold = (text: string) =>
     foldInstruction(text).replace(/\s+/gu, ' ').trim();
@@ -414,7 +432,7 @@ export function isSupportedActivityModification(
   if ((target.match(/\b(?:trang|page)\b/gu) ?? []).length !== 1) return false;
   return (
     (ACTIVITY_TARGET_VI.test(target) || ACTIVITY_TARGET_EN.test(target)) &&
-    isSupportedModification(instruction)
+    isSupportedModification(instruction, [], admission)
   );
 }
 
@@ -434,6 +452,7 @@ export function isSupportedDescriptionModification(
   source: string,
   instruction: string,
   description: string,
+  admission: ModificationAdmission = {},
 ): boolean {
   const fold = (text: string) =>
     foldInstruction(text).replace(/\s+/gu, ' ').trim();
@@ -450,7 +469,59 @@ export function isSupportedDescriptionModification(
   ];
   return (
     shapes.some((shape) => new RegExp(shape, 'u').test(text)) &&
-    isSupportedModification(instruction)
+    isSupportedModification(instruction, [], admission)
+  );
+}
+
+/**
+ * M8 (kế hoạch ngữ cảnh RAG, I6): the sentence without "… dựa trên <nguồn>".
+ * The source names what to read, never an edit; the rest passes the usual
+ * admission. Null when the sentence does not end with that source.
+ */
+export function withoutBasedOn(source: string, basedOn: string): string | null {
+  const text = withoutPoliteTail(source).trim();
+  const cue = new RegExp(
+    `\\s*,?\\s+(?:dựa trên|dựa vào|căn cứ vào|theo nội dung(?:\\s+(?:của|trong))?|tham khảo|based on|according to)\\s+${escapeRegExp(basedOn.normalize('NFC').trim())}$`,
+    'iu',
+  );
+  const match = cue.exec(text);
+  return match && match.index > 0 ? text.slice(0, match.index) : null;
+}
+
+// M7 (kế hoạch tìm theo nội dung, H1): "… vào trang có nhắc tới <X>", "Tìm
+// trang có nói về <X> rồi <việc>". The same cues as the AI service's rules.
+const CONTENT_CUE_VI =
+  '(?:co noi ve|co nhac toi|co nhac den|co nhac|co ghi(?! chu\\b)|co chua|chua|co noi dung|co doan(?: noi ve)?)';
+const CONTENT_CUE_EN =
+  '(?:that mentions|that talks about|that contains|mentioning|containing)';
+
+/**
+ * The sentence is exactly the edit clause and "trang <cue> <X>", or "tìm
+ * trang <cue> <X>" then the edit. The words name the Page, never an edit;
+ * the edit clause passes the usual admission.
+ */
+export function isSupportedContentModification(
+  source: string,
+  instruction: string,
+  topic: string,
+  admission: ModificationAdmission = {},
+): boolean {
+  const fold = (text: string) =>
+    foldInstruction(text).replace(/\s+/gu, ' ').trim();
+  const text = fold(withoutPoliteTail(source));
+  const edit = escapeRegExp(fold(withoutPoliteTail(instruction)));
+  const words = fold(topic);
+  if (!edit || !words || /\b(?:trang|page)\b/u.test(words)) return false;
+  const what = escapeRegExp(words);
+  const shapes = [
+    `^${edit} (?:vao|trong|o|tren|tai|cho) (?:trang|page) ${CONTENT_CUE_VI} ${what}$`,
+    `^(?:(?:hay|ban hay|giup toi|giup minh) )?tim (?:(?:mot|1|cai) )?(?:trang|page) (?:nao )?${CONTENT_CUE_VI} ${what}(?: ?[,;:] ?(?:(?:roi|sau do|xong) )?| (?:roi|sau do) )${edit}$`,
+    `^${edit} (?:to|in|on|into) the page ${CONTENT_CUE_EN} ${what}$`,
+    `^(?:please )?find the page ${CONTENT_CUE_EN} ${what}(?: ?[,;:] ?(?:then )?| (?:and then|then|and) )${edit}$`,
+  ];
+  return (
+    shapes.some((shape) => new RegExp(shape, 'u').test(text)) &&
+    isSupportedModification(instruction, [], admission)
   );
 }
 

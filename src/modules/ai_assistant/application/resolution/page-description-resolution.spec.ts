@@ -40,6 +40,7 @@ const match = (candidate: PageResolutionCandidate, score: number) => ({
   page: candidate,
   score,
   blockId: null,
+  excerpt: null,
 });
 const describedIntent = {
   intent: 'MODIFY_PAGE' as const,

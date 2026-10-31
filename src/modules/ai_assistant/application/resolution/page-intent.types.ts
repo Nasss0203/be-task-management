@@ -23,6 +23,8 @@ export interface PageScope {
 export type PageIntentExtraction =
   | {
       intent: 'MODIFY_PAGE';
+      /** M8: the source the user named ("dựa trên …"), in their own words. */
+      basedOn?: string;
       referenceType: 'TITLE' | 'CURRENT_PAGE' | 'UNRESOLVED';
       pageReference: string | null;
       instruction: string;
@@ -33,6 +35,8 @@ export type PageIntentExtraction =
   | {
       // Only the AI service's rules return it; the user always confirms the Page.
       intent: 'MODIFY_PAGE';
+      /** M8: the source the user named ("dựa trên …"), in their own words. */
+      basedOn?: string;
       referenceType: 'ACTIVITY';
       pageReference: null;
       instruction: string;
@@ -42,12 +46,26 @@ export type PageIntentExtraction =
   | {
       // M6: only the AI service's rules return it; the user always picks the Page.
       intent: 'MODIFY_PAGE';
+      /** M8: the source the user named ("dựa trên …"), in their own words. */
+      basedOn?: string;
       referenceType: 'DESCRIPTION';
       pageReference: null;
       instruction: string;
       needsClarification: false;
       /** What the Page is for, in the user's own words. */
       description: string;
+    }
+  | {
+      // M7: only the AI service's rules return it; the user always picks the Page.
+      intent: 'MODIFY_PAGE';
+      /** M8: the source the user named ("dựa trên …"), in their own words. */
+      basedOn?: string;
+      referenceType: 'CONTENT';
+      pageReference: null;
+      instruction: string;
+      needsClarification: false;
+      /** Words inside the Page, in the user's own words. */
+      topic: string;
     }
   | {
       intent: 'OTHER' | 'UNCLEAR';

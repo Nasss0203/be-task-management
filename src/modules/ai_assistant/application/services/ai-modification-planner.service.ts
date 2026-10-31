@@ -1,3 +1,7 @@
+import type {
+  PlanReference,
+  PlanSource,
+} from '../embedding/page-source-references.service';
 import {
   BadGatewayException,
   BadRequestException,
@@ -45,6 +49,10 @@ export interface GenerateAiModificationPlanParams {
   originalInstruction?: string;
   conversationId?: string;
   shareToken?: string;
+  /** M8 (I4): passages of other Pages the user named as the source. */
+  references?: PlanReference[];
+  /** M8 (I7): the Pages they came from, kept with the draft. */
+  sources?: PlanSource[];
 }
 
 export type GenerateAiModificationPlanResult = AiModificationPlan & {
@@ -90,7 +98,12 @@ export class AiModificationPlannerService {
       );
     }
 
-    if (!isSupportedModification(params.instruction)) {
+    // M8 (I6): what to take from a named source is data, as in the planner.
+    if (
+      !isSupportedModification(params.instruction, [], {
+        itemsFromSource: !!params.references?.length,
+      })
+    ) {
       throw new UnprocessableEntityException({
         status: 'UNSUPPORTED_OPERATION',
         message: 'Unsupported AI modification operation',
@@ -169,6 +182,7 @@ export class AiModificationPlannerService {
               instruction: params.instruction,
               requestId: params.requestId,
               pageContextFingerprint: fingerprintAiPageContext(pageContext),
+              ...(params.sources?.length ? { sources: params.sources } : {}),
             },
           }),
           context,
@@ -199,7 +213,9 @@ export class AiModificationPlannerService {
         requestId: params.requestId,
         capability: AI_MODIFICATION_PLAN_CAPABILITY,
         content: params.instruction,
-        input: {},
+        input: params.references?.length
+          ? { references: params.references }
+          : {},
         context: { ...pageContext },
       });
       const validatedPlan = this.planValidator.validate(

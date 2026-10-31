@@ -4,6 +4,7 @@ import { DataSource } from 'typeorm';
 import type {
   EmbeddingResourceType,
   PageEmbeddingSource,
+  PageEmbeddingSourceBlock,
   PageEmbeddingStore,
   SavePageEmbeddings,
   StoredPageEmbedding,
@@ -188,6 +189,20 @@ export class PageEmbeddingSqlStore implements PageEmbeddingStore {
         pageId,
       ]);
     });
+  }
+
+  async loadBlock(
+    pageId: string,
+    blockId: string,
+  ): Promise<PageEmbeddingSourceBlock | null> {
+    // The block must still belong to that Page: a vector may be older.
+    const [block] = await this.dataSource.query<PageEmbeddingSourceBlock[]>(
+      `SELECT id, type::text AS type, title, content
+       FROM page_blocks
+       WHERE id = $1 AND page_id = $2 AND deleted_at IS NULL`,
+      [blockId, pageId],
+    );
+    return block ?? null;
   }
 
   async findWorkspaceVectors(

@@ -15,6 +15,11 @@ export interface PageResolutionCandidate {
   title: string;
   parentPageId: string | null;
   teamspaceId: string | null;
+  /**
+   * M7 (H3): words of the block that matched, for SEMANTIC and CONTENT
+   * choices only; read after the Page passed the access check.
+   */
+  excerpt?: string;
 }
 
 export type PageResolutionResult =

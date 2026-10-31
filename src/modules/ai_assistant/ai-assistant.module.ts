@@ -70,6 +70,7 @@ import { PageIntentExtractionService } from './application/resolution/page-inten
 import { AiPageInstructionPlannerService } from './application/services/ai-page-instruction-planner.service';
 import { PageEmbeddingIndexer } from './application/embedding/page-embedding-indexer.service';
 import { PageEmbeddingSearch } from './application/embedding/page-embedding-search.service';
+import { PageSourceReferences } from './application/embedding/page-source-references.service';
 import { PageEmbeddingSqlStore } from './infrastructure/embedding/page-embedding.store';
 
 @Module({
@@ -122,6 +123,7 @@ import { PageEmbeddingSqlStore } from './infrastructure/embedding/page-embedding
     AiPageInstructionPlannerService,
     PageEmbeddingIndexer,
     PageEmbeddingSearch,
+    PageSourceReferences,
 
     AiAssistantService,
     {

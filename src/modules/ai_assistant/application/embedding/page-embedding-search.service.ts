@@ -11,6 +11,8 @@ import type { Page } from 'src/modules/content/domain/aggregates/page/page.aggre
 import { AI_ASSISTANT_TYPES } from '../../ai-assistant.types';
 import type { PageResolutionCandidate } from '../resolution/page-resolution.types';
 import { AiConversationAccessService } from '../services/ai-conversation-access.service';
+import { DESCRIBED_PAGE_MIN_SCORE } from './described-page-candidates';
+import { blockText, excerptOf } from './page-embedding-chunks';
 import {
   MAX_EMBEDDING_TEXT_LENGTH,
   VECTORS_PER_WORKSPACE_WARNING,
@@ -37,6 +39,25 @@ export interface PageEmbeddingMatch {
   score: number;
   /** The block that matched best, when it was a block. */
   blockId: string | null;
+  /** M7 (H3): that block's words, cut short; null for a title match. */
+  excerpt: string | null;
+}
+
+export interface PagePassageSearchInput {
+  userId: string;
+  workspaceId: string;
+  query: string;
+  /** The Page being edited: its text is already in the planner's context. */
+  excludePageId: string;
+  limit: number;
+  perPage: number;
+}
+
+export interface PagePassage {
+  pageId: string;
+  title: string;
+  text: string;
+  score: number;
 }
 
 const DEFAULT_LIMIT = 5;
@@ -80,7 +101,10 @@ export class PageEmbeddingSearch {
         `page_embedding_search_large workspace=${input.workspaceId} vectors=${rows.length}`,
       );
 
-    const best = new Map<string, Omit<PageEmbeddingMatch, 'page'>>();
+    const best = new Map<
+      string,
+      Omit<PageEmbeddingMatch, 'page' | 'excerpt'>
+    >();
     for (const row of rows) {
       if (row.embedding.length !== vector.length) continue;
       const score = dot(vector, row.embedding);
@@ -101,6 +125,8 @@ export class PageEmbeddingSearch {
       if (page)
         matches.push({
           ...match,
+          // Read only now: the Page passed the access check above.
+          excerpt: await this.excerpt(match.pageId, match.blockId),
           page: {
             pageId: page.getId(),
             workspaceId: page.getWorkspaceId(),
@@ -114,8 +140,74 @@ export class PageEmbeddingSearch {
     return matches;
   }
 
+  /**
+   * M8 (I3): the blocks closest to a sentence, best first, not grouped by
+   * Page; each Page is checked for the user before any block of it is read.
+   */
+  async searchPassages(input: PagePassageSearchInput): Promise<PagePassage[]> {
+    const query = input.query
+      .normalize('NFC')
+      .replace(/\s+/gu, ' ')
+      .trim()
+      .slice(0, MAX_EMBEDDING_TEXT_LENGTH);
+    if (!query) return [];
+    const { model, embeddings } = await this.embedder.embed('query', [query]);
+    const [vector] = embeddings;
+    const rows = await this.store.findWorkspaceVectors(
+      input.workspaceId,
+      model,
+      'BLOCK',
+    );
+    const ranked = rows
+      .filter(
+        (row) =>
+          row.blockId &&
+          row.pageId !== input.excludePageId &&
+          row.embedding.length === vector.length,
+      )
+      .map((row) => ({ row, score: dot(vector, row.embedding) }))
+      .filter(({ score }) => score >= DESCRIBED_PAGE_MIN_SCORE)
+      .sort((a, b) => b.score - a.score);
+
+    const pages = new Map<string, Page | null>();
+    const perPage = new Map<string, number>();
+    const passages: PagePassage[] = [];
+    for (const { row, score } of ranked) {
+      if (passages.length === input.limit) break;
+      if ((perPage.get(row.pageId) ?? 0) >= input.perPage) continue;
+      if (!pages.has(row.pageId)) {
+        if (pages.size === MAX_ACCESS_CHECKS) break;
+        pages.set(row.pageId, await this.readablePage(input, row.pageId));
+      }
+      const page = pages.get(row.pageId);
+      if (!page) continue;
+      // Read only now: the Page passed the access check above.
+      const block = await this.store.loadBlock(row.pageId, row.blockId!);
+      const text = block ? blockText(block) : '';
+      if (!text) continue;
+      perPage.set(row.pageId, (perPage.get(row.pageId) ?? 0) + 1);
+      passages.push({
+        pageId: row.pageId,
+        title: page.getTitle(),
+        text,
+        score,
+      });
+    }
+    return passages;
+  }
+
+  private async excerpt(
+    pageId: string,
+    blockId: string | null,
+  ): Promise<string | null> {
+    if (!blockId) return null;
+    const block = await this.store.loadBlock(pageId, blockId);
+    const text = block ? blockText(block) : '';
+    return text ? excerptOf(text) : null;
+  }
+
   private async readablePage(
-    input: PageEmbeddingSearchInput,
+    input: { userId: string; workspaceId: string; shareToken?: string },
     pageId: string,
   ): Promise<Page | null> {
     try {

@@ -10,6 +10,7 @@ import type {
 // its own rows, split into pieces the embedding model reads whole.
 export const PAGE_TEXT_LIMIT = 1000;
 export const BLOCK_CHUNK_LIMIT = 1500;
+export const EXCERPT_LIMIT = 160;
 
 export interface PageEmbeddingChunk {
   resourceType: EmbeddingResourceType;
@@ -50,7 +51,7 @@ export function buildPageEmbeddingChunks(
   return chunks;
 }
 
-function blockText(block: PageEmbeddingSourceBlock): string {
+export function blockText(block: PageEmbeddingSourceBlock): string {
   const content =
     block.content && typeof block.content === 'object'
       ? (block.content as Record<string, unknown>)
@@ -68,6 +69,15 @@ function joinParts(parts: unknown[]): string {
 
 function normalize(text: string): string {
   return text.normalize('NFC').replace(/\s+/gu, ' ').trim();
+}
+
+/** M7 (H3): at most `limit` characters, cut between words. */
+export function excerptOf(text: string, limit = EXCERPT_LIMIT): string {
+  const flat = text.replace(/\s+/gu, ' ').trim();
+  if (flat.length <= limit) return flat;
+  const cut = flat.slice(0, limit - 1);
+  const space = cut.lastIndexOf(' ');
+  return `${(space > limit / 2 ? cut.slice(0, space) : cut).trimEnd()}…`;
 }
 
 /** Pieces of at most BLOCK_CHUNK_LIMIT, cut after a sentence when possible. */

@@ -13,6 +13,7 @@ import {
   BLOCK_CHUNK_LIMIT,
   buildPageEmbeddingChunks,
   embeddingBatches,
+  excerptOf,
   splitText,
 } from './page-embedding-chunks';
 import { PageEmbeddingIndexer } from './page-embedding-indexer.service';
@@ -150,6 +151,7 @@ describe('PageEmbeddingIndexer (F5)', () => {
       findStored: jest.fn().mockResolvedValue([]),
       savePage: jest.fn().mockResolvedValue(undefined),
       removePage: jest.fn().mockResolvedValue(undefined),
+      loadBlock: jest.fn(),
       findWorkspaceVectors: jest.fn(),
     };
     embed = jest.fn((_kind: string, texts: string[]) =>
@@ -313,10 +315,11 @@ describe('PageEmbeddingSearch (F7)', () => {
     teamspaceId: null,
   });
   const findWorkspaceVectors = jest.fn();
+  const loadBlock = jest.fn();
   const embed = jest.fn();
   const getReadablePage = jest.fn();
   const search = new PageEmbeddingSearch(
-    { findWorkspaceVectors } as unknown as PageEmbeddingStore,
+    { findWorkspaceVectors, loadBlock } as unknown as PageEmbeddingStore,
     { embed } as TextEmbedder,
     { getReadablePage } as unknown as AiConversationAccessService,
   );
@@ -333,6 +336,13 @@ describe('PageEmbeddingSearch (F7)', () => {
       dimensions: 2,
       embeddings: [[1, 0]],
     });
+    loadBlock.mockImplementation((pageId: string, blockId: string) =>
+      Promise.resolve(
+        pageId === 'auth' && blockId === 'b1'
+          ? block('b1', 'TODO', 'Implement OAuth login with Google')
+          : null,
+      ),
+    );
     findWorkspaceVectors.mockResolvedValue([
       {
         pageId: 'auth',
@@ -391,15 +401,20 @@ describe('PageEmbeddingSearch (F7)', () => {
         pageId: 'auth',
         score: 0.9,
         blockId: 'b1',
+        excerpt: 'Implement OAuth login with Google',
         page: { ...readable('auth'), title: 'Title auth' },
       },
       {
         pageId: 'recipes',
         score: 0.1,
         blockId: null,
+        excerpt: null,
         page: readable('recipes'),
       },
     ]);
+    // M7 (H3): only the readable Page's own block is read back.
+    expect(loadBlock).toHaveBeenCalledTimes(1);
+    expect(loadBlock).toHaveBeenCalledWith('auth', 'b1');
     expect(embed).toHaveBeenCalledWith('query', ['trang nói về OAuth']);
     expect(findWorkspaceVectors).toHaveBeenCalledWith(
       'workspace-1',
@@ -476,5 +491,17 @@ describe('FastApiAiRuntimeAdapter.embed (F6)', () => {
     await expect(
       setup(data).adapter.embed('document', ['a', 'b']),
     ).rejects.toBeInstanceOf(BadGatewayException);
+  });
+});
+
+describe('excerptOf (M7, H3)', () => {
+  it('keeps short text and cuts long text between words', () => {
+    expect(excerptOf('  Implement   OAuth login ')).toBe(
+      'Implement OAuth login',
+    );
+    const long = `${'word '.repeat(50)}end`;
+    const cut = excerptOf(long);
+    expect(cut.length).toBeLessThanOrEqual(160);
+    expect(cut.endsWith('word…')).toBe(true);
   });
 });

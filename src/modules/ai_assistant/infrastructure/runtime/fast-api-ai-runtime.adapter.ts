@@ -77,6 +77,8 @@ interface FastApiPageCompositionResponse {
 interface FastApiModificationPlannerRequest {
   instruction: string;
   context: Record<string, unknown>;
+  /** M8 (I4): passages of other Pages, read only; only when there are any. */
+  references?: unknown[];
 }
 
 interface FastApiModificationPlannerResponse {
@@ -123,7 +125,7 @@ function isPageScope(value: unknown, instruction: string): boolean {
   );
 }
 
-/** M6: the description is the user's own words, never invented by the service. */
+/** M6 / M7: a description or topic is the user's own words, never invented. */
 function isPageDescription(value: unknown, instruction: string): boolean {
   return (
     typeof value === 'string' &&
@@ -164,6 +166,17 @@ function isPageActivity(value: unknown, instruction: string): boolean {
   );
 }
 
+const AI_RETRY_DELAY_MS = 1500;
+
+/** No answer at all, or the AI service's own 503 (Ollama unavailable). */
+function isBrieflyUnavailable(error: unknown): boolean {
+  return (
+    error instanceof ServiceUnavailableException ||
+    (error instanceof BadGatewayException &&
+      error.message === 'AI service returned HTTP 503')
+  );
+}
+
 @Injectable()
 export class FastApiAiRuntimeAdapter
   implements AiRuntimePort, PageIntentExtractor, AiIntentPort, TextEmbedder
@@ -174,7 +187,10 @@ export class FastApiAiRuntimeAdapter
   ) {}
 
   async classify(request: AiIntentRequest): Promise<AiIntentResult> {
-    const raw = await this.post<unknown>('/internal/v1/intent', request);
+    const raw = await this.postRetryingOnce<unknown>(
+      '/internal/v1/intent',
+      request,
+    );
     const invalid = () =>
       new BadGatewayException('AI service returned an invalid response');
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw invalid();
@@ -218,10 +234,10 @@ export class FastApiAiRuntimeAdapter
 
   /** M5 (F6): one unit vector per text; anything else is refused whole. */
   async embed(kind: EmbeddingKind, texts: string[]): Promise<EmbeddingBatch> {
-    const raw: unknown = await this.post<unknown>('/internal/v1/embeddings', {
-      kind,
-      texts,
-    });
+    const raw: unknown = await this.postRetryingOnce<unknown>(
+      '/internal/v1/embeddings',
+      { kind, texts },
+    );
     const invalid = () =>
       new BadGatewayException('AI service returned an invalid response');
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw invalid();
@@ -257,7 +273,7 @@ export class FastApiAiRuntimeAdapter
     instruction: string,
     currentPageId?: string,
   ): Promise<PageIntentResult> {
-    const raw: unknown = await this.post<unknown>(
+    const raw: unknown = await this.postRetryingOnce<unknown>(
       '/internal/v1/page-intent',
       { instruction, ...(currentPageId ? { currentPageId } : {}) },
     );
@@ -274,9 +290,11 @@ export class FastApiAiRuntimeAdapter
     ) {
       throw new BadGatewayException('AI service returned an invalid response');
     }
-    const result = value as Record<string, unknown>;
+    // M8: any edit may also carry "basedOn", the source the user named.
+    const { basedOn, ...result } = value as Record<string, unknown>;
     // M2: only an ACTIVITY result carries the sixth key, "activity"; M4: only
-    // a TITLE result may carry "scope"; M6: only a DESCRIPTION, "description".
+    // a TITLE result may carry "scope"; M6: only a DESCRIPTION, "description";
+    // M7: only a CONTENT result, "topic".
     const keys = Object.keys(result).sort().join(',');
     const base =
       'instruction,intent,needsClarification,pageReference,referenceType';
@@ -285,7 +303,9 @@ export class FastApiAiRuntimeAdapter
         ? keys === `activity,${base}`
         : result.referenceType === 'DESCRIPTION'
           ? keys === `description,${base}`
-          : keys === base ||
+          : result.referenceType === 'CONTENT'
+            ? keys === `${base},topic`
+            : keys === base ||
             (result.referenceType === 'TITLE' && keys === `${base},scope`);
     const intent = result.intent;
     const referenceType = result.referenceType;
@@ -319,6 +339,12 @@ export class FastApiAiRuntimeAdapter
           pageReference === null &&
           needsClarification === false &&
           isPageDescription(result.description, instruction);
+      } else if (referenceType === 'CONTENT') {
+        valid =
+          valid &&
+          pageReference === null &&
+          needsClarification === false &&
+          isPageDescription(result.topic, instruction);
       } else {
         valid = false;
       }
@@ -328,6 +354,10 @@ export class FastApiAiRuntimeAdapter
     } else {
       valid = false;
     }
+    valid =
+      valid &&
+      (basedOn === undefined ||
+        (intent === 'MODIFY_PAGE' && isPageDescription(basedOn, instruction)));
     if (!valid) {
       throw new BadGatewayException('AI service returned an invalid response');
     }
@@ -444,9 +474,13 @@ export class FastApiAiRuntimeAdapter
       throw new BadRequestException('AI modification plan context is required');
     }
 
+    const references = request.input.references;
     const payload: FastApiModificationPlannerRequest = {
       instruction: request.content,
       context: request.context,
+      ...(Array.isArray(references) && references.length
+        ? { references }
+        : {}),
     };
 
     const response = await this.post<FastApiModificationPlannerResponse>(
@@ -468,6 +502,25 @@ export class FastApiAiRuntimeAdapter
       model: response.model,
       ...this.mapUsage(response),
     };
+  }
+
+  /**
+   * Cheap calls that change nothing (intent, page intent, embeddings) are
+   * tried once more when the AI service is briefly unavailable: Ollama fails
+   * while it reloads a model or runs short of memory. Drafts are never
+   * retried, since each costs a full model run.
+   */
+  private async postRetryingOnce<TResponse>(
+    path: string,
+    payload: unknown,
+  ): Promise<TResponse> {
+    try {
+      return await this.post<TResponse>(path, payload);
+    } catch (error) {
+      if (!isBrieflyUnavailable(error)) throw error;
+      await new Promise((resolve) => setTimeout(resolve, AI_RETRY_DELAY_MS));
+      return this.post<TResponse>(path, payload);
+    }
   }
 
   private async post<TResponse>(
