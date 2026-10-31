@@ -8,9 +8,11 @@ import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/r
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
+import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { AddDatabaseViewToBlockCommand } from './add-database-view-to-block.command';
+import type { PageActivityRecorder } from 'src/modules/content/application/ports/page-activity-recorder.port';
 
 @Injectable()
 export class AddDatabaseViewToBlockHandler {
@@ -20,6 +22,10 @@ export class AddDatabaseViewToBlockHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+    @Inject(CONTENT_TYPES.repositories.PageRepository)
+    private readonly pageRepo: PageRepository,
+    @Inject(CONTENT_TYPES.ports.PageActivityRecorder)
+    private readonly activity: PageActivityRecorder,
   ) {}
 
   async execute(
@@ -48,6 +54,16 @@ export class AddDatabaseViewToBlockHandler {
 
       const updatedBlock = await this.pageBlockRepo.save(block, context);
 
+      await this.pageRepo.touch(block.getPageId(), context);
+      await this.activity.record(
+        {
+          actorId: command.actorId,
+          pageId: block.getPageId(),
+          blockId: block.getId(),
+          action: 'PAGE_BLOCK_CREATED',
+        },
+        context,
+      );
       return PageBlockResponseDto.fromDomain(updatedBlock);
     });
   }

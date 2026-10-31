@@ -289,8 +289,14 @@ export class PageController {
   @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
   @RequirePermissions(PERMISSIONS.PAGE_UPDATE)
   @ResponseMessage('Update page')
-  updatePage(@Param('pageId') pageId: string, @Body() dto: UpdatePageDto) {
-    return this.updatePageHandler.execute(new UpdatePageCommand(pageId, dto));
+  updatePage(
+    @Param('pageId') pageId: string,
+    @Body() dto: UpdatePageDto,
+    @Auth() auth: IAuth,
+  ) {
+    return this.updatePageHandler.execute(
+      new UpdatePageCommand(pageId, dto, auth.id),
+    );
   }
 
   @Put(':pageId/preset')

@@ -21,6 +21,8 @@ import { AiConversationAccessService } from './ai-conversation-access.service';
 import { AiPageInstructionPlannerService } from './ai-page-instruction-planner.service';
 import { resolveWritingSource } from './ai-writing-source';
 import type { PageInstructionPlanningResult } from '../resolution/page-instruction-planning.types';
+import type { UnsupportedModificationDetail } from './ai-modification-operation.policy';
+import { foldInstruction } from './ai-instruction-evidence';
 
 /** Chat nhiều lượt: the draft lives in another conversation than the one sent. */
 function conversationSwitch(
@@ -30,17 +32,124 @@ function conversationSwitch(
   return sent && sent !== used ? { conversationSwitched: true } : {};
 }
 
+/** Names what was refused, so the user knows how to rephrase (kế hoạch sửa nhỏ, D3). */
+function unsupportedMessage(detail?: UnsupportedModificationDetail): string {
+  switch (detail?.kind) {
+    case 'BLOCKED_WORD':
+      return detail.pageAction
+        ? `Hiện tại AI chưa làm được "${detail.term}": AI chỉ thay đổi nội dung bên trong trang.`
+        : `Hiện tại AI chưa làm được "${detail.term}". Nếu "${detail.term}" là nội dung cần thêm hoặc chữ mới, hãy đặt nó trong ngoặc kép.`;
+
+    case 'PUNCTUATION':
+      return `Hãy viết yêu cầu thành một câu lệnh, không dùng dấu "${detail.term}".`;
+
+    case 'MIXED':
+      return 'Mỗi câu chỉ một loại việc: hãy gửi riêng từng yêu cầu.';
+
+    case 'BULK':
+      return 'AI chỉ xoá từng block được nêu tên (tối đa 10 block mỗi câu), không xoá hàng loạt.';
+
+    default:
+      return 'Hiện tại AI chỉ thêm block, thêm dòng database, tích / bỏ tích to-do, sửa chữ hoặc xoá block có chữ. Mỗi câu chỉ một loại việc, hãy gửi từng yêu cầu riêng.';
+  }
+}
+
+/**
+ * M7 (H5): "tìm trang có nói về X" / "trang nào có nhắc tới X" without an
+ * edit only asks where something is; the reply says how to add the edit.
+ */
+function isFindOnlyRequest(instruction: string): boolean {
+  const text = foldInstruction(instruction).replace(/\s+/gu, ' ').trim();
+  return (
+    /^(?:(?:hay|ban hay|giup toi|giup minh) )?(?:tim (?:(?:mot|1|cai) )?(?:trang|page)|(?:trang|page) nao) (?:nao )?(?:co noi ve|co nhac|co chua|chua|co ghi|noi ve)\b/u.test(
+      text,
+    ) || /^(?:please )?(?:find|which) (?:the )?page\b/u.test(text)
+  );
+}
+
+/** M2: "bạn sửa hôm qua", "bạn sửa gần đây nhất có "release" trong tên". */
+function activityLabel(
+  intent: PageInstructionPlanningResult['intent'],
+): string | null {
+  if (intent?.referenceType !== 'ACTIVITY') return null;
+  const { relative, days, titleHint } = intent.activity;
+  const when = {
+    LATEST: 'gần đây nhất',
+    TODAY: 'hôm nay',
+    YESTERDAY: 'hôm qua',
+    N_DAYS_AGO: `${days} ngày trước`,
+    LAST_WEEK: 'tuần trước',
+    RECENT: 'gần đây',
+  }[relative];
+  return `bạn sửa ${when}${titleHint ? ` có "${titleHint}" trong tên` : ''}`;
+}
+
 /** Tells the user what went wrong finding the Page and how to phrase a retry. */
 function pageResolutionMessage(
   planning: PageInstructionPlanningResult,
 ): string {
   const name = planning.intent?.pageReference?.trim();
+  const activity = activityLabel(planning.intent);
   switch (planning.status) {
     case 'PAGE_NOT_FOUND':
+      if (activity)
+        return `Không thấy trang nào ${activity} mà bạn còn quyền truy cập. Hãy ghi tên trang, ví dụ: thêm checklist vào trang "Kế hoạch Q4".`;
+      if (planning.intent?.referenceType === 'CONTENT')
+        return `Không tìm thấy trang nào có nhắc tới "${planning.intent.topic}" mà bạn có quyền truy cập. Hãy ghi tên trang, ví dụ: thêm checklist vào trang "Kế hoạch Q4".`;
+      if (planning.intent?.referenceType === 'DESCRIPTION')
+        return `Không tìm thấy trang nào gần với mô tả "${planning.intent.description}" mà bạn có quyền truy cập. Hãy ghi tên trang, ví dụ: thêm checklist vào trang "Kế hoạch Q4".`;
       return name
         ? `Không tìm thấy trang "${name}" mà bạn có quyền truy cập trong workspace này. Kiểm tra lại tên trang.`
         : 'Không tìm thấy trang mà bạn có quyền truy cập trong workspace này. Kiểm tra lại tên trang.';
     case 'AMBIGUOUS_PAGE':
+      // M2: always confirmed, even a single Page.
+      if (planning.resolutionMethod === 'ACTIVITY' && activity) {
+        return planning.candidates.length === 1
+          ? `Trang ${activity} là "${planning.candidates[0].title}". Chọn trang để tiếp tục:`
+          : `Các trang ${activity}. Chọn một trang:`;
+      }
+      // M4: no Page with the title is in the place the user named.
+      if (
+        planning.scopeUnmatched &&
+        planning.intent.referenceType === 'TITLE'
+      ) {
+        const scope = planning.intent.scope;
+        const place = scope?.parentTitle
+          ? `"${scope.parentTitle}"`
+          : `teamspace "${scope?.teamspaceName ?? ''}"`;
+        return `Không có trang "${name}" nào trong ${place}. Chọn một trang:`;
+      }
+      // M7: Pages whose text holds the words, always picked by the user.
+      if (
+        planning.resolutionMethod === 'CONTENT' &&
+        planning.intent.referenceType === 'CONTENT'
+      ) {
+        const topic = planning.intent.topic;
+        return planning.candidates.length === 1
+          ? `Trang có nhắc tới "${topic}" là "${planning.candidates[0].title}". Chọn trang để tiếp tục:`
+          : `Các trang có nhắc tới "${topic}". Chọn một trang:`;
+      }
+      // M6: Pages close to a description, always picked by the user.
+      if (planning.resolutionMethod === 'SEMANTIC') {
+        const described =
+          planning.intent.referenceType === 'DESCRIPTION'
+            ? planning.intent.description
+            : name;
+        const typed =
+          planning.intent.referenceType === 'DESCRIPTION'
+            ? ''
+            : 'Không có trang nào tên như vậy. ';
+        return planning.candidates.length === 1
+          ? `${typed}Trang gần với mô tả "${described}" là "${planning.candidates[0].title}". Chọn trang để tiếp tục:`
+          : `${typed}Các trang gần với mô tả "${described}". Chọn một trang:`;
+      }
+      // M3: the typed name matched nothing; close titles need a choice.
+      if (planning.resolutionMethod === 'FUZZY_TITLE') {
+        const typed = name ? `Không có trang "${name}". ` : '';
+        return planning.candidates.length === 1
+          ? `${typed}Ý bạn là trang "${planning.candidates[0].title}"? Chọn trang để tiếp tục:`
+          : `${typed}Có phải một trong các trang này? Chọn một trang:`;
+      }
       if (planning.resolutionMethod === 'TITLE_IN_SENTENCE') {
         return planning.candidates.length === 1
           ? `Ý bạn là trang "${planning.candidates[0].title}"? Chọn trang để tiếp tục:`
@@ -50,8 +159,16 @@ function pageResolutionMessage(
         ? `Có nhiều trang tên "${name}". Chọn trang bạn muốn sửa:`
         : 'Có nhiều trang trùng tên. Chọn trang bạn muốn sửa:';
     case 'UNSUPPORTED_OPERATION':
-      return 'Hiện tại chỉ hỗ trợ thêm block hoặc thêm dòng database.';
+      return unsupportedMessage(planning.detail);
     case 'NEEDS_CLARIFICATION':
+      if (planning.reason === 'MISSING_SOURCE') {
+        const intent = planning.intent;
+        const source =
+          intent?.intent === 'MODIFY_PAGE' ? (intent.basedOn ?? '') : '';
+        return `Không tìm thấy nội dung nào về "${source}" mà bạn có quyền xem. Hãy ghi tên trang nguồn, ví dụ: … dựa trên trang "Bug tracker".`;
+      }
+      if (planning.reason === 'MISSING_CHECKLIST_ITEMS')
+        return `Checklist gồm những mục nào? Gửi lại cả câu kèm các mục, ví dụ: thêm checklist gồm in tài liệu, đặt phòng vào trang "${planning.pageTitle || name || 'Kế hoạch Q4'}".`;
       return planning.reason === 'UNCLEAR_INTENT'
         ? 'Bạn muốn thay đổi gì trên trang? Hãy mô tả rõ nội dung cần thêm.'
         : 'Bạn muốn sửa trang nào? Ghi tên trang trong ngoặc kép, ví dụ: Thêm checklist vào trang "Kế hoạch Q4".';
@@ -169,7 +286,9 @@ export class AiAskService {
       return business(
         'UNSUPPORTED_REQUEST',
         'M0_CAPABILITY_UNAVAILABLE',
-        'Yêu cầu này chưa được hỗ trợ trong phiên bản hiện tại.',
+        isFindOnlyRequest(input.instruction)
+          ? 'AI chưa trả lời câu chỉ tìm trang. Hãy ghi thêm việc cần làm, ví dụ: tìm trang có nói về OAuth rồi thêm checklist gồm test, review.'
+          : 'Yêu cầu này chưa được hỗ trợ trong phiên bản hiện tại.',
       );
     if (result.intent === 'MODIFY_PAGE') {
       // Admission is checked by the planner: only it knows which words are

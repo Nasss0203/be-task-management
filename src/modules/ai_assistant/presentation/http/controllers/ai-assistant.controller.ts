@@ -26,6 +26,9 @@ import { CreateConversationCommand } from '../../../application/commands/create-
 import { CreateConversationHandler } from '../../../application/commands/create-conversation/create-conversation.handler';
 import { DiscardGenerationCommand } from '../../../application/commands/discard-generation/discard-generation.command';
 import { DiscardGenerationHandler } from '../../../application/commands/discard-generation/discard-generation.handler';
+import { UndoAiModificationPlanCommand } from '../../../application/commands/undo-ai-modification-plan/undo-ai-modification-plan.command';
+
+import { UndoAiModificationPlanHandler } from '../../../application/commands/undo-ai-modification-plan/undo-ai-modification-plan.handler';
 
 import { ConfirmPageCompositionRequestDto } from '../../../application/dto/request/confirm-page-composition.request.dto';
 import { CreateAiConversationRequestDto } from '../../../application/dto/request/create-ai-conversation.request.dto';
@@ -76,6 +79,7 @@ export class AiAssistantController {
     private readonly pageIntentExtractionService: PageIntentExtractionService,
     private readonly aiPageInstructionPlannerService: AiPageInstructionPlannerService,
     private readonly aiAskService: AiAskService,
+    private readonly undoAiModificationPlanHandler: UndoAiModificationPlanHandler,
   ) {}
 
   @Post('ask')
@@ -308,6 +312,20 @@ export class AiAssistantController {
         dto.parentPageId ?? null,
         shareToken,
       ),
+    );
+  }
+
+  /** Restores the blocks an applied AI delete removed (kế hoạch xoá block, D5). */
+  @Post('generations/:generationId/undo')
+  @WriteRateLimit()
+  @ResponseMessage('AI changes undone')
+  undoGeneration(
+    @Auth() auth: IAuth,
+    @Param('generationId') generationId: string,
+    @Query('shareToken') shareToken?: string,
+  ) {
+    return this.undoAiModificationPlanHandler.execute(
+      new UndoAiModificationPlanCommand(auth.id, generationId, shareToken),
     );
   }
 

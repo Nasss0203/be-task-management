@@ -42,12 +42,21 @@ describe('Ask -> Page Intent -> authorized resolver -> draft planner', () => {
     const findAccessibleByExactTitle = jest
       .fn()
       .mockResolvedValue([pages.get('q4')]);
-    // M1b sentence matching reads the same scoped list as the exact lookup.
-    const findAccessibleInWorkspace = jest
-      .fn()
-      .mockImplementation((): unknown => findAccessibleByExactTitle());
+    // M1b sentence matching reads ids and titles of the same scoped list.
+    const findAccessibleTitlesInWorkspace = jest.fn(
+      async (): Promise<{ id: string; title: string }[]> =>
+        ((await findAccessibleByExactTitle()) as (Page | undefined)[])
+          .filter((page): page is Page => page !== undefined)
+          .map((page) => ({ id: page.getId(), title: page.getTitle() })),
+    );
     const resolver = new PageReferenceResolver(
-      { findAccessibleByExactTitle, findAccessibleInWorkspace },
+      {
+        findAccessibleByExactTitle,
+        findAccessibleTitlesInWorkspace,
+        // M2 reads are covered in page-activity-resolution.spec.
+        findRecentlyEditedPages: jest.fn(),
+        findProfileTimeZone: jest.fn(),
+      },
       access,
     );
     const extract = jest.fn().mockResolvedValue({
@@ -102,7 +111,8 @@ describe('Ask -> Page Intent -> authorized resolver -> draft planner', () => {
       userId: 'actor',
       workspaceId: 'workspace-1',
       requestId: 'r',
-      instruction: 'Thêm checklist vào trang Q4',
+      // A topic keeps this plannable; a bare checklist asks for its items (gp02).
+      instruction: 'Thêm checklist QA vào trang Q4',
       currentPageId: 'q3',
     };
     return {
@@ -218,8 +228,118 @@ describe('Ask -> Page Intent -> authorized resolver -> draft planner', () => {
     );
   });
   it.each([
-    'Thêm checklist',
-    'Thêm checklist vào trang này',
+    'tích gửi email trong trang Q4',
+    'đánh dấu đã hoàn thành phần gửi email ở trang Q4',
+    'gửi email xong rồi, trong trang Q4',
+    'bỏ tích gửi email trong trang Q4',
+  ])(
+    'drafts a to-do tick through the real admission (kế hoạch tích to-do): %s',
+    async (instruction) => {
+      const f = fixture();
+      expect(await f.service.ask({ ...f.input, instruction })).toMatchObject({
+        status: 'PLAN_GENERATED',
+        planning: { page: { pageId: 'q4' } },
+      });
+      expect(f.generate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pageId: 'q4',
+          originalInstruction: instruction,
+        }),
+      );
+    },
+  );
+
+  it.each([
+    'đổi Gửi email thành Gửi thư trong trang Q4',
+    'sửa tuần sau thành tháng sau ở trang Q4',
+  ])(
+    'drafts a block text edit through the real admission (kế hoạch sửa chữ block): %s',
+    async (instruction) => {
+      const f = fixture();
+      expect(await f.service.ask({ ...f.input, instruction })).toMatchObject({
+        status: 'PLAN_GENERATED',
+        planning: { page: { pageId: 'q4' } },
+      });
+    },
+  );
+
+  it.each(['xoá to-do Gửi email trong trang Q4', 'bỏ dòng Ghi chú ở trang Q4'])(
+    'drafts a block delete through the real admission (kế hoạch xoá block): %s',
+    async (instruction) => {
+      const f = fixture();
+      expect(await f.service.ask({ ...f.input, instruction })).toMatchObject({
+        status: 'PLAN_GENERATED',
+        planning: { page: { pageId: 'q4' } },
+      });
+    },
+  );
+
+  it('refuses a bulk delete with its own message (kế hoạch xoá block)', async () => {
+    const f = fixture();
+    expect(
+      await f.service.ask({
+        ...f.input,
+        instruction: 'xoá hết trong trang Q4',
+      }),
+    ).toMatchObject({
+      status: 'UNSUPPORTED_OPERATION',
+      assistantMessage:
+        'AI chỉ xoá từng block được nêu tên (tối đa 10 block mỗi câu), không xoá hàng loạt.',
+    });
+    expect(f.generate).not.toHaveBeenCalled();
+  });
+
+  it('names the blocked word through the real planner (kế hoạch sửa nhỏ, D3)', async () => {
+    const f = fixture();
+    expect(
+      await f.service.ask({
+        ...f.input,
+        instruction: 'tích xoá dữ liệu trong trang Q4',
+      }),
+    ).toMatchObject({
+      status: 'UNSUPPORTED_OPERATION',
+      assistantMessage:
+        'Hiện tại AI chưa làm được "xoá". Nếu "xoá" là nội dung cần thêm hoặc chữ mới, hãy đặt nó trong ngoặc kép.',
+    });
+  });
+
+  it.each([
+    'đổi tên trang Q4 thành Q5',
+    'đổi Gửi email thành xoá dữ liệu trong trang Q4',
+  ])('refuses %s without drafting', async (instruction) => {
+    const f = fixture();
+    expect(await f.service.ask({ ...f.input, instruction })).toMatchObject({
+      status: 'UNSUPPORTED_OPERATION',
+    });
+    expect(f.generate).not.toHaveBeenCalled();
+  });
+
+  it('refuses a tick mixed with an insertion without drafting (D4)', async () => {
+    const f = fixture();
+    expect(
+      await f.service.ask({
+        ...f.input,
+        instruction: 'tích gửi email và thêm checklist gồm a vào trang Q4',
+      }),
+    ).toMatchObject({ status: 'UNSUPPORTED_OPERATION' });
+    expect(f.generate).not.toHaveBeenCalled();
+  });
+
+  it.each(['Thêm checklist', 'Thêm checklist vào trang Q4'])(
+    'asks for checklist items without generating a draft (gp02): %s',
+    async (instruction) => {
+      const f = fixture();
+      expect(await f.service.ask({ ...f.input, instruction })).toMatchObject({
+        status: 'NEEDS_CLARIFICATION',
+        planning: { reason: 'MISSING_CHECKLIST_ITEMS' },
+      });
+      expect(f.generate).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    'Thêm checklist QA',
+    'Thêm checklist QA vào trang này',
     'Trang hiện tại thêm mục tổng kết',
   ])(
     'routes current Page through permission-aware resolver (%s)',
@@ -297,14 +417,14 @@ describe('Ask -> Page Intent -> authorized resolver -> draft planner', () => {
       ...f.input,
       instruction: 'add a QA checklist to Q4 page',
     });
+    // "… to Q4 page" names one real Page exactly: drafted without a choice.
     expect(result).toMatchObject({
-      status: 'AMBIGUOUS_PAGE',
-      planning: {
-        resolutionMethod: 'TITLE_IN_SENTENCE',
-        candidates: [{ pageId: 'q4' }],
-      },
+      status: 'PLAN_GENERATED',
+      planning: { resolutionMethod: 'EXACT_TITLE', page: { pageId: 'q4' } },
     });
-    expect(f.generate).not.toHaveBeenCalled();
+    expect(f.generate).toHaveBeenCalledWith(
+      expect.objectContaining({ pageId: 'q4' }),
+    );
   });
   it.each(['private', 'cross', 'missing'])(
     'does not resolve inaccessible named Page (%s)',

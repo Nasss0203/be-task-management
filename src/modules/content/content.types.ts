@@ -4,6 +4,7 @@ export const CONTENT_TYPES = {
     PageSnapshotReader: Symbol.for('PageSnapshotReader'),
     PublicSiteNavigationReader: Symbol.for('PublicSiteNavigationReader'),
     PageSearchReader: Symbol.for('PageSearchReader'),
+    PageActivityRecorder: Symbol.for('PageActivityRecorder'),
   },
   applications: {
     CreatePageHandler: Symbol.for('CreatePageHandler'),

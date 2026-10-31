@@ -13,6 +13,11 @@ import { firstValueFrom } from 'rxjs';
 import { AI_MODIFICATION_PLAN_CAPABILITY } from '../../application/constants/ai-modification-plan.constant';
 import { PAGE_COMPOSITION_CAPABILITY } from '../../application/constants/page-composition.constant';
 import type {
+  EmbeddingBatch,
+  EmbeddingKind,
+  TextEmbedder,
+} from '../../application/embedding/page-embedding.port';
+import type {
   AiRuntimePort,
   AiRuntimeRequest,
   AiRuntimeResult,
@@ -72,6 +77,8 @@ interface FastApiPageCompositionResponse {
 interface FastApiModificationPlannerRequest {
   instruction: string;
   context: Record<string, unknown>;
+  /** M8 (I4): passages of other Pages, read only; only when there are any. */
+  references?: unknown[];
 }
 
 interface FastApiModificationPlannerResponse {
@@ -90,9 +97,89 @@ const WRITING_CAPABILITIES: Record<string, WritingAction> = {
   'writing.continue': 'CONTINUE',
 };
 
+const ACTIVITY_RELATIVES = new Set([
+  'LATEST',
+  'TODAY',
+  'YESTERDAY',
+  'N_DAYS_AGO',
+  'LAST_WEEK',
+  'RECENT',
+]);
+
+/** M4: names from the user's own sentence; at least one place. */
+function isPageScope(value: unknown, instruction: string): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const scope = value as Record<string, unknown>;
+  if (Object.keys(scope).sort().join(',') !== 'parentTitle,teamspaceName')
+    return false;
+  const sentence = instruction.normalize('NFC').toLocaleLowerCase('vi');
+  const named = (name: unknown) =>
+    typeof name === 'string' &&
+    !!name.trim() &&
+    name.length <= 255 &&
+    sentence.includes(name.normalize('NFC').toLocaleLowerCase('vi'));
+  return (
+    (scope.parentTitle === null || named(scope.parentTitle)) &&
+    (scope.teamspaceName === null || named(scope.teamspaceName)) &&
+    (scope.parentTitle !== null || scope.teamspaceName !== null)
+  );
+}
+
+/** M6 / M7: a description or topic is the user's own words, never invented. */
+function isPageDescription(value: unknown, instruction: string): boolean {
+  return (
+    typeof value === 'string' &&
+    !!value.trim() &&
+    value.length <= 255 &&
+    instruction
+      .normalize('NFC')
+      .toLocaleLowerCase('vi')
+      .includes(value.normalize('NFC').toLocaleLowerCase('vi'))
+  );
+}
+
+/** M2: words of the user's own sentence only; NestJS computes the dates. */
+function isPageActivity(value: unknown, instruction: string): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const activity = value as Record<string, unknown>;
+  if (Object.keys(activity).sort().join(',') !== 'days,relative,titleHint')
+    return false;
+  const { relative, days, titleHint } = activity;
+  const nDays =
+    typeof days === 'number' &&
+    Number.isInteger(days) &&
+    days >= 1 &&
+    days <= 30;
+  return (
+    typeof relative === 'string' &&
+    ACTIVITY_RELATIVES.has(relative) &&
+    (relative === 'N_DAYS_AGO' ? nDays : days === null) &&
+    (titleHint === null ||
+      (typeof titleHint === 'string' &&
+        !!titleHint.trim() &&
+        titleHint.length <= 255 &&
+        // A hint is the user's own words, never invented by the service.
+        instruction
+          .normalize('NFC')
+          .toLocaleLowerCase('vi')
+          .includes(titleHint.normalize('NFC').toLocaleLowerCase('vi'))))
+  );
+}
+
+const AI_RETRY_DELAY_MS = 1500;
+
+/** No answer at all, or the AI service's own 503 (Ollama unavailable). */
+function isBrieflyUnavailable(error: unknown): boolean {
+  return (
+    error instanceof ServiceUnavailableException ||
+    (error instanceof BadGatewayException &&
+      error.message === 'AI service returned HTTP 503')
+  );
+}
+
 @Injectable()
 export class FastApiAiRuntimeAdapter
-  implements AiRuntimePort, PageIntentExtractor, AiIntentPort
+  implements AiRuntimePort, PageIntentExtractor, AiIntentPort, TextEmbedder
 {
   constructor(
     private readonly httpService: HttpService,
@@ -100,7 +187,10 @@ export class FastApiAiRuntimeAdapter
   ) {}
 
   async classify(request: AiIntentRequest): Promise<AiIntentResult> {
-    const raw = await this.post<unknown>('/internal/v1/intent', request);
+    const raw = await this.postRetryingOnce<unknown>(
+      '/internal/v1/intent',
+      request,
+    );
     const invalid = () =>
       new BadGatewayException('AI service returned an invalid response');
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw invalid();
@@ -142,11 +232,48 @@ export class FastApiAiRuntimeAdapter
     return raw as AiIntentResult;
   }
 
+  /** M5 (F6): one unit vector per text; anything else is refused whole. */
+  async embed(kind: EmbeddingKind, texts: string[]): Promise<EmbeddingBatch> {
+    const raw: unknown = await this.postRetryingOnce<unknown>(
+      '/internal/v1/embeddings',
+      { kind, texts },
+    );
+    const invalid = () =>
+      new BadGatewayException('AI service returned an invalid response');
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw invalid();
+    const response = raw as Record<string, unknown>;
+    const { model, dimensions, embeddings } = response;
+    if (
+      Object.keys(response).sort().join(',') !==
+        'dimensions,embeddings,model' ||
+      typeof model !== 'string' ||
+      !model.trim() ||
+      !Number.isInteger(dimensions) ||
+      (dimensions as number) <= 0 ||
+      !Array.isArray(embeddings) ||
+      embeddings.length !== texts.length ||
+      !embeddings.every(
+        (vector) =>
+          Array.isArray(vector) &&
+          vector.length === dimensions &&
+          vector.every(
+            (value) => typeof value === 'number' && Number.isFinite(value),
+          ),
+      )
+    )
+      throw invalid();
+    return {
+      model,
+      dimensions: dimensions as number,
+      embeddings: embeddings as number[][],
+    };
+  }
+
   async extract(
     instruction: string,
     currentPageId?: string,
   ): Promise<PageIntentResult> {
-    const raw: unknown = await this.post<unknown>(
+    const raw: unknown = await this.postRetryingOnce<unknown>(
       '/internal/v1/page-intent',
       { instruction, ...(currentPageId ? { currentPageId } : {}) },
     );
@@ -163,9 +290,23 @@ export class FastApiAiRuntimeAdapter
     ) {
       throw new BadGatewayException('AI service returned an invalid response');
     }
-    const result = value as Record<string, unknown>;
-    const validKeys = Object.keys(result).sort().join(',') ===
+    // M8: any edit may also carry "basedOn", the source the user named.
+    const { basedOn, ...result } = value as Record<string, unknown>;
+    // M2: only an ACTIVITY result carries the sixth key, "activity"; M4: only
+    // a TITLE result may carry "scope"; M6: only a DESCRIPTION, "description";
+    // M7: only a CONTENT result, "topic".
+    const keys = Object.keys(result).sort().join(',');
+    const base =
       'instruction,intent,needsClarification,pageReference,referenceType';
+    const validKeys =
+      result.referenceType === 'ACTIVITY'
+        ? keys === `activity,${base}`
+        : result.referenceType === 'DESCRIPTION'
+          ? keys === `description,${base}`
+          : result.referenceType === 'CONTENT'
+            ? keys === `${base},topic`
+            : keys === base ||
+            (result.referenceType === 'TITLE' && keys === `${base},scope`);
     const intent = result.intent;
     const referenceType = result.referenceType;
     const needsClarification = result.needsClarification;
@@ -179,12 +320,31 @@ export class FastApiAiRuntimeAdapter
         valid = valid && typeof pageReference === 'string' && !!pageReference.trim()
           && instruction.normalize('NFC').toLocaleLowerCase('vi').includes(
             pageReference.normalize('NFC').toLocaleLowerCase('vi'),
-          ) && !needsClarification;
+          ) && !needsClarification
+          && (result.scope === undefined || isPageScope(result.scope, instruction));
       } else if (referenceType === 'CURRENT_PAGE') {
         valid = valid && pageReference === null && !needsClarification
           && hasSourceBackedCurrentPage(instruction, currentPageId);
       } else if (referenceType === 'UNRESOLVED') {
         valid = valid && pageReference === null && needsClarification === true;
+      } else if (referenceType === 'ACTIVITY') {
+        valid =
+          valid &&
+          pageReference === null &&
+          needsClarification === false &&
+          isPageActivity(result.activity, instruction);
+      } else if (referenceType === 'DESCRIPTION') {
+        valid =
+          valid &&
+          pageReference === null &&
+          needsClarification === false &&
+          isPageDescription(result.description, instruction);
+      } else if (referenceType === 'CONTENT') {
+        valid =
+          valid &&
+          pageReference === null &&
+          needsClarification === false &&
+          isPageDescription(result.topic, instruction);
       } else {
         valid = false;
       }
@@ -194,6 +354,10 @@ export class FastApiAiRuntimeAdapter
     } else {
       valid = false;
     }
+    valid =
+      valid &&
+      (basedOn === undefined ||
+        (intent === 'MODIFY_PAGE' && isPageDescription(basedOn, instruction)));
     if (!valid) {
       throw new BadGatewayException('AI service returned an invalid response');
     }
@@ -310,9 +474,13 @@ export class FastApiAiRuntimeAdapter
       throw new BadRequestException('AI modification plan context is required');
     }
 
+    const references = request.input.references;
     const payload: FastApiModificationPlannerRequest = {
       instruction: request.content,
       context: request.context,
+      ...(Array.isArray(references) && references.length
+        ? { references }
+        : {}),
     };
 
     const response = await this.post<FastApiModificationPlannerResponse>(
@@ -334,6 +502,25 @@ export class FastApiAiRuntimeAdapter
       model: response.model,
       ...this.mapUsage(response),
     };
+  }
+
+  /**
+   * Cheap calls that change nothing (intent, page intent, embeddings) are
+   * tried once more when the AI service is briefly unavailable: Ollama fails
+   * while it reloads a model or runs short of memory. Drafts are never
+   * retried, since each costs a full model run.
+   */
+  private async postRetryingOnce<TResponse>(
+    path: string,
+    payload: unknown,
+  ): Promise<TResponse> {
+    try {
+      return await this.post<TResponse>(path, payload);
+    } catch (error) {
+      if (!isBrieflyUnavailable(error)) throw error;
+      await new Promise((resolve) => setTimeout(resolve, AI_RETRY_DELAY_MS));
+      return this.post<TResponse>(path, payload);
+    }
   }
 
   private async post<TResponse>(

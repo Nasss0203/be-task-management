@@ -36,4 +36,11 @@ export class AskAiRequestDto {
   @IsOptional()
   @IsUUID()
   requestId?: string | null;
+
+  // M2 (§11 #7): the browser's IANA zone, e.g. "Asia/Ho_Chi_Minh"; an unknown
+  // zone falls back to the profile's, then to Việt Nam.
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  timeZone?: string | null;
 }

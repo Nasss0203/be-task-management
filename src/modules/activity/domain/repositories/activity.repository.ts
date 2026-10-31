@@ -20,6 +20,17 @@ export type SaveActivityInput = {
   isSystem?: boolean;
 };
 
+/** A Page or Page-block edit by a person (plan-v2 §11 #5). */
+export type PageEditActivityInput = {
+  actorId: string;
+  /** The edited Page; bursts are merged per actor, Page and action. */
+  pageId: string;
+  entityType: ActivityEntityType;
+  entityId: string;
+  action: ActivityAction;
+  metadata: Record<string, unknown> | null;
+};
+
 export type FindActivityFilters = {
   workspaceId: string;
   projectId?: string;
@@ -43,4 +54,15 @@ export interface ActivityRepository {
   ): Promise<ActivityModel>;
 
   findMany(filters: FindActivityFilters): Promise<FindActivityResult>;
+
+  /**
+   * Moves the newest row of the same actor, Page and action written within
+   * `windowMs` to now; inserts a row when there is none. No row for a Page
+   * that does not exist.
+   */
+  recordPageEdit(
+    input: PageEditActivityInput,
+    windowMs: number,
+    context?: PersistenceContext,
+  ): Promise<void>;
 }

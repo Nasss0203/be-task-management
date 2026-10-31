@@ -6,6 +6,7 @@ import type { PageBlockRepository } from 'src/modules/content/domain/repositorie
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { ApplyPagePresetCommand } from './apply-page-preset.command';
+import type { PageActivityRecorder } from 'src/modules/content/application/ports/page-activity-recorder.port';
 
 @Injectable()
 export class ApplyPagePresetHandler {
@@ -18,6 +19,8 @@ export class ApplyPagePresetHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+    @Inject(CONTENT_TYPES.ports.PageActivityRecorder)
+    private readonly activity: PageActivityRecorder,
   ) {}
 
   async execute(command: ApplyPagePresetCommand): Promise<void> {
@@ -37,6 +40,15 @@ export class ApplyPagePresetHandler {
           pageId: command.pageId,
           createdBy: command.userId,
           blocks: preset.blocks,
+        },
+        context,
+      );
+      await this.activity.record(
+        {
+          actorId: command.userId,
+          pageId: command.pageId,
+          action: 'PAGE_UPDATED',
+          kind: 'PRESET',
         },
         context,
       );

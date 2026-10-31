@@ -4,6 +4,8 @@ export const AI_ASSISTANT_TYPES = {
     PageResolutionReader: Symbol('PageResolutionReader'),
     PageIntentExtractor: Symbol('PageIntentExtractor'),
     PageContextTransactionLocker: Symbol('PageContextTransactionLocker'),
+    TextEmbedder: Symbol('TextEmbedder'),
+    PageEmbeddingStore: Symbol('PageEmbeddingStore'),
   },
   services: {
     AiConversationAccess: Symbol('AiConversationAccess'),

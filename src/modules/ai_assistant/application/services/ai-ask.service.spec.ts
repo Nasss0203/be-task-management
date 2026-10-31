@@ -298,6 +298,64 @@ describe('AiAskService', () => {
     ).toMatchObject({ status: 'NEEDS_CLARIFICATION' });
     expect(f.assistant.submit).not.toHaveBeenCalled();
   });
+  it.each([
+    [
+      { kind: 'BLOCKED_WORD', term: 'chia sẻ', pageAction: false },
+      'Hiện tại AI chưa làm được "chia sẻ". Nếu "chia sẻ" là nội dung cần thêm hoặc chữ mới, hãy đặt nó trong ngoặc kép.',
+    ],
+    [
+      { kind: 'BLOCKED_WORD', term: 'đổi tên trang', pageAction: true },
+      'Hiện tại AI chưa làm được "đổi tên trang": AI chỉ thay đổi nội dung bên trong trang.',
+    ],
+    [
+      { kind: 'PUNCTUATION', term: '?' },
+      'Hãy viết yêu cầu thành một câu lệnh, không dùng dấu "?".',
+    ],
+    [
+      { kind: 'MIXED' },
+      'Mỗi câu chỉ một loại việc: hãy gửi riêng từng yêu cầu.',
+    ],
+    [
+      { kind: 'GENERIC' },
+      'Hiện tại AI chỉ thêm block, thêm dòng database, tích / bỏ tích to-do, sửa chữ hoặc xoá block có chữ. Mỗi câu chỉ một loại việc, hãy gửi từng yêu cầu riêng.',
+    ],
+  ])(
+    'explains an unsupported request (kế hoạch sửa nhỏ, D3): %j',
+    async (detail, message) => {
+      const f = fixture();
+      f.intent('MODIFY_PAGE');
+      f.planner.generate.mockResolvedValue({
+        status: 'UNSUPPORTED_OPERATION',
+        reason: 'INSERT_ONLY',
+        intent: { pageReference: 'Q4' },
+        detail,
+      });
+      expect(
+        await f.service.ask({ ...f.input, instruction: 'x trong trang Q4' }),
+      ).toMatchObject({
+        status: 'UNSUPPORTED_OPERATION',
+        assistantMessage: message,
+      });
+    },
+  );
+
+  it('explains a bulk delete (kế hoạch xoá block)', async () => {
+    const f = fixture();
+    f.intent('MODIFY_PAGE');
+    f.planner.generate.mockResolvedValue({
+      status: 'UNSUPPORTED_OPERATION',
+      reason: 'INSERT_ONLY',
+      intent: { pageReference: null },
+      detail: { kind: 'BULK' },
+    });
+    expect(
+      await f.service.ask({ ...f.input, instruction: 'xoá hết' }),
+    ).toMatchObject({
+      assistantMessage:
+        'AI chỉ xoá từng block được nêu tên (tối đa 10 block mỗi câu), không xoá hàng loạt.',
+    });
+  });
+
   it('relays the planner admission result for unsupported operations (M1b)', async () => {
     // The real gate is covered with the real planner in ai-ask-page-routing.spec.
     const f = fixture();
@@ -315,7 +373,73 @@ describe('AiAskService', () => {
     ).toMatchObject({
       status: 'UNSUPPORTED_OPERATION',
       assistantMessage:
-        'Hiện tại chỉ hỗ trợ thêm block hoặc thêm dòng database.',
+        'Hiện tại AI chỉ thêm block, thêm dòng database, tích / bỏ tích to-do, sửa chữ hoặc xoá block có chữ. Mỗi câu chỉ một loại việc, hãy gửi từng yêu cầu riêng.',
+    });
+  });
+
+  it.each([
+    [
+      'sub man',
+      'Checklist gồm những mục nào? Gửi lại cả câu kèm các mục, ví dụ: thêm checklist gồm in tài liệu, đặt phòng vào trang "sub man".',
+    ],
+    [
+      null,
+      'Checklist gồm những mục nào? Gửi lại cả câu kèm các mục, ví dụ: thêm checklist gồm in tài liệu, đặt phòng vào trang "Kế hoạch Q4".',
+    ],
+  ])(
+    'asks for checklist items (gp02) for Page %s',
+    async (pageReference, message) => {
+      const f = fixture();
+      f.intent('MODIFY_PAGE');
+      f.planner.generate.mockResolvedValue({
+        status: 'NEEDS_CLARIFICATION',
+        reason: 'MISSING_CHECKLIST_ITEMS',
+        intent: { pageReference },
+      });
+      expect(
+        await f.service.ask({ ...f.input, instruction: 'thêm checklist' }),
+      ).toMatchObject({
+        status: 'NEEDS_CLARIFICATION',
+        assistantMessage: message,
+      });
+    },
+  );
+
+  it('names the Page found in the sentence when none was extracted (gp02)', async () => {
+    const f = fixture();
+    f.intent('MODIFY_PAGE');
+    f.planner.generate.mockResolvedValue({
+      status: 'NEEDS_CLARIFICATION',
+      reason: 'MISSING_CHECKLIST_ITEMS',
+      intent: { pageReference: null },
+      pageTitle: 'sub man',
+    });
+    const message =
+      'Checklist gồm những mục nào? Gửi lại cả câu kèm các mục, ví dụ: thêm checklist gồm in tài liệu, đặt phòng vào trang "sub man".';
+    expect(
+      await f.service.ask({ ...f.input, instruction: 'thêm checklist' }),
+    ).toMatchObject({
+      status: 'NEEDS_CLARIFICATION',
+      assistantMessage: message,
+    });
+  });
+
+  it('names the Page found in the sentence when none was extracted (gp02)', async () => {
+    const f = fixture();
+    f.intent('MODIFY_PAGE');
+    f.planner.generate.mockResolvedValue({
+      status: 'NEEDS_CLARIFICATION',
+      reason: 'MISSING_CHECKLIST_ITEMS',
+      intent: { pageReference: null },
+      pageTitle: 'sub man',
+    });
+    const message =
+      'Checklist gồm những mục nào? Gửi lại cả câu kèm các mục, ví dụ: thêm checklist gồm in tài liệu, đặt phòng vào trang "sub man".';
+    expect(
+      await f.service.ask({ ...f.input, instruction: 'thêm checklist' }),
+    ).toMatchObject({
+      status: 'NEEDS_CLARIFICATION',
+      assistantMessage: message,
     });
   });
   it.each([

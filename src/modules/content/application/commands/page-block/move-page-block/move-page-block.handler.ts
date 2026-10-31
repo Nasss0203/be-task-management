@@ -10,10 +10,12 @@ import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageBlock } from 'src/modules/content/domain/entities/page-block.entity';
 import { canContainChildren } from 'src/modules/content/domain/policies/page-block-container.policy';
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
+import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { MovePageBlockCommand } from './move-page-block.command';
+import type { PageActivityRecorder } from 'src/modules/content/application/ports/page-activity-recorder.port';
 
 const PAGE_BLOCK_HIERARCHY_GUARD_LIMIT = 1000;
 
@@ -25,6 +27,10 @@ export class MovePageBlockHandler {
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
     private readonly ordering: PageBlockOrderingService,
+    @Inject(CONTENT_TYPES.repositories.PageRepository)
+    private readonly pageRepo: PageRepository,
+    @Inject(CONTENT_TYPES.ports.PageActivityRecorder)
+    private readonly activity: PageActivityRecorder,
   ) {}
 
   async execute(command: MovePageBlockCommand): Promise<PageBlockResponseDto> {
@@ -66,6 +72,16 @@ export class MovePageBlockHandler {
           context,
         );
 
+        await this.pageRepo.touch(source.getPageId(), context);
+        await this.activity.record(
+          {
+            actorId: command.actorId,
+            pageId: source.getPageId(),
+            blockId: source.getId(),
+            action: 'PAGE_BLOCK_REORDERED',
+          },
+          context,
+        );
         return PageBlockResponseDto.fromDomain(
           this.pickUpdatedSource(updatedBlocks, source.getId()),
         );
@@ -78,6 +94,16 @@ export class MovePageBlockHandler {
         context,
       );
 
+      await this.pageRepo.touch(source.getPageId(), context);
+      await this.activity.record(
+        {
+          actorId: command.actorId,
+          pageId: source.getPageId(),
+          blockId: source.getId(),
+          action: 'PAGE_BLOCK_REORDERED',
+        },
+        context,
+      );
       return PageBlockResponseDto.fromDomain(
         this.pickUpdatedSource(updatedBlocks, source.getId()),
       );

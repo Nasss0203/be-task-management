@@ -11,10 +11,12 @@ import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity';
 import { canContainChildren } from 'src/modules/content/domain/policies/page-block-container.policy';
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
+import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { ReorderPageBlockCommand } from './reorder-page-block.command';
+import type { PageActivityRecorder } from 'src/modules/content/application/ports/page-activity-recorder.port';
 
 @Injectable()
 export class ReorderPageBlockHandler {
@@ -24,6 +26,10 @@ export class ReorderPageBlockHandler {
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
     private readonly ordering: PageBlockOrderingService,
+    @Inject(CONTENT_TYPES.repositories.PageRepository)
+    private readonly pageRepo: PageRepository,
+    @Inject(CONTENT_TYPES.ports.PageActivityRecorder)
+    private readonly activity: PageActivityRecorder,
   ) {}
 
   async execute(
@@ -56,6 +62,15 @@ export class ReorderPageBlockHandler {
         context,
       );
 
+      await this.pageRepo.touch(command.dto.page_id, context);
+      await this.activity.record(
+        {
+          actorId: command.actorId,
+          pageId: command.dto.page_id,
+          action: 'PAGE_BLOCK_REORDERED',
+        },
+        context,
+      );
       return updatedBlocks.map((block) =>
         PageBlockResponseDto.fromDomain(block),
       );

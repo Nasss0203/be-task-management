@@ -20,6 +20,7 @@ import { generateSlug } from 'src/utils';
 import { PagePublicationTreeService } from '../../../services/page-publication-tree.service';
 import { PublicSubdomainAllocatorService } from '../../../services/public-subdomain-allocator.service';
 import { CreatePageCommand } from './create-page.command';
+import type { PageActivityRecorder } from 'src/modules/content/application/ports/page-activity-recorder.port';
 
 @Injectable()
 export class CreatePageHandler {
@@ -31,6 +32,8 @@ export class CreatePageHandler {
     @Inject(PERSISTENCE_TYPES.UnitOfWork) private readonly uow: UnitOfWork,
     private readonly publicationTree: PagePublicationTreeService,
     private readonly subdomains: PublicSubdomainAllocatorService,
+    @Inject(CONTENT_TYPES.ports.PageActivityRecorder)
+    private readonly activity: PageActivityRecorder,
   ) {}
 
   async execute(
@@ -138,6 +141,14 @@ export class CreatePageHandler {
       });
 
       const savedPage = await this.pageRepo.save(page, context);
+      await this.activity.record(
+        {
+          actorId: command.userId,
+          pageId: savedPage.getId(),
+          action: 'PAGE_CREATED',
+        },
+        context,
+      );
       await this.publicationTree.inheritNewPage(
         savedPage,
         command.userId,

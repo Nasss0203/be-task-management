@@ -1,11 +1,14 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Page } from 'src/modules/content/domain/aggregates/page/page.aggregate';
-import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
+import type {
+  PageRepository,
+  PageTitle,
+} from 'src/modules/content/domain/repositories/page.repository';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
-import type { Repository } from 'typeorm';
+import type { Repository, SelectQueryBuilder } from 'typeorm';
 import { EntityManager, In } from 'typeorm';
 import { PageOrmEntity } from '../entities/page.orm-entity';
 import { PageMapper } from '../mappers/page.mapper';
@@ -99,6 +102,10 @@ export class TypeOrmPageRepository implements PageRepository {
     return PageMapper.toDomain(saved);
   }
 
+  async touch(id: string, context?: PersistenceContext): Promise<void> {
+    await this.resolveRepo(context).update(id, { updatedAt: new Date() });
+  }
+
   async delete(id: string, context?: PersistenceContext): Promise<void> {
     await this.resolveRepo(context).softDelete(id);
   }
@@ -156,6 +163,51 @@ export class TypeOrmPageRepository implements PageRepository {
     userId: string,
     context?: PersistenceContext,
   ): Promise<Page[]> {
+    const orms = await this.accessiblePages(workspaceId, userId, context)
+      .distinct(true)
+      .orderBy('page.created_at', 'ASC')
+      .getMany();
+
+    return orms.map((orm) => PageMapper.toDomain(orm));
+  }
+
+  async findAccessibleByExactTitle(
+    workspaceId: string,
+    userId: string,
+    title: string,
+    context?: PersistenceContext,
+  ): Promise<Page[]> {
+    // The same comparison the AI resolver made in memory: NFC, any case.
+    const orms = await this.accessiblePages(workspaceId, userId, context)
+      .andWhere(
+        'lower(normalize(page.title, NFC)) = lower(normalize(:title, NFC))',
+        { title: title.trim() },
+      )
+      .orderBy('page.created_at', 'ASC')
+      .getMany();
+
+    return orms.map((orm) => PageMapper.toDomain(orm));
+  }
+
+  async findAccessibleTitlesByWorkspace(
+    workspaceId: string,
+    userId: string,
+    context?: PersistenceContext,
+  ): Promise<PageTitle[]> {
+    // Both membership joins are unique, so no row repeats without DISTINCT.
+    return this.accessiblePages(workspaceId, userId, context)
+      .select('page.id', 'id')
+      .addSelect('page.title', 'title')
+      .orderBy('page.created_at', 'ASC')
+      .getRawMany<PageTitle>();
+  }
+
+  /** Live Pages of the workspace the user may read (teamspace rules included). */
+  private accessiblePages(
+    workspaceId: string,
+    userId: string,
+    context?: PersistenceContext,
+  ): SelectQueryBuilder<PageOrmEntity> {
     const qb = this.resolveRepo(context)
       .createQueryBuilder('page')
 
@@ -202,14 +254,9 @@ export class TypeOrmPageRepository implements PageRepository {
           ownerRole: WorkspaceRole.OWNER,
         },
       )
+      .andWhere(ACTIVE_TEAMSPACE_CONDITION);
 
-      .andWhere(ACTIVE_TEAMSPACE_CONDITION)
-      .distinct(true)
-      .orderBy('page.created_at', 'ASC');
-
-    const orms = await qb.getMany();
-
-    return orms.map((orm) => PageMapper.toDomain(orm));
+    return qb;
   }
 
   async findAccessibleDeletedByWorkspace(

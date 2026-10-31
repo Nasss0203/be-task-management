@@ -1,5 +1,6 @@
 /* Repository doubles intentionally do not perform I/O. */
 /* eslint-disable @typescript-eslint/require-await */
+import type { PageActivityRecorder } from 'src/modules/content/application/ports/page-activity-recorder.port';
 import {
   BadRequestException,
   ConflictException,
@@ -214,7 +215,18 @@ describe('root-owned public sites', () => {
       publicationRepo,
       siteRepo,
     );
-    create = new CreatePageHandler(pageRepo, auth, uow, tree, allocator);
+    // Recording who edited a Page is covered in page-block-edited-time.spec.
+    const activity = {
+      record: async () => undefined,
+    } as unknown as PageActivityRecorder;
+    create = new CreatePageHandler(
+      pageRepo,
+      auth,
+      uow,
+      tree,
+      allocator,
+      activity,
+    );
     duplicate = new DuplicatePageHandler(
       pageRepo,
       {
@@ -224,8 +236,16 @@ describe('root-owned public sites', () => {
       uow,
       tree,
       allocator,
+      activity,
     );
-    move = new MovePageHandler(pageRepo, uow, auth, allocator, hierarchy);
+    move = new MovePageHandler(
+      pageRepo,
+      uow,
+      auth,
+      allocator,
+      hierarchy,
+      activity,
+    );
     publish = new PublishSiteHandler(
       pageRepo,
       siteRepo,
@@ -898,6 +918,7 @@ describe('root-owned public sites', () => {
       auth,
       allocator,
       hierarchy,
+      { record: async () => undefined } as unknown as PageActivityRecorder,
     );
     await expect(
       moveWithRollback.execute(

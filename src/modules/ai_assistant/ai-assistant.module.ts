@@ -61,12 +61,17 @@ import { AiModificationPlanExecutor } from './application/services/ai-modificati
 import { AiModificationPlannerService } from './application/services/ai-modification-planner.service';
 
 import { ConfirmAiModificationPlanHandler } from './application/commands/confirm-ai-modification-plan/confirm-ai-modification-plan.handler';
+import { UndoAiModificationPlanHandler } from './application/commands/undo-ai-modification-plan/undo-ai-modification-plan.handler';
 
 import { ConfirmGenerationHandler } from './application/commands/confirm-generation/confirm-generation.handler';
 import { PageReferenceResolver } from './application/resolution/page-reference-resolver.service';
 import { PageExactResolutionReader } from './infrastructure/resolution/page-exact-resolution.reader';
 import { PageIntentExtractionService } from './application/resolution/page-intent-extraction.service';
 import { AiPageInstructionPlannerService } from './application/services/ai-page-instruction-planner.service';
+import { PageEmbeddingIndexer } from './application/embedding/page-embedding-indexer.service';
+import { PageEmbeddingSearch } from './application/embedding/page-embedding-search.service';
+import { PageSourceReferences } from './application/embedding/page-source-references.service';
+import { PageEmbeddingSqlStore } from './infrastructure/embedding/page-embedding.store';
 
 @Module({
   imports: [
@@ -104,6 +109,7 @@ import { AiPageInstructionPlannerService } from './application/services/ai-page-
     ConfirmGenerationHandler,
     ConfirmPageCompositionHandler,
     ConfirmAiModificationPlanHandler,
+    UndoAiModificationPlanHandler,
 
     ListConversationsHandler,
     GetConversationHandler,
@@ -115,6 +121,9 @@ import { AiPageInstructionPlannerService } from './application/services/ai-page-
     PageReferenceResolver,
     PageIntentExtractionService,
     AiPageInstructionPlannerService,
+    PageEmbeddingIndexer,
+    PageEmbeddingSearch,
+    PageSourceReferences,
 
     AiAssistantService,
     {
@@ -142,6 +151,14 @@ import { AiPageInstructionPlannerService } from './application/services/ai-page-
     {
       provide: AI_ASSISTANT_TYPES.ports.AiIntent,
       useExisting: AI_ASSISTANT_TYPES.runtime.AiRuntime,
+    },
+    {
+      provide: AI_ASSISTANT_TYPES.ports.TextEmbedder,
+      useExisting: AI_ASSISTANT_TYPES.runtime.AiRuntime,
+    },
+    {
+      provide: AI_ASSISTANT_TYPES.ports.PageEmbeddingStore,
+      useClass: PageEmbeddingSqlStore,
     },
     {
       provide: AI_ASSISTANT_TYPES.ports.PageContextTransactionLocker,

@@ -267,6 +267,9 @@ describe('GetGenerationHandler', () => {
         operations: 1,
         blocks: 1,
         databaseRows: 0,
+        todoUpdates: 0,
+        blockEdits: 0,
+        blockDeletes: 0,
       },
       operations: plan.operations,
     });

@@ -167,9 +167,10 @@ export class PageBlockController {
   @ResponseMessage('Reorder page blocks')
   reorder(
     @Body() reorderPageBlockDto: ReorderPageBlockDto,
+    @Auth() auth: IAuth,
   ): Promise<PageBlockResponseDto[]> {
     return this.reorderPageBlockHandler.execute(
-      new ReorderPageBlockCommand(reorderPageBlockDto),
+      new ReorderPageBlockCommand(reorderPageBlockDto, auth.id),
     );
   }
 
@@ -181,9 +182,10 @@ export class PageBlockController {
   move(
     @Param('blockId', ParseUUIDPipe) blockId: string,
     @Body() movePageBlockDto: MovePageBlockDto,
+    @Auth() auth: IAuth,
   ): Promise<PageBlockResponseDto> {
     return this.movePageBlockHandler.execute(
-      new MovePageBlockCommand(blockId, movePageBlockDto),
+      new MovePageBlockCommand(blockId, movePageBlockDto, auth.id),
     );
   }
 
@@ -194,20 +196,25 @@ export class PageBlockController {
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updatePageBlockDto: UpdatePageBlockDto,
+    @Auth() auth: IAuth,
   ) {
     return this.updatePageBlockHandler.execute(
-      new UpdatePageBlockCommand(id, {
-        type: updatePageBlockDto.type,
-        title: updatePageBlockDto.title,
-        positionX: updatePageBlockDto.position_x,
-        positionY: updatePageBlockDto.position_y,
-        width: updatePageBlockDto.width,
-        height: updatePageBlockDto.height,
-        content: updatePageBlockDto.content,
-        styleConfig: updatePageBlockDto.style_config,
-        dataConfig: updatePageBlockDto.data_config,
-        isOpen: updatePageBlockDto.is_open,
-      }),
+      new UpdatePageBlockCommand(
+        id,
+        {
+          type: updatePageBlockDto.type,
+          title: updatePageBlockDto.title,
+          positionX: updatePageBlockDto.position_x,
+          positionY: updatePageBlockDto.position_y,
+          width: updatePageBlockDto.width,
+          height: updatePageBlockDto.height,
+          content: updatePageBlockDto.content,
+          styleConfig: updatePageBlockDto.style_config,
+          dataConfig: updatePageBlockDto.data_config,
+          isOpen: updatePageBlockDto.is_open,
+        },
+        auth.id,
+      ),
     );
   }
 
@@ -219,9 +226,10 @@ export class PageBlockController {
   async addDatabaseViewToBlock(
     @Param('blockId', ParseUUIDPipe) blockId: string,
     @Body() dto: AddDatabaseViewToBlockDto,
+    @Auth() auth: IAuth,
   ): Promise<PageBlockResponseDto> {
     return await this.addDatabaseViewToBlockHandler.execute(
-      new AddDatabaseViewToBlockCommand(blockId, dto),
+      new AddDatabaseViewToBlockCommand(blockId, dto, auth.id),
     );
   }
 
@@ -243,9 +251,12 @@ export class PageBlockController {
   @StrictWriteRateLimit()
   @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'blockId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
-  async restorePageBlock(@Param('blockId', ParseUUIDPipe) blockId: string) {
+  async restorePageBlock(
+    @Param('blockId', ParseUUIDPipe) blockId: string,
+    @Auth() auth: IAuth,
+  ) {
     await this.restorePageBlockHandler.execute(
-      new RestorePageBlockCommand(blockId),
+      new RestorePageBlockCommand(blockId, auth.id),
     );
     return { success: true };
   }
