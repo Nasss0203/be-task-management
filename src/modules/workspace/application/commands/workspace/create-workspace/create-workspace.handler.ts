@@ -46,7 +46,7 @@ export class CreateWorkspaceHandler {
       );
 
       if (starter.pages.length === 0) {
-        await this.pageProvisioningPort.createDefaultPage(
+        await this.pageProvisioningPort.createPageShell(
           {
             workspaceId: createdWorkspace.getId(),
             title: createdWorkspace.getName(),
