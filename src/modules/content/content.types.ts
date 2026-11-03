@@ -86,6 +86,8 @@ export const CONTENT_TYPES = {
     PageAccessRequestRepository: Symbol('PageAccessRequestRepository'),
     PublishedSiteRepository: Symbol('PublishedSiteRepository'),
     PagePublicationRepository: Symbol('PagePublicationRepository'),
+    FormAnswerKeyRepository: Symbol('FormAnswerKeyRepository'),
+    FormQuizAttemptRepository: Symbol('FormQuizAttemptRepository'),
   },
   bookmarkMetadataFetcher: Symbol('BookmarkMetadataFetcher'),
 };

@@ -16,6 +16,8 @@ import { PaymentOrderOrmEntity } from 'src/modules/billing/infrastructure/persis
 import { PaymentTransactionOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/payment-transaction.orm-entity';
 import { WorkspaceSubscriptionOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/workspace-subscription.orm-entity';
 import { CommentOrmEntity } from 'src/modules/comments/infrastructure/persistence/typeorm/entities/comment.orm-entity';
+import { FormAnswerKeyOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/form-answer-key.orm-entity';
+import { FormQuizAttemptOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/form-quiz-attempt.orm-entity';
 import { PageAccessRequestOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-access-request.orm-entity';
 import { PageBlockOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-block.orm-entity';
 import { PageEditRequestOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-edit-request.orm-entity';
@@ -152,4 +154,6 @@ export const DATABASE_ENTITIES = [
   TemplateReviewOrmEntity,
   CreatorProfileOrmEntity,
   CommentOrmEntity,
+  FormAnswerKeyOrmEntity,
+  FormQuizAttemptOrmEntity,
 ];

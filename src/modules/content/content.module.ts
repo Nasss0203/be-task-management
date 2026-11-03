@@ -41,6 +41,8 @@ import { PageBlockColumnCleanupService } from './application/services/page-block
 import { PageBlockFormService } from './application/services/page-block-form.service';
 import { SubmitFormResponseHandler } from './application/commands/form/submit-form-response/submit-form-response.handler';
 import { GetFormStructureHandler } from './application/queries/form/get-form-structure/get-form-structure.handler';
+import { GetFormAnswerKeysHandler } from './application/queries/form/get-form-answer-keys/get-form-answer-keys.handler';
+import { SetFormAnswerKeyHandler } from './application/commands/form/set-form-answer-key/set-form-answer-key.handler';
 import { FormController } from './presentation/http/controllers/form.controller';
 import { PageBlockOrderingService } from './application/services/page-block-ordering.service';
 import { PageBlockRowScopeService } from './application/services/page-block-row-scope.service';
@@ -112,12 +114,16 @@ import { GetPageSharesHandler } from './application/queries/page-share/get-page-
 import { GetPagesSharedWithMeHandler } from './application/queries/page-share/get-pages-shared-with-me/get-pages-shared-with-me.handler';
 import { ResolvePageShareLinkHandler } from './application/queries/page-share/resolve-page-share-link/resolve-page-share-link.handler';
 import { SearchPageShareCandidatesHandler } from './application/queries/page-share/search-page-share-candidates/search-page-share-candidates.handler';
+import { FormAnswerKeyOrmEntity } from './infrastructure/persistence/typeorm/entities/form-answer-key.orm-entity';
+import { FormQuizAttemptOrmEntity } from './infrastructure/persistence/typeorm/entities/form-quiz-attempt.orm-entity';
 import { PageAccessRequestOrmEntity } from './infrastructure/persistence/typeorm/entities/page-access-request.orm-entity';
 import { PageEditRequestOrmEntity } from './infrastructure/persistence/typeorm/entities/page-edit-request.orm-entity';
 import { PageFavoriteOrmEntity } from './infrastructure/persistence/typeorm/entities/page-favorite.orm-entity';
 import { PageShareLinkOrmEntity } from './infrastructure/persistence/typeorm/entities/page-share-link.orm-entity';
 import { PageShareSettingOrmEntity } from './infrastructure/persistence/typeorm/entities/page-share-setting.orm-entity';
 import { PageShareOrmEntity } from './infrastructure/persistence/typeorm/entities/page-share.orm-entity';
+import { TypeOrmFormAnswerKeyRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-form-answer-key.repository';
+import { TypeOrmFormQuizAttemptRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-form-quiz-attempt.repository';
 import { TypeOrmPageAccessRequestRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-access-request.repository';
 import { TypeOrmPageEditRequestRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-edit-request.repository';
 import { TypeOrmPageFavoriteRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-favorite.repository';
@@ -176,6 +182,14 @@ const repositories = [
   {
     provide: CONTENT_TYPES.repositories.PagePublicationRepository,
     useClass: TypeOrmPagePublicationRepository,
+  },
+  {
+    provide: CONTENT_TYPES.repositories.FormAnswerKeyRepository,
+    useClass: TypeOrmFormAnswerKeyRepository,
+  },
+  {
+    provide: CONTENT_TYPES.repositories.FormQuizAttemptRepository,
+    useClass: TypeOrmFormQuizAttemptRepository,
   },
 ];
 
@@ -495,6 +509,8 @@ const ports = [
       PageAccessRequestOrmEntity,
       PublishedSiteOrmEntity,
       PagePublicationOrmEntity,
+      FormAnswerKeyOrmEntity,
+      FormQuizAttemptOrmEntity,
     ]),
     DatabaseModule,
     BusinessDatabaseModule,
@@ -521,6 +537,8 @@ const ports = [
   providers: [
     SubmitFormResponseHandler,
     GetFormStructureHandler,
+    GetFormAnswerKeysHandler,
+    SetFormAnswerKeyHandler,
     ListPagePublicationsHandler,
     UpdatePagePublicationSettingsHandler,
     UpdatePageVisibilityHandler,

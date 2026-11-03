@@ -10,12 +10,13 @@ import type { PageBlockRepository } from 'src/modules/content/domain/repositorie
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import { DATABASE_TYPES } from 'src/modules/database/database.types';
 import type { Database } from 'src/modules/database/domain/aggregates/database/database.aggregate';
+import type { DatabaseProperty } from 'src/modules/database/domain/aggregates/database/database-property.entity';
 import { PropertyType } from 'src/modules/database/domain/enums/property-type.enum';
 import type { DatabaseRepository } from 'src/modules/database/domain/repositories/database.repository';
 import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
-import type { PageBlockJson } from 'src/shared/domain/page-block.types';
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
+import type { PageBlockJson } from 'src/shared/domain/page-block.types';
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 export const FORM_FIELD_PROPERTY_TYPES = new Set<PropertyType>([
@@ -37,6 +38,21 @@ const CONDITION_PROPERTY_TYPES = new Set<PropertyType>([
   PropertyType.STATUS,
 ]);
 
+export const QUIZ_PROPERTY_TYPES = new Set<PropertyType>([
+  PropertyType.TITLE,
+  PropertyType.TEXT,
+  PropertyType.NUMBER,
+  PropertyType.SELECT,
+  PropertyType.MULTI_SELECT,
+  PropertyType.STATUS,
+  PropertyType.CHECKBOX,
+]);
+
+export const QUIZ_SHOW_RESULTS = ['none', 'score', 'results'] as const;
+export type QuizShowResult = (typeof QUIZ_SHOW_RESULTS)[number];
+
+const MAX_ANSWER_LENGTH = 5000;
+
 const MAX_LABEL_LENGTH = 200;
 const MAX_MESSAGE_LENGTH = 500;
 
@@ -45,6 +61,12 @@ export interface SectionFormConfig {
   submitLabel: string | null;
   successMessage: string | null;
   respondentPropertyId: string | null;
+}
+
+export interface SectionQuizConfig {
+  showResult: QuizShowResult;
+  maxAttempts: number | null;
+  scorePropertyId: string;
 }
 
 export interface FormFieldCondition {
@@ -109,6 +131,22 @@ export function sectionFormOf(
   };
 }
 
+export function sectionQuizOf(
+  dataConfig: PageBlockJson | undefined,
+): SectionQuizConfig | null {
+  const config = record(record(dataConfig).quiz);
+  if (typeof config.score_property_id !== 'string') return null;
+
+  return {
+    showResult: QUIZ_SHOW_RESULTS.includes(config.show_result as QuizShowResult)
+      ? (config.show_result as QuizShowResult)
+      : 'score',
+    maxAttempts:
+      typeof config.max_attempts === 'number' ? config.max_attempts : null,
+    scorePropertyId: config.score_property_id,
+  };
+}
+
 export function formFieldOf(
   dataConfig: PageBlockJson | undefined,
 ): FormFieldConfig | null {
@@ -139,6 +177,48 @@ export function formFieldOf(
           }
         : null,
   };
+}
+
+export function assertAnswerKeyValue(
+  property: DatabaseProperty,
+  value: unknown,
+): void {
+  const options = new Set(
+    property.getOptions().map((option) => option.getId()),
+  );
+  const isOption = (id: unknown) => typeof id === 'string' && options.has(id);
+
+  const valid = (() => {
+    switch (property.getType()) {
+      case PropertyType.SELECT:
+      case PropertyType.STATUS:
+        return isOption(value);
+      case PropertyType.MULTI_SELECT:
+        return (
+          Array.isArray(value) &&
+          value.length > 0 &&
+          value.every(isOption) &&
+          new Set(value).size === value.length
+        );
+      case PropertyType.CHECKBOX:
+        return typeof value === 'boolean';
+      case PropertyType.NUMBER:
+        return typeof value === 'number' && Number.isFinite(value);
+      case PropertyType.TITLE:
+      case PropertyType.TEXT:
+        return (
+          typeof value === 'string' &&
+          value.trim() !== '' &&
+          value.length <= MAX_ANSWER_LENGTH
+        );
+      default:
+        return false;
+    }
+  })();
+
+  if (!valid) {
+    throw new BadRequestException('correct_value does not fit this question');
+  }
 }
 
 @Injectable()
@@ -177,6 +257,28 @@ export class PageBlockFormService {
         context,
       ),
     };
+  }
+
+  async answerKeyDatabase(
+    section: PageBlock,
+    userId: string,
+    context?: PersistenceContext,
+  ): Promise<Database> {
+    const { database } = await this.formDatabase(section, context);
+
+    const allowed = await this.authorization.authorize({
+      userId,
+      permissions: [PERMISSIONS.PAGE_BLOCK_UPDATE],
+      target: { type: 'page', id: database.getPageId() },
+    });
+
+    if (!allowed) {
+      throw new ForbiddenException(
+        'You need edit access to the page of this database',
+      );
+    }
+
+    return database;
   }
 
   private async databaseInWorkspace(
@@ -260,8 +362,12 @@ export class PageBlockFormService {
           'form.respondent_property_id must be a person property',
         );
       }
+
+      await this.assertValidQuiz(section.next, database, section, context);
     } else if (Object.keys(formConfig).length > 0) {
       throw new BadRequestException('form.database_id is required');
+    } else if (record(section.next).quiz) {
+      throw new BadRequestException('Turn the section into a form first');
     }
 
     if (!section.sectionId || current?.databaseId === next?.databaseId) return;
@@ -324,6 +430,13 @@ export class PageBlockFormService {
       );
     }
 
+    if (
+      sectionQuizOf(parent.getDataConfig())?.scorePropertyId ===
+      field.propertyId
+    ) {
+      throw new BadRequestException('The score column cannot be a question');
+    }
+
     const config = record(dataConfig);
     optionalText(config.placeholder, 'placeholder', MAX_LABEL_LENGTH);
     optionalText(config.help_text, 'help_text', MAX_MESSAGE_LENGTH);
@@ -378,6 +491,70 @@ export class PageBlockFormService {
       throw new BadRequestException(
         'show_when must name an option of a single choice question',
       );
+    }
+  }
+
+  private async assertValidQuiz(
+    next: PageBlockJson,
+    database: Database,
+    section: { pageId: string; sectionId: string | null },
+    context?: PersistenceContext,
+  ): Promise<void> {
+    const raw = record(next).quiz;
+    if (raw === undefined || raw === null) return;
+
+    const config = record(raw);
+    const quiz = sectionQuizOf(next);
+    const maxAttempts = config.max_attempts;
+
+    if (!QUIZ_SHOW_RESULTS.includes(config.show_result as QuizShowResult)) {
+      throw new BadRequestException(
+        'quiz.show_result must be none, score or results',
+      );
+    }
+
+    if (
+      maxAttempts !== undefined &&
+      maxAttempts !== null &&
+      !(Number.isInteger(maxAttempts) && (maxAttempts as number) > 0)
+    ) {
+      throw new BadRequestException(
+        'quiz.max_attempts must be a positive whole number',
+      );
+    }
+
+    const scoreProperty = database
+      .getProperties()
+      .find((item) => item.getId() === quiz?.scorePropertyId);
+
+    if (!quiz || scoreProperty?.getType() !== PropertyType.NUMBER) {
+      throw new BadRequestException(
+        'quiz.score_property_id must be a number property of the form database',
+      );
+    }
+
+    if (database.getPageId() === section.pageId) {
+      throw new BadRequestException(
+        'Move the answers database to its own page before turning on quiz',
+      );
+    }
+
+    if (!section.sectionId) return;
+
+    const children = await this.pageBlockRepo.findActiveChildren(
+      section.sectionId,
+      context,
+    );
+
+    if (
+      children.some(
+        (child) =>
+          child.getType() === PageBlockType.FORM_FIELD &&
+          formFieldOf(child.getDataConfig())?.propertyId ===
+            quiz.scorePropertyId,
+      )
+    ) {
+      throw new BadRequestException('The score column cannot be a question');
     }
   }
 }
