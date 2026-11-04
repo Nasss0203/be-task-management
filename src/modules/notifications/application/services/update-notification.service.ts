@@ -1,5 +1,6 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
+import { NotificationSourceType } from '../../domain/entities/notification.entity';
 import { type NotificationRepository } from '../../domain/repositories/notification.repository';
 import {
   UpdateInviteNotificationStatusServiceInput,
@@ -59,6 +60,18 @@ export class UpdateNotificationServiceImpl implements UpdateNotificationService 
     return this.notificationRepository.markAsRead(
       notificationId,
       userId,
+      context,
+    );
+  }
+
+  async archiveBySources(
+    sourceType: NotificationSourceType,
+    sourceIds: string[],
+    context?: PersistenceContext,
+  ): Promise<number> {
+    return this.notificationRepository.archiveBySources(
+      sourceType,
+      sourceIds,
       context,
     );
   }

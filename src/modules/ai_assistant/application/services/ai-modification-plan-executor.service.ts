@@ -304,12 +304,12 @@ export class AiModificationPlanExecutor {
 
       for (const [propertyId, value] of Object.entries(rowInput.values)) {
         await this.setRowValueHandler.execute(
-          new SetRowValueCommand(row.getId(), propertyId, value),
+          new SetRowValueCommand(row.id, propertyId, value),
           context,
         );
       }
 
-      createdRowIds.push(row.getId());
+      createdRowIds.push(row.id);
     }
 
     return createdRowIds;

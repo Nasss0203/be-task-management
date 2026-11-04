@@ -8,6 +8,8 @@ export class CreatePageBlockCommand {
   constructor(
     public readonly input: {
       pageId: string;
+      /** Task (database row) on this page whose content the block joins. */
+      rowId?: string | null;
       parentBlockId?: string | null;
       afterBlockId?: string | null;
       type: PageBlockType;

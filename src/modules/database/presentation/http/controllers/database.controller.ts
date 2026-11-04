@@ -19,7 +19,7 @@ export class DatabaseController {
     @Body() request: CreateDatabaseRequest,
   ) {
     const database = await this.createDatabaseHandler.execute(
-      new CreateDatabaseCommand(pageId, request.name),
+      new CreateDatabaseCommand(pageId, request.name, request.title_only),
     );
 
     return {

@@ -72,7 +72,7 @@ const PRESET_SOURCES: Record<
     blocks: [
       {
         type: PageBlockType.CALLOUT,
-        text: 'Welcome to your personal workspace. Use this page to learn the basics, then delete it when you are done.',
+        text: 'Welcome to your workspace. Use this page to learn the basics, then remove what you no longer need.',
       },
       { type: PageBlockType.HEADER, text: 'The basics' },
       {

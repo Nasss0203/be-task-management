@@ -26,6 +26,8 @@ import { CreatePageBlockCommand } from 'src/modules/content/application/commands
 import { CreatePageBlockHandler } from 'src/modules/content/application/commands/page-block/create-page-block/create-page-block.handler';
 import { DeletePageBlockCommand } from 'src/modules/content/application/commands/page-block/delete-page-block/delete-page-block.command';
 import { DeletePageBlockHandler } from 'src/modules/content/application/commands/page-block/delete-page-block/delete-page-block.handler';
+import { DuplicatePageBlockCommand } from 'src/modules/content/application/commands/page-block/duplicate-page-block/duplicate-page-block.command';
+import { DuplicatePageBlockHandler } from 'src/modules/content/application/commands/page-block/duplicate-page-block/duplicate-page-block.handler';
 import { MovePageBlockCommand } from 'src/modules/content/application/commands/page-block/move-page-block/move-page-block.command';
 import { MovePageBlockHandler } from 'src/modules/content/application/commands/page-block/move-page-block/move-page-block.handler';
 import { ReorderPageBlockCommand } from 'src/modules/content/application/commands/page-block/reorder-page-block/reorder-page-block.command';
@@ -47,12 +49,17 @@ import { FindDeletedPageBlocksQuery } from 'src/modules/content/application/quer
 import { FindPageBlockByIdHandler } from 'src/modules/content/application/queries/page-block/find-page-block-by-id/find-page-block-by-id.handler';
 import { FindPageBlockByIdQuery } from 'src/modules/content/application/queries/page-block/find-page-block-by-id/find-page-block-by-id.query';
 import { FindPageBlockByPageHandler } from 'src/modules/content/application/queries/page-block/find-page-block-by-page/find-page-block-by-page.handler';
+import { FindPageBlockByRowHandler } from 'src/modules/content/application/queries/page-block/find-page-block-by-row/find-page-block-by-row.handler';
+import { FindPageBlockByRowQuery } from 'src/modules/content/application/queries/page-block/find-page-block-by-row/find-page-block-by-row.query';
 import { FindPageBlockByPageQuery } from 'src/modules/content/application/queries/page-block/find-page-block-by-page/find-page-block-by-page.query';
 import { ResolveBookmarkMetadataHandler } from 'src/modules/content/application/queries/resolve-bookmark-metadata/resolve-bookmark-metadata.handler';
 import { ResolveBookmarkMetadataQuery } from 'src/modules/content/application/queries/resolve-bookmark-metadata/resolve-bookmark-metadata.query';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
+import { CreatePageBlockColumnsDto } from 'src/modules/content/application/dto/page/create-page-block-columns.dto';
+import { CreatePageBlockColumnsCommand } from 'src/modules/content/application/commands/page-block/create-page-block-columns/create-page-block-columns.command';
+import { CreatePageBlockColumnsHandler } from 'src/modules/content/application/commands/page-block/create-page-block-columns/create-page-block-columns.handler';
 import { ResolveBookmarkMetadataRequest } from '../requests/resolve-bookmark-metadata.request';
 
 @Controller('pageBlock')
@@ -77,6 +84,9 @@ export class PageBlockController {
     @Inject(CONTENT_TYPES.applications.FindPageBlockByPageHandler)
     private readonly findPageBlockByPageHandler: FindPageBlockByPageHandler,
 
+    @Inject(CONTENT_TYPES.applications.FindPageBlockByRowHandler)
+    private readonly findPageBlockByRowHandler: FindPageBlockByRowHandler,
+
     @Inject(CONTENT_TYPES.applications.FindPageBlockByIdHandler)
     private readonly findPageBlockByIdHandler: FindPageBlockByIdHandler,
 
@@ -88,6 +98,12 @@ export class PageBlockController {
 
     @Inject(CONTENT_TYPES.applications.RestorePageBlockHandler)
     private readonly restorePageBlockHandler: RestorePageBlockHandler,
+
+    @Inject(CONTENT_TYPES.applications.DuplicatePageBlockHandler)
+    private readonly duplicatePageBlockHandler: DuplicatePageBlockHandler,
+
+    @Inject(CONTENT_TYPES.applications.CreatePageBlockColumnsHandler)
+    private readonly createPageBlockColumnsHandler: CreatePageBlockColumnsHandler,
 
     private readonly resolveBookmarkMetadataHandler: ResolveBookmarkMetadataHandler,
   ) {}
@@ -104,6 +120,7 @@ export class PageBlockController {
     return this.createPageBlockHandler.execute(
       new CreatePageBlockCommand({
         pageId: createPageBlockDto.page_id,
+        rowId: createPageBlockDto.row_id,
         parentBlockId: createPageBlockDto.parent_block_id,
         afterBlockId: createPageBlockDto.after_block_id,
         type: createPageBlockDto.type,
@@ -130,6 +147,19 @@ export class PageBlockController {
   ): Promise<PageBlockResponseDto[]> {
     return this.findPageBlockByPageHandler.execute(
       new FindPageBlockByPageQuery(pageId),
+    );
+  }
+
+  /** A task's content; readable by whoever can read the page holding its database. */
+  @Get('row/:rowId')
+  @WorkspaceContext({ source: 'resource', type: 'database_row', key: 'rowId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
+  @ResponseMessage('Find page blocks by database row')
+  findAllByRowId(
+    @Param('rowId', ParseUUIDPipe) rowId: string,
+  ): Promise<PageBlockResponseDto[]> {
+    return this.findPageBlockByRowHandler.execute(
+      new FindPageBlockByRowQuery(rowId),
     );
   }
 
@@ -259,6 +289,35 @@ export class PageBlockController {
       new RestorePageBlockCommand(blockId, auth.id),
     );
     return { success: true };
+  }
+
+  @Post(':blockId/duplicate')
+  @WriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'blockId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
+  @ResponseMessage('Duplicate page block')
+  duplicate(
+    @Param('blockId', ParseUUIDPipe) blockId: string,
+    @Auth() auth: IAuth,
+  ): Promise<PageBlockResponseDto> {
+    return this.duplicatePageBlockHandler.execute(
+      new DuplicatePageBlockCommand(blockId, auth.id),
+    );
+  }
+
+  /** Sets 2–5 blocks side by side in a new column row (drag to a block's edge, "2 columns"). */
+  @Post('columns')
+  @WriteRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'page_id' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
+  @ResponseMessage('Create page block columns')
+  createColumns(
+    @Body() dto: CreatePageBlockColumnsDto,
+    @Auth() auth: IAuth,
+  ): Promise<PageBlockResponseDto> {
+    return this.createPageBlockColumnsHandler.execute(
+      new CreatePageBlockColumnsCommand(dto.page_id, dto.block_ids, auth.id),
+    );
   }
 
   @Post('bookmark/metadata')

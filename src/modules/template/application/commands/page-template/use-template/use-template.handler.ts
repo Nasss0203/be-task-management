@@ -437,6 +437,13 @@ export class UseTemplateHandler {
     provisioningResult: DatabaseProvisioningResult,
     templateViewIdsByDatabase: Map<string, Set<string>>,
   ): PageBlockJson {
+    // A copied form must not keep writing into the source page's database
+    if (blockType === PageBlockType.SECTION && this.isJsonRecord(dataConfig)) {
+      return Object.fromEntries(
+        Object.entries(dataConfig).filter(([key]) => key !== 'form'),
+      ) as PageBlockJson;
+    }
+
     if (blockType !== PageBlockType.DATABASE_VIEW) {
       return dataConfig;
     }

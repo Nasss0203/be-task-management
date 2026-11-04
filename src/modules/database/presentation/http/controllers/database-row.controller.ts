@@ -1,12 +1,13 @@
-import { Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
-import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { CreateDatabaseRowCommand } from 'src/modules/database/application/commands/create-database-row/create-database-row.command';
 import { CreateDatabaseRowHandler } from 'src/modules/database/application/commands/create-database-row/create-database-row.handler';
+import { GetDatabasePeopleHandler } from 'src/modules/database/application/queries/get-database-people/get-database-people.handler';
 import { GetDatabaseRowsHandler } from 'src/modules/database/application/queries/get-database-rows/get-database-rows.handler';
 import { GetDatabaseRowsQuery } from 'src/modules/database/application/queries/get-database-rows/get-database-rows.query';
-import { GetDatabasePeopleHandler } from 'src/modules/database/application/queries/get-database-people/get-database-people.handler';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
+import { CreateDatabaseRowRequest } from '../requests/create-database-row.request';
 
 @Controller('databases/:databaseId/rows')
 export class DatabaseRowController {
@@ -19,17 +20,13 @@ export class DatabaseRowController {
   @Post()
   @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
-  async createRow(@Param('databaseId') databaseId: string) {
-    const row = await this.createDatabaseRowHandler.execute(
-      new CreateDatabaseRowCommand(databaseId),
+  async createRow(
+    @Param('databaseId') databaseId: string,
+    @Body() request: CreateDatabaseRowRequest,
+  ) {
+    return this.createDatabaseRowHandler.execute(
+      new CreateDatabaseRowCommand(databaseId, request?.parentRowId ?? null),
     );
-
-    return {
-      id: row.getId(),
-      databaseId: row.getDatabaseId(),
-      position: row.getPosition(),
-      values: row.getValues(),
-    };
   }
 
   /** Names for Person cells, readable by anyone who can read the rows. */
@@ -44,20 +41,8 @@ export class DatabaseRowController {
   @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
   async getRows(@Param('databaseId') databaseId: string) {
-    const rows = await this.getDatabaseRowsHandler.execute(
+    return this.getDatabaseRowsHandler.execute(
       new GetDatabaseRowsQuery(databaseId),
     );
-
-    return rows.map((row) => ({
-      id: row.getId(),
-      databaseId: row.getDatabaseId(),
-      position: row.getPosition(),
-
-      values: row.getValues().map((value) => ({
-        id: value.getId(),
-        propertyId: value.getPropertyId(),
-        value: value.getValue(),
-      })),
-    }));
   }
 }

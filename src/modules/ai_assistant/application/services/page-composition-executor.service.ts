@@ -430,7 +430,7 @@ export class PageCompositionExecutor {
         const rowRef = this.normalizeOptionalRef(rowDraft.ref);
 
         if (rowRef !== null) {
-          databaseRowIds.set(rowRef, createdRow.getId());
+          databaseRowIds.set(rowRef, createdRow.id);
         }
 
         for (const [rawPropertyRef, draftValue] of Object.entries(
@@ -462,7 +462,7 @@ export class PageCompositionExecutor {
 
           await this.setRowValueHandler.execute(
             new SetRowValueCommand(
-              createdRow.getId(),
+              createdRow.id,
               propertyId,
               resolvedValue,
             ),

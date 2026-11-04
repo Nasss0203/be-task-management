@@ -193,6 +193,7 @@ describe('UndoAiModificationPlanHandler', () => {
     expect(repo.shiftSiblingOrderIndexes).toHaveBeenCalledWith(
       'page-1',
       null,
+      null,
       1,
       context,
     );

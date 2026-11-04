@@ -16,13 +16,11 @@ export class EffectivePageAccessService {
   ): Promise<ResourceAccessLevel | null> {
     /**
      * Kiểm tra từ level cao nhất xuống thấp nhất.
-     *
-     * COMMENTER chưa đưa vào đây vì hiện tại
-     * chưa có PAGE_COMMENT_* permissions.
      */
     const levels: readonly ResourceAccessLevel[] = [
       ResourceAccessLevel.FULL_ACCESS,
       ResourceAccessLevel.EDITOR,
+      ResourceAccessLevel.COMMENTER,
       ResourceAccessLevel.VIEWER,
     ];
 

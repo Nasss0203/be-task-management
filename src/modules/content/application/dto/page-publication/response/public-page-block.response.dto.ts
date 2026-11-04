@@ -5,6 +5,27 @@ import type {
 } from 'src/shared/domain/page-block.types';
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 
+/** Bảng chỉ đọc của database nằm trên chính page được publish. */
+export interface PublicDatabaseDto {
+  id: string;
+  name: string;
+  view: {
+    id: string;
+    name: string;
+    type: string;
+    properties: { propertyId: string; position: string; visible: boolean }[];
+  };
+  properties: {
+    id: string;
+    name: string;
+    type: string;
+    isHideable: boolean;
+    position: string;
+    options: { id: string; name: string; color: string | null }[];
+  }[];
+  rows: { id: string; values: { propertyId: string; value: unknown }[] }[];
+}
+
 export class PublicPageBlockResponseDto {
   id: string;
   parent_block_id: string | null;
@@ -25,6 +46,9 @@ export class PublicPageBlockResponseDto {
 
   is_open: boolean;
 
+  /** Chỉ có ở DATABASE_VIEW; null khi database không thuộc page này. */
+  database?: PublicDatabaseDto | null;
+
   static fromDomain(block: PageBlock): PublicPageBlockResponseDto {
     const dto = new PublicPageBlockResponseDto();
 
@@ -41,7 +65,7 @@ export class PublicPageBlockResponseDto {
 
     dto.order_index = block.getOrderIndex();
 
-    // DATABASE_VIEW configuration is workspace-only; public rendering is unsupported.
+    // DATABASE_VIEW config is workspace-only; the public table comes from `database` instead.
     dto.content =
       block.getType() === PageBlockType.DATABASE_VIEW
         ? null

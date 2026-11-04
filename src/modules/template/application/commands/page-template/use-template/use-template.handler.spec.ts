@@ -1109,6 +1109,17 @@ describe('UseTemplateHandler Regression Tests', () => {
       );
     });
 
+    it('drops the form link of a copied section', () => {
+      expect(
+        handler['remapBlockDataConfig'](
+          PageBlockType.SECTION,
+          { form: { database_id: 'source' }, other: true },
+          { databaseIdMap: new Map() } as never,
+          new Map(),
+        ),
+      ).toEqual({ other: true });
+    });
+
     it('throws BadRequestException if DATABASE_VIEW block references a view that does not belong to the database', async () => {
       pageTemplateRepository.findById.mockResolvedValue(createTemplate());
       templateListingRepository.findByTemplateId.mockResolvedValue(

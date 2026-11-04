@@ -2,12 +2,13 @@ import { PropertyType } from '../../enums/property-type.enum';
 import { DatabaseProperty } from '../database/database-property.entity';
 
 import { RowValue } from './row-value.entity';
-import { DateRowValue, RowValueData } from './row-value.type';
+import { RowValueData } from './row-value.type';
 
 interface CreateDatabaseRowParams {
   id: string;
   databaseId: string;
   position?: number;
+  parentRowId?: string | null;
 }
 
 interface RestoreDatabaseRowParams {
@@ -15,6 +16,7 @@ interface RestoreDatabaseRowParams {
   databaseId: string;
   values: RowValue[];
   position?: number;
+  parentRowId?: string | null;
 }
 
 export class DatabaseRow {
@@ -25,12 +27,19 @@ export class DatabaseRow {
     readonly databaseId: string,
     values: RowValue[],
     private position: number,
+    private parentRowId: string | null,
   ) {
     this.values = [...values];
   }
 
   static create(params: CreateDatabaseRowParams): DatabaseRow {
-    return new DatabaseRow(params.id, params.databaseId, [], params.position ?? 0);
+    return new DatabaseRow(
+      params.id,
+      params.databaseId,
+      [],
+      params.position ?? 0,
+      params.parentRowId ?? null,
+    );
   }
 
   static restore(params: RestoreDatabaseRowParams): DatabaseRow {
@@ -39,6 +48,7 @@ export class DatabaseRow {
       params.databaseId,
       params.values,
       params.position ?? 0,
+      params.parentRowId ?? null,
     );
   }
 
@@ -64,6 +74,10 @@ export class DatabaseRow {
 
   getValues(): readonly RowValue[] {
     return [...this.values];
+  }
+
+  getParentRowId(): string | null {
+    return this.parentRowId;
   }
 
   setValue(property: DatabaseProperty, rowValue: RowValue): RowValue {
@@ -94,6 +108,14 @@ export class DatabaseRow {
     this.values.push(rowValue);
 
     return rowValue;
+  }
+
+  changeParent(parentRowId: string | null): void {
+    if (parentRowId === this.id) {
+      throw new Error('A row cannot be its own parent');
+    }
+
+    this.parentRowId = parentRowId;
   }
 
   private validateValue(property: DatabaseProperty, value: RowValueData): void {

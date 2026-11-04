@@ -41,6 +41,7 @@ export class RestorePageDatabaseHandler {
         const lastRootBlock = await this.pageBlockRepo.findLastSibling(
           command.pageId,
           null,
+          null,
           context,
         );
 

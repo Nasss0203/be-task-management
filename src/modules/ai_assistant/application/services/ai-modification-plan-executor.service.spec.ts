@@ -522,13 +522,9 @@ describe('AiModificationPlanExecutor', () => {
   });
 
   it('creates database rows and sets every row value using the transaction context', async () => {
-    const row1 = {
-      getId: jest.fn().mockReturnValue('row-1'),
-    };
+    const row1 = { id: 'row-1' };
 
-    const row2 = {
-      getId: jest.fn().mockReturnValue('row-2'),
-    };
+    const row2 = { id: 'row-2' };
 
     createDatabaseRowHandler.execute
       .mockResolvedValueOnce(row1)

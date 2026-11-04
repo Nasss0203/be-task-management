@@ -231,6 +231,7 @@ export class UndoAiModificationPlanHandler {
     }
     const siblings = await this.pageBlockRepository.findActiveSiblings(
       root.getPageId(),
+      root.getRowId(),
       parentBlockId,
       context,
     );
@@ -240,6 +241,7 @@ export class UndoAiModificationPlanHandler {
     ) {
       await this.pageBlockRepository.shiftSiblingOrderIndexes(
         root.getPageId(),
+        root.getRowId(),
         parentBlockId,
         root.getOrderIndex(),
         context,

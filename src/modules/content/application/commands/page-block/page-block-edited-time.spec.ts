@@ -94,6 +94,10 @@ describe('page block commands mark the Page edited', () => {
   const pages = () => pageRepository as unknown as PageRepository;
   const ordering = () => new PageBlockOrderingService(blockRepo());
   const recorder = () => activity as unknown as PageActivityRecorder;
+  const rowScope = () =>
+    ({ assertTypeAllowed: jest.fn(), assertRowOnPage: jest.fn() }) as never;
+  const forms = () => ({}) as never;
+  const columnCleanup = () => ({ tidy: jest.fn() }) as never;
 
   // kế hoạch ghi activity A3: what each command records.
   const recorded: Record<string, string> = {
@@ -109,7 +113,14 @@ describe('page block commands mark the Page edited', () => {
     [
       'create',
       () =>
-        new CreatePageBlockHandler(blockRepo(), uow, pages(), recorder()).execute(
+        new CreatePageBlockHandler(
+          blockRepo(),
+          uow,
+          pages(),
+          recorder(),
+          rowScope(),
+          forms(),
+        ).execute(
           new CreatePageBlockCommand({
             pageId: 'page-1',
             type: PageBlockType.TEXT,
@@ -121,7 +132,13 @@ describe('page block commands mark the Page edited', () => {
     [
       'update',
       () =>
-        new UpdatePageBlockHandler(blockRepo(), uow, pages(), recorder()).execute(
+        new UpdatePageBlockHandler(
+          blockRepo(),
+          uow,
+          pages(),
+          recorder(),
+          forms(),
+        ).execute(
           new UpdatePageBlockCommand(
             'a',
             { content: { text: 'edited' } },
@@ -132,17 +149,24 @@ describe('page block commands mark the Page edited', () => {
     [
       'delete',
       () =>
-        new DeletePageBlockHandler(blockRepo(), uow, pages(), recorder()).execute(
-          new DeletePageBlockCommand('a', 'user-1'),
-        ),
+        new DeletePageBlockHandler(
+          blockRepo(),
+          uow,
+          pages(),
+          recorder(),
+          columnCleanup(),
+        ).execute(new DeletePageBlockCommand('a', 'user-1')),
     ],
     [
       'restore',
       () => {
         blocks.push(block('gone', 2, { deletedAt: new Date(0) }));
-        return new RestorePageBlockHandler(blockRepo(), uow, pages(), recorder()).execute(
-          new RestorePageBlockCommand('gone', 'user-1'),
-        );
+        return new RestorePageBlockHandler(
+          blockRepo(),
+          uow,
+          pages(),
+          recorder(),
+        ).execute(new RestorePageBlockCommand('gone', 'user-1'));
       },
     ],
     [
@@ -154,11 +178,16 @@ describe('page block commands mark the Page edited', () => {
           ordering(),
           pages(),
           recorder(),
+          columnCleanup(),
         ).execute(
-          new MovePageBlockCommand('b', {
-            target_parent_block_id: null,
-            target_order_index: 0,
-          }, 'user-1'),
+          new MovePageBlockCommand(
+            'b',
+            {
+              target_parent_block_id: null,
+              target_order_index: 0,
+            },
+            'user-1',
+          ),
         ),
     ],
     [
@@ -170,15 +199,19 @@ describe('page block commands mark the Page edited', () => {
           ordering(),
           pages(),
           recorder(),
+          rowScope(),
         ).execute(
-          new ReorderPageBlockCommand({
-            page_id: 'page-1',
-            parent_block_id: null,
-            items: [
-              { id: 'a', order_index: 1 },
-              { id: 'b', order_index: 0 },
-            ],
-          }, 'user-1'),
+          new ReorderPageBlockCommand(
+            {
+              page_id: 'page-1',
+              parent_block_id: null,
+              items: [
+                { id: 'a', order_index: 1 },
+                { id: 'b', order_index: 0 },
+              ],
+            },
+            'user-1',
+          ),
         ),
     ],
     [
@@ -191,10 +224,14 @@ describe('page block commands mark the Page edited', () => {
           pages(),
           recorder(),
         ).execute(
-          new AddDatabaseViewToBlockCommand('view', {
-            database_id: 'database-1',
-            view_id: 'view-1',
-          }, 'user-1'),
+          new AddDatabaseViewToBlockCommand(
+            'view',
+            {
+              database_id: 'database-1',
+              view_id: 'view-1',
+            },
+            'user-1',
+          ),
         );
       },
     ],
@@ -217,8 +254,18 @@ describe('page block commands mark the Page edited', () => {
 
   it('does not mark the Page edited when the change fails', async () => {
     await expect(
-      new UpdatePageBlockHandler(blockRepo(), uow, pages(), recorder()).execute(
-        new UpdatePageBlockCommand('missing', { content: { text: 'x' } }),
+      new UpdatePageBlockHandler(
+        blockRepo(),
+        uow,
+        pages(),
+        recorder(),
+        forms(),
+      ).execute(
+        new UpdatePageBlockCommand(
+          'missing',
+          { content: { text: 'x' } },
+          'user-1',
+        ),
       ),
     ).rejects.toThrow(NotFoundException);
     expect(pageRepository.touch).not.toHaveBeenCalled();

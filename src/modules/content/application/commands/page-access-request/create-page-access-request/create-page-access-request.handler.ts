@@ -1,18 +1,18 @@
 import {
-    ConflictException,
-    ForbiddenException,
-    GoneException,
-    Inject,
-    Injectable,
-    Logger,
-    NotFoundException,
+  ConflictException,
+  ForbiddenException,
+  GoneException,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
 } from '@nestjs/common';
 
 import type { CreateNotificationService } from 'src/modules/notifications/application/ports/create-notification.service.port';
 import {
-    NotificationSenderType,
-    NotificationSourceType,
-    NotificationType,
+  NotificationSenderType,
+  NotificationSourceType,
+  NotificationType,
 } from 'src/modules/notifications/domain/entities/notification.entity';
 import { NOTIFICATION_TYPES } from 'src/modules/notifications/notifications.types';
 
@@ -25,6 +25,9 @@ import { PERMISSION_TYPES } from 'src/modules/permission/permission.types';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { PageShareLinkTokenService } from 'src/shared/security/page-share-link-token.service';
+
+import { ResourceAccessLevel } from 'src/modules/content/domain/constants/resource-access-level.constant';
+import { isAccessLevelAtLeast } from 'src/modules/content/domain/constants/resource-access-level.util';
 
 import { CONTENT_TYPES } from '../../../../content.types';
 import { PageAccessRequest } from '../../../../domain/entities/page-access-request.entity';
@@ -53,6 +56,8 @@ export interface CreatePageAccessRequestResult {
  */
 interface CreatePageAccessRequestInternalResult extends CreatePageAccessRequestResult {
   workspaceId: string;
+  /** Mức quyền người xin muốn; người duyệt chọn sẵn mức này. */
+  requestedAccessLevel: ResourceAccessLevel;
 }
 
 @Injectable()
@@ -104,6 +109,7 @@ export class CreatePageAccessRequestHandler {
      * - Published site bật Allow updates (xin quyền sửa).
      */
     const fromSite = Boolean(command.site);
+    const wantsEdit = fromSite || command.intent === 'edit';
 
     if (command.site) {
       await this.assertEditableOnSite(command.pageId, command.site);
@@ -170,10 +176,10 @@ export class CreatePageAccessRequestHandler {
           }
 
           /**
-           * 4. Request Access chỉ dùng khi:
+           * 4. Request Access qua link dùng khi:
            *
-           * Only people invited
-           * linkAccessLevel = null
+           * - Only people invited (linkAccessLevel = null): xin xem hoặc sửa;
+           * - Link đang cho xem / comment: chỉ còn xin quyền sửa.
            */
           const setting = await this.pageGeneralAccessReader.findByPageId(
             command.pageId,
@@ -181,10 +187,17 @@ export class CreatePageAccessRequestHandler {
 
           const linkAccessLevel = setting?.linkAccessLevel ?? null;
 
-          if (linkAccessLevel !== null) {
+          if (linkAccessLevel !== null && !wantsEdit) {
             throw new ConflictException(
               'Access request is not required while link access is enabled',
             );
+          }
+
+          if (
+            linkAccessLevel !== null &&
+            isAccessLevelAtLeast(linkAccessLevel, ResourceAccessLevel.EDITOR)
+          ) {
+            throw new ConflictException('This link already allows editing');
           }
         }
 
@@ -199,7 +212,7 @@ export class CreatePageAccessRequestHandler {
           userId: command.userId,
 
           permissions: [
-            fromSite ? PERMISSIONS.PAGE_UPDATE : PERMISSIONS.PAGE_READ,
+            wantsEdit ? PERMISSIONS.PAGE_UPDATE : PERMISSIONS.PAGE_READ,
           ],
 
           target: {
@@ -252,6 +265,10 @@ export class CreatePageAccessRequestHandler {
            * Chỉ dùng nội bộ cho Notification.
            */
           workspaceId: page.getWorkspaceId(),
+
+          requestedAccessLevel: wantsEdit
+            ? ResourceAccessLevel.EDITOR
+            : ResourceAccessLevel.VIEWER,
         };
       });
 
@@ -355,10 +372,15 @@ export class CreatePageAccessRequestHandler {
 
             type: NotificationType.PAGE_ACCESS_REQUESTED,
 
-            title: 'Page access request',
+            title:
+              result.requestedAccessLevel === ResourceAccessLevel.EDITOR
+                ? 'Page edit access request'
+                : 'Page access request',
 
             metadata: {
               accessRequestId: result.id,
+
+              requestedAccessLevel: result.requestedAccessLevel,
 
               requesterId: result.userId,
 

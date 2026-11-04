@@ -12,6 +12,8 @@ import { DeletePageBlockHandler } from './application/commands/page-block/delete
 import { MovePageBlockHandler } from './application/commands/page-block/move-page-block/move-page-block.handler';
 import { ReorderPageBlockHandler } from './application/commands/page-block/reorder-page-block/reorder-page-block.handler';
 import { RestorePageBlockHandler } from './application/commands/page-block/restore-page-block/restore-page-block.handler';
+import { DuplicatePageBlockHandler } from './application/commands/page-block/duplicate-page-block/duplicate-page-block.handler';
+import { CreatePageBlockColumnsHandler } from './application/commands/page-block/create-page-block-columns/create-page-block-columns.handler';
 import { UpdatePageBlockHandler } from './application/commands/page-block/update-page-block/update-page-block.handler';
 import { CreatePageHandler } from './application/commands/page/create-page/create-page.handler';
 import { DeletePageHandler } from './application/commands/page/delete-page/delete-page.handler';
@@ -24,6 +26,7 @@ import { ListPagePresetsHandler } from './application/queries/page/list-page-pre
 import { FindDeletedPageBlocksHandler } from './application/queries/page-block/find-deleted-page-blocks/find-deleted-page-blocks.handler';
 import { FindPageBlockByIdHandler } from './application/queries/page-block/find-page-block-by-id/find-page-block-by-id.handler';
 import { FindPageBlockByPageHandler } from './application/queries/page-block/find-page-block-by-page/find-page-block-by-page.handler';
+import { FindPageBlockByRowHandler } from './application/queries/page-block/find-page-block-by-row/find-page-block-by-row.handler';
 import { FindDeletedPagesHandler } from './application/queries/page/find-deleted-pages/find-deleted-pages.handler';
 import { FindPageByIdHandler } from './application/queries/page/find-page-by-id/find-page-by-id.handler';
 import { FindPageByWorkspaceHandler } from './application/queries/page/find-page-by-workspace/find-page-by-workspace.handler';
@@ -36,7 +39,16 @@ import { ContentPageProvisioningService } from './application/services/content-p
 import { ActivityPageActivityRecorder } from './infrastructure/activity/page-activity.recorder';
 import { ActivityModule } from '../activity/activity.module';
 import { ContentPageSnapshotReaderService } from './application/services/content-page-snapshot-reader.service';
+import { PageBlockColumnCleanupService } from './application/services/page-block-column-cleanup.service';
+import { PageBlockFormService } from './application/services/page-block-form.service';
+import { SubmitFormResponseHandler } from './application/commands/form/submit-form-response/submit-form-response.handler';
+import { GetFormStructureHandler } from './application/queries/form/get-form-structure/get-form-structure.handler';
+import { GetFormAnswerKeysHandler } from './application/queries/form/get-form-answer-keys/get-form-answer-keys.handler';
+import { GetMyQuizAttemptsHandler } from './application/queries/form/get-my-quiz-attempts/get-my-quiz-attempts.handler';
+import { SetFormAnswerKeyHandler } from './application/commands/form/set-form-answer-key/set-form-answer-key.handler';
+import { FormController } from './presentation/http/controllers/form.controller';
 import { PageBlockOrderingService } from './application/services/page-block-ordering.service';
+import { PageBlockRowScopeService } from './application/services/page-block-row-scope.service';
 import { PagePublicationTreeService } from './application/services/page-publication-tree.service';
 import { PublicSubdomainAllocatorService } from './application/services/public-subdomain-allocator.service';
 import { PublicationHierarchySynchronizerService } from './application/services/publication-hierarchy-synchronizer.service';
@@ -105,12 +117,16 @@ import { GetPageSharesHandler } from './application/queries/page-share/get-page-
 import { GetPagesSharedWithMeHandler } from './application/queries/page-share/get-pages-shared-with-me/get-pages-shared-with-me.handler';
 import { ResolvePageShareLinkHandler } from './application/queries/page-share/resolve-page-share-link/resolve-page-share-link.handler';
 import { SearchPageShareCandidatesHandler } from './application/queries/page-share/search-page-share-candidates/search-page-share-candidates.handler';
+import { FormAnswerKeyOrmEntity } from './infrastructure/persistence/typeorm/entities/form-answer-key.orm-entity';
+import { FormQuizAttemptOrmEntity } from './infrastructure/persistence/typeorm/entities/form-quiz-attempt.orm-entity';
 import { PageAccessRequestOrmEntity } from './infrastructure/persistence/typeorm/entities/page-access-request.orm-entity';
 import { PageEditRequestOrmEntity } from './infrastructure/persistence/typeorm/entities/page-edit-request.orm-entity';
 import { PageFavoriteOrmEntity } from './infrastructure/persistence/typeorm/entities/page-favorite.orm-entity';
 import { PageShareLinkOrmEntity } from './infrastructure/persistence/typeorm/entities/page-share-link.orm-entity';
 import { PageShareSettingOrmEntity } from './infrastructure/persistence/typeorm/entities/page-share-setting.orm-entity';
 import { PageShareOrmEntity } from './infrastructure/persistence/typeorm/entities/page-share.orm-entity';
+import { TypeOrmFormAnswerKeyRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-form-answer-key.repository';
+import { TypeOrmFormQuizAttemptRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-form-quiz-attempt.repository';
 import { TypeOrmPageAccessRequestRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-access-request.repository';
 import { TypeOrmPageEditRequestRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-edit-request.repository';
 import { TypeOrmPageFavoriteRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-favorite.repository';
@@ -169,6 +185,14 @@ const repositories = [
   {
     provide: CONTENT_TYPES.repositories.PagePublicationRepository,
     useClass: TypeOrmPagePublicationRepository,
+  },
+  {
+    provide: CONTENT_TYPES.repositories.FormAnswerKeyRepository,
+    useClass: TypeOrmFormAnswerKeyRepository,
+  },
+  {
+    provide: CONTENT_TYPES.repositories.FormQuizAttemptRepository,
+    useClass: TypeOrmFormQuizAttemptRepository,
   },
 ];
 
@@ -270,8 +294,20 @@ const pageBlockHandlers = [
     useClass: RestorePageBlockHandler,
   },
   {
+    provide: CONTENT_TYPES.applications.DuplicatePageBlockHandler,
+    useClass: DuplicatePageBlockHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.CreatePageBlockColumnsHandler,
+    useClass: CreatePageBlockColumnsHandler,
+  },
+  {
     provide: CONTENT_TYPES.applications.FindPageBlockByPageHandler,
     useClass: FindPageBlockByPageHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.FindPageBlockByRowHandler,
+    useClass: FindPageBlockByRowHandler,
   },
   {
     provide: CONTENT_TYPES.applications.FindPageBlockByIdHandler,
@@ -429,6 +465,9 @@ const applicationServices = [
   PublicSubdomainAllocatorService,
   PublicationHierarchySynchronizerService,
   PageBlockOrderingService,
+  PageBlockColumnCleanupService,
+  PageBlockFormService,
+  PageBlockRowScopeService,
   PageShareLinkTokenService,
   PageEditRequestNotifier,
 ];
@@ -477,6 +516,8 @@ const ports = [
       PageAccessRequestOrmEntity,
       PublishedSiteOrmEntity,
       PagePublicationOrmEntity,
+      FormAnswerKeyOrmEntity,
+      FormQuizAttemptOrmEntity,
     ]),
     DatabaseModule,
     BusinessDatabaseModule,
@@ -498,9 +539,15 @@ const ports = [
     PublishedSitesController,
     WorkspacePublishedSitesController,
     PublicPageController,
+    FormController,
   ],
 
   providers: [
+    SubmitFormResponseHandler,
+    GetFormStructureHandler,
+    GetFormAnswerKeysHandler,
+    SetFormAnswerKeyHandler,
+    GetMyQuizAttemptsHandler,
     ListPagePublicationsHandler,
     UpdatePagePublicationSettingsHandler,
     UpdatePageVisibilityHandler,

@@ -23,6 +23,7 @@ export class PageBlockMapper {
       updatedAt: orm.updated_at,
       deletedAt: orm.deleted_at,
       deletedBy: orm.deleted_by,
+      rowId: orm.row_id,
     });
   }
 
@@ -31,6 +32,7 @@ export class PageBlockMapper {
     orm.id = domain.getId();
     orm.page_id = domain.getPageId();
     orm.parent_block_id = domain.getParentBlockId();
+    orm.row_id = domain.getRowId();
     orm.type = domain.getType();
     orm.title = domain.getTitle();
     orm.position_x = domain.getPositionX();

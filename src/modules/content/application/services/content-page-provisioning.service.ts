@@ -1,9 +1,15 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import { Page } from 'src/modules/content/domain/aggregates/page/page.aggregate';
+import { PagePreset } from 'src/modules/content/domain/enums/page-preset.enum';
 import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity';
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
+import { CreateDatabaseViewCommand } from 'src/modules/database/application/commands/create-database-view/create-database-view.command';
+import { CreateDatabaseViewHandler } from 'src/modules/database/application/commands/create-database-view/create-database-view.handler';
+import { CreateDatabaseCommand } from 'src/modules/database/application/commands/create-database/create-database.command';
+import { CreateDatabaseHandler } from 'src/modules/database/application/commands/create-database/create-database.handler';
+import { DatabaseViewType } from 'src/modules/database/domain/enums/database-view-type.enum';
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
@@ -17,6 +23,7 @@ import {
   CreatePageShellInput,
   ProvisionedPageResult,
 } from '../ports/content-page-provisioning.port';
+import { getPagePreset } from './page-presets';
 import { PublicSubdomainAllocatorService } from './public-subdomain-allocator.service';
 
 @Injectable()
@@ -30,6 +37,8 @@ export class ContentPageProvisioningService implements ContentPageProvisioningPo
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
     private readonly subdomains: PublicSubdomainAllocatorService,
+    private readonly createDatabase: CreateDatabaseHandler,
+    private readonly createDatabaseView: CreateDatabaseViewHandler,
   ) {}
 
   async createDefaultPage(
@@ -38,6 +47,7 @@ export class ContentPageProvisioningService implements ContentPageProvisioningPo
   ): Promise<void> {
     const create = async (manager: PersistenceContext) => {
       await this.pageRepo.lockWorkspaceHierarchy(input.workspaceId, manager);
+      const preset = getPagePreset(PagePreset.GETTING_STARTED);
       const page = Page.create({
         workspaceId: input.workspaceId,
         title: input.title,
@@ -47,26 +57,46 @@ export class ContentPageProvisioningService implements ContentPageProvisioningPo
           input.slug ?? input.title,
           manager,
         ),
-        icon: null,
+        icon: preset.icon,
         coverUrl: null,
       });
 
       const savedPage = await this.pageRepo.save(page, manager);
 
-      const block = PageBlock.create({
-        pageId: savedPage.getId(),
-        type: PageBlockType.DATABASE_VIEW,
-        title: savedPage.getTitle(),
-        positionX: 0,
-        positionY: 0,
-        width: 12,
-        height: 1,
-        orderIndex: 0,
-        createdBy: savedPage.getCreatedBy(),
-        isOpen: true,
-      });
+      const database = await this.createDatabase.execute(
+        new CreateDatabaseCommand(savedPage.getId(), 'Tasks'),
+        manager,
+      );
+      const view = await this.createDatabaseView.execute(
+        new CreateDatabaseViewCommand(
+          database.getId(),
+          'Table',
+          DatabaseViewType.TABLE,
+        ),
+        manager,
+      );
 
-      await this.pageBlockRepo.save(block, manager);
+      await this.createBlocksFromSnapshot(
+        {
+          pageId: savedPage.getId(),
+          createdBy: savedPage.getCreatedBy(),
+          blocks: [
+            ...preset.blocks,
+            {
+              sourceId: 'default-tasks',
+              type: PageBlockType.DATABASE_VIEW,
+              title: 'Tasks',
+              positionX: 0,
+              positionY: 0,
+              width: 12,
+              height: 1,
+              orderIndex: preset.blocks.length,
+              dataConfig: { database_id: database.getId(), view_id: view.id },
+            },
+          ],
+        },
+        manager,
+      );
     };
     if (context === undefined) await this.uow.runInTransaction(create);
     else await create(context);

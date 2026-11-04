@@ -26,6 +26,7 @@ export class CreateDatabaseHandler {
       titlePropertyId: randomUUID(),
       assigneePropertyId: randomUUID(),
       dueDatePropertyId: randomUUID(),
+      titleOnly: command.titleOnly,
     });
 
     await this.databaseRepository.save(database, context);

@@ -21,6 +21,7 @@ import { ContentModule } from './modules/content/content.module';
 import { DatabaseModule as DatabaseModules } from './modules/database/database.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { MailModule } from './modules/mail/mail.module';
+import { CommentsModule } from './modules/comments/comments.module';
 import { MentionsModule } from './modules/mentions/mentions.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PermissionModule } from './modules/permission/permission.module';
@@ -66,6 +67,7 @@ import { OutboxModule } from './shared/infrastructure/outbox/outbox.module';
     AttachmentModule,
     ActivityModule,
     AiAssistantModule,
+    CommentsModule,
     MentionsModule,
     NotificationsModule,
     //V2

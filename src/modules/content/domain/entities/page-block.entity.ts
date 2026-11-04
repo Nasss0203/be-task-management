@@ -26,6 +26,8 @@ export class PageBlock {
     private updatedAt: Date,
     private deletedAt: Date | null = null,
     private deletedBy: string | null = null,
+    /** Set on a block inside a task (database row); null for the page's own content. */
+    private readonly rowId: string | null = null,
   ) {}
 
   static restore(params: {
@@ -48,6 +50,7 @@ export class PageBlock {
     updatedAt: Date;
     deletedAt: Date | null;
     deletedBy: string | null;
+    rowId?: string | null;
   }): PageBlock {
     return new PageBlock(
       params.id,
@@ -69,6 +72,7 @@ export class PageBlock {
       params.updatedAt,
       params.deletedAt,
       params.deletedBy,
+      params.rowId ?? null,
     );
   }
 
@@ -87,6 +91,7 @@ export class PageBlock {
     styleConfig?: PageBlockStyleConfig;
     dataConfig?: PageBlockJson;
     isOpen?: boolean;
+    rowId?: string | null;
   }): PageBlock {
     return new PageBlock(
       crypto.randomUUID(),
@@ -106,6 +111,9 @@ export class PageBlock {
       params.isOpen ?? true,
       new Date(),
       new Date(),
+      null,
+      null,
+      params.rowId ?? null,
     );
   }
 
@@ -114,6 +122,9 @@ export class PageBlock {
   }
   getPageId(): string {
     return this.pageId;
+  }
+  getRowId(): string | null {
+    return this.rowId;
   }
   getParentBlockId(): string | null {
     return this.parentBlockId;

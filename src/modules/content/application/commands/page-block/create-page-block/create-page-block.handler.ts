@@ -6,12 +6,21 @@ import {
 } from '@nestjs/common';
 
 import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/response/page-block.response.dto';
+import { PageBlockFormService } from 'src/modules/content/application/services/page-block-form.service';
+import { PageBlockRowScopeService } from 'src/modules/content/application/services/page-block-row-scope.service';
 
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 
 import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity';
 
-import { canContainChildren } from 'src/modules/content/domain/policies/page-block-container.policy';
+import {
+  assertCanContain,
+  assertValidLayoutStyle,
+  MAX_COLUMNS,
+} from 'src/modules/content/domain/policies/page-block-container.policy';
+import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
+
+import { isAllowedEmbedContent } from 'src/modules/content/domain/policies/page-block-embed.policy';
 
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
@@ -34,6 +43,8 @@ export class CreatePageBlockHandler {
     private readonly pageRepo: PageRepository,
     @Inject(CONTENT_TYPES.ports.PageActivityRecorder)
     private readonly activity: PageActivityRecorder,
+    private readonly rowScope: PageBlockRowScopeService,
+    private readonly forms: PageBlockFormService,
   ) {}
 
   async execute(
@@ -55,11 +66,39 @@ export class CreatePageBlockHandler {
         isOpen,
       } = command.input;
 
+      if (!isAllowedEmbedContent(type, content)) {
+        throw new BadRequestException('Unsupported embed URL');
+      }
+
       const parentBlockId = command.input.parentBlockId ?? null;
+      const rowId = command.input.rowId ?? null;
+
+      this.rowScope.assertTypeAllowed(rowId, type);
+
+      if (rowId) {
+        await this.rowScope.assertRowOnPage(rowId, pageId, context);
+      }
 
       const afterBlockId = command.input.afterBlockId ?? null;
 
-      if (parentBlockId) {
+      assertValidLayoutStyle(type, styleConfig);
+
+      if (type === PageBlockType.SECTION) {
+        await this.forms.assertValidSectionForm(
+          {
+            pageId,
+            sectionId: null,
+            current: null,
+            next: dataConfig,
+            userId: createdBy,
+          },
+          context,
+        );
+      }
+
+      if (!parentBlockId) {
+        assertCanContain(null, type);
+      } else {
         const parent = await this.pageBlockRepo.findById(
           parentBlockId,
           context,
@@ -75,10 +114,30 @@ export class CreatePageBlockHandler {
           );
         }
 
-        if (!canContainChildren(parent.getType())) {
+        if (parent.getRowId() !== rowId) {
           throw new BadRequestException(
-            `Block type ${parent.getType()} cannot contain children`,
+            'Parent page block belongs to other content',
           );
+        }
+
+        assertCanContain(parent.getType(), type);
+
+        if (type === PageBlockType.FORM_FIELD) {
+          await this.forms.assertValidFormField(parent, dataConfig, context);
+          await this.forms.assertColumnFree(parent, dataConfig, context);
+        }
+
+        if (type === PageBlockType.COLUMN) {
+          const columns = await this.pageBlockRepo.findActiveChildren(
+            parent.getId(),
+            context,
+          );
+
+          if (columns.length >= MAX_COLUMNS) {
+            throw new BadRequestException(
+              `A column row holds at most ${MAX_COLUMNS} columns`,
+            );
+          }
         }
       }
 
@@ -100,7 +159,10 @@ export class CreatePageBlockHandler {
           );
         }
 
-        if (afterBlock.getParentBlockId() !== parentBlockId) {
+        if (
+          afterBlock.getParentBlockId() !== parentBlockId ||
+          afterBlock.getRowId() !== rowId
+        ) {
           throw new BadRequestException(
             'Previous page block belongs to another parent',
           );
@@ -110,6 +172,7 @@ export class CreatePageBlockHandler {
 
         await this.pageBlockRepo.shiftSiblingOrderIndexes(
           pageId,
+          rowId,
           parentBlockId,
           orderIndex,
           context,
@@ -117,6 +180,7 @@ export class CreatePageBlockHandler {
       } else {
         const lastSibling = await this.pageBlockRepo.findLastSibling(
           pageId,
+          rowId,
           parentBlockId,
           context,
         );
@@ -129,6 +193,7 @@ export class CreatePageBlockHandler {
        */
       const block = PageBlock.create({
         pageId,
+        rowId,
         parentBlockId,
 
         type,
