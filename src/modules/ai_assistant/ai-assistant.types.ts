@@ -6,6 +6,7 @@ export const AI_ASSISTANT_TYPES = {
     PageContextTransactionLocker: Symbol('PageContextTransactionLocker'),
     TextEmbedder: Symbol('TextEmbedder'),
     PageEmbeddingStore: Symbol('PageEmbeddingStore'),
+    AiAskEventLog: Symbol('AiAskEventLog'),
   },
   services: {
     AiConversationAccess: Symbol('AiConversationAccess'),

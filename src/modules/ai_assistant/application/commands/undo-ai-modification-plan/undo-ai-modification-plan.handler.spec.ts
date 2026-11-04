@@ -18,6 +18,7 @@ import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-w
 import { AiGenerationStatus } from '../../../domain/enums/ai-generation-status.enum';
 import type { AiGenerationRepository } from '../../../domain/repositories/ai-generation.repository';
 import type { AiPageContextTransactionLocker } from '../../services/ai-page-context-transaction-lock.port';
+import type { AiAskEventRecorder } from '../../ask-log/ai-ask-event-recorder.service';
 
 import { UndoAiModificationPlanCommand } from './undo-ai-modification-plan.command';
 import { UndoAiModificationPlanHandler } from './undo-ai-modification-plan.handler';
@@ -66,6 +67,7 @@ describe('UndoAiModificationPlanHandler', () => {
   let authorize: jest.Mock;
   let touch: jest.Mock;
   let record: jest.Mock;
+  let askLog: { recordUndo: jest.Mock };
   let handler: UndoAiModificationPlanHandler;
 
   const plan = (...blockIds: string[]) => ({
@@ -121,6 +123,7 @@ describe('UndoAiModificationPlanHandler', () => {
     authorize = jest.fn(() => Promise.resolve(true));
     touch = jest.fn(() => Promise.resolve());
     record = jest.fn(() => Promise.resolve());
+    askLog = { recordUndo: jest.fn(() => Promise.resolve()) };
     handler = new UndoAiModificationPlanHandler(
       {
         findByIdAndUserIdForUpdate: jest.fn(() => Promise.resolve(generation)),
@@ -136,6 +139,7 @@ describe('UndoAiModificationPlanHandler', () => {
         lock: jest.fn(() => Promise.resolve()),
       } as unknown as AiPageContextTransactionLocker,
       { record } as unknown as PageActivityRecorder,
+      askLog as unknown as AiAskEventRecorder,
     );
   });
 
@@ -170,6 +174,15 @@ describe('UndoAiModificationPlanHandler', () => {
       context,
     );
     expect(repo.shiftSiblingOrderIndexes).not.toHaveBeenCalled();
+    // Kế hoạch ghi log Ask (L5): one UNDO row after the restore.
+    expect(askLog.recordUndo).toHaveBeenCalledTimes(1);
+    expect(askLog.recordUndo).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user-1',
+        workspaceId: 'workspace-1',
+        generationId: 'generation-1',
+      }),
+    );
   });
 
   it('moves later blocks down when a new block took the old place', async () => {
@@ -188,6 +201,8 @@ describe('UndoAiModificationPlanHandler', () => {
   it('is harmless when run twice', async () => {
     await undo();
     expect(await undo()).toEqual({ restoredBlockIds: [] });
+    // The second Undo restored nothing, so it is not recorded.
+    expect(askLog.recordUndo).toHaveBeenCalledTimes(1);
   });
 
   it('leaves blocks another user deleted at the same moment', async () => {
@@ -262,7 +277,9 @@ describe('UndoAiModificationPlanHandler', () => {
       } as unknown as UnitOfWork,
       { lock: jest.fn() } as unknown as AiPageContextTransactionLocker,
       { record } as unknown as PageActivityRecorder,
+      askLog as unknown as AiAskEventRecorder,
     );
     await expect(undo()).rejects.toBeInstanceOf(NotFoundException);
+    expect(askLog.recordUndo).not.toHaveBeenCalled();
   });
 });

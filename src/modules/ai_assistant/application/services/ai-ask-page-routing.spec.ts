@@ -5,6 +5,7 @@ import { AiConversationAccessService } from './ai-conversation-access.service';
 import { AiPageInstructionPlannerService } from './ai-page-instruction-planner.service';
 import { PageIntentExtractionService } from '../resolution/page-intent-extraction.service';
 import { PageReferenceResolver } from '../resolution/page-reference-resolver.service';
+import { passThroughAskLog } from '../ask-log/ai-ask-event-recorder.fixture';
 import { AiConversation } from '../../domain/aggregates/ai-conversation/ai-conversation.aggregate';
 import { AiConversationScope } from '../../domain/enums/ai-conversation-scope.enum';
 
@@ -106,6 +107,7 @@ describe('Ask -> Page Intent -> authorized resolver -> draft planner', () => {
       {} as never,
       {} as never,
       planner,
+      passThroughAskLog(),
     );
     const input = {
       userId: 'actor',

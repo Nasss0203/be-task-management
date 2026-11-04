@@ -7,6 +7,7 @@ import { AiToolCallOrmEntity } from 'src/modules/ai_assistant/infrastructure/per
 import { AiUsageOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-usage.orm-entity';
 import { PageEmbeddingOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/page-embedding.orm-entity';
 import { PageIndexStateOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/page-index-state.orm-entity';
+import { AiAskEventOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-ask-event.orm-entity';
 import { AttachmentOrmEntity } from 'src/modules/attachment/infrastructure/persistence/typeorm/entities/attachment.orm-entity';
 import { BillingFeatureOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/billing-feature.orm-entity';
 import { BillingPlanFeatureOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/billing-plan-feature.orm-entity';
@@ -154,4 +155,5 @@ export const DATABASE_ENTITIES = [
   CreatorProfileOrmEntity,
   PageEmbeddingOrmEntity,
   PageIndexStateOrmEntity,
+  AiAskEventOrmEntity,
 ];

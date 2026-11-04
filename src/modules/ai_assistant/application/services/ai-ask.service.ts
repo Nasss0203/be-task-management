@@ -8,6 +8,7 @@ import { AI_ASSISTANT_TYPES } from '../../ai-assistant.types';
 import { AiConversationScope } from '../../domain/enums/ai-conversation-scope.enum';
 import { AiConversationStatus } from '../../domain/enums/ai-conversation-status.enum';
 import type { AiConversationRepository } from '../../domain/repositories/ai-conversation.repository';
+import { AiAskEventRecorder } from '../ask-log/ai-ask-event-recorder.service';
 import { CreateConversationCommand } from '../commands/create-conversation/create-conversation.command';
 import { CreateConversationHandler } from '../commands/create-conversation/create-conversation.handler';
 import { PAGE_COMPOSITION_CAPABILITY } from '../constants/page-composition.constant';
@@ -195,9 +196,30 @@ export class AiAskService {
     private readonly createConversation: CreateConversationHandler,
     private readonly assistant: AiAssistantService,
     private readonly pagePlanner: AiPageInstructionPlannerService,
+    private readonly askLog: AiAskEventRecorder,
   ) {}
 
+  /** Kế hoạch ghi log Ask (L3): every Ask is recorded once, however it ends. */
   async ask(input: AskAiInput): Promise<AiAskResponse> {
+    return this.askLog.trackAsk(
+      {
+        userId: input.userId,
+        workspaceId: input.workspaceId,
+        requestId: input.requestId,
+        instruction: String(input.instruction ?? ''),
+        currentPageId: input.currentPageId,
+        selectedPageId: input.selectedPageId,
+        selectedText: input.selectedText,
+        shareToken: input.shareToken,
+        findOnly:
+          typeof input.instruction === 'string' &&
+          isFindOnlyRequest(input.instruction),
+      },
+      () => this.answer(input),
+    );
+  }
+
+  private async answer(input: AskAiInput): Promise<AiAskResponse> {
     const payload = {
       instruction: input.instruction,
       ...(input.selectedText != null

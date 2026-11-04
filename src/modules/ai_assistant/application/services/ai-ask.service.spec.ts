@@ -6,6 +6,7 @@ import {
 import { AiConversation } from '../../domain/aggregates/ai-conversation/ai-conversation.aggregate';
 import { AiConversationScope } from '../../domain/enums/ai-conversation-scope.enum';
 import { AiAskService } from './ai-ask.service';
+import { passThroughAskLog } from '../ask-log/ai-ask-event-recorder.fixture';
 
 describe('AiAskService', () => {
   function fixture() {
@@ -48,6 +49,7 @@ describe('AiAskService', () => {
       create as never,
       assistant as never,
       planner as never,
+      passThroughAskLog(),
     );
     function classifyPort() {
       return { classify };

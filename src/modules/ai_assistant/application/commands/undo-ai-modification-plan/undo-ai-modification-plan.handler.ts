@@ -1,3 +1,5 @@
+import { performance } from 'node:perf_hooks';
+
 import {
   BadRequestException,
   ConflictException,
@@ -19,6 +21,7 @@ import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persist
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 
 import { AI_ASSISTANT_TYPES } from '../../../ai-assistant.types';
+import { AiAskEventRecorder } from '../../ask-log/ai-ask-event-recorder.service';
 import { AiGenerationStatus } from '../../../domain/enums/ai-generation-status.enum';
 import type { AiGenerationRepository } from '../../../domain/repositories/ai-generation.repository';
 import { AI_MODIFICATION_PLAN_CAPABILITY } from '../../constants/ai-modification-plan.constant';
@@ -67,12 +70,33 @@ export class UndoAiModificationPlanHandler {
 
     @Inject(CONTENT_TYPES.ports.PageActivityRecorder)
     private readonly activity: PageActivityRecorder,
+
+    private readonly askLog: AiAskEventRecorder,
   ) {}
 
   async execute(
     command: UndoAiModificationPlanCommand,
     now: Date = new Date(),
   ): Promise<UndoAiModificationPlanResult> {
+    const started = performance.now();
+    const { result, workspaceId } = await this.restore(command, now);
+    // Kế hoạch ghi log Ask (L5): only after the restore is committed, and only
+    // when it restored something (a second Undo restores nothing).
+    if (result.restoredBlockIds.length > 0) {
+      await this.askLog.recordUndo({
+        userId: command.userId,
+        workspaceId,
+        generationId: command.generationId,
+        durationMs: performance.now() - started,
+      });
+    }
+    return result;
+  }
+
+  private restore(
+    command: UndoAiModificationPlanCommand,
+    now: Date,
+  ): Promise<{ result: UndoAiModificationPlanResult; workspaceId: string }> {
     return this.unitOfWork.runInTransaction(async (context) => {
       const generation =
         await this.generationRepository.findByIdAndUserIdForUpdate(
@@ -187,7 +211,7 @@ export class UndoAiModificationPlanHandler {
           context,
         );
       }
-      return { restoredBlockIds };
+      return { result: { restoredBlockIds }, workspaceId };
     });
   }
 

@@ -204,6 +204,10 @@
     {
       "file": "1792915329668-UpdateSchema.ts",
       "sha256": "fcbd2c8d3ba08964ac34a29d331c51c1d4fb6d93eb3975be151714e04f7c328a"
+    },
+    {
+      "file": "1793446665938-CreateAiAskEvents.ts",
+      "sha256": "2615109f14e3183f0b2baa493819862f086bff0d5b8f76d53c30f698cb28bc02"
     }
   ]
 }

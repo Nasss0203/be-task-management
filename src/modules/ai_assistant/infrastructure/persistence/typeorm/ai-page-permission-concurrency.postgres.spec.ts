@@ -14,7 +14,7 @@ import { TypeOrmPageGeneralAccessReader } from 'src/modules/permission/infrastru
 import { PERMISSIONS } from 'src/modules/permission/domain/permissions/permission-code';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
-import { TeamspaceVisibility } from 'src/modules/workspace/domain/enums/teamspace-visibility.enum';
+import { TeamspaceVisibility } from 'src/modules/teamspace/domain/enums/teamspace-visibility.enum';
 import { AiGenerationStatus } from '../../../domain/enums/ai-generation-status.enum';
 import { AI_MODIFICATION_PLAN_CAPABILITY } from '../../../application/constants/ai-modification-plan.constant';
 import { fingerprintAiPageContext } from '../../../application/services/ai-page-context-fingerprint';

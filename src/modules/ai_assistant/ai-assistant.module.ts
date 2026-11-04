@@ -72,6 +72,8 @@ import { PageEmbeddingIndexer } from './application/embedding/page-embedding-ind
 import { PageEmbeddingSearch } from './application/embedding/page-embedding-search.service';
 import { PageSourceReferences } from './application/embedding/page-source-references.service';
 import { PageEmbeddingSqlStore } from './infrastructure/embedding/page-embedding.store';
+import { AiAskEventRecorder } from './application/ask-log/ai-ask-event-recorder.service';
+import { AiAskEventSqlStore } from './infrastructure/ask-log/ai-ask-event.store';
 
 @Module({
   imports: [
@@ -124,6 +126,7 @@ import { PageEmbeddingSqlStore } from './infrastructure/embedding/page-embedding
     PageEmbeddingIndexer,
     PageEmbeddingSearch,
     PageSourceReferences,
+    AiAskEventRecorder,
 
     AiAssistantService,
     {
@@ -159,6 +162,10 @@ import { PageEmbeddingSqlStore } from './infrastructure/embedding/page-embedding
     {
       provide: AI_ASSISTANT_TYPES.ports.PageEmbeddingStore,
       useClass: PageEmbeddingSqlStore,
+    },
+    {
+      provide: AI_ASSISTANT_TYPES.ports.AiAskEventLog,
+      useClass: AiAskEventSqlStore,
     },
     {
       provide: AI_ASSISTANT_TYPES.ports.PageContextTransactionLocker,
