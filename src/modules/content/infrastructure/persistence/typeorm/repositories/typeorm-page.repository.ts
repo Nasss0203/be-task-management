@@ -33,6 +33,7 @@ export class TypeOrmPageRepository implements PageRepository {
   ): Promise<boolean> {
     return this.resolveRepo(context).exists({
       where: { public_subdomain: subdomain },
+      withDeleted: true,
     });
   }
   async lockWorkspaceHierarchy(

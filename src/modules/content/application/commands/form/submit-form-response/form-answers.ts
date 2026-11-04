@@ -3,6 +3,7 @@ import { PropertyType } from 'src/modules/database/domain/enums/property-type.en
 
 export interface FormQuestion {
   propertyId: string;
+  blockId?: string;
   label: string;
   required: boolean;
   type: PropertyType;
