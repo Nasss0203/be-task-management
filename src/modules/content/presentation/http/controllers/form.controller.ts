@@ -20,12 +20,15 @@ import {
   type SubmitFormResponseResult,
 } from 'src/modules/content/application/commands/form/submit-form-response/submit-form-response.handler';
 import { FormAnswerKeyResponseDto } from 'src/modules/content/application/dto/form/response/form-answer-key.response.dto';
+import type { MyQuizAttemptsResponseDto } from 'src/modules/content/application/dto/form/response/form-quiz-attempts.response.dto';
 import { SetFormAnswerKeyDto } from 'src/modules/content/application/dto/form/set-form-answer-key.dto';
 import { SubmitFormResponseDto } from 'src/modules/content/application/dto/form/submit-form-response.dto';
 import { GetFormAnswerKeysHandler } from 'src/modules/content/application/queries/form/get-form-answer-keys/get-form-answer-keys.handler';
 import { GetFormAnswerKeysQuery } from 'src/modules/content/application/queries/form/get-form-answer-keys/get-form-answer-keys.query';
 import { GetFormStructureHandler } from 'src/modules/content/application/queries/form/get-form-structure/get-form-structure.handler';
 import { GetFormStructureQuery } from 'src/modules/content/application/queries/form/get-form-structure/get-form-structure.query';
+import { GetMyQuizAttemptsHandler } from 'src/modules/content/application/queries/form/get-my-quiz-attempts/get-my-quiz-attempts.handler';
+import { GetMyQuizAttemptsQuery } from 'src/modules/content/application/queries/form/get-my-quiz-attempts/get-my-quiz-attempts.query';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
 
@@ -36,6 +39,7 @@ export class FormController {
     private readonly getFormStructureHandler: GetFormStructureHandler,
     private readonly getFormAnswerKeysHandler: GetFormAnswerKeysHandler,
     private readonly setFormAnswerKeyHandler: SetFormAnswerKeyHandler,
+    private readonly getMyQuizAttemptsHandler: GetMyQuizAttemptsHandler,
   ) {}
 
   @Get(':blockId/answer-keys')
@@ -70,6 +74,19 @@ export class FormController {
         dto.points,
         auth.id,
       ),
+    );
+  }
+
+  @Get(':blockId/attempts/me')
+  @WorkspaceContext({ source: 'resource', type: 'page_block', key: 'blockId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
+  @ResponseMessage('Get my quiz attempts')
+  getMyAttempts(
+    @Param('blockId', ParseUUIDPipe) sectionBlockId: string,
+    @Auth() auth: IAuth,
+  ): Promise<MyQuizAttemptsResponseDto> {
+    return this.getMyQuizAttemptsHandler.execute(
+      new GetMyQuizAttemptsQuery(sectionBlockId, auth.id),
     );
   }
 

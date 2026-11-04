@@ -42,6 +42,7 @@ import { PageBlockFormService } from './application/services/page-block-form.ser
 import { SubmitFormResponseHandler } from './application/commands/form/submit-form-response/submit-form-response.handler';
 import { GetFormStructureHandler } from './application/queries/form/get-form-structure/get-form-structure.handler';
 import { GetFormAnswerKeysHandler } from './application/queries/form/get-form-answer-keys/get-form-answer-keys.handler';
+import { GetMyQuizAttemptsHandler } from './application/queries/form/get-my-quiz-attempts/get-my-quiz-attempts.handler';
 import { SetFormAnswerKeyHandler } from './application/commands/form/set-form-answer-key/set-form-answer-key.handler';
 import { FormController } from './presentation/http/controllers/form.controller';
 import { PageBlockOrderingService } from './application/services/page-block-ordering.service';
@@ -539,6 +540,7 @@ const ports = [
     GetFormStructureHandler,
     GetFormAnswerKeysHandler,
     SetFormAnswerKeyHandler,
+    GetMyQuizAttemptsHandler,
     ListPagePublicationsHandler,
     UpdatePagePublicationSettingsHandler,
     UpdatePageVisibilityHandler,
