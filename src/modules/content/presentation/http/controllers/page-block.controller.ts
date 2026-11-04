@@ -168,13 +168,14 @@ export class PageBlockController {
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_READ)
   async findDeletedPageBlocks(
     @Query('workspaceId') workspaceId: string,
+    @Auth() auth: IAuth,
     @Query('pageId') pageId?: string,
   ) {
     if (!workspaceId) {
       throw new BadRequestException('workspaceId is required');
     }
     return this.findDeletedPageBlocksHandler.execute(
-      new FindDeletedPageBlocksQuery(workspaceId, pageId),
+      new FindDeletedPageBlocksQuery(workspaceId, auth.id, pageId),
     );
   }
 
