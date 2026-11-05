@@ -4,6 +4,8 @@ import type { PersistenceContext } from 'src/shared/infrastructure/persistence/p
 import { BILLING_TYPES } from '../../billing.types';
 import { BillingInterval } from '../../domain/constants/billing-interval.constant';
 import { BillingProvider } from '../../domain/constants/billing-provider.constant';
+import { SubscriptionStatus } from '../../domain/constants/subscription-status.constant';
+import type { WorkspaceSubscription } from '../../domain/entities/workspace-subscription.entity';
 import type { BillingPlanPriceRepository } from '../../domain/repositories/billing-plan-price.repository';
 import type { PaymentOrderRepository } from '../../domain/repositories/payment-order.repository';
 import type { WorkspaceSubscriptionRepository } from '../../domain/repositories/workspace-subscription.repository';
@@ -75,7 +77,10 @@ export class BillingPaymentSettlementService {
     }
 
     const [subscription, planPrice] = await Promise.all([
-      this.subscriptionRepository.findById(subscriptionId, input.context),
+      this.subscriptionRepository.findByIdForUpdate(
+        subscriptionId,
+        input.context,
+      ),
       this.billingPlanPriceRepository.findById(
         paymentOrder.getPlanPriceId(),
         input.context,
@@ -104,8 +109,14 @@ export class BillingPaymentSettlementService {
       throw new Error('Payment order does not match its billing plan price');
     }
 
-    const periodEnd = this.calculatePeriodEnd(
+    const remainingPeriod = this.findRemainingPeriod(
+      subscription,
+      planPrice.getPlanId(),
       input.paidAt,
+    );
+
+    const periodEnd = this.calculatePeriodEnd(
+      remainingPeriod?.end ?? input.paidAt,
       planPrice.getBillingInterval(),
     );
 
@@ -115,7 +126,7 @@ export class BillingPaymentSettlementService {
       planId: planPrice.getPlanId(),
       planPriceId: planPrice.getId(),
       provider: planPrice.getProvider(),
-      periodStart: input.paidAt,
+      periodStart: remainingPeriod?.start ?? input.paidAt,
       periodEnd,
       changedAt: input.processedAt,
     });
@@ -124,6 +135,25 @@ export class BillingPaymentSettlementService {
     await this.subscriptionRepository.save(subscription, input.context);
 
     return 'PROCESSED';
+  }
+
+  private findRemainingPeriod(
+    subscription: WorkspaceSubscription,
+    planId: string,
+    paidAt: Date,
+  ): { start: Date; end: Date } | null {
+    const start = subscription.getCurrentPeriodStart();
+    const end = subscription.getCurrentPeriodEnd();
+
+    const isRenewingActivePaidPlan =
+      subscription.getStatus() === SubscriptionStatus.ACTIVE &&
+      subscription.getPlanPriceId() !== null &&
+      subscription.getPlanId() === planId &&
+      start !== null &&
+      end !== null &&
+      end.getTime() > paidAt.getTime();
+
+    return isRenewingActivePaidPlan ? { start, end } : null;
   }
 
   private calculatePeriodEnd(

@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import {
   ActivityAction,
@@ -6,6 +11,11 @@ import {
 } from 'src/modules/activity/domain/entities/activity.entity';
 import type { CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
 import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import { CONTENT_TYPES } from 'src/modules/content/content.types';
+import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
+import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
+import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 
 import { ATTACHMENT_TOKENS } from '../../../attachment.tokens';
 import { AttachmentAggregate } from '../../../domain/aggregates/attachment.aggregate';
@@ -29,6 +39,14 @@ export class UploadAttachmentHandler {
 
     @Inject(ACTIVITY_TYPES.services.CreateActivityService)
     private readonly createActivityService: CreateActivityService,
+
+    @Inject(CONTENT_TYPES.repositories.PageBlockRepository)
+    private readonly pageBlockRepository: PageBlockRepository,
+
+    @Inject(CONTENT_TYPES.repositories.PageRepository)
+    private readonly pageRepository: PageRepository,
+
+    private readonly authorizationService: AuthorizationService,
   ) {}
 
   async execute(command: UploadAttachmentCommand): Promise<AttachmentDto> {
@@ -37,6 +55,8 @@ export class UploadAttachmentHandler {
         'taskId, commentId or pageBlockId is required',
       );
     }
+
+    await this.assertCanAttachToPageBlock(command);
 
     // TODO(hardening): verify resource access and workspace consistency.
 
@@ -95,5 +115,31 @@ export class UploadAttachmentHandler {
     });
 
     return AttachmentDto.fromAggregate(saved);
+  }
+
+  private async assertCanAttachToPageBlock(
+    command: UploadAttachmentCommand,
+  ): Promise<void> {
+    if (!command.pageBlockId) {
+      return;
+    }
+
+    const block = await this.pageBlockRepository.findById(command.pageBlockId);
+    const page =
+      block && !block.getDeletedAt()
+        ? await this.pageRepository.findById(block.getPageId())
+        : null;
+
+    const allowed =
+      page?.getWorkspaceId() === command.workspaceId &&
+      (await this.authorizationService.authorize({
+        userId: command.actorId,
+        permissions: [PERMISSIONS.PAGE_BLOCK_UPDATE],
+        target: { type: 'pageBlock', id: command.pageBlockId },
+      }));
+
+    if (!allowed) {
+      throw new NotFoundException('Page block not found');
+    }
   }
 }

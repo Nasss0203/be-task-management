@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import {
   ActivityAction,
   ActivityEntityType,
@@ -14,11 +14,17 @@ describe('UploadAttachmentHandler', () => {
   const validateRealFileType = jest.fn();
   const upload = jest.fn();
   const createActivity = jest.fn();
+  const findBlockById = jest.fn();
+  const findPageById = jest.fn();
+  const authorize = jest.fn();
   const handler = new UploadAttachmentHandler(
     { save } as never,
     { validateExtension, validateRealFileType } as never,
     { upload } as never,
     { create: createActivity } as never,
+    { findById: findBlockById } as never,
+    { findById: findPageById } as never,
+    { authorize } as never,
   );
   const file = {
     originalName: 'test.png',
@@ -30,6 +36,12 @@ describe('UploadAttachmentHandler', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     validateExtension.mockReturnValue('.png');
+    findBlockById.mockResolvedValue({
+      getPageId: () => 'page-1',
+      getDeletedAt: () => null,
+    });
+    findPageById.mockResolvedValue({ getWorkspaceId: () => 'ws-1' });
+    authorize.mockResolvedValue(true);
     validateRealFileType.mockResolvedValue('image/png');
     upload.mockResolvedValue({
       provider: AttachmentProvider.CLOUDINARY,
@@ -70,6 +82,58 @@ describe('UploadAttachmentHandler', () => {
       ),
     ).rejects.toThrow(BadRequestException);
     expect(upload).not.toHaveBeenCalled();
+  });
+
+  describe('with a page block target', () => {
+    const uploadToBlock = () =>
+      handler.execute(
+        new UploadAttachmentCommand(
+          file,
+          'ws-1',
+          null,
+          null,
+          'block-1',
+          'user-1',
+        ),
+      );
+
+    it('uploads when the user can edit the block of this workspace', async () => {
+      await expect(uploadToBlock()).resolves.toMatchObject({
+        pageBlockId: 'block-1',
+      });
+      expect(authorize).toHaveBeenCalledWith({
+        userId: 'user-1',
+        permissions: ['page_block.update'],
+        target: { type: 'pageBlock', id: 'block-1' },
+      });
+    });
+
+    it('rejects a block of another workspace', async () => {
+      findPageById.mockResolvedValue({ getWorkspaceId: () => 'ws-2' });
+
+      await expect(uploadToBlock()).rejects.toThrow(NotFoundException);
+      expect(upload).not.toHaveBeenCalled();
+    });
+
+    it('rejects a block the user cannot edit', async () => {
+      authorize.mockResolvedValue(false);
+
+      await expect(uploadToBlock()).rejects.toThrow(NotFoundException);
+      expect(upload).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['missing', null],
+      [
+        'in the trash',
+        { getPageId: () => 'page-1', getDeletedAt: () => new Date() },
+      ],
+    ])('rejects a block that is %s', async (_label, foundBlock) => {
+      findBlockById.mockResolvedValue(foundBlock);
+
+      await expect(uploadToBlock()).rejects.toThrow(NotFoundException);
+      expect(upload).not.toHaveBeenCalled();
+    });
   });
 
   it('preserves validation, storage, persistence and activity ordering data', async () => {

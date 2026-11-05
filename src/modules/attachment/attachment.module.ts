@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MulterConfigService } from 'src/config/multer.config';
 import { StorageInfrastructureModule } from 'src/shared/infrastructure/storage/storage.module';
 import { ActivityModule } from '../activity/activity.module';
+import { ContentModule } from '../content/content.module';
+import { PermissionModule } from '../permission/permission.module';
 import { DeleteAttachmentHandler } from './application/commands/delete-attachment/delete-attachment.handler';
 import { UpdateAttachmentHandler } from './application/commands/update-attachment/update-attachment.handler';
 import { UploadAttachmentHandler } from './application/commands/upload-attachment/upload-attachment.handler';
@@ -31,6 +33,8 @@ const handlers = [
     MulterModule.registerAsync({ useClass: MulterConfigService }),
     TypeOrmModule.forFeature([AttachmentOrmEntity]),
     ActivityModule,
+    ContentModule,
+    PermissionModule,
     StorageInfrastructureModule,
   ],
   controllers: [AttachmentController],

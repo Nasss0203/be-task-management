@@ -100,10 +100,10 @@ describe('AttachmentController', () => {
   it('delegates task listing', async () => {
     getByTaskExecute.mockResolvedValue([{ id: 'att-1' }]);
 
-    await controller.findByTask('task-1');
+    await controller.findByTask('task-1', { id: 'user-1' } as IAuth);
 
     expect(getByTaskExecute).toHaveBeenCalledWith(
-      expect.objectContaining({ taskId: 'task-1' }),
+      expect.objectContaining({ taskId: 'task-1', actorId: 'user-1' }),
     );
   });
 

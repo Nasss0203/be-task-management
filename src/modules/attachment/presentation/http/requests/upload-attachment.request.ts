@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class UploadAttachmentRequest {
   @IsString()
@@ -14,6 +14,6 @@ export class UploadAttachmentRequest {
   commentId?: string;
 
   @IsOptional()
-  @IsString()
+  @IsUUID()
   pageBlockId?: string;
 }

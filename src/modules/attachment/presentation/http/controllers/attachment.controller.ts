@@ -83,7 +83,9 @@ export class AttachmentController {
     return this.uploadAttachmentHandler.execute(
       new UploadAttachmentCommand(
         {
-          originalName: Buffer.from(file.originalname, 'latin1').toString('utf8'),
+          originalName: Buffer.from(file.originalname, 'latin1').toString(
+            'utf8',
+          ),
           reportedMimeType: file.mimetype,
           size: file.size,
           buffer: file.buffer,
@@ -99,9 +101,9 @@ export class AttachmentController {
 
   @Get('tasks/:taskId')
   @ReadRateLimit()
-  findByTask(@Param('taskId') taskId: string) {
+  findByTask(@Param('taskId') taskId: string, @Auth() auth: IAuth) {
     return this.getAttachmentsByTaskHandler.execute(
-      new GetAttachmentsByTaskQuery(taskId),
+      new GetAttachmentsByTaskQuery(taskId, auth.id),
     );
   }
 

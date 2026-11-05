@@ -12,6 +12,11 @@ export interface WorkspaceSubscriptionRepository {
     context?: PersistenceContext,
   ): Promise<WorkspaceSubscription | null>;
 
+  findByIdForUpdate(
+    id: string,
+    context: PersistenceContext,
+  ): Promise<WorkspaceSubscription | null>;
+
   findByWorkspaceId(
     workspaceId: string,
     context?: PersistenceContext,
