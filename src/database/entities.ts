@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { Activity } from 'src/modules/activity/infrastructure/persistence/typeorm/entities/activity.orm-entity';
+import { AiAskEventOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-ask-event.orm-entity';
 import { AiConversationOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-conversation.orm-entity';
 import { AiGenerationOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-generation.orm-entity';
 import { AiMessageOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-message.orm-entity';
@@ -7,7 +8,6 @@ import { AiToolCallOrmEntity } from 'src/modules/ai_assistant/infrastructure/per
 import { AiUsageOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-usage.orm-entity';
 import { PageEmbeddingOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/page-embedding.orm-entity';
 import { PageIndexStateOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/page-index-state.orm-entity';
-import { AiAskEventOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-ask-event.orm-entity';
 import { AttachmentOrmEntity } from 'src/modules/attachment/infrastructure/persistence/typeorm/entities/attachment.orm-entity';
 import { BillingFeatureOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/billing-feature.orm-entity';
 import { BillingPlanFeatureOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/billing-plan-feature.orm-entity';
@@ -31,6 +31,7 @@ import { PageShareSettingOrmEntity } from 'src/modules/content/infrastructure/pe
 import { PageShareOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-share.orm-entity';
 import { PageOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page.orm-entity';
 import { PublishedSiteOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/published-site.orm-entity';
+import { CalendarFeedOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/calendar-feed.orm-entity';
 import { DatabasePropertyOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-property.orm-entity';
 import { DatabaseRowOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-row.orm-entity';
 import { DatabaseViewPropertyOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database-view-property.orm-entity';
@@ -162,4 +163,5 @@ export const DATABASE_ENTITIES = [
   CommentOrmEntity,
   FormAnswerKeyOrmEntity,
   FormQuizAttemptOrmEntity,
+  CalendarFeedOrmEntity,
 ];

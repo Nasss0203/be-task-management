@@ -3,6 +3,7 @@ export const DATABASE_TYPES = {
     DatabaseRepository: Symbol('DatabaseRepository'),
     DatabaseRowRepository: Symbol('DatabaseRowRepository'),
     DatabaseViewRepository: Symbol('DatabaseViewRepository'),
+    CalendarFeedRepository: Symbol('CalendarFeedRepository'),
   },
   ports: {
     DatabaseProvisioning: Symbol('DatabaseProvisioning'),

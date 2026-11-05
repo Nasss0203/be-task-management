@@ -240,6 +240,10 @@
     {
       "file": "1793525596585-UpdateSchema.ts",
       "sha256": "fcaa3d53dc2a5f97fb107e59d49e1ebcf1c5935f7f1753e49e3e58a786530837"
+    },
+    {
+      "file": "1793857872144-CreateCalendarFeeds.ts",
+      "sha256": "94a04741fe232c6d2f273ef3f73992ce4fdc98c8f81e974b9387cabed3700b2d"
     }
   ]
 }
