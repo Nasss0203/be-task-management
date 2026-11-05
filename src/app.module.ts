@@ -16,6 +16,7 @@ import { ActivityModule } from './modules/activity/activity.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AiAssistantModule } from './modules/ai_assistant/ai-assistant.module';
 import { AttachmentModule } from './modules/attachment/attachment.module';
+import { CalendarSyncModule } from './modules/calendar-sync/calendar-sync.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { ContentModule } from './modules/content/content.module';
 import { DatabaseModule as DatabaseModules } from './modules/database/database.module';
@@ -65,6 +66,7 @@ import { OutboxModule } from './shared/infrastructure/outbox/outbox.module';
     TemplateModule,
     MailModule,
     AttachmentModule,
+    CalendarSyncModule,
     ActivityModule,
     AiAssistantModule,
     CommentsModule,

@@ -38,22 +38,19 @@ const isDateValue = (value: unknown): value is DateRowValue =>
   typeof (value as DateRowValue).start === 'string' &&
   DATE_KEY.test((value as DateRowValue).start);
 
-export function buildCalendarIcs(input: {
-  name: string;
+export type CalendarEntry = {
+  rowId: string;
+  title: string;
+  startDate: string;
+  endDateExclusive: string;
+};
+
+export function collectCalendarEntries(input: {
   titlePropertyId: string | null;
   datePropertyId: string;
   rows: readonly DatabaseRow[];
-  now: Date;
-}): string {
-  const stamp = `${input.now.toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`;
-  const lines = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Taskmanly//Calendar feed//EN',
-    'CALSCALE:GREGORIAN',
-    'METHOD:PUBLISH',
-    `X-WR-CALNAME:${escapeText(input.name)}`,
-  ];
+}): CalendarEntry[] {
+  const entries: CalendarEntry[] = [];
 
   for (const row of input.rows) {
     const valueOf = (propertyId: string | null) =>
@@ -71,13 +68,42 @@ export function buildCalendarIcs(input: {
         : date.start;
     const title = valueOf(input.titlePropertyId);
 
+    entries.push({
+      rowId: row.getId(),
+      title: typeof title === 'string' && title.trim() ? title : 'Untitled',
+      startDate: date.start,
+      endDateExclusive: nextDay(end),
+    });
+  }
+
+  return entries;
+}
+
+export function buildCalendarIcs(input: {
+  name: string;
+  titlePropertyId: string | null;
+  datePropertyId: string;
+  rows: readonly DatabaseRow[];
+  now: Date;
+}): string {
+  const stamp = `${input.now.toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`;
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Taskmanly//Calendar feed//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    `X-WR-CALNAME:${escapeText(input.name)}`,
+  ];
+
+  for (const entry of collectCalendarEntries(input)) {
     lines.push(
       'BEGIN:VEVENT',
-      `UID:${row.getId()}@taskmanly`,
+      `UID:${entry.rowId}@taskmanly`,
       `DTSTAMP:${stamp}`,
-      `DTSTART;VALUE=DATE:${compact(date.start)}`,
-      `DTEND;VALUE=DATE:${compact(nextDay(end))}`,
-      `SUMMARY:${escapeText(typeof title === 'string' && title.trim() ? title : 'Untitled')}`,
+      `DTSTART;VALUE=DATE:${compact(entry.startDate)}`,
+      `DTEND;VALUE=DATE:${compact(entry.endDateExclusive)}`,
+      `SUMMARY:${escapeText(entry.title)}`,
       'END:VEVENT',
     );
   }

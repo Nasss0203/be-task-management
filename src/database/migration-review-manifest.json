@@ -244,6 +244,14 @@
     {
       "file": "1793857872144-CreateCalendarFeeds.ts",
       "sha256": "94a04741fe232c6d2f273ef3f73992ce4fdc98c8f81e974b9387cabed3700b2d"
+    },
+    {
+      "file": "1793871078264-CreateGoogleCalendarConnections.ts",
+      "sha256": "bd6ba13883eb07d574d16f83d9aeda410ba03c542ffce74d529b4e756896bec8"
+    },
+    {
+      "file": "1793877495797-AddGoogleCalendarSyncAssignedToMeOnly.ts",
+      "sha256": "f4519e0a16281be2781195388ecf41c5872fd367a0522e6e0923a02d010ca645"
     }
   ]
 }

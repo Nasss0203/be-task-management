@@ -18,6 +18,8 @@ import { BillingWebhookEventOrmEntity } from 'src/modules/billing/infrastructure
 import { PaymentOrderOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/payment-order.orm-entity';
 import { PaymentTransactionOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/payment-transaction.orm-entity';
 import { WorkspaceSubscriptionOrmEntity } from 'src/modules/billing/infrastructure/persistence/typeorm/entities/workspace-subscription.orm-entity';
+import { GoogleCalendarConnectionOrmEntity } from 'src/modules/calendar-sync/infrastructure/persistence/typeorm/entities/google-calendar-connection.orm-entity';
+import { GoogleCalendarSyncOrmEntity } from 'src/modules/calendar-sync/infrastructure/persistence/typeorm/entities/google-calendar-sync.orm-entity';
 import { CommentOrmEntity } from 'src/modules/comments/infrastructure/persistence/typeorm/entities/comment.orm-entity';
 import { FormAnswerKeyOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/form-answer-key.orm-entity';
 import { FormQuizAttemptOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/form-quiz-attempt.orm-entity';
@@ -164,4 +166,6 @@ export const DATABASE_ENTITIES = [
   FormAnswerKeyOrmEntity,
   FormQuizAttemptOrmEntity,
   CalendarFeedOrmEntity,
+  GoogleCalendarConnectionOrmEntity,
+  GoogleCalendarSyncOrmEntity,
 ];

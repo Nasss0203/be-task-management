@@ -170,6 +170,7 @@ import { CalendarFeedController } from './presentation/http/controllers/calendar
 
     DATABASE_TYPES.ports.DatabaseProvisioning,
     DATABASE_TYPES.ports.DatabaseSnapshotReader,
+    DATABASE_TYPES.ports.DatabasePeopleReader,
   ],
 })
 export class DatabaseModule {}
