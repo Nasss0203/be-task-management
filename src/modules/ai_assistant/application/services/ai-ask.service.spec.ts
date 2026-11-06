@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
+  PayloadTooLargeException,
 } from '@nestjs/common';
 import { AiConversation } from '../../domain/aggregates/ai-conversation/ai-conversation.aggregate';
 import { AiConversationScope } from '../../domain/enums/ai-conversation-scope.enum';
@@ -310,6 +311,10 @@ describe('AiAskService', () => {
       'Hiện tại AI chưa làm được "đổi tên trang": AI chỉ thay đổi nội dung bên trong trang.',
     ],
     [
+      { kind: 'BLOCKED_WORD', term: 'xoá', pageAction: false, misplaced: true },
+      'AI chưa hiểu cách sắp xếp câu này. Bạn thử viết việc cần làm trước, tên trang sau, ví dụ: "xoá dòng Gọi khách ở trang Họp tuần".',
+    ],
+    [
       { kind: 'PUNCTUATION', term: '?' },
       'Hãy viết yêu cầu thành một câu lệnh, không dùng dấu "?".',
     ],
@@ -355,6 +360,26 @@ describe('AiAskService', () => {
     ).toMatchObject({
       assistantMessage:
         'AI chỉ xoá từng block được nêu tên (tối đa 10 block mỗi câu), không xoá hàng loạt.',
+    });
+  });
+
+  it('explains a Page too long for the AI instead of a generic error (kế hoạch trang dài, E1)', async () => {
+    const f = fixture();
+    f.intent('MODIFY_PAGE');
+    f.planner.generate.mockRejectedValue(
+      new PayloadTooLargeException('AI service input exceeds its budget'),
+    );
+    expect(
+      await f.service.ask({
+        ...f.input,
+        instruction: 'thêm to-do A vào trang Q4',
+      }),
+    ).toMatchObject({
+      status: 'NEEDS_CLARIFICATION',
+      reason: 'PAGE_TOO_LONG',
+      capability: null,
+      assistantMessage:
+        'Trang này quá dài để AI đọc hết. Hãy nói rõ phần cần sửa, ví dụ: thêm to-do … vào phần "Tên mục".',
     });
   });
 

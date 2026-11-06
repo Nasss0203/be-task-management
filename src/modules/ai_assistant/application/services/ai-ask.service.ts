@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  PayloadTooLargeException,
 } from '@nestjs/common';
 import { AI_ASSISTANT_TYPES } from '../../ai-assistant.types';
 import { AiConversationScope } from '../../domain/enums/ai-conversation-scope.enum';
@@ -33,10 +34,22 @@ function conversationSwitch(
   return sent && sent !== used ? { conversationSwitched: true } : {};
 }
 
+/** Kế hoạch câu tự nhiên (N4): an example in the order the AI reads, no quotes. */
+function misplacedVerbMessage(term: string): string {
+  const verb = foldInstruction(term);
+  const example = /^(?:xoa|bo|go|delete|remove)$/u.test(verb)
+    ? `${term} dòng Gọi khách ở trang Họp tuần`
+    : /^(?:them|chen|bo sung|add|insert)/u.test(verb)
+      ? `${term} to-do Gọi khách vào trang Họp tuần`
+      : `${term} Báo cáo tháng 9 thành Báo cáo tháng 10 ở trang Họp tuần`;
+  return `AI chưa hiểu cách sắp xếp câu này. Bạn thử viết việc cần làm trước, tên trang sau, ví dụ: "${example}".`;
+}
+
 /** Names what was refused, so the user knows how to rephrase (kế hoạch sửa nhỏ, D3). */
 function unsupportedMessage(detail?: UnsupportedModificationDetail): string {
   switch (detail?.kind) {
     case 'BLOCKED_WORD':
+      if (detail.misplaced) return misplacedVerbMessage(detail.term);
       return detail.pageAction
         ? `Hiện tại AI chưa làm được "${detail.term}": AI chỉ thay đổi nội dung bên trong trang.`
         : `Hiện tại AI chưa làm được "${detail.term}". Nếu "${detail.term}" là nội dung cần thêm hoặc chữ mới, hãy đặt nó trong ngoặc kép.`;
@@ -324,17 +337,30 @@ export class AiAskService {
         throw new BadRequestException(
           'Page modification requires a PAGE conversation',
         );
-      const planning = await this.pagePlanner.generate({
-        ...input,
-        currentPageId: input.currentPageId ?? undefined,
-        selectedPageId: input.selectedPageId ?? undefined,
-        // A GLOBAL conversation never holds Page drafts: the planner opens a
-        // PAGE conversation, also when the PAGE conversation is for another Page.
-        conversationId: pageConversation?.getId(),
-        conversationPageId: input.shareToken
-          ? undefined
-          : (pageConversation?.getPageId() ?? undefined),
-      });
+      let planning: Awaited<ReturnType<typeof this.pagePlanner.generate>>;
+      try {
+        planning = await this.pagePlanner.generate({
+          ...input,
+          currentPageId: input.currentPageId ?? undefined,
+          selectedPageId: input.selectedPageId ?? undefined,
+          // A GLOBAL conversation never holds Page drafts: the planner opens a
+          // PAGE conversation, also when the PAGE conversation is for another Page.
+          conversationId: pageConversation?.getId(),
+          conversationPageId: input.shareToken
+            ? undefined
+            : (pageConversation?.getPageId() ?? undefined),
+        });
+      } catch (error) {
+        // Kế hoạch trang dài (E1): over 200 blocks here, or over the AI
+        // service's budget, the user is told how to narrow the request.
+        if (error instanceof PayloadTooLargeException)
+          return business(
+            'NEEDS_CLARIFICATION',
+            'PAGE_TOO_LONG',
+            'Trang này quá dài để AI đọc hết. Hãy nói rõ phần cần sửa, ví dụ: thêm to-do … vào phần "Tên mục".',
+          );
+        throw error;
+      }
       const base = {
         requestId: input.requestId,
         intent: result.intent,

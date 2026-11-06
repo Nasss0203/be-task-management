@@ -1,6 +1,7 @@
 import type { HttpService } from '@nestjs/axios';
 import {
   BadGatewayException,
+  PayloadTooLargeException,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -108,5 +109,52 @@ describe('FastApiAiRuntimeAdapter: one retry for cheap calls', () => {
       BadGatewayException,
     );
     expect(post).toHaveBeenCalledTimes(1);
+  });
+
+  // Kế hoạch trang dài (E1): the AI service's budget refusal is told apart
+  // from other errors so the user learns the Page is too long.
+  it.each([
+    'Value error, Context exceeds the 8000-byte UTF-8 budget.',
+    'Value error, Combined AI input exceeds the 10000-byte UTF-8 budget.',
+    'AI request exceeds the body size or JSON nesting limit.',
+  ])('reports a budget refusal as too large: %s', async (msg) => {
+    post.mockReturnValue(
+      throwError(() =>
+        Object.assign(new Error('Request failed with status code 422'), {
+          isAxiosError: true,
+          response: { status: 422, data: { detail: [{ msg }] } },
+        }),
+      ),
+    );
+    const outcome = await settle(
+      adapter.execute({
+        requestId: 'r',
+        capability: AI_MODIFICATION_PLAN_CAPABILITY,
+        content: 'thêm checklist',
+        input: {},
+        context: { page: {} },
+      }),
+    );
+    expect((outcome as { error: unknown }).error).toBeInstanceOf(
+      PayloadTooLargeException,
+    );
+  });
+
+  it('keeps other 422 answers as a bad gateway', async () => {
+    post.mockReturnValue(
+      throwError(() =>
+        Object.assign(new Error('Request failed with status code 422'), {
+          isAxiosError: true,
+          response: {
+            status: 422,
+            data: { detail: [{ msg: 'Field required' }] },
+          },
+        }),
+      ),
+    );
+    const outcome = await settle(adapter.embed('query', ['a']));
+    expect((outcome as { error: unknown }).error).toBeInstanceOf(
+      BadGatewayException,
+    );
   });
 });

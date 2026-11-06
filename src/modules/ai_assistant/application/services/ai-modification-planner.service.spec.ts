@@ -1,4 +1,8 @@
-import { BadGatewayException, BadRequestException } from '@nestjs/common';
+import {
+  BadGatewayException,
+  BadRequestException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { AiConversation } from '../../domain/aggregates/ai-conversation/ai-conversation.aggregate';
 import { AiConversationScope } from '../../domain/enums/ai-conversation-scope.enum';
 import { AiMessageRole } from '../../domain/enums/ai-message-role.enum';
@@ -43,7 +47,9 @@ describe('AiModificationPlannerService', () => {
   it('rejects truncated context before persisting a draft or calling the model', async () => {
     const context = makeContext();
     context.completeness.textTruncated = true;
-    const { service, generationRepository, runtime } = createService({ context });
+    const { service, generationRepository, runtime } = createService({
+      context,
+    });
     await expect(
       service.generate({
         requestId: 'request-incomplete',
@@ -178,10 +184,14 @@ describe('AiModificationPlannerService', () => {
       }),
       findByIdAndUserId: jest.fn(async () => lastConversation),
     };
-    const messageRepository = { save: jest.fn(async (message: any) => message) };
+    const messageRepository = {
+      save: jest.fn(async (message: any) => message),
+    };
     const usageRepository = { save: jest.fn(async (usage: any) => usage) };
     const unitOfWork = {
-      runInTransaction: jest.fn(async (fn: (context: any) => Promise<any>) => fn({})),
+      runInTransaction: jest.fn(async (fn: (context: any) => Promise<any>) =>
+        fn({}),
+      ),
     };
     const accessService = { assertCanRead: jest.fn() };
     (generationRepository.findByIdAndUserId as jest.Mock).mockImplementation(
@@ -221,9 +231,9 @@ describe('AiModificationPlannerService', () => {
       unitOfWork,
       accessService,
       setConversation: (conversation: AiConversation) => {
-        (conversationRepository.findByIdAndUserId as jest.Mock).mockResolvedValue(
-          conversation,
-        );
+        (
+          conversationRepository.findByIdAndUserId as jest.Mock
+        ).mockResolvedValue(conversation);
       },
       runtime,
       planValidator,
@@ -385,12 +395,16 @@ describe('AiModificationPlannerService', () => {
     expect(f.conversationRepository.save).not.toHaveBeenCalled();
     expect(f.accessService.assertCanRead).toHaveBeenCalledTimes(2);
     expect(f.messageRepository.save).toHaveBeenCalledTimes(2);
-    const userMessage = (f.messageRepository.save as jest.Mock).mock.calls[0][0];
-    const assistantMessage = (f.messageRepository.save as jest.Mock).mock.calls[1][0];
+    const userMessage = (f.messageRepository.save as jest.Mock).mock
+      .calls[0][0];
+    const assistantMessage = (f.messageRepository.save as jest.Mock).mock
+      .calls[1][0];
     expect(userMessage.getRole()).toBe(AiMessageRole.USER);
     expect(assistantMessage.getRole()).toBe(AiMessageRole.ASSISTANT);
     expect(userMessage.getMetadata().generationId).toBe(result.generationId);
-    expect(assistantMessage.getMetadata().generationId).toBe(result.generationId);
+    expect(assistantMessage.getMetadata().generationId).toBe(
+      result.generationId,
+    );
     expect(userMessage.getConversationId()).toBe(result.conversationId);
   });
 
@@ -404,12 +418,17 @@ describe('AiModificationPlannerService', () => {
       instruction: 'Thêm một release note.',
       originalInstruction: original,
     });
-    const conversation = (f.conversationRepository.save as jest.Mock).mock.calls[0][0];
-    const userMessage = (f.messageRepository.save as jest.Mock).mock.calls[0][0];
-    const generation = (f.generationRepository.save as jest.Mock).mock.calls[0][0];
+    const conversation = (f.conversationRepository.save as jest.Mock).mock
+      .calls[0][0];
+    const userMessage = (f.messageRepository.save as jest.Mock).mock
+      .calls[0][0];
+    const generation = (f.generationRepository.save as jest.Mock).mock
+      .calls[0][0];
     expect(conversation.getTitle()).toBe(original);
     expect(userMessage.getContent()).toBe(original);
-    expect(generation.getInputData().instruction).toBe('Thêm một release note.');
+    expect(generation.getInputData().instruction).toBe(
+      'Thêm một release note.',
+    );
     expect(f.runtime.execute).toHaveBeenCalledWith(
       expect.objectContaining({ content: 'Thêm một release note.' }),
     );
@@ -417,33 +436,41 @@ describe('AiModificationPlannerService', () => {
 
   it('rejects a conversation belonging to another page before persisting history', async () => {
     const f = createService();
-    f.setConversation(AiConversation.create({
-      id: 'other-page-thread',
-      userId: 'user-1',
-      workspaceId: 'workspace-1',
-      scope: AiConversationScope.PAGE,
-      pageId: 'other-page',
-    }));
-    await expect(f.service.generate({
-      requestId: 'wrong-page',
-      userId: 'user-1',
-      pageId: 'page-1',
-      instruction: 'Add tasks',
-      conversationId: 'other-page-thread',
-    })).rejects.toThrow('AI page conversation not found');
+    f.setConversation(
+      AiConversation.create({
+        id: 'other-page-thread',
+        userId: 'user-1',
+        workspaceId: 'workspace-1',
+        scope: AiConversationScope.PAGE,
+        pageId: 'other-page',
+      }),
+    );
+    await expect(
+      f.service.generate({
+        requestId: 'wrong-page',
+        userId: 'user-1',
+        pageId: 'page-1',
+        instruction: 'Add tasks',
+        conversationId: 'other-page-thread',
+      }),
+    ).rejects.toThrow('AI page conversation not found');
     expect(f.runtime.execute).not.toHaveBeenCalled();
     expect(f.messageRepository.save).not.toHaveBeenCalled();
   });
 
   it('persists a failed generation and user message when runtime fails', async () => {
     const f = createService();
-    (f.runtime.execute as jest.Mock).mockRejectedValue(new Error('Runtime unavailable'));
-    await expect(f.service.generate({
-      requestId: 'failed-plan',
-      userId: 'user-1',
-      pageId: 'page-1',
-      instruction: 'Add tasks',
-    })).rejects.toThrow('Runtime unavailable');
+    (f.runtime.execute as jest.Mock).mockRejectedValue(
+      new Error('Runtime unavailable'),
+    );
+    await expect(
+      f.service.generate({
+        requestId: 'failed-plan',
+        userId: 'user-1',
+        pageId: 'page-1',
+        instruction: 'Add tasks',
+      }),
+    ).rejects.toThrow('Runtime unavailable');
     expect(f.generationRepository.save).toHaveBeenCalledTimes(2);
     expect(f.messageRepository.save).toHaveBeenCalledTimes(1);
     const failed = (f.generationRepository.save as jest.Mock).mock.calls[1][0];
@@ -559,5 +586,40 @@ describe('AiModificationPlannerService', () => {
     expect(planValidator.validate).toHaveBeenCalledTimes(1);
 
     expect(generationRepository.save).toHaveBeenCalledTimes(2);
+  });
+  // Kế hoạch nội dung không ngoặc kép (K0): a verb in the content never turns
+  // into another kind of operation.
+  it.each([
+    ['thêm to-do xoá file log cũ', 'DELETE_BLOCK'],
+    ['tích xong Sửa máy in', 'SET_BLOCK_TEXT'],
+    ['đổi Gọi khách thành Xoá hợp đồng', 'DELETE_BLOCK'],
+  ])('refuses a draft of another kind for %s', async (instruction, type) => {
+    const other = {
+      ...makePlan(),
+      operations: [{ type, blockId: 'block-1' }],
+    } as unknown as AiModificationPlan;
+    const f = createService({ validatedPlan: other });
+    await expect(
+      f.service.generate({
+        requestId: 'kind',
+        userId: 'user-1',
+        pageId: 'page-1',
+        instruction,
+      }),
+    ).rejects.toThrow(UnprocessableEntityException);
+    const failed = (f.generationRepository.save as jest.Mock).mock.calls[1][0];
+    expect(failed.getStatus()).toBe(AiGenerationStatus.FAILED);
+  });
+
+  it('keeps a draft of the admitted kind for a verb in the content', async () => {
+    const f = createService();
+    await expect(
+      f.service.generate({
+        requestId: 'kind-ok',
+        userId: 'user-1',
+        pageId: 'page-1',
+        instruction: 'thêm to-do xoá file log cũ',
+      }),
+    ).resolves.toMatchObject({ status: 'PLAN_READY' });
   });
 });

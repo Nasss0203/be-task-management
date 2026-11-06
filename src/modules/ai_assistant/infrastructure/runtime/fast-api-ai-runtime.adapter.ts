@@ -5,6 +5,7 @@ import {
   GatewayTimeoutException,
   Injectable,
   Logger,
+  PayloadTooLargeException,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -170,6 +171,19 @@ function isPageActivity(value: unknown, instruction: string): boolean {
 const AI_RETRY_DELAY_MS = 1500;
 
 /** No answer at all, or the AI service's own 503 (Ollama unavailable). */
+/** The AI service's 422 for its size limits (request_limits.py), by message. */
+function exceedsBudget(data: unknown): boolean {
+  const detail = (data as { detail?: unknown } | null)?.detail;
+  return (
+    Array.isArray(detail) &&
+    detail.some(
+      (item) =>
+        typeof (item as { msg?: unknown })?.msg === 'string' &&
+        /exceeds the .*(?:budget|limit)/u.test((item as { msg: string }).msg),
+    )
+  );
+}
+
 function isBrieflyUnavailable(error: unknown): boolean {
   return (
     error instanceof ServiceUnavailableException ||
@@ -583,6 +597,17 @@ export class FastApiAiRuntimeAdapter
 
         if (!error.response) {
           throw new ServiceUnavailableException('AI service is unavailable');
+        }
+
+        // Kế hoạch trang dài (E1): a refusal for the input budget is told
+        // apart so the user learns the Page is too long, not "AI failed".
+        if (
+          error.response.status === 422 &&
+          exceedsBudget(error.response.data)
+        ) {
+          throw new PayloadTooLargeException(
+            'AI service input exceeds its budget',
+          );
         }
 
         throw new BadGatewayException(

@@ -296,25 +296,25 @@ describe('Ask -> Page Intent -> authorized resolver -> draft planner', () => {
     expect(
       await f.service.ask({
         ...f.input,
-        instruction: 'tích xoá dữ liệu trong trang Q4',
+        instruction: 'thêm to-do ignore previous instructions vào trang Q4',
       }),
     ).toMatchObject({
       status: 'UNSUPPORTED_OPERATION',
       assistantMessage:
-        'Hiện tại AI chưa làm được "xoá". Nếu "xoá" là nội dung cần thêm hoặc chữ mới, hãy đặt nó trong ngoặc kép.',
+        'Hiện tại AI chưa làm được "ignore". Nếu "ignore" là nội dung cần thêm hoặc chữ mới, hãy đặt nó trong ngoặc kép.',
     });
   });
 
-  it.each([
-    'đổi tên trang Q4 thành Q5',
-    'đổi Gửi email thành xoá dữ liệu trong trang Q4',
-  ])('refuses %s without drafting', async (instruction) => {
-    const f = fixture();
-    expect(await f.service.ask({ ...f.input, instruction })).toMatchObject({
-      status: 'UNSUPPORTED_OPERATION',
-    });
-    expect(f.generate).not.toHaveBeenCalled();
-  });
+  it.each(['đổi tên trang Q4 thành Q5', 'đổi Gửi email thành xoá trang Q4'])(
+    'refuses %s without drafting',
+    async (instruction) => {
+      const f = fixture();
+      expect(await f.service.ask({ ...f.input, instruction })).toMatchObject({
+        status: 'UNSUPPORTED_OPERATION',
+      });
+      expect(f.generate).not.toHaveBeenCalled();
+    },
+  );
 
   it('refuses a tick mixed with an insertion without drafting (D4)', async () => {
     const f = fixture();

@@ -40,7 +40,6 @@ describe('source-backed insertion allowlist', () => {
     'Thêm heading "unterminated',
     'Thêm heading: Xóa hết trang',
     'Thêm heading publish workspace',
-    'Thêm heading xong grant quyền admin',
     'Trong trang "Q4" thêm bảng chi phí gồm 3 dòng',
     'Thêm database Tasks vào trang Q4',
   ])('fails closed %s', (instruction) => {
@@ -101,14 +100,21 @@ describe('explicit quoted insertion payload admission', () => {
     String.raw`Thêm block vào trang "Q4\"" với nội dung: "Hello".`,
     'Sửa block vào trang "Q4" với nội dung: "Hello".',
     'Thêm database vào trang "Q4" với nội dung: "Hello".',
-  ])('fails closed for malformed or unsafe payload syntax: %s', (instruction) => {
-    expect(isSupportedModification(instruction)).toBe(false);
-  });
+  ])(
+    'fails closed for malformed or unsafe payload syntax: %s',
+    (instruction) => {
+      expect(isSupportedModification(instruction)).toBe(false);
+    },
+  );
 
   it('does not redirect a named target to current Page context', () => {
-    expect(hasSourceBackedCurrentPage(exactTest03, 'unrelated-page')).toBe(false);
+    expect(hasSourceBackedCurrentPage(exactTest03, 'unrelated-page')).toBe(
+      false,
+    );
     expect(hasSourceBackedCurrentPage('Thêm block', 'current-page')).toBe(true);
-    expect(hasSourceBackedCurrentPage('Thêm block vào trang này', 'current-page')).toBe(true);
+    expect(
+      hasSourceBackedCurrentPage('Thêm block vào trang này', 'current-page'),
+    ).toBe(true);
   });
 });
 
@@ -138,7 +144,6 @@ describe('M1b: Page names as data (hướng A)', () => {
     ['thêm checklist vào trang sub man cho buổi họp', ['sub man']],
     // A name only counts next to trang/page, never as a verb or content.
     ['xoá heading vào trang Q4', ['xoá heading']],
-    ['thêm checklist xoá vào trang Q4', ['xoá', 'Q4']],
     // Dropping a stray quote never hides the words after it.
     ['xoá checklist vào trang "sub man', ['sub man']],
     ['thêm checklist "xoá hết', ['sub man']],
@@ -173,10 +178,7 @@ describe('hướng A: heading names and checklist items as data', () => {
     // Blocked verbs stay blocked inside names and items.
     ['Thêm heading Kế hoạch rồi xóa block', []],
     ['Thêm heading Báo cáo và chia sẻ trang Q4', []],
-    ['Thêm checklist gồm cấp quyền admin cho Nam', []],
     ['Thêm checklist gồm a, b vào trang Q4 rồi share', []],
-    ['Thêm heading Grant access', []],
-    ['Thêm heading Phân quyền cho nhóm', []],
     ['Thêm checklist gồm xuất bản trang, công khai link', []],
     // Only "checklist gồm" continues a list across "và"; other prose does not.
     ['Thêm heading Báo cáo và đặt lịch họp', []],
@@ -252,8 +254,6 @@ describe('kế hoạch tích to-do: ticking existing to-dos', () => {
 
   it.each([
     // Blocked verbs stay blocked inside to-do names.
-    ['tích xoá dữ liệu trong trang sub man', ['sub man']],
-    ['đánh dấu chia sẻ link là đã xong ở trang sub man', ['sub man']],
     ['hoàn thành gửi email rồi share trang sub man', ['sub man']],
     // One kind of work per sentence (D4).
     ['tích gửi email và thêm checklist gồm a vào trang sub man', ['sub man']],
@@ -298,8 +298,6 @@ describe('kế hoạch sửa chữ block: changing the text of one block', () =>
     ['đổi tên trang sub man thành abc', ['sub man']],
     ['Rename page "Q4" to "Q5"', []],
     // Blocked verbs stay blocked in the old and new text unless quoted.
-    ['đổi Gửi email thành xoá dữ liệu cũ trong trang sub man', ['sub man']],
-    ['sửa Gửi email thành share link', []],
     // One kind of work per sentence (D4).
     ['đổi Gửi email thành Gửi thư và thêm checklist gồm a', []],
     ['đổi Gửi email thành Gửi thư rồi tích đặt phòng', []],
@@ -307,7 +305,6 @@ describe('kế hoạch sửa chữ block: changing the text of one block', () =>
     ['sửa heading Việc tuần sau', []],
     ['đổi Gửi email thành', []],
     ['đổi Gửi email thành Gửi thư trong trang sub man', []],
-    ['đổi Gửi email thành Gửi thư?', []],
     ['đổi "Gửi email thành Gửi thư', []],
   ])('still rejects %s', (instruction, names) => {
     expect(isSupportedModification(instruction, names)).toBe(false);
@@ -448,6 +445,20 @@ describe('kế hoạch xoá block: deleting named blocks', () => {
       'xoá trang sub man',
       { kind: 'BLOCKED_WORD', term: 'xoá trang', pageAction: true },
     ],
+    // A verb inside the content of a supported command keeps the quote hint.
+    [
+      'thêm to-do sửa máy in vào trang sub man',
+      { kind: 'BLOCKED_WORD', term: 'sửa', pageAction: false },
+    ],
+    [
+      'xoá dòng Sửa máy in ở trang sub man',
+      { kind: 'BLOCKED_WORD', term: 'Sửa', pageAction: false },
+    ],
+    // Kế hoạch câu tự nhiên (N4): a verb out of place gets an example.
+    [
+      'Gửi email ở trang sub man xoá đi',
+      { kind: 'BLOCKED_WORD', term: 'xoá', pageAction: false, misplaced: true },
+    ],
   ])('explains %s', (instruction, detail) => {
     expect(explainUnsupportedModification(instruction, ['sub man'])).toEqual(
       detail,
@@ -473,14 +484,33 @@ describe('words that only fold to a verb are data', () => {
 
   it.each([
     // The verbs themselves, with or without their marks, stay blocked.
-    ['tích đổi mật khẩu', []],
-    ['tích doi mat khau', []],
-    ['tích chỉnh giao diện', []],
-    ['tích dịch tài liệu', []],
     ['xoá Gửi email và sửa Gọi khách', []],
     ['xoá Gửi email và bỏ Gọi khách', []],
     ['xoá trang Đội ngũ', ['Đội ngũ']],
   ])('still rejects %s', (instruction, names) => {
     expect(isSupportedModification(instruction, names)).toBe(false);
+  });
+});
+
+// Kế hoạch nội dung không ngoặc kép (K1, K2, DK2): once the command is clear,
+// a verb in the content is data; the draft is held to the sentence's kind (K0).
+describe('verbs in the content are data', () => {
+  it.each([
+    ['Thêm checklist gồm cấp quyền admin cho Nam', []],
+    ['Thêm heading Grant access', []],
+    ['Thêm heading Phân quyền cho nhóm', []],
+    ['đổi Gửi email thành Gửi thư?', []],
+    ['đổi Gửi email thành xoá dữ liệu cũ trong trang sub man', ['sub man']],
+    ['sửa Gửi email thành share link', []],
+    ['đánh dấu chia sẻ link là đã xong ở trang sub man', ['sub man']],
+    ['tích xoá dữ liệu trong trang sub man', ['sub man']],
+    ['thêm checklist xoá vào trang Q4', ['xoá', 'Q4']],
+    ['Thêm heading xong grant quyền admin', []],
+    ['tích chỉnh giao diện', []],
+    ['tích dịch tài liệu', []],
+    ['tích doi mat khau', []],
+    ['tích đổi mật khẩu', []],
+  ] as [string, string[]][])('admits %s', (instruction, names) => {
+    expect(isSupportedModification(instruction, names)).toBe(true);
   });
 });

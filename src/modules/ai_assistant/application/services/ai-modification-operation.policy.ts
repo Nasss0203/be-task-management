@@ -59,10 +59,11 @@ const LABEL_OBJECT = /\b(?:heading|tieu de)$/u;
 // Môn Toán"); like "checklist gồm" items they may go on after "và". They are
 // data for the AI service, which takes them by rule (explicit_content.py).
 const CONTENT_OBJECT =
-  /\b(?:to-do|todo|viec|trich dan|quote|line|doan van|doan|paragraph|text|dong|task|muc)$/u;
+  /\b(?:to-do|todo|viec|trich dan|quote|line|doan van|doan|paragraph|text|dong|task|muc|ghi chu|note)$/u;
 
 // D3/D4: a checklist's name, topic or items ("checklist chuẩn bị họp gồm a, b").
-const LIST_OBJECT = /\b(?:checklist|viec can lam)$/u;
+// K4: "danh sách mua sắm gồm a, b" reads the same.
+const LIST_OBJECT = /\b(?:checklist|viec can lam|danh sach)$/u;
 
 const TARGET_SUFFIX =
   /\s*\b(?:(?:vao|trong|o|tai|cua|to|in|on)(?:\s+(?:cuoi|dau))?(?:\s+the)?\s+(?:(?:trang|page)(?:\s+(?:quoted|nay|hien tai|dang mo))?|(?:quoted|this|current)\s+page)|at\s+the\s+(?:end|top|bottom|start)\s+of\s+(?:the\s+|this\s+)?page)$/u;
@@ -191,13 +192,27 @@ function isInsertionAtNamedPlace(body: string): boolean {
 const BLOCKED_VERB =
   /\b(?:xoa|sua|chinh|doi|dich(?!\s+vu\b)|viet lai|rut gon|di chuyen|sap xep|thay the|chia se|cap quyen|phan quyen|thu hoi|xuat ban|cong khai|nhan ban|khoi phuc|delete|remove|update|edit|rename|rewrite|translate|move|reorder|replace|archive|ignore|override|execute|drop|truncate|publish|unpublish|share|grant|revoke|invite|export|restore|duplicate)\b/u;
 
+// Kế hoạch nội dung không ngoặc kép (K1): once the sentence's command is clear
+// ("thêm to-do …", "xoá dòng …", "tích xong …", "đổi … thành …"), a verb in the
+// content is data ("thêm to-do sửa máy in"). Only these stay refused there:
+// an action on a whole Page / workspace, and words that instruct the AI.
+const PAGE_ACTION =
+  /\b(?:xoa|delete|remove|chia se|share|cap quyen|phan quyen|grant|thu hoi|revoke|xuat ban|cong khai|publish|unpublish|nhan ban|duplicate|khoi phuc|restore|archive|export|doi ten|rename|di chuyen|move|moi|invite)\s+(?:(?:ca|toan bo_?|het|tat ca|cai|the|this|whole|entire|all)\s+)*(?:trang|page|pages|workspace|teamspace)\b/u;
+const AI_DIRECTIVE =
+  /\b(?:ignore|override|disregard|forget|bypass|bo qua|quen|phot lo)\b(?:\s+\S+){0,4}?\s+(?:instructions?|rules?|prompts?|system prompt|guidelines?|quy tac|huong dan|chi dan|chi thi|lenh|yeu cau truoc)\b/u;
+
+/** K1: content that is never data, even after a clear command. */
+function isDangerousData(text: string): boolean {
+  return PAGE_ACTION.test(text) || AI_DIRECTIVE.test(text);
+}
+
 // Kế hoạch sửa chữ block: "đổi / sửa / thay … X thành / bằng / to Y".
 const TEXT_EDIT =
   /^(?:chinh sua|thay doi|doi|sua|thay|chinh|cap nhat|change|update|edit|replace|rename)\s+(?<change>.+?\s+(?:thanh|sang|bang|to|with|into)\s+.+)$/u;
 
 // One kind of work per sentence (D4): no second command after và / rồi.
 const SECOND_COMMAND =
-  /\b(?:va|and|roi|then|sau do)\s+(?:them|chen|bo sung|ghi them|add|insert|append|prepend|tich|danh dau|bo tich|hoan thanh|lam xong|check|uncheck|mark|thay|cap nhat|change|xoa|bo|go|delete|remove)\b/u;
+  /\b(?:va|and|roi|then|sau do)\s+(?:them|chen|bo sung|ghi them|add|insert|append|prepend|tich|danh dau|bo tich|hoan thanh|lam xong|check|uncheck|mark|thay|cap nhat|change|xoa|bo|go|delete|remove|sua|doi|chinh sua|chinh|edit|update|rename|dich|translate|publish|share|chia se)\b/u;
 
 // Kế hoạch xoá block: "xoá / bỏ / gỡ / delete / remove X, Y và Z".
 // "bỏ tích" (untick), "bỏ qua" (override) and "bổ sung" (add) are not deletes.
@@ -230,7 +245,7 @@ function isBlockDelete(command: string): boolean {
       !!named &&
       isFreeData(name) &&
       !BULK.test(name) &&
-      !BLOCKED_VERB.test(name) &&
+      !isDangerousData(name) &&
       !INSERT.test(`${name} `) &&
       !TODO_VERB.test(name)
     );
@@ -252,7 +267,7 @@ function isBlockTextChange(command: string): boolean {
   return (
     !!change &&
     isFreeData(change) &&
-    !BLOCKED_VERB.test(change) &&
+    !isDangerousData(change) &&
     !SECOND_COMMAND.test(change)
   );
 }
@@ -274,7 +289,10 @@ function isTodoStatusChange(command: string): boolean {
 
     // "thêm logo xong rồi" or "tích a và thêm b" mix in another kind of work.
     return (
-      isFreeData(name) && !INSERT.test(`${name} `) && !TODO_VERB.test(name)
+      isFreeData(name) &&
+      !INSERT.test(`${name} `) &&
+      !TODO_VERB.test(name) &&
+      !isDangerousData(name)
     );
   });
 }
@@ -362,8 +380,46 @@ function dropUnclosedQuotes(source: string): string {
   return result;
 }
 
+/**
+ * K2: one "?" or "!" (or "?!") right before the Page target or at the end
+ * ends the content; it is dropped. Any other "?", "!" or ";" stays refused.
+ */
+function endMarkAsData(command: string): string {
+  // Only content takes it; "gửi email xong rồi?" asks, it does not tick.
+  if (!INSERT.test(command) && !TEXT_EDIT.test(command)) return command;
+  const mark =
+    /\s*[?!]+(?=(?:\s+(?:vao|trong|o|tai|cua|to|in|on)\s+(?:cuoi\s+)?(?:the\s+)?(?:trang|page)\b.*)?[\s.]*$)/u;
+  const found = mark.exec(command);
+  if (!found) return command;
+  const rest =
+    command.slice(0, found.index) +
+    command.slice(found.index + found[0].length);
+  return /[?!]/u.test(rest) ? command : rest;
+}
+
 const PAGE_FIRST_TARGET =
-  /^(?:(?:cap nhat|update)\s+)?(?:trong\s+)?(?:trang|page)\s+(?:quoted|hien tai|nay|this|current)(?:\s*[:,]\s*|\s+)/u;
+  /^(?:(?:cap nhat|update)\s+)?(?:(?:o|trong|tai|ben trong|tren|in|on|at)\s+)?(?:(?:the|this)\s+)?(?:(?:trang|page)\s+(?:quoted|hien tai|nay|this|current)|quoted\s+page)(?:\s*[:,]\s*|\s+)/u;
+
+// Kế hoạch câu tự nhiên (N2): polite words before the verb ("làm ơn", "mình muốn").
+const FILLER_PREFIX =
+  /^(?:(?:hay|vui long|lam on|giup toi|giup minh|giup|ban oi|ban hay|cho toi|cho minh|toi muon|minh muon|toi can|minh can|please|can you|could you|would you|i want to|i'd like to)\s*,?\s+)+/u;
+
+/**
+ * N1 + N2: "ở trang X, giúp mình sửa A thành B" → "sua A thanh B". A Page
+ * before the verb only names the target (X is masked to "quoted" only when it is
+ * a real Page name, M1b); polite words before the verb are dropped.
+ */
+function withoutLeadingTarget(command: string): string {
+  let rest = command;
+  for (let previous = ''; previous !== rest; ) {
+    previous = rest;
+    rest = rest
+      .replace(FILLER_PREFIX, '')
+      .replace(PAGE_FIRST_TARGET, '')
+      .replace(/^[,:]\s*/u, '');
+  }
+  return rest;
+}
 
 const BARE_CHECKLIST =
   /^(?:(?:mot|a|an|the|new|moi|another|\d+)\s+)*(?:checklist|check list|task list|todo|to-do)(?:\s+(?:moi|new))?$/u;
@@ -379,10 +435,11 @@ export function isBareChecklistRequest(
 ): boolean {
   const masked = maskQuotedText(dropUnclosedQuotes(source));
   if (masked === null) return false;
-  const command = maskPageNames(
+  const targeted = maskPageNames(
     stripCommandPrefix(foldCommand(masked).replace(/\s+/gu, ' ')),
     pageNames,
-  ).replace(PAGE_FIRST_TARGET, '');
+  );
+  const command = withoutLeadingTarget(targeted);
   if (!INSERT.test(command)) return false;
   const body = command
     .replace(INSERT, '')
@@ -402,22 +459,51 @@ export function isSupportedModification(
   pageNames: readonly string[] = [],
   admission: ModificationAdmission = {},
 ): boolean {
+  return admittedModificationKind(source, pageNames, admission) !== null;
+}
+
+/**
+ * Kế hoạch nội dung không ngoặc kép (K0): the one kind of work the sentence was
+ * admitted for. A draft must hold only operations of that kind, so words in the
+ * content can never turn into another operation.
+ */
+export type ModificationKind =
+  | 'INSERT'
+  | 'SET_BLOCK_TEXT'
+  | 'DELETE_BLOCK'
+  | 'SET_TODO_CHECKED';
+
+/** Operations a draft of each kind may hold. */
+export const OPERATIONS_OF_KIND: Record<ModificationKind, readonly string[]> = {
+  INSERT: ['INSERT_BLOCKS', 'CREATE_DATABASE_ROWS'],
+  SET_BLOCK_TEXT: ['SET_BLOCK_TEXT'],
+  DELETE_BLOCK: ['DELETE_BLOCK'],
+  SET_TODO_CHECKED: ['SET_TODO_CHECKED'],
+};
+
+export function admittedModificationKind(
+  source: string,
+  pageNames: readonly string[] = [],
+  admission: ModificationAdmission = {},
+): ModificationKind | null {
   const quotesClosed = dropUnclosedQuotes(source);
   const masked = maskQuotedText(quotesClosed);
-  if (masked === null) return false;
+  if (masked === null) return null;
   let command = maskPageNames(
     stripCommandPrefix(foldCommand(masked).replace(/\s+/gu, ' ')),
     pageNames,
   );
   // Match the entire command before stripping any Page-first target prefix.
   // Only this explicit payload grammar admits a colon; SAFE_TAIL stays closed.
-  if (isQuotedPayloadInsertion(source, command)) return true;
+  if (isQuotedPayloadInsertion(source, command)) return 'INSERT';
   // A Page-first prefix is only a target; require a separate insertion clause.
-  command = command.replace(PAGE_FIRST_TARGET, '');
-  if (/[;\n?!]/u.test(command)) return false;
+  command = withoutLeadingTarget(command);
+  // K2: one "?" or "!" may end the content ("thêm đoạn văn Ai làm?").
+  command = endMarkAsData(command);
+  if (/[;\n?!]/u.test(command)) return null;
   if (command.includes(':')) {
     const listed = colonAsItems(command);
-    if (listed === null) return false;
+    if (listed === null) return null;
     command = listed;
   }
   // A stray quote is tolerated as a typo, but then free data stays closed.
@@ -425,18 +511,31 @@ export function isSupportedModification(
 
   // "đổi X thành Y" leads with a verb from the list below; X and Y then pass
   // that same list as data (kế hoạch sửa chữ block).
-  if (allowFreeData && isBlockTextChange(command)) return true;
+  if (allowFreeData && isBlockTextChange(command)) return 'SET_BLOCK_TEXT';
 
   // "xoá X, Y" leads with a blocked verb too; the names then pass the list.
-  if (allowFreeData && isBlockDelete(command)) return true;
+  if (allowFreeData && isBlockDelete(command)) return 'DELETE_BLOCK';
 
-  // Other operation verbs outside quotes cannot be disguised as insertion data.
-  if (BLOCKED_VERB.test(command)) return false;
+  if (
+    allowFreeData &&
+    TODO_VERB.test(command) &&
+    !SECOND_COMMAND.test(command) &&
+    isTodoStatusChange(command)
+  )
+    return 'SET_TODO_CHECKED';
   if (!INSERT.test(command)) {
-    return allowFreeData && isTodoStatusChange(command);
+    // Other operation verbs outside quotes cannot be disguised as data.
+    if (BLOCKED_VERB.test(command)) return null;
+    return allowFreeData && isTodoStatusChange(command)
+      ? 'SET_TODO_CHECKED'
+      : null;
   }
   const body = command.replace(INSERT, '');
-  if (allowFreeData && isInsertionAtNamedPlace(body)) return true;
+  // K1: a verb in the content is data; a second command ("rồi xoá B") and an
+  // action on a Page or an instruction to the AI are not.
+  if (SECOND_COMMAND.test(body) || isDangerousData(body)) return null;
+  if (!allowFreeData && BLOCKED_VERB.test(body)) return null;
+  if (allowFreeData && isInsertionAtNamedPlace(body)) return 'INSERT';
   // Every joined clause must itself name supported content or another insertion.
   // Arbitrary prose that contains verbs should be explicitly quoted as data.
   let previous: InsertionClause | null = 'closed';
@@ -447,9 +546,9 @@ export function isSupportedModification(
       previous === 'items',
       admission.itemsFromSource,
     );
-    if (!previous) return false;
+    if (!previous) return null;
   }
-  return true;
+  return 'INSERT';
 }
 
 // M2 (kế hoạch tìm theo hoạt động, B7): "… vào trang [gợi ý] tôi sửa hôm qua".
@@ -608,7 +707,14 @@ export function withoutPageScope(
 /** Why a request was refused; it never changes what is refused (kế hoạch sửa nhỏ, D3). */
 export type UnsupportedModificationDetail =
   // pageAction: the word acts on a whole Page ("xoá trang", "đổi tên trang").
-  | { kind: 'BLOCKED_WORD'; term: string; pageAction: boolean }
+  // misplaced (kế hoạch câu tự nhiên, N4): a supported verb ("sửa", "xoá") that
+  // is not where the sentence's command is; the user gets an example, not quotes.
+  | {
+      kind: 'BLOCKED_WORD';
+      term: string;
+      pageAction: boolean;
+      misplaced?: boolean;
+    }
   | { kind: 'PUNCTUATION'; term: string }
   | { kind: 'MIXED' }
 
@@ -623,6 +729,12 @@ const PAGE_OBJECT =
 
 const SUPPORTED_VERB =
   /^(?:them|chen|bo sung|ghi them|add|insert|append|prepend|tich|danh dau|bo tich|bo danh dau|hoan thanh|lam xong|check|uncheck|mark|chinh sua|thay doi|doi|sua|thay|chinh|cap nhat|change|update|edit|replace|xoa|bo|go|delete|remove)\b/u;
+
+// Any supported verb, anywhere (N4: a command before the refused verb).
+const ANY_SUPPORTED_VERB = new RegExp(
+  `\\b${SUPPORTED_VERB.source.slice(1)}`,
+  'u',
+);
 
 const SECOND_KIND =
   /\b(?:va|and|roi|then|sau do)\s+(?:them|chen|bo sung|ghi them|add|insert|append|prepend|tich|danh dau|bo tich|hoan thanh|lam xong|check|uncheck|mark|doi|sua|thay|chinh|cap nhat|change|update|edit|replace|xoa|delete|remove|go)\b/u;
@@ -660,13 +772,17 @@ export function explainUnsupportedModification(
   if (masked === null) return { kind: 'GENERIC' };
   const words = masked.split(/\s+/u).filter(Boolean);
   const folded = words.map((word) => foldCommand(word));
-  const command = maskPageNames(
+  const targeted = maskPageNames(
     stripCommandPrefix(folded.join(' ')),
     pageNames,
-  ).replace(PAGE_FIRST_TARGET, '');
+  );
+  const command = withoutLeadingTarget(targeted);
   const punctuation = /[;?!\n]/u.exec(command);
   if (punctuation) return { kind: 'PUNCTUATION', term: punctuation[0] };
-  const blocked = (area: string): UnsupportedModificationDetail | null => {
+  const blocked = (
+    area: string,
+    whole = false,
+  ): UnsupportedModificationDetail | null => {
     const verbs = new RegExp(BLOCKED_VERB.source, 'gu');
     for (const match of area.matchAll(verbs)) {
       const after = area.slice(match.index + match[0].length).trim();
@@ -681,10 +797,22 @@ export function explainUnsupportedModification(
         continue;
       }
       const term = page ? `${match[0]} ${page[0]}` : match[0];
+      const before = area.slice(0, match.index);
+      // Only a sentence with no command before this verb ("A ở trang X xoá đi");
+      // "tích xoá dữ liệu" holds a command inside data and keeps the quote hint.
+      const misplaced =
+        whole &&
+        !page &&
+        !leading &&
+        SUPPORTED_VERB.test(match[0]) &&
+        !SECOND_KIND.test(area) &&
+        !ANY_SUPPORTED_VERB.test(before) &&
+        !TODO_VERB.test(before.trim());
       return {
         kind: 'BLOCKED_WORD',
         term: originalWords(words, folded, term),
         pageAction: !!page,
+        ...(misplaced ? { misplaced: true } : {}),
       };
     }
     return null;
@@ -707,7 +835,7 @@ export function explainUnsupportedModification(
     const inChange = blocked(edit.groups.change);
     if (inChange) return inChange;
   } else {
-    const anywhere = blocked(command);
+    const anywhere = blocked(command, true);
     if (anywhere) return anywhere;
   }
   if (SUPPORTED_VERB.test(command) && SECOND_KIND.test(command)) {

@@ -32,7 +32,10 @@ import { GetAiPageContextHandler } from '../queries/get-ai-page-context/get-ai-p
 import { GetAiPageContextQuery } from '../queries/get-ai-page-context/get-ai-page-context.query';
 import type { AiModificationPlan } from '../types/ai-modification-plan';
 import { AiConversationAccessService } from './ai-conversation-access.service';
-import { isSupportedModification } from './ai-modification-operation.policy';
+import {
+  admittedModificationKind,
+  OPERATIONS_OF_KIND,
+} from './ai-modification-operation.policy';
 import { AiModificationPlanValidatorService } from './ai-modification-plan-validator.service';
 import {
   fingerprintAiPageContext,
@@ -99,11 +102,10 @@ export class AiModificationPlannerService {
     }
 
     // M8 (I6): what to take from a named source is data, as in the planner.
-    if (
-      !isSupportedModification(params.instruction, [], {
-        itemsFromSource: !!params.references?.length,
-      })
-    ) {
+    const kind = admittedModificationKind(params.instruction, [], {
+      itemsFromSource: !!params.references?.length,
+    });
+    if (!kind) {
       throw new UnprocessableEntityException({
         status: 'UNSUPPORTED_OPERATION',
         message: 'Unsupported AI modification operation',
@@ -222,6 +224,20 @@ export class AiModificationPlannerService {
         runtimeResult.output,
         pageContext,
       );
+      // Kế hoạch nội dung không ngoặc kép (K0): words in the content may hold a
+      // verb ("thêm to-do xoá file cũ"); the draft still does only what the
+      // sentence was admitted for.
+      const allowed = OPERATIONS_OF_KIND[kind];
+      if (
+        (validatedPlan.operations as readonly { type: string }[]).some(
+          (operation) => !allowed.includes(operation.type),
+        )
+      ) {
+        throw new UnprocessableEntityException({
+          status: 'UNSUPPORTED_OPERATION',
+          message: 'The draft does another kind of work than the request',
+        });
+      }
 
       await this.unitOfWork.runInTransaction(async (context) => {
         // A page/conversation may have been deleted while the model was running.
