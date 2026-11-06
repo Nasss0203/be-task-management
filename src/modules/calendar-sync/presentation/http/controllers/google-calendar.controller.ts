@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   Post,
   Put,
@@ -26,6 +27,8 @@ import { RequirePermissions } from 'src/common/decorator/require-permissions.dec
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import type { IAuth } from 'src/types/auth';
+
+import { CALENDAR_SYNC_TYPES } from '../../../calendar-sync.types';
 
 import { ConnectGoogleCalendarCommand } from '../../../application/commands/connect-google-calendar/connect-google-calendar.command';
 import { ConnectGoogleCalendarHandler } from '../../../application/commands/connect-google-calendar/connect-google-calendar.handler';
@@ -51,12 +54,27 @@ const asOptionalString = (value: unknown) =>
 export class GoogleCalendarController {
   constructor(
     private readonly configService: ConfigService,
+    @Inject(
+      CALENDAR_SYNC_TYPES.applications.GetGoogleCalendarAuthorizeUrlHandler,
+    )
     private readonly getAuthorizeUrlHandler: GetGoogleCalendarAuthorizeUrlHandler,
+
+    @Inject(CALENDAR_SYNC_TYPES.applications.ConnectGoogleCalendarHandler)
     private readonly connectHandler: ConnectGoogleCalendarHandler,
+
+    @Inject(CALENDAR_SYNC_TYPES.applications.DisconnectGoogleCalendarHandler)
     private readonly disconnectHandler: DisconnectGoogleCalendarHandler,
+
+    @Inject(CALENDAR_SYNC_TYPES.applications.GetGoogleCalendarSyncHandler)
     private readonly getSyncHandler: GetGoogleCalendarSyncHandler,
+
+    @Inject(CALENDAR_SYNC_TYPES.applications.UpsertGoogleCalendarSyncHandler)
     private readonly upsertSyncHandler: UpsertGoogleCalendarSyncHandler,
+
+    @Inject(CALENDAR_SYNC_TYPES.applications.DeleteGoogleCalendarSyncHandler)
     private readonly deleteSyncHandler: DeleteGoogleCalendarSyncHandler,
+
+    @Inject(CALENDAR_SYNC_TYPES.applications.RequestGoogleCalendarSyncHandler)
     private readonly requestSyncHandler: RequestGoogleCalendarSyncHandler,
   ) {}
 

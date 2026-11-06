@@ -16,22 +16,23 @@ import { ActivityModule } from './modules/activity/activity.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AiAssistantModule } from './modules/ai_assistant/ai-assistant.module';
 import { AttachmentModule } from './modules/attachment/attachment.module';
-import { CalendarSyncModule } from './modules/calendar-sync/calendar-sync.module';
 import { BillingModule } from './modules/billing/billing.module';
+import { CalendarSyncModule } from './modules/calendar-sync/calendar-sync.module';
+import { CommentsModule } from './modules/comments/comments.module';
 import { ContentModule } from './modules/content/content.module';
 import { DatabaseModule as DatabaseModules } from './modules/database/database.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { MailModule } from './modules/mail/mail.module';
-import { CommentsModule } from './modules/comments/comments.module';
 import { MentionsModule } from './modules/mentions/mentions.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PermissionModule } from './modules/permission/permission.module';
+import { SlackIntegrationModule } from './modules/slack-integration/slack-integration.module';
 import { StripeWebhookModule } from './modules/stripe-webhook/stripe-webhook.module';
+import { TeamspaceModule } from './modules/teamspace/teamspace.module';
 import { TemplateModule } from './modules/template/template.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
-import { TeamspaceModule } from './modules/teamspace/teamspace.module';
-import { QueueModule } from './shared/infrastructure/queue/queue.module';
 import { OutboxModule } from './shared/infrastructure/outbox/outbox.module';
+import { QueueModule } from './shared/infrastructure/queue/queue.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { OutboxModule } from './shared/infrastructure/outbox/outbox.module';
     MailModule,
     AttachmentModule,
     CalendarSyncModule,
+    SlackIntegrationModule,
     ActivityModule,
     AiAssistantModule,
     CommentsModule,

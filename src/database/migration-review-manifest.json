@@ -252,6 +252,10 @@
     {
       "file": "1793877495797-AddGoogleCalendarSyncAssignedToMeOnly.ts",
       "sha256": "f4519e0a16281be2781195388ecf41c5872fd367a0522e6e0923a02d010ca645"
+    },
+    {
+      "file": "1793955947271-CreateSlackConnections.ts",
+      "sha256": "63656dc1efe8aa4da4d66d64d23aa8c11bcc41f837de0f7c349fadccd2683f9c"
     }
   ]
 }

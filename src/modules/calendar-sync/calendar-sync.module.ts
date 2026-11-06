@@ -56,17 +56,46 @@ import { GoogleCalendarController } from './presentation/http/controllers/google
       provide: CALENDAR_SYNC_TYPES.ports.GoogleCalendarSyncJobQueue,
       useClass: BullMqGoogleCalendarSyncJobQueue,
     },
+    {
+      provide: CALENDAR_SYNC_TYPES.services.GoogleCalendarAccessTokenService,
+      useClass: GoogleCalendarAccessTokenService,
+    },
+    {
+      provide:
+        CALENDAR_SYNC_TYPES.applications.GetGoogleCalendarAuthorizeUrlHandler,
+      useClass: GetGoogleCalendarAuthorizeUrlHandler,
+    },
+    {
+      provide: CALENDAR_SYNC_TYPES.applications.GetGoogleCalendarSyncHandler,
+      useClass: GetGoogleCalendarSyncHandler,
+    },
+    {
+      provide: CALENDAR_SYNC_TYPES.applications.ConnectGoogleCalendarHandler,
+      useClass: ConnectGoogleCalendarHandler,
+    },
+    {
+      provide: CALENDAR_SYNC_TYPES.applications.DisconnectGoogleCalendarHandler,
+      useClass: DisconnectGoogleCalendarHandler,
+    },
+    {
+      provide: CALENDAR_SYNC_TYPES.applications.UpsertGoogleCalendarSyncHandler,
+      useClass: UpsertGoogleCalendarSyncHandler,
+    },
+    {
+      provide: CALENDAR_SYNC_TYPES.applications.DeleteGoogleCalendarSyncHandler,
+      useClass: DeleteGoogleCalendarSyncHandler,
+    },
+    {
+      provide:
+        CALENDAR_SYNC_TYPES.applications.RequestGoogleCalendarSyncHandler,
+      useClass: RequestGoogleCalendarSyncHandler,
+    },
+    {
+      provide: CALENDAR_SYNC_TYPES.applications.RunGoogleCalendarSyncHandler,
+      useClass: RunGoogleCalendarSyncHandler,
+    },
     TokenCipherService,
     GoogleCalendarStateTokenService,
-    GoogleCalendarAccessTokenService,
-    GetGoogleCalendarAuthorizeUrlHandler,
-    GetGoogleCalendarSyncHandler,
-    ConnectGoogleCalendarHandler,
-    DisconnectGoogleCalendarHandler,
-    UpsertGoogleCalendarSyncHandler,
-    DeleteGoogleCalendarSyncHandler,
-    RequestGoogleCalendarSyncHandler,
-    RunGoogleCalendarSyncHandler,
     GoogleCalendarSyncProcessor,
   ],
 })

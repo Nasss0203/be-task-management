@@ -21,6 +21,7 @@ export class DeleteGoogleCalendarSyncHandler {
     @Inject(CALENDAR_SYNC_TYPES.ports.GoogleCalendarClient)
     private readonly client: GoogleCalendarClient,
 
+    @Inject(CALENDAR_SYNC_TYPES.services.GoogleCalendarAccessTokenService)
     private readonly accessTokenService: GoogleCalendarAccessTokenService,
   ) {}
 

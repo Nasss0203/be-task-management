@@ -2,18 +2,17 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
 import {
+  NotificationModel,
   NotificationSenderType,
   NotificationSourceType,
 } from '../../domain/entities/notification.entity';
-import { NotificationModel } from '../../domain/entities/notification.entity';
 import { type NotificationRepository } from '../../domain/repositories/notification.repository';
+import { NOTIFICATION_TYPES } from '../../notifications.types';
 import {
   CreateNotificationService,
   CreateNotificationServiceInput,
 } from '../ports/create-notification.service.port';
-import { NOTIFICATION_TYPES } from '../../notifications.types';
-
-const NOTIFICATION_CREATED_EVENT = 'notification.created';
+import { NOTIFICATION_CREATED_EVENT } from './notification-created.event';
 
 @Injectable()
 export class CreateNotificationServiceImpl implements CreateNotificationService {
@@ -72,24 +71,27 @@ export class CreateNotificationServiceImpl implements CreateNotificationService 
     input: CreateNotificationServiceInput,
   ): Promise<NotificationModel | null> {
     if (!input.receiverId || !input.title?.trim()) {
-      throw new BadRequestException('Notification recipient and title are required');
+      throw new BadRequestException(
+        'Notification recipient and title are required',
+      );
     }
-    const notification = await this.notificationRepository.insertNotificationIfAbsent({
-      id: deliveryId,
-      receiverId: input.receiverId,
-      senderType: input.senderType ?? NotificationSenderType.SYSTEM,
-      actorId: input.actorId ?? null,
-      sourceType: input.sourceType ?? NotificationSourceType.SYSTEM,
-      sourceId: input.sourceId ?? null,
-      workspaceId: input.workspaceId ?? null,
-      type: input.type,
-      title: input.title.trim(),
-      message: input.message ?? null,
-      actionUrl: input.actionUrl ?? null,
-      metadata: input.metadata ?? null,
-      readAt: null,
-      archivedAt: null,
-    });
+    const notification =
+      await this.notificationRepository.insertNotificationIfAbsent({
+        id: deliveryId,
+        receiverId: input.receiverId,
+        senderType: input.senderType ?? NotificationSenderType.SYSTEM,
+        actorId: input.actorId ?? null,
+        sourceType: input.sourceType ?? NotificationSourceType.SYSTEM,
+        sourceId: input.sourceId ?? null,
+        workspaceId: input.workspaceId ?? null,
+        type: input.type,
+        title: input.title.trim(),
+        message: input.message ?? null,
+        actionUrl: input.actionUrl ?? null,
+        metadata: input.metadata ?? null,
+        readAt: null,
+        archivedAt: null,
+      });
     if (notification) this.emitCreated(notification);
     return notification;
   }

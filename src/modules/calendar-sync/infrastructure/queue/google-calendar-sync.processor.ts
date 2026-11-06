@@ -20,6 +20,7 @@ export type GoogleCalendarSyncJobData = {
 @Processor(GOOGLE_CALENDAR_SYNC_QUEUE)
 export class GoogleCalendarSyncProcessor extends WorkerHost {
   constructor(
+    @Inject(CALENDAR_SYNC_TYPES.applications.RunGoogleCalendarSyncHandler)
     private readonly runGoogleCalendarSyncHandler: RunGoogleCalendarSyncHandler,
 
     @Inject(CALENDAR_SYNC_TYPES.repositories.GoogleCalendarSyncRepository)

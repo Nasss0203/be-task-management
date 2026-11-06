@@ -49,6 +49,7 @@ export class UpsertGoogleCalendarSyncHandler {
     @Inject(CALENDAR_SYNC_TYPES.ports.GoogleCalendarSyncJobQueue)
     private readonly jobQueue: GoogleCalendarSyncJobQueue,
 
+    @Inject(CALENDAR_SYNC_TYPES.services.GoogleCalendarAccessTokenService)
     private readonly accessTokenService: GoogleCalendarAccessTokenService,
   ) {}
 
