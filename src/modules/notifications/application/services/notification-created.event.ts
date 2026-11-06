@@ -9,5 +9,8 @@ export interface NotificationCreatedEvent {
     message: string | null;
     actionUrl: string | null;
     workspaceId: string | null;
+    sourceType: string;
+    sourceId: string | null;
+    metadata: Record<string, unknown> | null;
   };
 }

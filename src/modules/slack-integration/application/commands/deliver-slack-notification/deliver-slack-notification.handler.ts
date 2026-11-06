@@ -2,6 +2,14 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { resolveFrontendOrigin } from 'src/common/config/frontend-origin.config';
+import { CONTENT_TYPES } from 'src/modules/content/content.types';
+import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
+import {
+  NotificationSourceType,
+  NotificationType,
+} from 'src/modules/notifications/domain/entities/notification.entity';
+import type { WorkspaceRepository } from 'src/modules/workspace/domain/repositories/workspace.repository';
+import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import { TokenCipherService } from 'src/shared/security/token-cipher.service';
 
 import {
@@ -15,8 +23,19 @@ import {
 } from '../../ports/slack-client.port';
 import { DeliverSlackNotificationCommand } from './deliver-slack-notification.command';
 
+type SlackNotification =
+  DeliverSlackNotificationCommand['event']['notification'];
+
 const escapeSlackText = (text: string) =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+const pageIdOf = (notification: SlackNotification): string | null => {
+  if (notification.sourceType === NotificationSourceType.PAGE) {
+    return notification.sourceId;
+  }
+  const pageId = notification.metadata?.pageId;
+  return typeof pageId === 'string' ? pageId : null;
+};
 
 @Injectable()
 export class DeliverSlackNotificationHandler {
@@ -30,6 +49,12 @@ export class DeliverSlackNotificationHandler {
     private readonly tokenCipher: TokenCipherService,
 
     private readonly configService: ConfigService,
+
+    @Inject(WORKSPACE_TYPES.repositories.WorkspaceRepository)
+    private readonly workspaces: WorkspaceRepository,
+
+    @Inject(CONTENT_TYPES.repositories.PageRepository)
+    private readonly pages: PageRepository,
   ) {}
 
   async execute(command: DeliverSlackNotificationCommand): Promise<void> {
@@ -41,11 +66,13 @@ export class DeliverSlackNotificationHandler {
       return;
     }
 
+    const location = await this.locationOf(notification);
+
     try {
       await this.client.postDirectMessage(
         this.tokenCipher.decrypt(connection.botTokenEncrypted),
         connection.slackUserId,
-        this.toText(notification),
+        this.toText(notification, location),
       );
     } catch (error) {
       if (error instanceof SlackAuthError) {
@@ -58,9 +85,30 @@ export class DeliverSlackNotificationHandler {
     }
   }
 
-  private toText(
-    notification: DeliverSlackNotificationCommand['event']['notification'],
-  ) {
+  private async locationOf(
+    notification: SlackNotification,
+  ): Promise<string | null> {
+    if (notification.type === NotificationType.PAGE_ACCESS_REJECTED) {
+      return null;
+    }
+
+    const pageId = pageIdOf(notification);
+    const [workspace, page] = await Promise.all([
+      notification.workspaceId
+        ? this.workspaces.findById(notification.workspaceId)
+        : null,
+      pageId ? this.pages.findById(pageId) : null,
+    ]);
+
+    const parts = [
+      workspace?.getName(),
+      page && (page.getTitle() || 'Untitled'),
+    ].filter(Boolean);
+
+    return parts.length ? parts.join(' › ') : null;
+  }
+
+  private toText(notification: SlackNotification, location: string | null) {
     const url = notification.actionUrl
       ? new URL(
           notification.actionUrl,
@@ -70,6 +118,7 @@ export class DeliverSlackNotificationHandler {
 
     return [
       `*${escapeSlackText(notification.title)}*`,
+      location && escapeSlackText(location),
       notification.message && escapeSlackText(notification.message),
       url && `<${url}|Open in Taskmanly>`,
     ]

@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { SlackStateTokenService } from 'src/shared/security/slack-state-token.service';
 import { TokenCipherService } from 'src/shared/security/token-cipher.service';
+import { ContentModule } from 'src/modules/content/content.module';
+import { WorkspaceModule } from 'src/modules/workspace/workspace.module';
 
 import { ConnectSlackHandler } from './application/commands/connect-slack/connect-slack.handler';
 import { DeliverSlackNotificationHandler } from './application/commands/deliver-slack-notification/deliver-slack-notification.handler';
@@ -24,6 +26,8 @@ import { SLACK_INTEGRATION_TYPES } from './slack-integration.types';
   imports: [
     TypeOrmModule.forFeature([SlackConnectionOrmEntity]),
     BullModule.registerQueue({ name: SLACK_DELIVERY_QUEUE }),
+    WorkspaceModule,
+    ContentModule,
   ],
   controllers: [SlackController],
   providers: [
