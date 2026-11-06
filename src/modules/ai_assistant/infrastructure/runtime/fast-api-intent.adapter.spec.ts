@@ -163,7 +163,13 @@ describe('FastAPI M0 intent contract', () => {
           selectedText: 'private-selected-source',
         }),
       ).rejects.toThrow('AI service returned an invalid response');
-      for (const spy of spies) expect(spy).not.toHaveBeenCalled();
+      // Only the timing line (path, ms, status) may be logged (kế hoạch tốc độ Ask, A.1).
+      const logged = JSON.stringify(spies.map((spy) => spy.mock.calls));
+      expect(logged).not.toMatch(/private-|internal-token|test-token/u);
+      expect(spies[0]).not.toHaveBeenCalled();
+      expect(spies[2].mock.calls).toEqual([
+        [expect.stringMatching(/^ai_runtime_call path=\/internal\/v1\/intent ms=\d+ status=\w+$/u)],
+      ]);
     } finally {
       for (const spy of spies) spy.mockRestore();
     }

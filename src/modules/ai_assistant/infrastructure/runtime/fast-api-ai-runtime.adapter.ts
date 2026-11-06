@@ -4,6 +4,7 @@ import {
   BadRequestException,
   GatewayTimeoutException,
   Injectable,
+  Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -181,6 +182,10 @@ function isBrieflyUnavailable(error: unknown): boolean {
 export class FastApiAiRuntimeAdapter
   implements AiRuntimePort, PageIntentExtractor, AiIntentPort, TextEmbedder
 {
+  // Kế hoạch tốc độ Ask (A.1, DA3): one line per AI service call — path,
+  // milliseconds and outcome only, never the instruction or Page content.
+  private readonly logger = new Logger(FastApiAiRuntimeAdapter.name);
+
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
@@ -538,6 +543,8 @@ export class FastApiAiRuntimeAdapter
       this.configService.get<string>('AI_SERVICE_TIMEOUT_MS') ?? 65000,
     );
 
+    const startedAt = Date.now();
+    let outcome = 'ok';
     try {
       const response = await firstValueFrom(
         this.httpService.post<TResponse>(`${baseUrl}${path}`, payload, {
@@ -557,6 +564,11 @@ export class FastApiAiRuntimeAdapter
 
       return response.data;
     } catch (error) {
+      outcome = axios.isAxiosError(error)
+        ? (error.code ?? `HTTP_${error.response?.status ?? 'ERR'}`)
+        : error instanceof Error
+          ? error.name
+          : 'UNKNOWN';
       if (
         error instanceof BadRequestException ||
         error instanceof BadGatewayException
@@ -579,6 +591,10 @@ export class FastApiAiRuntimeAdapter
       }
 
       throw error;
+    } finally {
+      this.logger.log(
+        `ai_runtime_call path=${path} ms=${Date.now() - startedAt} status=${outcome}`,
+      );
     }
   }
 

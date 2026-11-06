@@ -19,6 +19,8 @@ const VERB_SPELLINGS: Record<string, readonly string[]> = {
   them: ['thêm'],
   chen: ['chèn'],
   tich: ['tích'],
+  // "thu hồi" (revoke) is blocked; "kiểm thử hồi quy" (gp07) is data.
+  thu: ['thu'],
 };
 
 function foldCommand(text: string): string {
@@ -35,8 +37,9 @@ function foldCommand(text: string): string {
 // Positive grammar: affirmative insertion + a supported content/row object.
 // Unknown commands fail closed. This is capability admission, never permission.
 const INSERT = /^(?:them|chen|bo sung|ghi them|add|insert|append|prepend)\s+/u;
+// Kế hoạch mở ngữ pháp câu "thêm" (D1): to-do, đoạn văn, trích dẫn, dòng chữ.
 const OBJECT =
-  /^(?:(?:mot|nhung|cac|a|an|the|new|moi|another|qa|\d+)\s+)*(?:heading|checklist|block|blocks|task|tasks|row|rows|dong|hang|muc|phan|ghi chu|noi dung|ket luan|release note|note|notes|text|paragraph|doan|tieu de|danh sach)\b/u;
+  /^(?:(?:mot|nhung|cac|a|an|the|new|moi|another|qa|\d+)\s+)*(?:viec can lam|to-do|todo|viec|trich dan|quote|line|doan van|heading|checklist|block|blocks|task|tasks|row|rows|dong|hang|muc|phan|ghi chu|noi dung|ket luan|release note|note|notes|text|paragraph|doan|tieu de|danh sach)\b/u;
 
 // Fully consume the remaining clause, rather than accepting any suffix after
 // "add heading". Free-form labels/content and titles must be quoted. This
@@ -52,12 +55,17 @@ const SAFE_TAIL = new Set(
 // and may not mention a Page: a target must be recognized (quoted or M1b).
 const LABEL_OBJECT = /\b(?:heading|tieu de)$/u;
 
-const LIST_OBJECT = /\bchecklist$/u;
+// D1: the words after these name one block's content ("to-do Ôn bài 5 vào phần
+// Môn Toán"); like "checklist gồm" items they may go on after "và". They are
+// data for the AI service, which takes them by rule (explicit_content.py).
+const CONTENT_OBJECT =
+  /\b(?:to-do|todo|viec|trich dan|quote|line|doan van|doan|paragraph|text|dong|task|muc)$/u;
 
-const LIST_ITEMS = /^(?:bao gom|gom)\s+/u;
+// D3/D4: a checklist's name, topic or items ("checklist chuẩn bị họp gồm a, b").
+const LIST_OBJECT = /\b(?:checklist|viec can lam)$/u;
 
 const TARGET_SUFFIX =
-  /\s*\b(?:vao|trong|o|tai|cua|to|in|on)(?:\s+(?:cuoi|dau))?(?:\s+the)?\s+(?:(?:trang|page)(?:\s+(?:quoted|nay|hien tai|dang mo))?|(?:quoted|this|current)\s+page)$/u;
+  /\s*\b(?:(?:vao|trong|o|tai|cua|to|in|on)(?:\s+(?:cuoi|dau))?(?:\s+the)?\s+(?:(?:trang|page)(?:\s+(?:quoted|nay|hien tai|dang mo))?|(?:quoted|this|current)\s+page)|at\s+the\s+(?:end|top|bottom|start)\s+of\s+(?:the\s+|this\s+)?page)$/u;
 
 // Kế hoạch tích to-do: ticking / unticking existing to-dos. Like "checklist
 // gồm" items the names are data, but one kind of work per sentence (D4).
@@ -82,9 +90,12 @@ const TODO_STATUS = [
 
 const TODO_FILLER = /^(?:(?:phan|muc|viec|cong viec|to-do|todo|task)\s+)+/u;
 
+// "tình trạng" (status) and "trạng thái" (state) fold to "trang" but name no Page (gp27).
+const PAGE_WORD = /\b(?<!tinh\s)trang\b(?!\s+thai\b)|\bpage\b/u;
+
 function isFreeData(text: string): boolean {
   const data = text.replace(TARGET_SUFFIX, '').trim();
-  return !!data && !/\b(?:trang|page)\b/u.test(data);
+  return !!data && !PAGE_WORD.test(data);
 }
 
 // "items": a "checklist gồm" list, which may continue after "và".
@@ -125,9 +136,8 @@ function insertionClause(
     return 'closed';
   if (
     object &&
-    LIST_OBJECT.test(objectName) &&
-    LIST_ITEMS.test(remainder) &&
-    isFreeData(remainder.replace(LIST_ITEMS, ''))
+    (LIST_OBJECT.test(objectName) || CONTENT_OBJECT.test(objectName)) &&
+    isFreeData(remainder)
   )
     return 'items';
 
@@ -136,6 +146,46 @@ function insertionClause(
   return afterItems && isFreeData(clause) && !TODO_VERB.test(clause)
     ? 'items'
     : null;
+}
+
+/**
+ * D3: one ":" opens a list right after the inserted object ("add a checklist:
+ * a, b", "thêm 2 dòng vào bảng Tasks: a, b"); it reads as "gồm". Any other
+ * colon, or a second one, stays refused.
+ */
+function colonAsItems(command: string): string | null {
+  const parts = command.split(':');
+  if (parts.length !== 2) return null;
+  const before = parts[0].trimEnd();
+  if (!INSERT.test(before) || !OBJECT.test(before.replace(INSERT, '').trim()))
+    return null;
+  return `${before} gom ${parts[1].trimStart()}`;
+}
+
+// D2/D5: "thêm X vào bảng / phần / mục / danh sách Y", "add X to the Y
+// table / list / section". X and Y are data; X never creates a table or a Page.
+const NAMED_PLACE_VI =
+  /^(?<data>.+?)\s+(?:vao|trong|duoi|o)\s+(?:trong\s+)?(?:bang|danh sach|phan|muc)\s+(?<place>.+)$/u;
+const NAMED_PLACE_EN =
+  /^(?<data>.+?)\s+(?:to|into|in|under)\s+the\s+(?<place>.+?)\s+(?:table|database|list|section|heading)(?:\s+(?<tail>.+))?$/u;
+const NOT_PLACED_DATA =
+  /^(?:(?:mot|a|an|the|new|moi)\s+)*(?:bang|database|databases|table|tables|trang|page|co so du lieu)\b/u;
+
+function isInsertionAtNamedPlace(body: string): boolean {
+  const text = body
+    .replace(TARGET_SUFFIX, '')
+    .replace(/[\s,.]+$/u, '')
+    .trim();
+  if (SECOND_COMMAND.test(text)) return false;
+  const match = NAMED_PLACE_VI.exec(text) ?? NAMED_PLACE_EN.exec(text);
+  if (!match?.groups) return false;
+  const { data, place, tail } = match.groups;
+  return (
+    !NOT_PLACED_DATA.test(data.trim()) &&
+    isFreeData(data) &&
+    isFreeData(place) &&
+    (tail === undefined || isFreeData(tail))
+  );
 }
 
 const BLOCKED_VERB =
@@ -364,7 +414,12 @@ export function isSupportedModification(
   if (isQuotedPayloadInsertion(source, command)) return true;
   // A Page-first prefix is only a target; require a separate insertion clause.
   command = command.replace(PAGE_FIRST_TARGET, '');
-  if (/[;:\n?!]/u.test(command)) return false;
+  if (/[;\n?!]/u.test(command)) return false;
+  if (command.includes(':')) {
+    const listed = colonAsItems(command);
+    if (listed === null) return false;
+    command = listed;
+  }
   // A stray quote is tolerated as a typo, but then free data stays closed.
   const allowFreeData = quotesClosed === source;
 
@@ -381,6 +436,7 @@ export function isSupportedModification(
     return allowFreeData && isTodoStatusChange(command);
   }
   const body = command.replace(INSERT, '');
+  if (allowFreeData && isInsertionAtNamedPlace(body)) return true;
   // Every joined clause must itself name supported content or another insertion.
   // Arbitrary prose that contains verbs should be explicitly quoted as data.
   let previous: InsertionClause | null = 'closed';
