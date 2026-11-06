@@ -5,6 +5,11 @@ export interface SlackOAuthResult {
   slackUserId: string;
 }
 
+export const SLACK_REPLY_ACTION_ID = 'reply_on_page';
+export const SLACK_REPLY_CALLBACK_ID = 'reply_on_page_submit';
+export const SLACK_REPLY_BLOCK_ID = 'reply';
+export const SLACK_REPLY_INPUT_ID = 'body';
+
 export class SlackAuthError extends Error {}
 
 export class SlackRetryableError extends Error {}
@@ -16,5 +21,11 @@ export interface SlackClient {
     botToken: string,
     slackUserId: string,
     text: string,
+    replyCommentId: string | null,
+  ): Promise<void>;
+  openReplyModal(
+    botToken: string,
+    triggerId: string,
+    commentId: string,
   ): Promise<void>;
 }

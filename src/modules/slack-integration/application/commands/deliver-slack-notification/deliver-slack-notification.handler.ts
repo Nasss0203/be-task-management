@@ -29,6 +29,17 @@ type SlackNotification =
 const escapeSlackText = (text: string) =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+const REPLYABLE_TYPES: ReadonlySet<string> = new Set([
+  NotificationType.COMMENT_MENTIONED,
+  NotificationType.COMMENT_REPLIED,
+]);
+
+const replyCommentIdOf = (notification: SlackNotification): string | null =>
+  REPLYABLE_TYPES.has(notification.type) &&
+  notification.sourceType === NotificationSourceType.COMMENT
+    ? notification.sourceId
+    : null;
+
 const pageIdOf = (notification: SlackNotification): string | null => {
   if (notification.sourceType === NotificationSourceType.PAGE) {
     return notification.sourceId;
@@ -73,6 +84,7 @@ export class DeliverSlackNotificationHandler {
         this.tokenCipher.decrypt(connection.botTokenEncrypted),
         connection.slackUserId,
         this.toText(notification, location),
+        replyCommentIdOf(notification),
       );
     } catch (error) {
       if (error instanceof SlackAuthError) {

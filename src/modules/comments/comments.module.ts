@@ -45,6 +45,6 @@ import { CommentController } from './presentation/http/controllers/comment.contr
     ListCommentsHandler,
     CountBlockCommentsHandler,
   ],
-  exports: [COMMENT_TYPES.repositories.CommentRepository],
+  exports: [COMMENT_TYPES.repositories.CommentRepository, CreateCommentHandler],
 })
 export class CommentsModule {}

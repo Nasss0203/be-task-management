@@ -12,6 +12,9 @@ import {
 
 @Entity('slack_connections')
 @Index('UQ_slack_connections_user', ['userId'], { unique: true })
+@Index('UQ_slack_connections_slack_user', ['slackTeamId', 'slackUserId'], {
+  unique: true,
+})
 export class SlackConnectionOrmEntity {
   @PrimaryColumn('uuid')
   id: string;

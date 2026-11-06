@@ -256,6 +256,10 @@
     {
       "file": "1793955947271-CreateSlackConnections.ts",
       "sha256": "63656dc1efe8aa4da4d66d64d23aa8c11bcc41f837de0f7c349fadccd2683f9c"
+    },
+    {
+      "file": "1793969608044-AddSlackConnectionsSlackUserUnique.ts",
+      "sha256": "e4c8218886fe0d2f1fe6d76d63bcf9cb36711cbdec6b4241f1626ed0a0e998bf"
     }
   ]
 }

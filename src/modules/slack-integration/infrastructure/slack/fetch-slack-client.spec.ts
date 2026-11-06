@@ -1,4 +1,6 @@
 import {
+  SLACK_REPLY_ACTION_ID,
+  SLACK_REPLY_CALLBACK_ID,
   SlackAuthError,
   SlackRetryableError,
 } from '../../application/ports/slack-client.port';
@@ -69,7 +71,7 @@ describe('FetchSlackClient', () => {
   it('posts the message to the user DM with the bot token', async () => {
     fetchMock.mockResolvedValue(jsonResponse(200, { ok: true }));
 
-    await client.postDirectMessage('xoxb-1', 'U1', 'Hello');
+    await client.postDirectMessage('xoxb-1', 'U1', 'Hello', null);
 
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe('https://slack.com/api/chat.postMessage');
@@ -82,13 +84,52 @@ describe('FetchSlackClient', () => {
     });
   });
 
+  it('adds a Reply on page button for comment notifications', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(200, { ok: true }));
+
+    await client.postDirectMessage('xoxb-1', 'U1', '*Nam*', 'comment-1');
+
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string) as {
+      text: string;
+      blocks: { elements: unknown[] }[];
+    };
+    expect(body.text).toBe('*Nam*');
+    expect(body.blocks[1].elements[0]).toEqual(
+      expect.objectContaining({
+        action_id: SLACK_REPLY_ACTION_ID,
+        value: 'comment-1',
+      }),
+    );
+  });
+
+  it('opens the reply modal for the comment', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(200, { ok: true }));
+
+    await client.openReplyModal('xoxb-1', 'trigger-1', 'comment-1');
+
+    const [url, init] = fetchMock.mock.calls[0];
+    const body = JSON.parse(init.body as string) as {
+      trigger_id: string;
+      view: { blocks: { element?: { max_length: number } }[] };
+    };
+    expect(url).toBe('https://slack.com/api/views.open');
+    expect(body.trigger_id).toBe('trigger-1');
+    expect(body.view).toEqual(
+      expect.objectContaining({
+        callback_id: SLACK_REPLY_CALLBACK_ID,
+        private_metadata: 'comment-1',
+      }),
+    );
+    expect(body.view.blocks[1].element?.max_length).toBeLessThanOrEqual(3000);
+  });
+
   it('treats a revoked token reported with HTTP 200 as an auth error', async () => {
     fetchMock.mockResolvedValue(
       jsonResponse(200, { ok: false, error: 'token_revoked' }),
     );
 
     await expect(
-      client.postDirectMessage('xoxb-1', 'U1', 'Hi'),
+      client.postDirectMessage('xoxb-1', 'U1', 'Hi', null),
     ).rejects.toBeInstanceOf(SlackAuthError);
   });
 
@@ -103,7 +144,7 @@ describe('FetchSlackClient', () => {
     fetchMock.mockResolvedValue(response);
 
     await expect(
-      client.postDirectMessage('xoxb-1', 'U1', 'Hi'),
+      client.postDirectMessage('xoxb-1', 'U1', 'Hi', null),
     ).rejects.toBeInstanceOf(SlackRetryableError);
   });
 });

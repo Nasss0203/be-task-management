@@ -46,6 +46,14 @@ export class ConnectSlackHandler {
       const existing = await this.connectionRepository.findByUserId(
         state.userId,
       );
+      const sameSlackUser = await this.connectionRepository.findBySlackUser(
+        result.teamId,
+        result.slackUserId,
+      );
+
+      if (sameSlackUser && sameSlackUser.userId !== state.userId) {
+        await this.connectionRepository.deleteByUserId(sameSlackUser.userId);
+      }
 
       await this.connectionRepository.save({
         id: existing?.id ?? randomUUID(),

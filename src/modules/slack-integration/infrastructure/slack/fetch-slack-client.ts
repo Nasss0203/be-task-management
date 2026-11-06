@@ -1,7 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+import { COMMENT_BODY_MAX_LENGTH } from 'src/modules/comments/application/dto/comment/request/create-comment.request.dto';
+
 import {
+  SLACK_REPLY_ACTION_ID,
+  SLACK_REPLY_BLOCK_ID,
+  SLACK_REPLY_CALLBACK_ID,
+  SLACK_REPLY_INPUT_ID,
   SlackAuthError,
   type SlackClient,
   type SlackOAuthResult,
@@ -12,6 +18,8 @@ const AUTHORIZE_URL = 'https://slack.com/oauth/v2/authorize';
 const API_URL = 'https://slack.com/api';
 const BOT_SCOPES = ['chat:write'];
 const REQUEST_TIMEOUT_MS = 15_000;
+const SECTION_TEXT_MAX_LENGTH = 3000;
+const REPLY_INPUT_MAX_LENGTH = Math.min(COMMENT_BODY_MAX_LENGTH, 3000);
 const AUTH_ERRORS = new Set([
   'invalid_auth',
   'not_authed',
@@ -76,14 +84,90 @@ export class FetchSlackClient implements SlackClient {
     botToken: string,
     slackUserId: string,
     text: string,
+    replyCommentId: string | null,
   ): Promise<void> {
-    await this.call('chat.postMessage', {
+    const blocks = replyCommentId
+      ? [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: text.slice(0, SECTION_TEXT_MAX_LENGTH),
+            },
+          },
+          {
+            type: 'actions',
+            elements: [
+              {
+                type: 'button',
+                action_id: SLACK_REPLY_ACTION_ID,
+                text: { type: 'plain_text', text: 'Reply on page' },
+                value: replyCommentId,
+              },
+            ],
+          },
+        ]
+      : undefined;
+
+    await this.callWithToken('chat.postMessage', botToken, {
+      channel: slackUserId,
+      text,
+      blocks,
+    });
+  }
+
+  async openReplyModal(
+    botToken: string,
+    triggerId: string,
+    commentId: string,
+  ): Promise<void> {
+    await this.callWithToken('views.open', botToken, {
+      trigger_id: triggerId,
+      view: {
+        type: 'modal',
+        callback_id: SLACK_REPLY_CALLBACK_ID,
+        private_metadata: commentId,
+        title: { type: 'plain_text', text: 'Reply on page' },
+        submit: { type: 'plain_text', text: 'Post reply' },
+        close: { type: 'plain_text', text: 'Cancel' },
+        blocks: [
+          {
+            type: 'context',
+            elements: [
+              {
+                type: 'mrkdwn',
+                text: 'Your reply is posted on the page, where everyone who can see the comment can read it.',
+              },
+            ],
+          },
+          {
+            type: 'input',
+            block_id: SLACK_REPLY_BLOCK_ID,
+            label: { type: 'plain_text', text: 'Reply' },
+            element: {
+              type: 'plain_text_input',
+              action_id: SLACK_REPLY_INPUT_ID,
+              multiline: true,
+              max_length: REPLY_INPUT_MAX_LENGTH,
+            },
+          },
+        ],
+      },
+    });
+  }
+
+  private callWithToken(
+    method: string,
+    botToken: string,
+    payload: Record<string, unknown>,
+  ): Promise<SlackResponse> {
+    return this.call(method, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${botToken}`,
         'Content-Type': 'application/json; charset=utf-8',
       },
-      body: JSON.stringify({ channel: slackUserId, text }),
+      body: JSON.stringify(payload),
     });
   }
 

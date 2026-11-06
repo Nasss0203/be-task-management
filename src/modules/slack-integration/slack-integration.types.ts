@@ -12,5 +12,7 @@ export const SLACK_INTEGRATION_TYPES = {
     ConnectSlackHandler: Symbol('ConnectSlackHandler'),
     DisconnectSlackHandler: Symbol('DisconnectSlackHandler'),
     DeliverSlackNotificationHandler: Symbol('DeliverSlackNotificationHandler'),
+    OpenSlackReplyHandler: Symbol('OpenSlackReplyHandler'),
+    ReplyFromSlackHandler: Symbol('ReplyFromSlackHandler'),
   },
 } as const;

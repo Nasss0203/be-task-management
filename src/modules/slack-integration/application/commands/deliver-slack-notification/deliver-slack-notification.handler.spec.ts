@@ -67,6 +67,7 @@ describe('DeliverSlackNotificationHandler', () => {
       'xoxb-1',
       'U1',
       '*Nam mentioned you*\nLooks good\n<http://localhost:3000/page/page-1|Open in Taskmanly>',
+      'comment-1',
     );
   });
 
@@ -81,6 +82,7 @@ describe('DeliverSlackNotificationHandler', () => {
       'xoxb-1',
       'U1',
       '*&lt;!channel&gt; &amp; co*\n&lt;https://evil|click&gt;',
+      'comment-1',
     );
   });
 
@@ -96,6 +98,7 @@ describe('DeliverSlackNotificationHandler', () => {
       'xoxb-1',
       'U1',
       '*Nam mentioned you*\nR&amp;D › &lt;Roadmap&gt;',
+      'comment-1',
     );
   });
 
@@ -117,6 +120,7 @@ describe('DeliverSlackNotificationHandler', () => {
       'xoxb-1',
       'U1',
       '*Nam mentioned you*\nUntitled',
+      null,
     );
   });
 
@@ -134,6 +138,7 @@ describe('DeliverSlackNotificationHandler', () => {
       'xoxb-1',
       'U1',
       '*Nam mentioned you*',
+      null,
     );
   });
 

@@ -17,6 +17,10 @@ export interface SlackConnection {
 
 export interface SlackConnectionRepository {
   findByUserId(userId: string): Promise<SlackConnection | null>;
+  findBySlackUser(
+    slackTeamId: string,
+    slackUserId: string,
+  ): Promise<SlackConnection | null>;
   save(connection: SlackConnection): Promise<void>;
   markError(id: string, error: SlackConnectionError | null): Promise<void>;
   deleteByUserId(userId: string): Promise<void>;

@@ -31,6 +31,13 @@ export class TypeOrmSlackConnectionRepository implements SlackConnectionReposito
     return orm ? toConnection(orm) : null;
   }
 
+  async findBySlackUser(slackTeamId: string, slackUserId: string) {
+    const orm = await this.repository.findOne({
+      where: { slackTeamId, slackUserId },
+    });
+    return orm ? toConnection(orm) : null;
+  }
+
   async save(connection: SlackConnection) {
     await this.repository.save(this.repository.create(connection));
   }

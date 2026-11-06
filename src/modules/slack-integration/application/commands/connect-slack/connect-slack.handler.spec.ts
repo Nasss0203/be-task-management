@@ -4,7 +4,12 @@ import { ConnectSlackHandler } from './connect-slack.handler';
 
 describe('ConnectSlackHandler', () => {
   const client = { exchangeCode: jest.fn() };
-  const connectionRepository = { findByUserId: jest.fn(), save: jest.fn() };
+  const connectionRepository = {
+    findByUserId: jest.fn(),
+    findBySlackUser: jest.fn(),
+    deleteByUserId: jest.fn(),
+    save: jest.fn(),
+  };
   const stateTokenService = { verify: jest.fn() };
   const tokenCipher = { encrypt: jest.fn((value: string) => `enc(${value})`) };
   const handler = new ConnectSlackHandler(
@@ -31,6 +36,7 @@ describe('ConnectSlackHandler', () => {
       slackUserId: 'U1',
     });
     connectionRepository.findByUserId.mockResolvedValue(null);
+    connectionRepository.findBySlackUser.mockResolvedValue(null);
   });
 
   it('stores the encrypted bot token for the user in the state', async () => {
@@ -62,6 +68,33 @@ describe('ConnectSlackHandler', () => {
     expect(connectionRepository.save).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'connection-1', lastError: null }),
     );
+  });
+
+  it('moves the Slack account away from another Taskmanly user', async () => {
+    connectionRepository.findBySlackUser.mockResolvedValue({
+      userId: 'user-2',
+    });
+
+    await connect();
+
+    expect(connectionRepository.findBySlackUser).toHaveBeenCalledWith(
+      'T1',
+      'U1',
+    );
+    expect(connectionRepository.deleteByUserId).toHaveBeenCalledWith('user-2');
+    expect(connectionRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 'user-1', slackUserId: 'U1' }),
+    );
+  });
+
+  it('keeps its own connection when reconnecting the same Slack account', async () => {
+    connectionRepository.findBySlackUser.mockResolvedValue({
+      userId: 'user-1',
+    });
+
+    await connect();
+
+    expect(connectionRepository.deleteByUserId).not.toHaveBeenCalled();
   });
 
   it('ignores the code when the state is not valid', async () => {
