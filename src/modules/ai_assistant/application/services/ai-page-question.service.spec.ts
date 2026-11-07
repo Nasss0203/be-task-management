@@ -240,6 +240,63 @@ describe('AiPageQuestionService (AI-Q1)', () => {
     });
   });
 
+  it('answers the one Page whose title goes on past the name read', async () => {
+    const f = fixture();
+    f.resolver.resolveFromSentence.mockResolvedValueOnce({
+      status: 'CANDIDATES',
+      candidates: [page('page-5', 'Cho thuê nhà')],
+      resolutionMethod: 'TITLE_IN_SENTENCE',
+    });
+    await expect(
+      f.service.answer({
+        ...f.input,
+        instruction: 'tóm tắt trang Cho thuê nhà',
+        questionKind: 'SUMMARY',
+        pageReference: 'Cho thuê',
+      }),
+    ).resolves.toMatchObject({
+      status: 'ANSWERED',
+      page: { pageId: 'page-5' },
+    });
+  });
+
+  it('still offers a choice when two Pages start with the name read', async () => {
+    const f = fixture();
+    f.resolver.resolveFromSentence.mockResolvedValueOnce({
+      status: 'CANDIDATES',
+      candidates: [
+        page('page-5', 'Cho thuê nhà'),
+        page('page-6', 'Cho thuê xe'),
+      ],
+      resolutionMethod: 'TITLE_IN_SENTENCE',
+    });
+    await expect(
+      f.service.answer({
+        ...f.input,
+        instruction: 'tóm tắt trang Cho thuê nhà và Cho thuê xe',
+        questionKind: 'SUMMARY',
+        pageReference: 'Cho thuê',
+      }),
+    ).resolves.toMatchObject({ status: 'AMBIGUOUS_PAGE' });
+  });
+
+  it('never takes a Page that only shares the first words', async () => {
+    const f = fixture();
+    f.resolver.resolveFromSentence.mockResolvedValueOnce({
+      status: 'CANDIDATES',
+      candidates: [page('page-7', 'Cho thuê nhà')],
+      resolutionMethod: 'TITLE_IN_SENTENCE',
+    });
+    await expect(
+      f.service.answer({
+        ...f.input,
+        instruction: 'tóm tắt trang Cho thuê xe, có nhắc Cho thuê nhà',
+        questionKind: 'SUMMARY',
+        pageReference: 'Cho thuê xe',
+      }),
+    ).resolves.toMatchObject({ status: 'AMBIGUOUS_PAGE' });
+  });
+
   it('uses the open Page for a question without a name', async () => {
     const f = fixture();
     f.resolver.resolve.mockResolvedValue({

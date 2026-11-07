@@ -1,16 +1,6 @@
 import { foldInstruction } from './ai-instruction-evidence';
 import { normalizeCommand } from './ai-sentence-normalize';
 
-/**
- * Kế hoạch chat nhiều lượt — hiểu câu nhắc lại lượt trước (M2, M3).
- *
- * "xoá nó đi", "sửa cái vừa thêm thành Gọi khách hàng", "đổi lại như cũ": the
- * words name the previous turn of the same PAGE conversation, never a block of
- * their own. The sentence is resolved here into an explicit one ("xoá \"Gọi
- * khách\"") that then goes through every check a typed sentence does
- * (admission, K0, planner, review of the draft). Only the latest turn counts
- * (DM3); anything unsure is asked back.
- */
 export type FollowUpVerb =
   | 'DELETE'
   | 'EDIT'
@@ -22,12 +12,10 @@ export type FollowUpVerb =
 
 export interface FollowUp {
   verb: FollowUpVerb;
-  /** EDIT: the new text, in the user's own words. */
   newText?: string;
 }
 
 const PRONOUN =
-  // "cái" may already be gone: normalizeCommand reads "xoá cái A" as "xoá A".
   '(?:no|chung|chung no|(?:cai )?do|(?:cai )?nay|(?:cai )?vua (?:them|sua|tao|roi)|may cai do|may cai vua them|cac cai do|cac cai vua them|it|them|that|that one|those)';
 
 const PATTERNS: [FollowUpVerb, RegExp][] = [
@@ -85,7 +73,6 @@ export function detectFollowUp(instruction: string): FollowUp | null {
   return null;
 }
 
-/** One operation of the previous draft, as stored in its output data. */
 interface PlanOperation {
   type: string;
   blockId?: string;
@@ -98,7 +85,6 @@ interface PlanOperation {
 
 export interface PreviousTurn {
   generationId: string;
-  /** PENDING: a draft not applied yet; APPLIED; OTHER: discarded / failed. */
   state: 'PENDING' | 'APPLIED' | 'OTHER';
   instruction: string;
   summary: string;
@@ -118,7 +104,6 @@ export type FollowUpResolution =
       kind: 'SENTENCE';
       instruction: string;
       understood: string;
-      /** DM1: the pending draft the new one replaces. */
       replaces?: string;
     }
   | { kind: 'DISCARD'; generationId: string; message: string }
@@ -126,13 +111,11 @@ export type FollowUpResolution =
 
 const ASK_WHICH =
   'Mình chưa biết "nó" là block nào. Hãy ghi rõ tên block, ví dụ: xoá to-do Gọi khách.';
-// Blocks created by one Apply share its moment (as Undo reads deleted blocks).
 const APPLY_TOLERANCE_MS = 60_000;
 
 const quote = (text: string): string => `"${text.replace(/"/gu, '')}"`;
 const listed = (texts: string[]): string => texts.map(quote).join(' và ');
 
-/** Blocks the previous turn now stands for on the Page, with their kind. */
 function targets(
   turn: PreviousTurn,
   blocks: PageBlockView[],
@@ -151,7 +134,7 @@ function targets(
             block.createdAt.getTime() >= at - APPLY_TOLERANCE_MS &&
             block.createdAt.getTime() <= at + 5_000,
         );
-        if (!match) return null; // edited or removed by hand since
+        if (!match) return null;
         found.push(match);
       }
     } else if (
@@ -162,7 +145,7 @@ function targets(
       if (!block) return null;
       found.push(block);
     } else {
-      return null; // rows, deletes: not "it" on the Page
+      return null;
     }
   }
   return found.length ? found : null;
@@ -189,7 +172,6 @@ export function resolveFollowUp(
   if (!turn || turn.state === 'OTHER')
     return { kind: 'ASK', message: ASK_WHICH };
 
-  // DM1: a draft not applied yet is changed or dropped, the Page is not touched.
   if (turn.state === 'PENDING') {
     if (followUp.verb === 'DELETE' || followUp.verb === 'DISCARD')
       return {
@@ -225,7 +207,6 @@ export function resolveFollowUp(
     };
   }
 
-  // APPLIED.
   if (followUp.verb === 'DISCARD') return { kind: 'ASK', message: ASK_WHICH };
   const deletes = turn.operations.filter(
     (operation) => operation.type === 'DELETE_BLOCK',
@@ -272,7 +253,6 @@ export function resolveFollowUp(
       };
     }
     case 'UNDO': {
-      // DM4: a draft doing the opposite, for the user to review.
       const operation = turn.operations[0];
       if (turn.operations.every((op) => op.type === 'INSERT_BLOCKS'))
         return {

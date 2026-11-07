@@ -17,11 +17,6 @@ import {
   type PreviousTurn,
 } from './ai-follow-up';
 
-/**
- * Kế hoạch chat nhiều lượt — hiểu câu nhắc lại lượt trước. Reads the latest
- * draft of a PAGE conversation (already authorized by the caller) and the
- * Page's blocks, and resolves "xoá nó đi" into an explicit sentence.
- */
 @Injectable()
 export class AiFollowUpService {
   constructor(
@@ -32,7 +27,6 @@ export class AiFollowUpService {
     private readonly discardGeneration: DiscardGenerationHandler,
   ) {}
 
-  /** null: not a follow-up sentence, or not in a PAGE conversation. */
   async resolve(
     instruction: string,
     conversation: AiConversation | null,
@@ -50,8 +44,6 @@ export class AiFollowUpService {
     const latest = (
       await this.generations.findByConversationId(conversation.getId())
     )
-      // A discarded or failed draft is no turn: "xoá nó đi" after dropping a
-      // draft means the change applied before it.
       .filter(
         (g) =>
           g.getCapability() === AI_MODIFICATION_PLAN_CAPABILITY &&

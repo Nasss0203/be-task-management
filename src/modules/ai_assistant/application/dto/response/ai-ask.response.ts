@@ -52,7 +52,6 @@ export type AiAskResponse = AskResponseBase &
       } & ConversationSwitch)
     | PlanningResponse
     | ({
-        /** AI-Q1: read only; the answer is assistantMessage, no draft. */
         status: 'ANSWERED';
         intent: 'PAGE_QUESTION';
         capability: 'PAGE_QUESTION';

@@ -66,7 +66,6 @@ const UNCLEAR_MESSAGE =
 const OTHER_MESSAGE =
   'AI chưa làm được yêu cầu này. Hiện AI làm được: tạo trang, thêm / sửa chữ / xoá / tích to-do trong trang, thêm dòng vào bảng, và dịch / viết lại / tóm tắt một đoạn chữ. Ví dụ: "thêm to-do Gọi khách vào trang Họp tuần".';
 
-/** AI-Q1: what to tell the user when a question found no single Page. */
 function pageQuestionMessage(
   outcome: Exclude<PageQuestionOutcome, { status: 'ANSWERED' }>,
 ): string {
@@ -260,9 +259,7 @@ export class AiAskService {
     private readonly assistant: AiAssistantService,
     private readonly pagePlanner: AiPageInstructionPlannerService,
     private readonly askLog: AiAskEventRecorder,
-    // Chat nhiều lượt — câu nhắc lượt trước; optional so older wiring still builds.
     @Optional() private readonly followUps?: AiFollowUpService,
-    // AI-Q1 — hỏi đáp về trang; optional so older wiring still builds.
     @Optional() private readonly pageQuestions?: AiPageQuestionService,
   ) {}
 
@@ -344,9 +341,6 @@ export class AiAskService {
         throw new BadRequestException('AI conversation is archived');
     }
 
-    // Kế hoạch chat nhiều lượt — hiểu câu nhắc lại lượt trước: "xoá nó đi" in a
-    // PAGE conversation becomes an explicit sentence on that Page, checked as
-    // any typed sentence; unsure → asked back.
     const followUp = await this.followUps?.resolve(
       input.instruction,
       conversation,
@@ -369,7 +363,6 @@ export class AiAskService {
       };
     }
     if (followUp?.kind === 'SENTENCE' && conversation?.getPageId()) {
-      // DM1: the pending draft is replaced, not left open beside the new one.
       if (followUp.replaces)
         await this.followUps?.discard(
           input.userId,
@@ -411,7 +404,6 @@ export class AiAskService {
           'M0_CAPABILITY_UNAVAILABLE',
           OTHER_MESSAGE,
         );
-      // A share-token request keeps the strict scope check (chat nhiều lượt, D4).
       if (
         conversation &&
         input.shareToken &&

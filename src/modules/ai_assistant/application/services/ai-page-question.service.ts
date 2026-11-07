@@ -70,15 +70,16 @@ function startsWithName(read: string, title: string): boolean {
   const key = (value: string) =>
     foldInstruction(value).replace(/\s+/gu, ' ').trim();
   const name = key(title);
-  return !!name && (key(read) === name || key(read).startsWith(`${name} `));
+  const typed = key(read);
+  return (
+    !!name &&
+    !!typed &&
+    (typed === name ||
+      typed.startsWith(`${name} `) ||
+      name.startsWith(`${typed} `))
+  );
 }
 
-/**
- * Hỏi đáp về trang (AI-Q1): read only. The Page is found the way an edit
- * finds it (exact title, title in the sentence, close titles, open Page),
- * its context is read with the user's own access, and the question and
- * answer are kept as messages of the Page's conversation. No draft.
- */
 @Injectable()
 export class AiPageQuestionService {
   constructor(
@@ -175,8 +176,6 @@ export class AiPageQuestionService {
     if (exact.status === 'RESOLVED') return { page: exact.page };
     if (exact.status === 'AMBIGUOUS') return { candidates: exact.candidates };
     const inSentence = await this.fromSentence(input);
-    // "trang Hội họp tuần họp lúc mấy giờ": the name read runs past the one
-    // real title in the sentence; that title starts it, so nothing to choose.
     if (
       inSentence &&
       'candidates' in inSentence &&
@@ -222,7 +221,6 @@ export class AiPageQuestionService {
   private async findPage(input: AskPageQuestionInput): Promise<Found> {
     if (input.pageReference) return this.byTitle(input, input.pageReference);
     if (input.databaseReference) {
-      // "bảng Tasks": a table on the open Page first, then a Page named so.
       const current = await this.currentPage(input);
       if (current && 'page' in current) {
         const context = await this.readContext(input, current.page);

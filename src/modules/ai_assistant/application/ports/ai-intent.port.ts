@@ -4,7 +4,6 @@ export const AI_INTENTS = [
   'WRITING',
   'OTHER',
   'UNCLEAR',
-  // AI-Q1: a question about one Page or table, read only.
   'PAGE_QUESTION',
 ] as const;
 export const PAGE_QUESTION_KINDS = [
@@ -37,7 +36,6 @@ export interface AiIntentResult {
     writingAction: AiWritingAction | null;
     language: string | null;
     needsClarification: boolean;
-    /** AI-Q1: only with PAGE_QUESTION; names are the user's own words. */
     questionKind?: PageQuestionKind;
     pageReference?: string | null;
     databaseReference?: string | null;

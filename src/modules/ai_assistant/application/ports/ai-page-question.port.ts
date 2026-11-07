@@ -1,6 +1,5 @@
 import type { PageQuestionKind } from './ai-intent.port';
 
-/** AI-Q1: one question about one Page; the context is already authorized. */
 export interface AiPageQuestionRequest {
   question: string;
   questionKind: PageQuestionKind;

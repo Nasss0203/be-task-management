@@ -248,7 +248,6 @@ export class FastApiAiRuntimeAdapter
     )
       throw invalid();
     const result = envelope.result as Record<string, unknown>;
-    // AI-Q1: only a PAGE_QUESTION carries its kind and the names it read.
     const question = result.intent === 'PAGE_QUESTION';
     if (
       Object.keys(result).sort().join(',') !==
@@ -288,7 +287,6 @@ export class FastApiAiRuntimeAdapter
     return raw as AiIntentResult;
   }
 
-  /** AI-Q1: the answer to one question about an authorized Page context. */
   async answerPageQuestion(
     request: AiPageQuestionRequest,
   ): Promise<AiPageQuestionResult> {
