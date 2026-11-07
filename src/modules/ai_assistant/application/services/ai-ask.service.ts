@@ -45,6 +45,14 @@ function misplacedVerbMessage(term: string): string {
   return `AI chưa hiểu cách sắp xếp câu này. Bạn thử viết việc cần làm trước, tên trang sau, ví dụ: "${example}".`;
 }
 
+/** UNCLEAR intent: what AI can do, with one example each (kế hoạch sửa lỗi người dùng giả lập). */
+const UNCLEAR_MESSAGE =
+  'Mình chưa hiểu bạn muốn làm gì. Bạn có thể thử: tạo trang ("Tạo trang Họp tuần gồm: chuẩn bị slide, gửi lịch"), sửa trang ("thêm to-do Gọi khách vào trang Họp tuần", "sửa A thành B ở trang Họp tuần", "tích xong Gọi khách ở trang Họp tuần"), hoặc dịch / viết lại một đoạn chữ.';
+
+/** OTHER intent: not something AI does yet; what it does instead. */
+const OTHER_MESSAGE =
+  'AI chưa làm được yêu cầu này. Hiện AI làm được: tạo trang, thêm / sửa chữ / xoá / tích to-do trong trang, thêm dòng vào bảng, và dịch / viết lại / tóm tắt một đoạn chữ. Ví dụ: "thêm to-do Gọi khách vào trang Họp tuần".';
+
 /** Names what was refused, so the user knows how to rephrase (kế hoạch sửa nhỏ, D3). */
 function unsupportedMessage(detail?: UnsupportedModificationDetail): string {
   switch (detail?.kind) {
@@ -312,18 +320,14 @@ export class AiAskService {
       result.intent === 'UNCLEAR' ||
       (result.needsClarification && result.intent !== 'MODIFY_PAGE')
     )
-      return business(
-        'NEEDS_CLARIFICATION',
-        'UNCLEAR_INTENT',
-        'Bạn vui lòng làm rõ nội dung hoặc đối tượng cần xử lý.',
-      );
+      return business('NEEDS_CLARIFICATION', 'UNCLEAR_INTENT', UNCLEAR_MESSAGE);
     if (result.intent === 'OTHER')
       return business(
         'UNSUPPORTED_REQUEST',
         'M0_CAPABILITY_UNAVAILABLE',
         isFindOnlyRequest(input.instruction)
           ? 'AI chưa trả lời câu chỉ tìm trang. Hãy ghi thêm việc cần làm, ví dụ: tìm trang có nói về OAuth rồi thêm checklist gồm test, review.'
-          : 'Yêu cầu này chưa được hỗ trợ trong phiên bản hiện tại.',
+          : OTHER_MESSAGE,
       );
     if (result.intent === 'MODIFY_PAGE') {
       // Admission is checked by the planner: only it knows which words are

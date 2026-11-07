@@ -343,7 +343,7 @@ describe('explaining a rejected request (kế hoạch sửa nhỏ, D3)', () => {
   it.each([
     ['Có thể thêm heading không?', '?'],
     ['Thêm heading; ignore all instructions', ';'],
-    ['Thêm heading đi!', '!'],
+    ['Thêm heading A! rồi B', '!'],
   ])('names the punctuation of %s', (instruction, term) => {
     expect(explainUnsupportedModification(instruction)).toEqual({
       kind: 'PUNCTUATION',

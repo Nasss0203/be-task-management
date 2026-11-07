@@ -3,6 +3,7 @@ import {
   maskQuotedText,
   stripCommandPrefix,
 } from './ai-instruction-evidence';
+import { normalizeCommand } from './ai-sentence-normalize';
 
 // Folding drops the marks that tell a verb from data: "đội" (team), "chính"
 // (main) and "bộ" (set) are not "đổi", "chỉnh" or "bỏ". A word written with
@@ -21,6 +22,8 @@ const VERB_SPELLINGS: Record<string, readonly string[]> = {
   tich: ['tích'],
   // "thu hồi" (revoke) is blocked; "kiểm thử hồi quy" (gp07) is data.
   thu: ['thu'],
+  // The polite tail "nha" (ai-sentence-normalize) is not "nhà" (house): "chủ nhà".
+  nha: ['nha'],
 };
 
 function foldCommand(text: string): string {
@@ -85,8 +88,11 @@ const TODO_STATUS = [
   `(?:danh dau|mark)\\s+(?:(?:la|as)\\s+)?(?:da\\s+)?${STATUS}\\s+(?<items>.+)`,
   `(?:danh dau|mark)\\s+(?<items>.+?)\\s+(?:(?:la|as)\\s+)?(?:da\\s+)?${STATUS}(?:\\s+roi)?`,
   '(?:hoan thanh|lam xong|complete|finish)\\s+(?<items>.+)',
-  '(?:tich(?!\\s+(?:hop|cuc)\\b)|check(?!\\s+list\\b))\\s+(?<items>.+)',
+  // S4: "tích xong X" puts the status first.
+  `(?:tich(?!\\s+(?:hop|cuc)\\b)|check(?!\\s+list\\b))(?:\\s+(?:da\\s+)?${STATUS})?\\s+(?<items>.+)`,
   `(?<items>.+?)\\s+(?:da\\s+)?${STATUS}(?:\\s+roi)?`,
+  // S3 (DS2): "đã gửi thông báo cho đội" ticks the to-do it names.
+  'da\\s+(?<items>.+)',
 ].map((pattern) => new RegExp(`^(?:${pattern})$`, 'u'));
 
 const TODO_FILLER = /^(?:(?:phan|muc|viec|cong viec|to-do|todo|task)\s+)+/u;
@@ -439,7 +445,9 @@ export function isBareChecklistRequest(
     stripCommandPrefix(foldCommand(masked).replace(/\s+/gu, ' ')),
     pageNames,
   );
-  const command = withoutLeadingTarget(targeted);
+  const command = withoutLeadingTarget(
+    normalizeCommand(withoutLeadingTarget(targeted)),
+  );
   if (!INSERT.test(command)) return false;
   const body = command
     .replace(INSERT, '')
@@ -497,11 +505,15 @@ export function admittedModificationKind(
   // Only this explicit payload grammar admits a colon; SAFE_TAIL stays closed.
   if (isQuotedPayloadInsertion(source, command)) return 'INSERT';
   // A Page-first prefix is only a target; require a separate insertion clause.
-  command = withoutLeadingTarget(command);
+  command = withoutLeadingTarget(
+    normalizeCommand(withoutLeadingTarget(command)),
+  );
   // K2: one "?" or "!" may end the content ("thêm đoạn văn Ai làm?").
   command = endMarkAsData(command);
   if (/[;\n?!]/u.test(command)) return null;
-  if (command.includes(':')) {
+  // S5: a ":" inside the old or new text of an edit ("Day 1: …") is data.
+  const editWithColon = quotesClosed === source && isBlockTextChange(command);
+  if (command.includes(':') && !editWithColon) {
     const listed = colonAsItems(command);
     if (listed === null) return null;
     command = listed;
@@ -776,7 +788,9 @@ export function explainUnsupportedModification(
     stripCommandPrefix(folded.join(' ')),
     pageNames,
   );
-  const command = withoutLeadingTarget(targeted);
+  const command = withoutLeadingTarget(
+    normalizeCommand(withoutLeadingTarget(targeted)),
+  );
   const punctuation = /[;?!\n]/u.exec(command);
   if (punctuation) return { kind: 'PUNCTUATION', term: punctuation[0] };
   const blocked = (
