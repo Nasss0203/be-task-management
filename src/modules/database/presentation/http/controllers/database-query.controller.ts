@@ -1,3 +1,5 @@
+import { Auth } from 'src/common/decorator/auth.decorator';
+import { type IAuth } from 'src/types/auth';
 import { Body, Controller, Get, Param, Patch } from '@nestjs/common';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
@@ -51,11 +53,12 @@ export class DatabaseQueryController {
   @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   async renameDatabase(
+    @Auth() user: IAuth,
     @Param('databaseId') databaseId: string,
     @Body() request: RenameDatabaseRequest,
   ) {
     return this.renameDatabaseHandler.execute(
-      new RenameDatabaseCommand(databaseId, request.name),
+      new RenameDatabaseCommand(databaseId, request.name, user.id),
     );
   }
 }

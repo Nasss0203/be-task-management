@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseModule as PersistenceDatabaseModule } from 'src/database/database.module';
 import { PermissionModule } from 'src/modules/permission/permission.module';
@@ -40,6 +40,8 @@ import { GetCalendarFeedIcsHandler } from './application/queries/get-calendar-fe
 import { DatabaseProvisioningService } from './application/services/database-provisioning.service';
 import { DatabaseSnapshotReaderService } from './application/services/database-snapshot-reader.service';
 import { DATABASE_TYPES } from './database.types';
+import { ActivityModule } from '../activity/activity.module';
+import { ActivityDatabaseActivityRecorder } from './infrastructure/activity/database-activity.recorder';
 import { DatabasePropertyOrmEntity } from './infrastructure/persistence/typeorm/entities/database-property.orm-entity';
 import { DatabaseRowOrmEntity } from './infrastructure/persistence/typeorm/entities/database-row.orm-entity';
 import { DatabaseViewPropertyOrmEntity } from './infrastructure/persistence/typeorm/entities/database-view-property.orm-entity';
@@ -65,6 +67,7 @@ import { CalendarFeedController } from './presentation/http/controllers/calendar
   imports: [
     PersistenceDatabaseModule,
     PermissionModule,
+    forwardRef(() => ActivityModule),
     TypeOrmModule.forFeature([
       DatabaseOrmEntity,
       DatabasePropertyOrmEntity,
@@ -125,6 +128,10 @@ import { CalendarFeedController } from './presentation/http/controllers/calendar
     {
       provide: DATABASE_TYPES.ports.DatabasePeopleReader,
       useClass: TypeOrmDatabasePeopleReader,
+    },
+    {
+      provide: DATABASE_TYPES.ports.DatabaseActivityRecorder,
+      useClass: ActivityDatabaseActivityRecorder,
     },
     {
       provide: DATABASE_TYPES.repositories.DatabaseRepository,

@@ -6,6 +6,7 @@ import { RestoreTeamspaceHandler } from './restore-teamspace.handler';
 describe('RestoreTeamspaceHandler', () => {
   let teamspace: Teamspace;
   let teamspaceRepo: any;
+  let activities: { create: jest.Mock };
   let handler: RestoreTeamspaceHandler;
 
   beforeEach(() => {
@@ -20,7 +21,8 @@ describe('RestoreTeamspaceHandler', () => {
       findArchivedManageableByUser: jest.fn().mockResolvedValue([teamspace]),
       save: jest.fn().mockImplementation((value) => Promise.resolve(value)),
     };
-    handler = new RestoreTeamspaceHandler(teamspaceRepo);
+    activities = { create: jest.fn().mockResolvedValue(undefined) };
+    handler = new RestoreTeamspaceHandler(teamspaceRepo, activities as never);
   });
 
   it('clears deletedAt and returns the teamspace', async () => {

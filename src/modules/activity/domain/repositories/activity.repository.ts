@@ -20,14 +20,15 @@ export type SaveActivityInput = {
   isSystem?: boolean;
 };
 
-/** A Page or Page-block edit by a person (plan-v2 §11 #5). */
+/** A person's change to something that lives on a Page (plan-v2 §11 #5). */
 export type PageEditActivityInput = {
   actorId: string;
-  /** The edited Page; bursts are merged per actor, Page and action. */
+  /** The Page the change lives on; its workspace owns the activity. */
   pageId: string;
   entityType: ActivityEntityType;
   entityId: string;
   action: ActivityAction;
+  field?: string | null;
   metadata: Record<string, unknown> | null;
 };
 
@@ -56,13 +57,14 @@ export interface ActivityRepository {
   findMany(filters: FindActivityFilters): Promise<FindActivityResult>;
 
   /**
-   * Moves the newest row of the same actor, Page and action written within
-   * `windowMs` to now; inserts a row when there is none. No row for a Page
+   * With `mergeWindowMs`, moves the newest row of the same actor, action,
+   * entity type and key (`metadata.pageId`, else the entity id) written within
+   * the window to now; inserts a row when there is none. No row for a Page
    * that does not exist.
    */
-  recordPageEdit(
+  recordOnPage(
     input: PageEditActivityInput,
-    windowMs: number,
+    mergeWindowMs: number | null,
     context?: PersistenceContext,
   ): Promise<void>;
 }

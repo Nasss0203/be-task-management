@@ -7,12 +7,15 @@ import { type DatabaseRepository } from '../../../domain/repositories/database.r
 
 import { AddPropertyOptionCommand } from './add-property-option.command';
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
+import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
 
 @Injectable()
 export class AddPropertyOptionHandler {
   constructor(
     @Inject(DATABASE_TYPES.repositories.DatabaseRepository)
     private readonly databaseRepository: DatabaseRepository,
+    @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
+    private readonly activityRecorder: DatabaseActivityRecorder,
   ) {}
 
   async execute(
@@ -46,6 +49,17 @@ export class AddPropertyOptionHandler {
     property.addOption(option);
 
     await this.databaseRepository.save(database, context);
+    await this.activityRecorder.record(
+      {
+        actorId: command.actorId,
+        databaseId: database.getId(),
+        action: 'DATABASE_PROPERTY_UPDATED',
+        propertyId: property.getId(),
+        optionId: option.getId(),
+        kind: 'OPTION_ADDED',
+      },
+      context,
+    );
 
     return option;
   }

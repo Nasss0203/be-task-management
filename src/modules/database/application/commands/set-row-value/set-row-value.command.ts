@@ -5,5 +5,6 @@ export class SetRowValueCommand {
     public readonly rowId: string,
     public readonly propertyId: string,
     public readonly value: RowValueData,
+    public readonly actorId: string | null = null,
   ) {}
 }

@@ -5,5 +5,6 @@ export class AddPropertyCommand {
     public readonly databaseId: string,
     public readonly name: string,
     public readonly type: PropertyType,
+    public readonly actorId: string | null = null,
   ) {}
 }

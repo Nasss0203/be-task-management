@@ -1,3 +1,4 @@
+import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
 import { type Provider } from '@nestjs/common';
 import {
   MODULE_METADATA,
@@ -55,7 +56,7 @@ function applicationProviders(): ApplicationProvider[] {
   );
 }
 
-/** Dependencies the handlers get from other modules (Workspace, Persistence, Permission, Outbox). */
+/** Dependencies the handlers get from other modules (Workspace, Persistence, Permission, Outbox, Activity). */
 const externalDependencies: Provider[] = [
   {
     provide: WORKSPACE_TYPES.repositories.WorkspaceMemberRepository,
@@ -66,6 +67,10 @@ const externalDependencies: Provider[] = [
   {
     provide: TEAMSPACE_INVITATION_DELIVERY_OUTBOX,
     useValue: { enqueue: jest.fn() },
+  },
+  {
+    provide: ACTIVITY_TYPES.services.CreateActivityService,
+    useValue: { create: jest.fn() },
   },
 ];
 

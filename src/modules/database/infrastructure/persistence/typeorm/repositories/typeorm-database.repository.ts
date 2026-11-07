@@ -57,6 +57,18 @@ export class TypeOrmDatabaseRepository implements DatabaseRepository {
     return DatabaseMapper.toDomain(entity);
   }
 
+  async findPageId(
+    id: string,
+    context?: PersistenceContext,
+  ): Promise<string | null> {
+    const entity = await this.getDatabaseRepository(context).findOne({
+      where: { id },
+      select: { pageId: true },
+    });
+
+    return entity?.pageId ?? null;
+  }
+
   async findByPageId(
     pageId: string,
     context?: PersistenceContext,

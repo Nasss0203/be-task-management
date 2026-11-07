@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { ActivityModule } from 'src/modules/activity/activity.module';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseModule } from 'src/database/database.module';
 import { PermissionModule } from 'src/modules/permission/permission.module';
@@ -53,6 +54,7 @@ import { TEAMSPACE_TYPES } from './teamspace.types';
     PermissionModule,
     DatabaseModule,
     OutboxModule,
+    forwardRef(() => ActivityModule),
   ],
   controllers: [TeamspaceController],
   providers: [

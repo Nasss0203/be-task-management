@@ -1,3 +1,9 @@
+import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import {
   ForbiddenException,
   Inject,
@@ -16,6 +22,8 @@ export class ArchiveTeamspaceHandler {
     @Inject(TEAMSPACE_TYPES.repositories.TeamspaceRepository)
     private readonly teamspaceRepo: TeamspaceRepository,
     private readonly authorizationService: AuthorizationService,
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async execute(command: ArchiveTeamspaceCommand): Promise<void> {
@@ -39,5 +47,12 @@ export class ArchiveTeamspaceHandler {
     // Archive = soft delete: every read path already filters deleted_at.
     teamspace.markAsDeleted(command.userId);
     await this.teamspaceRepo.save(teamspace);
+    await this.createActivityService.create({
+      workspaceId: teamspace.getWorkspaceId(),
+      entityType: ActivityEntityType.TEAMSPACE,
+      entityId: teamspace.getId(),
+      actorId: command.userId,
+      action: ActivityAction.TEAMSPACE_ARCHIVED,
+    });
   }
 }

@@ -3,5 +3,6 @@ export class MoveDatabaseRowCommand {
     public readonly rowId: string,
     public readonly previousRowId: string | null,
     public readonly nextRowId: string | null,
+    public readonly actorId: string | null = null,
   ) {}
 }

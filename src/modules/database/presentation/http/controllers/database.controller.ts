@@ -1,3 +1,5 @@
+import { Auth } from 'src/common/decorator/auth.decorator';
+import { type IAuth } from 'src/types/auth';
 import { Body, Controller, Param, Post } from '@nestjs/common';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
@@ -15,11 +17,17 @@ export class DatabaseController {
   @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
   async createDatabase(
+    @Auth() user: IAuth,
     @Param('pageId') pageId: string,
     @Body() request: CreateDatabaseRequest,
   ) {
     const database = await this.createDatabaseHandler.execute(
-      new CreateDatabaseCommand(pageId, request.name, request.title_only),
+      new CreateDatabaseCommand(
+        pageId,
+        request.name,
+        request.title_only,
+        user.id,
+      ),
     );
 
     return {

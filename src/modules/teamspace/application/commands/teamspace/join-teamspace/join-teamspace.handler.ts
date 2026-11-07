@@ -1,3 +1,9 @@
+import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { TeamspaceMember } from 'src/modules/teamspace/domain/entities/teamspace-member.entity';
 import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role.enum';
@@ -24,6 +30,8 @@ export class JoinTeamspaceHandler {
     private readonly membershipLock: TeamspaceMembershipLock,
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async execute(command: JoinTeamspaceCommand): Promise<TeamspaceMember> {
@@ -56,11 +64,29 @@ export class JoinTeamspaceHandler {
         if (await this.memberRepo.exists(teamspace.getId(), actor.getId(), context)) {
           throw new ConflictException('Workspace member already belongs to teamspace');
         }
-        return this.memberRepo.save(TeamspaceMember.create({
-          teamspaceId: teamspace.getId(),
-          workspaceMemberId: actor.getId(),
-          roleName: TeamspaceRole.MEMBER,
-        }), context);
+        const member = await this.memberRepo.save(
+          TeamspaceMember.create({
+            teamspaceId: teamspace.getId(),
+            workspaceMemberId: actor.getId(),
+            roleName: TeamspaceRole.MEMBER,
+          }),
+          context,
+        );
+        await this.createActivityService.create(
+          {
+            workspaceId: teamspace.getWorkspaceId(),
+            entityType: ActivityEntityType.TEAMSPACE,
+            entityId: teamspace.getId(),
+            actorId: command.userId,
+            action: ActivityAction.TEAMSPACE_MEMBER_JOINED,
+            metadata: {
+              userId: command.userId,
+              roleName: TeamspaceRole.MEMBER,
+            },
+          },
+          context,
+        );
+        return member;
       });
     } catch (error) {
       const driverError = (error as { driverError?: { code?: string; constraint?: string } }).driverError;

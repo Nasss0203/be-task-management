@@ -10,12 +10,15 @@ import { type DatabaseRowRepository } from '../../../domain/repositories/databas
 
 import { MoveDatabaseRowCommand } from './move-database-row.command';
 import { planRowMove } from './row-position';
+import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
 
 @Injectable()
 export class MoveDatabaseRowHandler {
   constructor(
     @Inject(DATABASE_TYPES.repositories.DatabaseRowRepository)
     private readonly databaseRowRepository: DatabaseRowRepository,
+    @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
+    private readonly activityRecorder: DatabaseActivityRecorder,
   ) {}
 
   async execute(
@@ -55,14 +58,27 @@ export class MoveDatabaseRowHandler {
       await this.databaseRowRepository.updatePositions([
         { id: row.getId(), position: plan.position },
       ]);
+      await this.activityRecorder.record({
+        actorId: command.actorId,
+        databaseId: row.getDatabaseId(),
+        action: 'DATABASE_ROW_MOVED',
+        rowId: row.getId(),
+      });
       return { id: row.getId(), position: plan.position };
     }
 
     await this.databaseRowRepository.updatePositions(plan.positions);
+    await this.activityRecorder.record({
+      actorId: command.actorId,
+      databaseId: row.getDatabaseId(),
+      action: 'DATABASE_ROW_MOVED',
+      rowId: row.getId(),
+    });
 
     return {
       id: row.getId(),
-      position: plan.positions.find((item) => item.id === row.getId())!.position,
+      position: plan.positions.find((item) => item.id === row.getId())!
+        .position,
     };
   }
 }

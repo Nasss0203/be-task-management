@@ -1,3 +1,9 @@
+import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import {
   BadRequestException,
   ForbiddenException,
@@ -38,6 +44,8 @@ export class AcceptWorkspaceInviteHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async execute(
@@ -121,6 +129,22 @@ export class AcceptWorkspaceInviteHandler {
           manager,
         );
       }
+
+      await this.createActivityService.create(
+        {
+          workspaceId: transactionalInvite.getWorkspaceId(),
+          entityType: ActivityEntityType.WORKSPACE,
+          entityId: transactionalInvite.getWorkspaceId(),
+          actorId: user.id,
+          action: ActivityAction.WORKSPACE_MEMBER_JOINED,
+          metadata: {
+            userId: user.id,
+            roleName: transactionalInvite.getRoleName(),
+            inviteId: transactionalInvite.getId(),
+          },
+        },
+        manager,
+      );
 
       transactionalInvite.accept(user.id, new Date());
 

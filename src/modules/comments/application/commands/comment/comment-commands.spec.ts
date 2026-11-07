@@ -3,6 +3,11 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import type { CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import { Comment } from 'src/modules/comments/domain/aggregates/comment/comment.aggregate';
 import { CommentTargetType } from 'src/modules/comments/domain/enums/comment-target-type.enum';
 import type { CommentRepository } from 'src/modules/comments/domain/repositories/comment.repository';
@@ -84,19 +89,32 @@ function setup(existing: Comment[] = []) {
   };
   const commentNotifications =
     notifier as unknown as CommentNotificationService;
+  const activities = { create: jest.fn(() => Promise.resolve()) };
+  const activityService = activities as unknown as CreateActivityService;
 
   return {
     commentRepo,
     notifier,
+    activities,
     create: new CreateCommentHandler(
       repo,
       targets,
       authors,
       commentNotifications,
+      activityService,
     ),
-    update: new UpdateCommentHandler(repo, authors, commentNotifications),
-    remove: new DeleteCommentHandler(repo, commentNotifications),
-    resolve: new ResolveCommentHandler(repo, authors),
+    update: new UpdateCommentHandler(
+      repo,
+      authors,
+      commentNotifications,
+      activityService,
+    ),
+    remove: new DeleteCommentHandler(
+      repo,
+      commentNotifications,
+      activityService,
+    ),
+    resolve: new ResolveCommentHandler(repo, authors, activityService),
     list: new ListCommentsHandler(repo, authors),
   };
 }
@@ -283,5 +301,85 @@ describe('comment commands', () => {
     );
 
     expect(result.map((item) => item.id)).toEqual(['c-root', 'c-reply']);
+  });
+
+  describe('activity', () => {
+    it('records a created comment with ids only, never the body', async () => {
+      const { create, activities } = setup();
+      const created = await create.execute(
+        new CreateCommentCommand(
+          CommentTargetType.PAGE,
+          'page-1',
+          'user-1',
+          'secret text',
+        ),
+      );
+
+      expect(activities.create).toHaveBeenCalledWith({
+        workspaceId: 'ws-1',
+        entityType: ActivityEntityType.COMMENT,
+        entityId: created.id,
+        actorId: 'user-1',
+        action: ActivityAction.COMMENT_CREATED,
+        metadata: {
+          pageId: 'page-1',
+          targetType: CommentTargetType.PAGE,
+          targetId: 'page-1',
+        },
+      });
+      expect(JSON.stringify(activities.create.mock.calls)).not.toContain(
+        'secret text',
+      );
+    });
+
+    it('records an edit only when the body changes', async () => {
+      const { update, activities } = setup([comment('c-1')]);
+
+      await update.execute(
+        new UpdateCommentCommand('c-1', 'user-1', 'body c-1'),
+      );
+      expect(activities.create).not.toHaveBeenCalled();
+
+      await update.execute(new UpdateCommentCommand('c-1', 'user-1', 'new'));
+      expect(activities.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          entityId: 'c-1',
+          action: ActivityAction.COMMENT_UPDATED,
+        }),
+      );
+    });
+
+    it('records a delete, and nothing when the delete is refused', async () => {
+      const { remove, activities } = setup([comment('c-1')]);
+
+      await expect(
+        remove.execute(new DeleteCommentCommand('c-1', 'someone-else')),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(activities.create).not.toHaveBeenCalled();
+
+      await remove.execute(new DeleteCommentCommand('c-1', 'user-1'));
+      expect(activities.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          entityId: 'c-1',
+          action: ActivityAction.COMMENT_DELETED,
+        }),
+      );
+    });
+
+    it('records resolve and reopen with a kind, and nothing when unchanged', async () => {
+      const { resolve, activities } = setup([comment('c-1')]);
+
+      await resolve.execute(new ResolveCommentCommand('c-1', 'user-2', false));
+      expect(activities.create).not.toHaveBeenCalled();
+
+      await resolve.execute(new ResolveCommentCommand('c-1', 'user-2', true));
+      await resolve.execute(new ResolveCommentCommand('c-1', 'user-2', false));
+      expect(
+        activities.create.mock.calls.map(
+          (call: unknown[]) =>
+            (call[0] as { metadata: { kind: string } }).metadata.kind,
+        ),
+      ).toEqual(['RESOLVED', 'REOPENED']);
+    });
   });
 });

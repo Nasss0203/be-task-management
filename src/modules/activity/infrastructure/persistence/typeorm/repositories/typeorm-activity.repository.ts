@@ -39,31 +39,44 @@ export class TypeOrmActivityRepository implements ActivityRepository {
     return ActivityMapper.toModel(saved);
   }
 
-  async recordPageEdit(
+  async recordOnPage(
     input: PageEditActivityInput,
-    windowMs: number,
+    mergeWindowMs: number | null,
     context?: PersistenceContext,
   ): Promise<void> {
     const repo = this.getRepo(context);
-    // created_at is a timestamp without time zone in the session's zone, so
-    // the window is measured with localtimestamp, never with a JS Date.
-    const refreshed = await repo.query<unknown[]>(
-      `UPDATE activities SET created_at = localtimestamp
-        WHERE id = (
-          SELECT id FROM activities
-           WHERE actor_id = $1
-             AND action = $2
-             AND entity_type IN ('PAGE', 'PAGE_BLOCK')
-             AND COALESCE(metadata ->> 'pageId', entity_id::text) = $3
-             AND created_at >= localtimestamp - $4 * interval '1 millisecond'
-           ORDER BY created_at DESC
-           LIMIT 1)
-        RETURNING id`,
-      [input.actorId, input.action, input.pageId, windowMs],
-    );
-    // The postgres driver answers UPDATE with [rows, affected count].
-    const rows = Array.isArray(refreshed[0]) ? refreshed[0] : refreshed;
-    if (rows.length > 0) return;
+    if (mergeWindowMs !== null) {
+      const mergeKey =
+        typeof input.metadata?.pageId === 'string'
+          ? input.metadata.pageId
+          : input.entityId;
+      // created_at is a timestamp without time zone in the session's zone, so
+      // the window is measured with localtimestamp, never with a JS Date.
+      const refreshed = await repo.query<unknown[]>(
+        `UPDATE activities SET created_at = localtimestamp, field = $6
+          WHERE id = (
+            SELECT id FROM activities
+             WHERE actor_id = $1
+               AND action = $2
+               AND entity_type = $5
+               AND COALESCE(metadata ->> 'pageId', entity_id::text) = $3
+               AND created_at >= localtimestamp - $4 * interval '1 millisecond'
+             ORDER BY created_at DESC
+             LIMIT 1)
+          RETURNING id`,
+        [
+          input.actorId,
+          input.action,
+          mergeKey,
+          mergeWindowMs,
+          input.entityType,
+          input.field ?? null,
+        ],
+      );
+      // The postgres driver answers UPDATE with [rows, affected count].
+      const rows = Array.isArray(refreshed[0]) ? refreshed[0] : refreshed;
+      if (rows.length > 0) return;
+    }
 
     const [page] = await repo.query<{ workspace_id: string }[]>(
       'SELECT workspace_id FROM pages WHERE id = $1',
@@ -77,6 +90,7 @@ export class TypeOrmActivityRepository implements ActivityRepository {
         entityId: input.entityId,
         actorId: input.actorId,
         action: input.action,
+        field: input.field ?? null,
         metadata: input.metadata,
       },
       context,

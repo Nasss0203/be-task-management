@@ -1,3 +1,9 @@
+import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import { TEAMSPACE_TYPES } from 'src/modules/teamspace/teamspace.types';
 import { ConflictException, ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { QueryFailedError } from 'typeorm';
@@ -38,6 +44,8 @@ export class CreateTeamspaceHandler {
 
     @Inject(TEAMSPACE_TYPES.ports.TeamspaceMembershipLock)
     private readonly membershipLock: TeamspaceMembershipLock,
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async execute(
@@ -100,6 +108,16 @@ export class CreateTeamspaceHandler {
       });
 
       await this.teamspaceMemberRepository.save(owner, context);
+      await this.createActivityService.create(
+        {
+          workspaceId: command.workspaceId,
+          entityType: ActivityEntityType.TEAMSPACE,
+          entityId: savedTeamspace.getId(),
+          actorId: command.userId,
+          action: ActivityAction.TEAMSPACE_CREATED,
+        },
+        context,
+      );
 
       return TeamspaceResponseDto.fromDomain(savedTeamspace);
       });

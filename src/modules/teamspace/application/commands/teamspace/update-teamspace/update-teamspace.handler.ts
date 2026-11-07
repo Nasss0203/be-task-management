@@ -1,3 +1,9 @@
+import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import {
   BadRequestException,
   ForbiddenException,
@@ -35,6 +41,8 @@ export class UpdateTeamspaceHandler {
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
     private readonly authorizationService: AuthorizationService,
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async execute(
@@ -126,12 +134,39 @@ export class UpdateTeamspaceHandler {
         );
       }
 
+      const before = [
+        teamspace.getName(),
+        teamspace.getDescription(),
+        teamspace.getIcon(),
+      ];
       teamspace.update({
         name,
         icon: command.icon,
         description: command.description,
       });
-      return this.teamspaceRepo.save(teamspace, context);
+      const after = [
+        teamspace.getName(),
+        teamspace.getDescription(),
+        teamspace.getIcon(),
+      ];
+      const fields = ['name', 'description', 'icon'].filter(
+        (_, index) => before[index] !== after[index],
+      );
+      const savedTeamspace = await this.teamspaceRepo.save(teamspace, context);
+      if (fields.length) {
+        await this.createActivityService.create(
+          {
+            workspaceId: teamspace.getWorkspaceId(),
+            entityType: ActivityEntityType.TEAMSPACE,
+            entityId: teamspace.getId(),
+            actorId: command.userId,
+            action: ActivityAction.TEAMSPACE_UPDATED,
+            metadata: { fields },
+          },
+          context,
+        );
+      }
+      return savedTeamspace;
     });
     return TeamspaceResponseDto.fromDomain(saved);
   }

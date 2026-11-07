@@ -9,5 +9,6 @@ export const DATABASE_TYPES = {
     DatabaseProvisioning: Symbol('DatabaseProvisioning'),
     DatabaseSnapshotReader: Symbol('DatabaseSnapshotReader'),
     DatabasePeopleReader: Symbol('DatabasePeopleReader'),
+    DatabaseActivityRecorder: Symbol('DatabaseActivityRecorder'),
   },
 } as const;

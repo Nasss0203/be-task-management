@@ -40,11 +40,14 @@ export class BullMqGoogleCalendarSyncJobQueue
   }
 
   async enqueue(syncId: string): Promise<void> {
+    const jobId = `google-calendar-sync-${syncId}`;
+    const running = await (await this.queue.getJob(jobId))?.isActive();
+
     await this.queue.add(
       RUN_GOOGLE_CALENDAR_SYNC_JOB,
       { syncId },
       {
-        jobId: `google-calendar-sync-${syncId}`,
+        jobId: running ? `${jobId}-rerun` : jobId,
         attempts: 3,
         backoff: { type: 'exponential', delay: 5000 },
         removeOnComplete: true,

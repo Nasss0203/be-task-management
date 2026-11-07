@@ -1,3 +1,7 @@
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { Teamspace } from 'src/modules/teamspace/domain/aggregates/teamspace/teamspace.aggregate';
@@ -8,6 +12,7 @@ describe('ArchiveTeamspaceHandler', () => {
   let teamspace: Teamspace;
   let teamspaceRepo: any;
   let authorization: any;
+  let activities: { create: jest.Mock };
   let handler: ArchiveTeamspaceHandler;
 
   beforeEach(() => {
@@ -22,7 +27,12 @@ describe('ArchiveTeamspaceHandler', () => {
       save: jest.fn().mockImplementation((value) => Promise.resolve(value)),
     };
     authorization = { authorize: jest.fn().mockResolvedValue(true) };
-    handler = new ArchiveTeamspaceHandler(teamspaceRepo, authorization);
+    activities = { create: jest.fn().mockResolvedValue(undefined) };
+    handler = new ArchiveTeamspaceHandler(
+      teamspaceRepo,
+      authorization,
+      activities as never,
+    );
   });
 
   it('soft deletes the teamspace and records who archived it', async () => {
@@ -36,6 +46,13 @@ describe('ArchiveTeamspaceHandler', () => {
     expect(teamspace.getDeletedAt()).toBeInstanceOf(Date);
     expect(teamspace.getDeletedBy()).toBe('owner');
     expect(teamspaceRepo.save).toHaveBeenCalledWith(teamspace);
+    expect(activities.create).toHaveBeenCalledWith({
+      workspaceId: 'workspace',
+      entityType: ActivityEntityType.TEAMSPACE,
+      entityId: teamspace.getId(),
+      actorId: 'owner',
+      action: ActivityAction.TEAMSPACE_ARCHIVED,
+    });
   });
 
   it('rejects users without TEAMSPACE_DELETE', async () => {
@@ -45,6 +62,7 @@ describe('ArchiveTeamspaceHandler', () => {
       handler.execute(new ArchiveTeamspaceCommand('teamspace', 'member')),
     ).rejects.toBeInstanceOf(ForbiddenException);
     expect(teamspaceRepo.save).not.toHaveBeenCalled();
+    expect(activities.create).not.toHaveBeenCalled();
   });
 
   it('returns 404 for a missing or already archived teamspace', async () => {

@@ -1,3 +1,9 @@
+import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import { BadRequestException, ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { hashTeamspaceInviteToken, isTeamspaceInviteToken } from 'src/modules/teamspace/application/services/teamspace-invite-token';
 import { TeamspaceMember } from 'src/modules/teamspace/domain/entities/teamspace-member.entity';
@@ -28,6 +34,8 @@ export class JoinTeamspaceByLinkHandler {
     private readonly membershipLock: TeamspaceMembershipLock,
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async execute(command: JoinTeamspaceByLinkCommand): Promise<TeamspaceMember> {
@@ -80,6 +88,21 @@ export class JoinTeamspaceByLinkHandler {
       }), context);
       link.recordSuccessfulUse(now);
       await this.linkRepo.save(link, context);
+      await this.createActivityService.create(
+        {
+          workspaceId: teamspace.getWorkspaceId(),
+          entityType: ActivityEntityType.TEAMSPACE,
+          entityId: teamspace.getId(),
+          actorId: command.userId,
+          action: ActivityAction.TEAMSPACE_MEMBER_JOINED,
+          metadata: {
+            userId: command.userId,
+            roleName: TeamspaceRole.MEMBER,
+            kind: 'INVITE_LINK',
+          },
+        },
+        context,
+      );
       return member;
     });
   }

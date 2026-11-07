@@ -10,12 +10,15 @@ import { type DatabaseRowRepository } from '../../../domain/repositories/databas
 
 import { ChangeDatabaseRowParentCommand } from './change-database-row-parent.command';
 import { wouldCreateCycle } from './row-tree';
+import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
 
 @Injectable()
 export class ChangeDatabaseRowParentHandler {
   constructor(
     @Inject(DATABASE_TYPES.repositories.DatabaseRowRepository)
     private readonly databaseRowRepository: DatabaseRowRepository,
+    @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
+    private readonly activityRecorder: DatabaseActivityRecorder,
   ) {}
 
   async execute(
@@ -49,8 +52,18 @@ export class ChangeDatabaseRowParentHandler {
       }
     }
 
+    const previousParentRowId = row.getParentRowId();
     row.changeParent(command.parentRowId);
     await this.databaseRowRepository.save(row);
+    if (previousParentRowId !== row.getParentRowId()) {
+      await this.activityRecorder.record({
+        actorId: command.actorId,
+        databaseId: row.getDatabaseId(),
+        action: 'DATABASE_ROW_MOVED',
+        rowId: row.getId(),
+        kind: 'PARENT_CHANGED',
+      });
+    }
 
     return { id: row.getId(), parentRowId: row.getParentRowId() };
   }

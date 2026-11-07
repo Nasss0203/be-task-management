@@ -3,5 +3,6 @@ export class RenamePropertyCommand {
     public readonly databaseId: string,
     public readonly propertyId: string,
     public readonly name: string,
+    public readonly actorId: string | null = null,
   ) {}
 }

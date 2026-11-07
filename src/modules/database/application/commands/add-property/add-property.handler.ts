@@ -20,6 +20,7 @@ import { DatabasePropertyDto } from '../../dto/database-property.dto';
 import { DEFAULT_STATUS_OPTIONS } from 'src/modules/database/domain/constants/default-property-options.constant';
 import { AddPropertyCommand } from './add-property.command';
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
+import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
 
 @Injectable()
 export class AddPropertyHandler {
@@ -32,6 +33,8 @@ export class AddPropertyHandler {
 
     @Inject(DATABASE_TYPES.repositories.DatabaseRowRepository)
     private readonly databaseRowRepository: DatabaseRowRepository,
+    @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
+    private readonly activityRecorder: DatabaseActivityRecorder,
   ) {}
 
   async execute(
@@ -73,6 +76,15 @@ export class AddPropertyHandler {
     database.addProperty(property);
 
     await this.databaseRepository.save(database, context);
+    await this.activityRecorder.record(
+      {
+        actorId: command.actorId,
+        databaseId: database.getId(),
+        action: 'DATABASE_PROPERTY_ADDED',
+        propertyId: property.getId(),
+      },
+      context,
+    );
 
     // Existing rows get the default status too, so none are left "without status".
     const defaultOption =

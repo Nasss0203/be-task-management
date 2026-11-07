@@ -3,5 +3,6 @@ export class CreateDatabaseCommand {
     public readonly pageId: string,
     public readonly name: string,
     public readonly titleOnly = false,
+    public readonly actorId: string | null = null,
   ) {}
 }

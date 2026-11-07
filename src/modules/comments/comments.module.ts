@@ -1,3 +1,4 @@
+import { ActivityModule } from 'src/modules/activity/activity.module';
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { IdentityModule } from '../identity/identity.module';
@@ -25,6 +26,7 @@ import { CommentController } from './presentation/http/controllers/comment.contr
     PermissionModule,
     MentionsModule,
     NotificationsModule,
+    forwardRef(() => ActivityModule),
   ],
   controllers: [CommentController],
   providers: [

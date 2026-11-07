@@ -15,6 +15,7 @@ import { type DatabaseRowRepository } from '../../../domain/repositories/databas
 import { type DatabaseRepository } from '../../../domain/repositories/database.repository';
 
 import { DeletePropertyOptionCommand } from './delete-property-option.command';
+import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
 
 @Injectable()
 export class DeletePropertyOptionHandler {
@@ -24,6 +25,8 @@ export class DeletePropertyOptionHandler {
 
     @Inject(DATABASE_TYPES.repositories.DatabaseRowRepository)
     private readonly databaseRowRepository: DatabaseRowRepository,
+    @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
+    private readonly activityRecorder: DatabaseActivityRecorder,
   ) {}
 
   async execute(command: DeletePropertyOptionCommand): Promise<void> {
@@ -63,6 +66,14 @@ export class DeletePropertyOptionHandler {
       database.removePropertyOption(command.propertyId, command.optionId);
 
       await this.databaseRepository.deletePropertyOption(command.optionId);
+      await this.activityRecorder.record({
+        actorId: command.actorId,
+        databaseId: database.getId(),
+        action: 'DATABASE_PROPERTY_UPDATED',
+        propertyId: command.propertyId,
+        optionId: command.optionId,
+        kind: 'OPTION_DELETED',
+      });
     } catch (error) {
       if (error instanceof DatabasePropertyNotFoundException) {
         throw new NotFoundException(error.message);

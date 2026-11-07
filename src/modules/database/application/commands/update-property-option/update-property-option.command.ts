@@ -5,5 +5,6 @@ export class UpdatePropertyOptionCommand {
     public readonly optionId: string,
     public readonly name: string,
     public readonly color: string | null,
+    public readonly actorId: string | null = null,
   ) {}
 }

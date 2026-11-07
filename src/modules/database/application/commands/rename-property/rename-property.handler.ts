@@ -14,12 +14,15 @@ import { type DatabaseRepository } from '../../../domain/repositories/database.r
 import { DatabasePropertyDto } from '../../dto/database-property.dto';
 import { RenamePropertyCommand } from './rename-property.command';
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
+import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
 
 @Injectable()
 export class RenamePropertyHandler {
   constructor(
     @Inject(DATABASE_TYPES.repositories.DatabaseRepository)
     private readonly databaseRepository: DatabaseRepository,
+    @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
+    private readonly activityRecorder: DatabaseActivityRecorder,
   ) {}
 
   async execute(
@@ -36,12 +39,28 @@ export class RenamePropertyHandler {
     }
 
     try {
+      const previousName = database
+        .getProperties()
+        .find((item) => item.getId() === command.propertyId)
+        ?.getName();
       const property = database.renameProperty(
         command.propertyId,
         command.name,
       );
 
       await this.databaseRepository.save(database, context);
+      if (previousName !== property.getName()) {
+        await this.activityRecorder.record(
+          {
+            actorId: command.actorId,
+            databaseId: database.getId(),
+            action: 'DATABASE_PROPERTY_UPDATED',
+            propertyId: property.getId(),
+            field: 'name',
+          },
+          context,
+        );
+      }
 
       return {
         id: property.getId(),
