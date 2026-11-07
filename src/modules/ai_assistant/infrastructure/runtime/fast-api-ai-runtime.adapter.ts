@@ -29,8 +29,14 @@ import type { PageIntentExtractor } from '../../application/resolution/page-inte
 import type { PageIntentResult } from '../../application/resolution/page-intent.types';
 import {
   AI_INTENTS,
+  PAGE_QUESTION_KINDS,
   WRITING_ACTIONS,
 } from '../../application/ports/ai-intent.port';
+import type {
+  AiPageQuestionPort,
+  AiPageQuestionRequest,
+  AiPageQuestionResult,
+} from '../../application/ports/ai-page-question.port';
 import type {
   AiIntentPort,
   AiIntentRequest,
@@ -205,7 +211,12 @@ function isBrieflyUnavailable(error: unknown): boolean {
 
 @Injectable()
 export class FastApiAiRuntimeAdapter
-  implements AiRuntimePort, PageIntentExtractor, AiIntentPort, TextEmbedder
+  implements
+    AiRuntimePort,
+    PageIntentExtractor,
+    AiIntentPort,
+    TextEmbedder,
+    AiPageQuestionPort
 {
   // Kế hoạch tốc độ Ask (A.1, DA3): one line per AI service call — path,
   // milliseconds and outcome only, never the instruction or Page content.
@@ -237,9 +248,24 @@ export class FastApiAiRuntimeAdapter
     )
       throw invalid();
     const result = envelope.result as Record<string, unknown>;
+    // AI-Q1: only a PAGE_QUESTION carries its kind and the names it read.
+    const question = result.intent === 'PAGE_QUESTION';
     if (
       Object.keys(result).sort().join(',') !==
-        'intent,language,needsClarification,writingAction' ||
+        (question
+          ? 'databaseReference,intent,language,needsClarification,pageReference,questionKind,writingAction'
+          : 'intent,language,needsClarification,writingAction') ||
+      (question &&
+        (!PAGE_QUESTION_KINDS.some((kind) => kind === result.questionKind) ||
+          result.needsClarification !== false ||
+          !(
+            result.pageReference === null ||
+            isPageDescription(result.pageReference, request.instruction)
+          ) ||
+          !(
+            result.databaseReference === null ||
+            isPageDescription(result.databaseReference, request.instruction)
+          ))) ||
       !AI_INTENTS.some((value) => value === result.intent) ||
       typeof result.needsClarification !== 'boolean' ||
       (result.intent === 'UNCLEAR' && !result.needsClarification)
@@ -260,6 +286,45 @@ export class FastApiAiRuntimeAdapter
     } else if (result.writingAction !== null || result.language !== null)
       throw invalid();
     return raw as AiIntentResult;
+  }
+
+  /** AI-Q1: the answer to one question about an authorized Page context. */
+  async answerPageQuestion(
+    request: AiPageQuestionRequest,
+  ): Promise<AiPageQuestionResult> {
+    const raw: unknown = await this.post<unknown>(
+      '/internal/v1/page-question',
+      {
+        question: request.question,
+        questionKind: request.questionKind,
+        ...(request.databaseReference
+          ? { databaseReference: request.databaseReference }
+          : {}),
+        context: request.context,
+      },
+    );
+    const response =
+      raw && typeof raw === 'object' && !Array.isArray(raw)
+        ? (raw as Record<string, unknown>)
+        : null;
+    if (
+      !response ||
+      Object.keys(response).sort().join(',') !==
+        'answer,facts,model,provider,usedModel' ||
+      typeof response.answer !== 'string' ||
+      !response.answer.trim() ||
+      response.answer.length > 8000 ||
+      typeof response.usedModel !== 'boolean' ||
+      !response.facts ||
+      typeof response.facts !== 'object' ||
+      Array.isArray(response.facts) ||
+      typeof response.provider !== 'string' ||
+      !response.provider.trim() ||
+      typeof response.model !== 'string' ||
+      !response.model.trim()
+    )
+      throw new BadGatewayException('AI service returned an invalid response');
+    return response as unknown as AiPageQuestionResult;
   }
 
   /** M5 (F6): one unit vector per text; anything else is refused whole. */

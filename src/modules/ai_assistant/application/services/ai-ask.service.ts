@@ -5,6 +5,7 @@ import {
   NotFoundException,
   PayloadTooLargeException,
   UnprocessableEntityException,
+  Optional,
 } from '@nestjs/common';
 import { AI_ASSISTANT_TYPES } from '../../ai-assistant.types';
 import { AiConversationScope } from '../../domain/enums/ai-conversation-scope.enum';
@@ -18,10 +19,21 @@ import { AI_MODIFICATION_PLAN_CAPABILITY } from '../constants/ai-modification-pl
 import type { AskAiRequestDto } from '../dto/request/ask-ai.request.dto';
 import type { AiAskResponse } from '../dto/response/ai-ask.response';
 import { AiModificationPlanPreviewResponseDto } from '../dto/response/ai-modification-plan-preview.response.dto';
-import type { AiIntentPort, AiIntent } from '../ports/ai-intent.port';
+import type {
+  AiIntentPort,
+  AiIntent,
+  AiIntentRequest,
+} from '../ports/ai-intent.port';
+import type { AiGenerationResponseDto } from '../dto/response/ai-generation.response.dto';
 import { AiAssistantService } from './ai-assistant.service';
 import { AiConversationAccessService } from './ai-conversation-access.service';
 import { AiPageInstructionPlannerService } from './ai-page-instruction-planner.service';
+import { AiFollowUpService } from './ai-follow-up.service';
+import {
+  AiPageQuestionService,
+  PAGE_QUESTION_CAPABILITY,
+  type PageQuestionOutcome,
+} from './ai-page-question.service';
 import { resolveWritingSource } from './ai-writing-source';
 import type { PageInstructionPlanningResult } from '../resolution/page-instruction-planning.types';
 import type { UnsupportedModificationDetail } from './ai-modification-operation.policy';
@@ -53,6 +65,32 @@ const UNCLEAR_MESSAGE =
 /** OTHER intent: not something AI does yet; what it does instead. */
 const OTHER_MESSAGE =
   'AI chưa làm được yêu cầu này. Hiện AI làm được: tạo trang, thêm / sửa chữ / xoá / tích to-do trong trang, thêm dòng vào bảng, và dịch / viết lại / tóm tắt một đoạn chữ. Ví dụ: "thêm to-do Gọi khách vào trang Họp tuần".';
+
+/** AI-Q1: what to tell the user when a question found no single Page. */
+function pageQuestionMessage(
+  outcome: Exclude<PageQuestionOutcome, { status: 'ANSWERED' }>,
+): string {
+  switch (outcome.status) {
+    case 'AMBIGUOUS_PAGE':
+      if (outcome.resolutionMethod === 'FUZZY_TITLE')
+        return outcome.candidates.length === 1
+          ? `Ý bạn là trang "${outcome.candidates[0].title}"? Chọn trang để AI trả lời:`
+          : 'Có phải một trong các trang này? Chọn trang bạn muốn hỏi:';
+      if (outcome.resolutionMethod === 'TITLE_IN_SENTENCE')
+        return outcome.candidates.length === 1
+          ? `Ý bạn là trang "${outcome.candidates[0].title}"? Chọn trang để AI trả lời:`
+          : 'Bạn muốn hỏi trang nào? Chọn một trang:';
+      return 'Có nhiều trang trùng tên. Chọn trang bạn muốn hỏi:';
+    case 'PAGE_NOT_FOUND':
+      return outcome.name
+        ? `Không tìm thấy trang hoặc bảng "${outcome.name}" mà bạn có quyền xem. Kiểm tra lại tên.`
+        : 'Không tìm thấy trang mà bạn có quyền xem. Kiểm tra lại tên trang.';
+    case 'PAGE_TOO_LONG':
+      return 'Trang này quá dài để AI đọc hết (hơn 200 block), nên AI chưa trả lời được câu hỏi về cả trang.';
+    default:
+      return 'Bạn muốn hỏi trang nào? Hãy ghi tên trang, ví dụ: trang Họp tuần còn việc nào chưa xong?';
+  }
+}
 
 /** Kế hoạch sửa tính năng viết (V4): the AI service's code, mapped by the runtime adapter. */
 const WRITING_NOT_DONE = 'WRITING_NOT_DONE';
@@ -222,6 +260,10 @@ export class AiAskService {
     private readonly assistant: AiAssistantService,
     private readonly pagePlanner: AiPageInstructionPlannerService,
     private readonly askLog: AiAskEventRecorder,
+    // Chat nhiều lượt — câu nhắc lượt trước; optional so older wiring still builds.
+    @Optional() private readonly followUps?: AiFollowUpService,
+    // AI-Q1 — hỏi đáp về trang; optional so older wiring still builds.
+    @Optional() private readonly pageQuestions?: AiPageQuestionService,
   ) {}
 
   /** Kế hoạch ghi log Ask (L3): every Ask is recorded once, however it ends. */
@@ -245,7 +287,7 @@ export class AiAskService {
   }
 
   private async answer(input: AskAiInput): Promise<AiAskResponse> {
-    const payload = {
+    let payload: AiIntentRequest = {
       instruction: input.instruction,
       ...(input.selectedText != null
         ? { selectedText: input.selectedText }
@@ -302,6 +344,50 @@ export class AiAskService {
         throw new BadRequestException('AI conversation is archived');
     }
 
+    // Kế hoạch chat nhiều lượt — hiểu câu nhắc lại lượt trước: "xoá nó đi" in a
+    // PAGE conversation becomes an explicit sentence on that Page, checked as
+    // any typed sentence; unsure → asked back.
+    const followUp = await this.followUps?.resolve(
+      input.instruction,
+      conversation,
+    );
+    if (followUp?.kind === 'ASK' || followUp?.kind === 'DISCARD') {
+      if (followUp.kind === 'DISCARD')
+        await this.followUps?.discard(
+          input.userId,
+          followUp.generationId,
+          input.shareToken,
+        );
+      return {
+        requestId: input.requestId,
+        intent: 'MODIFY_PAGE',
+        status: 'NEEDS_CLARIFICATION',
+        reason:
+          followUp.kind === 'DISCARD' ? 'DRAFT_DISCARDED' : 'FOLLOW_UP_UNCLEAR',
+        assistantMessage: followUp.message,
+        capability: null,
+      };
+    }
+    if (followUp?.kind === 'SENTENCE' && conversation?.getPageId()) {
+      // DM1: the pending draft is replaced, not left open beside the new one.
+      if (followUp.replaces)
+        await this.followUps?.discard(
+          input.userId,
+          followUp.replaces,
+          input.shareToken,
+        );
+      input = {
+        ...input,
+        instruction: followUp.instruction,
+        currentPageId: conversation.getPageId(),
+      };
+      payload = {
+        ...payload,
+        instruction: followUp.instruction,
+        currentPageId: conversation.getPageId(),
+      };
+    }
+
     const { result } = await this.intentRuntime.classify(payload);
     const business = (
       status:
@@ -318,6 +404,82 @@ export class AiAskService {
       assistantMessage,
       capability: null,
     });
+    if (result.intent === 'PAGE_QUESTION' && result.questionKind) {
+      if (!this.pageQuestions)
+        return business(
+          'UNSUPPORTED_REQUEST',
+          'M0_CAPABILITY_UNAVAILABLE',
+          OTHER_MESSAGE,
+        );
+      // A share-token request keeps the strict scope check (chat nhiều lượt, D4).
+      if (
+        conversation &&
+        input.shareToken &&
+        conversation.getScope() !== AiConversationScope.PAGE
+      )
+        throw new BadRequestException(
+          'Page question requires a PAGE conversation',
+        );
+      let outcome: PageQuestionOutcome;
+      try {
+        outcome = await this.pageQuestions.answer({
+          userId: input.userId,
+          workspaceId: input.workspaceId,
+          requestId: input.requestId,
+          instruction: input.instruction,
+          questionKind: result.questionKind,
+          pageReference: result.pageReference ?? null,
+          databaseReference: result.databaseReference ?? null,
+          currentPageId: input.currentPageId,
+          selectedPageId: input.selectedPageId,
+          conversation,
+          shareToken: input.shareToken,
+        });
+      } catch (error) {
+        if (
+          error instanceof UnprocessableEntityException &&
+          error.message === WRITING_NOT_DONE
+        )
+          return business(
+            'NEEDS_CLARIFICATION',
+            WRITING_NOT_DONE,
+            'AI chưa trả lời chắc chắn được câu này từ nội dung trang. Hãy hỏi cụ thể hơn, ví dụ: trang Họp tuần còn việc nào chưa xong?',
+          );
+        throw error;
+      }
+      if (outcome.status === 'ANSWERED')
+        return {
+          requestId: input.requestId,
+          intent: 'PAGE_QUESTION',
+          status: 'ANSWERED',
+          capability: PAGE_QUESTION_CAPABILITY,
+          reason: result.questionKind,
+          conversationId: outcome.conversationId,
+          ...(outcome.conversationSwitched
+            ? { conversationSwitched: true as const }
+            : {}),
+          page: { pageId: outcome.page.pageId, title: outcome.page.title },
+          usedModel: outcome.usedModel,
+          assistantMessage: outcome.answer,
+        };
+      if (outcome.status === 'AMBIGUOUS_PAGE')
+        return {
+          requestId: input.requestId,
+          intent: 'PAGE_QUESTION',
+          status: 'AMBIGUOUS_PAGE',
+          capability: PAGE_QUESTION_CAPABILITY,
+          candidates: outcome.candidates,
+          ...(outcome.resolutionMethod
+            ? { resolutionMethod: outcome.resolutionMethod }
+            : {}),
+          assistantMessage: pageQuestionMessage(outcome),
+        };
+      return business(
+        'NEEDS_CLARIFICATION',
+        outcome.status === 'NEEDS_PAGE' ? 'UNRESOLVED_PAGE' : outcome.status,
+        pageQuestionMessage(outcome),
+      );
+    }
     // M1b: an edit with an unclear Page name still goes to the planner, which
     // looks for real Page names in the sentence and asks if it finds none.
     if (
@@ -345,7 +507,7 @@ export class AiAskService {
         throw new BadRequestException(
           'Page modification requires a PAGE conversation',
         );
-      let planning: Awaited<ReturnType<typeof this.pagePlanner.generate>>;
+      let planning: PageInstructionPlanningResult;
       try {
         planning = await this.pagePlanner.generate({
           ...input,
@@ -465,7 +627,7 @@ export class AiAskService {
           ),
         )
       ).id;
-    let generation: Awaited<ReturnType<typeof this.assistant.submit>>;
+    let generation: AiGenerationResponseDto;
     try {
       generation = await this.assistant.submit({
         userId: input.userId,

@@ -34,6 +34,8 @@ import { AiAssistantService } from './application/services/ai-assistant.service'
 import { AiSubmitAuthorizationLock } from './application/services/ai-submit-authorization-lock.port';
 import { AiSubmitAuthorizationLockService } from './infrastructure/persistence/typeorm/ai-submit-authorization-lock.service';
 import { AiAskService } from './application/services/ai-ask.service';
+import { AiFollowUpService } from './application/services/ai-follow-up.service';
+import { AiPageQuestionService } from './application/services/ai-page-question.service';
 import { AiConversationAccessService } from './application/services/ai-conversation-access.service';
 import { PageCompositionDraftValidator } from './application/services/page-composition-draft-validator.service';
 import { PageCompositionExecutor } from './application/services/page-composition-executor.service';
@@ -134,6 +136,8 @@ import { AiAskEventSqlStore } from './infrastructure/ask-log/ai-ask-event.store'
       useClass: AiSubmitAuthorizationLockService,
     },
     AiAskService,
+    AiFollowUpService,
+    AiPageQuestionService,
     {
       provide: AI_ASSISTANT_TYPES.services.AiConversationAccess,
       useClass: AiConversationAccessService,
@@ -153,6 +157,10 @@ import { AiAskEventSqlStore } from './infrastructure/ask-log/ai-ask-event.store'
     },
     {
       provide: AI_ASSISTANT_TYPES.ports.AiIntent,
+      useExisting: AI_ASSISTANT_TYPES.runtime.AiRuntime,
+    },
+    {
+      provide: AI_ASSISTANT_TYPES.ports.AiPageQuestion,
       useExisting: AI_ASSISTANT_TYPES.runtime.AiRuntime,
     },
     {

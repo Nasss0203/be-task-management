@@ -4,6 +4,14 @@ export const AI_INTENTS = [
   'WRITING',
   'OTHER',
   'UNCLEAR',
+  // AI-Q1: a question about one Page or table, read only.
+  'PAGE_QUESTION',
+] as const;
+export const PAGE_QUESTION_KINDS = [
+  'TODO_STATUS',
+  'DATABASE_COUNT',
+  'SUMMARY',
+  'FREE',
 ] as const;
 export const WRITING_ACTIONS = [
   'IMPROVE',
@@ -15,6 +23,7 @@ export const WRITING_ACTIONS = [
 ] as const;
 export type AiIntent = (typeof AI_INTENTS)[number];
 export type AiWritingAction = (typeof WRITING_ACTIONS)[number];
+export type PageQuestionKind = (typeof PAGE_QUESTION_KINDS)[number];
 
 export interface AiIntentRequest {
   instruction: string;
@@ -28,6 +37,10 @@ export interface AiIntentResult {
     writingAction: AiWritingAction | null;
     language: string | null;
     needsClarification: boolean;
+    /** AI-Q1: only with PAGE_QUESTION; names are the user's own words. */
+    questionKind?: PageQuestionKind;
+    pageReference?: string | null;
+    databaseReference?: string | null;
   };
   provider: string;
   model: string;

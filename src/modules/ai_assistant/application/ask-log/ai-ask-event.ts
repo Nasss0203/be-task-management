@@ -118,9 +118,15 @@ export function askEventFromResponse(
     resolutionMethod:
       planning && 'resolutionMethod' in planning
         ? (planning.resolutionMethod ?? null)
-        : null,
+        : 'resolutionMethod' in response
+          ? (response.resolutionMethod ?? null)
+          : null,
     candidateCount:
-      planning && 'candidates' in planning ? planning.candidates.length : null,
+      planning && 'candidates' in planning
+        ? planning.candidates.length
+        : 'candidates' in response
+          ? response.candidates.length
+          : null,
     flags: {
       ...requestFlags(request),
       ...(intent && 'basedOn' in intent && intent.basedOn

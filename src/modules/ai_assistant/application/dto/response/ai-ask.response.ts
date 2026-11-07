@@ -1,5 +1,7 @@
 import type { AiIntent } from '../../ports/ai-intent.port';
 import type { PageInstructionPlanningResult } from '../../resolution/page-instruction-planning.types';
+import type { PageResolutionCandidate } from '../../resolution/page-resolution.types';
+import type { PageQuestionKind } from '../../ports/ai-intent.port';
 import type { AiGenerationResponseDto } from './ai-generation.response.dto';
 import type { AiModificationPlanPreviewResponseDto } from './ai-modification-plan-preview.response.dto';
 
@@ -49,4 +51,21 @@ export type AiAskResponse = AskResponseBase &
         generation: AiGenerationResponseDto;
       } & ConversationSwitch)
     | PlanningResponse
+    | ({
+        /** AI-Q1: read only; the answer is assistantMessage, no draft. */
+        status: 'ANSWERED';
+        intent: 'PAGE_QUESTION';
+        capability: 'PAGE_QUESTION';
+        reason: PageQuestionKind;
+        conversationId: string;
+        page: { pageId: string; title: string };
+        usedModel: boolean;
+      } & ConversationSwitch)
+    | {
+        status: 'AMBIGUOUS_PAGE';
+        intent: 'PAGE_QUESTION';
+        capability: 'PAGE_QUESTION';
+        candidates: PageResolutionCandidate[];
+        resolutionMethod?: 'TITLE_IN_SENTENCE' | 'FUZZY_TITLE';
+      }
   );
