@@ -33,6 +33,8 @@ export class GetActivitiesHandler {
       entityId: filters.entityId,
       actorId: filters.actorId,
       action: filters.action,
+      pageId: filters.pageId,
+      excludeEntityTypes: filters.excludeEntityTypes,
       cursor: filters.cursor,
       limit: filters.limit ? Number(filters.limit) : undefined,
     });

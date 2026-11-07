@@ -15,6 +15,7 @@ export class ActivityResponseDto {
     return {
       id: model.id,
       workspaceId: model.workspaceId,
+      pageId: model.pageId,
       projectId: model.projectId,
       entityType: model.entityType,
       entityId: model.entityId,
@@ -30,6 +31,7 @@ export class ActivityResponseDto {
   }
   id: string;
   workspaceId: string;
+  pageId: string | null;
   projectId: string | null;
 
   entityType: ActivityEntityType;

@@ -110,5 +110,6 @@ export class ActivityModel {
     public readonly metadata: Record<string, unknown> | null,
     public readonly isSystem: boolean,
     public readonly createdAt: Date,
+    public readonly pageId: string | null = null,
   ) {}
 }

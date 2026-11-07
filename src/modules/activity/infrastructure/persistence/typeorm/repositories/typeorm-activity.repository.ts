@@ -92,6 +92,7 @@ export class TypeOrmActivityRepository implements ActivityRepository {
         action: input.action,
         field: input.field ?? null,
         metadata: input.metadata,
+        pageId: input.pageId,
       },
       context,
     );
@@ -133,6 +134,16 @@ export class TypeOrmActivityRepository implements ActivityRepository {
     if (filters.action) {
       qb.andWhere('activity.action = :action', {
         action: filters.action,
+      });
+    }
+
+    if (filters.pageId) {
+      qb.andWhere('activity.pageId = :pageId', { pageId: filters.pageId });
+    }
+
+    if (filters.excludeEntityTypes?.length) {
+      qb.andWhere('activity.entityType NOT IN (:...excludeEntityTypes)', {
+        excludeEntityTypes: filters.excludeEntityTypes,
       });
     }
 

@@ -77,6 +77,7 @@ export class CreateCommentHandler {
       workspaceId: saved.getWorkspaceId(),
       entityType: ActivityEntityType.COMMENT,
       entityId: saved.getId(),
+      pageId: saved.getPageId(),
       actorId: command.authorId,
       action: ActivityAction.COMMENT_CREATED,
       metadata: {

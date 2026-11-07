@@ -16,6 +16,7 @@ import {
 @Index(['workspaceId', 'projectId'])
 @Index(['workspaceId', 'createdAt'])
 @Index(['actorId'])
+@Index(['pageId', 'createdAt'])
 export class Activity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -35,6 +36,9 @@ export class Activity {
 
   @Column({ name: 'entity_id', type: 'uuid' })
   entityId: string;
+
+  @Column({ name: 'page_id', type: 'uuid', nullable: true })
+  pageId: string | null;
 
   @Column({ name: 'actor_id', type: 'uuid', nullable: true })
   actorId: string | null;

@@ -20,6 +20,7 @@ export class ActivityMapper {
       entity.metadata ?? null,
       entity.isSystem,
       entity.createdAt,
+      entity.pageId ?? null,
     );
   }
 
@@ -39,6 +40,7 @@ export class ActivityMapper {
     e.newValue = model.newValue ?? null;
     e.metadata = model.metadata ?? null;
     e.isSystem = model.isSystem ?? false;
+    e.pageId = model.pageId ?? null;
 
     return e;
   }

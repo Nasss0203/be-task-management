@@ -8,11 +8,18 @@ import { FindActivityQueryDto } from '../../../application/dto/request/find-acti
 import { GetActivitiesHandler } from '../../../application/queries/get-activities/get-activities.handler';
 import { GetActivitiesQuery } from '../../../application/queries/get-activities/get-activities.query';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
+import { Auth } from 'src/common/decorator/auth.decorator';
+import type { IAuth } from 'src/types/auth';
+import { GetPageActivitiesHandler } from '../../../application/queries/get-page-activities/get-page-activities.handler';
+import { GetPageActivitiesQuery } from '../../../application/queries/get-page-activities/get-page-activities.query';
 
 @Controller('activity')
 @ReadRateLimit()
 export class ActivityController {
-  constructor(private readonly getActivitiesHandler: GetActivitiesHandler) {}
+  constructor(
+    private readonly getActivitiesHandler: GetActivitiesHandler,
+    private readonly getPageActivitiesHandler: GetPageActivitiesHandler,
+  ) {}
 
   @Get('workspaces/:workspaceId')
   @WorkspaceContext({ source: 'param', key: 'workspaceId' })
@@ -38,6 +45,27 @@ export class ActivityController {
   ) {
     return this.getActivitiesHandler.execute(
       new GetActivitiesQuery(workspaceId, query, { projectId }),
+    );
+  }
+
+  @Get('workspaces/:workspaceId/pages/:pageId')
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
+  @RequirePermissions(PERMISSIONS.PAGE_READ)
+  @ResponseMessage('Find page activities successfully')
+  findByPage(
+    @Param('workspaceId') workspaceId: string,
+    @Param('pageId') pageId: string,
+    @Query() query: FindActivityQueryDto,
+    @Auth() auth: IAuth,
+  ) {
+    return this.getPageActivitiesHandler.execute(
+      new GetPageActivitiesQuery(
+        auth.id,
+        workspaceId,
+        pageId,
+        query.cursor,
+        query.limit,
+      ),
     );
   }
 

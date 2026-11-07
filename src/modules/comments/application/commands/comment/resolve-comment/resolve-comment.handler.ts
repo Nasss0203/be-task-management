@@ -47,6 +47,7 @@ export class ResolveCommentHandler {
         workspaceId: saved.getWorkspaceId(),
         entityType: ActivityEntityType.COMMENT,
         entityId: saved.getId(),
+        pageId: saved.getPageId(),
         actorId: command.userId,
         action: ActivityAction.COMMENT_UPDATED,
         metadata: {

@@ -260,6 +260,14 @@
     {
       "file": "1793969608044-AddSlackConnectionsSlackUserUnique.ts",
       "sha256": "e4c8218886fe0d2f1fe6d76d63bcf9cb36711cbdec6b4241f1626ed0a0e998bf"
+    },
+    {
+      "file": "1794034110858-add-activity-database-teamspace-values.ts",
+      "sha256": "56a113a9e7c02a50aedea4027c9234837e584d11bebfc0baab34aaf48f7730d1"
+    },
+    {
+      "file": "1794039578252-add-activity-page-id.ts",
+      "sha256": "e15e007d9e479fa63a76ec7a588f02991bb61a8d097b494f7d855293197c2789"
     }
   ]
 }

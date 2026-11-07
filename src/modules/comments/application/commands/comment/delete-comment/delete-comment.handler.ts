@@ -44,6 +44,7 @@ export class DeleteCommentHandler {
       workspaceId: comment.getWorkspaceId(),
       entityType: ActivityEntityType.COMMENT,
       entityId: comment.getId(),
+      pageId: comment.getPageId(),
       actorId: command.userId,
       action: ActivityAction.COMMENT_DELETED,
       metadata: {

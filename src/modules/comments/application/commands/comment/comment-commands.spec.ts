@@ -319,6 +319,7 @@ describe('comment commands', () => {
         workspaceId: 'ws-1',
         entityType: ActivityEntityType.COMMENT,
         entityId: created.id,
+        pageId: 'page-1',
         actorId: 'user-1',
         action: ActivityAction.COMMENT_CREATED,
         metadata: {
@@ -344,6 +345,7 @@ describe('comment commands', () => {
       expect(activities.create).toHaveBeenCalledWith(
         expect.objectContaining({
           entityId: 'c-1',
+          pageId: 'page-1',
           action: ActivityAction.COMMENT_UPDATED,
         }),
       );
@@ -361,6 +363,7 @@ describe('comment commands', () => {
       expect(activities.create).toHaveBeenCalledWith(
         expect.objectContaining({
           entityId: 'c-1',
+          pageId: 'page-1',
           action: ActivityAction.COMMENT_DELETED,
         }),
       );
@@ -380,6 +383,11 @@ describe('comment commands', () => {
             (call[0] as { metadata: { kind: string } }).metadata.kind,
         ),
       ).toEqual(['RESOLVED', 'REOPENED']);
+      expect(
+        activities.create.mock.calls.map(
+          (call: unknown[]) => (call[0] as { pageId: string }).pageId,
+        ),
+      ).toEqual(['page-1', 'page-1']);
     });
   });
 });

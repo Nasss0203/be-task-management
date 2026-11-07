@@ -18,6 +18,7 @@ export type SaveActivityInput = {
   newValue?: unknown;
   metadata?: Record<string, unknown> | null;
   isSystem?: boolean;
+  pageId?: string | null;
 };
 
 /** A person's change to something that lives on a Page (plan-v2 §11 #5). */
@@ -39,6 +40,8 @@ export type FindActivityFilters = {
   entityId?: string;
   actorId?: string;
   action?: ActivityAction;
+  pageId?: string;
+  excludeEntityTypes?: ActivityEntityType[];
   cursor?: string;
   limit?: number;
 };
