@@ -9,6 +9,8 @@ import { CreateActivityServiceImpl } from './application/services/create-activit
 import { IdentityModule } from '../identity/identity.module';
 import { PermissionModule } from '../permission/permission.module';
 import { GetPageActivitiesHandler } from './application/queries/get-page-activities/get-page-activities.handler';
+import { GetPageActivitySummaryHandler } from './application/queries/get-page-activity-summary/get-page-activity-summary.handler';
+import { TypeOrmPageActivityDetailsReader } from './infrastructure/persistence/typeorm/readers/typeorm-page-activity-details.reader';
 
 @Module({
   imports: [
@@ -24,6 +26,11 @@ import { GetPageActivitiesHandler } from './application/queries/get-page-activit
     },
     GetActivitiesHandler,
     GetPageActivitiesHandler,
+    GetPageActivitySummaryHandler,
+    {
+      provide: ACTIVITY_TYPES.ports.PageActivityDetailsReader,
+      useClass: TypeOrmPageActivityDetailsReader,
+    },
     {
       provide: ACTIVITY_TYPES.repositories.ActivityRepository,
       useClass: TypeOrmActivityRepository,

@@ -5,4 +5,7 @@ export const ACTIVITY_TYPES = {
   repositories: {
     ActivityRepository: Symbol('ActivityRepository'),
   },
+  ports: {
+    PageActivityDetailsReader: Symbol('PageActivityDetailsReader'),
+  },
 } as const;

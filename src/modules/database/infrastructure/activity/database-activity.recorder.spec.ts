@@ -6,6 +6,7 @@ import type { ActivityRepository } from 'src/modules/activity/domain/repositorie
 import type { DatabaseRepository } from 'src/modules/database/domain/repositories/database.repository';
 import {
   ActivityDatabaseActivityRecorder,
+  ACTIVITY_TEXT_VALUE_MAX_LENGTH,
   DATABASE_ROW_EDIT_WINDOW_MS,
 } from './database-activity.recorder';
 
@@ -51,6 +52,35 @@ describe('ActivityDatabaseActivityRecorder', () => {
       context,
     );
     expect(DATABASE_ROW_EDIT_WINDOW_MS).toBe(5 * 60 * 1000);
+  });
+
+  it('keeps the new value, cutting text to the stored length', async () => {
+    const long = 'x'.repeat(ACTIVITY_TEXT_VALUE_MAX_LENGTH + 20);
+
+    await recorder.record({
+      actorId: 'user-1',
+      databaseId: 'db-1',
+      action: 'DATABASE_ROW_UPDATED',
+      rowId: 'row-1',
+      field: 'prop-1',
+      newValue: long,
+    });
+    await recorder.record({
+      actorId: 'user-1',
+      databaseId: 'db-1',
+      action: 'DATABASE_ROW_UPDATED',
+      rowId: 'row-1',
+      field: 'prop-2',
+      newValue: ['user-2', 'user-3'],
+    });
+
+    const values = recordOnPage.mock.calls.map(
+      (call: unknown[]) => (call[0] as { newValue: unknown }).newValue,
+    );
+    expect(values).toEqual([
+      'x'.repeat(ACTIVITY_TEXT_VALUE_MAX_LENGTH),
+      ['user-2', 'user-3'],
+    ]);
   });
 
   it('records schema changes on the database without merging', async () => {

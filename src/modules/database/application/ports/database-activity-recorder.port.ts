@@ -1,4 +1,5 @@
 import type { PersistenceContext } from 'src/shared/domain/persistence-context';
+import type { RowValueData } from '../../domain/aggregates/row/row-value.type';
 
 export type DatabaseEditAction =
   | 'DATABASE_CREATED'
@@ -15,7 +16,8 @@ export type DatabaseEditKind =
   | 'OPTION_ADDED'
   | 'OPTION_UPDATED'
   | 'OPTION_DELETED'
-  | 'PARENT_CHANGED';
+  | 'PARENT_CHANGED'
+  | 'CLEARED';
 
 export interface DatabaseEdit {
   actorId?: string | null;
@@ -26,6 +28,7 @@ export interface DatabaseEdit {
   optionId?: string;
   field?: string;
   kind?: DatabaseEditKind;
+  newValue?: RowValueData;
 }
 
 export interface DatabaseActivityRecorder {

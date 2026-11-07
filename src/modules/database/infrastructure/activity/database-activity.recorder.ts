@@ -14,6 +14,7 @@ import { DATABASE_TYPES } from 'src/modules/database/database.types';
 import type { PersistenceContext } from 'src/shared/domain/persistence-context';
 
 export const DATABASE_ROW_EDIT_WINDOW_MS = 5 * 60 * 1000;
+export const ACTIVITY_TEXT_VALUE_MAX_LENGTH = 80;
 
 @Injectable()
 export class ActivityDatabaseActivityRecorder implements DatabaseActivityRecorder {
@@ -53,6 +54,10 @@ export class ActivityDatabaseActivityRecorder implements DatabaseActivityRecorde
         entityId: onRow ? (edit.rowId ?? edit.databaseId) : edit.databaseId,
         action: ActivityAction[edit.action],
         field: edit.field ?? null,
+        newValue:
+          typeof edit.newValue === 'string'
+            ? edit.newValue.slice(0, ACTIVITY_TEXT_VALUE_MAX_LENGTH)
+            : edit.newValue,
         metadata: Object.keys(metadata).length ? metadata : null,
       },
       edit.action === 'DATABASE_ROW_UPDATED'

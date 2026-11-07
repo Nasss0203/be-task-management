@@ -53,13 +53,16 @@ export class TypeOrmActivityRepository implements ActivityRepository {
       // created_at is a timestamp without time zone in the session's zone, so
       // the window is measured with localtimestamp, never with a JS Date.
       const refreshed = await repo.query<unknown[]>(
-        `UPDATE activities SET created_at = localtimestamp, field = $6
+        `UPDATE activities
+            SET created_at = localtimestamp, field = $6,
+                new_value = $7::jsonb, metadata = $8::jsonb
           WHERE id = (
             SELECT id FROM activities
              WHERE actor_id = $1
                AND action = $2
                AND entity_type = $5
                AND COALESCE(metadata ->> 'pageId', entity_id::text) = $3
+               AND field IS NOT DISTINCT FROM $6
                AND created_at >= localtimestamp - $4 * interval '1 millisecond'
              ORDER BY created_at DESC
              LIMIT 1)
@@ -71,6 +74,8 @@ export class TypeOrmActivityRepository implements ActivityRepository {
           mergeWindowMs,
           input.entityType,
           input.field ?? null,
+          input.newValue === undefined ? null : JSON.stringify(input.newValue),
+          input.metadata === null ? null : JSON.stringify(input.metadata),
         ],
       );
       // The postgres driver answers UPDATE with [rows, affected count].
@@ -91,6 +96,7 @@ export class TypeOrmActivityRepository implements ActivityRepository {
         actorId: input.actorId,
         action: input.action,
         field: input.field ?? null,
+        newValue: input.newValue ?? null,
         metadata: input.metadata,
         pageId: input.pageId,
       },

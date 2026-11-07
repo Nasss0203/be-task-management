@@ -60,6 +60,60 @@ describe('TypeOrmActivityRepository', () => {
     );
   });
 
+  it('merges a row edit per property and keeps the newest value', async () => {
+    const { activities, repo } = setup();
+    repo.query.mockResolvedValueOnce([[{ id: 'a-1' }], 1]);
+
+    await activities.recordOnPage(
+      {
+        actorId: 'user-1',
+        pageId: 'page-1',
+        entityType: ActivityEntityType.DATABASE_ROW,
+        entityId: 'row-1',
+        action: ActivityAction.DATABASE_ROW_UPDATED,
+        field: 'prop-1',
+        newValue: ['opt-1'],
+        metadata: { databaseId: 'db-1' },
+      },
+      300000,
+    );
+
+    const [sql, params] = repo.query.mock.calls[0] as [string, unknown[]];
+    expect(sql).toContain('field IS NOT DISTINCT FROM $6');
+    expect(sql).toContain('new_value = $7::jsonb');
+    expect(params.slice(5)).toEqual([
+      'prop-1',
+      JSON.stringify(['opt-1']),
+      JSON.stringify({ databaseId: 'db-1' }),
+    ]);
+    expect(repo.save).not.toHaveBeenCalled();
+  });
+
+  it('stores the new value when nothing is merged', async () => {
+    const { activities, repo } = setup();
+    repo.query
+      .mockResolvedValueOnce([[], 0])
+      .mockResolvedValueOnce([{ workspace_id: 'ws-1' }]);
+
+    await activities.recordOnPage(
+      {
+        actorId: 'user-1',
+        pageId: 'page-1',
+        entityType: ActivityEntityType.DATABASE_ROW,
+        entityId: 'row-1',
+        action: ActivityAction.DATABASE_ROW_UPDATED,
+        field: 'prop-1',
+        newValue: 'done',
+        metadata: null,
+      },
+      300000,
+    );
+
+    expect(repo.save).toHaveBeenCalledWith(
+      expect.objectContaining({ newValue: 'done', field: 'prop-1' }),
+    );
+  });
+
   it('filters by page and leaves out excluded entity types', async () => {
     const { activities, qb } = setup();
 

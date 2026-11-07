@@ -30,6 +30,7 @@ export type PageEditActivityInput = {
   entityId: string;
   action: ActivityAction;
   field?: string | null;
+  newValue?: unknown;
   metadata: Record<string, unknown> | null;
 };
 

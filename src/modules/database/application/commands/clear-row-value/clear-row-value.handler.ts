@@ -49,6 +49,8 @@ export class ClearRowValueHandler {
       action: 'DATABASE_ROW_UPDATED',
       rowId: row.getId(),
       field: property.getId(),
+      kind: 'CLEARED',
+      newValue: null,
     });
   }
 }

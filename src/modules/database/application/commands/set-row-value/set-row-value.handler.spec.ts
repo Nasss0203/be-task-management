@@ -35,7 +35,7 @@ describe('SetRowValueHandler activity', () => {
     row = DatabaseRow.create({ id: 'row', databaseId: 'db' });
   });
 
-  it('records the edited property after saving, in the same context, without the value', async () => {
+  it('records the edited property and its new value after saving, in the same context', async () => {
     await handler.execute(
       new SetRowValueCommand('row', 'title', 'Launch plan', 'user-1'),
       context,
@@ -49,11 +49,9 @@ describe('SetRowValueHandler activity', () => {
         action: 'DATABASE_ROW_UPDATED',
         rowId: 'row',
         field: 'title',
+        newValue: 'Launch plan',
       },
       context,
-    );
-    expect(JSON.stringify(recorder.record.mock.calls)).not.toContain(
-      'Launch plan',
     );
   });
 

@@ -76,6 +76,7 @@ export class SetRowValueHandler {
           action: 'DATABASE_ROW_UPDATED',
           rowId: row.getId(),
           field: property.getId(),
+          newValue: command.value,
         },
         context,
       );

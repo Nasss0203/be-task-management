@@ -10,6 +10,14 @@ export class ActivityActorResponseDto {
   email?: string | null;
 }
 
+export class ActivityTargetResponseDto {
+  rowTitle: string | null;
+  propertyName: string | null;
+  propertyType: string | null;
+  options: { id: string; name: string; color: string | null }[];
+  people: { id: string; username: string | null }[];
+}
+
 export class ActivityResponseDto {
   static fromModel(model: ActivityModel): ActivityResponseDto {
     return {
@@ -39,6 +47,7 @@ export class ActivityResponseDto {
 
   actorId: string | null;
   actor?: ActivityActorResponseDto | null;
+  target?: ActivityTargetResponseDto | null;
 
   action: ActivityAction;
   field: string | null;
