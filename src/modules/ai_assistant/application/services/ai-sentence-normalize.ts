@@ -13,7 +13,10 @@ const EDIT_VERB =
 const DELETE_VERB = '(?:xoa(?: bo)?|go(?: bo)?|delete|remove)';
 const TICK_VERB =
   '(?:bo tich|bo danh dau|danh dau(?: (?:da )?(?:xong|hoan thanh))?|tich(?: (?:da )?xong)?|hoan thanh|check|uncheck|mark)';
-const VERB = `(?:them|chen|bo sung|ghi them|add|insert|${EDIT_VERB}|${DELETE_VERB}|${TICK_VERB})`;
+// Kế hoạch sửa tính năng viết (V1): writing verbs ("dịch giúp tôi …").
+const WRITE_VERB =
+  '(?:dich|tom tat|viet lai|viet tiep|rut gon|mo rong|viet dai ra|viet hay hon|translate|summarize|rewrite|shorten|expand|continue|paraphrase|improve)';
+const VERB = `(?:them|chen|bo sung|ghi them|add|insert|${EDIT_VERB}|${DELETE_VERB}|${TICK_VERB}|${WRITE_VERB})`;
 const KIND =
   '(?:to-do|todo|to-dos|todos|heading|tieu de|checklist|doan van|doan|dong|trich dan|ghi chu|viec|task|tasks|muc)';
 
@@ -34,7 +37,7 @@ const LOOSE_TAIL = /(?:[\s,]+(?:di|voi|nua|giup|cam on))+[\s.!?]*$/u;
 const INSERTS =
   /^(?:them|chen|bo sung|ghi them|add|insert|append|cho (?:minh|toi|em)|minh can|toi can)\b/u;
 const HELP_AFTER_VERB = new RegExp(
-  `^(${VERB}) (?:giup|gium)(?: (?:minh|toi))? `,
+  `^(${VERB}) (?:giup|gium)(?: (?:minh|toi))?(?= |:|,)`,
   'u',
 );
 const THING_AFTER_VERB = new RegExp(`^(${DELETE_VERB}|${TICK_VERB}) cai `, 'u');
@@ -58,6 +61,8 @@ const WRITE_INTO = /^ghi them vao ([^:]+?)\s*:\s*(.+)$/u;
 const NOTE =
   /^ghi chu(?: lai)?(?: (?:giup|gium)(?: (?:minh|toi))?)?(?:\s*:\s*|\s+)(.+)$/u;
 const ADD_INTO = /^them vao (phan [^:]+?)\s*:\s*(.+)$/u;
+const PAGE_TAIL =
+  /\s+(?:o|trong|tai|vao|cua|tren|on|in)\s+(?:the\s+)?(?:trang|page)\s+.+$/u;
 // Without ":" only the AI service knows where the section name ends (it has the
 // Page); admission reads the words as data of one insertion.
 // A place with nothing to add ("thêm vào phần Môn Sinh") stays refused: a list
@@ -84,7 +89,7 @@ export function normalizeCommand(folded: string): string {
   text = text
     .replace(WANT, '')
     .replace(GIVE_ME, 'them ')
-    .replace(HELP_AFTER_VERB, '$1 ')
+    .replace(HELP_AFTER_VERB, '$1')
     .replace(THING_AFTER_VERB, '$1 ')
     .replace(/\bto do\b/gu, 'to-do')
     .replace(/\bvo\b/gu, 'vao');
@@ -109,12 +114,16 @@ export function normalizeCommand(folded: string): string {
     .replace(WRITE_INTO, 'them doan van $2 vao $1')
     .replace(NOTE, 'them ghi chu $1')
     .replace(TABLE_FIRST, (_all, table: string, rest: string) => {
-      if (!rest.includes(':')) return `them ${rest} vao bang ${table}`;
+      // A Page named at the end stays at the end, where a target is read.
+      const target = PAGE_TAIL.exec(rest);
+      const page = target ? ` ${target[0].trim()}` : '';
+      const body = target ? rest.slice(0, target.index).trim() : rest;
+      if (!body.includes(':')) return `them ${body} vao bang ${table}${page}`;
       const [kind, items] = [
-        rest.slice(0, rest.indexOf(':')),
-        rest.slice(rest.indexOf(':') + 1),
+        body.slice(0, body.indexOf(':')),
+        body.slice(body.indexOf(':') + 1),
       ];
-      return `them ${kind.trim()} vao bang ${table}: ${items.trim()}`;
+      return `them ${kind.trim()} vao bang ${table}: ${items.trim()}${page}`;
     })
     .replace(ADD_INTO, (_all, place: string, items: string) =>
       items.includes(',')

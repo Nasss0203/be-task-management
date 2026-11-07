@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   NotFoundException,
   PayloadTooLargeException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { AiConversation } from '../../domain/aggregates/ai-conversation/ai-conversation.aggregate';
 import { AiConversationScope } from '../../domain/enums/ai-conversation-scope.enum';
@@ -140,6 +141,24 @@ describe('AiAskService', () => {
       }
     },
   );
+  it('tells the user plainly when a writing result failed the checks twice', async () => {
+    // Kế hoạch sửa tính năng viết (V4): the adapter maps the AI service's 422.
+    const f = fixture();
+    f.intent('WRITING', 'IMPROVE');
+    f.assistant.submit.mockRejectedValueOnce(
+      new UnprocessableEntityException('WRITING_NOT_DONE'),
+    );
+    expect(
+      await f.service.ask({
+        ...f.input,
+        instruction: 'Improve this text',
+        selectedText: 'source',
+      }),
+    ).toMatchObject({
+      status: 'NEEDS_CLARIFICATION',
+      reason: 'WRITING_NOT_DONE',
+    });
+  });
   it.each(['OTHER', 'UNCLEAR'])(
     'does not generate, persist or plan %s',
     async (intent) => {

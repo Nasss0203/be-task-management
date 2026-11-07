@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
   PayloadTooLargeException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { AI_ASSISTANT_TYPES } from '../../ai-assistant.types';
 import { AiConversationScope } from '../../domain/enums/ai-conversation-scope.enum';
@@ -52,6 +53,9 @@ const UNCLEAR_MESSAGE =
 /** OTHER intent: not something AI does yet; what it does instead. */
 const OTHER_MESSAGE =
   'AI chưa làm được yêu cầu này. Hiện AI làm được: tạo trang, thêm / sửa chữ / xoá / tích to-do trong trang, thêm dòng vào bảng, và dịch / viết lại / tóm tắt một đoạn chữ. Ví dụ: "thêm to-do Gọi khách vào trang Họp tuần".';
+
+/** Kế hoạch sửa tính năng viết (V4): the AI service's code, mapped by the runtime adapter. */
+const WRITING_NOT_DONE = 'WRITING_NOT_DONE';
 
 /** Names what was refused, so the user knows how to rephrase (kế hoạch sửa nhỏ, D3). */
 function unsupportedMessage(detail?: UnsupportedModificationDetail): string {
@@ -461,17 +465,32 @@ export class AiAskService {
           ),
         )
       ).id;
-    const generation = await this.assistant.submit({
-      userId: input.userId,
-      requestId: input.requestId,
-      conversationId,
-      capability,
-      content: input.instruction,
-      input: generationInput,
-      ...(context ? { context } : {}),
-      metadata: { intent: result.intent satisfies AiIntent },
-      shareToken: input.shareToken,
-    });
+    let generation: Awaited<ReturnType<typeof this.assistant.submit>>;
+    try {
+      generation = await this.assistant.submit({
+        userId: input.userId,
+        requestId: input.requestId,
+        conversationId,
+        capability,
+        content: input.instruction,
+        input: generationInput,
+        ...(context ? { context } : {}),
+        metadata: { intent: result.intent satisfies AiIntent },
+        shareToken: input.shareToken,
+      });
+    } catch (error) {
+      // Kế hoạch sửa tính năng viết (V4): a result that failed the checks twice.
+      if (
+        error instanceof UnprocessableEntityException &&
+        error.message === WRITING_NOT_DONE
+      )
+        return business(
+          'NEEDS_CLARIFICATION',
+          WRITING_NOT_DONE,
+          'AI chưa làm tốt yêu cầu này với đoạn chữ của bạn. Hãy thử lại, hoặc bôi đen đoạn ngắn hơn và ghi rõ việc cần làm.',
+        );
+      throw error;
+    }
     return {
       requestId: input.requestId,
       intent: result.intent,

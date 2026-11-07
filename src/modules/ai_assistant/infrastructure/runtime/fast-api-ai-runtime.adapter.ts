@@ -6,6 +6,7 @@ import {
   Injectable,
   Logger,
   PayloadTooLargeException,
+  UnprocessableEntityException,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -171,6 +172,16 @@ function isPageActivity(value: unknown, instruction: string): boolean {
 const AI_RETRY_DELAY_MS = 1500;
 
 /** No answer at all, or the AI service's own 503 (Ollama unavailable). */
+export const WRITING_NOT_DONE = 'WRITING_NOT_DONE';
+
+function writingNotDone(data: unknown): boolean {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    (data as { detail?: unknown }).detail === WRITING_NOT_DONE
+  );
+}
+
 /** The AI service's 422 for its size limits (request_limits.py), by message. */
 function exceedsBudget(data: unknown): boolean {
   const detail = (data as { detail?: unknown } | null)?.detail;
@@ -608,6 +619,15 @@ export class FastApiAiRuntimeAdapter
           throw new PayloadTooLargeException(
             'AI service input exceeds its budget',
           );
+        }
+
+        // Kế hoạch sửa tính năng viết (V4): the result failed the checks twice;
+        // the user is told plainly instead of "AI failed".
+        if (
+          error.response.status === 422 &&
+          writingNotDone(error.response.data)
+        ) {
+          throw new UnprocessableEntityException(WRITING_NOT_DONE);
         }
 
         throw new BadGatewayException(

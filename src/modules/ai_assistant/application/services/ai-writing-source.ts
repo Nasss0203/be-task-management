@@ -4,6 +4,8 @@ import {
   maskQuotedText,
   stripCommandPrefix,
 } from './ai-instruction-evidence';
+import { normalizeCommand } from './ai-sentence-normalize';
+import { inlineWritingText } from './ai-writing-inline-text';
 
 const ACTION =
   /^(?:dich|translate|tom tat|summarize|rut gon|shorten|viet lai|rewrite|improve|paraphrase|mo rong|expand|elaborate|viet tiep|continue)\b/u;
@@ -45,7 +47,8 @@ export function resolveWritingSource(
   // Quoted Page titles cannot become text, including with selected data present.
   if (/\b(?:trang|page)\b/u.test(directive)) return null;
   let text = selectedText ?? null;
-  if (!text && ACTION.test(directive)) {
+  // V1: "bạn có thể dịch giúp tôi …" leads with the verb once polite words go.
+  if (!text && ACTION.test(normalizeCommand(directive))) {
     if (colonIndex >= 0) {
       text = instruction.slice(colonIndex + 1).trim();
     } else {
@@ -64,6 +67,9 @@ export function resolveWritingSource(
       }
     }
   }
+  // V2: no ":", no quotes — the words left after verb, filler and language.
+  if (!text && colonIndex < 0 && quotes.length === 0)
+    text = inlineWritingText(instruction);
   if (!text?.trim()) return null;
   if (intent.writingAction !== 'TRANSLATE') return { text };
   const matched = Object.entries(LANGUAGES).filter(([, aliases]) =>
