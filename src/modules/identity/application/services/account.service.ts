@@ -103,27 +103,53 @@ export class AccountService {
     await this.userRepository.save(user);
   }
 
-  async setAvatar(userId: string, image: Buffer): Promise<AccountResponse> {
+  async setAvatar(
+    userId: string,
+    image: Buffer,
+    contentType: string,
+  ): Promise<AccountResponse> {
     const user = await this.findUser(userId);
+    const previousAvatarUrl = user.avatarUrl;
 
-    user.avatarUrl = await this.avatarStorage.upload(userId, image);
+    user.avatarUrl = await this.avatarStorage.upload(
+      userId,
+      image,
+      contentType,
+    );
+    const saved = await this.userRepository.save(user);
 
-    return this.toResponse(await this.userRepository.save(user));
+    await this.removeStoredAvatar(userId, previousAvatarUrl);
+
+    return this.toResponse(saved);
   }
 
   async removeAvatar(userId: string): Promise<AccountResponse> {
     const user = await this.findUser(userId);
+    const previousAvatarUrl = user.avatarUrl;
 
     user.avatarUrl = null;
     const saved = await this.userRepository.save(user);
 
-    await this.avatarStorage.remove(userId).catch((error: unknown) => {
-      this.logger.warn(
-        `Failed to delete avatar for user ${userId}: ${String(error)}`,
-      );
-    });
+    await this.removeStoredAvatar(userId, previousAvatarUrl);
 
     return this.toResponse(saved);
+  }
+
+  private async removeStoredAvatar(
+    userId: string,
+    avatarUrl: string | null,
+  ): Promise<void> {
+    if (!avatarUrl) {
+      return;
+    }
+
+    await this.avatarStorage
+      .remove(userId, avatarUrl)
+      .catch((error: unknown) => {
+        this.logger.warn(
+          `Failed to delete avatar for user ${userId}: ${String(error)}`,
+        );
+      });
   }
 
   private async findUser(userId: string): Promise<UserRecord> {

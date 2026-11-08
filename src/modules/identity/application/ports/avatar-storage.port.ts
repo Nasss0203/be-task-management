@@ -1,5 +1,5 @@
 export interface AvatarStoragePort {
-  upload(userId: string, image: Buffer): Promise<string>;
+  upload(userId: string, image: Buffer, contentType: string): Promise<string>;
 
-  remove(userId: string): Promise<void>;
+  remove(userId: string, avatarUrl: string): Promise<void>;
 }

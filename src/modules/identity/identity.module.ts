@@ -10,6 +10,7 @@ import { GoogleOAuthStateService } from 'src/common/services/google-oauth-state.
 import { RefreshTokenOriginGuard } from 'src/common/guard/refresh-token-origin.guard';
 import { GoogleAuthCallbackExceptionFilter } from 'src/common/filter/google-auth-callback-exception.filter';
 import { JwtStrategy } from 'src/common/strategy/jwt.strategy';
+import { StorageInfrastructureModule } from 'src/shared/infrastructure/storage/storage.module';
 import { LocalStrategy } from 'src/common/strategy/local.strategy';
 import { DatabaseModule } from 'src/database/database.module';
 import { MailModule } from 'src/modules/mail/mail.module';
@@ -37,7 +38,7 @@ import { TypeOrmRefreshTokenRepository } from './infrastructure/persistence/type
 import { TypeOrmUserAuthIdentityRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-user-auth-identity.repository';
 import { TypeOrmUserProfileRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-user-profile.repository';
 import { TypeOrmUserRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-user.repository';
-import { CloudinaryAvatarStorageAdapter } from './infrastructure/storage/cloudinary-avatar-storage.adapter';
+import { S3AvatarStorageAdapter } from './infrastructure/storage/s3-avatar-storage.adapter';
 import { AuthController } from './presentation/http/controllers/auth.controller';
 import { RefreshTokenController } from './presentation/http/controllers/refresh-token.controller';
 import { UserProfilesController } from './presentation/http/controllers/user-profiles.controller';
@@ -66,6 +67,7 @@ import { UsersController } from './presentation/http/controllers/users.controlle
     forwardRef(() => WorkspaceModule),
     MailModule,
     DatabaseModule,
+    StorageInfrastructureModule,
   ],
   controllers: [
     AuthController,
@@ -78,7 +80,7 @@ import { UsersController } from './presentation/http/controllers/users.controlle
     AccountService,
     {
       provide: IDENTITY_TYPES.ports.AvatarStorage,
-      useClass: CloudinaryAvatarStorageAdapter,
+      useClass: S3AvatarStorageAdapter,
     },
     GetProfileAuthHandler,
     GoogleAuthHandler,

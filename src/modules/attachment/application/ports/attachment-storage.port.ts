@@ -25,8 +25,11 @@ export interface AttachmentStoragePort {
   ): Promise<AttachmentStorageUploadResult>;
 
   createDownloadUrl(input: {
+    provider: AttachmentProvider;
     key: string;
     fileName: string;
     contentType?: string;
   }): Promise<{ downloadUrl: string; expiresIn: number }>;
+
+  delete(input: { provider: AttachmentProvider; key: string }): Promise<void>;
 }

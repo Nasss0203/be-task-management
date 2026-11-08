@@ -54,6 +54,7 @@ export class CreateAttachmentDownloadUrlHandler {
     }
 
     const result = await this.storage.createDownloadUrl({
+      provider: attachment.getProvider(),
       key: storageKey,
       fileName: attachment.getFileName(),
       contentType: attachment.getMimeType(),

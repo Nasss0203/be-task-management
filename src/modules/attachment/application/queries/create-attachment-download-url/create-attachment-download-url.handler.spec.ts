@@ -159,6 +159,7 @@ describe('CreateAttachmentDownloadUrlHandler', () => {
       expiresIn: 300,
     });
     expect(createDownloadUrl).toHaveBeenCalledWith({
+      provider: AttachmentProvider.R2,
       key: 'key',
       fileName: 'file.pdf',
       contentType: 'application/pdf',

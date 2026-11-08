@@ -15,8 +15,8 @@ import { ATTACHMENT_TOKENS } from './attachment.tokens';
 import { AttachmentOrmEntity } from './infrastructure/persistence/typeorm/entities/attachment.orm-entity';
 import { TypeOrmAttachmentRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-attachment.repository';
 import { AttachmentStorageRouterAdapter } from './infrastructure/storage/attachment-storage-router.adapter';
-import { CloudinaryAttachmentStorageAdapter } from './infrastructure/storage/cloudinary-attachment-storage.adapter';
 import { R2AttachmentStorageAdapter } from './infrastructure/storage/r2-attachment-storage.adapter';
+import { S3AttachmentStorageAdapter } from './infrastructure/storage/s3-attachment-storage.adapter';
 import { AttachmentFileValidatorAdapter } from './infrastructure/validation/attachment-file-validator.adapter';
 import { AttachmentController } from './presentation/http/controllers/attachment.controller';
 
@@ -52,8 +52,8 @@ const handlers = [
       useClass: AttachmentFileValidatorAdapter,
     },
 
-    CloudinaryAttachmentStorageAdapter,
     R2AttachmentStorageAdapter,
+    S3AttachmentStorageAdapter,
     ...handlers,
     MulterConfigService,
   ],

@@ -268,6 +268,10 @@
     {
       "file": "1794039578252-add-activity-page-id.ts",
       "sha256": "e15e007d9e479fa63a76ec7a588f02991bb61a8d097b494f7d855293197c2789"
+    },
+    {
+      "file": "1794125361326-add-attachment-provider-s3.ts",
+      "sha256": "22082417f7ecddea3de872b1ac75b0cb48142ed1ad1bb3e2b93af6ebad157ee8"
     }
   ]
 }
