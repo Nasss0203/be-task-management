@@ -1,4 +1,5 @@
 import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
+import { Auth } from 'src/common/decorator/auth.decorator';
 import { ReadRateLimit } from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
@@ -9,6 +10,7 @@ import {
 } from 'src/modules/mentions/application/queries/list-mention-candidates/list-mention-candidates.handler';
 import { ListMentionCandidatesQuery } from 'src/modules/mentions/application/queries/list-mention-candidates/list-mention-candidates.query';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
+import { type IAuth } from 'src/types/auth';
 
 @Controller()
 export class MentionController {
@@ -23,6 +25,7 @@ export class MentionController {
   @RequirePermissions(PERMISSIONS.PAGE_COMMENT_CREATE)
   @ResponseMessage('List mention candidates')
   listCandidates(
+    @Auth() auth: IAuth,
     @Param('pageId', ParseUUIDPipe) pageId: string,
     @Query('q') search?: string,
   ): Promise<MentionCandidateResponseDto[]> {
@@ -30,6 +33,7 @@ export class MentionController {
       new ListMentionCandidatesQuery(
         pageId,
         typeof search === 'string' ? search : '',
+        auth.id,
       ),
     );
   }

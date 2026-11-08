@@ -22,7 +22,12 @@ export class MentionCandidateService {
 
   async findAllowed(
     pageId: string,
-    filter: { query?: string; userIds?: string[]; limit: number },
+    filter: {
+      query?: string;
+      userIds?: string[];
+      excludeUserId?: string;
+      limit: number;
+    },
   ): Promise<MentionCandidate[]> {
     const scope = await this.reader.findPageScope(pageId);
 

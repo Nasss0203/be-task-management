@@ -22,6 +22,7 @@ export interface MentionCandidateReader {
     scope: MentionPageScope;
     query?: string;
     userIds?: string[];
+    excludeUserId?: string;
     limit: number;
   }): Promise<MentionCandidate[]>;
 }
