@@ -39,6 +39,11 @@ export class TypeOrmGoogleCalendarSyncRepository implements GoogleCalendarSyncRe
     return orm ? toSync(orm) : null;
   }
 
+  async findByConnectionId(connectionId: string) {
+    const orms = await this.repository.find({ where: { connectionId } });
+    return orms.map(toSync);
+  }
+
   async findIdsToSync() {
     const rows = await this.repository
       .createQueryBuilder('sync')

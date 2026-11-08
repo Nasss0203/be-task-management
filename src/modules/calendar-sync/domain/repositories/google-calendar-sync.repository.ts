@@ -17,6 +17,7 @@ export interface GoogleCalendarSyncRepository {
     connectionId: string,
     databaseId: string,
   ): Promise<GoogleCalendarSync | null>;
+  findByConnectionId(connectionId: string): Promise<GoogleCalendarSync[]>;
   findIdsToSync(): Promise<string[]>;
   save(sync: GoogleCalendarSync): Promise<void>;
   markSynced(id: string, syncedAt: Date): Promise<void>;
