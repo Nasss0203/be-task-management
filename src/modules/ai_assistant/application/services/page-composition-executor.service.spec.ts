@@ -419,6 +419,10 @@ describe('PageCompositionExecutor', () => {
 
     expect(createDatabaseCommand.pageId).toBe('page-1');
     expect(createDatabaseCommand.name).toBe('Tasks');
+    expect(fixture.createDatabaseExecute).toHaveBeenCalledWith(
+      expect.objectContaining({ titleOnly: true }),
+      fixture.context,
+    );
     expect(createDatabaseContext).toBe(fixture.context);
 
     expect(fixture.renamePropertyExecute).toHaveBeenCalledTimes(1);

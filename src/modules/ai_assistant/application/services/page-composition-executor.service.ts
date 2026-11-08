@@ -323,7 +323,7 @@ export class PageCompositionExecutor {
 
     for (const databaseDraft of databases) {
       const database = await this.createDatabaseHandler.execute(
-        new CreateDatabaseCommand(pageId, databaseDraft.name),
+        new CreateDatabaseCommand(pageId, databaseDraft.name, true),
         context,
       );
 
