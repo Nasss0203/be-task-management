@@ -30,8 +30,11 @@ import { CreateBillingCheckoutHandler } from '../../application/commands/checkou
 import { CreateBillingCheckoutRequestDto } from '../../application/dto/request/create-billing-checkout.request.dto';
 import { GetBillingPaymentStatusRequestDto } from '../../application/dto/request/get-billing-payment-status.request.dto';
 import { BillingPlanListResponseDto } from '../../application/dto/response/billing-plan-list.response.dto';
+import type { WorkspaceEntitlementsResponseDto } from '../../application/dto/response/workspace-entitlements.response.dto';
 import { CreateBillingCheckoutResponseDto } from '../../application/dto/response/create-billing-checkout.response.dto';
 import { WorkspaceSubscriptionResponseDto } from '../../application/dto/response/workspace-subscription.response.dto';
+import { GetWorkspaceEntitlementsHandler } from '../../application/queries/entitlement/get-workspace-entitlements/get-workspace-entitlements.handler';
+import { GetWorkspaceEntitlementsQuery } from '../../application/queries/entitlement/get-workspace-entitlements/get-workspace-entitlements.query';
 import { GetBillingPaymentStatusHandler } from '../../application/queries/payment/get-billing-payment-status/get-billing-payment-status.handler';
 import { GetBillingPaymentStatusQuery } from '../../application/queries/payment/get-billing-payment-status/get-billing-payment-status.query';
 import { ListBillingPlansHandler } from '../../application/queries/plan/list-billing-plans/list-billing-plans.handler';
@@ -61,6 +64,9 @@ export class BillingController {
     @Inject(BILLING_TYPES.applications.ListWorkspacePaymentOrdersHandler)
     private readonly listWorkspacePaymentOrdersHandler: ListWorkspacePaymentOrdersHandler,
 
+    @Inject(BILLING_TYPES.applications.GetWorkspaceEntitlementsHandler)
+    private readonly getWorkspaceEntitlementsHandler: GetWorkspaceEntitlementsHandler,
+
     private readonly configService: ConfigService,
   ) {}
 
@@ -85,6 +91,22 @@ export class BillingController {
   ): Promise<WorkspaceSubscriptionResponseDto> {
     return this.getWorkspaceSubscriptionHandler.execute(
       new GetWorkspaceSubscriptionQuery(workspaceId),
+    );
+  }
+
+  @Get('workspaces/:workspaceId/entitlements')
+  @ReadRateLimit()
+  @WorkspaceContext({
+    source: 'param',
+    key: 'workspaceId',
+  })
+  @RequirePermissions(PERMISSIONS.WORKSPACE_READ)
+  @ResponseMessage('Get workspace entitlements successfully')
+  getWorkspaceEntitlements(
+    @Param('workspaceId') workspaceId: string,
+  ): Promise<WorkspaceEntitlementsResponseDto> {
+    return this.getWorkspaceEntitlementsHandler.execute(
+      new GetWorkspaceEntitlementsQuery(workspaceId),
     );
   }
 

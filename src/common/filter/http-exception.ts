@@ -14,6 +14,7 @@ type ExceptionResponse = {
   error?: string;
   message?: string | string[];
   statusCode?: number;
+  details?: Record<string, unknown>;
 };
 
 @Catch()
@@ -37,6 +38,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     let message: string | string[] = 'Internal Server Error';
     let code: ErrorCode | string = this.getDefaultErrorCode(httpStatus);
+    let details: Record<string, unknown> | undefined;
 
     if (exception instanceof HttpException) {
       const exceptionResponse = exception.getResponse();
@@ -48,6 +50,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
       if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
         code = (exceptionResponse as ExceptionResponse).code || code;
+        details = (exceptionResponse as ExceptionResponse).details;
       }
     } else if (exception instanceof Error) {
       code = ErrorCode.INTERNAL_ERROR;
@@ -57,6 +60,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       statusCode: httpStatus,
       code,
       message,
+      ...(details ? { details } : {}),
       path: httpAdapter.getRequestUrl(ctx.getRequest()),
       timestamp: new Date().toISOString(),
     };
