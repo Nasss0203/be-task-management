@@ -1,6 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import type { IAuth } from 'src/types/auth';
+import { BulkDeleteWorkspaceFilesCommand } from '../../../application/commands/bulk-delete-workspace-files/bulk-delete-workspace-files.command';
+import { BulkDeleteWorkspaceFilesHandler } from '../../../application/commands/bulk-delete-workspace-files/bulk-delete-workspace-files.handler';
 import { DeleteAttachmentHandler } from '../../../application/commands/delete-attachment/delete-attachment.handler';
+import { GetWorkspaceStorageHandler } from '../../../application/queries/get-workspace-storage/get-workspace-storage.handler';
+import { ListWorkspaceStorageFilesHandler } from '../../../application/queries/list-workspace-storage-files/list-workspace-storage-files.handler';
+import { ListWorkspaceStorageFilesQuery } from '../../../application/queries/list-workspace-storage-files/list-workspace-storage-files.query';
 import { UpdateAttachmentHandler } from '../../../application/commands/update-attachment/update-attachment.handler';
 import { UploadAttachmentHandler } from '../../../application/commands/upload-attachment/upload-attachment.handler';
 import { CreateAttachmentDownloadUrlHandler } from '../../../application/queries/create-attachment-download-url/create-attachment-download-url.handler';
@@ -13,6 +18,8 @@ describe('AttachmentController', () => {
   const createUrlExecute = jest.fn();
   const updateExecute = jest.fn();
   const deleteExecute = jest.fn();
+  const listFilesExecute = jest.fn();
+  const bulkDeleteExecute = jest.fn();
   let controller: AttachmentController;
 
   beforeEach(async () => {
@@ -39,6 +46,18 @@ describe('AttachmentController', () => {
         {
           provide: DeleteAttachmentHandler,
           useValue: { execute: deleteExecute },
+        },
+        {
+          provide: GetWorkspaceStorageHandler,
+          useValue: { execute: jest.fn() },
+        },
+        {
+          provide: ListWorkspaceStorageFilesHandler,
+          useValue: { execute: listFilesExecute },
+        },
+        {
+          provide: BulkDeleteWorkspaceFilesHandler,
+          useValue: { execute: bulkDeleteExecute },
         },
       ],
     }).compile();
@@ -130,6 +149,29 @@ describe('AttachmentController', () => {
 
     expect(deleteExecute).toHaveBeenCalledWith(
       expect.objectContaining({ attachmentId: 'att-1', actorId: 'user-1' }),
+    );
+  });
+
+  it('delegates workspace file listing with the actor and filters', async () => {
+    await controller.listWorkspaceFiles('ws-1', { type: 'image', page: 2 }, {
+      id: 'user-1',
+    } as IAuth);
+
+    expect(listFilesExecute).toHaveBeenCalledWith(
+      new ListWorkspaceStorageFilesQuery('ws-1', 'user-1', {
+        type: 'image',
+        page: 2,
+      }),
+    );
+  });
+
+  it('delegates bulk delete with the actor', async () => {
+    await controller.bulkDeleteWorkspaceFiles('ws-1', { ids: ['a1'] }, {
+      id: 'user-1',
+    } as IAuth);
+
+    expect(bulkDeleteExecute).toHaveBeenCalledWith(
+      new BulkDeleteWorkspaceFilesCommand('ws-1', 'user-1', ['a1']),
     );
   });
 });

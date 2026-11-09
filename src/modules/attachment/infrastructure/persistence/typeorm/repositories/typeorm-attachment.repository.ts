@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 import { AttachmentAggregate } from '../../../../domain/aggregates/attachment.aggregate';
 import { AttachmentStatus } from '../../../../domain/enums/attachment-status.enum';
 import type { AttachmentRepository } from '../../../../domain/repositories/attachment.repository';
@@ -60,7 +60,35 @@ export class TypeOrmAttachmentRepository implements AttachmentRepository {
     );
   }
 
+  async findReadyByIds(
+    ids: string[],
+    context?: PersistenceContext,
+  ): Promise<AttachmentAggregate[]> {
+    if (!ids.length) {
+      return [];
+    }
+
+    const entities = await this.getRepository(context).find({
+      where: { id: In(ids), status: AttachmentStatus.READY },
+    });
+
+    return entities.map((entity) =>
+      AttachmentPersistenceMapper.toDomain(entity),
+    );
+  }
+
   async delete(id: string, context?: PersistenceContext): Promise<void> {
     await this.getRepository(context).delete(id);
+  }
+
+  async deleteByIds(
+    ids: string[],
+    context?: PersistenceContext,
+  ): Promise<void> {
+    if (!ids.length) {
+      return;
+    }
+
+    await this.getRepository(context).delete({ id: In(ids) });
   }
 }

@@ -6,12 +6,16 @@ import { StorageInfrastructureModule } from 'src/shared/infrastructure/storage/s
 import { ActivityModule } from '../activity/activity.module';
 import { ContentModule } from '../content/content.module';
 import { PermissionModule } from '../permission/permission.module';
+import { BulkDeleteWorkspaceFilesHandler } from './application/commands/bulk-delete-workspace-files/bulk-delete-workspace-files.handler';
 import { DeleteAttachmentHandler } from './application/commands/delete-attachment/delete-attachment.handler';
 import { UpdateAttachmentHandler } from './application/commands/update-attachment/update-attachment.handler';
 import { UploadAttachmentHandler } from './application/commands/upload-attachment/upload-attachment.handler';
 import { CreateAttachmentDownloadUrlHandler } from './application/queries/create-attachment-download-url/create-attachment-download-url.handler';
 import { GetAttachmentsByTaskHandler } from './application/queries/get-attachments-by-task/get-attachments-by-task.handler';
+import { GetWorkspaceStorageHandler } from './application/queries/get-workspace-storage/get-workspace-storage.handler';
+import { ListWorkspaceStorageFilesHandler } from './application/queries/list-workspace-storage-files/list-workspace-storage-files.handler';
 import { ATTACHMENT_TOKENS } from './attachment.tokens';
+import { SqlWorkspaceStorageReader } from './infrastructure/persistence/typeorm/adapters/sql-workspace-storage-reader.adapter';
 import { AttachmentOrmEntity } from './infrastructure/persistence/typeorm/entities/attachment.orm-entity';
 import { TypeOrmAttachmentRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-attachment.repository';
 import { AttachmentStorageRouterAdapter } from './infrastructure/storage/attachment-storage-router.adapter';
@@ -26,6 +30,9 @@ const handlers = [
   CreateAttachmentDownloadUrlHandler,
   UpdateAttachmentHandler,
   DeleteAttachmentHandler,
+  GetWorkspaceStorageHandler,
+  ListWorkspaceStorageFilesHandler,
+  BulkDeleteWorkspaceFilesHandler,
 ];
 
 @Module({
@@ -50,6 +57,10 @@ const handlers = [
     {
       provide: ATTACHMENT_TOKENS.fileValidator,
       useClass: AttachmentFileValidatorAdapter,
+    },
+    {
+      provide: ATTACHMENT_TOKENS.storageReader,
+      useClass: SqlWorkspaceStorageReader,
     },
 
     R2AttachmentStorageAdapter,
