@@ -24,6 +24,8 @@ const LEAD =
   /^(?:(?:nho ban|phien ban|ban oi|ban co the|ban giup (?:minh|toi)|ban hay|ban|lam on|vui long|giup (?:minh|toi)|hay|pls|plz|please|can you|could you|would you)\s*,?\s+)+/u;
 // "mình cần / tôi muốn thêm …": only before a verb ("mình cần một trang" creates a Page).
 const WANT = new RegExp(`^(?:minh|toi|em) (?:can|muon) (?=${VERB}\\b)`, 'u');
+const TICK_WORD =
+  /(?:^|(?<=, ))(?:(?<untick>untick|bo tick)|tick off|check off|tick)(?= )/u;
 const GIVE_ME = new RegExp(
   // "cho mình" may already be gone (withoutLeadingTarget drops it as polite).
   `^(?:cho (?:minh|toi|em)(?: (?:cai|mot|them))?|cai|mot cai) (?=${KIND}\\b)`,
@@ -88,6 +90,11 @@ export function normalizeCommand(folded: string): string {
   }
   text = text
     .replace(WANT, '')
+    .replace(TICK_WORD, (...match: unknown[]) =>
+      (match[match.length - 1] as { untick?: string }).untick
+        ? 'bo tich'
+        : 'tich',
+    )
     .replace(GIVE_ME, 'them ')
     .replace(HELP_AFTER_VERB, '$1')
     .replace(THING_AFTER_VERB, '$1 ')
@@ -110,6 +117,7 @@ export function normalizeCommand(folded: string): string {
       (_all, page: string | undefined, name: string, rest: string) =>
         [rest, 'vao phan', name, page].filter(Boolean).join(' '),
     )
+    .replace(HELP_AFTER_VERB, '$1')
     .replace(UNTICK_AFTER, 'bo tich $1')
     .replace(WRITE_INTO, 'them doan van $2 vao $1')
     .replace(NOTE, 'them ghi chu $1')
