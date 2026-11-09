@@ -478,6 +478,25 @@ describe('AiModificationPlannerService', () => {
     expect(failed.getErrorCode()).toBe('AI_MODIFICATION_PLAN_ERROR');
   });
 
+  it('marks a plan the model could not make with its own code', async () => {
+    const f = createService();
+    (f.runtime.execute as jest.Mock).mockRejectedValue(
+      new UnprocessableEntityException('DRAFT_NOT_DONE'),
+    );
+    await expect(
+      f.service.generate({
+        requestId: 'not-done-plan',
+        userId: 'user-1',
+        pageId: 'page-1',
+        instruction: 'Add tasks',
+      }),
+    ).rejects.toThrow('DRAFT_NOT_DONE');
+    const calls = (f.generationRepository.save as jest.Mock).mock.calls as [
+      { getErrorCode(): string | null },
+    ][];
+    expect(calls[1][0].getErrorCode()).toBe('AI_DRAFT_NOT_DONE');
+  });
+
   it('does not build context or call runtime when instruction is blank', async () => {
     const {
       service,

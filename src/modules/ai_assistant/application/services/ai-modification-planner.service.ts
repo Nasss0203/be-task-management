@@ -328,7 +328,10 @@ export class AiModificationPlannerService {
           );
           if (generation?.getStatus() === AiGenerationStatus.PROCESSING) {
             generation.fail(
-              'AI_MODIFICATION_PLAN_ERROR',
+              error instanceof UnprocessableEntityException &&
+                error.message === 'DRAFT_NOT_DONE'
+                ? 'AI_DRAFT_NOT_DONE'
+                : 'AI_MODIFICATION_PLAN_ERROR',
               error instanceof Error ? error.message : 'AI planning failed',
             );
             await this.generationRepository.save(generation, context);

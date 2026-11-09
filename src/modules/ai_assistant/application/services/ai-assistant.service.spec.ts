@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   NotFoundException,
   ServiceUnavailableException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import type { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
@@ -323,6 +324,14 @@ describe('AiAssistantService', () => {
       expect(f.committedUsage).toEqual([]);
     },
   );
+
+  it('marks a draft the model could not make with its own code', async () => {
+    const failure = new UnprocessableEntityException('DRAFT_NOT_DONE');
+    const f = createFixture(jest.fn().mockRejectedValue(failure));
+    await expect(f.service.submit(request)).rejects.toBe(failure);
+    expect(f.getGeneration()?.getStatus()).toBe(AiGenerationStatus.FAILED);
+    expect(f.getGeneration()?.getErrorCode()).toBe('AI_DRAFT_NOT_DONE');
+  });
 
   it('rolls back assistant output when usage is missing provider/model', async () => {
     const f = createFixture(

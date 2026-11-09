@@ -6,6 +6,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
@@ -267,6 +268,11 @@ export class AiAssistantService {
         return AiGenerationResponseDto.fromDomain(completed);
       });
     } catch (error: unknown) {
+      if (
+        error instanceof UnprocessableEntityException &&
+        error.message === 'DRAFT_NOT_DONE'
+      )
+        failureCode = 'AI_DRAFT_NOT_DONE';
       try {
         await this.unitOfWork.runInTransaction(async (context) => {
           const generation =

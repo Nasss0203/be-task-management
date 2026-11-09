@@ -382,6 +382,39 @@ describe('AiAskService', () => {
     });
   });
 
+  it('asks to rephrase when the model could not draft the Page change', async () => {
+    const f = fixture();
+    f.intent('MODIFY_PAGE');
+    f.planner.generate.mockRejectedValue(
+      new UnprocessableEntityException('DRAFT_NOT_DONE'),
+    );
+    expect(
+      await f.service.ask({
+        ...f.input,
+        instruction: 'thêm to-do A vào trang Q4',
+      }),
+    ).toMatchObject({
+      status: 'NEEDS_CLARIFICATION',
+      reason: 'DRAFT_NOT_DONE',
+      assistantMessage:
+        'AI chưa lập được bản nháp cho câu này. Hãy nói rõ thêm gì và vào đâu, ví dụ: thêm to-do Gọi khách vào phần Việc tuần sau.',
+    });
+  });
+
+  it('asks to rephrase when the model could not draft the new Page', async () => {
+    const f = fixture();
+    f.intent('CREATE_PAGE');
+    f.assistant.submit.mockRejectedValueOnce(
+      new UnprocessableEntityException('DRAFT_NOT_DONE'),
+    );
+    expect(await f.service.ask(f.input)).toMatchObject({
+      status: 'NEEDS_CLARIFICATION',
+      reason: 'DRAFT_NOT_DONE',
+      assistantMessage:
+        'AI chưa dựng được trang từ câu này. Hãy viết ngắn hơn hoặc liệt kê rõ, ví dụ: tạo trang Chi tiêu có bảng Chi tiêu với cột Khoản chi, Số tiền, Ngày.',
+    });
+  });
+
   it('explains a Page too long for the AI instead of a generic error (kế hoạch trang dài, E1)', async () => {
     const f = fixture();
     f.intent('MODIFY_PAGE');

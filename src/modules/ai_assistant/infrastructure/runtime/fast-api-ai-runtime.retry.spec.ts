@@ -3,6 +3,7 @@ import {
   BadGatewayException,
   PayloadTooLargeException,
   ServiceUnavailableException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { of, throwError } from 'rxjs';
@@ -138,6 +139,29 @@ describe('FastApiAiRuntimeAdapter: one retry for cheap calls', () => {
     expect((outcome as { error: unknown }).error).toBeInstanceOf(
       PayloadTooLargeException,
     );
+  });
+
+  it('reports a draft the model could not make as not done', async () => {
+    post.mockReturnValue(
+      throwError(() =>
+        Object.assign(new Error('Request failed with status code 422'), {
+          isAxiosError: true,
+          response: { status: 422, data: { detail: 'DRAFT_NOT_DONE' } },
+        }),
+      ),
+    );
+    const outcome = await settle(
+      adapter.execute({
+        requestId: 'r',
+        capability: AI_MODIFICATION_PLAN_CAPABILITY,
+        content: 'thêm checklist',
+        input: {},
+        context: { page: {} },
+      }),
+    );
+    const error = (outcome as { error: unknown }).error;
+    expect(error).toBeInstanceOf(UnprocessableEntityException);
+    expect((error as Error).message).toBe('DRAFT_NOT_DONE');
   });
 
   it('keeps other 422 answers as a bad gateway', async () => {

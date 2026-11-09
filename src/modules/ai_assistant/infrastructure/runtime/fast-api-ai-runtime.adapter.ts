@@ -180,11 +180,21 @@ const AI_RETRY_DELAY_MS = 1500;
 /** No answer at all, or the AI service's own 503 (Ollama unavailable). */
 export const WRITING_NOT_DONE = 'WRITING_NOT_DONE';
 
+export const DRAFT_NOT_DONE = 'DRAFT_NOT_DONE';
+
 function writingNotDone(data: unknown): boolean {
   return (
     typeof data === 'object' &&
     data !== null &&
     (data as { detail?: unknown }).detail === WRITING_NOT_DONE
+  );
+}
+
+function draftNotDone(data: unknown): boolean {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    (data as { detail?: unknown }).detail === DRAFT_NOT_DONE
   );
 }
 
@@ -691,6 +701,13 @@ export class FastApiAiRuntimeAdapter
           writingNotDone(error.response.data)
         ) {
           throw new UnprocessableEntityException(WRITING_NOT_DONE);
+        }
+
+        if (
+          error.response.status === 422 &&
+          draftNotDone(error.response.data)
+        ) {
+          throw new UnprocessableEntityException(DRAFT_NOT_DONE);
         }
 
         throw new BadGatewayException(

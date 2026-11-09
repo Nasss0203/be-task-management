@@ -93,6 +93,7 @@ function pageQuestionMessage(
 
 /** Kế hoạch sửa tính năng viết (V4): the AI service's code, mapped by the runtime adapter. */
 const WRITING_NOT_DONE = 'WRITING_NOT_DONE';
+const DRAFT_NOT_DONE = 'DRAFT_NOT_DONE';
 
 /** Names what was refused, so the user knows how to rephrase (kế hoạch sửa nhỏ, D3). */
 function unsupportedMessage(detail?: UnsupportedModificationDetail): string {
@@ -521,6 +522,15 @@ export class AiAskService {
             'PAGE_TOO_LONG',
             'Trang này quá dài để AI đọc hết. Hãy nói rõ phần cần sửa, ví dụ: thêm to-do … vào phần "Tên mục".',
           );
+        if (
+          error instanceof UnprocessableEntityException &&
+          error.message === DRAFT_NOT_DONE
+        )
+          return business(
+            'NEEDS_CLARIFICATION',
+            DRAFT_NOT_DONE,
+            'AI chưa lập được bản nháp cho câu này. Hãy nói rõ thêm gì và vào đâu, ví dụ: thêm to-do Gọi khách vào phần Việc tuần sau.',
+          );
         throw error;
       }
       const base = {
@@ -642,6 +652,16 @@ export class AiAskService {
           'NEEDS_CLARIFICATION',
           WRITING_NOT_DONE,
           'AI chưa làm tốt yêu cầu này với đoạn chữ của bạn. Hãy thử lại, hoặc bôi đen đoạn ngắn hơn và ghi rõ việc cần làm.',
+        );
+      if (
+        error instanceof UnprocessableEntityException &&
+        error.message === DRAFT_NOT_DONE &&
+        result.intent === 'CREATE_PAGE'
+      )
+        return business(
+          'NEEDS_CLARIFICATION',
+          DRAFT_NOT_DONE,
+          'AI chưa dựng được trang từ câu này. Hãy viết ngắn hơn hoặc liệt kê rõ, ví dụ: tạo trang Chi tiêu có bảng Chi tiêu với cột Khoản chi, Số tiền, Ngày.',
         );
       throw error;
     }
