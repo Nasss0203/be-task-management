@@ -1,6 +1,9 @@
 import type { FindUserService } from 'src/modules/identity/application/ports/find-user.service.interface';
 import type { CreateNotificationService } from 'src/modules/notifications/application/ports/create-notification.service.port';
-import { NotificationType } from 'src/modules/notifications/domain/entities/notification.entity';
+import {
+  NotificationSourceType,
+  NotificationType,
+} from 'src/modules/notifications/domain/entities/notification.entity';
 import { Mention } from '../../domain/entities/mention.entity';
 import { MentionEntityType } from '../../domain/enums/mention-entity-type.enum';
 import { MentionSourceType } from '../../domain/enums/mention-source-type.enum';
@@ -75,6 +78,11 @@ const input = (body: string) => ({
   entityId: 'page-1',
   body,
   actionUrl: '/page/page-1',
+  notifyAs: {
+    type: NotificationType.COMMENT_MENTIONED,
+    sourceType: NotificationSourceType.COMMENT,
+    place: 'a comment',
+  },
 });
 
 describe('SyncMentionsService', () => {

@@ -38,6 +38,8 @@ export const NotificationType = {
   PAGE_EDIT_APPROVED: 'page.edit.approved',
   PAGE_EDIT_REJECTED: 'page.edit.rejected',
 
+  PAGE_MENTIONED: 'page.mentioned',
+
   COMMENT_MENTIONED: 'comment.mentioned',
   COMMENT_REPLIED: 'comment.replied',
 } as const;

@@ -22,6 +22,7 @@ import {
   assertCanContain,
   assertValidLayoutStyle,
 } from 'src/modules/content/domain/policies/page-block-container.policy';
+import { PageBlockMentionService } from 'src/modules/content/application/services/page-block-mention.service';
 import { PageBlockFormService } from 'src/modules/content/application/services/page-block-form.service';
 import { UpdatePageBlockCommand } from './update-page-block.command';
 import type { PageActivityRecorder } from 'src/modules/content/application/ports/page-activity-recorder.port';
@@ -39,12 +40,13 @@ export class UpdatePageBlockHandler {
     @Inject(CONTENT_TYPES.ports.PageActivityRecorder)
     private readonly activity: PageActivityRecorder,
     private readonly forms: PageBlockFormService,
+    private readonly mentions: PageBlockMentionService,
   ) {}
 
   async execute(
     command: UpdatePageBlockCommand,
   ): Promise<PageBlockResponseDto> {
-    return this.uow.runInTransaction(async (context) => {
+    const saved = await this.uow.runInTransaction(async (context) => {
       const block = await this.pageBlockRepo.findById(command.blockId, context);
 
       if (!block) {
@@ -176,7 +178,13 @@ export class UpdatePageBlockHandler {
         },
         context,
       );
-      return PageBlockResponseDto.fromDomain(updatedBlock);
+      return updatedBlock;
     });
+
+    if (command.updates.content !== undefined) {
+      await this.mentions.afterSave(saved, command.userId);
+    }
+
+    return PageBlockResponseDto.fromDomain(saved);
   }
 }

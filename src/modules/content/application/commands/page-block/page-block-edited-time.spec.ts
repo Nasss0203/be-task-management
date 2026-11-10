@@ -98,6 +98,8 @@ describe('page block commands mark the Page edited', () => {
     ({ assertTypeAllowed: jest.fn(), assertRowOnPage: jest.fn() }) as never;
   const forms = () => ({}) as never;
   const columnCleanup = () => ({ tidy: jest.fn() }) as never;
+  const mentions = () =>
+    ({ afterSave: jest.fn(), afterDelete: jest.fn() }) as never;
 
   // kế hoạch ghi activity A3: what each command records.
   const recorded: Record<string, string> = {
@@ -120,6 +122,7 @@ describe('page block commands mark the Page edited', () => {
           recorder(),
           rowScope(),
           forms(),
+          mentions(),
         ).execute(
           new CreatePageBlockCommand({
             pageId: 'page-1',
@@ -138,6 +141,7 @@ describe('page block commands mark the Page edited', () => {
           pages(),
           recorder(),
           forms(),
+          mentions(),
         ).execute(
           new UpdatePageBlockCommand(
             'a',
@@ -155,6 +159,7 @@ describe('page block commands mark the Page edited', () => {
           pages(),
           recorder(),
           columnCleanup(),
+          mentions(),
         ).execute(new DeletePageBlockCommand('a', 'user-1')),
     ],
     [
@@ -260,6 +265,7 @@ describe('page block commands mark the Page edited', () => {
         pages(),
         recorder(),
         forms(),
+        mentions(),
       ).execute(
         new UpdatePageBlockCommand(
           'missing',
@@ -270,5 +276,61 @@ describe('page block commands mark the Page edited', () => {
     ).rejects.toThrow(NotFoundException);
     expect(pageRepository.touch).not.toHaveBeenCalled();
     expect(activity.record).not.toHaveBeenCalled();
+  });
+
+  it('hands saved and deleted blocks to mentions once the change is stored', async () => {
+    const createMentions = { afterSave: jest.fn(), afterDelete: jest.fn() };
+    const created = await new CreatePageBlockHandler(
+      blockRepo(),
+      uow,
+      pages(),
+      recorder(),
+      rowScope(),
+      forms(),
+      createMentions as never,
+    ).execute(
+      new CreatePageBlockCommand({
+        pageId: 'page-1',
+        type: PageBlockType.TEXT,
+        createdBy: 'user-1',
+        content: { text: 'new' },
+      }),
+    );
+
+    expect(createMentions.afterSave).toHaveBeenCalledWith(
+      expect.objectContaining({ getId: expect.any(Function) as unknown }),
+      'user-1',
+    );
+    expect(
+      (createMentions.afterSave.mock.calls[0] as [PageBlock])[0].getId(),
+    ).toBe(created.id);
+
+    const deleteMentions = { afterSave: jest.fn(), afterDelete: jest.fn() };
+    await new DeletePageBlockHandler(
+      blockRepo(),
+      uow,
+      pages(),
+      recorder(),
+      columnCleanup(),
+      deleteMentions as never,
+    ).execute(new DeletePageBlockCommand('a', 'user-1'));
+
+    expect(deleteMentions.afterDelete).toHaveBeenCalledWith(['a']);
+  });
+
+  it('does not touch mentions when the delete fails', async () => {
+    const deleteMentions = { afterSave: jest.fn(), afterDelete: jest.fn() };
+
+    await expect(
+      new DeletePageBlockHandler(
+        blockRepo(),
+        uow,
+        pages(),
+        recorder(),
+        columnCleanup(),
+        deleteMentions as never,
+      ).execute(new DeletePageBlockCommand('missing', 'user-1')),
+    ).rejects.toThrow();
+    expect(deleteMentions.afterDelete).not.toHaveBeenCalled();
   });
 });

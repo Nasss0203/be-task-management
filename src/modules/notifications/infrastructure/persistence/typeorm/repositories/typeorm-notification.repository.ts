@@ -100,6 +100,7 @@ export class TypeOrmNotificationRepository implements NotificationRepository {
           NotificationType.PAGE_ACCESS_REJECTED,
           NotificationType.COMMENT_MENTIONED,
           NotificationType.COMMENT_REPLIED,
+          NotificationType.PAGE_MENTIONED,
         ],
       });
     } else if (input.category === 'system') {

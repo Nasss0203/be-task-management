@@ -42,6 +42,7 @@ import { ActivityModule } from '../activity/activity.module';
 import { ContentPageSnapshotReaderService } from './application/services/content-page-snapshot-reader.service';
 import { PageBlockColumnCleanupService } from './application/services/page-block-column-cleanup.service';
 import { PageBlockFormService } from './application/services/page-block-form.service';
+import { PageBlockMentionService } from './application/services/page-block-mention.service';
 import { SubmitFormResponseHandler } from './application/commands/form/submit-form-response/submit-form-response.handler';
 import { GetFormStructureHandler } from './application/queries/form/get-form-structure/get-form-structure.handler';
 import { GetFormAnswerKeysHandler } from './application/queries/form/get-form-answer-keys/get-form-answer-keys.handler';
@@ -78,6 +79,7 @@ import { CreatePageEditRequestHandler } from './application/commands/page-edit-r
 
 import { PageShareLinkTokenService } from '../../shared/security/page-share-link-token.service';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { MentionsModule } from '../mentions/mentions.module';
 import { ApprovePageAccessRequestHandler } from './application/commands/page-access-request/approve-page-access-request/approve-page-access-request.handler';
 import { CreatePageAccessRequestHandler } from './application/commands/page-access-request/create-page-access-request/create-page-access-request.handler';
 import { RejectPageAccessRequestHandler } from './application/commands/page-access-request/reject-page-access-request/reject-page-access-request.handler';
@@ -468,6 +470,7 @@ const applicationServices = [
   PageBlockOrderingService,
   PageBlockColumnCleanupService,
   PageBlockFormService,
+  PageBlockMentionService,
   PageBlockRowScopeService,
   PageShareLinkTokenService,
   PageEditRequestNotifier,
@@ -524,6 +527,7 @@ const ports = [
     BusinessDatabaseModule,
     PermissionModule,
     NotificationsModule,
+    MentionsModule,
     forwardRef(() => WorkspaceModule),
     forwardRef(() => ActivityModule),
     BillingModule,
