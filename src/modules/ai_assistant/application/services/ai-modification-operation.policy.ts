@@ -407,7 +407,7 @@ const TASK_LIST =
   /^((?:add|insert|append)\s+)(?:these|the following)\s+tasks(?=(?:\s+for\s+[^:]+)?\s*:)/u;
 
 const PAGE_FIRST_TARGET =
-  /^(?:(?:cap nhat|update)\s+)?(?:(?:o|trong|tai|ben trong|tren|in|on|at)\s+)?(?:(?:the|this)\s+)?(?:(?:trang|page)\s+(?:quoted|hien tai|nay|this|current)|quoted\s+page)(?:\s*[:,]\s*|\s+)/u;
+  /^(?:(?:cap nhat|update)\s+)?(?:(?:o|trong|tai|ben trong|tren|in|on|at)\s+)?(?:(?:the|this)\s+)?(?:(?:trang|page)\s+(?:quoted|hien tai|nay|this|current)|quoted\s+page|(?:this|current)\s+page)(?:\s*[:,]\s*|\s+)/u;
 
 // Kế hoạch câu tự nhiên (N2): polite words before the verb ("làm ơn", "mình muốn").
 const FILLER_PREFIX =
@@ -570,6 +570,8 @@ export function admittedModificationKind(
 // The same grammar as the AI service's rules, checked again on the folded text.
 const ACTIVITY_TARGET_VI =
   /^ (?:vao|trong|o|tren|tai|cho) (?:trang|page) (?:\S+ ){0,6}?(?:(?:ma|do) )?(?:toi|minh|em) (?:(?:vua|moi|da) )*(?:chinh sua|sua|chinh|cap nhat|viet)(?: (?:gan day nhat|gan nhat|lan cuoi|lan gan nhat|moi nhat|cuoi cung|hom nay|hom qua|hom kia|tuan truoc|gan day|dao nay|\d{1,2} ngay truoc))?$/u;
+const ACTIVITY_FIRST_VI =
+  /^(?=.* (?:vua|moi) | .*(?:gan day nhat|gan nhat|lan cuoi|lan gan nhat|moi nhat|cuoi cung|hom nay|hom qua|hom kia|tuan truoc|gan day|dao nay|\d{1,2} ngay truoc)$) (?:o|trong|tren|tai) (?:trang|page) (?:\S+ ){0,6}?(?:(?:ma|do) )?(?:toi|minh|em) (?:(?:vua|moi|da) )*(?:chinh sua|sua|chinh|cap nhat|viet)(?: (?:gan day nhat|gan nhat|lan cuoi|lan gan nhat|moi nhat|cuoi cung|hom nay|hom qua|hom kia|tuan truoc|gan day|dao nay|\d{1,2} ngay truoc))?$/u;
 const ACTIVITY_TARGET_EN =
   /^ (?:to|in|on|into) (?:the )?(?:\S+ ){0,6}?page (?:that )?i (?:(?:last|just|recently) )*(?:edited|updated|changed|modified|worked on)(?: (?:most recently|last|today|yesterday|last week|recently|lately|\d{1,2} days? ago))?$/u;
 
@@ -597,13 +599,17 @@ export function isSupportedActivityModification(
     foldInstruction(text).replace(/\s+/gu, ' ').trim();
   const text = fold(withoutPoliteTail(source));
   const edit = fold(instruction);
-  if (!edit || !text.startsWith(edit)) return false;
-  const target = text.slice(edit.length);
+  if (!edit) return false;
+  const leading = !text.startsWith(edit) && text.endsWith(edit);
+  if (!text.startsWith(edit) && !leading) return false;
+  const target = leading
+    ? ` ${text.slice(0, text.length - edit.length).replace(/[\s,:]+$/u, '')}`
+    : text.slice(edit.length);
   if ((target.match(/\b(?:trang|page)\b/gu) ?? []).length !== 1) return false;
-  return (
-    (ACTIVITY_TARGET_VI.test(target) || ACTIVITY_TARGET_EN.test(target)) &&
-    isSupportedModification(instruction, [], admission)
-  );
+  const activity = leading
+    ? ACTIVITY_FIRST_VI.test(target) || ACTIVITY_TARGET_EN.test(target)
+    : ACTIVITY_TARGET_VI.test(target) || ACTIVITY_TARGET_EN.test(target);
+  return activity && isSupportedModification(instruction, [], admission);
 }
 
 // M6 (kế hoạch tìm theo mô tả, G1, G5): "… vào trang về <mô tả>", "Sửa trang

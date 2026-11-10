@@ -3,8 +3,53 @@ import {
   hasSourceBackedCurrentPage,
   explainUnsupportedModification,
   isBareChecklistRequest,
+  isSupportedActivityModification,
   isSupportedModification,
 } from './ai-modification-operation.policy';
+
+describe('D-25: a Page phrase before the edit', () => {
+  it.each([
+    [
+      'On the page I edited yesterday, add a to-do Call the client',
+      'add a to-do Call the client',
+    ],
+    ['In the page I last edited, add a heading Notes', 'add a heading Notes'],
+    [
+      'On the Trip page I edited yesterday, add a to-do Call the client',
+      'add a to-do Call the client',
+    ],
+    ['Ở trang tôi sửa hôm qua, thêm to-do Gọi khách', 'thêm to-do Gọi khách'],
+    [
+      'Trong trang mình vừa sửa, thêm heading Tổng kết',
+      'thêm heading Tổng kết',
+    ],
+    [
+      'add a to-do Call the client to the page I edited yesterday',
+      'add a to-do Call the client',
+    ],
+  ])('admits the activity Page in %s', (source, instruction) => {
+    expect(isSupportedActivityModification(source, instruction)).toBe(true);
+  });
+
+  it.each([
+    ['Ở trang tôi sửa hôm qua, xem có gì', 'xem có gì'],
+    ['Ở trang tôi sửa, thêm to-do Gọi khách', 'thêm to-do Gọi khách'],
+    [
+      'On the page I edited yesterday, add a to-do X and the B page',
+      'add a to-do X and the B page',
+    ],
+  ])('still rejects %s', (source, instruction) => {
+    expect(isSupportedActivityModification(source, instruction)).toBe(false);
+  });
+
+  it.each([
+    'On this page, add a to-do Call the client',
+    'On the current page, add a to-do Call the client',
+    'In this page add a heading Notes',
+  ])('admits %s', (instruction) => {
+    expect(admittedModificationKind(instruction)).toBe('INSERT');
+  });
+});
 
 describe('D-24: "these tasks" lists a to-do list', () => {
   it.each([
