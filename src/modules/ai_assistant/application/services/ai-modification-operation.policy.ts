@@ -403,6 +403,9 @@ function endMarkAsData(command: string): string {
   return /[?!]/u.test(rest) ? command : rest;
 }
 
+const TASK_LIST =
+  /^((?:add|insert|append)\s+)(?:these|the following)\s+tasks(?=(?:\s+for\s+[^:]+)?\s*:)/u;
+
 const PAGE_FIRST_TARGET =
   /^(?:(?:cap nhat|update)\s+)?(?:(?:o|trong|tai|ben trong|tren|in|on|at)\s+)?(?:(?:the|this)\s+)?(?:(?:trang|page)\s+(?:quoted|hien tai|nay|this|current)|quoted\s+page)(?:\s*[:,]\s*|\s+)/u;
 
@@ -507,7 +510,7 @@ export function admittedModificationKind(
   // A Page-first prefix is only a target; require a separate insertion clause.
   command = withoutLeadingTarget(
     normalizeCommand(withoutLeadingTarget(command)),
-  );
+  ).replace(TASK_LIST, '$1to-do list');
   // K2: one "?" or "!" may end the content ("thêm đoạn văn Ai làm?").
   command = endMarkAsData(command);
   if (/[;\n?!]/u.test(command)) return null;
