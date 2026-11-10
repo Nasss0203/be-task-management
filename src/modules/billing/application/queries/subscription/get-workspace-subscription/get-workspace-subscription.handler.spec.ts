@@ -98,6 +98,7 @@ describe('GetWorkspaceSubscriptionHandler', () => {
       currentPeriodStart,
       currentPeriodEnd,
       cancelAtPeriodEnd: false,
+      accessEndsAt: new Date('2026-10-15T02:00:00.000Z'),
     });
   });
 
@@ -137,6 +138,7 @@ describe('GetWorkspaceSubscriptionHandler', () => {
       currentPeriodStart: null,
       currentPeriodEnd: null,
       cancelAtPeriodEnd: false,
+      accessEndsAt: null,
     });
   });
 });

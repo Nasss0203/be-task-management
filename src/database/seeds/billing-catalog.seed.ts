@@ -121,7 +121,7 @@ const planFeatures = [
   {
     planCode: 'PLUS',
     featureCode: 'MAX_STORAGE_MB',
-    value: 10000,
+    value: 10240,
   },
   {
     planCode: 'PLUS',
@@ -147,7 +147,7 @@ const planFeatures = [
   {
     planCode: 'BUSINESS',
     featureCode: 'MAX_STORAGE_MB',
-    value: 100000,
+    value: 102400,
   },
   {
     planCode: 'BUSINESS',
