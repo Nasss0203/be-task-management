@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   ActivityAction,
   ActivityEntityType,
@@ -17,14 +21,22 @@ describe('UploadAttachmentHandler', () => {
   const findBlockById = jest.fn();
   const findPageById = jest.fn();
   const authorize = jest.fn();
+  const deleteObject = jest.fn();
+  const assertWithinLimit = jest.fn();
+  const unitOfWork = {
+    runInTransaction: (work: (context: unknown) => Promise<unknown>) =>
+      work('tx'),
+  };
   const handler = new UploadAttachmentHandler(
     { save } as never,
     { validateExtension, validateRealFileType } as never,
-    { upload } as never,
+    { upload, delete: deleteObject } as never,
     { create: createActivity } as never,
     { findById: findBlockById } as never,
     { findById: findPageById } as never,
     { authorize } as never,
+    unitOfWork as never,
+    { assertWithinLimit } as never,
   );
   const file = {
     originalName: 'test.png',
@@ -42,6 +54,8 @@ describe('UploadAttachmentHandler', () => {
     });
     findPageById.mockResolvedValue({ getWorkspaceId: () => 'ws-1' });
     authorize.mockResolvedValue(true);
+    assertWithinLimit.mockResolvedValue(undefined);
+    deleteObject.mockResolvedValue(undefined);
     validateRealFileType.mockResolvedValue('image/png');
     upload.mockResolvedValue({
       provider: AttachmentProvider.CLOUDINARY,
@@ -153,7 +167,7 @@ describe('UploadAttachmentHandler', () => {
       mimeType: 'image/png',
       uploadedBy: 'user-1',
     });
-    expect(save).toHaveBeenCalledWith(expect.any(AttachmentAggregate));
+    expect(save).toHaveBeenCalledWith(expect.any(AttachmentAggregate), 'tx');
     expect(createActivity).toHaveBeenCalledWith({
       workspaceId: 'ws-1',
       entityType: ActivityEntityType.ATTACHMENT,
@@ -176,6 +190,71 @@ describe('UploadAttachmentHandler', () => {
         secureUrl: 'https://secure-url',
       }),
     );
+  });
+
+  describe('storage limit', () => {
+    const uploadToTask = () =>
+      handler.execute(
+        new UploadAttachmentCommand(
+          file,
+          'ws-1',
+          'task-1',
+          null,
+          null,
+          'user-1',
+        ),
+      );
+
+    it('checks the file size in MB before uploading and again inside the transaction', async () => {
+      await uploadToTask();
+
+      expect(assertWithinLimit).toHaveBeenNthCalledWith(
+        1,
+        'ws-1',
+        'MAX_STORAGE_MB',
+        1024 / (1024 * 1024),
+      );
+      expect(assertWithinLimit).toHaveBeenNthCalledWith(
+        2,
+        'ws-1',
+        'MAX_STORAGE_MB',
+        1024 / (1024 * 1024),
+        'tx',
+      );
+    });
+
+    it('does not upload when the workspace is already full', async () => {
+      assertWithinLimit.mockRejectedValueOnce(
+        new ForbiddenException('WORKSPACE_LIMIT_EXCEEDED'),
+      );
+
+      await expect(uploadToTask()).rejects.toThrow(ForbiddenException);
+      expect(upload).not.toHaveBeenCalled();
+      expect(save).not.toHaveBeenCalled();
+    });
+
+    it('deletes the uploaded object when the locked re-check fails', async () => {
+      upload.mockResolvedValue({
+        provider: AttachmentProvider.S3,
+        storageKey: 'workspaces/ws-1/key.png',
+        publicId: null,
+        url: null,
+        secureUrl: null,
+      });
+      assertWithinLimit
+        .mockResolvedValueOnce(undefined)
+        .mockRejectedValueOnce(
+          new ForbiddenException('WORKSPACE_LIMIT_EXCEEDED'),
+        );
+
+      await expect(uploadToTask()).rejects.toThrow(ForbiddenException);
+      expect(save).not.toHaveBeenCalled();
+      expect(deleteObject).toHaveBeenCalledWith({
+        provider: AttachmentProvider.S3,
+        key: 'workspaces/ws-1/key.png',
+      });
+      expect(createActivity).not.toHaveBeenCalled();
+    });
   });
 
   it('preserves comment-only targets', async () => {

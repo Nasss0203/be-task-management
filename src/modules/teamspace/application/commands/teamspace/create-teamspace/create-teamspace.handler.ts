@@ -4,6 +4,9 @@ import {
   ActivityAction,
   ActivityEntityType,
 } from 'src/modules/activity/domain/entities/activity.entity';
+import { BILLING_TYPES } from 'src/modules/billing/billing.types';
+import type { WorkspaceEntitlementPort } from 'src/modules/billing/application/ports/workspace-entitlement.port';
+import { BillingFeatureCode } from 'src/modules/billing/domain/constants/billing-feature-code.constant';
 import { TEAMSPACE_TYPES } from 'src/modules/teamspace/teamspace.types';
 import { ConflictException, ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { QueryFailedError } from 'typeorm';
@@ -46,6 +49,8 @@ export class CreateTeamspaceHandler {
     private readonly membershipLock: TeamspaceMembershipLock,
     @Inject(ACTIVITY_TYPES.services.CreateActivityService)
     private readonly createActivityService: CreateActivityService,
+    @Inject(BILLING_TYPES.services.WorkspaceEntitlementPort)
+    private readonly entitlements: WorkspaceEntitlementPort,
   ) {}
 
   async execute(
@@ -71,6 +76,13 @@ export class CreateTeamspaceHandler {
       if (!currentMember || currentMember.getId() !== workspaceMember.getId() || currentMember.isGuest()) {
         throw new ForbiddenException('User is not a member of this workspace');
       }
+
+      await this.entitlements.assertWithinLimit(
+        command.workspaceId,
+        BillingFeatureCode.MAX_TEAMSPACES,
+        1,
+        context,
+      );
 
       const baseSlug = generateSlug(command.name).toLowerCase();
 

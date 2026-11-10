@@ -1,3 +1,5 @@
+import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
+
 export type UsagePeriod = {
   start: Date;
   end: Date;
@@ -15,5 +17,11 @@ export interface WorkspaceUsageReader {
     workspaceId: string,
     aiPeriod: UsagePeriod,
     now: Date,
+    context?: PersistenceContext,
   ): Promise<WorkspaceUsage>;
+
+  lockWorkspace(
+    workspaceId: string,
+    context: PersistenceContext,
+  ): Promise<void>;
 }

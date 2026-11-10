@@ -5,6 +5,11 @@ import {
   ActivityEntityType,
 } from 'src/modules/activity/domain/entities/activity.entity';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BILLING_TYPES } from 'src/modules/billing/billing.types';
+import type { WorkspaceEntitlementPort } from 'src/modules/billing/application/ports/workspace-entitlement.port';
+import { BillingFeatureCode } from 'src/modules/billing/domain/constants/billing-feature-code.constant';
+import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
+import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { TeamspaceResponseDto } from 'src/modules/teamspace/application/dto/teamspace/response/teamspace.response.dto';
 import type { TeamspaceRepository } from 'src/modules/teamspace/domain/repositories/teamspace.repository';
 import { TEAMSPACE_TYPES } from 'src/modules/teamspace/teamspace.types';
@@ -17,6 +22,10 @@ export class RestoreTeamspaceHandler {
     private readonly teamspaceRepo: TeamspaceRepository,
     @Inject(ACTIVITY_TYPES.services.CreateActivityService)
     private readonly createActivityService: CreateActivityService,
+    @Inject(PERSISTENCE_TYPES.UnitOfWork)
+    private readonly unitOfWork: UnitOfWork,
+    @Inject(BILLING_TYPES.services.WorkspaceEntitlementPort)
+    private readonly entitlements: WorkspaceEntitlementPort,
   ) {}
 
   async execute(
@@ -32,14 +41,27 @@ export class RestoreTeamspaceHandler {
       throw new NotFoundException('Archived teamspace not found');
     }
 
-    teamspace.restoreDeleted();
-    const restored = await this.teamspaceRepo.save(teamspace);
-    await this.createActivityService.create({
-      workspaceId: teamspace.getWorkspaceId(),
-      entityType: ActivityEntityType.TEAMSPACE,
-      entityId: teamspace.getId(),
-      actorId: command.userId,
-      action: ActivityAction.TEAMSPACE_RESTORED,
+    const restored = await this.unitOfWork.runInTransaction(async (context) => {
+      await this.entitlements.assertWithinLimit(
+        teamspace.getWorkspaceId(),
+        BillingFeatureCode.MAX_TEAMSPACES,
+        1,
+        context,
+      );
+
+      teamspace.restoreDeleted();
+      const saved = await this.teamspaceRepo.save(teamspace, context);
+      await this.createActivityService.create(
+        {
+          workspaceId: teamspace.getWorkspaceId(),
+          entityType: ActivityEntityType.TEAMSPACE,
+          entityId: teamspace.getId(),
+          actorId: command.userId,
+          action: ActivityAction.TEAMSPACE_RESTORED,
+        },
+        context,
+      );
+      return saved;
     });
     return TeamspaceResponseDto.fromDomain(restored);
   }

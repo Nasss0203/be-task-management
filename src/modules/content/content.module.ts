@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { DatabaseModule } from 'src/database/database.module';
+import { BillingModule } from 'src/modules/billing/billing.module';
 import { DatabaseModule as BusinessDatabaseModule } from 'src/modules/database/database.module';
 import { PermissionModule } from 'src/modules/permission/permission.module';
 import { WorkspaceModule } from 'src/modules/workspace/workspace.module';
@@ -525,6 +526,7 @@ const ports = [
     NotificationsModule,
     forwardRef(() => WorkspaceModule),
     forwardRef(() => ActivityModule),
+    BillingModule,
   ],
 
   controllers: [

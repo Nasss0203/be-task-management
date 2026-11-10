@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MulterConfigService } from 'src/config/multer.config';
+import { DatabaseModule } from 'src/database/database.module';
+import { BillingModule } from 'src/modules/billing/billing.module';
 import { StorageInfrastructureModule } from 'src/shared/infrastructure/storage/storage.module';
 import { ActivityModule } from '../activity/activity.module';
 import { ContentModule } from '../content/content.module';
@@ -43,6 +45,8 @@ const handlers = [
     ContentModule,
     PermissionModule,
     StorageInfrastructureModule,
+    DatabaseModule,
+    BillingModule,
   ],
   controllers: [AttachmentController],
   providers: [

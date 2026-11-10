@@ -16,14 +16,24 @@ import type { PageBlockRepository } from 'src/modules/content/domain/repositorie
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
+import { BILLING_TYPES } from 'src/modules/billing/billing.types';
+import type { WorkspaceEntitlementPort } from 'src/modules/billing/application/ports/workspace-entitlement.port';
+import { BillingFeatureCode } from 'src/modules/billing/domain/constants/billing-feature-code.constant';
+import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
+import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 
 import { ATTACHMENT_TOKENS } from '../../../attachment.tokens';
 import { AttachmentAggregate } from '../../../domain/aggregates/attachment.aggregate';
 import type { AttachmentRepository } from '../../../domain/repositories/attachment.repository';
 import { AttachmentDto } from '../../dto/attachment.dto';
 import type { AttachmentFileValidatorPort } from '../../ports/attachment-file-validator.port';
-import type { AttachmentStoragePort } from '../../ports/attachment-storage.port';
+import type {
+  AttachmentStoragePort,
+  AttachmentStorageUploadResult,
+} from '../../ports/attachment-storage.port';
 import { UploadAttachmentCommand } from './upload-attachment.command';
+
+const BYTES_PER_MB = 1024 * 1024;
 
 @Injectable()
 export class UploadAttachmentHandler {
@@ -47,6 +57,12 @@ export class UploadAttachmentHandler {
     private readonly pageRepository: PageRepository,
 
     private readonly authorizationService: AuthorizationService,
+
+    @Inject(PERSISTENCE_TYPES.UnitOfWork)
+    private readonly unitOfWork: UnitOfWork,
+
+    @Inject(BILLING_TYPES.services.WorkspaceEntitlementPort)
+    private readonly entitlements: WorkspaceEntitlementPort,
   ) {}
 
   async execute(command: UploadAttachmentCommand): Promise<AttachmentDto> {
@@ -67,6 +83,13 @@ export class UploadAttachmentHandler {
     const mimeType = await this.fileValidator.validateRealFileType(
       command.file,
       extension,
+    );
+
+    const sizeMb = command.file.size / BYTES_PER_MB;
+    await this.entitlements.assertWithinLimit(
+      command.workspaceId,
+      BillingFeatureCode.MAX_STORAGE_MB,
+      sizeMb,
     );
 
     const storageResult = await this.storage.upload({
@@ -96,7 +119,11 @@ export class UploadAttachmentHandler {
       secureUrl: storageResult.secureUrl,
     });
 
-    const saved = await this.attachmentRepository.save(attachment);
+    const saved = await this.saveWithinStorageLimit(
+      attachment,
+      sizeMb,
+      storageResult,
+    );
 
     await this.createActivityService.create({
       workspaceId: saved.getWorkspaceId(),
@@ -115,6 +142,34 @@ export class UploadAttachmentHandler {
     });
 
     return AttachmentDto.fromAggregate(saved);
+  }
+
+  private async saveWithinStorageLimit(
+    attachment: AttachmentAggregate,
+    sizeMb: number,
+    storageResult: AttachmentStorageUploadResult,
+  ): Promise<AttachmentAggregate> {
+    try {
+      return await this.unitOfWork.runInTransaction(async (context) => {
+        await this.entitlements.assertWithinLimit(
+          attachment.getWorkspaceId(),
+          BillingFeatureCode.MAX_STORAGE_MB,
+          sizeMb,
+          context,
+        );
+        return this.attachmentRepository.save(attachment, context);
+      });
+    } catch (error) {
+      if (storageResult.storageKey) {
+        await this.storage
+          .delete({
+            provider: storageResult.provider,
+            key: storageResult.storageKey,
+          })
+          .catch(() => undefined);
+      }
+      throw error;
+    }
   }
 
   private async assertCanAttachToPageBlock(

@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
 
 import { AiGenerationStatus } from 'src/modules/ai_assistant/domain/enums/ai-generation-status.enum';
 import { AttachmentStatus } from 'src/modules/attachment/domain/enums/attachment-status.enum';
 import { WorkspaceInviteStatus } from 'src/modules/workspace/domain/enums/workspace-invite-status.enum';
 import { WorkspaceInviteType } from 'src/modules/workspace/domain/enums/workspace-invite-type.enum';
 import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
+import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import type {
   UsagePeriod,
   WorkspaceUsage,
@@ -48,8 +49,10 @@ export class SqlWorkspaceUsageReader implements WorkspaceUsageReader {
     workspaceId: string,
     aiPeriod: UsagePeriod,
     now: Date,
+    context?: PersistenceContext,
   ): Promise<WorkspaceUsage> {
-    const rows: UsageRow[] = await this.dataSource.query(USAGE_SQL, [
+    const manager = (context as EntityManager | undefined) ?? this.dataSource;
+    const rows: UsageRow[] = await manager.query(USAGE_SQL, [
       workspaceId,
       aiPeriod.start,
       aiPeriod.end,
@@ -70,5 +73,15 @@ export class SqlWorkspaceUsageReader implements WorkspaceUsageReader {
       storageBytes: Number(row?.storage_bytes ?? 0),
       aiRequests: row?.ai_requests ?? 0,
     };
+  }
+
+  async lockWorkspace(
+    workspaceId: string,
+    context: PersistenceContext,
+  ): Promise<void> {
+    await (context as EntityManager).query(
+      'SELECT id FROM workspaces WHERE id = $1 FOR UPDATE',
+      [workspaceId],
+    );
   }
 }

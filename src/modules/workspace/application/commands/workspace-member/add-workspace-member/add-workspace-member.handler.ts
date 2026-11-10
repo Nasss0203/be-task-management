@@ -10,6 +10,9 @@ import {
   ActivityAction,
   ActivityEntityType,
 } from 'src/modules/activity/domain/entities/activity.entity';
+import { BILLING_TYPES } from 'src/modules/billing/billing.types';
+import type { WorkspaceEntitlementPort } from 'src/modules/billing/application/ports/workspace-entitlement.port';
+import { BillingFeatureCode } from 'src/modules/billing/domain/constants/billing-feature-code.constant';
 import { WorkspaceMemberResponseDto } from 'src/modules/workspace/application/dto/workspace-member/response/workspace-member.response.dto';
 import { WorkspaceMember } from 'src/modules/workspace/domain/aggregates/workspace-member/workspace-member.aggregate';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
@@ -31,6 +34,9 @@ export class AddWorkspaceMemberHandler {
 
     @Inject(ACTIVITY_TYPES.services.CreateActivityService)
     private readonly createActivityService: CreateActivityService,
+
+    @Inject(BILLING_TYPES.services.WorkspaceEntitlementPort)
+    private readonly entitlements: WorkspaceEntitlementPort,
   ) {}
 
   async execute(
@@ -65,6 +71,13 @@ export class AddWorkspaceMemberHandler {
       if (existed?.isMember()) {
         throw new ConflictException('User already belongs to this workspace');
       }
+
+      await this.entitlements.assertWithinLimit(
+        command.workspaceId,
+        BillingFeatureCode.MAX_MEMBERS,
+        1,
+        manager,
+      );
 
       let member: WorkspaceMember;
 

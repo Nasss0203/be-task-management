@@ -2,6 +2,7 @@ import { ActivityModule } from 'src/modules/activity/activity.module';
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseModule } from 'src/database/database.module';
+import { BillingModule } from 'src/modules/billing/billing.module';
 import { PermissionModule } from 'src/modules/permission/permission.module';
 import { WorkspaceModule } from 'src/modules/workspace/workspace.module';
 import { OutboxModule } from 'src/shared/infrastructure/outbox/outbox.module';
@@ -54,6 +55,7 @@ import { TEAMSPACE_TYPES } from './teamspace.types';
     PermissionModule,
     DatabaseModule,
     OutboxModule,
+    BillingModule,
     forwardRef(() => ActivityModule),
   ],
   controllers: [TeamspaceController],

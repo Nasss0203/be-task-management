@@ -11,6 +11,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { BILLING_TYPES } from 'src/modules/billing/billing.types';
+import type { WorkspaceEntitlementPort } from 'src/modules/billing/application/ports/workspace-entitlement.port';
+import { BillingFeatureCode } from 'src/modules/billing/domain/constants/billing-feature-code.constant';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { type UpdateNotificationService } from 'src/modules/notifications/application/ports/update-notification.service.port';
 import { NOTIFICATION_TYPES } from 'src/modules/notifications/notifications.types';
@@ -46,6 +49,8 @@ export class AcceptWorkspaceInviteHandler {
     private readonly uow: UnitOfWork,
     @Inject(ACTIVITY_TYPES.services.CreateActivityService)
     private readonly createActivityService: CreateActivityService,
+    @Inject(BILLING_TYPES.services.WorkspaceEntitlementPort)
+    private readonly entitlements: WorkspaceEntitlementPort,
   ) {}
 
   async execute(
@@ -110,6 +115,13 @@ export class AcceptWorkspaceInviteHandler {
           'You are already a member of this workspace',
         );
       }
+
+      await this.entitlements.assertWithinLimit(
+        transactionalInvite.getWorkspaceId(),
+        BillingFeatureCode.MAX_MEMBERS,
+        transactionalInvite.getType() === WorkspaceInviteType.EMAIL ? 0 : 1,
+        manager,
+      );
 
       if (transactionalMembership) {
         transactionalMembership.promoteToMember(

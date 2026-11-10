@@ -173,6 +173,7 @@ describe('BillingEntitlementService', () => {
       'workspace-1',
       { start: PERIOD_START, end: PERIOD_END },
       NOW,
+      undefined,
     );
   });
 

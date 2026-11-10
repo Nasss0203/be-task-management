@@ -1,4 +1,5 @@
 import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import { BILLING_TYPES } from 'src/modules/billing/billing.types';
 import { type Provider } from '@nestjs/common';
 import {
   MODULE_METADATA,
@@ -71,6 +72,10 @@ const externalDependencies: Provider[] = [
   {
     provide: ACTIVITY_TYPES.services.CreateActivityService,
     useValue: { create: jest.fn() },
+  },
+  {
+    provide: BILLING_TYPES.services.WorkspaceEntitlementPort,
+    useValue: { assertWithinLimit: jest.fn() },
   },
 ];
 

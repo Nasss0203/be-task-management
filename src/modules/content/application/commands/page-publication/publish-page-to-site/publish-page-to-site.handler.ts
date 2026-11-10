@@ -8,6 +8,9 @@ import {
 } from '@nestjs/common';
 import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
+import { BILLING_TYPES } from 'src/modules/billing/billing.types';
+import type { WorkspaceEntitlementPort } from 'src/modules/billing/application/ports/workspace-entitlement.port';
+import { BillingFeatureCode } from 'src/modules/billing/domain/constants/billing-feature-code.constant';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { CONTENT_TYPES } from '../../../../content.types';
@@ -32,6 +35,8 @@ export class PublishPageToSiteHandler {
     @Inject(PERSISTENCE_TYPES.UnitOfWork) private readonly uow: UnitOfWork,
     private readonly authorization: AuthorizationService,
     private readonly publicationTree: PagePublicationTreeService,
+    @Inject(BILLING_TYPES.services.WorkspaceEntitlementPort)
+    private readonly entitlements: WorkspaceEntitlementPort,
   ) {}
   async execute(
     command: PublishPageToSiteCommand,
@@ -55,6 +60,10 @@ export class PublishPageToSiteHandler {
         if (!site) throw new NotFoundException('Published site not found');
         if (site.getDisabledAt() !== null)
           throw new BadRequestException('Published site is disabled');
+        await this.entitlements.assertWithinLimit(
+          site.getWorkspaceId(),
+          BillingFeatureCode.PUBLIC_PAGE,
+        );
         const page = await this.pages.findById(command.pageId, context);
         if (!page || page.getDeletedAt() !== null)
           throw new NotFoundException('Page not found');

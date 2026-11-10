@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 
 import { ErrorCode } from 'src/common/constants/error-code.constant';
+import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { BILLING_TYPES } from '../../billing.types';
 import { BillingFeatureCode } from '../../domain/constants/billing-feature-code.constant';
 import { SubscriptionStatus } from '../../domain/constants/subscription-status.constant';
@@ -54,6 +55,7 @@ export class BillingEntitlementService implements WorkspaceEntitlementPort {
   async getEntitlements(
     workspaceId: string,
     now = new Date(),
+    context?: PersistenceContext,
   ): Promise<WorkspaceEntitlementsResponseDto> {
     const subscription =
       await this.subscriptionRepository.findByWorkspaceId(workspaceId);
@@ -64,7 +66,7 @@ export class BillingEntitlementService implements WorkspaceEntitlementPort {
     const [features, planFeatures, usage] = await Promise.all([
       this.featureRepository.findAll(),
       this.planFeatureRepository.findByPlanId(plan.getId()),
-      this.usageReader.getUsage(workspaceId, usagePeriod, now),
+      this.usageReader.getUsage(workspaceId, usagePeriod, now, context),
     ]);
     const valuesByFeatureId = new Map(
       planFeatures.map((planFeature) => [
@@ -103,8 +105,17 @@ export class BillingEntitlementService implements WorkspaceEntitlementPort {
     workspaceId: string,
     feature: BillingFeatureCode,
     increment = 1,
+    context?: PersistenceContext,
   ): Promise<void> {
-    const entitlements = await this.getEntitlements(workspaceId);
+    if (context) {
+      await this.usageReader.lockWorkspace(workspaceId, context);
+    }
+
+    const entitlements = await this.getEntitlements(
+      workspaceId,
+      new Date(),
+      context,
+    );
     const entitlement = entitlements.features.find(
       (item) => item.code === String(feature),
     );

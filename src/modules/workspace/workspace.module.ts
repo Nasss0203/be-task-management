@@ -43,6 +43,7 @@ import { WorkspacesController } from './presentation/http/controllers/workspace.
 import { WORKSPACE_TYPES } from './workspace.types';
 
 import { DatabaseModule } from 'src/database/database.module';
+import { BillingModule } from 'src/modules/billing/billing.module';
 import { PermissionModule } from '../permission/permission.module';
 import { SelectWorkspaceHandler } from './application/commands/workspace/select-workspace/select-workspace.handler';
 import { GetPendingWorkspaceInvitesHandler } from './application/queries/workspace-invite/get-pending-workspace-invites/get-pending-workspace-invites.handler';
@@ -62,6 +63,7 @@ import { WorkspaceSoftDeleteService } from './application/services/workspace-sof
     NotificationsModule,
     DatabaseModule,
     PermissionModule,
+    BillingModule,
   ],
   controllers: [
     WorkspacesController,

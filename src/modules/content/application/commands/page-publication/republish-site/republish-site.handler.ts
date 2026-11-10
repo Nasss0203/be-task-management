@@ -13,6 +13,9 @@ import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PagePublicationRepository } from 'src/modules/content/domain/repositories/page-publication.repository';
 import type { PublishedSiteRepository } from 'src/modules/content/domain/repositories/published-site.repository';
 
+import { BILLING_TYPES } from 'src/modules/billing/billing.types';
+import type { WorkspaceEntitlementPort } from 'src/modules/billing/application/ports/workspace-entitlement.port';
+import { BillingFeatureCode } from 'src/modules/billing/domain/constants/billing-feature-code.constant';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
@@ -32,6 +35,8 @@ export class RepublishSiteHandler {
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
     private readonly publicationTree: PagePublicationTreeService,
+    @Inject(BILLING_TYPES.services.WorkspaceEntitlementPort)
+    private readonly entitlements: WorkspaceEntitlementPort,
   ) {}
 
   async execute(
@@ -75,6 +80,11 @@ export class RepublishSiteHandler {
       if (!site) {
         throw new NotFoundException('Published site not found');
       }
+
+      await this.entitlements.assertWithinLimit(
+        site.getWorkspaceId(),
+        BillingFeatureCode.PUBLIC_PAGE,
+      );
 
       publication = await this.pagePublicationRepository.findBySiteAndPage(
         site.getId(),
