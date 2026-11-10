@@ -69,7 +69,7 @@ const CONTENT_OBJECT =
 const LIST_OBJECT = /\b(?:checklist|viec can lam|danh sach)$/u;
 
 const TARGET_SUFFIX =
-  /\s*\b(?:(?:vao|trong|o|tai|cua|to|in|on|from)(?:\s+(?:cuoi|dau))?(?:\s+the)?\s+(?:(?:trang|page)(?:\s+(?:quoted|nay|hien tai|dang mo))?|(?:quoted|this|current)\s+page)|at\s+the\s+(?:end|top|bottom|start)\s+of\s+(?:the\s+|this\s+)?page)$/u;
+  /\s*\b(?:(?:(?:vao|trong|o|tai|cua|to|in|on|from)(?:\s+(?:cuoi|dau))?|cuoi|dau)(?:\s+the)?\s+(?:(?:trang|page)(?:\s+(?:quoted|nay|hien tai|dang mo))?|(?:quoted|this|current)\s+page)|(?:at|to)\s+the\s+(?:end|top|bottom|start|beginning)\s+of\s+(?:the\s+|this\s+)?(?:quoted\s+)?page)$/u;
 
 // Kế hoạch tích to-do: ticking / unticking existing to-dos. Like "checklist
 // gồm" items the names are data, but one kind of work per sentence (D4).

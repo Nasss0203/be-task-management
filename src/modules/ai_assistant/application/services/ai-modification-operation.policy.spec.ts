@@ -7,6 +7,36 @@ import {
   isSupportedModification,
 } from './ai-modification-operation.policy';
 
+describe('D-30: the end of a named Page', () => {
+  it.each([
+    [
+      'add a heading Day 2 at the end of the Trip to Hanoi page',
+      'Trip to Hanoi',
+    ],
+    ['add a to-do Call the hotel to the end of the Trip page', 'Trip'],
+    ['add a to-do Call the hotel at the top of the Trip page', 'Trip'],
+  ])('admits %s', (instruction, name) => {
+    expect(isSupportedModification(instruction, [name])).toBe(true);
+  });
+
+  it.each([
+    'add a heading Day 2 at the end of the page',
+    'thêm heading Kết luận vào cuối trang',
+    'thêm to-do Gọi nhà cung cấp cuối trang',
+  ])('admits the instruction without the name: %s', (instruction) => {
+    expect(isSupportedModification(instruction)).toBe(true);
+  });
+
+  it('still rejects deleting a named Page', () => {
+    expect(
+      isSupportedModification(
+        'delete the Trip page at the end of the Trip page',
+        ['Trip'],
+      ),
+    ).toBe(false);
+  });
+});
+
 describe('D-28: "from the <title> page" ends the sentence', () => {
   it.each([
     'delete the to-do Phone charger from the Trip to Hanoi page',

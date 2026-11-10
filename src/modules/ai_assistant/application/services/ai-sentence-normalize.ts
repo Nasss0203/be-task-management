@@ -41,6 +41,8 @@ const TAIL =
 // "đi", "với", "nữa", "cảm ơn" also end content ("bữa trưa mang đi"): dropped
 // only when the sentence adds nothing ("xoá cái X đi", "giúp mình với").
 const LOOSE_TAIL = /(?:[\s,]+(?:di|voi|nua|giup|cam on))+[\s.!?]*$/u;
+const TARGET_BEFORE_TAIL =
+  /\b(?:vao|o|trong|tai|tren|cua|cho|cuoi|dau)\s+(?:trang|page|bang|table)\s+[^,]+?(?=(?:[\s,]+(?:di|voi|nua|giup|cam on))+[\s.!?]*$)/u;
 const INSERTS =
   /^(?:them|chen|bo sung|ghi them|add|insert|append|cho (?:minh|toi|em)|minh can|toi can)\b/u;
 const HELP_AFTER_VERB = new RegExp(
@@ -91,7 +93,8 @@ export function normalizeCommand(folded: string): string {
   for (let previous = ''; previous !== text; ) {
     previous = text;
     text = text.replace(LEAD, '').replace(TAIL, '');
-    if (!INSERTS.test(text)) text = text.replace(LOOSE_TAIL, '');
+    if (!INSERTS.test(text) || TARGET_BEFORE_TAIL.test(text))
+      text = text.replace(LOOSE_TAIL, '');
   }
   text = text
     .replace(WANT, '')
