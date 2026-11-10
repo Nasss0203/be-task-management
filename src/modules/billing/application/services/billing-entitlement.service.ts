@@ -160,13 +160,7 @@ export class BillingEntitlementService implements WorkspaceEntitlementPort {
     const start = subscription?.getCurrentPeriodStart();
     const end = subscription?.getCurrentPeriodEnd();
 
-    if (
-      !subscription ||
-      subscription.getStatus() !== SubscriptionStatus.ACTIVE ||
-      !start ||
-      !end ||
-      end.getTime() <= now.getTime()
-    ) {
+    if (!subscription || !start || !end || !subscription.hasPaidAccessAt(now)) {
       return null;
     }
 
@@ -178,14 +172,15 @@ export class BillingEntitlementService implements WorkspaceEntitlementPort {
     paidPeriod: PaidPeriod | null,
   ): Promise<BillingPlan> {
     const isUnexpiredPlan =
-      subscription?.getStatus() === SubscriptionStatus.ACTIVE &&
-      (paidPeriod !== null ||
-        (subscription.getCurrentPeriodEnd() === null &&
-          subscription.getCurrentPeriodStart() === null));
+      paidPeriod !== null ||
+      (subscription?.getStatus() === SubscriptionStatus.ACTIVE &&
+        subscription.getCurrentPeriodEnd() === null &&
+        subscription.getCurrentPeriodStart() === null);
 
-    const plan = isUnexpiredPlan
-      ? await this.planRepository.findById(subscription.getPlanId())
-      : await this.planRepository.findByCode(FREE_PLAN_CODE);
+    const plan =
+      isUnexpiredPlan && subscription
+        ? await this.planRepository.findById(subscription.getPlanId())
+        : await this.planRepository.findByCode(FREE_PLAN_CODE);
 
     if (!plan) {
       throw new InternalServerErrorException(

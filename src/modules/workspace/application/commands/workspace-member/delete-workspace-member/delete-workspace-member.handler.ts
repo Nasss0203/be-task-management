@@ -20,6 +20,8 @@ import type { TeamspaceOwnershipGuard } from 'src/modules/workspace/application/
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { type UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
+import { BILLING_TYPES } from 'src/modules/billing/billing.types';
+import type { SubscriptionLifecyclePort } from 'src/modules/billing/application/ports/subscription-lifecycle.port';
 import { WorkspaceSoftDeleteService } from '../../../services/workspace-soft-delete.service';
 
 import { DeleteWorkspaceMemberCommand } from './delete-workspace-member.command';
@@ -46,6 +48,9 @@ export class DeleteWorkspaceMemberHandler {
     private readonly userProfilePreferenceService: UserProfilePreferenceService,
 
     private readonly workspaceSoftDeleteService: WorkspaceSoftDeleteService,
+
+    @Inject(BILLING_TYPES.services.SubscriptionLifecyclePort)
+    private readonly subscriptionLifecycle: SubscriptionLifecyclePort,
   ) {}
 
   async execute(command: DeleteWorkspaceMemberCommand): Promise<void> {
@@ -123,6 +128,11 @@ export class DeleteWorkspaceMemberHandler {
       );
 
       await this.workspaceMemberRepository.deleteByWorkspaceAndUser(
+        command.workspaceId,
+        command.userId,
+        manager,
+      );
+      await this.subscriptionLifecycle.handleBillingContactLeft(
         command.workspaceId,
         command.userId,
         manager,

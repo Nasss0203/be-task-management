@@ -73,6 +73,7 @@ function plusSubscription(
   overrides: Partial<{
     status: SubscriptionStatus;
     currentPeriodEnd: Date;
+    cancelAtPeriodEnd: boolean;
   }> = {},
 ): WorkspaceSubscription {
   return WorkspaceSubscription.reconstitute({
@@ -84,7 +85,7 @@ function plusSubscription(
     status: overrides.status ?? SubscriptionStatus.ACTIVE,
     currentPeriodStart: PERIOD_START,
     currentPeriodEnd: overrides.currentPeriodEnd ?? PERIOD_END,
-    cancelAtPeriodEnd: false,
+    cancelAtPeriodEnd: overrides.cancelAtPeriodEnd ?? false,
     canceledAt: null,
     providerCustomerId: null,
     providerSubscriptionId: null,
@@ -177,10 +178,37 @@ describe('BillingEntitlementService', () => {
     );
   });
 
-  it('falls back to FREE and the calendar month once the paid period has ended', async () => {
+  it('keeps the paid plan during the 3-day grace period after the period ends', async () => {
+    subscriptionRepository.findByWorkspaceId.mockResolvedValue(
+      plusSubscription({
+        status: SubscriptionStatus.PAST_DUE,
+        currentPeriodEnd: new Date('2026-11-06T10:00:01.000Z'),
+      }),
+    );
+
+    const result = await service.getEntitlements('workspace-1');
+
+    expect(result.plan.code).toBe('PLUS');
+  });
+
+  it('falls back to FREE right at the period end when the plan is cancelled', async () => {
     subscriptionRepository.findByWorkspaceId.mockResolvedValue(
       plusSubscription({
         currentPeriodEnd: new Date('2026-11-09T09:59:59.000Z'),
+        cancelAtPeriodEnd: true,
+      }),
+    );
+
+    const result = await service.getEntitlements('workspace-1');
+
+    expect(result.plan.code).toBe('FREE');
+  });
+
+  it('falls back to FREE and the calendar month once the grace period has ended', async () => {
+    subscriptionRepository.findByWorkspaceId.mockResolvedValue(
+      plusSubscription({
+        status: SubscriptionStatus.PAST_DUE,
+        currentPeriodEnd: new Date('2026-11-06T10:00:00.000Z'),
       }),
     );
 
@@ -194,19 +222,18 @@ describe('BillingEntitlementService', () => {
     });
   });
 
-  it.each([
-    SubscriptionStatus.PAST_DUE,
-    SubscriptionStatus.CANCELED,
-    SubscriptionStatus.EXPIRED,
-  ])('treats a %s subscription as FREE', async (status) => {
-    subscriptionRepository.findByWorkspaceId.mockResolvedValue(
-      plusSubscription({ status }),
-    );
+  it.each([SubscriptionStatus.CANCELED, SubscriptionStatus.EXPIRED])(
+    'treats a %s subscription as FREE',
+    async (status) => {
+      subscriptionRepository.findByWorkspaceId.mockResolvedValue(
+        plusSubscription({ status }),
+      );
 
-    const result = await service.getEntitlements('workspace-1');
+      const result = await service.getEntitlements('workspace-1');
 
-    expect(result.plan.code).toBe('FREE');
-  });
+      expect(result.plan.code).toBe('FREE');
+    },
+  );
 
   it('uses FREE when the workspace has no subscription row', async () => {
     subscriptionRepository.findByWorkspaceId.mockResolvedValue(null);

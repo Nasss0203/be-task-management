@@ -272,6 +272,10 @@
     {
       "file": "1794125361326-add-attachment-provider-s3.ts",
       "sha256": "22082417f7ecddea3de872b1ac75b0cb48142ed1ad1bb3e2b93af6ebad157ee8"
+    },
+    {
+      "file": "1794200000000-add-subscription-billing-contact-and-expiry-notice.ts",
+      "sha256": "0e38c7f9dea7c6f47a3e5741b0bc885c314fae0f1a9edd9ab619c22219403a3f"
     }
   ]
 }

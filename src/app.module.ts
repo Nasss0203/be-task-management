@@ -17,6 +17,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { AiAssistantModule } from './modules/ai_assistant/ai-assistant.module';
 import { AttachmentModule } from './modules/attachment/attachment.module';
 import { BillingModule } from './modules/billing/billing.module';
+import { BillingJobsModule } from './modules/billing/billing-jobs.module';
 import { CalendarSyncModule } from './modules/calendar-sync/calendar-sync.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { ContentModule } from './modules/content/content.module';
@@ -76,6 +77,7 @@ import { QueueModule } from './shared/infrastructure/queue/queue.module';
     NotificationsModule,
     //V2
     BillingModule,
+    BillingJobsModule,
     DatabaseModules,
     AdminModule,
 

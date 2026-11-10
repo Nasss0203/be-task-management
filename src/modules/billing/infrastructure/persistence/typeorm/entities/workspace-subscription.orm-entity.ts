@@ -88,6 +88,18 @@ export class WorkspaceSubscriptionOrmEntity {
   })
   provider_subscription_id: string | null;
 
+  @Column({
+    type: 'uuid',
+    nullable: true,
+  })
+  billing_contact_user_id: string | null;
+
+  @Column({
+    type: 'date',
+    nullable: true,
+  })
+  expiry_notice_sent_on: string | null;
+
   @CreateDateColumn({
     type: 'timestamptz',
     name: 'created_at',

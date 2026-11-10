@@ -194,17 +194,44 @@ describe('BillingPaymentSettlementService', () => {
       );
     });
 
-    it('starts from the payment time once the current period has ended', async () => {
+    it('continues from the old period end when paid during the grace period', async () => {
       activateCurrentPlan();
-      const paidAt = new Date('2026-02-21T05:00:00Z');
+      subscription.markPastDue();
+      const paidAt = new Date('2026-02-22T05:00:00Z');
+      setUpOrderAt(paidAt);
+
+      await settle({ paidAt, processedAt: paidAt });
+
+      expect(subscription.getCurrentPeriodStart()).toEqual(currentStart);
+      expect(subscription.getCurrentPeriodEnd()).toEqual(
+        new Date('2026-03-20T05:00:00Z'),
+      );
+      expect(subscription.getBillingContactUserId()).toBe('actor');
+    });
+
+    it('starts from the payment time once the grace period has ended', async () => {
+      activateCurrentPlan();
+      const paidAt = new Date('2026-02-23T05:00:00Z');
       setUpOrderAt(paidAt);
 
       await settle({ paidAt, processedAt: paidAt });
 
       expect(subscription.getCurrentPeriodStart()).toEqual(paidAt);
       expect(subscription.getCurrentPeriodEnd()).toEqual(
-        new Date('2026-03-21T05:00:00Z'),
+        new Date('2026-03-23T05:00:00Z'),
       );
+    });
+
+    it('starts from the payment time after the end of a cancelled period', async () => {
+      activateCurrentPlan();
+      subscription.scheduleCancellation();
+      const paidAt = new Date('2026-02-21T05:00:00Z');
+      setUpOrderAt(paidAt);
+
+      await settle({ paidAt, processedAt: paidAt });
+
+      expect(subscription.getCurrentPeriodStart()).toEqual(paidAt);
+      expect(subscription.getCancelAtPeriodEnd()).toBe(false);
     });
 
     it('starts from the payment time when switching to another plan', async () => {

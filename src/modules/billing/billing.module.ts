@@ -3,6 +3,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PaymentModule } from '../payment/payment.module';
 
 import { DatabaseModule } from 'src/database/database.module';
+import { MailModule } from 'src/modules/mail/mail.module';
+import { CancelSubscriptionHandler } from './application/commands/subscription/cancel-subscription/cancel-subscription.handler';
+import { ProcessSubscriptionExpiryHandler } from './application/commands/subscription/process-subscription-expiry/process-subscription-expiry.handler';
+import { ResumeSubscriptionHandler } from './application/commands/subscription/resume-subscription/resume-subscription.handler';
+import { BillingSubscriptionLifecycleService } from './application/services/billing-subscription-lifecycle.service';
+import { MailSubscriptionNoticeSender } from './infrastructure/mail/mail-subscription-notice-sender.adapter';
+import { SqlSubscriptionExpiryReader } from './infrastructure/persistence/typeorm/adapters/sql-subscription-expiry-reader.adapter';
 import { CreateBillingCheckoutHandler } from './application/commands/checkout/create-billing-checkout/create-billing-checkout.handler';
 import { ProcessSepayPgIpnHandler } from './application/commands/webhook/process-sepay-pg-ipn/process-sepay-pg-ipn.handler';
 import { ProcessSepayWebhookHandler } from './application/commands/webhook/process-sepay-webhook/process-sepay-webhook.handler';
@@ -38,6 +45,7 @@ import { SepayWebhookController } from './presentation/controllers/sepay-webhook
   imports: [
     PaymentModule,
     DatabaseModule,
+    MailModule,
     TypeOrmModule.forFeature([
       BillingPlanOrmEntity,
       BillingFeatureOrmEntity,
@@ -139,10 +147,36 @@ import { SepayWebhookController } from './presentation/controllers/sepay-webhook
       provide: BILLING_TYPES.applications.GetWorkspaceEntitlementsHandler,
       useClass: GetWorkspaceEntitlementsHandler,
     },
+    {
+      provide: BILLING_TYPES.services.SubscriptionExpiryReader,
+      useClass: SqlSubscriptionExpiryReader,
+    },
+    {
+      provide: BILLING_TYPES.services.SubscriptionNoticeSender,
+      useClass: MailSubscriptionNoticeSender,
+    },
+    {
+      provide: BILLING_TYPES.services.SubscriptionLifecyclePort,
+      useClass: BillingSubscriptionLifecycleService,
+    },
+    {
+      provide: BILLING_TYPES.applications.CancelSubscriptionHandler,
+      useClass: CancelSubscriptionHandler,
+    },
+    {
+      provide: BILLING_TYPES.applications.ResumeSubscriptionHandler,
+      useClass: ResumeSubscriptionHandler,
+    },
+    {
+      provide: BILLING_TYPES.applications.ProcessSubscriptionExpiryHandler,
+      useClass: ProcessSubscriptionExpiryHandler,
+    },
   ],
   exports: [
     BILLING_TYPES.applications.ProcessStripeWebhookHandler,
     BILLING_TYPES.services.WorkspaceEntitlementPort,
+    BILLING_TYPES.services.SubscriptionLifecyclePort,
+    BILLING_TYPES.applications.ProcessSubscriptionExpiryHandler,
   ],
 })
 export class BillingModule {}

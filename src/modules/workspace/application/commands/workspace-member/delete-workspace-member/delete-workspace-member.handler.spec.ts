@@ -13,6 +13,7 @@ import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role
 import { Workspace } from 'src/modules/workspace/domain/aggregates/workspace/workspace.aggregate';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
+import { BILLING_TYPES } from 'src/modules/billing/billing.types';
 import type { EntityManager } from 'typeorm';
 import { DeleteWorkspaceMemberCommand } from './delete-workspace-member.command';
 import { DeleteWorkspaceMemberHandler } from './delete-workspace-member.handler';
@@ -50,6 +51,10 @@ describe('DeleteWorkspaceMemberHandler', () => {
 
   const mockWorkspaceSoftDeleteService = {
     execute: jest.fn(),
+  };
+
+  const mockSubscriptionLifecycle = {
+    handleBillingContactLeft: jest.fn(),
   };
 
   const mockUserProfilePreferenceService = {
@@ -92,6 +97,10 @@ describe('DeleteWorkspaceMemberHandler', () => {
         {
           provide: WorkspaceSoftDeleteService,
           useValue: mockWorkspaceSoftDeleteService,
+        },
+        {
+          provide: BILLING_TYPES.services.SubscriptionLifecyclePort,
+          useValue: mockSubscriptionLifecycle,
         },
         {
           provide: IDENTITY_TYPES.services.UserProfilePreferenceService,
@@ -142,6 +151,9 @@ describe('DeleteWorkspaceMemberHandler', () => {
     );
     expect(
       mockWorkspaceMemberRepository.deleteByWorkspaceAndUser,
+    ).toHaveBeenCalledWith('ws-1', 'user-1', mockManager);
+    expect(
+      mockSubscriptionLifecycle.handleBillingContactLeft,
     ).toHaveBeenCalledWith('ws-1', 'user-1', mockManager);
     expect(mockCreateActivityService.create).toHaveBeenCalledWith(
       {

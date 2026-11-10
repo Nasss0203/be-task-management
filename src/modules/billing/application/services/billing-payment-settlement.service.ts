@@ -4,7 +4,6 @@ import type { PersistenceContext } from 'src/shared/infrastructure/persistence/p
 import { BILLING_TYPES } from '../../billing.types';
 import { BillingInterval } from '../../domain/constants/billing-interval.constant';
 import { BillingProvider } from '../../domain/constants/billing-provider.constant';
-import { SubscriptionStatus } from '../../domain/constants/subscription-status.constant';
 import type { WorkspaceSubscription } from '../../domain/entities/workspace-subscription.entity';
 import type { BillingPlanPriceRepository } from '../../domain/repositories/billing-plan-price.repository';
 import type { PaymentOrderRepository } from '../../domain/repositories/payment-order.repository';
@@ -128,6 +127,7 @@ export class BillingPaymentSettlementService {
       provider: planPrice.getProvider(),
       periodStart: remainingPeriod?.start ?? input.paidAt,
       periodEnd,
+      billingContactUserId: paymentOrder.getCreatedBy(),
       changedAt: input.processedAt,
     });
 
@@ -146,12 +146,11 @@ export class BillingPaymentSettlementService {
     const end = subscription.getCurrentPeriodEnd();
 
     const isRenewingActivePaidPlan =
-      subscription.getStatus() === SubscriptionStatus.ACTIVE &&
       subscription.getPlanPriceId() !== null &&
       subscription.getPlanId() === planId &&
       start !== null &&
       end !== null &&
-      end.getTime() > paidAt.getTime();
+      subscription.hasPaidAccessAt(paidAt);
 
     return isRenewingActivePaidPlan ? { start, end } : null;
   }

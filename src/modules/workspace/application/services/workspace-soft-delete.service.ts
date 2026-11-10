@@ -2,6 +2,8 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
+import { BILLING_TYPES } from 'src/modules/billing/billing.types';
+import type { SubscriptionLifecyclePort } from 'src/modules/billing/application/ports/subscription-lifecycle.port';
 import type { WorkspaceRepository } from '../../domain/repositories/workspace.repository';
 import { WORKSPACE_TYPES } from '../../workspace.types';
 
@@ -10,6 +12,9 @@ export class WorkspaceSoftDeleteService {
   constructor(
     @Inject(WORKSPACE_TYPES.repositories.WorkspaceRepository)
     private readonly workspaceRepository: WorkspaceRepository,
+
+    @Inject(BILLING_TYPES.services.SubscriptionLifecyclePort)
+    private readonly subscriptionLifecycle: SubscriptionLifecyclePort,
   ) {}
 
   async execute(
@@ -30,5 +35,9 @@ export class WorkspaceSoftDeleteService {
     workspace.softDelete(userId, new Date());
 
     await this.workspaceRepository.save(workspace, context);
+    await this.subscriptionLifecycle.handleWorkspaceDeleted(
+      workspaceId,
+      context,
+    );
   }
 }

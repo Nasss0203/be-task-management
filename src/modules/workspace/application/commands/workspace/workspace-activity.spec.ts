@@ -15,6 +15,9 @@ describe('workspace activity', () => {
     save: jest.fn((value: Workspace) => Promise.resolve(value)),
   };
   const activities = { create: jest.fn(() => Promise.resolve()) };
+  const subscriptionLifecycle = {
+    handleWorkspaceDeleted: jest.fn(() => Promise.resolve()),
+  };
   const update = new UpdateWorkspaceHandler(
     repository as never,
     activities as never,
@@ -22,6 +25,7 @@ describe('workspace activity', () => {
   const softDelete = new SoftDeleteWorkspaceHandler(
     repository as never,
     activities as never,
+    subscriptionLifecycle as never,
   );
 
   beforeEach(() => {
@@ -66,6 +70,9 @@ describe('workspace activity', () => {
       actorId: 'user-1',
       action: ActivityAction.WORKSPACE_DELETED,
     });
+    expect(subscriptionLifecycle.handleWorkspaceDeleted).toHaveBeenCalledWith(
+      'ws',
+    );
   });
 
   it('records nothing for a workspace the user cannot reach', async () => {
