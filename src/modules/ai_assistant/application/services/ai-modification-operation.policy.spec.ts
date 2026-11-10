@@ -7,6 +7,24 @@ import {
   isSupportedModification,
 } from './ai-modification-operation.policy';
 
+describe('D-28: "from the <title> page" ends the sentence', () => {
+  it.each([
+    'delete the to-do Phone charger from the Trip to Hanoi page',
+    'uncheck Passport from the Trip to Hanoi page',
+  ])('admits %s', (instruction) => {
+    expect(isSupportedModification(instruction, ['Trip to Hanoi'])).toBe(true);
+  });
+
+  it.each(['delete the Trip to Hanoi page', 'remove the Trip to Hanoi page'])(
+    'still rejects %s',
+    (instruction) => {
+      expect(isSupportedModification(instruction, ['Trip to Hanoi'])).toBe(
+        false,
+      );
+    },
+  );
+});
+
 describe('D-25: a Page phrase before the edit', () => {
   it.each([
     [
