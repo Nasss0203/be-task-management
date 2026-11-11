@@ -25,9 +25,11 @@ const LEAD =
 // "mình cần / tôi muốn thêm …": only before a verb ("mình cần một trang" creates a Page).
 const WANT = new RegExp(`^(?:minh|toi|em) (?:can|muon) (?=${VERB}\\b)`, 'u');
 const LET_ME = new RegExp(
-  `^cho (?:toi|minh|em) (?=(?:${EDIT_VERB}|${DELETE_VERB}|${TICK_VERB})\\b)`,
+  `^cho (?:toi|minh|em) (?=(?:${EDIT_VERB}|${DELETE_VERB}|${TICK_VERB}|them|ghi them|chen|bo sung|tao|lap)\\b)`,
   'u',
 );
+const GIVE_PAGE =
+  /^cho (?:toi|minh|em) (?:mot (?:trang|page)(?: moi)?(?: (?:co ten|ten))?|(?:trang|page) (?:moi(?: (?:co ten|ten))?|co ten|ten)) (?=\S)/u;
 const DONE_SHORT = /(?<=\bxong) r(?=[\s.!?]*$)/u;
 const TICK_WORD =
   /(?:^|(?<=, ))(?:(?<untick>untick|bo tick)|tick off|check off|tick)(?= )/u;
@@ -99,6 +101,7 @@ export function normalizeCommand(folded: string): string {
   text = text
     .replace(WANT, '')
     .replace(LET_ME, '')
+    .replace(GIVE_PAGE, 'tao trang ')
     .replace(DONE_SHORT, ' roi')
     .replace(TICK_WORD, (...match: unknown[]) =>
       (match[match.length - 1] as { untick?: string }).untick
