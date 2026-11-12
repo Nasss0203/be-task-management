@@ -6,9 +6,14 @@ import {
 } from './ai-instruction-evidence';
 import { normalizeCommand } from './ai-sentence-normalize';
 import { inlineWritingText } from './ai-writing-inline-text';
+import { vocabularyPattern } from './ai-vi-vocabulary-words';
 
-const ACTION =
-  /^(?:dich|translate|tom tat|summarize|rut gon|shorten|viet lai|rewrite|improve|paraphrase|mo rong|expand|elaborate|viet tiep|continue)\b/u;
+const ACTION = new RegExp(
+  `^(?:${vocabularyPattern('write_translate', 'write_improve', 'write_shorten', 'write_expand', 'write_summarize', 'write_continue')})\\b`,
+  'u',
+);
+const LANGUAGE_BEFORE = vocabularyPattern('language_prep', 'language_noun');
+const PAGE_WORD = /\b(?:trang(?!\s+trong(?:\s+hon\b|\s*(?:[,.!?]|$)))|page)\b/u;
 const LANGUAGES: Record<string, string[]> = {
   English: ['tieng anh', 'english'],
   Vietnamese: ['tieng viet', 'vietnamese'],
@@ -45,7 +50,7 @@ export function resolveWritingSource(
   if (masked === null) return null;
   const directive = stripCommandPrefix(foldInstruction(masked));
   // Quoted Page titles cannot become text, including with selected data present.
-  if (/\b(?:trang|page)\b/u.test(directive)) return null;
+  if (PAGE_WORD.test(directive)) return null;
   let text = selectedText ?? null;
   // V1: "bạn có thể dịch giúp tôi …" leads with the verb once polite words go.
   if (!text && ACTION.test(normalizeCommand(directive))) {
@@ -75,8 +80,9 @@ export function resolveWritingSource(
   const matched = Object.entries(LANGUAGES).filter(([, aliases]) =>
     aliases.some(
       (alias) =>
-        new RegExp(`\\b(?:sang\\s+|to\\s+)${alias}\\b`, 'u').test(directive) ||
-        new RegExp(`^${alias}\\s+please[.!?]*$`, 'u').test(directive),
+        new RegExp(`\\b${LANGUAGE_BEFORE}\\s+${alias}\\b`, 'u').test(
+          directive,
+        ) || new RegExp(`^${alias}\\s+please[.!?]*$`, 'u').test(directive),
     ),
   );
   if (matched.length !== 1 || matched[0][0] !== intent.language) return null;

@@ -9,35 +9,30 @@ import { vocabularyWords } from './ai-vi-vocabulary-words';
  * `writing_source.inline_writing_text` (shared `ai-writing-inline-text.cases.json`).
  */
 const LEAD = vocabularyWords('lead', 'lead_short', 'let_me');
-const ACTIONS = [
-  'tom tat',
-  'viet lai',
-  'viet tiep',
-  'rut gon',
-  'mo rong',
-  'dich',
-  'translate',
-  'summarize',
-  'shorten',
-  'rewrite',
-  'expand',
-  'continue',
-  'paraphrase',
-  'improve',
-];
+const ACTIONS = vocabularyWords(
+  'write_translate',
+  'write_improve',
+  'write_shorten',
+  'write_expand',
+  'write_summarize',
+  'write_continue',
+);
+const PASSAGE = vocabularyWords('write_passage');
+const PASSAGE_HEAD = vocabularyWords('write_passage_head');
+const PASSAGE_POINTER = vocabularyWords('write_passage_pointer');
 const FILLER = [
-  ...vocabularyWords('help_after_verb'),
-  'doan nay',
-  'cau nay',
-  'cai nay',
-  'doan sau',
-  'cau sau',
-  'doan van nay',
+  ...vocabularyWords('help_after_verb', 'write_passage', 'inline_lead_filler'),
   'this',
   'it',
   'lai',
   'nay',
 ];
+const STYLE_WORDS = vocabularyWords(
+  'write_style_improve',
+  'write_style_shorten',
+  'write_style_expand',
+);
+const LANGUAGE_BEFORE = vocabularyWords('language_prep', 'language_noun');
 const LANGUAGES = [
   'tieng tay ban nha',
   'tieng anh',
@@ -60,6 +55,7 @@ const TAIL = vocabularyWords('tail', 'trailing_with');
 // Translating takes any phrase; for the other actions only a real passage.
 const MIN_WORDS: Record<string, number> = { dich: 2, translate: 2 };
 const MIN_PASSAGE_WORDS = 8;
+const SHORT_PASSAGE_WORDS = 4;
 
 const byLength = (phrases: string[]): string[][] =>
   phrases.map((p) => p.split(' ')).sort((a, b) => b.length - a.length);
@@ -81,9 +77,114 @@ function endsWith(folded: string[], end: number, phrases: string[]): number {
 }
 
 function languageAt(folded: string[], at: number): number {
-  if (!['sang', 'to', 'into', 'qua'].includes(folded[at] ?? '')) return 0;
-  const size = startsWith(folded, at + 1, LANGUAGES);
-  return size ? size + 1 : 0;
+  const before =
+    at < folded.length ? startsWith(folded, at, LANGUAGE_BEFORE) : 0;
+  if (!before) return 0;
+  const size = startsWith(folded, at + before, LANGUAGES);
+  return size ? size + before : 0;
+}
+
+function styleAt(folded: string[], at: number): number {
+  if (folded[at] !== 'cho') return 0;
+  const size = startsWith(folded, at + 1, STYLE_WORDS);
+  if (!size) return 0;
+  return size + 1 + (folded[at + size + 1] === 'hon' ? 1 : 0);
+}
+
+function trim(
+  folded: string[],
+  from: number,
+  to: number,
+): { start: number; end: number; styled: boolean } {
+  let [start, end, styled] = [from, to, false];
+  for (let changed = true; changed; ) {
+    changed = false;
+    const head =
+      startsWith(folded, start, FILLER) ||
+      languageAt(folded, start) ||
+      styleAt(folded, start);
+    if (head) {
+      styled = styled || styleAt(folded, start) > 0;
+      start += head;
+      changed = true;
+      continue;
+    }
+    const tail = endsWith(folded, end, TAIL);
+    if (tail && end - tail >= start) {
+      end -= tail;
+      changed = true;
+    }
+    for (let back = 2; back < 6; back++) {
+      const style = styleAt(folded, end - back) === back;
+      if (
+        end - back >= start &&
+        (languageAt(folded, end - back) === back || style)
+      ) {
+        styled = styled || style;
+        end -= back;
+        changed = true;
+        break;
+      }
+    }
+  }
+  return { start, end, styled };
+}
+
+function pointsAtPassage(
+  folded: string[],
+  start: number,
+  end: number,
+): boolean {
+  for (let index = 0; index < Math.min(end, folded.length); index++) {
+    const head = startsWith(folded, index, PASSAGE_HEAD);
+    if (
+      head &&
+      startsWith(folded, index + head, PASSAGE_POINTER) &&
+      index + head + 1 > start
+    )
+      return true;
+  }
+  return false;
+}
+
+function passage(
+  words: string[],
+  folded: string[],
+  start: number,
+  end: number,
+  verb: string,
+  styled: boolean,
+): string | null {
+  for (let index = start; index < end; index++) {
+    if (startsWith(folded, index, PASSAGE)) return null;
+  }
+  if (pointsAtPassage(folded, start, end)) return null;
+  const minimum =
+    MIN_WORDS[verb] ?? (styled ? MIN_PASSAGE_WORDS : SHORT_PASSAGE_WORDS);
+  if (end - start < minimum) return null;
+  return (
+    words
+      .slice(start, end)
+      .join(' ')
+      .replace(/^[\s:,.]+|[\s:,.]+$/gu, '') || null
+  );
+}
+
+function textBeforeCommand(
+  words: string[],
+  folded: string[],
+  start: number,
+): string | null {
+  for (let index = words.length - 1; index > start; index--) {
+    if (!words[index - 1].endsWith(',')) continue;
+    const action = startsWith(folded, index, ACTIONS);
+    if (!action) continue;
+    const rest = trim(folded, index + action, words.length);
+    if (rest.start < rest.end) return null;
+    const verb = folded.slice(index, index + action).join(' ');
+    return passage(words, folded, start, index, verb, false);
+  }
+  return null;
 }
 
 export function inlineWritingText(instruction: string): string | null {
@@ -102,32 +203,8 @@ export function inlineWritingText(instruction: string): string | null {
     size = startsWith(folded, start, LEAD);
   }
   const action = startsWith(folded, start, ACTIONS);
-  if (!action) return null;
+  if (!action) return textBeforeCommand(words, folded, start);
   const verb = folded.slice(start, start + action).join(' ');
-  start += action;
-  let end = words.length;
-  for (let changed = true; changed; ) {
-    changed = false;
-    const head = startsWith(folded, start, FILLER) || languageAt(folded, start);
-    if (head) {
-      start += head;
-      changed = true;
-      continue;
-    }
-    const tail = endsWith(folded, end, TAIL);
-    if (tail && end - tail >= start) {
-      end -= tail;
-      changed = true;
-    }
-    for (let back = 2; back < 6; back++) {
-      if (end - back > start && languageAt(folded, end - back) === back) {
-        end -= back;
-        changed = true;
-        break;
-      }
-    }
-  }
-  const text = words.slice(start, end);
-  if (text.length < (MIN_WORDS[verb] ?? MIN_PASSAGE_WORDS)) return null;
-  return text.join(' ').replace(/^[\s:,.]+|[\s:,.]+$/gu, '') || null;
+  const found = trim(folded, start + action, words.length);
+  return passage(words, folded, found.start, found.end, verb, found.styled);
 }
