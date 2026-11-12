@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { ResourceAccessLevel } from 'src/modules/content/domain/constants/resource-access-level.constant';
 import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role.enum';
 import { TeamspaceVisibility } from 'src/modules/teamspace/domain/enums/teamspace-visibility.enum';
 import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
@@ -353,8 +354,12 @@ export class AuthorizationService {
       return false;
     }
 
+    const accessLevel = context.teamspaceId
+      ? ResourceAccessLevel.VIEWER
+      : setting.workspaceAccessLevel;
+
     return PageAccessPermissionPolicy.hasAllPermissions(
-      setting.workspaceAccessLevel,
+      accessLevel,
       permissions,
     );
   }
