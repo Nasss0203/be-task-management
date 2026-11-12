@@ -61,6 +61,11 @@ import { RestorePageDatabaseCommand } from 'src/modules/content/application/comm
 import { RestorePageDatabaseHandler } from 'src/modules/content/application/commands/page-database/restore-page-database/restore-page-database.handler';
 import { SearchPagesHandler } from 'src/modules/content/application/queries/page/search-pages/search-pages.handler';
 import { SearchPagesQuery } from 'src/modules/content/application/queries/page/search-pages/search-pages.query';
+import {
+  ListPageMentionTitlesHandler,
+  PageMentionTitlesDto,
+} from 'src/modules/content/application/queries/page/list-page-mention-titles/list-page-mention-titles.handler';
+import { ListPageMentionTitlesQuery } from 'src/modules/content/application/queries/page/list-page-mention-titles/list-page-mention-titles.query';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { type IAuth } from 'src/types/auth';
@@ -77,6 +82,9 @@ export class PageController {
 
     @Inject(CONTENT_TYPES.applications.SearchPagesHandler)
     private readonly searchPagesHandler: SearchPagesHandler,
+
+    @Inject(CONTENT_TYPES.applications.ListPageMentionTitlesHandler)
+    private readonly listPageMentionTitlesHandler: ListPageMentionTitlesHandler,
 
     @Inject(CONTENT_TYPES.applications.FindDatabasesByWorkspaceHandler)
     private readonly findDatabasesByWorkspaceHandler: FindDatabasesByWorkspaceHandler,
@@ -212,6 +220,24 @@ export class PageController {
   ) {
     return this.searchPagesHandler.execute(
       new SearchPagesQuery(workspaceId, auth.id, typeof q === 'string' ? q : ''),
+    );
+  }
+
+  @ResponseMessage('List mentioned page titles')
+  @Get('workspace/:workspaceId/mention-titles')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
+  @RequirePermissions(PERMISSIONS.PAGE_READ)
+  async listMentionTitles(
+    @Param('workspaceId') workspaceId: string,
+    @Query('ids') ids: string | undefined,
+    @Auth() auth: IAuth,
+  ): Promise<PageMentionTitlesDto> {
+    return this.listPageMentionTitlesHandler.execute(
+      new ListPageMentionTitlesQuery(
+        workspaceId,
+        auth.id,
+        typeof ids === 'string' && ids ? ids.split(',') : [],
+      ),
     );
   }
 
