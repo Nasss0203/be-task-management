@@ -38,6 +38,7 @@ import { resolveWritingSource } from './ai-writing-source';
 import type { PageInstructionPlanningResult } from '../resolution/page-instruction-planning.types';
 import type { UnsupportedModificationDetail } from './ai-modification-operation.policy';
 import { foldInstruction } from './ai-instruction-evidence';
+import { vocabularyPattern } from './ai-vi-vocabulary-words';
 
 /** Chat nhiều lượt: the draft lives in another conversation than the one sent. */
 function conversationSwitch(
@@ -122,12 +123,16 @@ function unsupportedMessage(detail?: UnsupportedModificationDetail): string {
  * M7 (H5): "tìm trang có nói về X" / "trang nào có nhắc tới X" without an
  * edit only asks where something is; the reply says how to add the edit.
  */
+const FIND_ONLY = new RegExp(
+  `^(?:${vocabularyPattern('lead')} )?(?:tim (?:(?:mot|1|cai) )?(?:trang|page)|(?:trang|page) nao) (?:nao )?(?:co noi ve|co nhac|co chua|chua|co ghi|noi ve)\\b`,
+  'u',
+);
+
 function isFindOnlyRequest(instruction: string): boolean {
   const text = foldInstruction(instruction).replace(/\s+/gu, ' ').trim();
   return (
-    /^(?:(?:hay|ban hay|giup toi|giup minh) )?(?:tim (?:(?:mot|1|cai) )?(?:trang|page)|(?:trang|page) nao) (?:nao )?(?:co noi ve|co nhac|co chua|chua|co ghi|noi ve)\b/u.test(
-      text,
-    ) || /^(?:please )?(?:find|which) (?:the )?page\b/u.test(text)
+    FIND_ONLY.test(text) ||
+    /^(?:please )?(?:find|which) (?:the )?page\b/u.test(text)
   );
 }
 

@@ -1,3 +1,5 @@
+import { vocabularyPattern } from './ai-vi-vocabulary-words';
+
 /** Small M0 surface grammar. Quoted content is always data. */
 export function foldInstruction(value: string): string {
   return value
@@ -30,11 +32,11 @@ export function maskQuotedText(value: string): string | null {
   return masked;
 }
 
+const COMMAND_PREFIX = new RegExp(
+  `^(?:${vocabularyPattern('lead')}\\s+)+`,
+  'u',
+);
+
 export function stripCommandPrefix(value: string): string {
-  return value
-    .trim()
-    .replace(
-      /^(?:(?:hay|vui long|giup toi|giup minh|ban hay|please|can you|could you|would you)\s+)+/u,
-      '',
-    );
+  return value.trim().replace(COMMAND_PREFIX, '');
 }

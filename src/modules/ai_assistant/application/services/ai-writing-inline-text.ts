@@ -1,4 +1,5 @@
 import { foldInstruction } from './ai-instruction-evidence';
+import { vocabularyWords } from './ai-vi-vocabulary-words';
 
 /**
  * The text a writing request works on when it has no ":" or quotes (kế hoạch sửa
@@ -7,25 +8,7 @@ import { foldInstruction } from './ai-instruction-evidence';
  * the target language, the words left are the text. Mirrors ai-taskmanly
  * `writing_source.inline_writing_text` (shared `ai-writing-inline-text.cases.json`).
  */
-const LEAD = [
-  'nho ban',
-  'phien ban',
-  'ban oi',
-  'ban co the',
-  'ban hay',
-  'ban',
-  'lam on',
-  'vui long',
-  'giup toi',
-  'giup minh',
-  'hay',
-  'pls',
-  'please',
-  'can you',
-  'could you',
-  'cho toi',
-  'cho minh',
-];
+const LEAD = vocabularyWords('lead', 'lead_short', 'let_me');
 const ACTIONS = [
   'tom tat',
   'viet lai',
@@ -43,12 +26,7 @@ const ACTIONS = [
   'improve',
 ];
 const FILLER = [
-  'giup toi',
-  'giup minh',
-  'gium toi',
-  'gium minh',
-  'giup',
-  'gium',
+  ...vocabularyWords('help_after_verb'),
   'doan nay',
   'cau nay',
   'cai nay',
@@ -78,18 +56,7 @@ const LANGUAGES = [
   'chinese',
   'spanish',
 ];
-const TAIL = [
-  'duoc khong',
-  'duoc ko',
-  'nhe ban',
-  'nhe',
-  'nha',
-  'please',
-  'giup toi',
-  'giup minh',
-  'gium',
-  'voi',
-];
+const TAIL = vocabularyWords('tail', 'trailing_with');
 // Translating takes any phrase; for the other actions only a real passage.
 const MIN_WORDS: Record<string, number> = { dich: 2, translate: 2 };
 const MIN_PASSAGE_WORDS = 8;

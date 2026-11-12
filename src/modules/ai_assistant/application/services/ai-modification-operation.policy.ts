@@ -4,6 +4,10 @@ import {
   stripCommandPrefix,
 } from './ai-instruction-evidence';
 import { normalizeCommand } from './ai-sentence-normalize';
+import { vocabularyPattern } from './ai-vi-vocabulary-words';
+
+const COMMAND_TAIL = vocabularyPattern('tail', 'trailing_go');
+const POLITE_SUFFIX = new RegExp(`(?:[\\s,.]+${COMMAND_TAIL})*[\\s,.]*$`, 'u');
 
 // Folding drops the marks that tell a verb from data: "đội" (team), "chính"
 // (main) and "bộ" (set) are not "đổi", "chỉnh" or "bỏ". A word written with
@@ -237,10 +241,7 @@ const BLOCK_KIND =
 /** Named blocks to delete; every name is plain data. */
 function isBlockDelete(command: string): boolean {
   const body = command
-    .replace(
-      /(?:[\s,.]+(?:nhe|nha|di|giup toi|giup minh|please))*[\s,.]*$/u,
-      '',
-    )
+    .replace(POLITE_SUFFIX, '')
     .replace(TARGET_SUFFIX, '')
     .replace(/[\s,.]+$/u, '');
   const names = BLOCK_DELETE.exec(body)?.groups?.names;
@@ -261,10 +262,7 @@ function isBlockDelete(command: string): boolean {
 /** One block's text change; the old and new text are plain data. */
 function isBlockTextChange(command: string): boolean {
   const body = command
-    .replace(
-      /(?:[\s,.]+(?:nhe|nha|di|giup toi|giup minh|please))*[\s,.]*$/u,
-      '',
-    )
+    .replace(POLITE_SUFFIX, '')
     .replace(TARGET_SUFFIX, '')
     .replace(/[\s,.]+$/u, '');
   const change = TEXT_EDIT.exec(body)?.groups?.change;
@@ -281,10 +279,7 @@ function isBlockTextChange(command: string): boolean {
 /** Tick / untick sentences (kế hoạch tích to-do); names must be plain data. */
 function isTodoStatusChange(command: string): boolean {
   const body = command
-    .replace(
-      /(?:[\s,.]+(?:nhe|nha|di|giup toi|giup minh|please))*[\s,.]*$/u,
-      '',
-    )
+    .replace(POLITE_SUFFIX, '')
     .replace(TARGET_SUFFIX, '')
     .replace(/[\s,.]+$/u, '');
   const items = TODO_STATUS.map((pattern) => pattern.exec(body)).find(Boolean)
@@ -410,8 +405,10 @@ const PAGE_FIRST_TARGET =
   /^(?:(?:cap nhat|update)\s+)?(?:(?:o|trong|tai|ben trong|tren|in|on|at)\s+)?(?:(?:the|this)\s+)?(?:(?:trang|page)\s+(?:quoted|hien tai|nay|this|current)|quoted\s+page|(?:this|current)\s+page)(?:\s*[:,]\s*|\s+)/u;
 
 // Kế hoạch câu tự nhiên (N2): polite words before the verb ("làm ơn", "mình muốn").
-const FILLER_PREFIX =
-  /^(?:(?:hay|vui long|lam on|giup toi|giup minh|giup|ban oi|ban hay|cho toi|cho minh|toi muon|minh muon|toi can|minh can|please|can you|could you|would you|i want to|i'd like to)\s*,?\s+)+/u;
+const FILLER_PREFIX = new RegExp(
+  `^(?:${vocabularyPattern('lead', 'let_me', 'want', 'help_after_verb')}\\s*,?\\s+)+`,
+  'u',
+);
 
 /**
  * N1 + N2: "ở trang X, giúp mình sửa A thành B" → "sua A thanh B". A Page
@@ -455,7 +452,7 @@ export function isBareChecklistRequest(
   const body = command
     .replace(INSERT, '')
     .replace(/[.!]+$/u, '')
-    .replace(/\s+(?:nhe|nha|di|giup toi|giup minh|please)$/u, '')
+    .replace(new RegExp(`\\s+${COMMAND_TAIL}$`, 'u'), '')
     .replace(TARGET_SUFFIX, '')
     .trim();
   return BARE_CHECKLIST.test(body);
@@ -639,7 +636,7 @@ export function isSupportedDescriptionModification(
   const what = escapeRegExp(named);
   const shapes = [
     `^${edit} (?:vao|trong|o|tren|tai|cho) trang ${DESCRIPTION_CUE_VI} ${what}$`,
-    `^(?:(?:hay|vui long) )?(?:sua|chinh sua|chinh|cap nhat) trang ${DESCRIPTION_CUE_VI} ${what} ?[:,;] ${edit}$`,
+    `^(?:${vocabularyPattern('lead')} )?(?:sua|chinh sua|chinh|cap nhat) trang ${DESCRIPTION_CUE_VI} ${what} ?[:,;] ${edit}$`,
     `^${edit} (?:to|in|on|into) the page ${DESCRIPTION_CUE_EN} ${what}$`,
     `^(?:please )?(?:edit|update) the page ${DESCRIPTION_CUE_EN} ${what} ?[:,;] ${edit}$`,
   ];
@@ -691,7 +688,7 @@ export function isSupportedContentModification(
   const what = escapeRegExp(words);
   const shapes = [
     `^${edit} (?:vao|trong|o|tren|tai|cho) (?:trang|page) ${CONTENT_CUE_VI} ${what}$`,
-    `^(?:(?:hay|ban hay|giup toi|giup minh) )?tim (?:(?:mot|1|cai) )?(?:trang|page) (?:nao )?${CONTENT_CUE_VI} ${what}(?: ?[,;:] ?(?:(?:roi|sau do|xong) )?| (?:roi|sau do) )${edit}$`,
+    `^(?:${vocabularyPattern('lead')} )?tim (?:(?:mot|1|cai) )?(?:trang|page) (?:nao )?${CONTENT_CUE_VI} ${what}(?: ?[,;:] ?(?:(?:roi|sau do|xong) )?| (?:roi|sau do) )${edit}$`,
     `^${edit} (?:to|in|on|into) the page ${CONTENT_CUE_EN} ${what}$`,
     `^(?:please )?find the page ${CONTENT_CUE_EN} ${what}(?: ?[,;:] ?(?:then )?| (?:and then|then|and) )${edit}$`,
   ];

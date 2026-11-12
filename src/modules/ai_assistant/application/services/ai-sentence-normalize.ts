@@ -8,47 +8,68 @@
  * words are kept, so they still pass every check that follows.
  */
 
-const EDIT_VERB =
-  '(?:chinh sua|thay doi|doi|sua|thay|cap nhat|change|update|edit|rename)';
-const DELETE_VERB = '(?:xoa(?: bo)?|go(?: bo)?|delete|remove)';
-const TICK_VERB =
-  '(?:bo tich|bo danh dau|danh dau(?: (?:da )?(?:xong|hoan thanh))?|tich(?: (?:da )?xong)?|hoan thanh|check|uncheck|mark)';
+import { vocabularyPattern as words } from './ai-vi-vocabulary-words';
+
+const EDIT_VERB = words('verb_edit');
+const DELETE_VERB = words('verb_delete');
+const TICK_VERB = words('verb_tick');
 // Kế hoạch sửa tính năng viết (V1): writing verbs ("dịch giúp tôi …").
-const WRITE_VERB =
-  '(?:dich|tom tat|viet lai|viet tiep|rut gon|mo rong|viet dai ra|viet hay hon|translate|summarize|rewrite|shorten|expand|continue|paraphrase|improve)';
-const VERB = `(?:them|chen|bo sung|ghi them|add|insert|${EDIT_VERB}|${DELETE_VERB}|${TICK_VERB}|${WRITE_VERB})`;
+const WRITE_VERB = words('verb_write');
+const INSERT_VERB = words('verb_insert');
+const CREATE_VERB = words('verb_create_page');
+const VERB = `(?:${INSERT_VERB}|${EDIT_VERB}|${DELETE_VERB}|${TICK_VERB}|${WRITE_VERB})`;
 const KIND =
   '(?:to-do|todo|to-dos|todos|heading|tieu de|checklist|doan van|doan|dong|trich dan|ghi chu|viec|task|tasks|muc)';
+const LET_ME_WORDS = words('let_me');
 
-const LEAD =
-  /^(?:(?:nho ban|phien ban|ban oi|ban co the|ban giup (?:minh|toi)|ban hay|ban|lam on|vui long|giup (?:minh|toi)|hay|pls|plz|please|can you|could you|would you)\s*,?\s+)+/u;
+const LEAD = new RegExp(`^(?:${words('lead', 'lead_short')}\\s*,?\\s+)+`, 'u');
 // "mình cần / tôi muốn thêm …": only before a verb ("mình cần một trang" creates a Page).
-const WANT = new RegExp(`^(?:minh|toi|em) (?:can|muon) (?=${VERB}\\b)`, 'u');
+const WANT = new RegExp(`^${words('want')} (?=${VERB}\\b)`, 'u');
 const LET_ME = new RegExp(
-  `^cho (?:toi|minh|em) (?=(?:${EDIT_VERB}|${DELETE_VERB}|${TICK_VERB}|them|ghi them|chen|bo sung|tao|lap)\\b)`,
+  `^${LET_ME_WORDS} (?=(?:${EDIT_VERB}|${DELETE_VERB}|${TICK_VERB}|${INSERT_VERB}|${CREATE_VERB})\\b)`,
   'u',
 );
-const GIVE_PAGE =
-  /^cho (?:toi|minh|em) (?:mot (?:trang|page)(?: moi)?(?: (?:co ten|ten))?|(?:trang|page) (?:moi(?: (?:co ten|ten))?|co ten|ten)) (?=\S)/u;
+const GIVE_PAGE = new RegExp(
+  `^${LET_ME_WORDS} (?:mot (?:trang|page)(?: moi)?(?: (?:co ten|ten))?|(?:trang|page) (?:moi(?: (?:co ten|ten))?|co ten|ten)) (?=\\S)`,
+  'u',
+);
 const DONE_SHORT = /(?<=\bxong) r(?=[\s.!?]*$)/u;
 const TICK_WORD =
   /(?:^|(?<=, ))(?:(?<untick>untick|bo tick)|tick off|check off|tick)(?= )/u;
 const GIVE_ME = new RegExp(
   // "cho mình" may already be gone (withoutLeadingTarget drops it as polite).
-  `^(?:cho (?:minh|toi|em)(?: (?:cai|mot|them))?|cai|mot cai) (?=${KIND}\\b)`,
+  `^(?:${LET_ME_WORDS}(?: (?:cai|mot|them))?|cai|mot cai) (?=${KIND}\\b)`,
   'u',
 );
-const TAIL =
-  /(?:[\s,]+(?:duoc khong|duoc ko|dc ko|dc khong|duoc chu|nhe ban|nhe|nha|giup (?:minh|toi)|gium(?: (?:minh|toi))?|please|pls|plz|thanks))+[\s.!?]*$/u;
+const TAIL = new RegExp(`(?:[\\s,]+${words('tail')})+[\\s.!?]*$`, 'u');
 // "đi", "với", "nữa", "cảm ơn" also end content ("bữa trưa mang đi"): dropped
 // only when the sentence adds nothing ("xoá cái X đi", "giúp mình với").
-const LOOSE_TAIL = /(?:[\s,]+(?:di|voi|nua|giup|cam on))+[\s.!?]*$/u;
-const TARGET_BEFORE_TAIL =
-  /\b(?:vao|o|trong|tai|tren|cua|cho|cuoi|dau)\s+(?:trang|page|bang|table)\s+[^,]+?(?=(?:[\s,]+(?:di|voi|nua|giup|cam on))+[\s.!?]*$)/u;
-const INSERTS =
-  /^(?:them|chen|bo sung|ghi them|add|insert|append|cho (?:minh|toi|em)|minh can|toi can)\b/u;
+const LOOSE = words('loose_tail');
+const LOOSE_TAIL = new RegExp(`(?:[\\s,]+${LOOSE})+[\\s.!?]*$`, 'u');
+const TARGET_BEFORE_TAIL = new RegExp(
+  `\\b(?:vao|o|trong|tai|tren|cua|cho|cuoi|dau)\\s+(?:trang|page|bang|table)\\s+[^,]+?(?=(?:[\\s,]+${LOOSE})+[\\s.!?]*$)`,
+  'u',
+);
+const TRAILING_WITH = new RegExp(
+  `[\\s,]+${words('trailing_with')}[\\s.!?]*$`,
+  'u',
+);
+const LIST_MARK = new RegExp(`,|\\s${words('list_joiners')}\\s`, 'u');
+const INSERTS = new RegExp(
+  `^(?:${INSERT_VERB}|${LET_ME_WORDS}|${words('want')}|${words('verb_create_page', 'verb_create_page_en', 'verb_create_page_loose')})\\b`,
+  'u',
+);
+const CREATE_PAGE = new RegExp(
+  `^${words('verb_create_page', 'verb_create_page_loose')}(?: (?:giup|gium|cho))?(?: (?:minh|toi|em))?(?: (?:mot|cai))* (?=(?:trang|page)\\b)`,
+  'u',
+);
+const CREATE_START = new RegExp(
+  `^${words('verb_create_page', 'verb_create_page_en')}(?: (?:mot|a|an|new))? (?:trang|page)\\b`,
+  'u',
+);
+const LIST_OPENER_LONG = new RegExp(`\\b${words('list_opener_long')}\\b`, 'u');
 const HELP_AFTER_VERB = new RegExp(
-  `^(${VERB}) (?:giup|gium)(?: (?:minh|toi))?(?= |:|,)`,
+  `^(${VERB}) ${words('help_after_verb')}(?= |:|,)`,
   'u',
 );
 const THING_AFTER_VERB = new RegExp(`^(${DELETE_VERB}|${TICK_VERB}) cai `, 'u');
@@ -84,10 +105,13 @@ const ADD_INTO_LOOSE = /^them vao ((?:phan|muc) [^:]+,[^:]+)$/u;
 const TABLE_FIRST =
   /^them vao bang (\S+(?: \S+)??) ((?:\d+ )?(?:dong|hang|tasks?|rows?|sach|cuon)\b.+)$/u;
 
+const NAME_SPLIT = new RegExp(
+  `\\s*(?:,|\\b${words('list_joiners')}\\b)\\s*`,
+  'u',
+);
+
 function namesCount(rest: string): number {
-  return rest
-    .split(/\s*(?:,|\bva\b|\bvoi\b|\band\b)\s*/u)
-    .filter((part) => part.trim()).length;
+  return rest.split(NAME_SPLIT).filter((part) => part.trim()).length;
 }
 
 export function normalizeCommand(folded: string): string {
@@ -97,6 +121,9 @@ export function normalizeCommand(folded: string): string {
     text = text.replace(LEAD, '').replace(TAIL, '');
     if (!INSERTS.test(text) || TARGET_BEFORE_TAIL.test(text))
       text = text.replace(LOOSE_TAIL, '');
+    const trailing = TRAILING_WITH.exec(text);
+    if (trailing && LIST_MARK.test(text.slice(0, trailing.index)))
+      text = text.slice(0, trailing.index);
   }
   text = text
     .replace(WANT, '')
@@ -109,6 +136,11 @@ export function normalizeCommand(folded: string): string {
         : 'tich',
     )
     .replace(GIVE_ME, 'them ')
+    .replace(CREATE_PAGE, 'tao ');
+  if (CREATE_START.test(text)) {
+    text = text.replace(LIST_OPENER_LONG, (found) => found.split(' ')[0]);
+  }
+  text = text
     .replace(HELP_AFTER_VERB, '$1')
     .replace(THING_AFTER_VERB, '$1 ')
     .replace(/\bto do\b/gu, 'to-do')
