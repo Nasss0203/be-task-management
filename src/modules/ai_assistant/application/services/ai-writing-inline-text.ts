@@ -19,9 +19,17 @@ const ACTIONS = vocabularyWords(
 );
 const PASSAGE = vocabularyWords('write_passage');
 const PASSAGE_HEAD = vocabularyWords('write_passage_head');
-const PASSAGE_POINTER = vocabularyWords('write_passage_pointer');
+const PASSAGE_POINTER = vocabularyWords(
+  'write_passage_pointer',
+  'write_selection',
+);
 const FILLER = [
-  ...vocabularyWords('help_after_verb', 'write_passage', 'inline_lead_filler'),
+  ...vocabularyWords(
+    'help_after_verb',
+    'write_help_after_verb',
+    'write_passage',
+    'inline_lead_filler',
+  ),
   'this',
   'it',
   'lai',
@@ -52,6 +60,24 @@ const LANGUAGES = [
   'spanish',
 ];
 const TAIL = vocabularyWords('tail', 'trailing_with');
+const COMMAND_WORDS = [
+  ...vocabularyWords(
+    'lead',
+    'let_me',
+    'help_after_verb',
+    'write_help_after_verb',
+    'tail',
+    'write_passage',
+    'write_passage_head',
+    'write_passage_pointer',
+    'write_selection',
+    'write_soft_tail',
+    'write_style_improve',
+    'write_style_shorten',
+    'write_style_expand',
+  ),
+  ...LANGUAGES,
+];
 // Translating takes any phrase; for the other actions only a real passage.
 const MIN_WORDS: Record<string, number> = { dich: 2, translate: 2 };
 const MIN_PASSAGE_WORDS = 8;
@@ -130,6 +156,18 @@ function trim(
   return { start, end, styled };
 }
 
+function contentWords(folded: string[], start: number, end: number): number {
+  const part = folded.slice(0, end);
+  let [count, index] = [0, start];
+  while (index < end) {
+    const size =
+      languageAt(part, index) || startsWith(part, index, COMMAND_WORDS);
+    if (size) index += size;
+    else [count, index] = [count + 1, index + 1];
+  }
+  return count;
+}
+
 function pointsAtPassage(
   folded: string[],
   start: number,
@@ -161,7 +199,7 @@ function passage(
   if (pointsAtPassage(folded, start, end)) return null;
   const minimum =
     MIN_WORDS[verb] ?? (styled ? MIN_PASSAGE_WORDS : SHORT_PASSAGE_WORDS);
-  if (end - start < minimum) return null;
+  if (contentWords(folded, start, end) < minimum) return null;
   return (
     words
       .slice(start, end)
