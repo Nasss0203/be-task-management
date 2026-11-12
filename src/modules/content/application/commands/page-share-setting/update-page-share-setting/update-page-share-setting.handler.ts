@@ -7,7 +7,10 @@ import {
 } from '@nestjs/common';
 
 import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
+import type { TeamspacePermissionReader } from 'src/modules/permission/application/ports/teamspace-permission-reader.port';
 import { PERMISSIONS } from 'src/modules/permission/domain/permissions/permission-code';
+import { PERMISSION_TYPES } from 'src/modules/permission/permission.types';
+import { TeamspaceVisibility } from 'src/modules/teamspace/domain/enums/teamspace-visibility.enum';
 
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 
@@ -28,6 +31,9 @@ export class UpdatePageShareSettingHandler {
 
     @Inject(CONTENT_TYPES.repositories.PageRepository)
     private readonly pageRepository: PageRepository,
+
+    @Inject(PERMISSION_TYPES.ports.TeamspacePermissionReader)
+    private readonly teamspacePermissionReader: TeamspacePermissionReader,
 
     private readonly authorizationService: AuthorizationService,
   ) {}
@@ -52,22 +58,7 @@ export class UpdatePageShareSettingHandler {
       );
     }
 
-    if (
-      command.workspaceAccessLevel &&
-      command.workspaceAccessLevel !== ResourceAccessLevel.VIEWER
-    ) {
-      const page = await this.pageRepository.findById(command.pageId);
-
-      if (!page) {
-        throw new NotFoundException('Page not found');
-      }
-
-      if (page.getTeamspaceId()) {
-        throw new BadRequestException(
-          'Teamspace pages can only be shared with the workspace as view only',
-        );
-      }
-    }
+    await this.assertTeamspaceSharing(command);
 
     let setting = await this.pageShareSettingRepository.findByPageId(
       command.pageId,
@@ -90,5 +81,51 @@ export class UpdatePageShareSettingHandler {
     const saved = await this.pageShareSettingRepository.save(setting);
 
     return PageShareSettingDto.fromDomain(saved);
+  }
+
+  private async assertTeamspaceSharing(
+    command: UpdatePageShareSettingCommand,
+  ): Promise<void> {
+    const opensToWorkspace = Boolean(command.workspaceAccessLevel);
+    const linkBeyondView =
+      Boolean(command.linkAccessLevel) &&
+      command.linkAccessLevel !== ResourceAccessLevel.VIEWER;
+
+    if (!opensToWorkspace && !linkBeyondView) {
+      return;
+    }
+
+    const page = await this.pageRepository.findById(command.pageId);
+
+    if (!page) {
+      throw new NotFoundException('Page not found');
+    }
+
+    const teamspaceId = page.getTeamspaceId();
+
+    if (!teamspaceId) {
+      return;
+    }
+
+    if (linkBeyondView) {
+      throw new BadRequestException(
+        'Teamspace pages can only be shared by link as view only',
+      );
+    }
+
+    if (command.workspaceAccessLevel !== ResourceAccessLevel.VIEWER) {
+      throw new BadRequestException(
+        'Teamspace pages can only be shared with the workspace as view only',
+      );
+    }
+
+    const teamspace =
+      await this.teamspacePermissionReader.findTeamspace(teamspaceId);
+
+    if (teamspace?.visibility !== TeamspaceVisibility.OPEN) {
+      throw new BadRequestException(
+        'Pages in a private teamspace cannot be shared with the whole workspace',
+      );
+    }
   }
 }

@@ -7,28 +7,40 @@ import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role
 import { PERMISSIONS } from '../../domain/permissions/permission-code';
 import { AuthorizationService } from './authorization.service';
 
-describe('AuthorizationService workspace general access', () => {
+type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+
+describe('AuthorizationService access from outside a teamspace', () => {
   let teamspaceId: string | null;
+  let visibility: TeamspaceVisibility;
+  let isWorkspaceMember: boolean;
   let teamspaceRole: TeamspaceRole | null;
   let workspaceAccessLevel: ResourceAccessLevel | null;
   let sharedAccessLevel: ResourceAccessLevel | null;
+  let shareLink: { authorize: jest.Mock };
   let service: AuthorizationService;
 
   beforeEach(() => {
     teamspaceId = 'teamspace';
+    visibility = TeamspaceVisibility.OPEN;
+    isWorkspaceMember = true;
     teamspaceRole = null;
     workspaceAccessLevel = ResourceAccessLevel.EDITOR;
     sharedAccessLevel = null;
+    shareLink = { authorize: jest.fn().mockResolvedValue(true) };
 
     service = new AuthorizationService(
       {
         findMembership: jest.fn(() =>
-          Promise.resolve({
-            workspaceId: 'workspace',
-            userId: 'member',
-            membershipType: WorkspaceMembershipType.MEMBER,
-            role: WorkspaceRole.MEMBER,
-          }),
+          Promise.resolve(
+            isWorkspaceMember
+              ? {
+                  workspaceId: 'workspace',
+                  userId: 'member',
+                  membershipType: WorkspaceMembershipType.MEMBER,
+                  role: WorkspaceRole.MEMBER,
+                }
+              : null,
+          ),
         ),
       },
       {
@@ -36,7 +48,7 @@ describe('AuthorizationService workspace general access', () => {
           Promise.resolve({
             id: 'teamspace',
             workspaceId: 'workspace',
-            visibility: TeamspaceVisibility.OPEN,
+            visibility,
           }),
         ),
         findMembership: jest.fn(() =>
@@ -52,6 +64,13 @@ describe('AuthorizationService workspace general access', () => {
       },
       {
         findPageContext: jest.fn(() =>
+          Promise.resolve({
+            pageId: 'page',
+            workspaceId: 'workspace',
+            teamspaceId,
+          }),
+        ),
+        findPageBlockContext: jest.fn(() =>
           Promise.resolve({
             pageId: 'page',
             workspaceId: 'workspace',
@@ -75,35 +94,84 @@ describe('AuthorizationService workspace general access', () => {
           Promise.resolve({ workspaceAccessLevel, linkAccessLevel: null }),
         ),
       },
-      { authorize: jest.fn().mockResolvedValue(false) } as never,
+      shareLink,
     );
   });
 
-  const can = (permission: (typeof PERMISSIONS)[keyof typeof PERMISSIONS]) =>
+  const can = (permission: Permission, shareToken?: string) =>
     service.authorize({
       userId: 'member',
       permissions: [permission],
       target: { type: 'page', id: 'page' },
+      shareToken,
     });
 
-  it('lets a member outside the teamspace only view a teamspace page shared with the workspace', async () => {
-    await expect(can(PERMISSIONS.PAGE_READ)).resolves.toBe(true);
-    await expect(can(PERMISSIONS.PAGE_BLOCK_READ)).resolves.toBe(true);
-    await expect(can(PERMISSIONS.PAGE_BLOCK_UPDATE)).resolves.toBe(false);
-    await expect(can(PERMISSIONS.PAGE_UPDATE)).resolves.toBe(false);
-    await expect(can(PERMISSIONS.PAGE_COMMENT_CREATE)).resolves.toBe(false);
+  describe('workspace general access', () => {
+    it('lets a member outside an open teamspace only view the page', async () => {
+      await expect(can(PERMISSIONS.PAGE_READ)).resolves.toBe(true);
+      await expect(can(PERMISSIONS.PAGE_BLOCK_READ)).resolves.toBe(true);
+      await expect(can(PERMISSIONS.PAGE_BLOCK_UPDATE)).resolves.toBe(false);
+      await expect(can(PERMISSIONS.PAGE_UPDATE)).resolves.toBe(false);
+      await expect(can(PERMISSIONS.PAGE_COMMENT_CREATE)).resolves.toBe(false);
+    });
+
+    it('gives nothing in a private teamspace, even with a saved setting', async () => {
+      visibility = TeamspaceVisibility.PRIVATE;
+      workspaceAccessLevel = ResourceAccessLevel.VIEWER;
+
+      await expect(can(PERMISSIONS.PAGE_READ)).resolves.toBe(false);
+    });
+
+    it('keeps a teamspace page closed when workspace access is off', async () => {
+      workspaceAccessLevel = null;
+
+      await expect(can(PERMISSIONS.PAGE_READ)).resolves.toBe(false);
+    });
+
+    it('keeps the chosen level for pages outside a teamspace', async () => {
+      teamspaceId = null;
+
+      await expect(can(PERMISSIONS.PAGE_UPDATE)).resolves.toBe(true);
+    });
   });
 
-  it('keeps a teamspace page closed when workspace access is off', async () => {
-    workspaceAccessLevel = null;
+  describe('share link', () => {
+    beforeEach(() => {
+      isWorkspaceMember = false;
+    });
 
-    await expect(can(PERMISSIONS.PAGE_READ)).resolves.toBe(false);
-  });
+    it.each([TeamspaceVisibility.OPEN, TeamspaceVisibility.PRIVATE])(
+      'lets a link only view a page in a %s teamspace',
+      async (teamspaceVisibility) => {
+        visibility = teamspaceVisibility;
 
-  it('keeps the chosen level for pages outside a teamspace', async () => {
-    teamspaceId = null;
+        await expect(can(PERMISSIONS.PAGE_READ, 'token')).resolves.toBe(true);
+        await expect(can(PERMISSIONS.PAGE_BLOCK_UPDATE, 'token')).resolves.toBe(
+          false,
+        );
+      },
+    );
 
-    await expect(can(PERMISSIONS.PAGE_UPDATE)).resolves.toBe(true);
+    it('applies the same limit to page blocks', async () => {
+      const block = (permission: Permission) =>
+        service.authorize({
+          userId: 'member',
+          permissions: [permission],
+          target: { type: 'pageBlock', id: 'block' },
+          shareToken: 'token',
+        });
+
+      await expect(block(PERMISSIONS.PAGE_BLOCK_READ)).resolves.toBe(true);
+      await expect(block(PERMISSIONS.PAGE_BLOCK_UPDATE)).resolves.toBe(false);
+    });
+
+    it('keeps an editing link on pages outside a teamspace', async () => {
+      teamspaceId = null;
+
+      await expect(can(PERMISSIONS.PAGE_BLOCK_UPDATE, 'token')).resolves.toBe(
+        true,
+      );
+    });
   });
 
   it('keeps editing for teamspace members', async () => {
@@ -112,7 +180,8 @@ describe('AuthorizationService workspace general access', () => {
     await expect(can(PERMISSIONS.PAGE_BLOCK_UPDATE)).resolves.toBe(true);
   });
 
-  it('keeps editing for a member the page is shared with directly', async () => {
+  it('keeps editing for someone the page is shared with directly', async () => {
+    visibility = TeamspaceVisibility.PRIVATE;
     sharedAccessLevel = ResourceAccessLevel.EDITOR;
 
     await expect(can(PERMISSIONS.PAGE_BLOCK_UPDATE)).resolves.toBe(true);

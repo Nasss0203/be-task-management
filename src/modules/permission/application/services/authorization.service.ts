@@ -167,11 +167,7 @@ export class AuthorizationService {
     /**
      * 4. Anyone with the link
      */
-    return this.pageShareLinkAuthorizationReader.authorize({
-      token: shareToken,
-      pageId: context.pageId,
-      permissions,
-    });
+    return this.authorizeShareLink(context, shareToken, permissions);
   }
 
   /**
@@ -232,6 +228,24 @@ export class AuthorizationService {
      * 4. PageBlock dùng quyền Share Link
      * của Page chứa nó.
      */
+    return this.authorizeShareLink(context, shareToken, permissions);
+  }
+
+  private async authorizeShareLink(
+    context: ResourceAuthorizationContext,
+    shareToken: string,
+    permissions: readonly PermissionCode[],
+  ): Promise<boolean> {
+    if (
+      context.teamspaceId &&
+      !PageAccessPermissionPolicy.hasAllPermissions(
+        ResourceAccessLevel.VIEWER,
+        permissions,
+      )
+    ) {
+      return false;
+    }
+
     return this.pageShareLinkAuthorizationReader.authorize({
       token: shareToken,
       pageId: context.pageId,
@@ -354,12 +368,23 @@ export class AuthorizationService {
       return false;
     }
 
-    const accessLevel = context.teamspaceId
-      ? ResourceAccessLevel.VIEWER
-      : setting.workspaceAccessLevel;
+    if (!context.teamspaceId) {
+      return PageAccessPermissionPolicy.hasAllPermissions(
+        setting.workspaceAccessLevel,
+        permissions,
+      );
+    }
+
+    const teamspace = await this.teamspacePermissionReader.findTeamspace(
+      context.teamspaceId,
+    );
+
+    if (teamspace?.visibility !== TeamspaceVisibility.OPEN) {
+      return false;
+    }
 
     return PageAccessPermissionPolicy.hasAllPermissions(
-      accessLevel,
+      ResourceAccessLevel.VIEWER,
       permissions,
     );
   }
