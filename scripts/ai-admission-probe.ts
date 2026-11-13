@@ -8,8 +8,9 @@
  *   npx ts-node -T -r tsconfig-paths/register scripts/ai-admission-probe.ts <in.json> <out.json>
  *
  * in.json: [{ id, instruction, pageTitle, pages?, currentPageId?, pageIntent, plan? }
- *           | { id, kind: 'writing', instruction, selectedText, intent }]
- * out.json: { [id]: { stage, status, reason?, kind?, pageTitle? } | { source } }
+ *           | { id, kind: 'writing', instruction, selectedText, intent }
+ *           | { id, kind: 'titles', instruction, pages }]
+ * out.json: { [id]: { stage, status, reason?, kind?, pageTitle? } | { source } | { titles } }
  */
 import 'reflect-metadata';
 
@@ -22,7 +23,10 @@ import {
 import { AiPageInstructionPlannerService } from '../src/modules/ai_assistant/application/services/ai-page-instruction-planner.service';
 import { resolveWritingSource } from '../src/modules/ai_assistant/application/services/ai-writing-source';
 import { PageIntentExtractionService } from '../src/modules/ai_assistant/application/resolution/page-intent-extraction.service';
-import { PageReferenceResolver } from '../src/modules/ai_assistant/application/resolution/page-reference-resolver.service';
+import {
+  pageTitlesFrom,
+  PageReferenceResolver,
+} from '../src/modules/ai_assistant/application/resolution/page-reference-resolver.service';
 import {
   findPageTitlesInSentence,
   normalizeForTitleMatch,
@@ -51,6 +55,13 @@ interface ProbeWritingCase {
   intent: Record<string, unknown>;
 }
 
+interface ProbeTitlesCase {
+  id: string;
+  kind: 'titles';
+  instruction: string;
+  pages: ProbePage[];
+}
+
 interface ProbeResult {
   stage: 'admitted' | 'refused' | 'clarify' | 'error';
   status: string;
@@ -72,6 +83,17 @@ export function probeWriting(item: ProbeWritingCase): {
       item.instruction,
       item.selectedText,
       item.intent as unknown as Parameters<typeof resolveWritingSource>[2],
+    ),
+  };
+}
+
+export function probeTitles(item: ProbeTitlesCase): { titles: string[] } {
+  const ids = findPageTitlesInSentence(item.instruction, item.pages);
+  return {
+    titles: pageTitlesFrom(
+      item.pages
+        .filter((known) => ids.includes(known.id))
+        .map((known) => known.title),
     ),
   };
 }
@@ -223,10 +245,15 @@ async function main(): Promise<void> {
   const items = JSON.parse(readFileSync(input, 'utf8')) as (
     | ProbeCase
     | ProbeWritingCase
+    | ProbeTitlesCase
   )[];
   const results: Record<string, unknown> = {};
   for (const item of items)
-    results[item.id] = 'kind' in item ? probeWriting(item) : await probe(item);
+    results[item.id] = !('kind' in item)
+      ? await probe(item)
+      : item.kind === 'titles'
+        ? probeTitles(item)
+        : probeWriting(item);
   writeFileSync(output, JSON.stringify(results, null, 1), 'utf8');
 }
 

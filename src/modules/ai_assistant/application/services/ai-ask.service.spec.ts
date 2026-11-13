@@ -879,3 +879,55 @@ describe('AiAskService', () => {
     expect(f.assistant.submit).not.toHaveBeenCalled();
   });
 });
+
+describe('AiAskService real Page titles (G2a)', () => {
+  function setup(titles: string[]) {
+    const classify = jest.fn().mockResolvedValue({
+      result: { intent: 'OTHER', writingAction: null, language: null, needsClarification: false },
+      provider: 'test',
+      model: 'test',
+    });
+    const titlesInSentence = jest.fn().mockResolvedValue(titles);
+    const service = new AiAskService(
+      { classify } as never,
+      { assertWorkspaceRead: jest.fn(), getReadablePage: jest.fn(), assertCanRead: jest.fn() } as never,
+      { findByIdAndUserId: jest.fn() } as never,
+      { execute: jest.fn() } as never,
+      { submit: jest.fn() } as never,
+      { generate: jest.fn() } as never,
+      passThroughAskLog(),
+      undefined,
+      undefined,
+      { titlesInSentence } as never,
+    );
+    return { service, classify, titlesInSentence };
+  }
+  const input = {
+    userId: 'actor',
+    workspaceId: 'workspace-1',
+    requestId: 'request-1',
+    instruction: 'trang Hội họp tuần họp lúc mấy giờ',
+    shareToken: 'share',
+  };
+
+  it('sends the readable titles found in the sentence', async () => {
+    const f = setup(['Hội họp tuần']);
+    await f.service.ask(input);
+    expect(f.titlesInSentence).toHaveBeenCalledWith({
+      userId: 'actor',
+      workspaceId: 'workspace-1',
+      instruction: 'trang Hội họp tuần họp lúc mấy giờ',
+      shareToken: 'share',
+    });
+    expect(f.classify).toHaveBeenCalledWith({
+      instruction: 'trang Hội họp tuần họp lúc mấy giờ',
+      pageTitles: ['Hội họp tuần'],
+    });
+  });
+
+  it('sends no titles field when none is found', async () => {
+    const f = setup([]);
+    await f.service.ask(input);
+    expect(f.classify).toHaveBeenCalledWith({ instruction: 'trang Hội họp tuần họp lúc mấy giờ' });
+  });
+});

@@ -375,10 +375,15 @@ export class FastApiAiRuntimeAdapter
   async extract(
     instruction: string,
     currentPageId?: string,
+    pageTitles?: string[],
   ): Promise<PageIntentResult> {
     const raw: unknown = await this.postRetryingOnce<unknown>(
       '/internal/v1/page-intent',
-      { instruction, ...(currentPageId ? { currentPageId } : {}) },
+      {
+        instruction,
+        ...(currentPageId ? { currentPageId } : {}),
+        ...(pageTitles?.length ? { pageTitles } : {}),
+      },
     );
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
       throw new BadGatewayException('AI service returned an invalid response');

@@ -4,5 +4,6 @@ export interface PageIntentExtractor {
   extract(
     instruction: string,
     currentPageId?: string,
+    pageTitles?: string[],
   ): Promise<PageIntentResult>;
 }

@@ -36,6 +36,7 @@ import {
 } from './ai-page-question.service';
 import { resolveWritingSource } from './ai-writing-source';
 import type { PageInstructionPlanningResult } from '../resolution/page-instruction-planning.types';
+import { PageReferenceResolver } from '../resolution/page-reference-resolver.service';
 import type { UnsupportedModificationDetail } from './ai-modification-operation.policy';
 import { foldInstruction } from './ai-instruction-evidence';
 import { vocabularyPattern } from './ai-vi-vocabulary-words';
@@ -267,6 +268,7 @@ export class AiAskService {
     private readonly askLog: AiAskEventRecorder,
     @Optional() private readonly followUps?: AiFollowUpService,
     @Optional() private readonly pageQuestions?: AiPageQuestionService,
+    @Optional() private readonly pageTitles?: PageReferenceResolver,
   ) {}
 
   /** Kế hoạch ghi log Ask (L3): every Ask is recorded once, however it ends. */
@@ -387,6 +389,14 @@ export class AiAskService {
       };
     }
 
+    const titles =
+      (await this.pageTitles?.titlesInSentence({
+        userId: input.userId,
+        workspaceId: input.workspaceId,
+        instruction: payload.instruction,
+        shareToken: input.shareToken,
+      })) ?? [];
+    if (titles.length) payload = { ...payload, pageTitles: titles };
     const { result } = await this.intentRuntime.classify(payload);
     const business = (
       status:

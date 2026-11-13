@@ -37,6 +37,11 @@ import {
 
 // More textual matches than this are not worth authorizing one by one.
 const MAX_SENTENCE_MATCHES_TO_AUTHORIZE = 25;
+const MAX_PAGE_TITLES = 5;
+
+export function pageTitlesFrom(titles: readonly string[]): string[] {
+  return [...new Set(titles)].slice(0, MAX_PAGE_TITLES);
+}
 
 /** Same title: NFC and any case, else the same words without marks. */
 function sameName(typed: string, title: string): boolean {
@@ -106,6 +111,15 @@ export class PageReferenceResolver {
       resolutionMethod: 'CURRENT_CONTEXT',
       confidence: 1,
     };
+  }
+
+  async titlesInSentence(
+    input: ResolvePageFromSentenceInput,
+  ): Promise<string[]> {
+    const found = await this.resolveFromSentence(input);
+    return found.status === 'CANDIDATES'
+      ? pageTitlesFrom(found.candidates.map((candidate) => candidate.title))
+      : [];
   }
 
   async resolveFromSentence(

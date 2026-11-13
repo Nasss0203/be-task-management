@@ -48,6 +48,15 @@ describe('FastApiAiRuntimeAdapter page intent', () => {
     );
   });
 
+  it('sends the real Page titles found in the sentence (G2a)', async () => {
+    const { adapter, post } = setup(good);
+    await adapter.extract('Thêm checklist QA vào page Release 2.0', undefined, ['Release 2.0']);
+    expect(post.mock.calls[0][1]).toEqual({
+      instruction: 'Thêm checklist QA vào page Release 2.0',
+      pageTitles: ['Release 2.0'],
+    });
+  });
+
   it.each([
     { ...good, result: { ...good.result, pageId: 'invented' } },
     { ...good, result: { ...good.result, pageReference: 'Invented' } },

@@ -556,3 +556,29 @@ describe('AiPageInstructionPlannerService', () => {
     expect(extract).not.toHaveBeenCalled();
   });
 });
+
+describe('AiPageInstructionPlannerService real Page titles (G2a)', () => {
+  it('passes the readable titles found in the sentence to the page intent', async () => {
+    const extract = jest.fn().mockResolvedValue({ result: { intent: 'OTHER' } });
+    const titlesInSentence = jest.fn().mockResolvedValue(['Release 2.0']);
+    const service = new AiPageInstructionPlannerService(
+      { extract } as unknown as PageIntentExtractionService,
+      { titlesInSentence } as unknown as PageReferenceResolver,
+      { generate: jest.fn() } as unknown as AiModificationPlannerService,
+    );
+    await service.generate({
+      userId: 'actor-1',
+      workspaceId: 'workspace-1',
+      requestId: 'request-1',
+      instruction: 'Thêm checklist QA vào page Release 2.0',
+      shareToken: 'share-token',
+    });
+    expect(titlesInSentence).toHaveBeenCalledWith({
+      userId: 'actor-1',
+      workspaceId: 'workspace-1',
+      instruction: 'Thêm checklist QA vào page Release 2.0',
+      shareToken: 'share-token',
+    });
+    expect(extract).toHaveBeenCalledWith('Thêm checklist QA vào page Release 2.0', undefined, ['Release 2.0']);
+  });
+});

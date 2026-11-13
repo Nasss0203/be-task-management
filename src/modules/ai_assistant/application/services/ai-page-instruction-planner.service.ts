@@ -131,8 +131,20 @@ export class AiPageInstructionPlannerService {
       throw new BadRequestException('Invalid AI page instruction request');
     }
 
-    const extracted =
-      input.currentPageId === undefined
+    const titles =
+      (await this.pageReferenceResolver.titlesInSentence?.({
+        userId: input.userId,
+        workspaceId: input.workspaceId,
+        instruction: input.instruction,
+        shareToken: input.shareToken,
+      })) ?? [];
+    const extracted = titles.length
+      ? await this.extractionService.extract(
+          input.instruction,
+          input.currentPageId,
+          titles,
+        )
+      : input.currentPageId === undefined
         ? await this.extractionService.extract(input.instruction)
         : await this.extractionService.extract(
             input.instruction,

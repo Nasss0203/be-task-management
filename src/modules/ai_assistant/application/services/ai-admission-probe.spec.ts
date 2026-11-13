@@ -1,4 +1,8 @@
-import { probe, probeWriting } from '../../../../../scripts/ai-admission-probe';
+import {
+  probe,
+  probeTitles,
+  probeWriting,
+} from '../../../../../scripts/ai-admission-probe';
 
 const MEETING = '00000000-0000-4000-8000-00000000000a';
 const NEAR = '00000000-0000-4000-8000-00000000000b';
@@ -125,5 +129,16 @@ describe('ai-admission-probe', () => {
         intent: writing,
       }).source,
     ).toBeNull();
+  });
+
+  it('gives the real titles in the sentence like NestJS does (G2a)', () => {
+    expect(
+      probeTitles({
+        id: 'i',
+        kind: 'titles',
+        instruction: 'trang Hội họp tuần họp lúc mấy giờ',
+        pages: PAGES,
+      }).titles,
+    ).toEqual(['Hội họp tuần']);
   });
 });

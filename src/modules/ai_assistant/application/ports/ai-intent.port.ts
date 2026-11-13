@@ -28,6 +28,7 @@ export interface AiIntentRequest {
   instruction: string;
   selectedText?: string | null;
   currentPageId?: string | null;
+  pageTitles?: string[];
 }
 
 export interface AiIntentResult {

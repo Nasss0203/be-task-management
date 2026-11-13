@@ -2,7 +2,10 @@ import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import type { Page } from 'src/modules/content/domain/aggregates/page/page.aggregate';
 import type { AiConversationAccessService } from '../services/ai-conversation-access.service';
 import type { PageResolutionReader } from './page-resolution.port';
-import { PageReferenceResolver } from './page-reference-resolver.service';
+import {
+  pageTitlesFrom,
+  PageReferenceResolver,
+} from './page-reference-resolver.service';
 
 const page = (id: string, title: string, workspaceId = 'workspace-1') => ({
   getId: () => id, getTitle: () => title, getWorkspaceId: () => workspaceId,
@@ -142,5 +145,24 @@ describe('PageReferenceResolver.resolveFromSentence (M1b)', () => {
       ...input, instruction: 'thêm checklist vào trang Notes',
     })).toEqual({ status: 'TOO_MANY', candidates: [] });
     expect(getReadablePage).not.toHaveBeenCalled();
+  });
+
+  it('gives the AI service only readable titles found in the sentence (G2a)', async () => {
+    expect(await resolver.titlesInSentence({
+      ...input, instruction: 'trong trang sub man ghi thêm đoạn họp ở trang Bí mật',
+    })).toEqual(['sub man']);
+    expect(await resolver.titlesInSentence({
+      ...input, instruction: 'thêm checklist vào trang Q4',
+    })).toEqual([]);
+  });
+
+  it('gives each title once and at most five (G2a)', async () => {
+    const many = Array.from({ length: 5 }, (_, i) => page(`same-${i}`, 'Notes'));
+    findAccessibleTitlesInWorkspace.mockResolvedValue(titled(many));
+    getReadablePage.mockImplementation(async (_user: string, id: string) => many.find((p) => p.getId() === id));
+    expect(await resolver.titlesInSentence({
+      ...input, instruction: 'thêm checklist vào trang Notes',
+    })).toEqual(['Notes']);
+    expect(pageTitlesFrom(['A', 'B', 'A', 'C', 'D', 'E', 'F'])).toEqual(['A', 'B', 'C', 'D', 'E']);
   });
 });

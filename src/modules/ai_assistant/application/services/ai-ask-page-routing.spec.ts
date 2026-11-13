@@ -224,7 +224,7 @@ describe('Ask -> Page Intent -> authorized resolver -> draft planner', () => {
       preview: { pageId: 'q4', counts: { operations: 0 } },
       planning: { page: { pageId: 'q4' } },
     });
-    expect(f.extract).toHaveBeenCalledWith(f.input.instruction, 'q3');
+    expect(f.extract).toHaveBeenCalledWith(f.input.instruction, 'q3', ['Q4']);
     expect(f.generate).toHaveBeenCalledWith(
       expect.objectContaining({ pageId: 'q4' }),
     );
@@ -366,7 +366,11 @@ describe('Ask -> Page Intent -> authorized resolver -> draft planner', () => {
       expect(f.authorize).toHaveBeenCalledWith(
         expect.objectContaining({ target: { type: 'page', id: 'q3' } }),
       );
-      expect(f.findAccessibleByExactTitle).not.toHaveBeenCalled();
+      expect(f.findAccessibleByExactTitle).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+      );
     },
   );
   it('returns ambiguous candidates only after per-Page authorization', async () => {
@@ -400,7 +404,11 @@ describe('Ask -> Page Intent -> authorized resolver -> draft planner', () => {
       expect(await f.service.ask({ ...f.input, instruction })).toMatchObject({
         status: 'UNSUPPORTED_OPERATION',
       });
-      expect(f.findAccessibleByExactTitle).not.toHaveBeenCalled();
+      expect(f.findAccessibleByExactTitle).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+      );
       expect(f.generate).not.toHaveBeenCalled();
     },
   );

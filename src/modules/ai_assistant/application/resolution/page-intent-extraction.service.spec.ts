@@ -14,6 +14,12 @@ describe('PageIntentExtractionService', () => {
     expect(extract).toHaveBeenCalledWith('Thêm heading vào page Release 2.0');
   });
 
+  it('passes the real Page titles found in the sentence (G2a)', async () => {
+    extract.mockResolvedValue({ result: { intent: 'OTHER' } });
+    await service.extract('Thêm heading vào page Release 2.0', undefined, ['Release 2.0']);
+    expect(extract).toHaveBeenCalledWith('Thêm heading vào page Release 2.0', undefined, ['Release 2.0']);
+  });
+
   it.each(['', '  ', 'x'.repeat(4001)])('rejects invalid input', (instruction) => {
     expect(() => service.extract(instruction)).toThrow(BadRequestException);
     expect(extract).not.toHaveBeenCalled();
