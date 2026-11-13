@@ -31,6 +31,7 @@ import { JoinTeamspaceByLinkCommand } from 'src/modules/teamspace/application/co
 import { JoinTeamspaceByLinkHandler } from 'src/modules/teamspace/application/commands/teamspace/join-teamspace-by-link/join-teamspace-by-link.handler';
 import { JoinTeamspaceCommand } from 'src/modules/teamspace/application/commands/teamspace/join-teamspace/join-teamspace.command';
 import { JoinTeamspaceHandler } from 'src/modules/teamspace/application/commands/teamspace/join-teamspace/join-teamspace.handler';
+import { LeaveTeamspaceDto } from 'src/modules/teamspace/application/dto/teamspace/leave-teamspace.dto';
 import { LeaveTeamspaceCommand } from 'src/modules/teamspace/application/commands/teamspace/leave-teamspace/leave-teamspace.command';
 import { LeaveTeamspaceHandler } from 'src/modules/teamspace/application/commands/teamspace/leave-teamspace/leave-teamspace.handler';
 import { RemoveTeamspaceMemberCommand } from 'src/modules/teamspace/application/commands/teamspace/remove-teamspace-member/remove-teamspace-member.command';
@@ -265,10 +266,11 @@ export class TeamspaceController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async leaveTeamspace(
     @Param('teamspaceId', ParseUUIDPipe) teamspaceId: string,
+    @Body() dto: LeaveTeamspaceDto,
     @Auth() auth: IAuth,
   ): Promise<void> {
     await this.leaveTeamspaceHandler.execute(
-      new LeaveTeamspaceCommand(teamspaceId, auth.id),
+      new LeaveTeamspaceCommand(teamspaceId, auth.id, dto.newOwnerMemberId),
     );
   }
 

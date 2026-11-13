@@ -195,10 +195,19 @@ export class TypeOrmTeamspaceRepository implements TeamspaceRepository {
       )
       .where('teamspace.deleted_at IS NOT NULL')
       .andWhere(
-        '(workspace_member.role_name = :workspaceOwner OR teamspace_member.role_name = :teamspaceOwner)',
+        `(
+          teamspace.deleted_by = :userId
+          OR teamspace_member.role_name = :teamspaceOwner
+          OR (
+            teamspace.visibility = :openVisibility
+            AND workspace_member.role_name = :workspaceOwner
+          )
+        )`,
         {
+          userId,
           workspaceOwner: WorkspaceRole.OWNER,
           teamspaceOwner: TeamspaceRole.OWNER,
+          openVisibility: TeamspaceVisibility.OPEN,
         },
       );
 

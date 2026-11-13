@@ -36,7 +36,7 @@ export interface TeamspaceRepository {
     context?: PersistenceContext,
   ): Promise<AccessibleTeamspace[]>;
 
-  /** Archived teamspaces the user may restore: workspace OWNER or teamspace OWNER. */
+  /** Archived teamspaces the user may restore: whoever archived it, a teamspace OWNER, or a workspace OWNER for OPEN teamspaces. */
   findArchivedManageableByUser(
     userId: string,
     filter: { workspaceId?: string; teamspaceId?: string },

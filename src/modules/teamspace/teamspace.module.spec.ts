@@ -1,4 +1,5 @@
 import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import { NOTIFICATION_TYPES } from 'src/modules/notifications/notifications.types';
 import { BILLING_TYPES } from 'src/modules/billing/billing.types';
 import { type Provider } from '@nestjs/common';
 import {
@@ -76,6 +77,10 @@ const externalDependencies: Provider[] = [
   {
     provide: BILLING_TYPES.services.WorkspaceEntitlementPort,
     useValue: { assertWithinLimit: jest.fn() },
+  },
+  {
+    provide: NOTIFICATION_TYPES.services.CreateNotificationService,
+    useValue: { createNotification: jest.fn() },
   },
 ];
 
