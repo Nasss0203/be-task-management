@@ -128,6 +128,15 @@ describe('AuthorizationService access from outside a teamspace', () => {
       await expect(can(PERMISSIONS.PAGE_READ)).resolves.toBe(false);
     });
 
+    it('lets a member manage a shared page without any general access', async () => {
+      teamspaceId = null;
+      workspaceAccessLevel = null;
+
+      await expect(can(PERMISSIONS.PAGE_UPDATE)).resolves.toBe(true);
+      await expect(can(PERMISSIONS.PAGE_DELETE)).resolves.toBe(true);
+      await expect(can(PERMISSIONS.PAGE_SHARE_UPDATE)).resolves.toBe(true);
+    });
+
     it('keeps the chosen level for pages outside a teamspace', async () => {
       teamspaceId = null;
 

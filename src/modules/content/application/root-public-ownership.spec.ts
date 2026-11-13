@@ -242,6 +242,7 @@ describe('root-owned public sites', () => {
       tree,
       allocator,
       activity,
+      auth,
     );
     move = new MovePageHandler(
       pageRepo,

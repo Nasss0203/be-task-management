@@ -176,7 +176,7 @@ export class PageController {
     source: 'query',
     key: 'workspaceId',
   })
-  @RequirePermissions(PERMISSIONS.PAGE_DELETE)
+  @RequirePermissions(PERMISSIONS.PAGE_PERMANENT_DELETE)
   async permanentlyDeletePage(
     @Param('pageId') pageId: string,
     @Query('workspaceId')
@@ -291,9 +291,10 @@ export class PageController {
   async permanentlyDeleteDatabase(
     @Param('pageId', ParseUUIDPipe) pageId: string,
     @Param('databaseId', ParseUUIDPipe) databaseId: string,
+    @Auth() auth: IAuth,
   ) {
     await this.permanentlyDeletePageDatabaseHandler.execute(
-      new PermanentlyDeletePageDatabaseCommand(pageId, databaseId),
+      new PermanentlyDeletePageDatabaseCommand(pageId, databaseId, auth.id),
     );
 
     return { success: true };

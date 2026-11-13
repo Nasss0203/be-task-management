@@ -21,6 +21,7 @@ export const PERMISSIONS = {
   PAGE_READ: 'page.read',
   PAGE_UPDATE: 'page.update',
   PAGE_DELETE: 'page.delete',
+  PAGE_PERMANENT_DELETE: 'page.permanent_delete',
   /** Publish to the web; only from workspace/teamspace roles, never from a page share. */
   PAGE_PUBLISH: 'page.publish',
 
