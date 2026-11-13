@@ -6,6 +6,7 @@ import { DatabaseModule } from 'src/database/database.module';
 import { BillingModule } from 'src/modules/billing/billing.module';
 import { StorageInfrastructureModule } from 'src/shared/infrastructure/storage/storage.module';
 import { ActivityModule } from '../activity/activity.module';
+import { CommentsModule } from '../comments/comments.module';
 import { ContentModule } from '../content/content.module';
 import { PermissionModule } from '../permission/permission.module';
 import { BulkDeleteWorkspaceFilesHandler } from './application/commands/bulk-delete-workspace-files/bulk-delete-workspace-files.handler';
@@ -13,7 +14,6 @@ import { DeleteAttachmentHandler } from './application/commands/delete-attachmen
 import { UpdateAttachmentHandler } from './application/commands/update-attachment/update-attachment.handler';
 import { UploadAttachmentHandler } from './application/commands/upload-attachment/upload-attachment.handler';
 import { CreateAttachmentDownloadUrlHandler } from './application/queries/create-attachment-download-url/create-attachment-download-url.handler';
-import { GetAttachmentsByTaskHandler } from './application/queries/get-attachments-by-task/get-attachments-by-task.handler';
 import { GetWorkspaceStorageHandler } from './application/queries/get-workspace-storage/get-workspace-storage.handler';
 import { ListWorkspaceStorageFilesHandler } from './application/queries/list-workspace-storage-files/list-workspace-storage-files.handler';
 import { ATTACHMENT_TOKENS } from './attachment.tokens';
@@ -28,7 +28,6 @@ import { AttachmentController } from './presentation/http/controllers/attachment
 
 const handlers = [
   UploadAttachmentHandler,
-  GetAttachmentsByTaskHandler,
   CreateAttachmentDownloadUrlHandler,
   UpdateAttachmentHandler,
   DeleteAttachmentHandler,
@@ -42,6 +41,7 @@ const handlers = [
     MulterModule.registerAsync({ useClass: MulterConfigService }),
     TypeOrmModule.forFeature([AttachmentOrmEntity]),
     ActivityModule,
+    CommentsModule,
     ContentModule,
     PermissionModule,
     StorageInfrastructureModule,

@@ -14,7 +14,6 @@ const createAttachment = (
   AttachmentAggregate.reconstitute({
     id: 'att-1',
     workspaceId: 'ws-1',
-    taskId: 'task-1',
     commentId: null,
     pageBlockId,
     uploadedBy: 'user-1',
@@ -77,21 +76,34 @@ describe('CreateAttachmentDownloadUrlHandler', () => {
     await expect(handler.execute(query)).resolves.toMatchObject({
       downloadUrl: 'https://r2/signed',
     });
-    expect(authorize).toHaveBeenLastCalledWith({
+    expect(authorize).toHaveBeenCalledTimes(1);
+    expect(authorize).toHaveBeenCalledWith({
       userId: 'user-1',
       permissions: ['page_block.read'],
       target: { type: 'pageBlock', id: 'block-1' },
     });
   });
 
-  it('hides the file when the page block is not readable either', async () => {
+  it('hides a page file from a workspace member who cannot read the page', async () => {
+    authorize.mockImplementation(({ target }) =>
+      Promise.resolve(target.type === 'workspace'),
+    );
+    findReadyById.mockResolvedValue(
+      createAttachment(AttachmentProvider.R2, 'key', null, 'block-1'),
+    );
+
+    await expect(handler.execute(query)).rejects.toThrow(NotFoundException);
+    expect(createDownloadUrl).not.toHaveBeenCalled();
+  });
+
+  it('hides the file when the page block is not readable', async () => {
     authorize.mockResolvedValue(false);
     findReadyById.mockResolvedValue(
       createAttachment(AttachmentProvider.R2, 'key', null, 'block-1'),
     );
 
     await expect(handler.execute(query)).rejects.toThrow(NotFoundException);
-    expect(authorize).toHaveBeenCalledTimes(2);
+    expect(authorize).toHaveBeenCalledTimes(1);
     expect(createDownloadUrl).not.toHaveBeenCalled();
   });
 

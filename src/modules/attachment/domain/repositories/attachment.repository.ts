@@ -12,11 +12,6 @@ export interface AttachmentRepository {
     context?: PersistenceContext,
   ): Promise<AttachmentAggregate | null>;
 
-  findReadyByTaskId(
-    taskId: string,
-    context?: PersistenceContext,
-  ): Promise<AttachmentAggregate[]>;
-
   findReadyByIds(
     ids: string[],
     context?: PersistenceContext,

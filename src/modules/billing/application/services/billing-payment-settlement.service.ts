@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 import { BILLING_TYPES } from '../../billing.types';
@@ -23,6 +23,8 @@ export interface SettleBillingPaymentInput {
 
 @Injectable()
 export class BillingPaymentSettlementService {
+  private readonly logger = new Logger(BillingPaymentSettlementService.name);
+
   constructor(
     @Inject(BILLING_TYPES.repositories.PaymentOrderRepository)
     private readonly paymentOrderRepository: PaymentOrderRepository,
@@ -47,11 +49,17 @@ export class BillingPaymentSettlementService {
       return 'IGNORED';
     }
 
+    const receivedCurrency = input.currency.trim().toUpperCase();
+
     if (
       paymentOrder.getProvider() !== input.provider ||
-      paymentOrder.getCurrency() !== input.currency.trim().toUpperCase() ||
+      paymentOrder.getCurrency() !== receivedCurrency ||
       paymentOrder.getAmount() !== input.amount
     ) {
+      this.logger.warn(
+        `Payment for order ${input.orderCode} does not match the order: expected ${paymentOrder.getAmount()} ${paymentOrder.getCurrency()} via ${paymentOrder.getProvider()}, received ${input.amount} ${receivedCurrency} via ${input.provider}`,
+      );
+
       return 'IGNORED';
     }
 
@@ -100,12 +108,8 @@ export class BillingPaymentSettlementService {
       );
     }
 
-    if (
-      planPrice.getProvider() !== paymentOrder.getProvider() ||
-      planPrice.getAmount() !== paymentOrder.getAmount() ||
-      planPrice.getCurrency() !== paymentOrder.getCurrency()
-    ) {
-      throw new Error('Payment order does not match its billing plan price');
+    if (planPrice.getProvider() !== paymentOrder.getProvider()) {
+      throw new Error('Payment order does not match its billing plan provider');
     }
 
     const remainingPeriod = this.findRemainingPeriod(

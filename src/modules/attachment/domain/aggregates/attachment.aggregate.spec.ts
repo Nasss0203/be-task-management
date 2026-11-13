@@ -6,7 +6,6 @@ describe('AttachmentAggregate', () => {
   it('creates a READY aggregate with generated identity and timestamps', () => {
     const attachment = AttachmentAggregate.create({
       workspaceId: 'ws-1',
-      taskId: 'task-1',
       uploadedBy: 'user-1',
       fileName: 'file.pdf',
       mimeType: 'application/pdf',
@@ -36,7 +35,7 @@ describe('AttachmentAggregate', () => {
       secureUrl: 'https://url',
     });
 
-    expect(attachment.getTaskId()).toBeNull();
+    expect(attachment.getPageBlockId()).toBeNull();
     expect(attachment.getStorageKey()).toBeNull();
     expect(attachment.getPublicId()).toBe('public-id');
   });
@@ -47,7 +46,6 @@ describe('AttachmentAggregate', () => {
     const attachment = AttachmentAggregate.reconstitute({
       id: 'att-1',
       workspaceId: 'ws-1',
-      taskId: 'task-1',
       commentId: null,
       uploadedBy: 'user-1',
       fileName: 'file.pdf',

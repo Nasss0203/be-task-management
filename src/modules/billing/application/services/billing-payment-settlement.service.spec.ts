@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { BillingInterval } from '../../domain/constants/billing-interval.constant';
 import { BillingProvider } from '../../domain/constants/billing-provider.constant';
 import { PaymentOrderStatus } from '../../domain/constants/payment-order-status.constant';
@@ -148,15 +149,32 @@ describe('BillingPaymentSettlementService', () => {
     expect(order.isPending()).toBe(true);
   });
 
-  it('refuses to settle when the plan price changed after the order', async () => {
+  it('activates the plan at the order amount when the plan price changed after the order', async () => {
     setUp({ priceAmount: 129000 });
 
-    await expect(settle()).rejects.toThrow(
-      'Payment order does not match its billing plan price',
-    );
-    expect(orderRepository.save).not.toHaveBeenCalled();
-    expect(subscriptionRepository.save).not.toHaveBeenCalled();
+    await expect(settle()).resolves.toBe('PROCESSED');
+    expect(order.getStatus()).toBe(PaymentOrderStatus.PAID);
+    expect(subscription.getPlanId()).toBe('plan-pro');
   });
+
+  it.each([
+    ['less', { amount: 50000 }],
+    ['more', { amount: 199000 }],
+    ['another currency', { currency: 'USD' }],
+  ])(
+    'keeps the order pending and logs a warning when the payment is %s',
+    async (_label, overrides) => {
+      const warn = jest
+        .spyOn(Logger.prototype, 'warn')
+        .mockImplementation(() => undefined);
+
+      await expect(settle(overrides)).resolves.toBe('IGNORED');
+      expect(order.isPending()).toBe(true);
+      expect(orderRepository.save).not.toHaveBeenCalled();
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining(ORDER_CODE));
+      warn.mockRestore();
+    },
+  );
 
   describe('when the workspace already has a paid period', () => {
     const currentStart = new Date('2026-01-20T05:00:00Z');

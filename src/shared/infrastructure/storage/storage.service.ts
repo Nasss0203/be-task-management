@@ -85,7 +85,6 @@ export class StorageService {
 
   buildStorageKey(input: {
     workspaceId: string;
-    taskId?: string;
     commentId?: string;
     pageBlockId?: string;
     fileName: string;
@@ -101,10 +100,6 @@ export class StorageService {
       .slice(0, 100);
 
     const id = randomUUID();
-
-    if (input.taskId) {
-      return `workspaces/${input.workspaceId}/tasks/${input.taskId}/${id}-${safeName}${ext}`;
-    }
 
     if (input.commentId) {
       return `workspaces/${input.workspaceId}/comments/${input.commentId}/${id}-${safeName}${ext}`;

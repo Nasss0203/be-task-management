@@ -6,7 +6,6 @@ export class AttachmentPersistenceMapper {
     return AttachmentAggregate.reconstitute({
       id: entity.id,
       workspaceId: entity.workspaceId,
-      taskId: entity.taskId ?? null,
       commentId: entity.commentId ?? null,
       pageBlockId: entity.pageBlockId,
       uploadedBy: entity.uploadedBy,
@@ -29,7 +28,6 @@ export class AttachmentPersistenceMapper {
 
     entity.id = attachment.getId();
     entity.workspaceId = attachment.getWorkspaceId();
-    entity.taskId = attachment.getTaskId();
     entity.commentId = attachment.getCommentId();
     entity.pageBlockId = attachment.getPageBlockId();
     entity.uploadedBy = attachment.getUploadedBy();

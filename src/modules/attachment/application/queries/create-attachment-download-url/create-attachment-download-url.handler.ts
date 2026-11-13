@@ -74,24 +74,20 @@ export class CreateAttachmentDownloadUrlHandler {
     userId: string,
     attachment: AttachmentAggregate,
   ): Promise<boolean> {
-    const allowedByWorkspace = await this.authorizationService.authorize({
+    const pageBlockId = attachment.getPageBlockId();
+
+    if (pageBlockId) {
+      return this.authorizationService.authorize({
+        userId,
+        permissions: [PERMISSIONS.PAGE_BLOCK_READ],
+        target: { type: 'pageBlock', id: pageBlockId },
+      });
+    }
+
+    return this.authorizationService.authorize({
       userId,
       permissions: [PERMISSIONS.ATTACHMENT_READ],
       target: { type: 'workspace', id: attachment.getWorkspaceId() },
     });
-    if (allowedByWorkspace) {
-      return true;
-    }
-
-    const pageBlockId = attachment.getPageBlockId();
-
-    return (
-      pageBlockId !== null &&
-      this.authorizationService.authorize({
-        userId,
-        permissions: [PERMISSIONS.PAGE_BLOCK_READ],
-        target: { type: 'pageBlock', id: pageBlockId },
-      })
-    );
   }
 }

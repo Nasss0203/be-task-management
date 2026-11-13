@@ -4,6 +4,7 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { ErrorCode } from '../constants/error-code.constant';
@@ -19,6 +20,8 @@ type ExceptionResponse = {
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpExceptionFilter.name);
+
   constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
@@ -56,12 +59,21 @@ export class HttpExceptionFilter implements ExceptionFilter {
       code = ErrorCode.INTERNAL_ERROR;
     }
 
+    const path = httpAdapter.getRequestUrl(ctx.getRequest());
+
+    if (httpStatus >= 500) {
+      this.logger.error(
+        `${httpAdapter.getRequestMethod(ctx.getRequest())} ${path} failed with ${httpStatus}`,
+        exception instanceof Error ? exception.stack : String(exception),
+      );
+    }
+
     const responseBody = {
       statusCode: httpStatus,
       code,
       message,
       ...(details ? { details } : {}),
-      path: httpAdapter.getRequestUrl(ctx.getRequest()),
+      path,
       timestamp: new Date().toISOString(),
     };
 

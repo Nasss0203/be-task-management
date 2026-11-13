@@ -7,10 +7,6 @@ export class UploadAttachmentRequest {
 
   @IsString()
   @IsOptional()
-  taskId?: string;
-
-  @IsString()
-  @IsOptional()
   commentId?: string;
 
   @IsOptional()

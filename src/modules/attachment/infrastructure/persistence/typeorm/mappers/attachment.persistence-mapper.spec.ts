@@ -7,7 +7,6 @@ import { AttachmentPersistenceMapper } from './attachment.persistence-mapper';
 const state = {
   id: 'att-1',
   workspaceId: 'ws-1',
-  taskId: 'task-1',
   commentId: null,
   uploadedBy: 'user-1',
   fileName: 'file.pdf',
@@ -47,7 +46,6 @@ describe('AttachmentPersistenceMapper', () => {
     const aggregate = AttachmentPersistenceMapper.toDomain(
       Object.assign(new AttachmentOrmEntity(), {
         ...state,
-        taskId: null,
         storageKey: null,
         provider: AttachmentProvider.CLOUDINARY,
         publicId: 'public-id',
@@ -56,7 +54,7 @@ describe('AttachmentPersistenceMapper', () => {
       }),
     );
 
-    expect(aggregate.getTaskId()).toBeNull();
+    expect(aggregate.getCommentId()).toBeNull();
     expect(aggregate.getStorageKey()).toBeNull();
     expect(aggregate.getPublicId()).toBe('public-id');
   });

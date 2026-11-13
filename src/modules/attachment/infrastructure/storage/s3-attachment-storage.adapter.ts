@@ -39,7 +39,6 @@ export class S3AttachmentStorageAdapter {
     const storageKey = `${isPublic ? 'public' : 'private'}/${this.storageService.buildStorageKey(
       {
         workspaceId: input.workspaceId,
-        taskId: input.taskId ?? undefined,
         commentId: input.commentId ?? undefined,
         pageBlockId: input.pageBlockId ?? undefined,
         fileName: input.fileName,

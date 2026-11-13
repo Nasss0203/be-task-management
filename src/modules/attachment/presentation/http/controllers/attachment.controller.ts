@@ -39,8 +39,6 @@ import {
 } from '../../../application/constants/attachment-file.constants';
 import { CreateAttachmentDownloadUrlHandler } from '../../../application/queries/create-attachment-download-url/create-attachment-download-url.handler';
 import { CreateAttachmentDownloadUrlQuery } from '../../../application/queries/create-attachment-download-url/create-attachment-download-url.query';
-import { GetAttachmentsByTaskHandler } from '../../../application/queries/get-attachments-by-task/get-attachments-by-task.handler';
-import { GetAttachmentsByTaskQuery } from '../../../application/queries/get-attachments-by-task/get-attachments-by-task.query';
 import { GetWorkspaceStorageHandler } from '../../../application/queries/get-workspace-storage/get-workspace-storage.handler';
 import { GetWorkspaceStorageQuery } from '../../../application/queries/get-workspace-storage/get-workspace-storage.query';
 import { ListWorkspaceStorageFilesHandler } from '../../../application/queries/list-workspace-storage-files/list-workspace-storage-files.handler';
@@ -54,7 +52,6 @@ import { UploadAttachmentRequest } from '../requests/upload-attachment.request';
 export class AttachmentController {
   constructor(
     private readonly uploadAttachmentHandler: UploadAttachmentHandler,
-    private readonly getAttachmentsByTaskHandler: GetAttachmentsByTaskHandler,
     private readonly createDownloadUrlHandler: CreateAttachmentDownloadUrlHandler,
     private readonly updateAttachmentHandler: UpdateAttachmentHandler,
     private readonly deleteAttachmentHandler: DeleteAttachmentHandler,
@@ -103,7 +100,6 @@ export class AttachmentController {
           buffer: file.buffer,
         },
         workspaceId,
-        body.taskId ?? null,
         body.commentId ?? null,
         body.pageBlockId ?? null,
         auth.id,
@@ -153,14 +149,6 @@ export class AttachmentController {
     );
   }
 
-  @Get('tasks/:taskId')
-  @ReadRateLimit()
-  findByTask(@Param('taskId') taskId: string, @Auth() auth: IAuth) {
-    return this.getAttachmentsByTaskHandler.execute(
-      new GetAttachmentsByTaskQuery(taskId, auth.id),
-    );
-  }
-
   @Post(':id/download-url')
   @WriteRateLimit()
   @ResponseMessage('Get URL file')
@@ -173,6 +161,7 @@ export class AttachmentController {
   @Patch(':id')
   @WriteRateLimit()
   @WorkspaceContext({ source: 'resource', type: 'attachment', key: 'id' })
+  @RequirePermissions(PERMISSIONS.ATTACHMENT_UPLOAD)
   update(
     @Param('id') id: string,
     @Body() _body: UpdateAttachmentRequest,

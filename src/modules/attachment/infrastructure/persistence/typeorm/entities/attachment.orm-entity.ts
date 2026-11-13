@@ -10,7 +10,6 @@ import { AttachmentProvider } from '../../../../domain/enums/attachment-provider
 import { AttachmentStatus } from '../../../../domain/enums/attachment-status.enum';
 
 @Entity('attachments')
-@Index(['workspaceId', 'taskId'])
 @Index(['workspaceId', 'commentId'])
 @Index(['storageKey'])
 @Index(['publicId'])
@@ -20,9 +19,6 @@ export class AttachmentOrmEntity {
 
   @Column({ name: 'workspace_id', type: 'uuid' })
   workspaceId: string;
-
-  @Column({ name: 'task_id', type: 'uuid', nullable: true })
-  taskId: string | null;
 
   @Column({ name: 'comment_id', type: 'uuid', nullable: true })
   commentId: string | null;

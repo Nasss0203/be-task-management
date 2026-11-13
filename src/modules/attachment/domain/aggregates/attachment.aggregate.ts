@@ -6,7 +6,6 @@ import { AttachmentStatus } from '../enums/attachment-status.enum';
 export type CreateAttachmentParams = {
   id?: string;
   workspaceId: string;
-  taskId?: string | null;
   commentId?: string | null;
   pageBlockId?: string | null;
   uploadedBy: string;
@@ -26,7 +25,6 @@ export type CreateAttachmentParams = {
 export type ReconstituteAttachmentParams = {
   id: string;
   workspaceId: string;
-  taskId: string | null;
   commentId: string | null;
   pageBlockId: string | null;
   uploadedBy: string;
@@ -47,7 +45,6 @@ export class AttachmentAggregate {
   private constructor(
     private readonly id: string,
     private readonly workspaceId: string,
-    private readonly taskId: string | null,
     private readonly commentId: string | null,
     private readonly pageBlockId: string | null,
     private readonly uploadedBy: string,
@@ -70,7 +67,6 @@ export class AttachmentAggregate {
     return new AttachmentAggregate(
       params.id ?? randomUUID(),
       params.workspaceId,
-      params.taskId ?? null,
       params.commentId ?? null,
       params.pageBlockId ?? null,
       params.uploadedBy,
@@ -94,7 +90,6 @@ export class AttachmentAggregate {
     return new AttachmentAggregate(
       params.id,
       params.workspaceId,
-      params.taskId,
       params.commentId,
       params.pageBlockId,
       params.uploadedBy,
@@ -118,10 +113,6 @@ export class AttachmentAggregate {
 
   getWorkspaceId(): string {
     return this.workspaceId;
-  }
-
-  getTaskId(): string | null {
-    return this.taskId;
   }
 
   getCommentId(): string | null {

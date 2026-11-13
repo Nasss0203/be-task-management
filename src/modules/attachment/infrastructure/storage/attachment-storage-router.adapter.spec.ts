@@ -21,7 +21,6 @@ describe('AttachmentStorageRouterAdapter', () => {
   const input = {
     buffer: Buffer.from('file'),
     workspaceId: 'ws-1',
-    taskId: 'task-1',
     commentId: null,
     pageBlockId: null,
     fileName: 'test.pdf',

@@ -46,20 +46,6 @@ export class TypeOrmAttachmentRepository implements AttachmentRepository {
     return entity ? AttachmentPersistenceMapper.toDomain(entity) : null;
   }
 
-  async findReadyByTaskId(
-    taskId: string,
-    context?: PersistenceContext,
-  ): Promise<AttachmentAggregate[]> {
-    const entities = await this.getRepository(context).find({
-      where: { taskId, status: AttachmentStatus.READY },
-      order: { createdAt: 'DESC' },
-    });
-
-    return entities.map((entity) =>
-      AttachmentPersistenceMapper.toDomain(entity),
-    );
-  }
-
   async findReadyByIds(
     ids: string[],
     context?: PersistenceContext,

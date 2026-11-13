@@ -6,7 +6,6 @@ export class AttachmentDto {
   constructor(
     public readonly id: string,
     public readonly workspaceId: string,
-    public readonly taskId: string | null,
     public readonly commentId: string | null,
     public readonly pageBlockId: string | null,
     public readonly uploadedBy: string,
@@ -27,7 +26,6 @@ export class AttachmentDto {
     return new AttachmentDto(
       attachment.getId(),
       attachment.getWorkspaceId(),
-      attachment.getTaskId(),
       attachment.getCommentId(),
       attachment.getPageBlockId(),
       attachment.getUploadedBy(),

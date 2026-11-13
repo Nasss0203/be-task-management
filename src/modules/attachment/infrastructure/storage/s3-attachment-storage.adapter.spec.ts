@@ -23,7 +23,6 @@ describe('S3AttachmentStorageAdapter', () => {
   const input = {
     buffer: Buffer.from('file'),
     workspaceId: 'ws-1',
-    taskId: null,
     commentId: null,
     pageBlockId: 'block-1',
     fileName: 'Ảnh bìa.png',
@@ -46,7 +45,6 @@ describe('S3AttachmentStorageAdapter', () => {
     });
     expect(buildStorageKey).toHaveBeenCalledWith({
       workspaceId: 'ws-1',
-      taskId: undefined,
       commentId: undefined,
       pageBlockId: 'block-1',
       fileName: 'Ảnh bìa.png',
@@ -61,17 +59,16 @@ describe('S3AttachmentStorageAdapter', () => {
   it.each(['application/pdf', 'image/svg+xml'])(
     'keeps %s private without a URL',
     async (mimeType) => {
-      buildStorageKey.mockReturnValue('workspaces/ws-1/tasks/task-1/uuid-f');
+      buildStorageKey.mockReturnValue('workspaces/ws-1/comments/c-1/uuid-f');
 
       const result = await adapter.upload({
         ...input,
-        taskId: 'task-1',
         pageBlockId: null,
         mimeType,
       });
 
       expect(result).toMatchObject({
-        storageKey: 'private/workspaces/ws-1/tasks/task-1/uuid-f',
+        storageKey: 'private/workspaces/ws-1/comments/c-1/uuid-f',
         url: null,
         secureUrl: null,
       });

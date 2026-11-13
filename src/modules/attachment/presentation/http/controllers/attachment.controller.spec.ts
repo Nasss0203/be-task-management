@@ -1,4 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { PERMISSIONS_KEY } from 'src/common/decorator/require-permissions.decorator';
+import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import type { IAuth } from 'src/types/auth';
 import { BulkDeleteWorkspaceFilesCommand } from '../../../application/commands/bulk-delete-workspace-files/bulk-delete-workspace-files.command';
 import { BulkDeleteWorkspaceFilesHandler } from '../../../application/commands/bulk-delete-workspace-files/bulk-delete-workspace-files.handler';
@@ -9,12 +11,10 @@ import { ListWorkspaceStorageFilesQuery } from '../../../application/queries/lis
 import { UpdateAttachmentHandler } from '../../../application/commands/update-attachment/update-attachment.handler';
 import { UploadAttachmentHandler } from '../../../application/commands/upload-attachment/upload-attachment.handler';
 import { CreateAttachmentDownloadUrlHandler } from '../../../application/queries/create-attachment-download-url/create-attachment-download-url.handler';
-import { GetAttachmentsByTaskHandler } from '../../../application/queries/get-attachments-by-task/get-attachments-by-task.handler';
 import { AttachmentController } from './attachment.controller';
 
 describe('AttachmentController', () => {
   const uploadExecute = jest.fn();
-  const getByTaskExecute = jest.fn();
   const createUrlExecute = jest.fn();
   const updateExecute = jest.fn();
   const deleteExecute = jest.fn();
@@ -30,10 +30,6 @@ describe('AttachmentController', () => {
         {
           provide: UploadAttachmentHandler,
           useValue: { execute: uploadExecute },
-        },
-        {
-          provide: GetAttachmentsByTaskHandler,
-          useValue: { execute: getByTaskExecute },
         },
         {
           provide: CreateAttachmentDownloadUrlHandler,
@@ -67,6 +63,18 @@ describe('AttachmentController', () => {
 
   it('is defined', () => expect(controller).toBeDefined());
 
+  it('requires the upload permission to update an attachment', () => {
+    expect(
+      Reflect.getMetadata(
+        PERMISSIONS_KEY,
+        Object.getOwnPropertyDescriptor(
+          AttachmentController.prototype,
+          'update',
+        )?.value as object,
+      ),
+    ).toEqual([PERMISSIONS.ATTACHMENT_UPLOAD]);
+  });
+
   it('maps a Multer file and HTTP input to UploadAttachmentCommand', async () => {
     uploadExecute.mockResolvedValue({ id: 'att-1' });
     const file = {
@@ -77,15 +85,15 @@ describe('AttachmentController', () => {
     } as Express.Multer.File;
 
     await expect(
-      controller.upload('ws-1', { taskId: 'task-1' }, file, {
+      controller.upload('ws-1', { commentId: 'comment-1' }, file, {
         id: 'user-1',
       } as IAuth),
     ).resolves.toEqual({ id: 'att-1' });
     expect(uploadExecute).toHaveBeenCalledWith(
       expect.objectContaining({
         workspaceId: 'ws-1',
-        taskId: 'task-1',
-        commentId: null,
+        commentId: 'comment-1',
+        pageBlockId: null,
         actorId: 'user-1',
         file: {
           originalName: 'test.png',
@@ -113,16 +121,6 @@ describe('AttachmentController', () => {
       expect.objectContaining({
         file: expect.objectContaining({ originalName: utf8Name }),
       }),
-    );
-  });
-
-  it('delegates task listing', async () => {
-    getByTaskExecute.mockResolvedValue([{ id: 'att-1' }]);
-
-    await controller.findByTask('task-1', { id: 'user-1' } as IAuth);
-
-    expect(getByTaskExecute).toHaveBeenCalledWith(
-      expect.objectContaining({ taskId: 'task-1', actorId: 'user-1' }),
     );
   });
 
