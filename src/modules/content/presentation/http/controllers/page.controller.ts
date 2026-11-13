@@ -181,13 +181,14 @@ export class PageController {
     @Param('pageId') pageId: string,
     @Query('workspaceId')
     workspaceId: string,
+    @Auth() auth: IAuth,
   ) {
     if (!workspaceId) {
       throw new BadRequestException('workspaceId is required');
     }
 
     await this.permanentlyDeletePageHandler.execute(
-      new PermanentlyDeletePageCommand(workspaceId, pageId),
+      new PermanentlyDeletePageCommand(workspaceId, pageId, auth.id),
     );
 
     return {

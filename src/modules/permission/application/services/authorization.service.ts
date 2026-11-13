@@ -1,9 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ResourceAccessLevel } from 'src/modules/content/domain/constants/resource-access-level.constant';
-import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role.enum';
 import { TeamspaceVisibility } from 'src/modules/teamspace/domain/enums/teamspace-visibility.enum';
 import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
-import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import {
   PERMISSIONS,
   type PermissionCode,
@@ -485,17 +483,6 @@ export class AuthorizationService {
       !workspaceMembership.role
     ) {
       return false;
-    }
-
-    /**
-     * Workspace OWNER được xem như
-     * Teamspace OWNER.
-     */
-    if (workspaceMembership.role === WorkspaceRole.OWNER) {
-      return TeamspacePermissionPolicy.hasAllPermissions(
-        TeamspaceRole.OWNER,
-        permissions,
-      );
     }
 
     const teamspaceMembership =

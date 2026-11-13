@@ -77,6 +77,9 @@ import { UpdateTeamspaceMemberRoleDto } from 'src/modules/teamspace/application/
 import { UpdateTeamspaceDto } from 'src/modules/teamspace/application/dto/teamspace/update-teamspace.dto';
 import { DiscoverTeamspacesHandler } from 'src/modules/teamspace/application/queries/teamspace/discover-teamspaces/discover-teamspaces.handler';
 import { DiscoverTeamspacesQuery } from 'src/modules/teamspace/application/queries/teamspace/discover-teamspaces/discover-teamspaces.query';
+import { GetPrivateTeamspaceSummariesHandler } from 'src/modules/teamspace/application/queries/teamspace/get-private-teamspace-summaries/get-private-teamspace-summaries.handler';
+import { GetPrivateTeamspaceSummariesQuery } from 'src/modules/teamspace/application/queries/teamspace/get-private-teamspace-summaries/get-private-teamspace-summaries.query';
+import { PrivateTeamspaceSummaryResponseDto } from 'src/modules/teamspace/application/dto/teamspace/response/private-teamspace-summary.response.dto';
 import { GetMyTeamspaceInvitationsHandler } from 'src/modules/teamspace/application/queries/teamspace/get-my-teamspace-invitations/get-my-teamspace-invitations.handler';
 import { GetMyTeamspaceInvitationsQuery } from 'src/modules/teamspace/application/queries/teamspace/get-my-teamspace-invitations/get-my-teamspace-invitations.query';
 import { GetTeamspaceMembersHandler } from 'src/modules/teamspace/application/queries/teamspace/get-teamspace-members/get-teamspace-members.handler';
@@ -133,6 +136,8 @@ export class TeamspaceController {
     private readonly joinTeamspaceHandler: JoinTeamspaceHandler,
     @Inject(TEAMSPACE_TYPES.applications.DiscoverTeamspacesHandler)
     private readonly discoverTeamspacesHandler: DiscoverTeamspacesHandler,
+    @Inject(TEAMSPACE_TYPES.applications.GetPrivateTeamspaceSummariesHandler)
+    private readonly getPrivateTeamspaceSummariesHandler: GetPrivateTeamspaceSummariesHandler,
     @Inject(TEAMSPACE_TYPES.applications.UpdateTeamspaceJoinSettingsHandler)
     private readonly updateTeamspaceJoinSettingsHandler: UpdateTeamspaceJoinSettingsHandler,
     @Inject(TEAMSPACE_TYPES.applications.UpdateTeamspaceHandler)
@@ -415,6 +420,16 @@ export class TeamspaceController {
         query.page ?? 1,
         query.limit ?? 20,
       ),
+    );
+  }
+
+  @Get('private')
+  findPrivateSummaries(
+    @Query('workspaceId', ParseUUIDPipe) workspaceId: string,
+    @Auth() auth: IAuth,
+  ): Promise<PrivateTeamspaceSummaryResponseDto[]> {
+    return this.getPrivateTeamspaceSummariesHandler.execute(
+      new GetPrivateTeamspaceSummariesQuery(workspaceId, auth.id),
     );
   }
 

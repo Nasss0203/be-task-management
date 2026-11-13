@@ -13,6 +13,7 @@ describe('AuthorizationService access from outside a teamspace', () => {
   let teamspaceId: string | null;
   let visibility: TeamspaceVisibility;
   let isWorkspaceMember: boolean;
+  let workspaceRole: WorkspaceRole;
   let teamspaceRole: TeamspaceRole | null;
   let workspaceAccessLevel: ResourceAccessLevel | null;
   let sharedAccessLevel: ResourceAccessLevel | null;
@@ -23,6 +24,7 @@ describe('AuthorizationService access from outside a teamspace', () => {
     teamspaceId = 'teamspace';
     visibility = TeamspaceVisibility.OPEN;
     isWorkspaceMember = true;
+    workspaceRole = WorkspaceRole.MEMBER;
     teamspaceRole = null;
     workspaceAccessLevel = ResourceAccessLevel.EDITOR;
     sharedAccessLevel = null;
@@ -37,7 +39,7 @@ describe('AuthorizationService access from outside a teamspace', () => {
                   workspaceId: 'workspace',
                   userId: 'member',
                   membershipType: WorkspaceMembershipType.MEMBER,
-                  role: WorkspaceRole.MEMBER,
+                  role: workspaceRole,
                 }
               : null,
           ),
@@ -178,6 +180,54 @@ describe('AuthorizationService access from outside a teamspace', () => {
       teamspaceId = null;
 
       await expect(can(PERMISSIONS.PAGE_BLOCK_UPDATE, 'token')).resolves.toBe(
+        true,
+      );
+    });
+  });
+
+  describe('workspace owner inside a teamspace', () => {
+    const canTeamspace = (permission: Permission) =>
+      service.authorize({
+        userId: 'member',
+        permissions: [permission],
+        target: { type: 'teamspace', id: 'teamspace' },
+      });
+
+    beforeEach(() => {
+      workspaceRole = WorkspaceRole.OWNER;
+    });
+
+    it('sees nothing in a private teamspace without joining', async () => {
+      visibility = TeamspaceVisibility.PRIVATE;
+
+      await expect(canTeamspace(PERMISSIONS.TEAMSPACE_READ)).resolves.toBe(
+        false,
+      );
+      await expect(can(PERMISSIONS.PAGE_READ)).resolves.toBe(false);
+    });
+
+    it('only views an open teamspace without joining', async () => {
+      await expect(canTeamspace(PERMISSIONS.TEAMSPACE_READ)).resolves.toBe(
+        true,
+      );
+      await expect(canTeamspace(PERMISSIONS.TEAMSPACE_UPDATE)).resolves.toBe(
+        false,
+      );
+      await expect(
+        canTeamspace(PERMISSIONS.TEAMSPACE_MEMBER_ADD),
+      ).resolves.toBe(false);
+    });
+
+    it('follows the teamspace role after joining', async () => {
+      teamspaceRole = TeamspaceRole.MEMBER;
+
+      await expect(canTeamspace(PERMISSIONS.TEAMSPACE_UPDATE)).resolves.toBe(
+        false,
+      );
+
+      teamspaceRole = TeamspaceRole.OWNER;
+
+      await expect(canTeamspace(PERMISSIONS.TEAMSPACE_UPDATE)).resolves.toBe(
         true,
       );
     });

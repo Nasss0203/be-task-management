@@ -119,7 +119,7 @@ describe('AddTeamspaceMemberHandler transactional authorization', () => {
     expect(memberRepo.save).not.toHaveBeenCalled();
   });
 
-  it('uses the existing Workspace Owner policy without a Teamspace membership', async () => {
+  it('rejects a Workspace Owner who is not a member of the Teamspace', async () => {
     workspaceMemberRepo.findByWorkspaceAndUser.mockResolvedValue({
       getId: () => 'actor',
       getRole: () => WorkspaceRole.OWNER,
@@ -127,9 +127,24 @@ describe('AddTeamspaceMemberHandler transactional authorization', () => {
     });
     memberRepo.findByTeamspaceAndWorkspaceMember.mockResolvedValue(null);
     await expect(
-      handler.execute(command(TeamspaceRole.OWNER)),
-    ).resolves.toBeDefined();
-    expect(memberRepo.save).toHaveBeenCalledTimes(1);
+      handler.execute(command(TeamspaceRole.MEMBER)),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(memberRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('rejects a Workspace Owner who is only a Teamspace member', async () => {
+    workspaceMemberRepo.findByWorkspaceAndUser.mockResolvedValue({
+      getId: () => 'actor',
+      getRole: () => WorkspaceRole.OWNER,
+      isGuest: () => false,
+    });
+    memberRepo.findByTeamspaceAndWorkspaceMember.mockResolvedValue({
+      getRoleName: () => TeamspaceRole.MEMBER,
+    });
+    await expect(
+      handler.execute(command(TeamspaceRole.MEMBER)),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(memberRepo.save).not.toHaveBeenCalled();
   });
 
   it('keeps target and duplicate checks inside the transaction', async () => {

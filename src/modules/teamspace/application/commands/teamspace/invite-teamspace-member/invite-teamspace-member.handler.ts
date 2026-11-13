@@ -9,12 +9,10 @@ import { TEAMSPACE_INVITATION_LIFETIME_MS } from 'src/modules/teamspace/applicat
 import { rethrowInvitationPendingUniqueConflict } from 'src/modules/teamspace/application/services/teamspace-invitation-unique-conflict';
 import { TeamspaceInvitation } from 'src/modules/teamspace/domain/entities/teamspace-invitation.entity';
 import { TeamspaceInvitationStatus } from 'src/modules/teamspace/domain/enums/teamspace-invitation-status.enum';
-import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role.enum';
 import type { TeamspaceInvitationRepository } from 'src/modules/teamspace/domain/repositories/teamspace-invitation.repository';
 import type { TeamspaceMemberRepository } from 'src/modules/teamspace/domain/repositories/teamspace-member.repository';
 import type { TeamspaceRepository } from 'src/modules/teamspace/domain/repositories/teamspace.repository';
 import { TEAMSPACE_TYPES } from 'src/modules/teamspace/teamspace.types';
-import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
@@ -73,9 +71,7 @@ export class InviteTeamspaceMemberHandler {
               command.teamspaceId, actor.getId(), context,
             )
           : null;
-        const actorRole = actor?.getRole() === WorkspaceRole.OWNER
-          ? TeamspaceRole.OWNER
-          : actorTeamspaceMember?.getRoleName();
+        const actorRole = actorTeamspaceMember?.getRoleName();
         if (!actor || actor.isGuest() || !actorRole ||
           !TeamspacePermissionPolicy.hasPermission(actorRole, PERMISSIONS.TEAMSPACE_MEMBER_ADD)) {
           throw new ForbiddenException('You do not have permission to invite teamspace members');

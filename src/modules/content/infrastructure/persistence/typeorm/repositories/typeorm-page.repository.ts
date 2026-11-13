@@ -5,7 +5,6 @@ import type {
   PageRepository,
   PageTitle,
 } from 'src/modules/content/domain/repositories/page.repository';
-import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import type { Repository, SelectQueryBuilder } from 'typeorm';
@@ -244,16 +243,7 @@ export class TypeOrmPageRepository implements PageRepository {
       })
 
       .andWhere(
-        `
-        (
-          workspace_member.role_name = :ownerRole
-          OR page.teamspace_id IS NULL
-          OR teamspace_member.id IS NOT NULL
-        )
-      `,
-        {
-          ownerRole: WorkspaceRole.OWNER,
-        },
+        '(page.teamspace_id IS NULL OR teamspace_member.id IS NOT NULL)',
       )
       .andWhere(ACTIVE_TEAMSPACE_CONDITION);
 
@@ -294,16 +284,7 @@ export class TypeOrmPageRepository implements PageRepository {
 
       .andWhere('page.deleted_at IS NOT NULL')
       .andWhere(
-        `
-        (
-          workspace_member.role_name = :ownerRole
-          OR page.teamspace_id IS NULL
-          OR teamspace_member.id IS NOT NULL
-        )
-      `,
-        {
-          ownerRole: WorkspaceRole.OWNER,
-        },
+        '(page.teamspace_id IS NULL OR teamspace_member.id IS NOT NULL)',
       )
       .andWhere(ACTIVE_TEAMSPACE_CONDITION)
       .distinct(true)

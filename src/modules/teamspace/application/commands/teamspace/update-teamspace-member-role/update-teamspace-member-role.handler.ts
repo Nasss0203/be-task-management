@@ -31,7 +31,6 @@ import { AuthorizationService } from 'src/modules/permission/application/service
 
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { TeamspacePermissionPolicy } from 'src/modules/permission/domain/policies/teamspace-permission.policy';
-import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 
@@ -138,10 +137,7 @@ export class UpdateTeamspaceMemberRoleHandler {
             context,
           )
         : null;
-      const actorRole =
-        actor?.getRole() === WorkspaceRole.OWNER
-          ? TeamspaceRole.OWNER
-          : actorTeamspaceMember?.getRoleName();
+      const actorRole = actorTeamspaceMember?.getRoleName();
       if (
         !actor ||
         actor.isGuest() ||

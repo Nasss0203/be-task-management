@@ -5,7 +5,11 @@ import { EntityManager, Repository } from 'typeorm';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 import { Teamspace } from 'src/modules/teamspace/domain/aggregates/teamspace/teamspace.aggregate';
-import type { TeamspaceRepository } from 'src/modules/teamspace/domain/repositories/teamspace.repository';
+import type {
+  AccessibleTeamspace,
+  PrivateTeamspaceSummary,
+  TeamspaceRepository,
+} from 'src/modules/teamspace/domain/repositories/teamspace.repository';
 
 import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role.enum';
 import { TeamspaceVisibility } from 'src/modules/teamspace/domain/enums/teamspace-visibility.enum';
@@ -86,11 +90,12 @@ export class TypeOrmTeamspaceRepository implements TeamspaceRepository {
     workspaceId: string,
     userId: string,
     context?: PersistenceContext,
-  ): Promise<Teamspace[]> {
+  ): Promise<AccessibleTeamspace[]> {
     const repository = this.getRepo(context);
 
-    const entities = await repository
+    const { entities, raw } = await repository
       .createQueryBuilder('teamspace')
+      .addSelect('teamspace_member.role_name', 'my_role')
 
       .innerJoin(
         'workspace_members',
@@ -126,13 +131,11 @@ export class TypeOrmTeamspaceRepository implements TeamspaceRepository {
       .andWhere(
         `
           (
-            workspace_member.role_name = :workspaceOwner
-            OR teamspace.visibility = :openVisibility
+            teamspace.visibility = :openVisibility
             OR teamspace_member.id IS NOT NULL
           )
         `,
         {
-          workspaceOwner: WorkspaceRole.OWNER,
           openVisibility: TeamspaceVisibility.OPEN,
         },
       )
@@ -141,9 +144,12 @@ export class TypeOrmTeamspaceRepository implements TeamspaceRepository {
 
       .orderBy('teamspace.created_at', 'ASC')
 
-      .getMany();
+      .getRawAndEntities<{ my_role: TeamspaceRole | null }>();
 
-    return entities.map((entity) => TeamspaceMapper.toDomain(entity));
+    return entities.map((entity, index) => ({
+      teamspace: TeamspaceMapper.toDomain(entity),
+      myRole: raw[index]?.my_role ?? null,
+    }));
   }
 
   async existsBySlug(
@@ -258,5 +264,57 @@ export class TypeOrmTeamspaceRepository implements TeamspaceRepository {
       })),
       total,
     };
+  }
+
+  async findPrivateSummariesNotJoined(
+    workspaceId: string,
+    workspaceMemberId: string,
+    context?: PersistenceContext,
+  ): Promise<PrivateTeamspaceSummary[]> {
+    const { entities, raw } = await this.getRepo(context)
+      .createQueryBuilder('teamspace')
+      .innerJoin('teamspace.workspace', 'workspace', 'workspace.deleted_at IS NULL')
+      .addSelect(
+        `(
+          SELECT COUNT(*)::int
+          FROM teamspace_members member
+          WHERE member.teamspace_id = teamspace.id
+        )`,
+        'member_count',
+      )
+      .addSelect(
+        `(
+          SELECT COALESCE(array_agg(owner_user.username ORDER BY owner.joined_at, owner.id), '{}')
+          FROM teamspace_members owner
+          INNER JOIN workspace_members owner_member ON owner_member.id = owner.workspace_member_id
+          INNER JOIN users owner_user ON owner_user.id = owner_member.user_id
+          WHERE owner.teamspace_id = teamspace.id
+            AND owner.role_name = :ownerRole
+        )`,
+        'owner_names',
+      )
+      .where('teamspace.workspace_id = :workspaceId', { workspaceId })
+      .andWhere('teamspace.deleted_at IS NULL')
+      .andWhere('teamspace.visibility = :privateVisibility', {
+        privateVisibility: TeamspaceVisibility.PRIVATE,
+      })
+      .andWhere(
+        `NOT EXISTS (
+          SELECT 1 FROM teamspace_members own
+          WHERE own.teamspace_id = teamspace.id
+            AND own.workspace_member_id = :workspaceMemberId
+        )`,
+        { workspaceMemberId },
+      )
+      .setParameter('ownerRole', TeamspaceRole.OWNER)
+      .orderBy('teamspace.created_at', 'ASC')
+      .addOrderBy('teamspace.id', 'ASC')
+      .getRawAndEntities<{ member_count: number; owner_names: string[] }>();
+
+    return entities.map((entity, index) => ({
+      teamspace: TeamspaceMapper.toDomain(entity),
+      ownerNames: raw[index]?.owner_names ?? [],
+      memberCount: raw[index]?.member_count ?? 0,
+    }));
   }
 }

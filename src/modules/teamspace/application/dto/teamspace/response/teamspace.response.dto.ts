@@ -1,4 +1,5 @@
 import { Teamspace } from 'src/modules/teamspace/domain/aggregates/teamspace/teamspace.aggregate';
+import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role.enum';
 import { TeamspaceVisibility } from 'src/modules/teamspace/domain/enums/teamspace-visibility.enum';
 
 export class TeamspaceResponseDto {
@@ -30,3 +31,7 @@ export class TeamspaceResponseDto {
     return dto;
   }
 }
+
+export type AccessibleTeamspaceResponseDto = TeamspaceResponseDto & {
+  myRole: TeamspaceRole | null;
+};

@@ -53,6 +53,22 @@ export class PermanentlyDeletePageDatabaseHandler {
       );
     }
 
+    const teamspaceId = page.getTeamspaceId();
+    if (
+      teamspaceId &&
+      !(await this.authorizationService.authorize({
+        userId: command.userId,
+        permissions: [PERMISSIONS.TEAMSPACE_READ],
+        target: {
+          type: 'teamspace',
+          id: teamspaceId,
+          workspaceId: page.getWorkspaceId(),
+        },
+      }))
+    ) {
+      throw new ForbiddenException('You do not have access to this teamspace');
+    }
+
     await this.uow.runInTransaction(async (context) => {
       const blocks = await findTrashedDatabaseBlocks(
         this.databaseRepo,

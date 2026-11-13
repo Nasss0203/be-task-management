@@ -5,12 +5,10 @@ import { TeamspacePermissionPolicy } from 'src/modules/permission/domain/policie
 import { CreatedTeamspaceInviteLinkResponseDto } from 'src/modules/teamspace/application/dto/teamspace/response/teamspace-invite-link.response.dto';
 import { createTeamspaceInviteToken, hashTeamspaceInviteToken } from 'src/modules/teamspace/application/services/teamspace-invite-token';
 import { TeamspaceInviteLink } from 'src/modules/teamspace/domain/entities/teamspace-invite-link.entity';
-import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role.enum';
 import type { TeamspaceInviteLinkRepository } from 'src/modules/teamspace/domain/repositories/teamspace-invite-link.repository';
 import type { TeamspaceMemberRepository } from 'src/modules/teamspace/domain/repositories/teamspace-member.repository';
 import type { TeamspaceRepository } from 'src/modules/teamspace/domain/repositories/teamspace.repository';
 import { TEAMSPACE_TYPES } from 'src/modules/teamspace/teamspace.types';
-import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
@@ -85,8 +83,7 @@ export class CreateTeamspaceInviteLinkHandler {
             command.teamspaceId, actor.getId(), context,
           )
         : null;
-      const actorRole = actor?.getRole() === WorkspaceRole.OWNER
-        ? TeamspaceRole.OWNER : actorMember?.getRoleName();
+      const actorRole = actorMember?.getRoleName();
       if (!actor || actor.getId() !== preliminaryActor.getId() || actor.isGuest() || !actorRole ||
         !TeamspacePermissionPolicy.hasPermission(actorRole, PERMISSIONS.TEAMSPACE_MEMBER_ADD)) {
         throw new ForbiddenException('You do not have permission to create teamspace invite links');

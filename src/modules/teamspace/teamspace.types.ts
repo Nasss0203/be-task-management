@@ -41,6 +41,9 @@ export const TEAMSPACE_TYPES = {
     ListTeamspaceInviteLinksHandler: Symbol('ListTeamspaceInviteLinksHandler'),
     JoinTeamspaceHandler: Symbol('JoinTeamspaceHandler'),
     DiscoverTeamspacesHandler: Symbol('DiscoverTeamspacesHandler'),
+    GetPrivateTeamspaceSummariesHandler: Symbol(
+      'GetPrivateTeamspaceSummariesHandler',
+    ),
     UpdateTeamspaceJoinSettingsHandler: Symbol(
       'UpdateTeamspaceJoinSettingsHandler',
     ),

@@ -28,7 +28,6 @@ import { AuthorizationService } from 'src/modules/permission/application/service
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role.enum';
 import { TeamspacePermissionPolicy } from 'src/modules/permission/domain/policies/teamspace-permission.policy';
-import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import type { TeamspaceMembershipLock } from '../../../ports/teamspace-membership-lock.port';
 import { AddTeamspaceMemberCommand } from './add-teamspace-member.command';
 
@@ -114,10 +113,7 @@ export class AddTeamspaceMemberHandler {
             manager,
           )
         : null;
-      const actorRole =
-        actor?.getRole() === WorkspaceRole.OWNER
-          ? TeamspaceRole.OWNER
-          : actorTeamspaceMember?.getRoleName();
+      const actorRole = actorTeamspaceMember?.getRoleName();
       const requiredPermissions =
         command.role === TeamspaceRole.OWNER
           ? [
