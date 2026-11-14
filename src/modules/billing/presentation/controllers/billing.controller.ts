@@ -25,13 +25,20 @@ import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorat
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import type { IAuth } from 'src/types/auth';
 
+import { CancelSubscriptionCommand } from '../../application/commands/subscription/cancel-subscription/cancel-subscription.command';
+import { CancelSubscriptionHandler } from '../../application/commands/subscription/cancel-subscription/cancel-subscription.handler';
+import { ResumeSubscriptionCommand } from '../../application/commands/subscription/resume-subscription/resume-subscription.command';
+import { ResumeSubscriptionHandler } from '../../application/commands/subscription/resume-subscription/resume-subscription.handler';
 import { CreateBillingCheckoutCommand } from '../../application/commands/checkout/create-billing-checkout/create-billing-checkout.command';
 import { CreateBillingCheckoutHandler } from '../../application/commands/checkout/create-billing-checkout/create-billing-checkout.handler';
 import { CreateBillingCheckoutRequestDto } from '../../application/dto/request/create-billing-checkout.request.dto';
 import { GetBillingPaymentStatusRequestDto } from '../../application/dto/request/get-billing-payment-status.request.dto';
 import { BillingPlanListResponseDto } from '../../application/dto/response/billing-plan-list.response.dto';
+import type { WorkspaceEntitlementsResponseDto } from '../../application/dto/response/workspace-entitlements.response.dto';
 import { CreateBillingCheckoutResponseDto } from '../../application/dto/response/create-billing-checkout.response.dto';
 import { WorkspaceSubscriptionResponseDto } from '../../application/dto/response/workspace-subscription.response.dto';
+import { GetWorkspaceEntitlementsHandler } from '../../application/queries/entitlement/get-workspace-entitlements/get-workspace-entitlements.handler';
+import { GetWorkspaceEntitlementsQuery } from '../../application/queries/entitlement/get-workspace-entitlements/get-workspace-entitlements.query';
 import { GetBillingPaymentStatusHandler } from '../../application/queries/payment/get-billing-payment-status/get-billing-payment-status.handler';
 import { GetBillingPaymentStatusQuery } from '../../application/queries/payment/get-billing-payment-status/get-billing-payment-status.query';
 import { ListBillingPlansHandler } from '../../application/queries/plan/list-billing-plans/list-billing-plans.handler';
@@ -61,6 +68,15 @@ export class BillingController {
     @Inject(BILLING_TYPES.applications.ListWorkspacePaymentOrdersHandler)
     private readonly listWorkspacePaymentOrdersHandler: ListWorkspacePaymentOrdersHandler,
 
+    @Inject(BILLING_TYPES.applications.CancelSubscriptionHandler)
+    private readonly cancelSubscriptionHandler: CancelSubscriptionHandler,
+
+    @Inject(BILLING_TYPES.applications.ResumeSubscriptionHandler)
+    private readonly resumeSubscriptionHandler: ResumeSubscriptionHandler,
+
+    @Inject(BILLING_TYPES.applications.GetWorkspaceEntitlementsHandler)
+    private readonly getWorkspaceEntitlementsHandler: GetWorkspaceEntitlementsHandler,
+
     private readonly configService: ConfigService,
   ) {}
 
@@ -85,6 +101,63 @@ export class BillingController {
   ): Promise<WorkspaceSubscriptionResponseDto> {
     return this.getWorkspaceSubscriptionHandler.execute(
       new GetWorkspaceSubscriptionQuery(workspaceId),
+    );
+  }
+
+  @Post('workspaces/:workspaceId/subscription/cancel')
+  @HttpCode(200)
+  @BillingRateLimit()
+  @WorkspaceContext({
+    source: 'param',
+    key: 'workspaceId',
+  })
+  @RequirePermissions(PERMISSIONS.WORKSPACE_UPDATE)
+  @ResponseMessage('Cancel workspace subscription at period end successfully')
+  async cancelWorkspaceSubscription(
+    @Param('workspaceId') workspaceId: string,
+  ): Promise<WorkspaceSubscriptionResponseDto> {
+    await this.cancelSubscriptionHandler.execute(
+      new CancelSubscriptionCommand(workspaceId),
+    );
+    return this.getWorkspaceSubscriptionHandler.execute(
+      new GetWorkspaceSubscriptionQuery(workspaceId),
+    );
+  }
+
+  @Post('workspaces/:workspaceId/subscription/resume')
+  @HttpCode(200)
+  @BillingRateLimit()
+  @WorkspaceContext({
+    source: 'param',
+    key: 'workspaceId',
+  })
+  @RequirePermissions(PERMISSIONS.WORKSPACE_UPDATE)
+  @ResponseMessage('Resume workspace subscription successfully')
+  async resumeWorkspaceSubscription(
+    @Param('workspaceId') workspaceId: string,
+    @Auth() auth: IAuth,
+  ): Promise<WorkspaceSubscriptionResponseDto> {
+    await this.resumeSubscriptionHandler.execute(
+      new ResumeSubscriptionCommand(workspaceId, auth.id),
+    );
+    return this.getWorkspaceSubscriptionHandler.execute(
+      new GetWorkspaceSubscriptionQuery(workspaceId),
+    );
+  }
+
+  @Get('workspaces/:workspaceId/entitlements')
+  @ReadRateLimit()
+  @WorkspaceContext({
+    source: 'param',
+    key: 'workspaceId',
+  })
+  @RequirePermissions(PERMISSIONS.WORKSPACE_READ)
+  @ResponseMessage('Get workspace entitlements successfully')
+  getWorkspaceEntitlements(
+    @Param('workspaceId') workspaceId: string,
+  ): Promise<WorkspaceEntitlementsResponseDto> {
+    return this.getWorkspaceEntitlementsHandler.execute(
+      new GetWorkspaceEntitlementsQuery(workspaceId),
     );
   }
 

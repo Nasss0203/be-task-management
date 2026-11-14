@@ -108,13 +108,43 @@ describe('AccountService', () => {
   it('stores the uploaded avatar url and clears it on removal', async () => {
     avatarStorage.upload.mockResolvedValue('https://cdn.example/avatar.png');
 
-    await expect(service.setAvatar('user-1', Buffer.from('x'))).resolves.toMatchObject({
+    await expect(
+      service.setAvatar('user-1', Buffer.from('x'), 'image/png'),
+    ).resolves.toMatchObject({
       avatarUrl: 'https://cdn.example/avatar.png',
     });
+    expect(avatarStorage.upload).toHaveBeenCalledWith(
+      'user-1',
+      Buffer.from('x'),
+      'image/png',
+    );
+    expect(avatarStorage.remove).not.toHaveBeenCalled();
 
     avatarStorage.remove.mockRejectedValue(new Error('cdn down'));
     await expect(service.removeAvatar('user-1')).resolves.toMatchObject({
       avatarUrl: null,
     });
+    expect(avatarStorage.remove).toHaveBeenCalledWith(
+      'user-1',
+      'https://cdn.example/avatar.png',
+    );
+  });
+
+  it('removes the previous avatar file after saving a new one', async () => {
+    current = { ...user(), avatarUrl: 'https://cdn.example/old.png' };
+    avatarStorage.upload.mockResolvedValue('https://cdn.example/new.png');
+    avatarStorage.remove.mockResolvedValue(undefined);
+
+    await expect(
+      service.setAvatar('user-1', Buffer.from('x'), 'image/webp'),
+    ).resolves.toMatchObject({ avatarUrl: 'https://cdn.example/new.png' });
+
+    expect(avatarStorage.remove).toHaveBeenCalledWith(
+      'user-1',
+      'https://cdn.example/old.png',
+    );
+    expect(userRepository.save.mock.invocationCallOrder[0]).toBeLessThan(
+      avatarStorage.remove.mock.invocationCallOrder[0],
+    );
   });
 });

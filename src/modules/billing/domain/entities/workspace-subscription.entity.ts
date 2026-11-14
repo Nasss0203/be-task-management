@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { BillingProvider } from '../constants/billing-provider.constant';
 import { SubscriptionStatus } from '../constants/subscription-status.constant';
+import { SUBSCRIPTION_GRACE_DAYS } from '../constants/subscription-expiry.constant';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export interface CreateInitialFreeSubscriptionParams {
   id?: string;
@@ -23,6 +26,8 @@ export interface ReconstituteWorkspaceSubscriptionParams {
   canceledAt: Date | null;
   providerCustomerId: string | null;
   providerSubscriptionId: string | null;
+  billingContactUserId?: string | null;
+  expiryNoticeSentOn?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +40,7 @@ export interface ActivatePaidSubscriptionParams {
   periodEnd: Date;
   providerCustomerId?: string | null;
   providerSubscriptionId?: string | null;
+  billingContactUserId?: string | null;
   changedAt?: Date;
 }
 
@@ -54,6 +60,8 @@ export class WorkspaceSubscription {
     private providerSubscriptionId: string | null,
     private readonly createdAt: Date,
     private updatedAt: Date,
+    private billingContactUserId: string | null = null,
+    private expiryNoticeSentOn: string | null = null,
   ) {}
 
   static createInitialFree(
@@ -101,6 +109,8 @@ export class WorkspaceSubscription {
       params.providerSubscriptionId,
       params.createdAt,
       params.updatedAt,
+      params.billingContactUserId ?? null,
+      params.expiryNoticeSentOn ?? null,
     );
   }
 
@@ -117,6 +127,9 @@ export class WorkspaceSubscription {
     this.canceledAt = null;
     this.providerCustomerId = params.providerCustomerId ?? null;
     this.providerSubscriptionId = params.providerSubscriptionId ?? null;
+    this.billingContactUserId =
+      params.billingContactUserId ?? this.billingContactUserId;
+    this.expiryNoticeSentOn = null;
     this.updatedAt = params.changedAt ?? new Date();
   }
 
@@ -136,7 +149,7 @@ export class WorkspaceSubscription {
   }
 
   scheduleCancellation(changedAt = new Date()): void {
-    if (this.status !== SubscriptionStatus.ACTIVE) {
+    if (!this.isPaidStatus()) {
       throw new Error(
         'Only active subscriptions can be scheduled for cancellation',
       );
@@ -148,6 +161,61 @@ export class WorkspaceSubscription {
 
     this.cancelAtPeriodEnd = true;
     this.updatedAt = changedAt;
+  }
+
+  resume(billingContactUserId: string, changedAt = new Date()): void {
+    if (
+      this.status !== SubscriptionStatus.ACTIVE ||
+      !this.cancelAtPeriodEnd ||
+      !this.currentPeriodEnd ||
+      this.currentPeriodEnd.getTime() <= changedAt.getTime()
+    ) {
+      throw new Error(
+        'Only subscriptions scheduled for cancellation within their period can be resumed',
+      );
+    }
+
+    this.cancelAtPeriodEnd = false;
+    this.billingContactUserId = billingContactUserId;
+    this.updatedAt = changedAt;
+  }
+
+  isPaid(): boolean {
+    return this.planPriceId !== null && this.currentPeriodEnd !== null;
+  }
+
+  getAccessEndsAt(): Date | null {
+    if (!this.currentPeriodEnd) {
+      return null;
+    }
+
+    return this.cancelAtPeriodEnd
+      ? this.currentPeriodEnd
+      : new Date(
+          this.currentPeriodEnd.getTime() + SUBSCRIPTION_GRACE_DAYS * DAY_MS,
+        );
+  }
+
+  hasPaidAccessAt(now: Date): boolean {
+    const accessEndsAt = this.getAccessEndsAt();
+
+    return (
+      this.isPaidStatus() &&
+      accessEndsAt !== null &&
+      now.getTime() < accessEndsAt.getTime()
+    );
+  }
+
+  markExpiryNoticeSent(day: string, changedAt = new Date()): void {
+    this.expiryNoticeSentOn = day;
+    this.updatedAt = changedAt;
+  }
+
+  private isPaidStatus(): boolean {
+    return (
+      this.status === SubscriptionStatus.ACTIVE ||
+      this.status === SubscriptionStatus.PAST_DUE
+    );
   }
 
   markPastDue(changedAt = new Date()): void {
@@ -195,6 +263,8 @@ export class WorkspaceSubscription {
     this.canceledAt = null;
     this.providerCustomerId = null;
     this.providerSubscriptionId = null;
+    this.billingContactUserId = null;
+    this.expiryNoticeSentOn = null;
     this.updatedAt = changedAt;
   }
 
@@ -254,6 +324,14 @@ export class WorkspaceSubscription {
 
   getProviderSubscriptionId(): string | null {
     return this.providerSubscriptionId;
+  }
+
+  getBillingContactUserId(): string | null {
+    return this.billingContactUserId;
+  }
+
+  getExpiryNoticeSentOn(): string | null {
+    return this.expiryNoticeSentOn;
   }
 
   getCreatedAt(): Date {

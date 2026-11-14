@@ -17,6 +17,7 @@ import { type DatabaseRepository } from '../../../domain/repositories/database.r
 
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
 import { CreateDatabaseRowCommand } from './create-database-row.command';
+import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
 
 @Injectable()
 export class CreateDatabaseRowHandler {
@@ -26,6 +27,8 @@ export class CreateDatabaseRowHandler {
 
     @Inject(DATABASE_TYPES.repositories.DatabaseRowRepository)
     private readonly databaseRowRepository: DatabaseRowRepository,
+    @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
+    private readonly activityRecorder: DatabaseActivityRecorder,
   ) {}
 
   async execute(
@@ -85,6 +88,15 @@ export class CreateDatabaseRowHandler {
     }
 
     await this.databaseRowRepository.save(row, context);
+    await this.activityRecorder.record(
+      {
+        actorId: command.actorId,
+        databaseId: database.getId(),
+        action: 'DATABASE_ROW_CREATED',
+        rowId: row.getId(),
+      },
+      context,
+    );
 
     return DatabaseRowDto.fromDomain(row);
   }

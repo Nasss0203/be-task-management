@@ -1,3 +1,9 @@
+import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import {
   BadRequestException,
   ConflictException,
@@ -25,7 +31,6 @@ import { AuthorizationService } from 'src/modules/permission/application/service
 
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { TeamspacePermissionPolicy } from 'src/modules/permission/domain/policies/teamspace-permission.policy';
-import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 
@@ -51,6 +56,8 @@ export class UpdateTeamspaceMemberRoleHandler {
     private readonly uow: UnitOfWork,
 
     private readonly authorizationService: AuthorizationService,
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async execute(
@@ -130,10 +137,7 @@ export class UpdateTeamspaceMemberRoleHandler {
             context,
           )
         : null;
-      const actorRole =
-        actor?.getRole() === WorkspaceRole.OWNER
-          ? TeamspaceRole.OWNER
-          : actorTeamspaceMember?.getRoleName();
+      const actorRole = actorTeamspaceMember?.getRoleName();
       if (
         !actor ||
         actor.isGuest() ||
@@ -173,10 +177,27 @@ export class UpdateTeamspaceMemberRoleHandler {
       }
 
       // 7. Domain mutation.
+      const previousRole = member.getRoleName();
       member.changeRole(command.roleName);
 
       // 8. Persistence.
-      return this.memberRepo.save(member, context);
+      const savedMember = await this.memberRepo.save(member, context);
+      await this.createActivityService.create(
+        {
+          workspaceId: teamspace.getWorkspaceId(),
+          entityType: ActivityEntityType.TEAMSPACE,
+          entityId: command.teamspaceId,
+          actorId: command.userId,
+          action: ActivityAction.TEAMSPACE_MEMBER_ROLE_CHANGED,
+          metadata: {
+            workspaceMemberId: member.getWorkspaceMemberId(),
+            from: previousRole,
+            to: command.roleName,
+          },
+        },
+        context,
+      );
+      return savedMember;
     });
   }
 }

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 
 import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/response/page-block.response.dto';
+import { PageBlockMentionService } from 'src/modules/content/application/services/page-block-mention.service';
 import { PageBlockFormService } from 'src/modules/content/application/services/page-block-form.service';
 import { PageBlockRowScopeService } from 'src/modules/content/application/services/page-block-row-scope.service';
 
@@ -45,12 +46,13 @@ export class CreatePageBlockHandler {
     private readonly activity: PageActivityRecorder,
     private readonly rowScope: PageBlockRowScopeService,
     private readonly forms: PageBlockFormService,
+    private readonly mentions: PageBlockMentionService,
   ) {}
 
   async execute(
     command: CreatePageBlockCommand,
   ): Promise<PageBlockResponseDto> {
-    return this.uow.runInTransaction(async (context) => {
+    const created = await this.uow.runInTransaction(async (context) => {
       const {
         pageId,
         type,
@@ -229,7 +231,11 @@ export class CreatePageBlockHandler {
         },
         context,
       );
-      return PageBlockResponseDto.fromDomain(savedBlock);
+      return savedBlock;
     });
+
+    await this.mentions.afterSave(created, command.input.createdBy);
+
+    return PageBlockResponseDto.fromDomain(created);
   }
 }

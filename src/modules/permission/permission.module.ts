@@ -68,6 +68,7 @@ import { PERMISSION_TYPES } from './permission.types';
     EffectivePageAccessService,
 
     PERMISSION_TYPES.ports.PageSharePermissionReader,
+    PERMISSION_TYPES.ports.TeamspacePermissionReader,
     PERMISSION_TYPES.ports.PageGeneralAccessReader,
     PERMISSION_TYPES.ports.PageAccessReviewerReader,
   ],

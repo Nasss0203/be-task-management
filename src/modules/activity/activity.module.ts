@@ -7,11 +7,16 @@ import { ACTIVITY_TYPES } from './activity.types';
 import { TypeOrmActivityRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-activity.repository';
 import { CreateActivityServiceImpl } from './application/services/create-activity.service';
 import { IdentityModule } from '../identity/identity.module';
+import { PermissionModule } from '../permission/permission.module';
+import { GetPageActivitiesHandler } from './application/queries/get-page-activities/get-page-activities.handler';
+import { GetPageActivitySummaryHandler } from './application/queries/get-page-activity-summary/get-page-activity-summary.handler';
+import { TypeOrmPageActivityDetailsReader } from './infrastructure/persistence/typeorm/readers/typeorm-page-activity-details.reader';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Activity]),
     forwardRef(() => IdentityModule),
+    PermissionModule,
   ],
   controllers: [ActivityController],
   providers: [
@@ -20,6 +25,12 @@ import { IdentityModule } from '../identity/identity.module';
       useClass: CreateActivityServiceImpl,
     },
     GetActivitiesHandler,
+    GetPageActivitiesHandler,
+    GetPageActivitySummaryHandler,
+    {
+      provide: ACTIVITY_TYPES.ports.PageActivityDetailsReader,
+      useClass: TypeOrmPageActivityDetailsReader,
+    },
     {
       provide: ACTIVITY_TYPES.repositories.ActivityRepository,
       useClass: TypeOrmActivityRepository,

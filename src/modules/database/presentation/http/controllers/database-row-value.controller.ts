@@ -1,3 +1,5 @@
+import { Auth } from 'src/common/decorator/auth.decorator';
+import { type IAuth } from 'src/types/auth';
 import { Body, Controller, Delete, Param, Patch } from '@nestjs/common';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
@@ -20,12 +22,13 @@ export class DatabaseRowValueController {
   @WorkspaceContext({ source: 'resource', type: 'database_row', key: 'rowId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   async setValue(
+    @Auth() user: IAuth,
     @Param('rowId') rowId: string,
     @Param('propertyId') propertyId: string,
     @Body() request: SetRowValueRequest,
   ) {
     const value = await this.setRowValueHandler.execute(
-      new SetRowValueCommand(rowId, propertyId, request.value),
+      new SetRowValueCommand(rowId, propertyId, request.value, user.id),
     );
 
     return {
@@ -40,11 +43,12 @@ export class DatabaseRowValueController {
   @WorkspaceContext({ source: 'resource', type: 'database_row', key: 'rowId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   async clearValue(
+    @Auth() user: IAuth,
     @Param('rowId') rowId: string,
     @Param('propertyId') propertyId: string,
   ) {
     await this.clearRowValueHandler.execute(
-      new ClearRowValueCommand(rowId, propertyId),
+      new ClearRowValueCommand(rowId, propertyId, user.id),
     );
 
     return {

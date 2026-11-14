@@ -56,19 +56,21 @@ export class TypeOrmPageAccessReviewerReader implements PageAccessReviewerReader
      *
      * Workspace OWNER có PAGE_SHARE_UPDATE.
      */
-    const workspaceOwners = await this.dataSource.query<UserIdRow[]>(
-      `
+    if (!page.teamspace_id) {
+      const workspaceOwners = await this.dataSource.query<UserIdRow[]>(
+        `
           SELECT user_id
           FROM workspace_members
           WHERE workspace_id = $1
             AND membership_type = 'MEMBER'
             AND role_name = 'OWNER'
         `,
-      [page.workspace_id],
-    );
+        [page.workspace_id],
+      );
 
-    for (const owner of workspaceOwners) {
-      reviewerIds.add(owner.user_id);
+      for (const owner of workspaceOwners) {
+        reviewerIds.add(owner.user_id);
+      }
     }
 
     /**
@@ -178,6 +180,7 @@ export class TypeOrmPageAccessReviewerReader implements PageAccessReviewerReader
       await this.pageGeneralAccessReader.findByPageId(pageId);
 
     if (
+      !page.teamspace_id &&
       generalAccess?.workspaceAccessLevel === ResourceAccessLevel.FULL_ACCESS
     ) {
       const workspaceMembers = await this.dataSource.query<UserIdRow[]>(

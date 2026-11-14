@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 
@@ -9,6 +14,10 @@ import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
 
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
+
+import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
+
+import { PERMISSIONS } from 'src/modules/permission/domain/permissions/permission-code';
 
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 
@@ -36,6 +45,7 @@ export class DuplicatePageHandler {
     private readonly subdomains: PublicSubdomainAllocatorService,
     @Inject(CONTENT_TYPES.ports.PageActivityRecorder)
     private readonly activity: PageActivityRecorder,
+    private readonly authorizationService: AuthorizationService,
   ) {}
 
   async execute(command: DuplicatePageCommand): Promise<PageResponseDto> {
@@ -55,6 +65,32 @@ export class DuplicatePageHandler {
        */
       if (sourcePage.getWorkspaceId() !== command.workspaceId) {
         throw new NotFoundException('Page not found in workspace');
+      }
+
+      const teamspaceId = sourcePage.getTeamspaceId();
+      const [canReadSource, canCreateCopy] = await Promise.all([
+        this.authorizationService.authorize({
+          userId: command.userId,
+          permissions: [PERMISSIONS.PAGE_READ],
+          target: { type: 'page', id: command.pageId },
+        }),
+        this.authorizationService.authorize({
+          userId: command.userId,
+          permissions: [PERMISSIONS.PAGE_CREATE],
+          target: teamspaceId
+            ? {
+                type: 'teamspace',
+                id: teamspaceId,
+                workspaceId: command.workspaceId,
+              }
+            : { type: 'workspace', id: command.workspaceId },
+        }),
+      ]);
+
+      if (!canReadSource || !canCreateCopy) {
+        throw new ForbiddenException(
+          'You do not have permission to duplicate this page',
+        );
       }
 
       /**

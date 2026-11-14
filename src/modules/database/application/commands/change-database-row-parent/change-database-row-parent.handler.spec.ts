@@ -16,7 +16,11 @@ describe('ChangeDatabaseRowParentHandler', () => {
     findByDatabaseId: jest.fn(() => Promise.resolve(rows)),
     save: jest.fn(),
   };
-  const handler = new ChangeDatabaseRowParentHandler(repository as never);
+  const recorder = { record: jest.fn(() => Promise.resolve()) };
+  const handler = new ChangeDatabaseRowParentHandler(
+    repository as never,
+    recorder as never,
+  );
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -28,6 +32,21 @@ describe('ChangeDatabaseRowParentHandler', () => {
       handler.execute(new ChangeDatabaseRowParentCommand('b', 'x')),
     ).resolves.toEqual({ id: 'b', parentRowId: 'x' });
     expect(repository.save).toHaveBeenCalledWith(rows[1]);
+  });
+
+  it('records a parent change by the actor, and nothing when the parent stays', async () => {
+    await handler.execute(new ChangeDatabaseRowParentCommand('b', 'x', 'u'));
+    expect(recorder.record).toHaveBeenCalledWith({
+      actorId: 'u',
+      databaseId: 'db',
+      action: 'DATABASE_ROW_MOVED',
+      rowId: 'b',
+      kind: 'PARENT_CHANGED',
+    });
+
+    recorder.record.mockClear();
+    await handler.execute(new ChangeDatabaseRowParentCommand('b', 'x', 'u'));
+    expect(recorder.record).not.toHaveBeenCalled();
   });
 
   it('makes a row top-level without loading the tree', async () => {
@@ -45,6 +64,7 @@ describe('ChangeDatabaseRowParentHandler', () => {
       handler.execute(new ChangeDatabaseRowParentCommand('a', 'b')),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(repository.save).not.toHaveBeenCalled();
+    expect(recorder.record).not.toHaveBeenCalled();
   });
 
   it('rejects a missing row', async () => {

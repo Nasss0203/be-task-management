@@ -1,3 +1,5 @@
+import { Auth } from 'src/common/decorator/auth.decorator';
+import { type IAuth } from 'src/types/auth';
 import { Body, Controller, Delete, Param, Patch, Post } from '@nestjs/common';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
@@ -35,11 +37,12 @@ export class DatabasePropertyController {
   @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
   async addProperty(
+    @Auth() user: IAuth,
     @Param('databaseId') databaseId: string,
     @Body() request: AddPropertyRequest,
   ) {
     return await this.addPropertyHandler.execute(
-      new AddPropertyCommand(databaseId, request.name, request.type),
+      new AddPropertyCommand(databaseId, request.name, request.type, user.id),
     );
   }
 
@@ -47,6 +50,7 @@ export class DatabasePropertyController {
   @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
   async addPropertyOption(
+    @Auth() user: IAuth,
     @Param('databaseId') databaseId: string,
     @Param('propertyId') propertyId: string,
     @Body() request: AddPropertyOptionRequest,
@@ -57,6 +61,7 @@ export class DatabasePropertyController {
         propertyId,
         request.name,
         request.color ?? null,
+        user.id,
       ),
     );
 
@@ -72,6 +77,7 @@ export class DatabasePropertyController {
   @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   async renameProperty(
+    @Auth() user: IAuth,
     @Param('databaseId')
     databaseId: string,
 
@@ -82,7 +88,7 @@ export class DatabasePropertyController {
     request: RenamePropertyRequest,
   ) {
     return this.renamePropertyHandler.execute(
-      new RenamePropertyCommand(databaseId, propertyId, request.name),
+      new RenamePropertyCommand(databaseId, propertyId, request.name, user.id),
     );
   }
 
@@ -90,13 +96,14 @@ export class DatabasePropertyController {
   @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async deleteProperty(
+    @Auth() user: IAuth,
     @Param('databaseId')
     databaseId: string,
     @Param('propertyId')
     propertyId: string,
   ) {
     await this.deletePropertyHandler.execute(
-      new DeletePropertyCommand(databaseId, propertyId),
+      new DeletePropertyCommand(databaseId, propertyId, user.id),
     );
 
     return {
@@ -108,6 +115,7 @@ export class DatabasePropertyController {
   @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   async updatePropertyOption(
+    @Auth() user: IAuth,
     @Param('databaseId')
     databaseId: string,
 
@@ -127,6 +135,7 @@ export class DatabasePropertyController {
         optionId,
         request.name,
         request.color ?? null,
+        user.id,
       ),
     );
   }
@@ -135,6 +144,7 @@ export class DatabasePropertyController {
   @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
   async deletePropertyOption(
+    @Auth() user: IAuth,
     @Param('databaseId')
     databaseId: string,
 
@@ -145,7 +155,12 @@ export class DatabasePropertyController {
     optionId: string,
   ) {
     await this.deletePropertyOptionHandler.execute(
-      new DeletePropertyOptionCommand(databaseId, propertyId, optionId),
+      new DeletePropertyOptionCommand(
+        databaseId,
+        propertyId,
+        optionId,
+        user.id,
+      ),
     );
 
     return {

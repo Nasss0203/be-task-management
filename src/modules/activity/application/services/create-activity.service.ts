@@ -36,6 +36,7 @@ export class CreateActivityServiceImpl implements CreateActivityService {
 
         metadata: input.metadata ?? null,
         isSystem: input.isSystem ?? false,
+        pageId: input.pageId ?? null,
       },
       context,
     );

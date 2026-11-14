@@ -1,3 +1,9 @@
+import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import {
   BadRequestException,
   ForbiddenException,
@@ -5,6 +11,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { BILLING_TYPES } from 'src/modules/billing/billing.types';
+import type { WorkspaceEntitlementPort } from 'src/modules/billing/application/ports/workspace-entitlement.port';
+import { BillingFeatureCode } from 'src/modules/billing/domain/constants/billing-feature-code.constant';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { type UpdateNotificationService } from 'src/modules/notifications/application/ports/update-notification.service.port';
 import { NOTIFICATION_TYPES } from 'src/modules/notifications/notifications.types';
@@ -38,6 +47,10 @@ export class AcceptWorkspaceInviteHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
+    @Inject(BILLING_TYPES.services.WorkspaceEntitlementPort)
+    private readonly entitlements: WorkspaceEntitlementPort,
   ) {}
 
   async execute(
@@ -103,6 +116,13 @@ export class AcceptWorkspaceInviteHandler {
         );
       }
 
+      await this.entitlements.assertWithinLimit(
+        transactionalInvite.getWorkspaceId(),
+        BillingFeatureCode.MAX_MEMBERS,
+        transactionalInvite.getType() === WorkspaceInviteType.EMAIL ? 0 : 1,
+        manager,
+      );
+
       if (transactionalMembership) {
         transactionalMembership.promoteToMember(
           transactionalInvite.getRoleName(),
@@ -121,6 +141,22 @@ export class AcceptWorkspaceInviteHandler {
           manager,
         );
       }
+
+      await this.createActivityService.create(
+        {
+          workspaceId: transactionalInvite.getWorkspaceId(),
+          entityType: ActivityEntityType.WORKSPACE,
+          entityId: transactionalInvite.getWorkspaceId(),
+          actorId: user.id,
+          action: ActivityAction.WORKSPACE_MEMBER_JOINED,
+          metadata: {
+            userId: user.id,
+            roleName: transactionalInvite.getRoleName(),
+            inviteId: transactionalInvite.getId(),
+          },
+        },
+        manager,
+      );
 
       transactionalInvite.accept(user.id, new Date());
 

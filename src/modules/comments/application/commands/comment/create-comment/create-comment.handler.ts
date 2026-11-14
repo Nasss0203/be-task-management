@@ -1,3 +1,9 @@
+import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import {
   BadRequestException,
   Inject,
@@ -22,6 +28,8 @@ export class CreateCommentHandler {
     private readonly targets: CommentTargetResolver,
     private readonly authors: CommentAuthorService,
     private readonly commentNotifications: CommentNotificationService,
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async execute(command: CreateCommentCommand): Promise<CommentResponseDto> {
@@ -64,6 +72,20 @@ export class CreateCommentHandler {
         body: command.body,
       }),
     );
+
+    await this.createActivityService.create({
+      workspaceId: saved.getWorkspaceId(),
+      entityType: ActivityEntityType.COMMENT,
+      entityId: saved.getId(),
+      pageId: saved.getPageId(),
+      actorId: command.authorId,
+      action: ActivityAction.COMMENT_CREATED,
+      metadata: {
+        pageId: saved.getPageId(),
+        targetType: saved.getTargetType(),
+        targetId: saved.getTargetId(),
+      },
+    });
 
     await this.commentNotifications.afterSave(saved, command.authorId, parent);
 

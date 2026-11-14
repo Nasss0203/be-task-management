@@ -1,3 +1,9 @@
+import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import {
   ConflictException,
   ForbiddenException,
@@ -12,7 +18,6 @@ import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role
 import type { TeamspaceMemberRepository } from 'src/modules/teamspace/domain/repositories/teamspace-member.repository';
 import type { TeamspaceRepository } from 'src/modules/teamspace/domain/repositories/teamspace.repository';
 import { TEAMSPACE_TYPES } from 'src/modules/teamspace/teamspace.types';
-import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
@@ -40,6 +45,8 @@ export class RemoveTeamspaceMemberHandler {
     private readonly uow: UnitOfWork,
 
     private readonly authorizationService: AuthorizationService,
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async execute(command: RemoveTeamspaceMemberCommand): Promise<void> {
@@ -105,10 +112,7 @@ export class RemoveTeamspaceMemberHandler {
             context,
           )
         : null;
-      const actorRole =
-        actor?.getRole() === WorkspaceRole.OWNER
-          ? TeamspaceRole.OWNER
-          : actorTeamspaceMember?.getRoleName();
+      const actorRole = actorTeamspaceMember?.getRoleName();
       if (
         !actor ||
         actor.isGuest() ||
@@ -140,6 +144,17 @@ export class RemoveTeamspaceMemberHandler {
       if (!deleted) {
         throw new NotFoundException('Teamspace member not found');
       }
+      await this.createActivityService.create(
+        {
+          workspaceId: teamspace.getWorkspaceId(),
+          entityType: ActivityEntityType.TEAMSPACE,
+          entityId: command.teamspaceId,
+          actorId: command.userId,
+          action: ActivityAction.TEAMSPACE_MEMBER_REMOVED,
+          metadata: { workspaceMemberId: member.getWorkspaceMemberId() },
+        },
+        context,
+      );
     });
   }
 }

@@ -11,12 +11,15 @@ import { PropertyOptionNotFoundException } from 'src/modules/database/domain/exc
 import { type DatabaseRepository } from 'src/modules/database/domain/repositories/database.repository';
 import { PropertyOptionDto } from '../../dto/database-property.dto';
 import { UpdatePropertyOptionCommand } from './update-property-option.command';
+import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
 
 @Injectable()
 export class UpdatePropertyOptionHandler {
   constructor(
     @Inject(DATABASE_TYPES.repositories.DatabaseRepository)
     private readonly databaseRepository: DatabaseRepository,
+    @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
+    private readonly activityRecorder: DatabaseActivityRecorder,
   ) {}
 
   async execute(
@@ -29,6 +32,13 @@ export class UpdatePropertyOptionHandler {
     }
 
     try {
+      const previous = database
+        .getProperties()
+        .find((item) => item.getId() === command.propertyId)
+        ?.getOptions()
+        .find((item) => item.getId() === command.optionId);
+      const changed = (name: string, color: string | null) =>
+        previous?.getName() !== name || previous?.getColor() !== color;
       const option = database.updatePropertyOption(
         command.propertyId,
         command.optionId,
@@ -37,6 +47,16 @@ export class UpdatePropertyOptionHandler {
       );
 
       await this.databaseRepository.save(database);
+      if (changed(option.getName(), option.getColor())) {
+        await this.activityRecorder.record({
+          actorId: command.actorId,
+          databaseId: database.getId(),
+          action: 'DATABASE_PROPERTY_UPDATED',
+          propertyId: command.propertyId,
+          optionId: option.getId(),
+          kind: 'OPTION_UPDATED',
+        });
+      }
 
       return {
         id: option.getId(),

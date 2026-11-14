@@ -18,6 +18,8 @@ export class WorkspaceSubscriptionMapper {
       canceledAt: entity.canceled_at ?? null,
       providerCustomerId: entity.provider_customer_id ?? null,
       providerSubscriptionId: entity.provider_subscription_id ?? null,
+      billingContactUserId: entity.billing_contact_user_id ?? null,
+      expiryNoticeSentOn: entity.expiry_notice_sent_on ?? null,
       createdAt: entity.created_at,
       updatedAt: entity.updated_at,
     });
@@ -40,6 +42,8 @@ export class WorkspaceSubscriptionMapper {
     entity.canceled_at = subscription.getCanceledAt();
     entity.provider_customer_id = subscription.getProviderCustomerId();
     entity.provider_subscription_id = subscription.getProviderSubscriptionId();
+    entity.billing_contact_user_id = subscription.getBillingContactUserId();
+    entity.expiry_notice_sent_on = subscription.getExpiryNoticeSentOn();
     entity.created_at = subscription.getCreatedAt();
     entity.updated_at = subscription.getUpdatedAt();
 

@@ -1,3 +1,7 @@
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role.enum';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
@@ -12,6 +16,7 @@ describe('AddTeamspaceMemberHandler transactional authorization', () => {
   let lock: any;
   let uow: any;
   let authorization: any;
+  let activities: { create: jest.Mock };
   let handler: AddTeamspaceMemberHandler;
   let actorRole: TeamspaceRole;
 
@@ -42,12 +47,14 @@ describe('AddTeamspaceMemberHandler transactional authorization', () => {
       }),
       findById: jest.fn().mockResolvedValue({
         getWorkspaceId: () => 'workspace',
+        getUserId: () => 'target-user',
         isGuest: () => false,
       }),
     };
     lock = { lockForMembershipChange: jest.fn().mockResolvedValue(undefined) };
     uow = { runInTransaction: jest.fn((fn) => fn(context)) };
     authorization = { authorize: jest.fn().mockResolvedValue(true) };
+    activities = { create: jest.fn().mockResolvedValue(undefined) };
     handler = new AddTeamspaceMemberHandler(
       teamspaceRepo,
       memberRepo,
@@ -55,6 +62,7 @@ describe('AddTeamspaceMemberHandler transactional authorization', () => {
       lock,
       uow,
       authorization,
+      activities as never,
     );
   });
 
@@ -77,6 +85,17 @@ describe('AddTeamspaceMemberHandler transactional authorization', () => {
         expect.objectContaining({}),
         context,
       );
+      expect(activities.create).toHaveBeenCalledWith(
+        {
+          workspaceId: 'workspace',
+          entityType: ActivityEntityType.TEAMSPACE,
+          entityId: 'teamspace',
+          actorId: 'actor-user',
+          action: ActivityAction.TEAMSPACE_MEMBER_JOINED,
+          metadata: { userId: 'target-user', roleName: role },
+        },
+        context,
+      );
     },
   );
 
@@ -88,6 +107,7 @@ describe('AddTeamspaceMemberHandler transactional authorization', () => {
         ForbiddenException,
       );
       expect(memberRepo.save).not.toHaveBeenCalled();
+      expect(activities.create).not.toHaveBeenCalled();
     },
   );
 
@@ -99,15 +119,32 @@ describe('AddTeamspaceMemberHandler transactional authorization', () => {
     expect(memberRepo.save).not.toHaveBeenCalled();
   });
 
-  it('uses the existing Workspace Owner policy without a Teamspace membership', async () => {
+  it('rejects a Workspace Owner who is not a member of the Teamspace', async () => {
     workspaceMemberRepo.findByWorkspaceAndUser.mockResolvedValue({
       getId: () => 'actor',
       getRole: () => WorkspaceRole.OWNER,
       isGuest: () => false,
     });
     memberRepo.findByTeamspaceAndWorkspaceMember.mockResolvedValue(null);
-    await expect(handler.execute(command(TeamspaceRole.OWNER))).resolves.toBeDefined();
-    expect(memberRepo.save).toHaveBeenCalledTimes(1);
+    await expect(
+      handler.execute(command(TeamspaceRole.MEMBER)),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(memberRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('rejects a Workspace Owner who is only a Teamspace member', async () => {
+    workspaceMemberRepo.findByWorkspaceAndUser.mockResolvedValue({
+      getId: () => 'actor',
+      getRole: () => WorkspaceRole.OWNER,
+      isGuest: () => false,
+    });
+    memberRepo.findByTeamspaceAndWorkspaceMember.mockResolvedValue({
+      getRoleName: () => TeamspaceRole.MEMBER,
+    });
+    await expect(
+      handler.execute(command(TeamspaceRole.MEMBER)),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(memberRepo.save).not.toHaveBeenCalled();
   });
 
   it('keeps target and duplicate checks inside the transaction', async () => {
@@ -122,9 +159,9 @@ describe('AddTeamspaceMemberHandler transactional authorization', () => {
     lock.lockForMembershipChange.mockRejectedValue(
       new ForbiddenException('Actor workspace membership changed'),
     );
-    await expect(handler.execute(command(TeamspaceRole.OWNER))).rejects.toBeInstanceOf(
-      ForbiddenException,
-    );
+    await expect(
+      handler.execute(command(TeamspaceRole.OWNER)),
+    ).rejects.toBeInstanceOf(ForbiddenException);
     expect(memberRepo.save).not.toHaveBeenCalled();
   });
 });

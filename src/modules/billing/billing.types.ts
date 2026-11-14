@@ -20,6 +20,12 @@ export const BILLING_TYPES = {
     ListWorkspacePaymentOrdersHandler: Symbol(
       'ListWorkspacePaymentOrdersHandler',
     ),
+    GetWorkspaceEntitlementsHandler: Symbol('GetWorkspaceEntitlementsHandler'),
+    CancelSubscriptionHandler: Symbol('BillingCancelSubscriptionHandler'),
+    ResumeSubscriptionHandler: Symbol('BillingResumeSubscriptionHandler'),
+    ProcessSubscriptionExpiryHandler: Symbol(
+      'BillingProcessSubscriptionExpiryHandler',
+    ),
   },
 
   services: {
@@ -27,5 +33,11 @@ export const BILLING_TYPES = {
       'WorkspaceSubscriptionProvisioningService',
     ),
     BillingPaymentSettlementService: Symbol('BillingPaymentSettlementService'),
+    BillingEntitlementService: Symbol('BillingEntitlementService'),
+    WorkspaceUsageReader: Symbol('BillingWorkspaceUsageReader'),
+    WorkspaceEntitlementPort: Symbol('WorkspaceEntitlementPort'),
+    SubscriptionExpiryReader: Symbol('BillingSubscriptionExpiryReader'),
+    SubscriptionNoticeSender: Symbol('BillingSubscriptionNoticeSender'),
+    SubscriptionLifecyclePort: Symbol('BillingSubscriptionLifecyclePort'),
   },
 } as const;

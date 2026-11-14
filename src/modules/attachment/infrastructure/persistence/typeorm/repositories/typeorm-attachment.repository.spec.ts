@@ -9,7 +9,6 @@ const createAggregate = () =>
   AttachmentAggregate.reconstitute({
     id: 'att-1',
     workspaceId: 'ws-1',
-    taskId: 'task-1',
     commentId: null,
     uploadedBy: 'user-1',
     fileName: 'test.pdf',
@@ -47,7 +46,6 @@ describe('TypeOrmAttachmentRepository', () => {
       Object.assign(new AttachmentOrmEntity(), {
         id: aggregate.getId(),
         workspaceId: aggregate.getWorkspaceId(),
-        taskId: aggregate.getTaskId(),
         commentId: aggregate.getCommentId(),
         uploadedBy: aggregate.getUploadedBy(),
         fileName: aggregate.getFileName(),
@@ -78,16 +76,6 @@ describe('TypeOrmAttachmentRepository', () => {
     await expect(repository.findReadyById('att-1')).resolves.toBeNull();
     expect(findOneMock).toHaveBeenCalledWith({
       where: { id: 'att-1', status: AttachmentStatus.READY },
-    });
-  });
-
-  it('finds READY attachments by task newest first', async () => {
-    findMock.mockResolvedValue([]);
-
-    await expect(repository.findReadyByTaskId('task-1')).resolves.toEqual([]);
-    expect(findMock).toHaveBeenCalledWith({
-      where: { taskId: 'task-1', status: AttachmentStatus.READY },
-      order: { createdAt: 'DESC' },
     });
   });
 

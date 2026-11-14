@@ -4,6 +4,8 @@ import { Database } from '../aggregates/database/database.aggregate';
 export interface DatabaseRepository {
   findById(id: string, context?: PersistenceContext): Promise<Database | null>;
 
+  findPageId(id: string, context?: PersistenceContext): Promise<string | null>;
+
   findByPageId(
     pageId: string,
     context?: PersistenceContext,

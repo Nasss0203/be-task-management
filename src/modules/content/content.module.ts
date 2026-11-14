@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { DatabaseModule } from 'src/database/database.module';
+import { BillingModule } from 'src/modules/billing/billing.module';
 import { DatabaseModule as BusinessDatabaseModule } from 'src/modules/database/database.module';
 import { PermissionModule } from 'src/modules/permission/permission.module';
 import { WorkspaceModule } from 'src/modules/workspace/workspace.module';
@@ -41,6 +42,7 @@ import { ActivityModule } from '../activity/activity.module';
 import { ContentPageSnapshotReaderService } from './application/services/content-page-snapshot-reader.service';
 import { PageBlockColumnCleanupService } from './application/services/page-block-column-cleanup.service';
 import { PageBlockFormService } from './application/services/page-block-form.service';
+import { PageBlockMentionService } from './application/services/page-block-mention.service';
 import { SubmitFormResponseHandler } from './application/commands/form/submit-form-response/submit-form-response.handler';
 import { GetFormStructureHandler } from './application/queries/form/get-form-structure/get-form-structure.handler';
 import { GetFormAnswerKeysHandler } from './application/queries/form/get-form-answer-keys/get-form-answer-keys.handler';
@@ -72,11 +74,13 @@ import { TypeOrmPublishedSiteRepository } from './infrastructure/persistence/typ
 import { TypeOrmPublicSiteNavigationReader } from './infrastructure/persistence/typeorm/readers/typeorm-public-site-navigation.reader';
 import { TypeOrmPageSearchReader } from './infrastructure/persistence/typeorm/readers/typeorm-page-search.reader';
 import { SearchPagesHandler } from './application/queries/page/search-pages/search-pages.handler';
+import { ListPageMentionTitlesHandler } from './application/queries/page/list-page-mention-titles/list-page-mention-titles.handler';
 
 import { CreatePageEditRequestHandler } from './application/commands/page-edit-request/create-page-edit-request/create-page-edit-request.handler';
 
 import { PageShareLinkTokenService } from '../../shared/security/page-share-link-token.service';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { MentionsModule } from '../mentions/mentions.module';
 import { ApprovePageAccessRequestHandler } from './application/commands/page-access-request/approve-page-access-request/approve-page-access-request.handler';
 import { CreatePageAccessRequestHandler } from './application/commands/page-access-request/create-page-access-request/create-page-access-request.handler';
 import { RejectPageAccessRequestHandler } from './application/commands/page-access-request/reject-page-access-request/reject-page-access-request.handler';
@@ -467,6 +471,7 @@ const applicationServices = [
   PageBlockOrderingService,
   PageBlockColumnCleanupService,
   PageBlockFormService,
+  PageBlockMentionService,
   PageBlockRowScopeService,
   PageShareLinkTokenService,
   PageEditRequestNotifier,
@@ -498,6 +503,10 @@ const ports = [
     useClass: SearchPagesHandler,
   },
   {
+    provide: CONTENT_TYPES.applications.ListPageMentionTitlesHandler,
+    useClass: ListPageMentionTitlesHandler,
+  },
+  {
     provide: CONTENT_TYPES.bookmarkMetadataFetcher,
     useClass: HtmlBookmarkMetadataFetcherAdapter,
   },
@@ -523,8 +532,10 @@ const ports = [
     BusinessDatabaseModule,
     PermissionModule,
     NotificationsModule,
+    MentionsModule,
     forwardRef(() => WorkspaceModule),
     forwardRef(() => ActivityModule),
+    BillingModule,
   ],
 
   controllers: [

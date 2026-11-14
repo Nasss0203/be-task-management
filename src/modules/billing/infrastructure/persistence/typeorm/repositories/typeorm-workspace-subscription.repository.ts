@@ -48,6 +48,22 @@ export class TypeOrmWorkspaceSubscriptionRepository implements WorkspaceSubscrip
     return entity ? WorkspaceSubscriptionMapper.toDomain(entity) : null;
   }
 
+  async findByIdForUpdate(
+    id: string,
+    context: PersistenceContext,
+  ): Promise<WorkspaceSubscription | null> {
+    const entity = await this.getRepository(context).findOne({
+      where: {
+        id,
+      },
+      lock: {
+        mode: 'pessimistic_write',
+      },
+    });
+
+    return entity ? WorkspaceSubscriptionMapper.toDomain(entity) : null;
+  }
+
   async findByWorkspaceId(
     workspaceId: string,
     context?: PersistenceContext,

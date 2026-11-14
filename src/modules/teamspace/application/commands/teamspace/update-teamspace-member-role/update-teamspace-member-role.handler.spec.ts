@@ -1,4 +1,8 @@
 import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
+import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
@@ -40,6 +44,7 @@ describe('UpdateTeamspaceMemberRoleHandler', () => {
   let lock: any;
   let uow: any;
   let authorization: any;
+  let activities: { create: jest.Mock };
   let handler: UpdateTeamspaceMemberRoleHandler;
   let target: TeamspaceMember;
 
@@ -72,6 +77,7 @@ describe('UpdateTeamspaceMemberRoleHandler', () => {
     lock = { lockForMembershipChange: jest.fn().mockResolvedValue(undefined) };
     uow = { runInTransaction: jest.fn((fn) => fn(context)) };
     authorization = { authorize: jest.fn().mockResolvedValue(true) };
+    activities = { create: jest.fn().mockResolvedValue(undefined) };
     handler = new UpdateTeamspaceMemberRoleHandler(
       teamspaceRepo,
       memberRepo,
@@ -79,6 +85,7 @@ describe('UpdateTeamspaceMemberRoleHandler', () => {
       lock,
       uow,
       authorization,
+      activities as never,
     );
   });
 
@@ -97,6 +104,21 @@ describe('UpdateTeamspaceMemberRoleHandler', () => {
       context,
     );
     expect(memberRepo.save).toHaveBeenCalledWith(target, context);
+    expect(activities.create).toHaveBeenCalledWith(
+      {
+        workspaceId: 'workspace',
+        entityType: ActivityEntityType.TEAMSPACE,
+        entityId: 'teamspace',
+        actorId: 'actor-user',
+        action: ActivityAction.TEAMSPACE_MEMBER_ROLE_CHANGED,
+        metadata: {
+          workspaceMemberId: target.getWorkspaceMemberId(),
+          from: TeamspaceRole.MEMBER,
+          to: TeamspaceRole.OWNER,
+        },
+      },
+      context,
+    );
   });
 
   it('demotes another owner when one remains', async () => {
@@ -150,6 +172,7 @@ describe('UpdateTeamspaceMemberRoleHandler', () => {
     await handler.execute(command(TeamspaceRole.MEMBER));
     expect(target.getUpdatedAt()).toBe(before);
     expect(memberRepo.save).not.toHaveBeenCalled();
+    expect(activities.create).not.toHaveBeenCalled();
   });
 
   it('propagates persistence errors so UnitOfWork can roll back', async () => {
@@ -157,5 +180,6 @@ describe('UpdateTeamspaceMemberRoleHandler', () => {
     await expect(handler.execute(command(TeamspaceRole.OWNER))).rejects.toThrow(
       'write failed',
     );
+    expect(activities.create).not.toHaveBeenCalled();
   });
 });

@@ -55,6 +55,7 @@ export class GetWorkspaceSubscriptionHandler {
         currentPeriodStart: null,
         currentPeriodEnd: null,
         cancelAtPeriodEnd: false,
+        accessEndsAt: null,
       };
     }
 
@@ -82,6 +83,7 @@ export class GetWorkspaceSubscriptionHandler {
       currentPeriodStart: subscription.getCurrentPeriodStart(),
       currentPeriodEnd: subscription.getCurrentPeriodEnd(),
       cancelAtPeriodEnd: subscription.getCancelAtPeriodEnd(),
+      accessEndsAt: subscription.getAccessEndsAt(),
     };
   }
 }

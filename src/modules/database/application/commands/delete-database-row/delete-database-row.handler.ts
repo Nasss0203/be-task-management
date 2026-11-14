@@ -4,12 +4,15 @@ import { DATABASE_TYPES } from '../../../database.types';
 import { type DatabaseRowRepository } from '../../../domain/repositories/database-row.repository';
 
 import { DeleteDatabaseRowCommand } from './delete-database-row.command';
+import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
 
 @Injectable()
 export class DeleteDatabaseRowHandler {
   constructor(
     @Inject(DATABASE_TYPES.repositories.DatabaseRowRepository)
     private readonly databaseRowRepository: DatabaseRowRepository,
+    @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
+    private readonly activityRecorder: DatabaseActivityRecorder,
   ) {}
 
   async execute(command: DeleteDatabaseRowCommand): Promise<void> {
@@ -20,5 +23,11 @@ export class DeleteDatabaseRowHandler {
     }
 
     await this.databaseRowRepository.delete(row.getId());
+    await this.activityRecorder.record({
+      actorId: command.actorId,
+      databaseId: row.getDatabaseId(),
+      action: 'DATABASE_ROW_DELETED',
+      rowId: row.getId(),
+    });
   }
 }

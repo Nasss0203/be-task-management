@@ -14,6 +14,7 @@ import { type DatabaseRepository } from '../../../domain/repositories/database.r
 
 import { SetRowValueCommand } from './set-row-value.command';
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
+import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
 
 @Injectable()
 export class SetRowValueHandler {
@@ -23,6 +24,8 @@ export class SetRowValueHandler {
 
     @Inject(DATABASE_TYPES.repositories.DatabaseRowRepository)
     private readonly databaseRowRepository: DatabaseRowRepository,
+    @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
+    private readonly activityRecorder: DatabaseActivityRecorder,
   ) {}
 
   async execute(
@@ -66,6 +69,17 @@ export class SetRowValueHandler {
       const savedValue = row.setValue(property, rowValue);
 
       await this.databaseRowRepository.save(row, context);
+      await this.activityRecorder.record(
+        {
+          actorId: command.actorId,
+          databaseId: database.getId(),
+          action: 'DATABASE_ROW_UPDATED',
+          rowId: row.getId(),
+          field: property.getId(),
+          newValue: command.value,
+        },
+        context,
+      );
 
       return savedValue;
     } catch (error) {

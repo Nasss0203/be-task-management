@@ -1,9 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 import { BILLING_TYPES } from '../../billing.types';
 import { BillingInterval } from '../../domain/constants/billing-interval.constant';
 import { BillingProvider } from '../../domain/constants/billing-provider.constant';
+import type { WorkspaceSubscription } from '../../domain/entities/workspace-subscription.entity';
 import type { BillingPlanPriceRepository } from '../../domain/repositories/billing-plan-price.repository';
 import type { PaymentOrderRepository } from '../../domain/repositories/payment-order.repository';
 import type { WorkspaceSubscriptionRepository } from '../../domain/repositories/workspace-subscription.repository';
@@ -22,6 +23,8 @@ export interface SettleBillingPaymentInput {
 
 @Injectable()
 export class BillingPaymentSettlementService {
+  private readonly logger = new Logger(BillingPaymentSettlementService.name);
+
   constructor(
     @Inject(BILLING_TYPES.repositories.PaymentOrderRepository)
     private readonly paymentOrderRepository: PaymentOrderRepository,
@@ -46,11 +49,17 @@ export class BillingPaymentSettlementService {
       return 'IGNORED';
     }
 
+    const receivedCurrency = input.currency.trim().toUpperCase();
+
     if (
       paymentOrder.getProvider() !== input.provider ||
-      paymentOrder.getCurrency() !== input.currency.trim().toUpperCase() ||
+      paymentOrder.getCurrency() !== receivedCurrency ||
       paymentOrder.getAmount() !== input.amount
     ) {
+      this.logger.warn(
+        `Payment for order ${input.orderCode} does not match the order: expected ${paymentOrder.getAmount()} ${paymentOrder.getCurrency()} via ${paymentOrder.getProvider()}, received ${input.amount} ${receivedCurrency} via ${input.provider}`,
+      );
+
       return 'IGNORED';
     }
 
@@ -75,7 +84,10 @@ export class BillingPaymentSettlementService {
     }
 
     const [subscription, planPrice] = await Promise.all([
-      this.subscriptionRepository.findById(subscriptionId, input.context),
+      this.subscriptionRepository.findByIdForUpdate(
+        subscriptionId,
+        input.context,
+      ),
       this.billingPlanPriceRepository.findById(
         paymentOrder.getPlanPriceId(),
         input.context,
@@ -96,16 +108,18 @@ export class BillingPaymentSettlementService {
       );
     }
 
-    if (
-      planPrice.getProvider() !== paymentOrder.getProvider() ||
-      planPrice.getAmount() !== paymentOrder.getAmount() ||
-      planPrice.getCurrency() !== paymentOrder.getCurrency()
-    ) {
-      throw new Error('Payment order does not match its billing plan price');
+    if (planPrice.getProvider() !== paymentOrder.getProvider()) {
+      throw new Error('Payment order does not match its billing plan provider');
     }
 
-    const periodEnd = this.calculatePeriodEnd(
+    const remainingPeriod = this.findRemainingPeriod(
+      subscription,
+      planPrice.getPlanId(),
       input.paidAt,
+    );
+
+    const periodEnd = this.calculatePeriodEnd(
+      remainingPeriod?.end ?? input.paidAt,
       planPrice.getBillingInterval(),
     );
 
@@ -115,8 +129,9 @@ export class BillingPaymentSettlementService {
       planId: planPrice.getPlanId(),
       planPriceId: planPrice.getId(),
       provider: planPrice.getProvider(),
-      periodStart: input.paidAt,
+      periodStart: remainingPeriod?.start ?? input.paidAt,
       periodEnd,
+      billingContactUserId: paymentOrder.getCreatedBy(),
       changedAt: input.processedAt,
     });
 
@@ -124,6 +139,24 @@ export class BillingPaymentSettlementService {
     await this.subscriptionRepository.save(subscription, input.context);
 
     return 'PROCESSED';
+  }
+
+  private findRemainingPeriod(
+    subscription: WorkspaceSubscription,
+    planId: string,
+    paidAt: Date,
+  ): { start: Date; end: Date } | null {
+    const start = subscription.getCurrentPeriodStart();
+    const end = subscription.getCurrentPeriodEnd();
+
+    const isRenewingActivePaidPlan =
+      subscription.getPlanPriceId() !== null &&
+      subscription.getPlanId() === planId &&
+      start !== null &&
+      end !== null &&
+      subscription.hasPaidAccessAt(paidAt);
+
+    return isRenewingActivePaidPlan ? { start, end } : null;
   }
 
   private calculatePeriodEnd(

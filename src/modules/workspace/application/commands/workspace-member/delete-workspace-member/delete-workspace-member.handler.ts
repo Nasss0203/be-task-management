@@ -2,8 +2,17 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
+import {
+  NotificationSenderType,
+  NotificationSourceType,
+  NotificationType,
+} from 'src/modules/notifications/domain/entities/notification.entity';
+import type { CreateNotificationService } from 'src/modules/notifications/application/ports/create-notification.service.port';
+import { NOTIFICATION_TYPES } from 'src/modules/notifications/notifications.types';
+import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role.enum';
 import {
   ActivityAction,
   ActivityEntityType,
@@ -16,16 +25,23 @@ import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 import type { WorkspaceRepository } from 'src/modules/workspace/domain/repositories/workspace.repository';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
-import type { TeamspaceOwnershipGuard } from 'src/modules/workspace/application/ports/teamspace-ownership-guard.port';
+import type {
+  TeamspaceHandover,
+  TeamspaceOwnershipGuard,
+} from 'src/modules/workspace/application/ports/teamspace-ownership-guard.port';
 import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { type UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
+import { BILLING_TYPES } from 'src/modules/billing/billing.types';
+import type { SubscriptionLifecyclePort } from 'src/modules/billing/application/ports/subscription-lifecycle.port';
 import { WorkspaceSoftDeleteService } from '../../../services/workspace-soft-delete.service';
 
 import { DeleteWorkspaceMemberCommand } from './delete-workspace-member.command';
 
 @Injectable()
 export class DeleteWorkspaceMemberHandler {
+  private readonly logger = new Logger(DeleteWorkspaceMemberHandler.name);
+
   constructor(
     @Inject(WORKSPACE_TYPES.repositories.WorkspaceMemberRepository)
     private readonly workspaceMemberRepository: WorkspaceMemberRepository,
@@ -46,10 +62,16 @@ export class DeleteWorkspaceMemberHandler {
     private readonly userProfilePreferenceService: UserProfilePreferenceService,
 
     private readonly workspaceSoftDeleteService: WorkspaceSoftDeleteService,
+
+    @Inject(BILLING_TYPES.services.SubscriptionLifecyclePort)
+    private readonly subscriptionLifecycle: SubscriptionLifecyclePort,
+
+    @Inject(NOTIFICATION_TYPES.services.CreateNotificationService)
+    private readonly notifications: CreateNotificationService,
   ) {}
 
   async execute(command: DeleteWorkspaceMemberCommand): Promise<void> {
-    return this.uow.runInTransaction(async (manager) => {
+    const handovers = await this.uow.runInTransaction(async (manager) => {
       const isSelfLeave = command.actorId === command.userId;
 
       if (!isSelfLeave) {
@@ -112,17 +134,33 @@ export class DeleteWorkspaceMemberHandler {
             manager,
           );
 
-          return;
+          return [];
         }
       }
 
-      await this.teamspaceOwnershipGuard.assertCanRemoveWorkspaceMember(
-        command.workspaceId,
-        targetMember.getId(),
-        manager,
-      );
+      let teamspaceHandovers: TeamspaceHandover[] = [];
+      if (isSelfLeave) {
+        await this.teamspaceOwnershipGuard.assertCanRemoveWorkspaceMember(
+          command.workspaceId,
+          targetMember.getId(),
+          manager,
+        );
+      } else {
+        teamspaceHandovers =
+          await this.teamspaceOwnershipGuard.handOverTeamspacesOf(
+            command.workspaceId,
+            targetMember.getId(),
+            command.userId,
+            manager,
+          );
+      }
 
       await this.workspaceMemberRepository.deleteByWorkspaceAndUser(
+        command.workspaceId,
+        command.userId,
+        manager,
+      );
+      await this.subscriptionLifecycle.handleBillingContactLeft(
         command.workspaceId,
         command.userId,
         manager,
@@ -147,7 +185,66 @@ export class DeleteWorkspaceMemberHandler {
         },
         manager,
       );
+
+      for (const handover of teamspaceHandovers) {
+        await this.createActivityService.create(
+          {
+            workspaceId: command.workspaceId,
+            entityType: ActivityEntityType.TEAMSPACE,
+            entityId: handover.teamspaceId,
+            actorId: command.actorId,
+            ...(handover.newOwnerWorkspaceMemberId
+              ? {
+                  action: ActivityAction.TEAMSPACE_MEMBER_ROLE_CHANGED,
+                  metadata: {
+                    workspaceMemberId: handover.newOwnerWorkspaceMemberId,
+                    from: TeamspaceRole.MEMBER,
+                    to: TeamspaceRole.OWNER,
+                    reason: 'previous_owner_removed_from_workspace',
+                  },
+                }
+              : {
+                  action: ActivityAction.TEAMSPACE_ARCHIVED,
+                  metadata: { reason: 'last_member_removed_from_workspace' },
+                }),
+          },
+          manager,
+        );
+      }
+
+      return teamspaceHandovers;
     });
+
+    for (const handover of handovers) {
+      if (handover.newOwnerUserId) {
+        await this.notifyNewTeamspaceOwner(command, handover);
+      }
+    }
+  }
+
+  private async notifyNewTeamspaceOwner(
+    command: DeleteWorkspaceMemberCommand,
+    handover: TeamspaceHandover,
+  ): Promise<void> {
+    try {
+      await this.notifications.createNotification({
+        receiverId: handover.newOwnerUserId as string,
+        senderType: NotificationSenderType.USER,
+        actorId: command.actorId,
+        sourceType: NotificationSourceType.TEAMSPACE,
+        sourceId: handover.teamspaceId,
+        workspaceId: command.workspaceId,
+        type: NotificationType.TEAMSPACE_OWNERSHIP_TRANSFERRED,
+        title: 'Bạn là owner mới của Teamspace',
+        message: `Owner trước đã rời workspace, bạn được chuyển quyền owner của Teamspace "${handover.teamspaceName}".`,
+        metadata: { teamspaceId: handover.teamspaceId },
+      });
+    } catch (error) {
+      this.logger.error(
+        `Teamspace ${handover.teamspaceId} owner changed but the notification failed`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
   }
 
   private async updateLastActiveWorkspaceAfterLeave(

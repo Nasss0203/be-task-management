@@ -19,6 +19,7 @@ export type CreateActivityServiceInput = {
   newValue?: unknown;
   metadata?: Record<string, unknown> | null;
   isSystem?: boolean;
+  pageId?: string | null;
 };
 
 export interface CreateActivityService {

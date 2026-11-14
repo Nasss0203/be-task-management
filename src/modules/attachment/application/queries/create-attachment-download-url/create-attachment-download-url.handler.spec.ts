@@ -9,12 +9,13 @@ const createAttachment = (
   provider: AttachmentProvider,
   storageKey: string | null,
   secureUrl: string | null,
+  pageBlockId: string | null = null,
 ) =>
   AttachmentAggregate.reconstitute({
     id: 'att-1',
     workspaceId: 'ws-1',
-    taskId: 'task-1',
     commentId: null,
+    pageBlockId,
     uploadedBy: 'user-1',
     fileName: 'file.pdf',
     mimeType: 'application/pdf',
@@ -32,13 +33,79 @@ const createAttachment = (
 describe('CreateAttachmentDownloadUrlHandler', () => {
   const findReadyById = jest.fn();
   const createDownloadUrl = jest.fn();
+  const authorize = jest.fn<Promise<boolean>, [{ target: { type: string } }]>();
   const handler = new CreateAttachmentDownloadUrlHandler(
     { findReadyById } as never,
     { createDownloadUrl } as never,
+    { authorize } as never,
   );
   const query = new CreateAttachmentDownloadUrlQuery('att-1', 'user-1');
 
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    authorize.mockResolvedValue(true);
+  });
+
+  it('hides an attachment of a workspace the user cannot read', async () => {
+    authorize.mockResolvedValue(false);
+    findReadyById.mockResolvedValue(
+      createAttachment(AttachmentProvider.R2, 'key', null),
+    );
+
+    await expect(handler.execute(query)).rejects.toThrow(NotFoundException);
+    expect(authorize).toHaveBeenCalledWith({
+      userId: 'user-1',
+      permissions: ['attachment.read'],
+      target: { type: 'workspace', id: 'ws-1' },
+    });
+    expect(createDownloadUrl).not.toHaveBeenCalled();
+  });
+
+  it('allows a guest who can read the page block holding the file', async () => {
+    authorize.mockImplementation(({ target }) =>
+      Promise.resolve(target.type === 'pageBlock'),
+    );
+    findReadyById.mockResolvedValue(
+      createAttachment(AttachmentProvider.R2, 'key', null, 'block-1'),
+    );
+    createDownloadUrl.mockResolvedValue({
+      downloadUrl: 'https://r2/signed',
+      expiresIn: 300,
+    });
+
+    await expect(handler.execute(query)).resolves.toMatchObject({
+      downloadUrl: 'https://r2/signed',
+    });
+    expect(authorize).toHaveBeenCalledTimes(1);
+    expect(authorize).toHaveBeenCalledWith({
+      userId: 'user-1',
+      permissions: ['page_block.read'],
+      target: { type: 'pageBlock', id: 'block-1' },
+    });
+  });
+
+  it('hides a page file from a workspace member who cannot read the page', async () => {
+    authorize.mockImplementation(({ target }) =>
+      Promise.resolve(target.type === 'workspace'),
+    );
+    findReadyById.mockResolvedValue(
+      createAttachment(AttachmentProvider.R2, 'key', null, 'block-1'),
+    );
+
+    await expect(handler.execute(query)).rejects.toThrow(NotFoundException);
+    expect(createDownloadUrl).not.toHaveBeenCalled();
+  });
+
+  it('hides the file when the page block is not readable', async () => {
+    authorize.mockResolvedValue(false);
+    findReadyById.mockResolvedValue(
+      createAttachment(AttachmentProvider.R2, 'key', null, 'block-1'),
+    );
+
+    await expect(handler.execute(query)).rejects.toThrow(NotFoundException);
+    expect(authorize).toHaveBeenCalledTimes(1);
+    expect(createDownloadUrl).not.toHaveBeenCalled();
+  });
 
   it('throws when the attachment is not READY or missing', async () => {
     findReadyById.mockResolvedValue(null);
@@ -104,6 +171,7 @@ describe('CreateAttachmentDownloadUrlHandler', () => {
       expiresIn: 300,
     });
     expect(createDownloadUrl).toHaveBeenCalledWith({
+      provider: AttachmentProvider.R2,
       key: 'key',
       fileName: 'file.pdf',
       contentType: 'application/pdf',

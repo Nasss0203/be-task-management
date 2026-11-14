@@ -4,7 +4,10 @@ import { Inject, Injectable } from '@nestjs/common';
 
 import type { TeamspaceRepository } from 'src/modules/teamspace/domain/repositories/teamspace.repository';
 
-import { TeamspaceResponseDto } from '../../../dto/teamspace/response/teamspace.response.dto';
+import {
+  type AccessibleTeamspaceResponseDto,
+  TeamspaceResponseDto,
+} from '../../../dto/teamspace/response/teamspace.response.dto';
 import { GetTeamspacesQuery } from './get-teamspaces.query';
 
 @Injectable()
@@ -14,15 +17,16 @@ export class GetTeamspacesHandler {
     private readonly teamspaceRepository: TeamspaceRepository,
   ) {}
 
-  async execute(query: GetTeamspacesQuery): Promise<TeamspaceResponseDto[]> {
+  async execute(query: GetTeamspacesQuery): Promise<AccessibleTeamspaceResponseDto[]> {
     const teamspaces =
       await this.teamspaceRepository.findAccessibleByWorkspaceAndUser(
         query.workspaceId,
         query.userId,
       );
 
-    return teamspaces.map((teamspace) =>
-      TeamspaceResponseDto.fromDomain(teamspace),
-    );
+    return teamspaces.map(({ teamspace, myRole }) => ({
+      ...TeamspaceResponseDto.fromDomain(teamspace),
+      myRole,
+    }));
   }
 }

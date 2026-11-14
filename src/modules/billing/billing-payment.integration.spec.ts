@@ -209,6 +209,7 @@ describe('Subscription checkout and verified webhook settlement (synthetic persi
   };
   const subscriptionRepository = {
     findById: jest.fn(async () => subscription),
+    findByIdForUpdate: jest.fn(() => Promise.resolve(subscription)),
     findByWorkspaceId: jest.fn(async () => subscription),
     save: jest.fn(async (value) => value),
   };

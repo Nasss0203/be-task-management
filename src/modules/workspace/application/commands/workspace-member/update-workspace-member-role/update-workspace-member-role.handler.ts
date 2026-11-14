@@ -11,6 +11,8 @@ import {
 } from 'src/modules/activity/domain/entities/activity.entity';
 import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
 import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import { BILLING_TYPES } from 'src/modules/billing/billing.types';
+import type { SubscriptionLifecyclePort } from 'src/modules/billing/application/ports/subscription-lifecycle.port';
 import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
@@ -30,6 +32,9 @@ export class UpdateWorkspaceMemberRoleHandler {
 
     @Inject(ACTIVITY_TYPES.services.CreateActivityService)
     private readonly createActivityService: CreateActivityService,
+
+    @Inject(BILLING_TYPES.services.SubscriptionLifecyclePort)
+    private readonly subscriptionLifecycle: SubscriptionLifecyclePort,
   ) {}
 
   async execute(command: UpdateWorkspaceMemberRoleCommand): Promise<void> {
@@ -88,6 +93,14 @@ export class UpdateWorkspaceMemberRoleHandler {
       targetMember.changeRole(command.roleName);
 
       await this.workspaceMemberRepository.save(targetMember, manager);
+
+      if (command.roleName !== WorkspaceRole.OWNER) {
+        await this.subscriptionLifecycle.handleBillingContactLeft(
+          command.workspaceId,
+          command.userId,
+          manager,
+        );
+      }
 
       await this.createActivityService.create(
         {

@@ -1,3 +1,9 @@
+import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import { TEAMSPACE_TYPES } from 'src/modules/teamspace/teamspace.types';
 import {
   ConflictException,
@@ -22,7 +28,6 @@ import { AuthorizationService } from 'src/modules/permission/application/service
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role.enum';
 import { TeamspacePermissionPolicy } from 'src/modules/permission/domain/policies/teamspace-permission.policy';
-import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import type { TeamspaceMembershipLock } from '../../../ports/teamspace-membership-lock.port';
 import { AddTeamspaceMemberCommand } from './add-teamspace-member.command';
 
@@ -45,6 +50,8 @@ export class AddTeamspaceMemberHandler {
     private readonly uow: UnitOfWork,
 
     private readonly authorizationService: AuthorizationService,
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async execute(command: AddTeamspaceMemberCommand): Promise<TeamspaceMember> {
@@ -106,10 +113,7 @@ export class AddTeamspaceMemberHandler {
             manager,
           )
         : null;
-      const actorRole =
-        actor?.getRole() === WorkspaceRole.OWNER
-          ? TeamspaceRole.OWNER
-          : actorTeamspaceMember?.getRoleName();
+      const actorRole = actorTeamspaceMember?.getRoleName();
       const requiredPermissions =
         command.role === TeamspaceRole.OWNER
           ? [
@@ -190,7 +194,25 @@ export class AddTeamspaceMemberHandler {
       /**
        * 6. Lưu.
        */
-      return this.teamspaceMemberRepo.save(teamspaceMember, manager);
+      const savedMember = await this.teamspaceMemberRepo.save(
+        teamspaceMember,
+        manager,
+      );
+      await this.createActivityService.create(
+        {
+          workspaceId: teamspace.getWorkspaceId(),
+          entityType: ActivityEntityType.TEAMSPACE,
+          entityId: command.teamspaceId,
+          actorId: command.userId,
+          action: ActivityAction.TEAMSPACE_MEMBER_JOINED,
+          metadata: {
+            userId: workspaceMember.getUserId(),
+            roleName: command.role,
+          },
+        },
+        manager,
+      );
+      return savedMember;
     });
   }
 }

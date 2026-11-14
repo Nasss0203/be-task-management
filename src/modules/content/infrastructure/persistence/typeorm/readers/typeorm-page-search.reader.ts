@@ -51,7 +51,7 @@ export class TypeOrmPageSearchReader implements PageSearchReader {
            AND tm.workspace_member_id = wm.id
           WHERE p.workspace_id = $1
             AND p.deleted_at IS NULL
-            AND (wm.role_name = 'OWNER' OR p.teamspace_id IS NULL OR tm.id IS NOT NULL)
+            AND (p.teamspace_id IS NULL OR tm.id IS NOT NULL)
             AND NOT EXISTS (
               SELECT 1 FROM teamspaces t
               WHERE t.id = p.teamspace_id AND t.deleted_at IS NOT NULL

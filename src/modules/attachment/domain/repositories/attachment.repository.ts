@@ -12,10 +12,12 @@ export interface AttachmentRepository {
     context?: PersistenceContext,
   ): Promise<AttachmentAggregate | null>;
 
-  findReadyByTaskId(
-    taskId: string,
+  findReadyByIds(
+    ids: string[],
     context?: PersistenceContext,
   ): Promise<AttachmentAggregate[]>;
 
   delete(id: string, context?: PersistenceContext): Promise<void>;
+
+  deleteByIds(ids: string[], context?: PersistenceContext): Promise<void>;
 }

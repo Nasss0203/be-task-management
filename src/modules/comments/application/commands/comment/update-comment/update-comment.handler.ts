@@ -1,3 +1,9 @@
+import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import {
   ForbiddenException,
   Inject,
@@ -18,6 +24,8 @@ export class UpdateCommentHandler {
     private readonly commentRepo: CommentRepository,
     private readonly authors: CommentAuthorService,
     private readonly commentNotifications: CommentNotificationService,
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async execute(command: UpdateCommentCommand): Promise<CommentResponseDto> {
@@ -31,9 +39,25 @@ export class UpdateCommentHandler {
       throw new ForbiddenException('You can only edit your own comments');
     }
 
+    const previousBody = comment.getBody();
     comment.edit(command.body);
 
     const saved = await this.commentRepo.save(comment);
+    if (previousBody !== saved.getBody()) {
+      await this.createActivityService.create({
+        workspaceId: saved.getWorkspaceId(),
+        entityType: ActivityEntityType.COMMENT,
+        entityId: saved.getId(),
+        pageId: saved.getPageId(),
+        actorId: command.userId,
+        action: ActivityAction.COMMENT_UPDATED,
+        metadata: {
+          pageId: saved.getPageId(),
+          targetType: saved.getTargetType(),
+          targetId: saved.getTargetId(),
+        },
+      });
+    }
 
     // Sửa comment: chỉ báo người mới được thêm vào mention, không báo "replied" lại
     await this.commentNotifications.afterSave(saved, command.userId);

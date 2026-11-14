@@ -10,10 +10,19 @@ export type StoredObject = {
   size: number;
 };
 
+export type SignedDownloadOptions = {
+  fileName?: string;
+  contentType?: string;
+};
+
 export interface ObjectStoragePort {
   upload(input: UploadObjectInput): Promise<StoredObject>;
 
   delete(key: string): Promise<void>;
 
-  getSignedDownloadUrl(key: string, expiresInSeconds?: number): Promise<string>;
+  getSignedDownloadUrl(
+    key: string,
+    expiresInSeconds?: number,
+    options?: SignedDownloadOptions,
+  ): Promise<string>;
 }

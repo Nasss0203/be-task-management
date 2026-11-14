@@ -89,6 +89,7 @@ describePostgres('Teamspace handlers with real PostgreSQL transactions', () => {
       lock,
       uow,
       authorization,
+      { create: jest.fn().mockResolvedValue(undefined) } as never,
     );
     addHandler = new AddTeamspaceMemberHandler(
       teamspaceRepo,
@@ -97,6 +98,7 @@ describePostgres('Teamspace handlers with real PostgreSQL transactions', () => {
       lock,
       uow,
       authorization,
+      { create: jest.fn().mockResolvedValue(undefined) } as never,
     );
   });
 

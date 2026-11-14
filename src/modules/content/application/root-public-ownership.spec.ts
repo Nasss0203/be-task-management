@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
 import type { WorkspaceRepository } from 'src/modules/workspace/domain/repositories/workspace.repository';
+import type { WorkspaceEntitlementPort } from 'src/modules/billing/application/ports/workspace-entitlement.port';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { Page } from '../domain/aggregates/page/page.aggregate';
 import { PageBlock } from '../domain/entities/page-block.entity';
@@ -66,6 +67,10 @@ describe('root-owned public sites', () => {
   const authorize = jest.fn().mockResolvedValue(true);
   const auth = { authorize } as unknown as AuthorizationService;
   const uow: UnitOfWork = { runInTransaction: (fn) => fn(context) };
+  const assertWithinLimit = jest.fn();
+  const entitlements = {
+    assertWithinLimit,
+  } as unknown as WorkspaceEntitlementPort;
   const publication = (siteId: string, pageId: string) =>
     [...publications.values()].find(
       (p) => p.getSiteId() === siteId && p.getPageId() === pageId,
@@ -237,6 +242,7 @@ describe('root-owned public sites', () => {
       tree,
       allocator,
       activity,
+      auth,
     );
     move = new MovePageHandler(
       pageRepo,
@@ -252,6 +258,7 @@ describe('root-owned public sites', () => {
       publicationRepo,
       uow,
       tree,
+      entitlements,
     );
     legacyAttach = new PublishPageToSiteHandler(
       siteRepo,
@@ -260,7 +267,20 @@ describe('root-owned public sites', () => {
       uow,
       auth,
       tree,
+      entitlements,
     );
+  });
+
+  it('does not publish when the plan has no public pages', async () => {
+    const home = await createPage('Home');
+    assertWithinLimit.mockRejectedValueOnce(
+      new ForbiddenException('WORKSPACE_LIMIT_EXCEEDED'),
+    );
+
+    await expect(publishRoot(home)).rejects.toBeInstanceOf(ForbiddenException);
+    expect(assertWithinLimit).toHaveBeenCalledWith(workspace, 'PUBLIC_PAGE');
+    expect(sites.size).toBe(0);
+    expect(publications.size).toBe(0);
   });
 
   it('reserves global deterministic names while keeping child Pages without a subdomain', async () => {
@@ -395,9 +415,13 @@ describe('root-owned public sites', () => {
     expect(pages.get(other.getId())?.getPublicSubdomain()).toBeNull();
     expect(publication(homeSiteId, other.getId())?.getPath()).toBe('/other');
     await expect(
-      new RepublishSiteHandler(publicationRepo, siteRepo, uow, tree).execute(
-        new RepublishSiteCommand('user', other.getId(), oldSiteId),
-      ),
+      new RepublishSiteHandler(
+        publicationRepo,
+        siteRepo,
+        uow,
+        tree,
+        entitlements,
+      ).execute(new RepublishSiteCommand('user', other.getId(), oldSiteId)),
     ).rejects.toBeInstanceOf(BadRequestException);
     await movePage(pages.get(other.getId())!, null);
     expect(pages.get(other.getId())?.getPublicSubdomain()).toBe('other-2');
@@ -543,6 +567,7 @@ describe('root-owned public sites', () => {
       siteRepo,
       uow,
       tree,
+      entitlements,
     );
     await republish.execute(
       new RepublishSiteCommand('user', home.getId(), siteId),
@@ -862,6 +887,7 @@ describe('root-owned public sites', () => {
       siteRepo,
       uow,
       tree,
+      entitlements,
     ).execute(new RepublishSiteCommand('user', home.getId(), siteId));
     expect(sites.get(siteId)?.getDisabledAt()).toBeNull();
     expect(home.getPublicSubdomain()).toBe('home');

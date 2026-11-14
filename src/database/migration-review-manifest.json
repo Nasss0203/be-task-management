@@ -240,6 +240,46 @@
     {
       "file": "1793525596585-UpdateSchema.ts",
       "sha256": "fcaa3d53dc2a5f97fb107e59d49e1ebcf1c5935f7f1753e49e3e58a786530837"
+    },
+    {
+      "file": "1793857872144-CreateCalendarFeeds.ts",
+      "sha256": "94a04741fe232c6d2f273ef3f73992ce4fdc98c8f81e974b9387cabed3700b2d"
+    },
+    {
+      "file": "1793871078264-CreateGoogleCalendarConnections.ts",
+      "sha256": "bd6ba13883eb07d574d16f83d9aeda410ba03c542ffce74d529b4e756896bec8"
+    },
+    {
+      "file": "1793877495797-AddGoogleCalendarSyncAssignedToMeOnly.ts",
+      "sha256": "f4519e0a16281be2781195388ecf41c5872fd367a0522e6e0923a02d010ca645"
+    },
+    {
+      "file": "1793955947271-CreateSlackConnections.ts",
+      "sha256": "63656dc1efe8aa4da4d66d64d23aa8c11bcc41f837de0f7c349fadccd2683f9c"
+    },
+    {
+      "file": "1793969608044-AddSlackConnectionsSlackUserUnique.ts",
+      "sha256": "e4c8218886fe0d2f1fe6d76d63bcf9cb36711cbdec6b4241f1626ed0a0e998bf"
+    },
+    {
+      "file": "1794034110858-add-activity-database-teamspace-values.ts",
+      "sha256": "56a113a9e7c02a50aedea4027c9234837e584d11bebfc0baab34aaf48f7730d1"
+    },
+    {
+      "file": "1794039578252-add-activity-page-id.ts",
+      "sha256": "e15e007d9e479fa63a76ec7a588f02991bb61a8d097b494f7d855293197c2789"
+    },
+    {
+      "file": "1794125361326-add-attachment-provider-s3.ts",
+      "sha256": "22082417f7ecddea3de872b1ac75b0cb48142ed1ad1bb3e2b93af6ebad157ee8"
+    },
+    {
+      "file": "1794200000000-add-subscription-billing-contact-and-expiry-notice.ts",
+      "sha256": "0e38c7f9dea7c6f47a3e5741b0bc885c314fae0f1a9edd9ab619c22219403a3f"
+    },
+    {
+      "file": "1794643107828-UpdateSchema.ts",
+      "sha256": "d6689bfed65cf6fd7fd62facbcd8579631e532fce4323a70a1476d82673c6cd4"
     }
   ]
 }

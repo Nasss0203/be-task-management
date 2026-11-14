@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { PageBlockMentionService } from 'src/modules/content/application/services/page-block-mention.service';
 import { PageBlockColumnCleanupService } from 'src/modules/content/application/services/page-block-column-cleanup.service';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import type { PageBlock } from 'src/modules/content/domain/entities/page-block.entity';
@@ -29,10 +30,11 @@ export class DeletePageBlockHandler {
     @Inject(CONTENT_TYPES.ports.PageActivityRecorder)
     private readonly activity: PageActivityRecorder,
     private readonly columnCleanup: PageBlockColumnCleanupService,
+    private readonly mentions: PageBlockMentionService,
   ) {}
 
   async execute(command: DeletePageBlockCommand): Promise<void> {
-    await this.uow.runInTransaction(async (context) => {
+    const deletedIds = await this.uow.runInTransaction(async (context) => {
       const block = await this.pageBlockRepo.findById(command.blockId, context);
       if (!block) {
         throw new NotFoundException('Page block not found');
@@ -60,7 +62,11 @@ export class DeletePageBlockHandler {
         command.userId,
         context,
       );
+
+      return subtree.map((subtreeBlock) => subtreeBlock.getId());
     });
+
+    await this.mentions.afterDelete(deletedIds);
   }
 
   private async collectActiveSubtree(

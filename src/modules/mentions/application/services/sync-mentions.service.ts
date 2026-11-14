@@ -4,8 +4,8 @@ import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
 import type { CreateNotificationService } from 'src/modules/notifications/application/ports/create-notification.service.port';
 import {
   NotificationSenderType,
-  NotificationSourceType,
-  NotificationType,
+  type NotificationSourceType,
+  type NotificationType,
 } from 'src/modules/notifications/domain/entities/notification.entity';
 import { NOTIFICATION_TYPES } from 'src/modules/notifications/notifications.types';
 import { Mention } from '../../domain/entities/mention.entity';
@@ -30,6 +30,13 @@ export interface SyncMentionsInput {
   body: string;
   /** Link mở đúng chỗ được nhắc (page, `#block-…`). */
   actionUrl: string;
+  notifyAs: MentionNotificationKind;
+}
+
+export interface MentionNotificationKind {
+  type: NotificationType;
+  sourceType: NotificationSourceType;
+  place: string;
 }
 
 const MESSAGE_MAX_LENGTH = 140;
@@ -106,11 +113,11 @@ export class SyncMentionsService {
           receiverId: userId,
           senderType: NotificationSenderType.USER,
           actorId: input.actorId,
-          sourceType: NotificationSourceType.COMMENT,
+          sourceType: input.notifyAs.sourceType,
           sourceId: input.sourceId,
           workspaceId: input.workspaceId,
-          type: NotificationType.COMMENT_MENTIONED,
-          title: `${actorName} mentioned you in a comment`,
+          type: input.notifyAs.type,
+          title: `${actorName} mentioned you in ${input.notifyAs.place}`,
           message,
           actionUrl: input.actionUrl,
           metadata: {

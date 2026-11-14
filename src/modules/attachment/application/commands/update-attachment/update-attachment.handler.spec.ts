@@ -8,7 +8,6 @@ import { UpdateAttachmentHandler } from './update-attachment.handler';
 const attachment = AttachmentAggregate.reconstitute({
   id: 'att-1',
   workspaceId: 'ws-1',
-  taskId: 'task-1',
   commentId: null,
   uploadedBy: 'user-1',
   fileName: 'file.pdf',

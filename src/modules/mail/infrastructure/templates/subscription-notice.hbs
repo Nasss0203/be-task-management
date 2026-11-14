@@ -1,0 +1,59 @@
+<html lang='vi'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>{{heading}}</title>
+  </head>
+  <body style='margin: 0; padding: 0; background-color: #f1f5fc; font-family: "Segoe UI", Arial, Helvetica, sans-serif; color: #070b14;'>
+    <table role='presentation' cellpadding='0' cellspacing='0' width='100%' style='background-color: #f1f5fc; margin: 0; padding: 40px 0;'>
+      <tr>
+        <td align='center' style='padding: 0 16px;'>
+          <table role='presentation' cellpadding='0' cellspacing='0' width='100%' style='max-width: 620px; background-color: #ffffff; border: 1px solid #d4d8de; border-radius: 20px; overflow: hidden;'>
+            <tr>
+              <td style='padding: 36px 40px 32px; background: linear-gradient(135deg, #05070d 0%, #0a1018 60%, #0f1c33 100%);'>
+                <div style='display: inline-block; margin-bottom: 20px; padding: 5px 14px; border-radius: 999px; background-color: rgba(57, 123, 233, 0.15); color: #397be9; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;'>{{appName}}</div>
+                <h1 style='margin: 0; font-size: 26px; line-height: 34px; color: #f1f5fc; font-weight: 700;'>{{heading}}</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style='padding: 40px;'>
+                <p style='margin: 0 0 16px; font-size: 16px; line-height: 26px; color: #3a4460;'>Xin chào <strong style='color: #070b14;'>{{recipientName}}</strong>,</p>
+                <p style='margin: 0 0 28px; font-size: 16px; line-height: 28px; color: #4a5578;'>{{message}}</p>
+                <table role='presentation' cellpadding='0' cellspacing='0' width='100%' style='margin: 0 0 28px; background-color: #f8fafd; border: 1px solid #d4d8de; border-radius: 14px;'>
+                  <tr>
+                    <td style='padding: 22px 24px;'>
+                      <table role='presentation' cellpadding='0' cellspacing='0' width='100%'>
+                        <tr>
+                          <td style='padding: 6px 0; font-size: 14px; color: #8899bb; width: 140px;'>Workspace</td>
+                          <td style='padding: 6px 0; font-size: 14px; color: #070b14; font-weight: 600;'>{{workspaceName}}</td>
+                        </tr>
+                        <tr>
+                          <td style='padding: 6px 0; border-top: 1px solid #e4e8ef; font-size: 14px; color: #8899bb;'>Gói</td>
+                          <td style='padding: 6px 0; border-top: 1px solid #e4e8ef; font-size: 14px; color: #070b14; font-weight: 600;'>{{planName}}</td>
+                        </tr>
+                        <tr>
+                          <td style='padding: 6px 0; border-top: 1px solid #e4e8ef; font-size: 14px; color: #8899bb;'>{{dateLabel}}</td>
+                          <td style='padding: 6px 0; border-top: 1px solid #e4e8ef; font-size: 14px; color: #c0392b; font-weight: 600;'>{{dateValue}}</td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+                <table role='presentation' cellpadding='0' cellspacing='0' width='100%'>
+                  <tr>
+                    <td align='center'>
+                      <a href='{{actionUrl}}' target='_blank' style='display: inline-block; min-width: 220px; padding: 16px 36px; border-radius: 12px; background: linear-gradient(135deg, #1c50a7 0%, #397be9 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 700;'>{{actionLabel}}</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style='padding: 20px 40px; border-top: 1px solid #e4e8ef; font-size: 12px; color: #8899bb;'>© {{year}} {{appName}}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

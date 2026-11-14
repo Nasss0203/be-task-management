@@ -43,9 +43,23 @@ export class PlaywrightTemplateThumbnailRendererService implements TemplateThumb
           width: THUMBNAIL_WIDTH,
           height: THUMBNAIL_HEIGHT,
         },
-        extraHTTPHeaders: {
-          'x-template-render-key': internalKey,
-        },
+      });
+
+      const renderOrigin = new URL(renderUrl).origin;
+
+      await page.route('**/*', (route) => {
+        const request = route.request();
+
+        if (new URL(request.url()).origin !== renderOrigin) {
+          return route.continue();
+        }
+
+        return route.continue({
+          headers: {
+            ...request.headers(),
+            'x-template-render-key': internalKey,
+          },
+        });
       });
 
       const response = await page.goto(renderUrl, {

@@ -9,6 +9,12 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { BILLING_TYPES } from 'src/modules/billing/billing.types';
+import type { WorkspaceEntitlementPort } from 'src/modules/billing/application/ports/workspace-entitlement.port';
+import { BillingFeatureCode } from 'src/modules/billing/domain/constants/billing-feature-code.constant';
+import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
+import type { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
+import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 import { type FindUserService } from 'src/modules/identity/application/ports/find-user.service.interface';
 import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
 import { MailService } from 'src/modules/mail/application/services/mail.service';
@@ -55,6 +61,12 @@ export class InviteWorkspaceMemberHandler {
     private readonly createNotificationService: CreateNotificationService,
 
     private readonly mailService: MailService,
+
+    @Inject(PERSISTENCE_TYPES.UnitOfWork)
+    private readonly uow: UnitOfWork,
+
+    @Inject(BILLING_TYPES.services.WorkspaceEntitlementPort)
+    private readonly entitlements: WorkspaceEntitlementPort,
   ) {}
 
   async execute(
@@ -109,8 +121,6 @@ export class InviteWorkspaceMemberHandler {
       );
     }
 
-    const result: WorkspaceInviteResponseDto[] = [];
-
     for (const recipient of resolvedRecipients) {
       if (recipient.user_id && recipient.user_id === invitedBy) {
         throw new BadRequestException('You cannot invite yourself');
@@ -143,11 +153,37 @@ export class InviteWorkspaceMemberHandler {
           `A pending invite for ${recipient.email} already exists`,
         );
       }
+    }
 
-      const invite = await this.createEmailInvite(workspaceId, invitedBy, dto, {
-        user_id: recipient.user_id,
-        email: recipient.email,
-      });
+    const invites = await this.uow.runInTransaction(async (context) => {
+      await this.entitlements.assertWithinLimit(
+        workspaceId,
+        BillingFeatureCode.MAX_MEMBERS,
+        resolvedRecipients.length,
+        context,
+      );
+
+      const created: WorkspaceInvite[] = [];
+
+      for (const recipient of resolvedRecipients) {
+        created.push(
+          await this.createEmailInvite(
+            workspaceId,
+            invitedBy,
+            dto,
+            { user_id: recipient.user_id, email: recipient.email },
+            context,
+          ),
+        );
+      }
+
+      return created;
+    });
+
+    const result: WorkspaceInviteResponseDto[] = [];
+
+    for (const [index, recipient] of resolvedRecipients.entries()) {
+      const invite = invites[index];
 
       if (recipient.user_id) {
         await this.createNotificationService.createNotification({
@@ -214,6 +250,7 @@ export class InviteWorkspaceMemberHandler {
       user_id: string | null;
       email: string;
     },
+    context: PersistenceContext,
   ) {
     if (!recipient.email || !recipient.email.trim()) {
       throw new BadRequestException('email is required');
@@ -228,6 +265,7 @@ export class InviteWorkspaceMemberHandler {
         invitedBy,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       }),
+      context,
     );
   }
 

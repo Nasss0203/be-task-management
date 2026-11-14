@@ -1,3 +1,9 @@
+import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import {
   BadRequestException,
   ForbiddenException,
@@ -9,11 +15,9 @@ import { AuthorizationService } from 'src/modules/permission/application/service
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { TeamspacePermissionPolicy } from 'src/modules/permission/domain/policies/teamspace-permission.policy';
 import { TeamspaceResponseDto } from 'src/modules/teamspace/application/dto/teamspace/response/teamspace.response.dto';
-import { TeamspaceRole } from 'src/modules/teamspace/domain/enums/teamspace-role.enum';
 import type { TeamspaceMemberRepository } from 'src/modules/teamspace/domain/repositories/teamspace-member.repository';
 import type { TeamspaceRepository } from 'src/modules/teamspace/domain/repositories/teamspace.repository';
 import { TEAMSPACE_TYPES } from 'src/modules/teamspace/teamspace.types';
-import { WorkspaceRole } from 'src/modules/workspace/domain/enums/workspace-role.enum';
 import type { WorkspaceMemberRepository } from 'src/modules/workspace/domain/repositories/workspace-member.repository';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
@@ -35,6 +39,8 @@ export class UpdateTeamspaceHandler {
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
     private readonly authorizationService: AuthorizationService,
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   async execute(
@@ -107,10 +113,7 @@ export class UpdateTeamspaceHandler {
             context,
           )
         : null;
-      const actorRole =
-        actor?.getRole() === WorkspaceRole.OWNER
-          ? TeamspaceRole.OWNER
-          : actorMember?.getRoleName();
+      const actorRole = actorMember?.getRoleName();
       if (
         !actor ||
         actor.getId() !== initialActor.getId() ||
@@ -126,12 +129,39 @@ export class UpdateTeamspaceHandler {
         );
       }
 
+      const before = [
+        teamspace.getName(),
+        teamspace.getDescription(),
+        teamspace.getIcon(),
+      ];
       teamspace.update({
         name,
         icon: command.icon,
         description: command.description,
       });
-      return this.teamspaceRepo.save(teamspace, context);
+      const after = [
+        teamspace.getName(),
+        teamspace.getDescription(),
+        teamspace.getIcon(),
+      ];
+      const fields = ['name', 'description', 'icon'].filter(
+        (_, index) => before[index] !== after[index],
+      );
+      const savedTeamspace = await this.teamspaceRepo.save(teamspace, context);
+      if (fields.length) {
+        await this.createActivityService.create(
+          {
+            workspaceId: teamspace.getWorkspaceId(),
+            entityType: ActivityEntityType.TEAMSPACE,
+            entityId: teamspace.getId(),
+            actorId: command.userId,
+            action: ActivityAction.TEAMSPACE_UPDATED,
+            metadata: { fields },
+          },
+          context,
+        );
+      }
+      return savedTeamspace;
     });
     return TeamspaceResponseDto.fromDomain(saved);
   }

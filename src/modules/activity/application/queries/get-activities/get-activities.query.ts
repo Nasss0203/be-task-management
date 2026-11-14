@@ -16,6 +16,8 @@ export class GetActivitiesQuery {
       projectId?: string;
       entityType?: ActivityEntityType;
       entityId?: string;
+      pageId?: string;
+      excludeEntityTypes?: ActivityEntityType[];
     } = {},
   ) {}
 }

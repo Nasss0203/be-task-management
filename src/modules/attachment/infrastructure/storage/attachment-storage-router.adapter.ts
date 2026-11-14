@@ -4,29 +4,43 @@ import type {
   AttachmentStorageUploadResult,
   UploadAttachmentStorageInput,
 } from '../../application/ports/attachment-storage.port';
-import { CloudinaryAttachmentStorageAdapter } from './cloudinary-attachment-storage.adapter';
+import { AttachmentProvider } from '../../domain/enums/attachment-provider.enum';
 import { R2AttachmentStorageAdapter } from './r2-attachment-storage.adapter';
+import { S3AttachmentStorageAdapter } from './s3-attachment-storage.adapter';
 
 @Injectable()
 export class AttachmentStorageRouterAdapter implements AttachmentStoragePort {
   constructor(
-    private readonly cloudinaryStorage: CloudinaryAttachmentStorageAdapter,
+    private readonly s3Storage: S3AttachmentStorageAdapter,
     private readonly r2Storage: R2AttachmentStorageAdapter,
   ) {}
 
   upload(
     input: UploadAttachmentStorageInput,
   ): Promise<AttachmentStorageUploadResult> {
-    return input.mimeType.startsWith('image/')
-      ? this.cloudinaryStorage.upload(input)
-      : this.r2Storage.upload(input);
+    return this.s3Storage.upload(input);
   }
 
-  createDownloadUrl(input: {
+  createDownloadUrl({
+    provider,
+    ...input
+  }: {
+    provider: AttachmentProvider;
     key: string;
     fileName: string;
     contentType?: string;
   }): Promise<{ downloadUrl: string; expiresIn: number }> {
-    return this.r2Storage.createDownloadUrl(input);
+    return provider === AttachmentProvider.S3
+      ? this.s3Storage.createDownloadUrl(input)
+      : this.r2Storage.createDownloadUrl(input);
+  }
+
+  async delete(input: {
+    provider: AttachmentProvider;
+    key: string;
+  }): Promise<void> {
+    if (input.provider === AttachmentProvider.S3) {
+      await this.s3Storage.delete(input.key);
+    }
   }
 }

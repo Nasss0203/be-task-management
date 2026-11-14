@@ -26,6 +26,7 @@ export class SqlMentionCandidateReader implements MentionCandidateReader {
     scope: MentionPageScope;
     query?: string;
     userIds?: string[];
+    excludeUserId?: string;
     limit: number;
   }): Promise<MentionCandidate[]> {
     // Escape % và _ để chuỗi tìm kiếm của user không thành wildcard
@@ -48,14 +49,16 @@ export class SqlMentionCandidateReader implements MentionCandidateReader {
          )
          AND ($4::text IS NULL OR u.username ILIKE $4 OR u.email ILIKE $4)
          AND ($5::uuid[] IS NULL OR u.id = ANY($5::uuid[]))
+         AND ($6::uuid IS NULL OR u.id <> $6::uuid)
        ORDER BY u.username ASC
-       LIMIT $6`,
+       LIMIT $7`,
       [
         input.scope.workspaceId,
         WorkspaceMembershipType.MEMBER,
         input.scope.teamspaceId,
         pattern,
         input.userIds ?? null,
+        input.excludeUserId ?? null,
         input.limit,
       ],
     );

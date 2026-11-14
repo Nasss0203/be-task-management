@@ -29,6 +29,7 @@ export const NotificationType = {
   WORKSPACE_MEMBER_JOINED: 'workspace.member_joined',
   WORKSPACE_MEMBER_REMOVED: 'workspace.member_removed',
   TEAMSPACE_INVITATION_RECEIVED: 'teamspace.invitation_received',
+  TEAMSPACE_OWNERSHIP_TRANSFERRED: 'teamspace.ownership_transferred',
 
   PAGE_ACCESS_REQUESTED: 'page.access.requested',
   PAGE_ACCESS_APPROVED: 'page.access.approved',
@@ -37,6 +38,8 @@ export const NotificationType = {
   PAGE_EDIT_REQUESTED: 'page.edit.requested',
   PAGE_EDIT_APPROVED: 'page.edit.approved',
   PAGE_EDIT_REJECTED: 'page.edit.rejected',
+
+  PAGE_MENTIONED: 'page.mentioned',
 
   COMMENT_MENTIONED: 'comment.mentioned',
   COMMENT_REPLIED: 'comment.replied',

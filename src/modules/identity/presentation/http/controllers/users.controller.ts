@@ -108,7 +108,7 @@ export class UsersController {
     )
     file: Express.Multer.File,
   ): Promise<AccountResponse> {
-    return this.accountService.setAvatar(auth.id, file.buffer);
+    return this.accountService.setAvatar(auth.id, file.buffer, file.mimetype);
   }
 
   @Delete('me/avatar')

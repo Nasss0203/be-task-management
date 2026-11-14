@@ -1,6 +1,9 @@
-import { Module } from '@nestjs/common';
+import { ActivityModule } from 'src/modules/activity/activity.module';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseModule } from 'src/database/database.module';
+import { BillingModule } from 'src/modules/billing/billing.module';
+import { NotificationsModule } from 'src/modules/notifications/notifications.module';
 import { PermissionModule } from 'src/modules/permission/permission.module';
 import { WorkspaceModule } from 'src/modules/workspace/workspace.module';
 import { OutboxModule } from 'src/shared/infrastructure/outbox/outbox.module';
@@ -24,6 +27,7 @@ import { ArchiveTeamspaceHandler } from './application/commands/teamspace/archiv
 import { RestoreTeamspaceHandler } from './application/commands/teamspace/restore-teamspace/restore-teamspace.handler';
 import { GetArchivedTeamspacesHandler } from './application/queries/teamspace/get-archived-teamspaces/get-archived-teamspaces.handler';
 import { DiscoverTeamspacesHandler } from './application/queries/teamspace/discover-teamspaces/discover-teamspaces.handler';
+import { GetPrivateTeamspaceSummariesHandler } from './application/queries/teamspace/get-private-teamspace-summaries/get-private-teamspace-summaries.handler';
 import { GetMyTeamspaceInvitationsHandler } from './application/queries/teamspace/get-my-teamspace-invitations/get-my-teamspace-invitations.handler';
 import { GetTeamspaceMembersHandler } from './application/queries/teamspace/get-teamspace-members/get-teamspace-members.handler';
 import { GetTeamspacesHandler } from './application/queries/teamspace/get-teamspaces/get-teamspaces.handler';
@@ -53,6 +57,9 @@ import { TEAMSPACE_TYPES } from './teamspace.types';
     PermissionModule,
     DatabaseModule,
     OutboxModule,
+    BillingModule,
+    NotificationsModule,
+    forwardRef(() => ActivityModule),
   ],
   controllers: [TeamspaceController],
   providers: [
@@ -143,6 +150,10 @@ import { TEAMSPACE_TYPES } from './teamspace.types';
     {
       provide: TEAMSPACE_TYPES.applications.DiscoverTeamspacesHandler,
       useClass: DiscoverTeamspacesHandler,
+    },
+    {
+      provide: TEAMSPACE_TYPES.applications.GetPrivateTeamspaceSummariesHandler,
+      useClass: GetPrivateTeamspaceSummariesHandler,
     },
     {
       provide: TEAMSPACE_TYPES.applications.UpdateTeamspaceJoinSettingsHandler,

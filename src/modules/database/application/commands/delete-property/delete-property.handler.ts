@@ -13,12 +13,15 @@ import { DatabasePropertyNotFoundException } from '../../../domain/exceptions/da
 import { type DatabaseRepository } from '../../../domain/repositories/database.repository';
 
 import { DeletePropertyCommand } from './delete-property.command';
+import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
 
 @Injectable()
 export class DeletePropertyHandler {
   constructor(
     @Inject(DATABASE_TYPES.repositories.DatabaseRepository)
     private readonly databaseRepository: DatabaseRepository,
+    @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
+    private readonly activityRecorder: DatabaseActivityRecorder,
   ) {}
 
   async execute(command: DeletePropertyCommand): Promise<void> {
@@ -32,6 +35,12 @@ export class DeletePropertyHandler {
       database.removeProperty(command.propertyId);
 
       await this.databaseRepository.deleteProperty(command.propertyId);
+      await this.activityRecorder.record({
+        actorId: command.actorId,
+        databaseId: database.getId(),
+        action: 'DATABASE_PROPERTY_DELETED',
+        propertyId: command.propertyId,
+      });
     } catch (error) {
       if (error instanceof DatabasePropertyNotFoundException) {
         throw new HttpException(error.message, HttpStatus.NOT_FOUND);

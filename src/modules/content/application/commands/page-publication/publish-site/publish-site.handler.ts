@@ -15,6 +15,9 @@ import type { PagePublicationRepository } from 'src/modules/content/domain/repos
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import type { PublishedSiteRepository } from 'src/modules/content/domain/repositories/published-site.repository';
 
+import { BILLING_TYPES } from 'src/modules/billing/billing.types';
+import type { WorkspaceEntitlementPort } from 'src/modules/billing/application/ports/workspace-entitlement.port';
+import { BillingFeatureCode } from 'src/modules/billing/domain/constants/billing-feature-code.constant';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
 
@@ -37,6 +40,8 @@ export class PublishSiteHandler {
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
     private readonly publicationTree: PagePublicationTreeService,
+    @Inject(BILLING_TYPES.services.WorkspaceEntitlementPort)
+    private readonly entitlements: WorkspaceEntitlementPort,
   ) {}
 
   async execute(command: PublishSiteCommand) {
@@ -53,6 +58,11 @@ export class PublishSiteHandler {
       if (!page || page.getDeletedAt() !== null) {
         throw new NotFoundException('Page not found');
       }
+
+      await this.entitlements.assertWithinLimit(
+        page.getWorkspaceId(),
+        BillingFeatureCode.PUBLIC_PAGE,
+      );
 
       if (page.getParentPageId() !== null)
         throw new ConflictException(

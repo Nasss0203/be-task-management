@@ -21,6 +21,8 @@ import { STORAGE_TYPES } from 'src/shared/infrastructure/storage/storage.types';
 import type { TemplateThumbnailRenderer } from '../../ports/template-thumbnail-renderer.port';
 import { GenerateTemplateVersionThumbnailCommand } from './generate-template-version-thumbnail.command';
 
+const STALE_PENDING_MS = 5 * 60_000;
+
 @Injectable()
 export class GenerateTemplateVersionThumbnailHandler {
   constructor(
@@ -70,9 +72,15 @@ export class GenerateTemplateVersionThumbnailHandler {
       }
 
       if (existing?.getStatus() === TemplateVersionAssetStatus.PENDING) {
-        throw new ConflictException(
-          'Template thumbnail generation is already in progress',
-        );
+        const staleBefore = Date.now() - STALE_PENDING_MS;
+
+        if (existing.getUpdatedAt().getTime() > staleBefore) {
+          throw new ConflictException(
+            'Template thumbnail generation is already in progress',
+          );
+        }
+
+        existing.markFailed();
       }
 
       if (existing?.getStatus() === TemplateVersionAssetStatus.FAILED) {

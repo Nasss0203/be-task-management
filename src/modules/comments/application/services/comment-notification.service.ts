@@ -85,6 +85,11 @@ export class CommentNotificationService {
         entityId: comment.getTargetId(),
         body: comment.getBody(),
         actionUrl,
+        notifyAs: {
+          type: NotificationType.COMMENT_MENTIONED,
+          sourceType: NotificationSourceType.COMMENT,
+          place: 'a comment',
+        },
       });
 
       const parentAuthorId = parent?.getAuthorId();

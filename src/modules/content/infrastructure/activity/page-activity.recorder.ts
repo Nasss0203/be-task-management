@@ -33,7 +33,7 @@ export class ActivityPageActivityRecorder implements PageActivityRecorder {
         ? kind
         : null;
 
-    await this.activities.recordPageEdit(
+    await this.activities.recordOnPage(
       {
         actorId: edit.actorId,
         pageId: edit.pageId,

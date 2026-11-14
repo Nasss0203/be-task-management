@@ -10,13 +10,13 @@ import {
 
 describe('ActivityPageActivityRecorder (kế hoạch ghi activity)', () => {
   const context = { transaction: 'tx' };
-  let recordPageEdit: jest.Mock;
+  let recordOnPage: jest.Mock;
   let recorder: ActivityPageActivityRecorder;
 
   beforeEach(() => {
-    recordPageEdit = jest.fn(() => Promise.resolve());
+    recordOnPage = jest.fn(() => Promise.resolve());
     recorder = new ActivityPageActivityRecorder({
-      recordPageEdit,
+      recordOnPage,
     } as unknown as ActivityRepository);
   });
 
@@ -30,7 +30,7 @@ describe('ActivityPageActivityRecorder (kế hoạch ghi activity)', () => {
       },
       context,
     );
-    expect(recordPageEdit).toHaveBeenCalledWith(
+    expect(recordOnPage).toHaveBeenCalledWith(
       {
         actorId: 'user-1',
         pageId: 'page-1',
@@ -58,16 +58,14 @@ describe('ActivityPageActivityRecorder (kế hoạch ghi activity)', () => {
       action: 'PAGE_BLOCK_CREATED',
       kind: 'RESTORED',
     });
-    expect(recordPageEdit.mock.calls.map((call: unknown[]) => call[0])).toEqual(
-      [
-        expect.objectContaining({ entityId: 'p', metadata: { pageId: 'p' } }),
-        expect.objectContaining({
-          entityId: 'b',
-          action: ActivityAction.PAGE_BLOCK_CREATED,
-          metadata: { pageId: 'p', kind: 'RESTORED' },
-        }),
-      ],
-    );
+    expect(recordOnPage.mock.calls.map((call: unknown[]) => call[0])).toEqual([
+      expect.objectContaining({ entityId: 'p', metadata: { pageId: 'p' } }),
+      expect.objectContaining({
+        entityId: 'b',
+        action: ActivityAction.PAGE_BLOCK_CREATED,
+        metadata: { pageId: 'p', kind: 'RESTORED' },
+      }),
+    ]);
   });
 
   it('records a Page edit on the Page, with a kind only when there is one', async () => {
@@ -82,20 +80,18 @@ describe('ActivityPageActivityRecorder (kế hoạch ghi activity)', () => {
       action: 'PAGE_UPDATED',
       kind: 'MOVED',
     });
-    expect(recordPageEdit.mock.calls.map((call: unknown[]) => call[0])).toEqual(
-      [
-        expect.objectContaining({
-          entityType: ActivityEntityType.PAGE,
-          entityId: 'p',
-          metadata: null,
-        }),
-        expect.objectContaining({
-          entityType: ActivityEntityType.PAGE,
-          entityId: 'p',
-          metadata: { kind: 'MOVED' },
-        }),
-      ],
-    );
+    expect(recordOnPage.mock.calls.map((call: unknown[]) => call[0])).toEqual([
+      expect.objectContaining({
+        entityType: ActivityEntityType.PAGE,
+        entityId: 'p',
+        metadata: null,
+      }),
+      expect.objectContaining({
+        entityType: ActivityEntityType.PAGE,
+        entityId: 'p',
+        metadata: { kind: 'MOVED' },
+      }),
+    ]);
   });
 
   it.each([undefined, null, ''])(
@@ -106,7 +102,7 @@ describe('ActivityPageActivityRecorder (kế hoạch ghi activity)', () => {
         pageId: 'p',
         action: 'PAGE_BLOCK_UPDATED',
       });
-      expect(recordPageEdit).not.toHaveBeenCalled();
+      expect(recordOnPage).not.toHaveBeenCalled();
     },
   );
 });

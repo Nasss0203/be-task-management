@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 
 import {
   ObjectStoragePort,
+  SignedDownloadOptions,
   StoredObject,
   UploadObjectInput,
 } from 'src/shared/application/ports/object-storage.port';
@@ -73,10 +74,15 @@ export class AwsS3StorageService implements ObjectStoragePort {
   async getSignedDownloadUrl(
     key: string,
     expiresInSeconds = 300,
+    options: SignedDownloadOptions = {},
   ): Promise<string> {
     const command = new GetObjectCommand({
       Bucket: this.bucket,
       Key: key,
+      ResponseContentType: options.contentType,
+      ResponseContentDisposition: options.fileName
+        ? `inline; filename="${encodeURIComponent(options.fileName)}"`
+        : undefined,
     });
 
     return getSignedUrl(this.client, command, {

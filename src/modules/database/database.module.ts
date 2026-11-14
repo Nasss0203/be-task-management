@@ -1,6 +1,8 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseModule as PersistenceDatabaseModule } from 'src/database/database.module';
+import { PermissionModule } from 'src/modules/permission/permission.module';
+import { CalendarFeedTokenService } from 'src/shared/security/calendar-feed-token.service';
 import { AddPropertyOptionHandler } from './application/commands/add-property-option/add-property-option.handler';
 import { AddPropertyHandler } from './application/commands/add-property/add-property.handler';
 import { ClearRowValueHandler } from './application/commands/clear-row-value/clear-row-value.handler';
@@ -31,9 +33,15 @@ import { TypeOrmDatabasePeopleReader } from './infrastructure/persistence/typeor
 import { GetDatabaseViewHandler } from './application/queries/get-database-view/get-database-view.handler';
 import { GetDatabaseViewsHandler } from './application/queries/get-database-views/get-database-views.handler';
 import { GetDatabaseHandler } from './application/queries/get-database/get-database.handler';
+import { UpsertCalendarFeedHandler } from './application/commands/upsert-calendar-feed/upsert-calendar-feed.handler';
+import { RevokeCalendarFeedHandler } from './application/commands/revoke-calendar-feed/revoke-calendar-feed.handler';
+import { GetMyCalendarFeedHandler } from './application/queries/get-my-calendar-feed/get-my-calendar-feed.handler';
+import { GetCalendarFeedIcsHandler } from './application/queries/get-calendar-feed-ics/get-calendar-feed-ics.handler';
 import { DatabaseProvisioningService } from './application/services/database-provisioning.service';
 import { DatabaseSnapshotReaderService } from './application/services/database-snapshot-reader.service';
 import { DATABASE_TYPES } from './database.types';
+import { ActivityModule } from '../activity/activity.module';
+import { ActivityDatabaseActivityRecorder } from './infrastructure/activity/database-activity.recorder';
 import { DatabasePropertyOrmEntity } from './infrastructure/persistence/typeorm/entities/database-property.orm-entity';
 import { DatabaseRowOrmEntity } from './infrastructure/persistence/typeorm/entities/database-row.orm-entity';
 import { DatabaseViewPropertyOrmEntity } from './infrastructure/persistence/typeorm/entities/database-view-property.orm-entity';
@@ -41,6 +49,8 @@ import { DatabaseViewOrmEntity } from './infrastructure/persistence/typeorm/enti
 import { DatabaseOrmEntity } from './infrastructure/persistence/typeorm/entities/database.orm-entity';
 import { PropertyOptionOrmEntity } from './infrastructure/persistence/typeorm/entities/property-option.orm-entity';
 import { RowValueOrmEntity } from './infrastructure/persistence/typeorm/entities/row-value.orm-entity';
+import { CalendarFeedOrmEntity } from './infrastructure/persistence/typeorm/entities/calendar-feed.orm-entity';
+import { TypeOrmCalendarFeedRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-calendar-feed.repository';
 import { TypeOrmDatabaseRowRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-database-row.repository';
 import { TypeOrmDatabaseViewRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-database-view.repository';
 import { TypeOrmDatabaseRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-database.repository';
@@ -51,10 +61,13 @@ import { DatabaseRowValueController } from './presentation/http/controllers/data
 import { DatabaseRowController } from './presentation/http/controllers/database-row.controller';
 import { DatabaseViewController } from './presentation/http/controllers/database-view.controller';
 import { DatabaseController } from './presentation/http/controllers/database.controller';
+import { CalendarFeedController } from './presentation/http/controllers/calendar-feed.controller';
 
 @Module({
   imports: [
     PersistenceDatabaseModule,
+    PermissionModule,
+    forwardRef(() => ActivityModule),
     TypeOrmModule.forFeature([
       DatabaseOrmEntity,
       DatabasePropertyOrmEntity,
@@ -63,6 +76,7 @@ import { DatabaseController } from './presentation/http/controllers/database.con
       RowValueOrmEntity,
       DatabaseViewOrmEntity,
       DatabaseViewPropertyOrmEntity,
+      CalendarFeedOrmEntity,
     ]),
   ],
   controllers: [
@@ -73,6 +87,7 @@ import { DatabaseController } from './presentation/http/controllers/database.con
     DatabaseQueryController,
     DatabaseRowResourceController,
     DatabaseViewController,
+    CalendarFeedController,
   ],
 
   providers: [
@@ -105,9 +120,18 @@ import { DatabaseController } from './presentation/http/controllers/database.con
     ChangeDatabaseRowParentHandler,
     GetDatabaseRowHandler,
     GetDatabasePeopleHandler,
+    UpsertCalendarFeedHandler,
+    RevokeCalendarFeedHandler,
+    GetMyCalendarFeedHandler,
+    GetCalendarFeedIcsHandler,
+    CalendarFeedTokenService,
     {
       provide: DATABASE_TYPES.ports.DatabasePeopleReader,
       useClass: TypeOrmDatabasePeopleReader,
+    },
+    {
+      provide: DATABASE_TYPES.ports.DatabaseActivityRecorder,
+      useClass: ActivityDatabaseActivityRecorder,
     },
     {
       provide: DATABASE_TYPES.repositories.DatabaseRepository,
@@ -120,6 +144,10 @@ import { DatabaseController } from './presentation/http/controllers/database.con
     {
       provide: DATABASE_TYPES.repositories.DatabaseViewRepository,
       useClass: TypeOrmDatabaseViewRepository,
+    },
+    {
+      provide: DATABASE_TYPES.repositories.CalendarFeedRepository,
+      useClass: TypeOrmCalendarFeedRepository,
     },
     {
       provide: DATABASE_TYPES.ports.DatabaseSnapshotReader,
@@ -149,6 +177,7 @@ import { DatabaseController } from './presentation/http/controllers/database.con
 
     DATABASE_TYPES.ports.DatabaseProvisioning,
     DATABASE_TYPES.ports.DatabaseSnapshotReader,
+    DATABASE_TYPES.ports.DatabasePeopleReader,
   ],
 })
 export class DatabaseModule {}

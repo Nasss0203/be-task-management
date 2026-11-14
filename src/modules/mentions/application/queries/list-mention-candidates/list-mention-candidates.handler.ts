@@ -22,6 +22,7 @@ export class ListMentionCandidatesHandler {
 
     const users = await this.candidates.findAllowed(query.pageId, {
       query: search || undefined,
+      excludeUserId: query.requesterId,
       limit: CANDIDATE_LIMIT,
     });
 

@@ -27,4 +27,6 @@ export class WorkspaceSubscriptionResponseDto {
   currentPeriodEnd: Date | null;
 
   cancelAtPeriodEnd: boolean;
+
+  accessEndsAt: Date | null;
 }

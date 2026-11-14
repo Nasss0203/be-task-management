@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  HttpStatus,
   ValidationError,
   ValidationPipe,
   VersioningType,
@@ -68,7 +69,11 @@ async function bootstrap() {
         return;
       }
 
-      callback(new Error(`Origin ${origin} is not allowed by CORS`));
+      callback(
+        Object.assign(new Error(`Origin ${origin} is not allowed by CORS`), {
+          status: HttpStatus.FORBIDDEN,
+        }),
+      );
     },
 
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',

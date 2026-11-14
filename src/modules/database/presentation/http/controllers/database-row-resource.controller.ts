@@ -1,3 +1,5 @@
+import { Auth } from 'src/common/decorator/auth.decorator';
+import { type IAuth } from 'src/types/auth';
 import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
@@ -32,9 +34,9 @@ export class DatabaseRowResourceController {
   @Delete(':rowId')
   @WorkspaceContext({ source: 'resource', type: 'database_row', key: 'rowId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_DELETE)
-  async deleteRow(@Param('rowId') rowId: string) {
+  async deleteRow(@Auth() user: IAuth, @Param('rowId') rowId: string) {
     await this.deleteDatabaseRowHandler.execute(
-      new DeleteDatabaseRowCommand(rowId),
+      new DeleteDatabaseRowCommand(rowId, user.id),
     );
 
     return {
@@ -46,6 +48,7 @@ export class DatabaseRowResourceController {
   @WorkspaceContext({ source: 'resource', type: 'database_row', key: 'rowId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   async moveRow(
+    @Auth() user: IAuth,
     @Param('rowId') rowId: string,
     @Body() request: MoveDatabaseRowRequest,
   ) {
@@ -54,6 +57,7 @@ export class DatabaseRowResourceController {
         rowId,
         request.previousRowId ?? null,
         request.nextRowId ?? null,
+        user.id,
       ),
     );
   }
@@ -62,11 +66,12 @@ export class DatabaseRowResourceController {
   @WorkspaceContext({ source: 'resource', type: 'database_row', key: 'rowId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_UPDATE)
   async changeParent(
+    @Auth() user: IAuth,
     @Param('rowId') rowId: string,
     @Body() request: ChangeDatabaseRowParentRequest,
   ) {
     return this.changeDatabaseRowParentHandler.execute(
-      new ChangeDatabaseRowParentCommand(rowId, request.parentRowId),
+      new ChangeDatabaseRowParentCommand(rowId, request.parentRowId, user.id),
     );
   }
 }

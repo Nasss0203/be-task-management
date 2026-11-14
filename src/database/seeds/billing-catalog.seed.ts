@@ -11,7 +11,8 @@ type FeatureCode =
   | 'MAX_MEMBERS'
   | 'MAX_TEAMSPACES'
   | 'MAX_STORAGE_MB'
-  | 'PUBLIC_PAGE';
+  | 'PUBLIC_PAGE'
+  | 'AI_REQUESTS_MONTHLY';
 
 type FeatureValue = number | boolean;
 
@@ -66,6 +67,13 @@ const features = [
     description: 'Allows workspace pages to be published publicly.',
     valueType: 'BOOLEAN',
   },
+  {
+    code: 'AI_REQUESTS_MONTHLY',
+    name: 'AI requests per month',
+    description:
+      'Maximum number of AI requests in a workspace per billing period.',
+    valueType: 'NUMBER',
+  },
 ] satisfies Array<{
   code: FeatureCode;
   name: string;
@@ -94,6 +102,11 @@ const planFeatures = [
     featureCode: 'PUBLIC_PAGE',
     value: false,
   },
+  {
+    planCode: 'FREE',
+    featureCode: 'AI_REQUESTS_MONTHLY',
+    value: 30,
+  },
 
   {
     planCode: 'PLUS',
@@ -108,12 +121,17 @@ const planFeatures = [
   {
     planCode: 'PLUS',
     featureCode: 'MAX_STORAGE_MB',
-    value: 10000,
+    value: 10240,
   },
   {
     planCode: 'PLUS',
     featureCode: 'PUBLIC_PAGE',
     value: true,
+  },
+  {
+    planCode: 'PLUS',
+    featureCode: 'AI_REQUESTS_MONTHLY',
+    value: 500,
   },
 
   {
@@ -129,12 +147,17 @@ const planFeatures = [
   {
     planCode: 'BUSINESS',
     featureCode: 'MAX_STORAGE_MB',
-    value: 100000,
+    value: 102400,
   },
   {
     planCode: 'BUSINESS',
     featureCode: 'PUBLIC_PAGE',
     value: true,
+  },
+  {
+    planCode: 'BUSINESS',
+    featureCode: 'AI_REQUESTS_MONTHLY',
+    value: 2000,
   },
 ] satisfies Array<{
   planCode: PlanCode;

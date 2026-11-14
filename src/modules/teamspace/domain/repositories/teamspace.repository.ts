@@ -1,6 +1,18 @@
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 
 import { Teamspace } from '../aggregates/teamspace/teamspace.aggregate';
+import { TeamspaceRole } from '../enums/teamspace-role.enum';
+
+export interface AccessibleTeamspace {
+  teamspace: Teamspace;
+  myRole: TeamspaceRole | null;
+}
+
+export interface PrivateTeamspaceSummary {
+  teamspace: Teamspace;
+  ownerNames: string[];
+  memberCount: number;
+}
 
 export interface TeamspaceRepository {
   save(teamspace: Teamspace, context?: PersistenceContext): Promise<Teamspace>;
@@ -22,9 +34,9 @@ export interface TeamspaceRepository {
     workspaceId: string,
     userId: string,
     context?: PersistenceContext,
-  ): Promise<Teamspace[]>;
+  ): Promise<AccessibleTeamspace[]>;
 
-  /** Archived teamspaces the user may restore: workspace OWNER or teamspace OWNER. */
+  /** Archived teamspaces the user may restore: whoever archived it, a teamspace OWNER, or a workspace OWNER for OPEN teamspaces. */
   findArchivedManageableByUser(
     userId: string,
     filter: { workspaceId?: string; teamspaceId?: string },
@@ -38,4 +50,10 @@ export interface TeamspaceRepository {
     offset: number,
     context?: PersistenceContext,
   ): Promise<{ items: Array<{ teamspace: Teamspace; isMember: boolean }>; total: number }>;
+
+  findPrivateSummariesNotJoined(
+    workspaceId: string,
+    workspaceMemberId: string,
+    context?: PersistenceContext,
+  ): Promise<PrivateTeamspaceSummary[]>;
 }

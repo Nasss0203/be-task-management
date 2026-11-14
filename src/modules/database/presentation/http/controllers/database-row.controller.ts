@@ -1,3 +1,5 @@
+import { Auth } from 'src/common/decorator/auth.decorator';
+import { type IAuth } from 'src/types/auth';
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
@@ -21,11 +23,16 @@ export class DatabaseRowController {
   @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
   @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
   async createRow(
+    @Auth() user: IAuth,
     @Param('databaseId') databaseId: string,
     @Body() request: CreateDatabaseRowRequest,
   ) {
     return this.createDatabaseRowHandler.execute(
-      new CreateDatabaseRowCommand(databaseId, request?.parentRowId ?? null),
+      new CreateDatabaseRowCommand(
+        databaseId,
+        request?.parentRowId ?? null,
+        user.id,
+      ),
     );
   }
 

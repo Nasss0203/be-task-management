@@ -1,4 +1,8 @@
-import { BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   ActivityAction,
   ActivityEntityType,
@@ -14,11 +18,27 @@ describe('UploadAttachmentHandler', () => {
   const validateRealFileType = jest.fn();
   const upload = jest.fn();
   const createActivity = jest.fn();
+  const findBlockById = jest.fn();
+  const findPageById = jest.fn();
+  const findCommentById = jest.fn();
+  const authorize = jest.fn();
+  const deleteObject = jest.fn();
+  const assertWithinLimit = jest.fn();
+  const unitOfWork = {
+    runInTransaction: (work: (context: unknown) => Promise<unknown>) =>
+      work('tx'),
+  };
   const handler = new UploadAttachmentHandler(
     { save } as never,
     { validateExtension, validateRealFileType } as never,
-    { upload } as never,
+    { upload, delete: deleteObject } as never,
     { create: createActivity } as never,
+    { findById: findBlockById } as never,
+    { findById: findPageById } as never,
+    { findById: findCommentById } as never,
+    { authorize } as never,
+    unitOfWork as never,
+    { assertWithinLimit } as never,
   );
   const file = {
     originalName: 'test.png',
@@ -30,6 +50,18 @@ describe('UploadAttachmentHandler', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     validateExtension.mockReturnValue('.png');
+    findBlockById.mockResolvedValue({
+      getPageId: () => 'page-1',
+      getDeletedAt: () => null,
+    });
+    findPageById.mockResolvedValue({ getWorkspaceId: () => 'ws-1' });
+    findCommentById.mockResolvedValue({
+      getWorkspaceId: () => 'ws-1',
+      isDeleted: () => false,
+    });
+    authorize.mockResolvedValue(true);
+    assertWithinLimit.mockResolvedValue(undefined);
+    deleteObject.mockResolvedValue(undefined);
     validateRealFileType.mockResolvedValue('image/png');
     upload.mockResolvedValue({
       provider: AttachmentProvider.CLOUDINARY,
@@ -43,7 +75,6 @@ describe('UploadAttachmentHandler', () => {
         AttachmentAggregate.reconstitute({
           id: 'att-1',
           workspaceId: attachment.getWorkspaceId(),
-          taskId: attachment.getTaskId(),
           commentId: attachment.getCommentId(),
           pageBlockId: attachment.getPageBlockId(),
           uploadedBy: attachment.getUploadedBy(),
@@ -63,18 +94,63 @@ describe('UploadAttachmentHandler', () => {
     );
   });
 
-  it('rejects upload without a task, comment or page block target', async () => {
+  it('rejects upload without a comment or page block target', async () => {
     await expect(
       handler.execute(
-        new UploadAttachmentCommand(file, 'ws-1', null, null, null, 'user-1'),
+        new UploadAttachmentCommand(file, 'ws-1', null, null, 'user-1'),
       ),
     ).rejects.toThrow(BadRequestException);
     expect(upload).not.toHaveBeenCalled();
   });
 
+  describe('with a page block target', () => {
+    const uploadToBlock = () =>
+      handler.execute(
+        new UploadAttachmentCommand(file, 'ws-1', null, 'block-1', 'user-1'),
+      );
+
+    it('uploads when the user can edit the block of this workspace', async () => {
+      await expect(uploadToBlock()).resolves.toMatchObject({
+        pageBlockId: 'block-1',
+      });
+      expect(authorize).toHaveBeenCalledWith({
+        userId: 'user-1',
+        permissions: ['page_block.update'],
+        target: { type: 'pageBlock', id: 'block-1' },
+      });
+    });
+
+    it('rejects a block of another workspace', async () => {
+      findPageById.mockResolvedValue({ getWorkspaceId: () => 'ws-2' });
+
+      await expect(uploadToBlock()).rejects.toThrow(NotFoundException);
+      expect(upload).not.toHaveBeenCalled();
+    });
+
+    it('rejects a block the user cannot edit', async () => {
+      authorize.mockResolvedValue(false);
+
+      await expect(uploadToBlock()).rejects.toThrow(NotFoundException);
+      expect(upload).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['missing', null],
+      [
+        'in the trash',
+        { getPageId: () => 'page-1', getDeletedAt: () => new Date() },
+      ],
+    ])('rejects a block that is %s', async (_label, foundBlock) => {
+      findBlockById.mockResolvedValue(foundBlock);
+
+      await expect(uploadToBlock()).rejects.toThrow(NotFoundException);
+      expect(upload).not.toHaveBeenCalled();
+    });
+  });
+
   it('preserves validation, storage, persistence and activity ordering data', async () => {
     const result = await handler.execute(
-      new UploadAttachmentCommand(file, 'ws-1', 'task-1', null, null, 'user-1'),
+      new UploadAttachmentCommand(file, 'ws-1', 'comment-1', null, 'user-1'),
     );
 
     expect(validateExtension).toHaveBeenCalledWith('test.png');
@@ -82,14 +158,13 @@ describe('UploadAttachmentHandler', () => {
     expect(upload).toHaveBeenCalledWith({
       buffer: file.buffer,
       workspaceId: 'ws-1',
-      taskId: 'task-1',
-      commentId: null,
+      commentId: 'comment-1',
       pageBlockId: null,
       fileName: 'test.png',
       mimeType: 'image/png',
       uploadedBy: 'user-1',
     });
-    expect(save).toHaveBeenCalledWith(expect.any(AttachmentAggregate));
+    expect(save).toHaveBeenCalledWith(expect.any(AttachmentAggregate), 'tx');
     expect(createActivity).toHaveBeenCalledWith({
       workspaceId: 'ws-1',
       entityType: ActivityEntityType.ATTACHMENT,
@@ -97,8 +172,7 @@ describe('UploadAttachmentHandler', () => {
       actorId: 'user-1',
       action: ActivityAction.ATTACHMENT_UPLOADED,
       metadata: {
-        taskId: 'task-1',
-        commentId: null,
+        commentId: 'comment-1',
         pageBlockId: null,
         fileName: 'test.png',
         mimeType: 'image/png',
@@ -114,20 +188,89 @@ describe('UploadAttachmentHandler', () => {
     );
   });
 
+  describe('storage limit', () => {
+    const uploadToTask = () =>
+      handler.execute(
+        new UploadAttachmentCommand(file, 'ws-1', 'comment-1', null, 'user-1'),
+      );
+
+    it('checks the file size in MB before uploading and again inside the transaction', async () => {
+      await uploadToTask();
+
+      expect(assertWithinLimit).toHaveBeenNthCalledWith(
+        1,
+        'ws-1',
+        'MAX_STORAGE_MB',
+        1024 / (1024 * 1024),
+      );
+      expect(assertWithinLimit).toHaveBeenNthCalledWith(
+        2,
+        'ws-1',
+        'MAX_STORAGE_MB',
+        1024 / (1024 * 1024),
+        'tx',
+      );
+    });
+
+    it('does not upload when the workspace is already full', async () => {
+      assertWithinLimit.mockRejectedValueOnce(
+        new ForbiddenException('WORKSPACE_LIMIT_EXCEEDED'),
+      );
+
+      await expect(uploadToTask()).rejects.toThrow(ForbiddenException);
+      expect(upload).not.toHaveBeenCalled();
+      expect(save).not.toHaveBeenCalled();
+    });
+
+    it('deletes the uploaded object when the locked re-check fails', async () => {
+      upload.mockResolvedValue({
+        provider: AttachmentProvider.S3,
+        storageKey: 'workspaces/ws-1/key.png',
+        publicId: null,
+        url: null,
+        secureUrl: null,
+      });
+      assertWithinLimit
+        .mockResolvedValueOnce(undefined)
+        .mockRejectedValueOnce(
+          new ForbiddenException('WORKSPACE_LIMIT_EXCEEDED'),
+        );
+
+      await expect(uploadToTask()).rejects.toThrow(ForbiddenException);
+      expect(save).not.toHaveBeenCalled();
+      expect(deleteObject).toHaveBeenCalledWith({
+        provider: AttachmentProvider.S3,
+        key: 'workspaces/ws-1/key.png',
+      });
+      expect(createActivity).not.toHaveBeenCalled();
+    });
+  });
+
   it('preserves comment-only targets', async () => {
     const result = await handler.execute(
-      new UploadAttachmentCommand(
-        file,
-        'ws-1',
-        null,
-        'comment-1',
-        null,
-        'user-1',
-      ),
+      new UploadAttachmentCommand(file, 'ws-1', 'comment-1', null, 'user-1'),
     );
 
-    expect(result.taskId).toBeNull();
     expect(result.commentId).toBe('comment-1');
+    expect(findCommentById).toHaveBeenCalledWith('comment-1');
+  });
+
+  it.each([
+    ['missing', null],
+    ['deleted', { getWorkspaceId: () => 'ws-1', isDeleted: () => true }],
+    [
+      'of another workspace',
+      { getWorkspaceId: () => 'ws-2', isDeleted: () => false },
+    ],
+  ])('rejects a comment that is %s', async (_label, foundComment) => {
+    findCommentById.mockResolvedValue(foundComment);
+
+    await expect(
+      handler.execute(
+        new UploadAttachmentCommand(file, 'ws-1', 'comment-1', null, 'user-1'),
+      ),
+    ).rejects.toThrow(NotFoundException);
+    expect(upload).not.toHaveBeenCalled();
   });
 
   it('persists R2 storage metadata returned by the storage port', async () => {
@@ -145,8 +288,7 @@ describe('UploadAttachmentHandler', () => {
       new UploadAttachmentCommand(
         { ...file, originalName: 'test.pdf' },
         'ws-1',
-        'task-1',
-        null,
+        'comment-1',
         null,
         'user-1',
       ),

@@ -1,3 +1,9 @@
+import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
+import { type CreateActivityService } from 'src/modules/activity/application/ports/create-activity.service.port';
+import {
+  ActivityAction,
+  ActivityEntityType,
+} from 'src/modules/activity/domain/entities/activity.entity';
 import {
   ForbiddenException,
   Inject,
@@ -15,6 +21,8 @@ export class DeleteCommentHandler {
     @Inject(COMMENT_TYPES.repositories.CommentRepository)
     private readonly commentRepo: CommentRepository,
     private readonly commentNotifications: CommentNotificationService,
+    @Inject(ACTIVITY_TYPES.services.CreateActivityService)
+    private readonly createActivityService: CreateActivityService,
   ) {}
 
   /** Xóa mềm. Xóa comment gốc thì danh sách cũng ẩn luôn các trả lời của nó. */
@@ -32,6 +40,19 @@ export class DeleteCommentHandler {
     comment.softDelete();
 
     await this.commentRepo.save(comment);
+    await this.createActivityService.create({
+      workspaceId: comment.getWorkspaceId(),
+      entityType: ActivityEntityType.COMMENT,
+      entityId: comment.getId(),
+      pageId: comment.getPageId(),
+      actorId: command.userId,
+      action: ActivityAction.COMMENT_DELETED,
+      metadata: {
+        pageId: comment.getPageId(),
+        targetType: comment.getTargetType(),
+        targetId: comment.getTargetId(),
+      },
+    });
 
     // Xóa gốc thì các trả lời cũng ẩn theo, nên dọn cả thông báo của chúng
     const replyIds = comment.getParentCommentId()
