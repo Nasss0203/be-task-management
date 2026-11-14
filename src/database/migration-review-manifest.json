@@ -276,6 +276,10 @@
     {
       "file": "1794200000000-add-subscription-billing-contact-and-expiry-notice.ts",
       "sha256": "0e38c7f9dea7c6f47a3e5741b0bc885c314fae0f1a9edd9ab619c22219403a3f"
+    },
+    {
+      "file": "1794643107828-UpdateSchema.ts",
+      "sha256": "d6689bfed65cf6fd7fd62facbcd8579631e532fce4323a70a1476d82673c6cd4"
     }
   ]
 }

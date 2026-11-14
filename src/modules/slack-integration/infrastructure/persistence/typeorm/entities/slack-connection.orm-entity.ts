@@ -41,6 +41,24 @@ export class SlackConnectionOrmEntity {
   @Column({ name: 'last_error', type: 'varchar', length: 64, nullable: true })
   lastError: string | null;
 
+  @Column({ name: 'last_delivered_at', type: 'timestamptz', nullable: true })
+  lastDeliveredAt: Date | null;
+
+  @Column({
+    name: 'last_delivery_failed_at',
+    type: 'timestamptz',
+    nullable: true,
+  })
+  lastDeliveryFailedAt: Date | null;
+
+  @Column({
+    name: 'last_delivery_error',
+    type: 'varchar',
+    length: 32,
+    nullable: true,
+  })
+  lastDeliveryError: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 

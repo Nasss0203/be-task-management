@@ -15,10 +15,14 @@ describe('DeliverSlackNotificationHandler', () => {
     slackUserId: 'U1',
     botTokenEncrypted: 'enc',
     lastError: null,
+    lastDeliveredAt: null,
+    lastDeliveryFailedAt: null,
+    lastDeliveryError: null,
   };
   const connectionRepository = {
     findByUserId: jest.fn(),
     markError: jest.fn(),
+    markDelivered: jest.fn(),
   };
   const client = { postDirectMessage: jest.fn() };
   const tokenCipher = { decrypt: jest.fn(() => 'xoxb-1') };
@@ -69,6 +73,24 @@ describe('DeliverSlackNotificationHandler', () => {
       '*Nam mentioned you*\nLooks good\n<http://localhost:3000/page/page-1|Open in Taskmanly>',
       'comment-1',
     );
+  });
+
+  it('records when the message reached Slack', async () => {
+    await deliver();
+
+    expect(connectionRepository.markDelivered).toHaveBeenCalledWith(
+      'connection-1',
+      expect.any(Date),
+    );
+  });
+
+  it('does not fail the job when the delivery time cannot be saved', async () => {
+    connectionRepository.markDelivered.mockRejectedValueOnce(
+      new Error('db down'),
+    );
+
+    await expect(deliver()).resolves.toBeUndefined();
+    expect(client.postDirectMessage).toHaveBeenCalledTimes(1);
   });
 
   it('escapes Slack control characters typed by users', async () => {
@@ -175,5 +197,6 @@ describe('DeliverSlackNotificationHandler', () => {
 
     await expect(deliver()).rejects.toBeInstanceOf(SlackRetryableError);
     expect(connectionRepository.markError).not.toHaveBeenCalled();
+    expect(connectionRepository.markDelivered).not.toHaveBeenCalled();
   });
 });

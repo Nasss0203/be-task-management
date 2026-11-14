@@ -6,6 +6,7 @@ import type {
   SlackConnection,
   SlackConnectionError,
   SlackConnectionRepository,
+  SlackDeliveryError,
 } from '../../../../domain/repositories/slack-connection.repository';
 import { SlackConnectionOrmEntity } from '../entities/slack-connection.orm-entity';
 
@@ -17,6 +18,9 @@ const toConnection = (orm: SlackConnectionOrmEntity): SlackConnection => ({
   slackUserId: orm.slackUserId,
   botTokenEncrypted: orm.botTokenEncrypted,
   lastError: orm.lastError as SlackConnectionError | null,
+  lastDeliveredAt: orm.lastDeliveredAt,
+  lastDeliveryFailedAt: orm.lastDeliveryFailedAt,
+  lastDeliveryError: orm.lastDeliveryError as SlackDeliveryError | null,
 });
 
 @Injectable()
@@ -44,6 +48,21 @@ export class TypeOrmSlackConnectionRepository implements SlackConnectionReposito
 
   async markError(id: string, error: SlackConnectionError | null) {
     await this.repository.update({ id }, { lastError: error });
+  }
+
+  async markDelivered(id: string, deliveredAt: Date) {
+    await this.repository.update({ id }, { lastDeliveredAt: deliveredAt });
+  }
+
+  async markDeliveryFailed(
+    id: string,
+    failedAt: Date,
+    error: SlackDeliveryError,
+  ) {
+    await this.repository.update(
+      { id },
+      { lastDeliveryFailedAt: failedAt, lastDeliveryError: error },
+    );
   }
 
   async deleteByUserId(userId: string) {

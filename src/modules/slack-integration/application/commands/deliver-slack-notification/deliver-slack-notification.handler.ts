@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { resolveFrontendOrigin } from 'src/common/config/frontend-origin.config';
@@ -50,6 +50,8 @@ const pageIdOf = (notification: SlackNotification): string | null => {
 
 @Injectable()
 export class DeliverSlackNotificationHandler {
+  private readonly logger = new Logger(DeliverSlackNotificationHandler.name);
+
   constructor(
     @Inject(SLACK_INTEGRATION_TYPES.repositories.SlackConnectionRepository)
     private readonly connectionRepository: SlackConnectionRepository,
@@ -94,6 +96,14 @@ export class DeliverSlackNotificationHandler {
         );
       }
       throw error;
+    }
+
+    try {
+      await this.connectionRepository.markDelivered(connection.id, new Date());
+    } catch (error) {
+      this.logger.warn(
+        `Slack delivery status was not saved: ${(error as Error).message}`,
+      );
     }
   }
 

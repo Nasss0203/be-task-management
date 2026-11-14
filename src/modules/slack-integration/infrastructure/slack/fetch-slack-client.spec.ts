@@ -2,14 +2,19 @@ import {
   SLACK_REPLY_ACTION_ID,
   SLACK_REPLY_CALLBACK_ID,
   SlackAuthError,
+  SlackRateLimitedError,
   SlackRetryableError,
 } from '../../application/ports/slack-client.port';
 import { FetchSlackClient } from './fetch-slack-client';
 
-const jsonResponse = (status: number, body: unknown = {}) =>
+const jsonResponse = (
+  status: number,
+  body: unknown = {},
+  headers: Record<string, string> = {},
+) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...headers },
   });
 
 describe('FetchSlackClient', () => {
@@ -133,9 +138,24 @@ describe('FetchSlackClient', () => {
     ).rejects.toBeInstanceOf(SlackAuthError);
   });
 
+  it('tells the job how long Slack asked it to wait', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(429, {}, { 'Retry-After': '30' }));
+
+    const error = await client
+      .postDirectMessage('xoxb-1', 'U1', 'Hi', null)
+      .catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(SlackRateLimitedError);
+    expect((error as SlackRateLimitedError).retryAfterMs).toBe(30_000);
+  });
+
   it.each([
-    ['rate limited', jsonResponse(429)],
-    ['Slack down', jsonResponse(503)],
+    ['rate limited without Retry-After', jsonResponse(429)],
+    [
+      'rate limited with an unreadable Retry-After',
+      jsonResponse(429, {}, { 'Retry-After': 'soon' }),
+    ],
+    ['Slack down', jsonResponse(503, {}, { 'Retry-After': '30' })],
     [
       'unknown Slack error',
       jsonResponse(200, { ok: false, error: 'internal_error' }),
@@ -143,8 +163,11 @@ describe('FetchSlackClient', () => {
   ])('lets the job retry when %s', async (_label, response) => {
     fetchMock.mockResolvedValue(response);
 
-    await expect(
-      client.postDirectMessage('xoxb-1', 'U1', 'Hi', null),
-    ).rejects.toBeInstanceOf(SlackRetryableError);
+    const error = await client
+      .postDirectMessage('xoxb-1', 'U1', 'Hi', null)
+      .catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(SlackRetryableError);
+    expect(error).not.toBeInstanceOf(SlackRateLimitedError);
   });
 });

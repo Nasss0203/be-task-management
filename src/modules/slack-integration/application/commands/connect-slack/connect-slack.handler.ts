@@ -63,6 +63,9 @@ export class ConnectSlackHandler {
         slackUserId: result.slackUserId,
         botTokenEncrypted: this.tokenCipher.encrypt(result.botToken),
         lastError: null,
+        lastDeliveredAt: null,
+        lastDeliveryFailedAt: null,
+        lastDeliveryError: null,
       });
 
       return { returnTo: state.returnTo, status: 'connected' };

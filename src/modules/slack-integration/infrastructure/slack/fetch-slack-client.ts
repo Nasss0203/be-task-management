@@ -11,6 +11,7 @@ import {
   SlackAuthError,
   type SlackClient,
   type SlackOAuthResult,
+  SlackRateLimitedError,
   SlackRetryableError,
 } from '../../application/ports/slack-client.port';
 
@@ -185,9 +186,14 @@ export class FetchSlackClient implements SlackClient {
     });
 
     if (!response.ok) {
-      throw new SlackRetryableError(
-        `Slack ${method} failed: ${response.status}`,
-      );
+      const failure = `Slack ${method} failed: ${response.status}`;
+      const retryAfterSeconds = Number(response.headers.get('retry-after'));
+
+      throw response.status === 429 &&
+        Number.isInteger(retryAfterSeconds) &&
+        retryAfterSeconds > 0
+        ? new SlackRateLimitedError(failure, retryAfterSeconds * 1000)
+        : new SlackRetryableError(failure);
     }
 
     const body = (await response.json()) as SlackResponse;

@@ -14,6 +14,15 @@ export class SlackAuthError extends Error {}
 
 export class SlackRetryableError extends Error {}
 
+export class SlackRateLimitedError extends SlackRetryableError {
+  constructor(
+    message: string,
+    readonly retryAfterMs: number,
+  ) {
+    super(message);
+  }
+}
+
 export interface SlackClient {
   buildAuthorizeUrl(state: string): string;
   exchangeCode(code: string): Promise<SlackOAuthResult>;

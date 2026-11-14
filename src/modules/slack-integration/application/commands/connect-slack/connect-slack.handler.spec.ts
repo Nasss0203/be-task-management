@@ -54,6 +54,9 @@ describe('ConnectSlackHandler', () => {
       slackUserId: 'U1',
       botTokenEncrypted: 'enc(xoxb-1)',
       lastError: null,
+      lastDeliveredAt: null,
+      lastDeliveryFailedAt: null,
+      lastDeliveryError: null,
     });
   });
 
