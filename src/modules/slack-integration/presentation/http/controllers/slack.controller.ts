@@ -177,6 +177,7 @@ export class SlackController {
         new ReplyFromSlackCommand(
           interaction.slackTeamId,
           interaction.slackUserId,
+          interaction.viewId,
           interaction.commentId,
           interaction.body,
         ),

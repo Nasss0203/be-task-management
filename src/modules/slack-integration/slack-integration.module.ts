@@ -29,6 +29,7 @@ import {
 } from './infrastructure/queue/slack-delivery-queue.constants';
 import { SlackDeliveryProcessor } from './infrastructure/queue/slack-delivery.processor';
 import { SlackUnfurlProcessor } from './infrastructure/queue/slack-unfurl.processor';
+import { RedisSlackSubmissionLock } from './infrastructure/redis/redis-slack-submission-lock';
 import { FetchSlackClient } from './infrastructure/slack/fetch-slack-client';
 import { SlackRequestVerifier } from './infrastructure/slack/slack-request-verifier';
 import { SlackController } from './presentation/http/controllers/slack.controller';
@@ -63,6 +64,10 @@ import { SLACK_INTEGRATION_TYPES } from './slack-integration.types';
     {
       provide: SLACK_INTEGRATION_TYPES.ports.SlackUnfurlQueue,
       useClass: BullMqSlackUnfurlQueue,
+    },
+    {
+      provide: SLACK_INTEGRATION_TYPES.ports.SlackSubmissionLock,
+      useClass: RedisSlackSubmissionLock,
     },
     {
       provide: SLACK_INTEGRATION_TYPES.applications.GetSlackAuthorizeUrlHandler,

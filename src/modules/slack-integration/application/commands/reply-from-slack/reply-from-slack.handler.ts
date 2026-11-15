@@ -10,7 +10,10 @@ import { PERMISSIONS } from 'src/modules/permission/constants/permission.constan
 
 import type { SlackConnectionRepository } from '../../../domain/repositories/slack-connection.repository';
 import { SLACK_INTEGRATION_TYPES } from '../../../slack-integration.types';
+import type { SlackSubmissionLock } from '../../ports/slack-submission-lock.port';
 import { ReplyFromSlackCommand } from './reply-from-slack.command';
+
+export const SLACK_REPLY_SUBMISSION_TTL_MS = 60_000;
 
 export type ReplyFromSlackResult = { ok: true } | { ok: false; error: string };
 
@@ -28,6 +31,9 @@ export class ReplyFromSlackHandler {
     private readonly authorization: AuthorizationService,
 
     private readonly createComment: CreateCommentHandler,
+
+    @Inject(SLACK_INTEGRATION_TYPES.ports.SlackSubmissionLock)
+    private readonly submissionLock: SlackSubmissionLock,
   ) {}
 
   async execute(command: ReplyFromSlackCommand): Promise<ReplyFromSlackResult> {
@@ -68,6 +74,17 @@ export class ReplyFromSlackHandler {
       return fail('You can no longer comment on this page.');
     }
 
+    const submissionKey = `slack:reply:${command.slackTeamId}:${command.viewId}`;
+
+    if (
+      !(await this.submissionLock.acquire(
+        submissionKey,
+        SLACK_REPLY_SUBMISSION_TTL_MS,
+      ))
+    ) {
+      return { ok: true };
+    }
+
     try {
       await this.createComment.execute(
         new CreateCommentCommand(
@@ -79,6 +96,7 @@ export class ReplyFromSlackHandler {
         ),
       );
     } catch (error) {
+      await this.submissionLock.release(submissionKey);
       if (error instanceof HttpException) {
         return fail('This comment can no longer be replied to.');
       }

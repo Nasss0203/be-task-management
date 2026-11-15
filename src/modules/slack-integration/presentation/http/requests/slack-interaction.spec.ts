@@ -29,6 +29,7 @@ describe('parseSlackInteraction', () => {
         ...base,
         type: 'view_submission',
         view: {
+          id: 'V1',
           callback_id: 'reply_on_page_submit',
           private_metadata: commentId,
           state: { values: { reply: { body: { value: 'Looks good' } } } },
@@ -38,6 +39,7 @@ describe('parseSlackInteraction', () => {
       kind: 'submit-reply',
       slackTeamId: 'T1',
       slackUserId: 'U1',
+      viewId: 'V1',
       commentId,
       body: 'Looks good',
     });
@@ -61,6 +63,17 @@ describe('parseSlackInteraction', () => {
         type: 'block_actions',
         trigger_id: 'trigger-1',
         actions: [{ action_id: 'other', value: commentId }],
+      }),
+    ],
+    [
+      'a submitted reply without the modal id',
+      JSON.stringify({
+        ...base,
+        type: 'view_submission',
+        view: {
+          callback_id: 'reply_on_page_submit',
+          private_metadata: commentId,
+        },
       }),
     ],
     ['an unknown interaction', JSON.stringify({ ...base, type: 'shortcut' })],

@@ -6,6 +6,7 @@ export const SLACK_INTEGRATION_TYPES = {
     SlackClient: Symbol('SlackClient'),
     SlackDeliveryQueue: Symbol('SlackDeliveryQueue'),
     SlackUnfurlQueue: Symbol('SlackUnfurlQueue'),
+    SlackSubmissionLock: Symbol('SlackSubmissionLock'),
   },
   applications: {
     GetSlackAuthorizeUrlHandler: Symbol('GetSlackAuthorizeUrlHandler'),

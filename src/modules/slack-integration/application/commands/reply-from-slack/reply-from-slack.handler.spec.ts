@@ -4,18 +4,23 @@ import { CommentTargetType } from 'src/modules/comments/domain/enums/comment-tar
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 
 import { ReplyFromSlackCommand } from './reply-from-slack.command';
-import { ReplyFromSlackHandler } from './reply-from-slack.handler';
+import {
+  ReplyFromSlackHandler,
+  SLACK_REPLY_SUBMISSION_TTL_MS,
+} from './reply-from-slack.handler';
 
 describe('ReplyFromSlackHandler', () => {
   const connectionRepository = { findBySlackUser: jest.fn() };
   const comments = { findById: jest.fn() };
   const authorization = { authorize: jest.fn() };
   const createComment = { execute: jest.fn() };
+  const submissionLock = { acquire: jest.fn(), release: jest.fn() };
   const handler = new ReplyFromSlackHandler(
     connectionRepository as never,
     comments as never,
     authorization as never,
     createComment as never,
+    submissionLock,
   );
   const comment = (parentCommentId: string | null = null) => ({
     getId: () => 'comment-1',
@@ -26,7 +31,9 @@ describe('ReplyFromSlackHandler', () => {
     isDeleted: () => false,
   });
   const reply = (body = '  Looks good  ') =>
-    handler.execute(new ReplyFromSlackCommand('T1', 'U1', 'comment-1', body));
+    handler.execute(
+      new ReplyFromSlackCommand('T1', 'U1', 'V1', 'comment-1', body),
+    );
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -35,6 +42,7 @@ describe('ReplyFromSlackHandler', () => {
     });
     comments.findById.mockResolvedValue(comment());
     authorization.authorize.mockResolvedValue(true);
+    submissionLock.acquire.mockResolvedValue(true);
   });
 
   it('posts the reply as the connected user under the comment', async () => {
@@ -101,6 +109,25 @@ describe('ReplyFromSlackHandler', () => {
       expect.objectContaining({ ok: false }),
     );
     expect(createComment.execute).not.toHaveBeenCalled();
+    expect(submissionLock.acquire).not.toHaveBeenCalled();
+  });
+
+  it('holds the submitted modal for a minute while posting', async () => {
+    await reply();
+
+    expect(submissionLock.acquire).toHaveBeenCalledWith(
+      'slack:reply:T1:V1',
+      SLACK_REPLY_SUBMISSION_TTL_MS,
+    );
+    expect(submissionLock.release).not.toHaveBeenCalled();
+  });
+
+  it('posts once when the same modal is submitted twice', async () => {
+    submissionLock.acquire.mockResolvedValue(false);
+
+    await expect(reply()).resolves.toEqual({ ok: true });
+
+    expect(createComment.execute).not.toHaveBeenCalled();
   });
 
   it('turns a rejected comment into a message for the modal', async () => {
@@ -112,5 +139,15 @@ describe('ReplyFromSlackHandler', () => {
       ok: false,
       error: 'This comment can no longer be replied to.',
     });
+    expect(submissionLock.release).toHaveBeenCalledWith('slack:reply:T1:V1');
+  });
+
+  it('lets the user submit again after an unexpected failure', async () => {
+    const error = new Error('db down');
+    createComment.execute.mockRejectedValue(error);
+
+    await expect(reply()).rejects.toBe(error);
+
+    expect(submissionLock.release).toHaveBeenCalledWith('slack:reply:T1:V1');
   });
 });

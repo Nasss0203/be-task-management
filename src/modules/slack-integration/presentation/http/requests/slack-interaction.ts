@@ -14,6 +14,7 @@ type RawInteraction = {
   user?: { id?: unknown; team_id?: unknown };
   actions?: { action_id?: unknown; value?: unknown }[];
   view?: {
+    id?: unknown;
     callback_id?: unknown;
     private_metadata?: unknown;
     state?: {
@@ -34,6 +35,7 @@ export type SlackInteraction =
       kind: 'submit-reply';
       slackTeamId: string;
       slackUserId: string;
+      viewId: string;
       commentId: string;
       body: string;
     };
@@ -87,17 +89,19 @@ export const parseSlackInteraction = (
     interaction.type === 'view_submission' &&
     interaction.view?.callback_id === SLACK_REPLY_CALLBACK_ID
   ) {
+    const viewId = text(interaction.view.id);
     const commentId = uuid(interaction.view.private_metadata);
     const body =
       interaction.view.state?.values?.[SLACK_REPLY_BLOCK_ID]?.[
         SLACK_REPLY_INPUT_ID
       ]?.value;
 
-    return commentId
+    return viewId && commentId
       ? {
           kind: 'submit-reply',
           slackTeamId,
           slackUserId,
+          viewId,
           commentId,
           body: typeof body === 'string' ? body : '',
         }
