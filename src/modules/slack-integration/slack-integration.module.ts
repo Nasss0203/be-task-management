@@ -17,6 +17,7 @@ import { DisconnectSlackHandler } from './application/commands/disconnect-slack/
 import { SlackNotificationListener } from './application/listeners/slack-notification.listener';
 import { GetSlackAuthorizeUrlHandler } from './application/queries/get-slack-authorize-url/get-slack-authorize-url.handler';
 import { GetSlackStatusHandler } from './application/queries/get-slack-status/get-slack-status.handler';
+import { SearchSlackPagesHandler } from './application/queries/search-slack-pages/search-slack-pages.handler';
 import { SlackConnectionOrmEntity } from './infrastructure/persistence/typeorm/entities/slack-connection.orm-entity';
 import { TypeOrmSlackConnectionRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-slack-connection.repository';
 import { BullMqSlackDeliveryQueue } from './infrastructure/queue/bullmq-slack-delivery-queue.service';
@@ -78,6 +79,10 @@ import { SLACK_INTEGRATION_TYPES } from './slack-integration.types';
     {
       provide: SLACK_INTEGRATION_TYPES.applications.ReplyFromSlackHandler,
       useClass: ReplyFromSlackHandler,
+    },
+    {
+      provide: SLACK_INTEGRATION_TYPES.applications.SearchSlackPagesHandler,
+      useClass: SearchSlackPagesHandler,
     },
     TokenCipherService,
     SlackStateTokenService,

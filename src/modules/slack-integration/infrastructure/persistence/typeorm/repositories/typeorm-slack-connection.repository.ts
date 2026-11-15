@@ -21,6 +21,8 @@ const toConnection = (orm: SlackConnectionOrmEntity): SlackConnection => ({
   lastDeliveredAt: orm.lastDeliveredAt,
   lastDeliveryFailedAt: orm.lastDeliveryFailedAt,
   lastDeliveryError: orm.lastDeliveryError as SlackDeliveryError | null,
+  grantedScopes:
+    orm.grantedScopes === null ? null : orm.grantedScopes.split(','),
 });
 
 @Injectable()
@@ -43,7 +45,12 @@ export class TypeOrmSlackConnectionRepository implements SlackConnectionReposito
   }
 
   async save(connection: SlackConnection) {
-    await this.repository.save(this.repository.create(connection));
+    await this.repository.save(
+      this.repository.create({
+        ...connection,
+        grantedScopes: connection.grantedScopes?.join(',') ?? null,
+      }),
+    );
   }
 
   async markError(id: string, error: SlackConnectionError | null) {

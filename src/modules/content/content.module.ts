@@ -600,6 +600,7 @@ const ports = [
 
     CONTENT_TYPES.applications.FindPageByIdHandler,
     CONTENT_TYPES.applications.FindPageBlockByPageHandler,
+    CONTENT_TYPES.applications.SearchPagesHandler,
   ],
 })
 export class ContentModule {}

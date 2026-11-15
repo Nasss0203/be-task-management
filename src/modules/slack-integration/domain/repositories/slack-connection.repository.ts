@@ -24,6 +24,7 @@ export interface SlackConnection {
   lastDeliveredAt: Date | null;
   lastDeliveryFailedAt: Date | null;
   lastDeliveryError: SlackDeliveryError | null;
+  grantedScopes: string[] | null;
 }
 
 export interface SlackConnectionRepository {

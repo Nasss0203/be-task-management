@@ -6,6 +6,10 @@ import type {
   SlackDeliveryError,
 } from '../../../domain/repositories/slack-connection.repository';
 import { SLACK_INTEGRATION_TYPES } from '../../../slack-integration.types';
+import {
+  SLACK_BOT_SCOPES,
+  SLACK_LEGACY_BOT_SCOPES,
+} from '../../ports/slack-client.port';
 import { GetSlackStatusQuery } from './get-slack-status.query';
 
 export type SlackStatus = {
@@ -15,6 +19,7 @@ export type SlackStatus = {
   lastDeliveredAt: Date | null;
   lastDeliveryFailedAt: Date | null;
   lastDeliveryError: SlackDeliveryError | null;
+  missingScopes: string[];
 };
 
 @Injectable()
@@ -36,6 +41,14 @@ export class GetSlackStatusHandler {
       lastDeliveredAt: connection?.lastDeliveredAt ?? null,
       lastDeliveryFailedAt: connection?.lastDeliveryFailedAt ?? null,
       lastDeliveryError: connection?.lastDeliveryError ?? null,
+      missingScopes: connection
+        ? SLACK_BOT_SCOPES.filter(
+            (scope) =>
+              !(connection.grantedScopes ?? SLACK_LEGACY_BOT_SCOPES).includes(
+                scope,
+              ),
+          )
+        : [],
     };
   }
 }

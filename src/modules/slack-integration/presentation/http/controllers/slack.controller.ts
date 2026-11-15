@@ -42,6 +42,8 @@ import { GetSlackAuthorizeUrlHandler } from '../../../application/queries/get-sl
 import { GetSlackAuthorizeUrlQuery } from '../../../application/queries/get-slack-authorize-url/get-slack-authorize-url.query';
 import { GetSlackStatusHandler } from '../../../application/queries/get-slack-status/get-slack-status.handler';
 import { GetSlackStatusQuery } from '../../../application/queries/get-slack-status/get-slack-status.query';
+import { SearchSlackPagesHandler } from '../../../application/queries/search-slack-pages/search-slack-pages.handler';
+import { SearchSlackPagesQuery } from '../../../application/queries/search-slack-pages/search-slack-pages.query';
 import { SLACK_INTEGRATION_TYPES } from '../../../slack-integration.types';
 import { SlackRequestVerifier } from '../../../infrastructure/slack/slack-request-verifier';
 import { GetSlackAuthorizeUrlRequest } from '../requests/get-slack-authorize-url.request';
@@ -83,6 +85,9 @@ export class SlackController {
 
     @Inject(SLACK_INTEGRATION_TYPES.applications.ReplyFromSlackHandler)
     private readonly replyHandler: ReplyFromSlackHandler,
+
+    @Inject(SLACK_INTEGRATION_TYPES.applications.SearchSlackPagesHandler)
+    private readonly searchPagesHandler: SearchSlackPagesHandler,
 
     private readonly requestVerifier: SlackRequestVerifier,
   ) {}
@@ -178,6 +183,45 @@ export class SlackController {
             errors: { [SLACK_REPLY_BLOCK_ID]: result.error },
           };
     }
+  }
+
+  @Post('commands')
+  @Public()
+  @SkipTransform()
+  @WebhookRateLimit()
+  @HttpCode(HttpStatus.OK)
+  commands(
+    @Body('team_id') slackTeamId: unknown,
+    @Body('user_id') slackUserId: unknown,
+    @Body('text') text: unknown,
+    @Req() request: RawBodyRequest<Request>,
+    @Headers('x-slack-signature') signature?: string,
+    @Headers('x-slack-request-timestamp') timestamp?: string,
+  ) {
+    if (!request.rawBody) {
+      throw new BadRequestException('Slack request body is unavailable');
+    }
+
+    this.requestVerifier.verify({
+      rawBody: request.rawBody,
+      signature,
+      timestamp,
+    });
+
+    const teamId = asOptionalString(slackTeamId);
+    const userId = asOptionalString(slackUserId);
+
+    if (!teamId || !userId) {
+      throw new BadRequestException('Slack command is missing the user');
+    }
+
+    return this.searchPagesHandler.execute(
+      new SearchSlackPagesQuery(
+        teamId,
+        userId,
+        typeof text === 'string' ? text : '',
+      ),
+    );
   }
 
   @Get()

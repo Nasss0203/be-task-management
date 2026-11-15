@@ -15,6 +15,7 @@ describe('GetSlackStatusHandler', () => {
       lastDeliveredAt: deliveredAt,
       lastDeliveryFailedAt: failedAt,
       lastDeliveryError: SlackDeliveryError.RATE_LIMITED,
+      grantedScopes: ['chat:write', 'commands', 'links:read', 'links:write'],
     });
 
     await expect(
@@ -26,7 +27,30 @@ describe('GetSlackStatusHandler', () => {
       lastDeliveredAt: deliveredAt,
       lastDeliveryFailedAt: failedAt,
       lastDeliveryError: SlackDeliveryError.RATE_LIMITED,
+      missingScopes: [],
     });
+  });
+
+  it.each([
+    ['saved before scopes were stored', null],
+    ['granted only chat:write', ['chat:write']],
+  ])('asks to reconnect a connection %s', async (_label, grantedScopes) => {
+    connectionRepository.findByUserId.mockResolvedValue({
+      slackTeamName: 'Acme',
+      lastError: null,
+      lastDeliveredAt: null,
+      lastDeliveryFailedAt: null,
+      lastDeliveryError: null,
+      grantedScopes,
+    });
+
+    const status = await handler.execute(new GetSlackStatusQuery('user-1'));
+
+    expect(status.missingScopes).toEqual([
+      'commands',
+      'links:read',
+      'links:write',
+    ]);
   });
 
   it('returns empty delivery fields when Slack is not connected', async () => {
@@ -41,6 +65,7 @@ describe('GetSlackStatusHandler', () => {
       lastDeliveredAt: null,
       lastDeliveryFailedAt: null,
       lastDeliveryError: null,
+      missingScopes: [],
     });
   });
 });

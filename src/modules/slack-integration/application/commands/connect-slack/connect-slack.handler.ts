@@ -66,6 +66,7 @@ export class ConnectSlackHandler {
         lastDeliveredAt: null,
         lastDeliveryFailedAt: null,
         lastDeliveryError: null,
+        grantedScopes: result.grantedScopes,
       });
 
       return { returnTo: state.returnTo, status: 'connected' };

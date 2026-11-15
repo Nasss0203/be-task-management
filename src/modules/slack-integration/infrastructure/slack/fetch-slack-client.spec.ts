@@ -39,13 +39,15 @@ describe('FetchSlackClient', () => {
 
   beforeEach(() => fetchMock.mockReset());
 
-  it('asks for the chat:write bot scope with the signed state', () => {
+  it('asks for the message, command and link bot scopes with the signed state', () => {
     const url = new URL(client.buildAuthorizeUrl('state-1'));
 
     expect(url.origin + url.pathname).toBe(
       'https://slack.com/oauth/v2/authorize',
     );
-    expect(url.searchParams.get('scope')).toBe('chat:write');
+    expect(url.searchParams.get('scope')).toBe(
+      'chat:write,commands,links:read,links:write',
+    );
     expect(url.searchParams.get('state')).toBe('state-1');
     expect(url.searchParams.get('redirect_uri')).toBe(
       'https://tunnel.example/callback',
@@ -57,6 +59,7 @@ describe('FetchSlackClient', () => {
       jsonResponse(200, {
         ok: true,
         access_token: 'xoxb-1',
+        scope: 'chat:write,commands',
         team: { id: 'T1', name: 'Acme' },
         authed_user: { id: 'U1' },
       }),
@@ -67,6 +70,7 @@ describe('FetchSlackClient', () => {
       teamId: 'T1',
       teamName: 'Acme',
       slackUserId: 'U1',
+      grantedScopes: ['chat:write', 'commands'],
     });
     expect(fetchMock.mock.calls[0][0]).toBe(
       'https://slack.com/api/oauth.v2.access',

@@ -1,8 +1,18 @@
+export const SLACK_BOT_SCOPES = [
+  'chat:write',
+  'commands',
+  'links:read',
+  'links:write',
+] as const;
+
+export const SLACK_LEGACY_BOT_SCOPES = ['chat:write'];
+
 export interface SlackOAuthResult {
   botToken: string;
   teamId: string;
   teamName: string;
   slackUserId: string;
+  grantedScopes: string[];
 }
 
 export const SLACK_REPLY_ACTION_ID = 'reply_on_page';

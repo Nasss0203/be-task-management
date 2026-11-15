@@ -34,6 +34,7 @@ describe('ConnectSlackHandler', () => {
       teamId: 'T1',
       teamName: 'Acme',
       slackUserId: 'U1',
+      grantedScopes: ['chat:write', 'commands'],
     });
     connectionRepository.findByUserId.mockResolvedValue(null);
     connectionRepository.findBySlackUser.mockResolvedValue(null);
@@ -57,6 +58,7 @@ describe('ConnectSlackHandler', () => {
       lastDeliveredAt: null,
       lastDeliveryFailedAt: null,
       lastDeliveryError: null,
+      grantedScopes: ['chat:write', 'commands'],
     });
   });
 

@@ -280,6 +280,10 @@
     {
       "file": "1794643107828-UpdateSchema.ts",
       "sha256": "d6689bfed65cf6fd7fd62facbcd8579631e532fce4323a70a1476d82673c6cd4"
+    },
+    {
+      "file": "1794652858296-UpdateSchema.ts",
+      "sha256": "9838af3448962624223171c7728e2410c1db49d4fe6691fde5f0563a9714188d"
     }
   ]
 }

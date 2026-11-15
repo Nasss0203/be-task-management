@@ -59,6 +59,9 @@ export class SlackConnectionOrmEntity {
   })
   lastDeliveryError: string | null;
 
+  @Column({ name: 'granted_scopes', type: 'text', nullable: true })
+  grantedScopes: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 

@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { COMMENT_BODY_MAX_LENGTH } from 'src/modules/comments/application/dto/comment/request/create-comment.request.dto';
 
 import {
+  SLACK_BOT_SCOPES,
   SLACK_REPLY_ACTION_ID,
   SLACK_REPLY_BLOCK_ID,
   SLACK_REPLY_CALLBACK_ID,
@@ -17,7 +18,6 @@ import {
 
 const AUTHORIZE_URL = 'https://slack.com/oauth/v2/authorize';
 const API_URL = 'https://slack.com/api';
-const BOT_SCOPES = ['chat:write'];
 const REQUEST_TIMEOUT_MS = 15_000;
 const SECTION_TEXT_MAX_LENGTH = 3000;
 const REPLY_INPUT_MAX_LENGTH = Math.min(COMMENT_BODY_MAX_LENGTH, 3000);
@@ -34,6 +34,7 @@ type SlackResponse = {
   ok: boolean;
   error?: string;
   access_token?: string;
+  scope?: string;
   team?: { id: string; name: string };
   authed_user?: { id: string };
 };
@@ -47,7 +48,7 @@ export class FetchSlackClient implements SlackClient {
 
     url.search = new URLSearchParams({
       client_id: this.configService.getOrThrow<string>('SLACK_CLIENT_ID'),
-      scope: BOT_SCOPES.join(','),
+      scope: SLACK_BOT_SCOPES.join(','),
       redirect_uri: this.redirectUri(),
       state,
     }).toString();
@@ -78,6 +79,7 @@ export class FetchSlackClient implements SlackClient {
       teamId: body.team.id,
       teamName: body.team.name,
       slackUserId: body.authed_user.id,
+      grantedScopes: (body.scope ?? '').split(',').filter(Boolean),
     };
   }
 
