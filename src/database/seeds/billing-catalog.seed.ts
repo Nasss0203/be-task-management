@@ -90,7 +90,7 @@ const planFeatures = [
   {
     planCode: 'FREE',
     featureCode: 'MAX_TEAMSPACES',
-    value: 1,
+    value: 5,
   },
   {
     planCode: 'FREE',

@@ -199,8 +199,16 @@ export class TypeOrmTeamspaceRepository implements TeamspaceRepository {
           teamspace.deleted_by = :userId
           OR teamspace_member.role_name = :teamspaceOwner
           OR (
-            teamspace.visibility = :openVisibility
-            AND workspace_member.role_name = :workspaceOwner
+            workspace_member.role_name = :workspaceOwner
+            AND (
+              teamspace.visibility = :openVisibility
+              OR NOT EXISTS (
+                SELECT 1 FROM workspace_members deleter
+                WHERE deleter.workspace_id = teamspace.workspace_id
+                  AND deleter.user_id = teamspace.deleted_by
+                  AND deleter.membership_type = :membershipType
+              )
+            )
           )
         )`,
         {
