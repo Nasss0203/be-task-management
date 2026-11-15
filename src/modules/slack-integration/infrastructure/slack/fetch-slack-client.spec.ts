@@ -93,6 +93,35 @@ describe('FetchSlackClient', () => {
     });
   });
 
+  it.each([
+    [
+      { unfurlId: 'unfurl-1', source: 'composer' },
+      { unfurl_id: 'unfurl-1', source: 'composer' },
+    ],
+    [
+      { channel: 'C1', messageTs: '123.456' },
+      { channel: 'C1', ts: '123.456' },
+    ],
+  ])('attaches link previews to the shared message', async (target, sent) => {
+    fetchMock.mockResolvedValue(jsonResponse(200, { ok: true }));
+    const unfurls = {
+      'https://app.example/page/1': {
+        blocks: [
+          {
+            type: 'section' as const,
+            text: { type: 'mrkdwn' as const, text: '*Roadmap*' },
+          },
+        ],
+      },
+    };
+
+    await client.unfurlLinks('xoxb-1', target, unfurls);
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('https://slack.com/api/chat.unfurl');
+    expect(JSON.parse(init.body as string)).toEqual({ ...sent, unfurls });
+  });
+
   it('adds a Reply on page button for comment notifications', async () => {
     fetchMock.mockResolvedValue(jsonResponse(200, { ok: true }));
 

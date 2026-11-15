@@ -18,11 +18,17 @@ import { SlackNotificationListener } from './application/listeners/slack-notific
 import { GetSlackAuthorizeUrlHandler } from './application/queries/get-slack-authorize-url/get-slack-authorize-url.handler';
 import { GetSlackStatusHandler } from './application/queries/get-slack-status/get-slack-status.handler';
 import { SearchSlackPagesHandler } from './application/queries/search-slack-pages/search-slack-pages.handler';
+import { UnfurlSlackLinksHandler } from './application/commands/unfurl-slack-links/unfurl-slack-links.handler';
 import { SlackConnectionOrmEntity } from './infrastructure/persistence/typeorm/entities/slack-connection.orm-entity';
 import { TypeOrmSlackConnectionRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-slack-connection.repository';
 import { BullMqSlackDeliveryQueue } from './infrastructure/queue/bullmq-slack-delivery-queue.service';
-import { SLACK_DELIVERY_QUEUE } from './infrastructure/queue/slack-delivery-queue.constants';
+import { BullMqSlackUnfurlQueue } from './infrastructure/queue/bullmq-slack-unfurl-queue.service';
+import {
+  SLACK_DELIVERY_QUEUE,
+  SLACK_UNFURL_QUEUE,
+} from './infrastructure/queue/slack-delivery-queue.constants';
 import { SlackDeliveryProcessor } from './infrastructure/queue/slack-delivery.processor';
+import { SlackUnfurlProcessor } from './infrastructure/queue/slack-unfurl.processor';
 import { FetchSlackClient } from './infrastructure/slack/fetch-slack-client';
 import { SlackRequestVerifier } from './infrastructure/slack/slack-request-verifier';
 import { SlackController } from './presentation/http/controllers/slack.controller';
@@ -31,7 +37,10 @@ import { SLACK_INTEGRATION_TYPES } from './slack-integration.types';
 @Module({
   imports: [
     TypeOrmModule.forFeature([SlackConnectionOrmEntity]),
-    BullModule.registerQueue({ name: SLACK_DELIVERY_QUEUE }),
+    BullModule.registerQueue(
+      { name: SLACK_DELIVERY_QUEUE },
+      { name: SLACK_UNFURL_QUEUE },
+    ),
     WorkspaceModule,
     ContentModule,
     CommentsModule,
@@ -50,6 +59,10 @@ import { SLACK_INTEGRATION_TYPES } from './slack-integration.types';
     {
       provide: SLACK_INTEGRATION_TYPES.ports.SlackDeliveryQueue,
       useClass: BullMqSlackDeliveryQueue,
+    },
+    {
+      provide: SLACK_INTEGRATION_TYPES.ports.SlackUnfurlQueue,
+      useClass: BullMqSlackUnfurlQueue,
     },
     {
       provide: SLACK_INTEGRATION_TYPES.applications.GetSlackAuthorizeUrlHandler,
@@ -84,11 +97,16 @@ import { SLACK_INTEGRATION_TYPES } from './slack-integration.types';
       provide: SLACK_INTEGRATION_TYPES.applications.SearchSlackPagesHandler,
       useClass: SearchSlackPagesHandler,
     },
+    {
+      provide: SLACK_INTEGRATION_TYPES.applications.UnfurlSlackLinksHandler,
+      useClass: UnfurlSlackLinksHandler,
+    },
     TokenCipherService,
     SlackStateTokenService,
     SlackRequestVerifier,
     SlackNotificationListener,
     SlackDeliveryProcessor,
+    SlackUnfurlProcessor,
   ],
 })
 export class SlackIntegrationModule {}

@@ -5,6 +5,7 @@ export const SLACK_INTEGRATION_TYPES = {
   ports: {
     SlackClient: Symbol('SlackClient'),
     SlackDeliveryQueue: Symbol('SlackDeliveryQueue'),
+    SlackUnfurlQueue: Symbol('SlackUnfurlQueue'),
   },
   applications: {
     GetSlackAuthorizeUrlHandler: Symbol('GetSlackAuthorizeUrlHandler'),
@@ -15,5 +16,6 @@ export const SLACK_INTEGRATION_TYPES = {
     OpenSlackReplyHandler: Symbol('OpenSlackReplyHandler'),
     ReplyFromSlackHandler: Symbol('ReplyFromSlackHandler'),
     SearchSlackPagesHandler: Symbol('SearchSlackPagesHandler'),
+    UnfurlSlackLinksHandler: Symbol('UnfurlSlackLinksHandler'),
   },
 } as const;

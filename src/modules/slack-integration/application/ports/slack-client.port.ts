@@ -33,6 +33,14 @@ export class SlackRateLimitedError extends SlackRetryableError {
   }
 }
 
+export type SlackUnfurlTarget =
+  | { unfurlId: string; source: string }
+  | { channel: string; messageTs: string };
+
+export type SlackUnfurl = {
+  blocks: { type: 'section'; text: { type: 'mrkdwn'; text: string } }[];
+};
+
 export interface SlackClient {
   buildAuthorizeUrl(state: string): string;
   exchangeCode(code: string): Promise<SlackOAuthResult>;
@@ -46,5 +54,10 @@ export interface SlackClient {
     botToken: string,
     triggerId: string,
     commentId: string,
+  ): Promise<void>;
+  unfurlLinks(
+    botToken: string,
+    target: SlackUnfurlTarget,
+    unfurls: Record<string, SlackUnfurl>,
   ): Promise<void>;
 }

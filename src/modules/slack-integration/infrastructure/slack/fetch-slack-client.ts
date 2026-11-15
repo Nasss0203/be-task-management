@@ -14,6 +14,8 @@ import {
   type SlackOAuthResult,
   SlackRateLimitedError,
   SlackRetryableError,
+  type SlackUnfurl,
+  type SlackUnfurlTarget,
 } from '../../application/ports/slack-client.port';
 
 const AUTHORIZE_URL = 'https://slack.com/oauth/v2/authorize';
@@ -156,6 +158,19 @@ export class FetchSlackClient implements SlackClient {
           },
         ],
       },
+    });
+  }
+
+  async unfurlLinks(
+    botToken: string,
+    target: SlackUnfurlTarget,
+    unfurls: Record<string, SlackUnfurl>,
+  ): Promise<void> {
+    await this.callWithToken('chat.unfurl', botToken, {
+      ...('unfurlId' in target
+        ? { unfurl_id: target.unfurlId, source: target.source }
+        : { channel: target.channel, ts: target.messageTs }),
+      unfurls,
     });
   }
 

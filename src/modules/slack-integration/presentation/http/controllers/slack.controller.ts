@@ -35,7 +35,9 @@ import { OpenSlackReplyCommand } from '../../../application/commands/open-slack-
 import { OpenSlackReplyHandler } from '../../../application/commands/open-slack-reply/open-slack-reply.handler';
 import { ReplyFromSlackCommand } from '../../../application/commands/reply-from-slack/reply-from-slack.command';
 import { ReplyFromSlackHandler } from '../../../application/commands/reply-from-slack/reply-from-slack.handler';
+import { UnfurlSlackLinksCommand } from '../../../application/commands/unfurl-slack-links/unfurl-slack-links.command';
 import { SLACK_REPLY_BLOCK_ID } from '../../../application/ports/slack-client.port';
+import type { SlackUnfurlQueue } from '../../../application/ports/slack-unfurl-queue.port';
 import { DisconnectSlackCommand } from '../../../application/commands/disconnect-slack/disconnect-slack.command';
 import { DisconnectSlackHandler } from '../../../application/commands/disconnect-slack/disconnect-slack.handler';
 import { GetSlackAuthorizeUrlHandler } from '../../../application/queries/get-slack-authorize-url/get-slack-authorize-url.handler';
@@ -47,6 +49,7 @@ import { SearchSlackPagesQuery } from '../../../application/queries/search-slack
 import { SLACK_INTEGRATION_TYPES } from '../../../slack-integration.types';
 import { SlackRequestVerifier } from '../../../infrastructure/slack/slack-request-verifier';
 import { GetSlackAuthorizeUrlRequest } from '../requests/get-slack-authorize-url.request';
+import { parseSlackEvent } from '../requests/slack-event';
 import { parseSlackInteraction } from '../requests/slack-interaction';
 
 const asOptionalString = (value: unknown) =>
@@ -88,6 +91,9 @@ export class SlackController {
 
     @Inject(SLACK_INTEGRATION_TYPES.applications.SearchSlackPagesHandler)
     private readonly searchPagesHandler: SearchSlackPagesHandler,
+
+    @Inject(SLACK_INTEGRATION_TYPES.ports.SlackUnfurlQueue)
+    private readonly unfurlQueue: SlackUnfurlQueue,
 
     private readonly requestVerifier: SlackRequestVerifier,
   ) {}
@@ -222,6 +228,46 @@ export class SlackController {
         typeof text === 'string' ? text : '',
       ),
     );
+  }
+
+  @Post('events')
+  @Public()
+  @SkipTransform()
+  @WebhookRateLimit()
+  @HttpCode(HttpStatus.OK)
+  async events(
+    @Body() body: unknown,
+    @Req() request: RawBodyRequest<Request>,
+    @Headers('x-slack-signature') signature?: string,
+    @Headers('x-slack-request-timestamp') timestamp?: string,
+  ) {
+    if (!request.rawBody) {
+      throw new BadRequestException('Slack request body is unavailable');
+    }
+
+    this.requestVerifier.verify({
+      rawBody: request.rawBody,
+      signature,
+      timestamp,
+    });
+
+    const event = parseSlackEvent(body);
+
+    if (event?.kind === 'url-verification') {
+      return { challenge: event.challenge };
+    }
+
+    if (event?.kind === 'link-shared') {
+      await this.unfurlQueue.enqueue(
+        event.eventId,
+        new UnfurlSlackLinksCommand(
+          event.slackTeamId,
+          event.slackUserId,
+          event.target,
+          event.urls,
+        ),
+      );
+    }
   }
 
   @Get()
