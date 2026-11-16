@@ -57,6 +57,20 @@ export class TypeOrmGoogleCalendarSyncRepository implements GoogleCalendarSyncRe
     return rows.map((row) => row.id);
   }
 
+  async findIdsByDatabaseId(databaseId: string) {
+    const rows = await this.repository
+      .createQueryBuilder('sync')
+      .innerJoin('sync.connection', 'connection')
+      .select('sync.id', 'id')
+      .where('sync.database_id = :databaseId', { databaseId })
+      .andWhere('connection.last_error IS DISTINCT FROM :revoked', {
+        revoked: GoogleCalendarSyncError.ACCESS_REVOKED,
+      })
+      .getRawMany<{ id: string }>();
+
+    return rows.map((row) => row.id);
+  }
+
   async save(sync: GoogleCalendarSync) {
     await this.repository.save(this.repository.create(sync));
   }

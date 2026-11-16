@@ -5,6 +5,7 @@ import { type DatabaseRowRepository } from '../../../domain/repositories/databas
 
 import { DeleteDatabaseRowCommand } from './delete-database-row.command';
 import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
+import type { DatabaseRowChangePublisher } from '../../ports/database-row-change-publisher.port';
 
 @Injectable()
 export class DeleteDatabaseRowHandler {
@@ -13,6 +14,8 @@ export class DeleteDatabaseRowHandler {
     private readonly databaseRowRepository: DatabaseRowRepository,
     @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
     private readonly activityRecorder: DatabaseActivityRecorder,
+    @Inject(DATABASE_TYPES.ports.DatabaseRowChangePublisher)
+    private readonly rowChangePublisher: DatabaseRowChangePublisher,
   ) {}
 
   async execute(command: DeleteDatabaseRowCommand): Promise<void> {
@@ -29,5 +32,6 @@ export class DeleteDatabaseRowHandler {
       action: 'DATABASE_ROW_DELETED',
       rowId: row.getId(),
     });
+    this.rowChangePublisher.publish(row.getDatabaseId());
   }
 }

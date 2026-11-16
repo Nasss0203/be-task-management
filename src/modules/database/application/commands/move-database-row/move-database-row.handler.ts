@@ -11,6 +11,7 @@ import { type DatabaseRowRepository } from '../../../domain/repositories/databas
 import { MoveDatabaseRowCommand } from './move-database-row.command';
 import { planRowMove } from './row-position';
 import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
+import type { DatabaseRowChangePublisher } from '../../ports/database-row-change-publisher.port';
 
 @Injectable()
 export class MoveDatabaseRowHandler {
@@ -19,6 +20,8 @@ export class MoveDatabaseRowHandler {
     private readonly databaseRowRepository: DatabaseRowRepository,
     @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
     private readonly activityRecorder: DatabaseActivityRecorder,
+    @Inject(DATABASE_TYPES.ports.DatabaseRowChangePublisher)
+    private readonly rowChangePublisher: DatabaseRowChangePublisher,
   ) {}
 
   async execute(
@@ -64,6 +67,7 @@ export class MoveDatabaseRowHandler {
         action: 'DATABASE_ROW_MOVED',
         rowId: row.getId(),
       });
+      this.rowChangePublisher.publish(row.getDatabaseId());
       return { id: row.getId(), position: plan.position };
     }
 
@@ -74,6 +78,7 @@ export class MoveDatabaseRowHandler {
       action: 'DATABASE_ROW_MOVED',
       rowId: row.getId(),
     });
+    this.rowChangePublisher.publish(row.getDatabaseId());
 
     return {
       id: row.getId(),

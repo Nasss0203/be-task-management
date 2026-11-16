@@ -57,4 +57,22 @@ describe('BullMqGoogleCalendarSyncJobQueue', () => {
 
     expect(addedJobId(queue.add)).toBe('google-calendar-sync-sync-1-rerun');
   });
+
+  it('delays a run after a row change and merges changes of the same sync inside the delay', async () => {
+    const { queue, jobQueue } = createQueue(undefined);
+
+    await jobQueue.enqueue('sync-1', { delayMs: 5000 });
+
+    expect(queue.getJob).not.toHaveBeenCalled();
+    expect(queue.add).toHaveBeenCalledWith(
+      RUN_GOOGLE_CALENDAR_SYNC_JOB,
+      { syncId: 'sync-1' },
+      expect.objectContaining({
+        delay: 5000,
+        deduplication: { id: 'google-calendar-sync-sync-1-change', ttl: 5000 },
+        attempts: 3,
+      }),
+    );
+    expect(addedJobId(queue.add)).toBeUndefined();
+  });
 });

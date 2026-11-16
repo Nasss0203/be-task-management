@@ -1,3 +1,10 @@
+export type EnqueueGoogleCalendarSyncOptions = {
+  delayMs?: number;
+};
+
 export interface GoogleCalendarSyncJobQueue {
-  enqueue(syncId: string): Promise<void>;
+  enqueue(
+    syncId: string,
+    options?: EnqueueGoogleCalendarSyncOptions,
+  ): Promise<void>;
 }

@@ -2,7 +2,10 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import type { Queue } from 'bullmq';
 
-import type { GoogleCalendarSyncJobQueue } from '../../application/ports/google-calendar-sync-job-queue.port';
+import type {
+  EnqueueGoogleCalendarSyncOptions,
+  GoogleCalendarSyncJobQueue,
+} from '../../application/ports/google-calendar-sync-job-queue.port';
 import {
   GOOGLE_CALENDAR_SYNC_QUEUE,
   RUN_GOOGLE_CALENDAR_SYNC_JOB,
@@ -10,6 +13,13 @@ import {
   SYNC_ALL_GOOGLE_CALENDARS_JOB,
   SYNC_ALL_GOOGLE_CALENDARS_SCHEDULER,
 } from './google-calendar-sync-queue.constants';
+
+const RUN_JOB_OPTIONS = {
+  attempts: 3,
+  backoff: { type: 'exponential', delay: 5000 },
+  removeOnComplete: true,
+  removeOnFail: true,
+};
 
 @Injectable()
 export class BullMqGoogleCalendarSyncJobQueue
@@ -39,20 +49,31 @@ export class BullMqGoogleCalendarSyncJobQueue
       });
   }
 
-  async enqueue(syncId: string): Promise<void> {
+  async enqueue(
+    syncId: string,
+    options?: EnqueueGoogleCalendarSyncOptions,
+  ): Promise<void> {
     const jobId = `google-calendar-sync-${syncId}`;
+
+    if (options?.delayMs) {
+      await this.queue.add(
+        RUN_GOOGLE_CALENDAR_SYNC_JOB,
+        { syncId },
+        {
+          ...RUN_JOB_OPTIONS,
+          delay: options.delayMs,
+          deduplication: { id: `${jobId}-change`, ttl: options.delayMs },
+        },
+      );
+      return;
+    }
+
     const running = await (await this.queue.getJob(jobId))?.isActive();
 
     await this.queue.add(
       RUN_GOOGLE_CALENDAR_SYNC_JOB,
       { syncId },
-      {
-        jobId: running ? `${jobId}-rerun` : jobId,
-        attempts: 3,
-        backoff: { type: 'exponential', delay: 5000 },
-        removeOnComplete: true,
-        removeOnFail: true,
-      },
+      { ...RUN_JOB_OPTIONS, jobId: running ? `${jobId}-rerun` : jobId },
     );
   }
 }

@@ -6,6 +6,7 @@ import { type DatabaseRepository } from '../../../domain/repositories/database.r
 
 import { ClearRowValueCommand } from './clear-row-value.command';
 import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
+import type { DatabaseRowChangePublisher } from '../../ports/database-row-change-publisher.port';
 
 @Injectable()
 export class ClearRowValueHandler {
@@ -17,6 +18,8 @@ export class ClearRowValueHandler {
     private readonly databaseRowRepository: DatabaseRowRepository,
     @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
     private readonly activityRecorder: DatabaseActivityRecorder,
+    @Inject(DATABASE_TYPES.ports.DatabaseRowChangePublisher)
+    private readonly rowChangePublisher: DatabaseRowChangePublisher,
   ) {}
 
   async execute(command: ClearRowValueCommand): Promise<void> {
@@ -52,5 +55,6 @@ export class ClearRowValueHandler {
       kind: 'CLEARED',
       newValue: null,
     });
+    this.rowChangePublisher.publish(database.getId());
   }
 }

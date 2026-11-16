@@ -24,10 +24,12 @@ describe('SetRowValueHandler activity', () => {
     save: jest.fn(() => Promise.resolve()),
   };
   const recorder = { record: jest.fn(() => Promise.resolve()) };
+  const publisher = { publish: jest.fn() };
   const handler = new SetRowValueHandler(
     databaseRepository as never,
     rowRepository as never,
     recorder as never,
+    publisher as never,
   );
 
   beforeEach(() => {
@@ -53,6 +55,7 @@ describe('SetRowValueHandler activity', () => {
       },
       context,
     );
+    expect(publisher.publish).toHaveBeenCalledWith('db');
   });
 
   it('passes no actor for system writes, so the recorder skips them', async () => {
@@ -79,5 +82,6 @@ describe('SetRowValueHandler activity', () => {
     ).rejects.toThrow('write failed');
 
     expect(recorder.record).not.toHaveBeenCalled();
+    expect(publisher.publish).not.toHaveBeenCalled();
   });
 });

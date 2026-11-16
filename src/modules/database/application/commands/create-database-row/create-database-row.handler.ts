@@ -18,6 +18,7 @@ import { type DatabaseRepository } from '../../../domain/repositories/database.r
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
 import { CreateDatabaseRowCommand } from './create-database-row.command';
 import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
+import type { DatabaseRowChangePublisher } from '../../ports/database-row-change-publisher.port';
 
 @Injectable()
 export class CreateDatabaseRowHandler {
@@ -29,6 +30,8 @@ export class CreateDatabaseRowHandler {
     private readonly databaseRowRepository: DatabaseRowRepository,
     @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
     private readonly activityRecorder: DatabaseActivityRecorder,
+    @Inject(DATABASE_TYPES.ports.DatabaseRowChangePublisher)
+    private readonly rowChangePublisher: DatabaseRowChangePublisher,
   ) {}
 
   async execute(
@@ -97,6 +100,7 @@ export class CreateDatabaseRowHandler {
       },
       context,
     );
+    this.rowChangePublisher.publish(database.getId());
 
     return DatabaseRowDto.fromDomain(row);
   }

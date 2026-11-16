@@ -17,9 +17,11 @@ describe('ChangeDatabaseRowParentHandler', () => {
     save: jest.fn(),
   };
   const recorder = { record: jest.fn(() => Promise.resolve()) };
+  const publisher = { publish: jest.fn() };
   const handler = new ChangeDatabaseRowParentHandler(
     repository as never,
     recorder as never,
+    publisher as never,
   );
 
   beforeEach(() => {

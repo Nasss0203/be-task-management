@@ -13,6 +13,7 @@ import { DisconnectGoogleCalendarHandler } from './application/commands/disconne
 import { RequestGoogleCalendarSyncHandler } from './application/commands/request-google-calendar-sync/request-google-calendar-sync.handler';
 import { RunGoogleCalendarSyncHandler } from './application/commands/run-google-calendar-sync/run-google-calendar-sync.handler';
 import { UpsertGoogleCalendarSyncHandler } from './application/commands/upsert-google-calendar-sync/upsert-google-calendar-sync.handler';
+import { DatabaseRowsChangedListener } from './application/listeners/database-rows-changed.listener';
 import { GetGoogleCalendarAuthorizeUrlHandler } from './application/queries/get-google-calendar-authorize-url/get-google-calendar-authorize-url.handler';
 import { GetGoogleCalendarSyncHandler } from './application/queries/get-google-calendar-sync/get-google-calendar-sync.handler';
 import { GoogleCalendarAccessTokenService } from './application/services/google-calendar-access-token.service';
@@ -97,6 +98,7 @@ import { GoogleCalendarController } from './presentation/http/controllers/google
     TokenCipherService,
     GoogleCalendarStateTokenService,
     GoogleCalendarSyncProcessor,
+    DatabaseRowsChangedListener,
   ],
 })
 export class CalendarSyncModule {}

@@ -11,6 +11,7 @@ import { type DatabaseRowRepository } from '../../../domain/repositories/databas
 import { ChangeDatabaseRowParentCommand } from './change-database-row-parent.command';
 import { wouldCreateCycle } from './row-tree';
 import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
+import type { DatabaseRowChangePublisher } from '../../ports/database-row-change-publisher.port';
 
 @Injectable()
 export class ChangeDatabaseRowParentHandler {
@@ -19,6 +20,8 @@ export class ChangeDatabaseRowParentHandler {
     private readonly databaseRowRepository: DatabaseRowRepository,
     @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
     private readonly activityRecorder: DatabaseActivityRecorder,
+    @Inject(DATABASE_TYPES.ports.DatabaseRowChangePublisher)
+    private readonly rowChangePublisher: DatabaseRowChangePublisher,
   ) {}
 
   async execute(
@@ -63,6 +66,7 @@ export class ChangeDatabaseRowParentHandler {
         rowId: row.getId(),
         kind: 'PARENT_CHANGED',
       });
+      this.rowChangePublisher.publish(row.getDatabaseId());
     }
 
     return { id: row.getId(), parentRowId: row.getParentRowId() };

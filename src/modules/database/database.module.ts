@@ -42,6 +42,7 @@ import { DatabaseSnapshotReaderService } from './application/services/database-s
 import { DATABASE_TYPES } from './database.types';
 import { ActivityModule } from '../activity/activity.module';
 import { ActivityDatabaseActivityRecorder } from './infrastructure/activity/database-activity.recorder';
+import { EventEmitterDatabaseRowChangePublisher } from './infrastructure/events/event-emitter-database-row-change.publisher';
 import { DatabasePropertyOrmEntity } from './infrastructure/persistence/typeorm/entities/database-property.orm-entity';
 import { DatabaseRowOrmEntity } from './infrastructure/persistence/typeorm/entities/database-row.orm-entity';
 import { DatabaseViewPropertyOrmEntity } from './infrastructure/persistence/typeorm/entities/database-view-property.orm-entity';
@@ -132,6 +133,10 @@ import { CalendarFeedController } from './presentation/http/controllers/calendar
     {
       provide: DATABASE_TYPES.ports.DatabaseActivityRecorder,
       useClass: ActivityDatabaseActivityRecorder,
+    },
+    {
+      provide: DATABASE_TYPES.ports.DatabaseRowChangePublisher,
+      useClass: EventEmitterDatabaseRowChangePublisher,
     },
     {
       provide: DATABASE_TYPES.repositories.DatabaseRepository,

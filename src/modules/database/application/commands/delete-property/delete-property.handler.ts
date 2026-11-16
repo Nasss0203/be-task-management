@@ -14,6 +14,7 @@ import { type DatabaseRepository } from '../../../domain/repositories/database.r
 
 import { DeletePropertyCommand } from './delete-property.command';
 import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
+import type { DatabaseRowChangePublisher } from '../../ports/database-row-change-publisher.port';
 
 @Injectable()
 export class DeletePropertyHandler {
@@ -22,6 +23,8 @@ export class DeletePropertyHandler {
     private readonly databaseRepository: DatabaseRepository,
     @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
     private readonly activityRecorder: DatabaseActivityRecorder,
+    @Inject(DATABASE_TYPES.ports.DatabaseRowChangePublisher)
+    private readonly rowChangePublisher: DatabaseRowChangePublisher,
   ) {}
 
   async execute(command: DeletePropertyCommand): Promise<void> {
@@ -41,6 +44,7 @@ export class DeletePropertyHandler {
         action: 'DATABASE_PROPERTY_DELETED',
         propertyId: command.propertyId,
       });
+      this.rowChangePublisher.publish(database.getId());
     } catch (error) {
       if (error instanceof DatabasePropertyNotFoundException) {
         throw new HttpException(error.message, HttpStatus.NOT_FOUND);
