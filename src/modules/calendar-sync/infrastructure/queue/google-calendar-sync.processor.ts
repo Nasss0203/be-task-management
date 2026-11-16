@@ -42,7 +42,7 @@ export class GoogleCalendarSyncProcessor extends WorkerHost {
 
     if (job.name === SYNC_ALL_GOOGLE_CALENDARS_JOB) {
       for (const syncId of await this.syncRepository.findIdsToSync()) {
-        await this.jobQueue.enqueue(syncId);
+        await this.jobQueue.enqueue(syncId, { scheduled: true });
       }
     }
   }

@@ -1,5 +1,6 @@
 export type EnqueueGoogleCalendarSyncOptions = {
   delayMs?: number;
+  scheduled?: boolean;
 };
 
 export interface GoogleCalendarSyncJobQueue {

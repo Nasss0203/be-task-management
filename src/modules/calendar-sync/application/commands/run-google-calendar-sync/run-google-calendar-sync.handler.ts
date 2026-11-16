@@ -1,3 +1,5 @@
+import { setTimeout as sleep } from 'node:timers/promises';
+
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -28,11 +30,14 @@ import {
   type GoogleCalendarEvent,
   type GoogleCalendarEventInput,
   GoogleCalendarNotFoundError,
+  GoogleCalendarRateLimitError,
   GoogleCalendarRequestError,
 } from '../../ports/google-calendar-client.port';
 import { GoogleCalendarAccessTokenService } from '../../services/google-calendar-access-token.service';
 import { buildEventDescription } from '../../services/google-calendar-event-description';
 import { RunGoogleCalendarSyncCommand } from './run-google-calendar-sync.command';
+
+export const GOOGLE_WRITE_SPACING_MS = 200;
 
 const toEventId = (rowId: string) => rowId.replace(/-/g, '');
 
@@ -192,7 +197,9 @@ export class RunGoogleCalendarSyncHandler {
       if (error instanceof GoogleCalendarRequestError) {
         await this.syncRepository.markFailed(
           sync.id,
-          GoogleCalendarSyncError.GOOGLE_ERROR,
+          error instanceof GoogleCalendarRateLimitError
+            ? GoogleCalendarSyncError.RATE_LIMITED
+            : GoogleCalendarSyncError.GOOGLE_ERROR,
         );
       }
       throw error;
@@ -252,6 +259,13 @@ export class RunGoogleCalendarSyncHandler {
   ): Promise<void> {
     const calendarId = sync.googleCalendarId;
     const pending = new Map(inputs.map((input) => [input.id, input]));
+    let writes = 0;
+    const write = async (request: () => Promise<void>) => {
+      if (writes++ > 0) {
+        await sleep(GOOGLE_WRITE_SPACING_MS);
+      }
+      await request();
+    };
 
     for (const event of await this.client.listEvents(accessToken, calendarId)) {
       const input = pending.get(event.id);
@@ -259,15 +273,21 @@ export class RunGoogleCalendarSyncHandler {
 
       if (!input) {
         if (event.status !== 'cancelled') {
-          await this.client.deleteEvent(accessToken, calendarId, event.id);
+          await write(() =>
+            this.client.deleteEvent(accessToken, calendarId, event.id),
+          );
         }
       } else if (!isUpToDate(event, input)) {
-        await this.client.updateEvent(accessToken, calendarId, input);
+        await write(() =>
+          this.client.updateEvent(accessToken, calendarId, input),
+        );
       }
     }
 
     for (const input of pending.values()) {
-      await this.client.insertEvent(accessToken, calendarId, input);
+      await write(() =>
+        this.client.insertEvent(accessToken, calendarId, input),
+      );
     }
   }
 }

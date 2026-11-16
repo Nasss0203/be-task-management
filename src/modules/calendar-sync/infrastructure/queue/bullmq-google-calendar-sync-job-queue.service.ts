@@ -12,11 +12,12 @@ import {
   SYNC_ALL_GOOGLE_CALENDARS_EVERY_MS,
   SYNC_ALL_GOOGLE_CALENDARS_JOB,
   SYNC_ALL_GOOGLE_CALENDARS_SCHEDULER,
+  SYNC_ALL_GOOGLE_CALENDARS_SPREAD_MS,
 } from './google-calendar-sync-queue.constants';
 
 const RUN_JOB_OPTIONS = {
-  attempts: 3,
-  backoff: { type: 'exponential', delay: 5000 },
+  attempts: 5,
+  backoff: { type: 'exponential', delay: 30_000 },
   removeOnComplete: true,
   removeOnFail: true,
 };
@@ -63,6 +64,21 @@ export class BullMqGoogleCalendarSyncJobQueue
           ...RUN_JOB_OPTIONS,
           delay: options.delayMs,
           deduplication: { id: `${jobId}-change`, ttl: options.delayMs },
+        },
+      );
+      return;
+    }
+
+    if (options?.scheduled) {
+      await this.queue.add(
+        RUN_GOOGLE_CALENDAR_SYNC_JOB,
+        { syncId },
+        {
+          ...RUN_JOB_OPTIONS,
+          jobId: `${jobId}-scheduled`,
+          delay: Math.floor(
+            Math.random() * SYNC_ALL_GOOGLE_CALENDARS_SPREAD_MS,
+          ),
         },
       );
       return;

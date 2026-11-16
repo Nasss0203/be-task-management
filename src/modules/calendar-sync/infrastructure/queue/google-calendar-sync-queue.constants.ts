@@ -7,3 +7,5 @@ export const SYNC_ALL_GOOGLE_CALENDARS_JOB = 'sync-all-google-calendars';
 export const SYNC_ALL_GOOGLE_CALENDARS_SCHEDULER = 'google-calendar-sync-all';
 
 export const SYNC_ALL_GOOGLE_CALENDARS_EVERY_MS = 10 * 60_000;
+
+export const SYNC_ALL_GOOGLE_CALENDARS_SPREAD_MS = 5 * 60_000;

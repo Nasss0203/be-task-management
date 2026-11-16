@@ -1,3 +1,5 @@
+import { setTimeout as sleep } from 'node:timers/promises';
+
 import { PropertyType } from 'src/modules/database/domain/enums/property-type.enum';
 
 import { GoogleCalendarSyncError } from '../../../domain/google-calendar-sync-error';
@@ -5,10 +7,18 @@ import type { GoogleCalendarSync } from '../../../domain/repositories/google-cal
 import {
   type GoogleCalendarEvent,
   GoogleCalendarNotFoundError,
+  GoogleCalendarRateLimitError,
   GoogleCalendarRequestError,
 } from '../../ports/google-calendar-client.port';
 import { RunGoogleCalendarSyncCommand } from './run-google-calendar-sync.command';
-import { RunGoogleCalendarSyncHandler } from './run-google-calendar-sync.handler';
+import {
+  GOOGLE_WRITE_SPACING_MS,
+  RunGoogleCalendarSyncHandler,
+} from './run-google-calendar-sync.handler';
+
+jest.mock('node:timers/promises', () => ({
+  setTimeout: jest.fn(() => Promise.resolve()),
+}));
 
 const ROW_A = '11111111-1111-4111-8111-111111111111';
 const ROW_B = '22222222-2222-4222-8222-222222222222';
@@ -364,6 +374,49 @@ Open in Taskmanly: ${ROW_URL_A}`,
       'sync-1',
       GoogleCalendarSyncError.GOOGLE_ERROR,
     );
+  });
+
+  it('records a Google rate limit and rethrows it so the job is retried later', async () => {
+    client.insertEvent.mockRejectedValueOnce(
+      new GoogleCalendarRateLimitError(429, 'rate limited'),
+    );
+
+    await expect(run()).rejects.toBeInstanceOf(GoogleCalendarRateLimitError);
+    expect(syncRepository.markFailed).toHaveBeenCalledWith(
+      'sync-1',
+      GoogleCalendarSyncError.RATE_LIMITED,
+    );
+    expect(syncRepository.markSynced).not.toHaveBeenCalled();
+  });
+
+  it('spaces out the writes to Google but not the first one', async () => {
+    const ROW_C = '33333333-3333-4333-8333-333333333333';
+    databaseRowRepository.findByDatabaseId.mockResolvedValue([
+      row(ROW_A, 'Launch', '2026-11-10'),
+      row(ROW_B, 'Review', '2026-11-12'),
+    ]);
+    client.listEvents.mockResolvedValue([
+      event(EVENT_A, 'Old title', '2026-11-10', '2026-11-11'),
+      event(ROW_C.replace(/-/g, ''), 'Gone', '2026-11-01', '2026-11-02'),
+    ]);
+
+    await run();
+
+    expect(client.updateEvent).toHaveBeenCalledTimes(1);
+    expect(client.deleteEvent).toHaveBeenCalledTimes(1);
+    expect(client.insertEvent).toHaveBeenCalledTimes(1);
+    expect(sleep).toHaveBeenCalledTimes(2);
+    expect(sleep).toHaveBeenCalledWith(GOOGLE_WRITE_SPACING_MS);
+  });
+
+  it('does not wait when nothing has to be written', async () => {
+    client.listEvents.mockResolvedValue([
+      event(EVENT_A, 'Launch', '2026-11-10', '2026-11-11'),
+    ]);
+
+    await run();
+
+    expect(sleep).not.toHaveBeenCalled();
   });
 
   it('does nothing for a sync that no longer exists', async () => {

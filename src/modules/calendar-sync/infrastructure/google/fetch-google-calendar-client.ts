@@ -7,6 +7,7 @@ import {
   type GoogleCalendarEvent,
   type GoogleCalendarEventInput,
   GoogleCalendarNotFoundError,
+  GoogleCalendarRateLimitError,
   GoogleCalendarRequestError,
 } from '../../application/ports/google-calendar-client.port';
 
@@ -23,6 +24,10 @@ type TokenResponse = {
   id_token?: string;
   scope?: string;
   error?: string;
+};
+
+type ApiErrorResponse = {
+  error?: { errors?: { domain?: string }[] };
 };
 
 type EventListResponse = {
@@ -306,10 +311,12 @@ export class FetchGoogleCalendarClient implements GoogleCalendarClient {
     });
 
     if (!response.ok) {
-      throw new GoogleCalendarRequestError(
-        response.status,
-        `Google Calendar ${method} ${path.split('?')[0]} failed`,
-      );
+      const message = `Google Calendar ${method} ${path.split('?')[0]} failed`;
+
+      if (await this.isRateLimited(response)) {
+        throw new GoogleCalendarRateLimitError(response.status, message);
+      }
+      throw new GoogleCalendarRequestError(response.status, message);
     }
 
     if (response.status === 204) {
@@ -317,6 +324,22 @@ export class FetchGoogleCalendarClient implements GoogleCalendarClient {
     }
 
     return (await response.json()) as T;
+  }
+
+  private async isRateLimited(response: Response): Promise<boolean> {
+    if (response.status === 429) {
+      return true;
+    }
+    if (response.status !== 403) {
+      return false;
+    }
+
+    const body = (await response.json().catch(() => ({}))) as ApiErrorResponse;
+
+    return (
+      body.error?.errors?.some((error) => error.domain === 'usageLimits') ??
+      false
+    );
   }
 
   private async ignoreMissing(request: Promise<unknown>): Promise<void> {

@@ -1,6 +1,7 @@
 import {
   GoogleCalendarAccessRevokedError,
   GoogleCalendarNotFoundError,
+  GoogleCalendarRateLimitError,
   GoogleCalendarRequestError,
 } from '../../application/ports/google-calendar-client.port';
 import { FetchGoogleCalendarClient } from './fetch-google-calendar-client';
@@ -193,6 +194,46 @@ describe('FetchGoogleCalendarClient', () => {
       ).resolves.toBeUndefined();
     },
   );
+
+  it.each([
+    [429, 'rateLimitExceeded'],
+    [403, 'userRateLimitExceeded'],
+    [403, 'quotaExceeded'],
+  ])('reports %i %s as a rate limit', async (status, reason) => {
+    fetchMock.mockResolvedValue(
+      jsonResponse(status, {
+        error: { errors: [{ domain: 'usageLimits', reason }], code: status },
+      }),
+    );
+
+    await expect(
+      client.insertEvent('token', 'calendar-1', {
+        id: 'abc12',
+        summary: 'Launch',
+        description: '',
+        startDate: '2026-11-10',
+        endDateExclusive: '2026-11-11',
+      }),
+    ).rejects.toMatchObject({
+      constructor: GoogleCalendarRateLimitError,
+      status,
+    });
+  });
+
+  it('keeps a 403 that is not about usage limits as a plain Google failure', async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse(403, {
+        error: { errors: [{ domain: 'global', reason: 'forbidden' }] },
+      }),
+    );
+
+    const error = await client
+      .deleteEvent('token', 'calendar-1', 'abc12')
+      .catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(GoogleCalendarRequestError);
+    expect(error).not.toBeInstanceOf(GoogleCalendarRateLimitError);
+  });
 
   it('surfaces other Google failures', async () => {
     fetchMock.mockResolvedValue(jsonResponse(503));

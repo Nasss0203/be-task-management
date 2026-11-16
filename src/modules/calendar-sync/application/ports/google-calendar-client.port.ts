@@ -38,6 +38,8 @@ export class GoogleCalendarRequestError extends Error {
   }
 }
 
+export class GoogleCalendarRateLimitError extends GoogleCalendarRequestError {}
+
 export interface GoogleCalendarClient {
   buildAuthorizeUrl(state: string): string;
   exchangeCode(code: string): Promise<{ refreshToken: string; email: string }>;

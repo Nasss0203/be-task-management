@@ -4,6 +4,7 @@ export const GoogleCalendarSyncError = {
   DATE_PROPERTY_MISSING: 'DATE_PROPERTY_MISSING',
   CALENDAR_MISSING: 'CALENDAR_MISSING',
   GOOGLE_ERROR: 'GOOGLE_ERROR',
+  RATE_LIMITED: 'RATE_LIMITED',
 } as const;
 
 export type GoogleCalendarSyncError =

@@ -70,9 +70,30 @@ describe('BullMqGoogleCalendarSyncJobQueue', () => {
       expect.objectContaining({
         delay: 5000,
         deduplication: { id: 'google-calendar-sync-sync-1-change', ttl: 5000 },
-        attempts: 3,
+        attempts: 5,
+        backoff: { type: 'exponential', delay: 30_000 },
       }),
     );
     expect(addedJobId(queue.add)).toBeUndefined();
   });
+
+  it.each([0, 0.999999])(
+    'spreads a scheduled run over the next five minutes under its own job id (random %d)',
+    async (random) => {
+      jest.spyOn(Math, 'random').mockReturnValue(random);
+      const { queue, jobQueue } = createQueue(undefined);
+
+      await jobQueue.enqueue('sync-1', { scheduled: true });
+
+      const options = (
+        queue.add.mock.calls[0] as [string, unknown, { delay: number }]
+      )[2];
+      expect(addedJobId(queue.add)).toBe(
+        'google-calendar-sync-sync-1-scheduled',
+      );
+      expect(options.delay).toBeGreaterThanOrEqual(0);
+      expect(options.delay).toBeLessThan(5 * 60_000);
+      expect(queue.getJob).not.toHaveBeenCalled();
+    },
+  );
 });
