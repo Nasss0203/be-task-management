@@ -15,6 +15,7 @@ import { DatabasePropertyDto } from '../../dto/database-property.dto';
 import { RenamePropertyCommand } from './rename-property.command';
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
 import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
+import type { DatabaseRowChangePublisher } from '../../ports/database-row-change-publisher.port';
 
 @Injectable()
 export class RenamePropertyHandler {
@@ -23,6 +24,8 @@ export class RenamePropertyHandler {
     private readonly databaseRepository: DatabaseRepository,
     @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
     private readonly activityRecorder: DatabaseActivityRecorder,
+    @Inject(DATABASE_TYPES.ports.DatabaseRowChangePublisher)
+    private readonly rowChangePublisher: DatabaseRowChangePublisher,
   ) {}
 
   async execute(
@@ -60,6 +63,7 @@ export class RenamePropertyHandler {
           },
           context,
         );
+        this.rowChangePublisher.publish(database.getId());
       }
 
       return {

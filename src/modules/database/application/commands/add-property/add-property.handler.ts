@@ -21,6 +21,7 @@ import { DEFAULT_STATUS_OPTIONS } from 'src/modules/database/domain/constants/de
 import { AddPropertyCommand } from './add-property.command';
 import { PersistenceContext } from 'src/shared/domain/persistence-context';
 import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
+import type { DatabaseRowChangePublisher } from '../../ports/database-row-change-publisher.port';
 
 @Injectable()
 export class AddPropertyHandler {
@@ -35,6 +36,8 @@ export class AddPropertyHandler {
     private readonly databaseRowRepository: DatabaseRowRepository,
     @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
     private readonly activityRecorder: DatabaseActivityRecorder,
+    @Inject(DATABASE_TYPES.ports.DatabaseRowChangePublisher)
+    private readonly rowChangePublisher: DatabaseRowChangePublisher,
   ) {}
 
   async execute(
@@ -108,6 +111,7 @@ export class AddPropertyHandler {
         );
         await this.databaseRowRepository.save(row, context);
       }
+      this.rowChangePublisher.publish(database.getId());
     }
 
     const views = await this.databaseViewRepository.findByDatabaseId(

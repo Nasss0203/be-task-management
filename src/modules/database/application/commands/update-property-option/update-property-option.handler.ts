@@ -12,6 +12,7 @@ import { type DatabaseRepository } from 'src/modules/database/domain/repositorie
 import { PropertyOptionDto } from '../../dto/database-property.dto';
 import { UpdatePropertyOptionCommand } from './update-property-option.command';
 import type { DatabaseActivityRecorder } from '../../ports/database-activity-recorder.port';
+import type { DatabaseRowChangePublisher } from '../../ports/database-row-change-publisher.port';
 
 @Injectable()
 export class UpdatePropertyOptionHandler {
@@ -20,6 +21,8 @@ export class UpdatePropertyOptionHandler {
     private readonly databaseRepository: DatabaseRepository,
     @Inject(DATABASE_TYPES.ports.DatabaseActivityRecorder)
     private readonly activityRecorder: DatabaseActivityRecorder,
+    @Inject(DATABASE_TYPES.ports.DatabaseRowChangePublisher)
+    private readonly rowChangePublisher: DatabaseRowChangePublisher,
   ) {}
 
   async execute(
@@ -37,8 +40,8 @@ export class UpdatePropertyOptionHandler {
         .find((item) => item.getId() === command.propertyId)
         ?.getOptions()
         .find((item) => item.getId() === command.optionId);
-      const changed = (name: string, color: string | null) =>
-        previous?.getName() !== name || previous?.getColor() !== color;
+      const previousName = previous?.getName();
+      const previousColor = previous?.getColor();
       const option = database.updatePropertyOption(
         command.propertyId,
         command.optionId,
@@ -47,7 +50,8 @@ export class UpdatePropertyOptionHandler {
       );
 
       await this.databaseRepository.save(database);
-      if (changed(option.getName(), option.getColor())) {
+      const renamed = previousName !== option.getName();
+      if (renamed || previousColor !== option.getColor()) {
         await this.activityRecorder.record({
           actorId: command.actorId,
           databaseId: database.getId(),
@@ -56,6 +60,9 @@ export class UpdatePropertyOptionHandler {
           optionId: option.getId(),
           kind: 'OPTION_UPDATED',
         });
+      }
+      if (renamed) {
+        this.rowChangePublisher.publish(database.getId());
       }
 
       return {
