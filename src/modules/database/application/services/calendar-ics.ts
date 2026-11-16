@@ -1,7 +1,19 @@
+import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
+
+import {
+  DATE_KEY,
+  DATE_TIME_KEY,
+  isTimeZone,
+} from '../../domain/aggregates/row/date-row-value';
 import type { DatabaseRow } from '../../domain/aggregates/row/database-row.aggregate';
 import type { DateRowValue } from '../../domain/aggregates/row/row-value.type';
 
-const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const DEFAULT_EVENT_MINUTES = 60;
 
 const escapeText = (value: string) =>
   value
@@ -38,12 +50,53 @@ const isDateValue = (value: unknown): value is DateRowValue =>
   typeof (value as DateRowValue).start === 'string' &&
   DATE_KEY.test((value as DateRowValue).start);
 
+export type TimedRange = {
+  start: string;
+  end: string;
+  timeZone: string;
+};
+
 export type CalendarEntry = {
   rowId: string;
   title: string;
   startDate: string;
   endDateExclusive: string;
+  timed: TimedRange | null;
 };
+
+export const zonedDateTimeToDate = (local: string, timeZone: string): Date =>
+  dayjs.tz(local, timeZone).toDate();
+
+const toTimedRange = (value: unknown): TimedRange | null => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return null;
+  }
+
+  const { start, end, timeZone } = value as DateRowValue;
+
+  if (
+    typeof start !== 'string' ||
+    !DATE_TIME_KEY.test(start) ||
+    !isTimeZone(timeZone)
+  ) {
+    return null;
+  }
+
+  return {
+    start,
+    end:
+      typeof end === 'string' && DATE_TIME_KEY.test(end) && end > start
+        ? end
+        : dayjs
+            .utc(start)
+            .add(DEFAULT_EVENT_MINUTES, 'minute')
+            .format('YYYY-MM-DDTHH:mm'),
+    timeZone,
+  };
+};
+
+const utcStamp = (date: Date) =>
+  `${date.toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`;
 
 export function collectCalendarEntries(input: {
   titlePropertyId: string | null;
@@ -60,19 +113,37 @@ export function collectCalendarEntries(input: {
         ?.getValue();
 
     const date = valueOf(input.datePropertyId);
+    const titleValue = valueOf(input.titlePropertyId);
+    const title =
+      typeof titleValue === 'string' && titleValue.trim()
+        ? titleValue
+        : 'Untitled';
+    const timed = toTimedRange(date);
+
+    if (timed) {
+      entries.push({
+        rowId: row.getId(),
+        title,
+        startDate: timed.start.slice(0, 10),
+        endDateExclusive: nextDay(timed.end.slice(0, 10)),
+        timed,
+      });
+      continue;
+    }
+
     if (!isDateValue(date)) continue;
 
     const end =
       date.end && DATE_KEY.test(date.end) && date.end > date.start
         ? date.end
         : date.start;
-    const title = valueOf(input.titlePropertyId);
 
     entries.push({
       rowId: row.getId(),
-      title: typeof title === 'string' && title.trim() ? title : 'Untitled',
+      title,
       startDate: date.start,
       endDateExclusive: nextDay(end),
+      timed: null,
     });
   }
 
@@ -86,7 +157,7 @@ export function buildCalendarIcs(input: {
   rows: readonly DatabaseRow[];
   now: Date;
 }): string {
-  const stamp = `${input.now.toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`;
+  const stamp = utcStamp(input.now);
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -101,8 +172,15 @@ export function buildCalendarIcs(input: {
       'BEGIN:VEVENT',
       `UID:${entry.rowId}@taskmanly`,
       `DTSTAMP:${stamp}`,
-      `DTSTART;VALUE=DATE:${compact(entry.startDate)}`,
-      `DTEND;VALUE=DATE:${compact(entry.endDateExclusive)}`,
+      ...(entry.timed
+        ? [
+            `DTSTART:${utcStamp(zonedDateTimeToDate(entry.timed.start, entry.timed.timeZone))}`,
+            `DTEND:${utcStamp(zonedDateTimeToDate(entry.timed.end, entry.timed.timeZone))}`,
+          ]
+        : [
+            `DTSTART;VALUE=DATE:${compact(entry.startDate)}`,
+            `DTEND;VALUE=DATE:${compact(entry.endDateExclusive)}`,
+          ]),
       `SUMMARY:${escapeText(entry.title)}`,
       'END:VEVENT',
     );

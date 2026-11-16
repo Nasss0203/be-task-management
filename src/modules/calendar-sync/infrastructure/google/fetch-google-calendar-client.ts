@@ -212,8 +212,21 @@ export class FetchGoogleCalendarClient implements GoogleCalendarClient {
       summary: event.summary,
       description: event.description,
       transparency: 'transparent',
-      start: { date: event.startDate },
-      end: { date: event.endDateExclusive },
+      ...(event.timed
+        ? {
+            start: {
+              dateTime: `${event.timed.start}:00`,
+              timeZone: event.timed.timeZone,
+            },
+            end: {
+              dateTime: `${event.timed.end}:00`,
+              timeZone: event.timed.timeZone,
+            },
+          }
+        : {
+            start: { date: event.startDate },
+            end: { date: event.endDateExclusive },
+          }),
     };
   }
 

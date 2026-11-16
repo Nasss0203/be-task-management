@@ -4,8 +4,8 @@ export type GoogleCalendarEvent = {
   summary?: string;
   description?: string;
   transparency?: string;
-  start?: { date?: string };
-  end?: { date?: string };
+  start?: { date?: string; dateTime?: string; timeZone?: string };
+  end?: { date?: string; dateTime?: string; timeZone?: string };
 };
 
 export type GoogleCalendarEventInput = {
@@ -14,6 +14,7 @@ export type GoogleCalendarEventInput = {
   description: string;
   startDate: string;
   endDateExclusive: string;
+  timed?: { start: string; end: string; timeZone: string } | null;
 };
 
 export class GoogleCalendarAccessRevokedError extends Error {

@@ -153,6 +153,36 @@ describe('FetchGoogleCalendarClient', () => {
     });
   });
 
+  it('sends a timed event with its time zone instead of all-day dates', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, { id: 'abc12' }));
+
+    await client.insertEvent('token', 'calendar-1', {
+      id: 'abc12',
+      summary: 'Launch',
+      description: '',
+      startDate: '2026-11-20',
+      endDateExclusive: '2026-11-21',
+      timed: {
+        start: '2026-11-20T09:00',
+        end: '2026-11-20T10:30',
+        timeZone: 'Asia/Ho_Chi_Minh',
+      },
+    });
+
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string) as {
+      start: unknown;
+      end: unknown;
+    };
+    expect(body.start).toEqual({
+      dateTime: '2026-11-20T09:00:00',
+      timeZone: 'Asia/Ho_Chi_Minh',
+    });
+    expect(body.end).toEqual({
+      dateTime: '2026-11-20T10:30:00',
+      timeZone: 'Asia/Ho_Chi_Minh',
+    });
+  });
+
   it.each([404, 410])(
     'treats an event already gone (%i) as deleted',
     async (status) => {

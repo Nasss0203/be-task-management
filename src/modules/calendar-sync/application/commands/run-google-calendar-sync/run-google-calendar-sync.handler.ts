@@ -4,7 +4,10 @@ import { ConfigService } from '@nestjs/config';
 import { resolveFrontendOrigin } from 'src/common/config/frontend-origin.config';
 import { DATABASE_TYPES } from 'src/modules/database/database.types';
 import type { DatabasePeopleReader } from 'src/modules/database/application/ports/database-people-reader.port';
-import { collectCalendarEntries } from 'src/modules/database/application/services/calendar-ics';
+import {
+  collectCalendarEntries,
+  zonedDateTimeToDate,
+} from 'src/modules/database/application/services/calendar-ics';
 import type { DatabaseProperty } from 'src/modules/database/domain/aggregates/database/database-property.entity';
 import type { DatabaseRow } from 'src/modules/database/domain/aggregates/row/database-row.aggregate';
 import { PropertyType } from 'src/modules/database/domain/enums/property-type.enum';
@@ -47,6 +50,28 @@ const isAssignedTo = (
     );
   });
 
+const isSameInstant = (
+  actual: string | undefined,
+  local: string,
+  timeZone: string,
+) =>
+  actual !== undefined &&
+  Date.parse(actual) === zonedDateTimeToDate(local, timeZone).getTime();
+
+const hasSameTime = (
+  event: GoogleCalendarEvent,
+  input: GoogleCalendarEventInput,
+) =>
+  input.timed
+    ? isSameInstant(
+        event.start?.dateTime,
+        input.timed.start,
+        input.timed.timeZone,
+      ) &&
+      isSameInstant(event.end?.dateTime, input.timed.end, input.timed.timeZone)
+    : event.start?.date === input.startDate &&
+      event.end?.date === input.endDateExclusive;
+
 const isUpToDate = (
   event: GoogleCalendarEvent,
   input: GoogleCalendarEventInput,
@@ -55,8 +80,7 @@ const isUpToDate = (
   event.summary === input.summary &&
   (event.description ?? '') === input.description &&
   event.transparency === 'transparent' &&
-  event.start?.date === input.startDate &&
-  event.end?.date === input.endDateExclusive;
+  hasSameTime(event, input);
 
 @Injectable()
 export class RunGoogleCalendarSyncHandler {
@@ -217,6 +241,7 @@ export class RunGoogleCalendarSyncHandler {
       }),
       startDate: entry.startDate,
       endDateExclusive: entry.endDateExclusive,
+      timed: entry.timed,
     }));
   }
 

@@ -1,6 +1,7 @@
 import { PropertyType } from '../../enums/property-type.enum';
 import { DatabaseProperty } from '../database/database-property.entity';
 
+import { DATE_TIME_KEY, isTimeZone } from './date-row-value';
 import { RowValue } from './row-value.entity';
 import { RowValueData } from './row-value.type';
 
@@ -233,6 +234,22 @@ export class DatabaseRow {
       typeof value.start !== 'string'
     ) {
       throw new Error('DATE property requires a date value');
+    }
+
+    if (!DATE_TIME_KEY.test(value.start)) {
+      return;
+    }
+
+    if (!isTimeZone(value.timeZone)) {
+      throw new Error('DATE property with a time requires a valid time zone');
+    }
+
+    if (
+      value.end !== undefined &&
+      value.end !== null &&
+      (!DATE_TIME_KEY.test(value.end) || value.end <= value.start)
+    ) {
+      throw new Error('DATE property end time must be after its start time');
     }
   }
 }

@@ -58,6 +58,25 @@ describe('buildCalendarIcs', () => {
     expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(2);
   });
 
+  it('writes a row with a time as a UTC timed event, one hour long without an end', () => {
+    const ics = build([
+      row('r1', 'Demo', {
+        start: '2026-11-20T09:00',
+        end: '2026-11-20T10:30',
+        timeZone: 'Asia/Ho_Chi_Minh',
+      }),
+      row('r2', 'Call', {
+        start: '2026-11-20T23:30',
+        timeZone: 'Asia/Ho_Chi_Minh',
+      }),
+      row('r3', 'No zone', { start: '2026-11-20T09:00' }),
+    ]);
+
+    expect(ics).toContain('DTSTART:20261120T020000Z\r\nDTEND:20261120T033000Z');
+    expect(ics).toContain('DTSTART:20261120T163000Z\r\nDTEND:20261120T173000Z');
+    expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(2);
+  });
+
   it('uses CRLF and folds long lines within 75 bytes', () => {
     const ics = build([
       row('r1', 'Lên kế hoạch '.repeat(12), { start: '2026-11-05' }),

@@ -140,6 +140,7 @@ describe('RunGoogleCalendarSyncHandler', () => {
         description: `Open in Taskmanly: ${ROW_URL_A}`,
         startDate: '2026-11-10',
         endDateExclusive: '2026-11-11',
+        timed: null,
       },
     );
     expect(syncRepository.markSynced).toHaveBeenCalledWith(
@@ -371,5 +372,73 @@ Open in Taskmanly: ${ROW_URL_A}`,
     await run();
 
     expect(authorizationService.authorize).not.toHaveBeenCalled();
+  });
+  describe('timed rows', () => {
+    const timedRow = (value: object) => ({
+      getId: () => ROW_A,
+      getValues: () => [
+        { getPropertyId: () => 'title', getValue: () => 'Launch' },
+        { getPropertyId: () => 'due', getValue: () => value },
+      ],
+    });
+    const timedEvent = (start: string, end: string): GoogleCalendarEvent => ({
+      ...event(EVENT_A, 'Launch', '', ''),
+      start: { dateTime: start, timeZone: 'Asia/Ho_Chi_Minh' },
+      end: { dateTime: end, timeZone: 'Asia/Ho_Chi_Minh' },
+    });
+
+    beforeEach(() => {
+      databaseRowRepository.findByDatabaseId.mockResolvedValue([
+        timedRow({
+          start: '2026-11-20T09:00',
+          end: '2026-11-20T10:30',
+          timeZone: 'Asia/Ho_Chi_Minh',
+        }),
+      ]);
+    });
+
+    it('pushes a row with a time as a timed event', async () => {
+      await run();
+
+      expect(client.insertEvent).toHaveBeenCalledWith(
+        'access-token',
+        'calendar-1',
+        expect.objectContaining({
+          id: EVENT_A,
+          timed: {
+            start: '2026-11-20T09:00',
+            end: '2026-11-20T10:30',
+            timeZone: 'Asia/Ho_Chi_Minh',
+          },
+        }),
+      );
+    });
+
+    it('leaves a timed event alone when Google returns the same instants in another offset', async () => {
+      client.listEvents.mockResolvedValue([
+        timedEvent('2026-11-20T03:00:00+01:00', '2026-11-20T04:30:00+01:00'),
+      ]);
+
+      await run();
+
+      expect(client.updateEvent).not.toHaveBeenCalled();
+      expect(client.insertEvent).not.toHaveBeenCalled();
+    });
+
+    it('updates the event when its time changed or it was all-day before', async () => {
+      client.listEvents.mockResolvedValue([
+        timedEvent('2026-11-20T09:00:00+07:00', '2026-11-20T11:00:00+07:00'),
+      ]);
+      await run();
+      expect(client.updateEvent).toHaveBeenCalledTimes(1);
+
+      client.updateEvent.mockClear();
+      client.listEvents.mockResolvedValue([
+        event(EVENT_A, 'Launch', '2026-11-20', '2026-11-21'),
+      ]);
+      await run();
+      expect(client.updateEvent).toHaveBeenCalledTimes(1);
+      expect(client.insertEvent).not.toHaveBeenCalled();
+    });
   });
 });
