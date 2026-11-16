@@ -4,6 +4,7 @@ import {
   Injectable,
   Logger,
   Optional,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 
 import {
@@ -34,8 +35,20 @@ import {
   withoutBasedOn,
   withoutPageScope,
   isSupportedModification,
+  needsRuleDraft,
   type ModificationAdmission,
 } from './ai-modification-operation.policy';
+
+/** A4c: the planner kept no model draft for a sentence that needs one by rule. */
+function isRuleDraftRequired(error: unknown): boolean {
+  if (!(error instanceof UnprocessableEntityException)) return false;
+  const response = error.getResponse();
+  return (
+    typeof response === 'object' &&
+    response !== null &&
+    (response as { reason?: unknown }).reason === 'RULE_DRAFT_REQUIRED'
+  );
+}
 
 type ModifyPageIntent = Extract<
   Awaited<ReturnType<PageIntentExtractionService['extract']>>['result'],
@@ -731,27 +744,45 @@ export class AiPageInstructionPlannerService {
       };
     }
     const sources = found?.status === 'FOUND' ? found.sources : undefined;
+    const original = input.sourceSentence ?? input.instruction;
+    const requireRuleDraft = needsRuleDraft(original, [page.title], {
+      itemsFromSource: !!found,
+    });
 
     // The resolver has already checked PAGE_READ and workspace boundaries.
     // The existing planner loads fresh authorized Page Context again.
-    const plan = await this.modificationPlanner.generate({
-      userId: input.userId,
-      requestId: input.requestId,
-      pageId: page.pageId,
-      instruction: intent.instruction,
-      originalInstruction: input.sourceSentence ?? input.instruction,
-      // A conversation of another Page is not reused: the planner opens a new
-      // PAGE conversation, so the old one is never written to.
-      conversationId:
-        input.conversationPageId !== undefined &&
-        input.conversationPageId !== page.pageId
-          ? undefined
-          : input.conversationId,
-      shareToken: input.shareToken,
-      ...(found?.status === 'FOUND'
-        ? { references: found.references, sources: found.sources }
-        : {}),
-    });
+    let plan: Awaited<ReturnType<AiModificationPlannerService['generate']>>;
+    try {
+      plan = await this.modificationPlanner.generate({
+        userId: input.userId,
+        requestId: input.requestId,
+        pageId: page.pageId,
+        instruction: intent.instruction,
+        originalInstruction: original,
+        // A conversation of another Page is not reused: the planner opens a new
+        // PAGE conversation, so the old one is never written to.
+        conversationId:
+          input.conversationPageId !== undefined &&
+          input.conversationPageId !== page.pageId
+            ? undefined
+            : input.conversationId,
+        shareToken: input.shareToken,
+        ...(found?.status === 'FOUND'
+          ? { references: found.references, sources: found.sources }
+          : {}),
+        ...(requireRuleDraft ? { requireRuleDraft: true } : {}),
+      });
+    } catch (error) {
+      if (isRuleDraftRequired(error)) {
+        return {
+          status: 'NEEDS_CLARIFICATION',
+          reason: 'RULE_DRAFT_REQUIRED',
+          intent,
+          pageTitle: page.title,
+        };
+      }
+      throw error;
+    }
 
     // A draft may only refer to the Page selected by authorized resolution.
     if (plan.pageId !== page.pageId) {

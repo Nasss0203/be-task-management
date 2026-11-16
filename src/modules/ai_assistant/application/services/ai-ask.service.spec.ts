@@ -503,6 +503,27 @@ describe('AiAskService', () => {
     });
   });
 
+  it('asks for the kind and content when only a rule may draft (A4c)', async () => {
+    const f = fixture();
+    f.intent('MODIFY_PAGE');
+    f.planner.generate.mockResolvedValue({
+      status: 'NEEDS_CLARIFICATION',
+      reason: 'RULE_DRAFT_REQUIRED',
+      intent: { pageReference: null },
+      pageTitle: 'sub man',
+    });
+    expect(
+      await f.service.ask({
+        ...f.input,
+        instruction: 'ghi việc gọi khách vào trang sub man',
+      }),
+    ).toMatchObject({
+      status: 'NEEDS_CLARIFICATION',
+      assistantMessage:
+        'Mình chưa chắc nội dung cần thêm. Bạn ghi rõ loại và nội dung, ví dụ: thêm to-do Gọi khách vào trang "sub man".',
+    });
+  });
+
   it('names the Page found in the sentence when none was extracted (gp02)', async () => {
     const f = fixture();
     f.intent('MODIFY_PAGE');

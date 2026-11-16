@@ -5,7 +5,67 @@ import {
   isBareChecklistRequest,
   isSupportedActivityModification,
   isSupportedModification,
+  needsRuleDraft,
 } from './ai-modification-operation.policy';
+
+describe('A4: natural "thêm" sentences', () => {
+  const names = ['Hội họp tuần'];
+
+  it.each([
+    ['nhờ bạn thêm việc gọi thợ ở trang Hội họp tuần luôn giúp mình', 'INSERT'],
+    [
+      'thêm hai to-do in tài liệu, đặt phòng vào trang Hội họp tuần nhé',
+      'INSERT',
+    ],
+    ['ghi dòng Mua sữa vào bảng Chi tiêu ở trang Hội họp tuần', 'INSERT'],
+    ['xoá việc Gọi khách khỏi trang Hội họp tuần', 'DELETE_BLOCK'],
+  ])('reads %s as %s', (instruction, kind) => {
+    expect(admittedModificationKind(instruction, names)).toBe(kind);
+  });
+
+  it('keeps a page action after the place refused', () => {
+    expect(
+      admittedModificationKind(
+        'thêm việc A vào trang Hội họp tuần và xoá trang',
+        names,
+      ),
+    ).toBeNull();
+  });
+});
+
+describe('A4c: sentences admitted only by the A4 additions', () => {
+  const names = ['Hội họp tuần'];
+
+  it.each([
+    'nhờ bạn thêm việc gọi thợ ở trang Hội họp tuần luôn giúp mình',
+    'ghi việc gọi khách vào trang Hội họp tuần',
+    'thêm hai to-do in tài liệu, đặt phòng vào trang Hội họp tuần',
+    'thêm câu họp dời sang thứ Năm xuống dưới cùng trang Hội họp tuần',
+    'thêm đề mục Tổng kết ở trang Hội họp tuần',
+    'ghi việc gửi email vào trang này',
+  ])('needs a draft by rule: %s', (instruction) => {
+    expect(needsRuleDraft(instruction, names)).toBe(true);
+  });
+
+  it.each([
+    'thêm việc gọi thợ vào trang Hội họp tuần',
+    'thêm checklist gồm in tài liệu, đặt phòng vào trang Hội họp tuần',
+    'xoá dòng Gọi khách ở trang Hội họp tuần',
+    'chia sẻ trang Hội họp tuần cho cả nhóm',
+  ])('keeps the old way for %s', (instruction) => {
+    expect(needsRuleDraft(instruction, names)).toBe(false);
+  });
+
+  it('reads the old grammar when asked to', () => {
+    expect(
+      admittedModificationKind(
+        'ghi việc gọi khách vào trang Hội họp tuần',
+        names,
+        { strict: true },
+      ),
+    ).toBeNull();
+  });
+});
 
 describe('D-30: the end of a named Page', () => {
   it.each([
