@@ -37,6 +37,18 @@ export class TypeOrmAdminUserReader implements AdminUserReader {
       );
     }
 
+    if (input.isActive !== undefined) {
+      baseQuery.andWhere('u.is_active = :isActive', {
+        isActive: input.isActive,
+      });
+    }
+
+    if (input.systemRole) {
+      baseQuery.andWhere('u.system_role = :systemRole', {
+        systemRole: input.systemRole,
+      });
+    }
+
     const rowsQuery = baseQuery
       .clone()
       .select([

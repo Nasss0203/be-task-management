@@ -4,6 +4,8 @@ export interface ListAdminUsersInput {
   page: number;
   limit: number;
   search?: string;
+  isActive?: boolean;
+  systemRole?: SystemRole;
 }
 
 export interface AdminUserSummary {

@@ -63,7 +63,13 @@ export class AdminUsersController {
     @Query() query: ListAdminUsersRequestDto,
   ): Promise<AdminUserListResponseDto> {
     return this.listAdminUsersHandler.execute(
-      new ListAdminUsersQuery(query.page, query.limit, query.search),
+      new ListAdminUsersQuery(
+        query.page,
+        query.limit,
+        query.search,
+        query.isActive,
+        query.systemRole,
+      ),
     );
   }
 

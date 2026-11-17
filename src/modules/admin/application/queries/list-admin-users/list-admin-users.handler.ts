@@ -16,6 +16,8 @@ export class ListAdminUsersHandler {
       page: query.page,
       limit: query.limit,
       search: query.search,
+      isActive: query.isActive,
+      systemRole: query.systemRole,
     });
 
     return {
