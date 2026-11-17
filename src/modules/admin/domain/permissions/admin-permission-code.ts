@@ -16,6 +16,9 @@ export const ADMIN_PERMISSIONS = {
   BILLING_READ: 'admin.billing.read',
   BILLING_UPDATE: 'admin.billing.update',
 
+  // Templates
+  TEMPLATES_READ: 'admin.templates.read',
+
   // Template Categories
   TEMPLATE_CATEGORIES_CREATE: 'admin.template-categories.create',
   TEMPLATE_CATEGORIES_READ: 'admin.template-categories.read',

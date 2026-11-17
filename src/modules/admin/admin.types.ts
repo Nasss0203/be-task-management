@@ -10,6 +10,7 @@ export const ADMIN_TYPES = {
     BillingPlanReader: Symbol('AdminBillingPlanReader'),
     BillingPlanWriter: Symbol('AdminBillingPlanWriter'),
     MarketplaceSalesReader: Symbol('AdminMarketplaceSalesReader'),
+    TemplateReader: Symbol('AdminTemplateReader'),
   },
   applications: {
     GetAdminAccessHandler: Symbol('AdminGetAdminAccessHandler'),
@@ -54,6 +55,10 @@ export const ADMIN_TYPES = {
     GetAdminMarketplaceSalesOverviewHandler: Symbol(
       'AdminGetAdminMarketplaceSalesOverviewHandler',
     ),
+    GetAdminTemplatesOverviewHandler: Symbol(
+      'AdminGetAdminTemplatesOverviewHandler',
+    ),
+    ListAdminTemplatesHandler: Symbol('AdminListAdminTemplatesHandler'),
     ListAdminMarketplaceSalesHandler: Symbol(
       'AdminListAdminMarketplaceSalesHandler',
     ),

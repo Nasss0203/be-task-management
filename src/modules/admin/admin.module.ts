@@ -47,6 +47,10 @@ import { AdminMarketplaceSalesController } from './presentation/http/controllers
 import { TypeOrmAdminMarketplaceSalesReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-marketplace-sales.reader';
 import { GetAdminMarketplaceSalesOverviewHandler } from './application/queries/get-admin-marketplace-sales-overview/get-admin-marketplace-sales-overview.handler';
 import { ListAdminMarketplaceSalesHandler } from './application/queries/list-admin-marketplace-sales/list-admin-marketplace-sales.handler';
+import { AdminTemplatesController } from './presentation/http/controllers/admin-templates.controller';
+import { TypeOrmAdminTemplateReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-template.reader';
+import { GetAdminTemplatesOverviewHandler } from './application/queries/get-admin-templates-overview/get-admin-templates-overview.handler';
+import { ListAdminTemplatesHandler } from './application/queries/list-admin-templates/list-admin-templates.handler';
 @Module({
   imports: [MarketplaceModule, BillingModule],
   controllers: [
@@ -59,6 +63,7 @@ import { ListAdminMarketplaceSalesHandler } from './application/queries/list-adm
     AdminTemplatePurchaseController,
     AdminMarketplaceCommissionController,
     AdminMarketplaceSalesController,
+    AdminTemplatesController,
   ],
   providers: [
     {
@@ -92,6 +97,18 @@ import { ListAdminMarketplaceSalesHandler } from './application/queries/list-adm
     {
       provide: ADMIN_TYPES.applications.ListAdminMarketplaceSalesHandler,
       useClass: ListAdminMarketplaceSalesHandler,
+    },
+    {
+      provide: ADMIN_TYPES.ports.TemplateReader,
+      useClass: TypeOrmAdminTemplateReader,
+    },
+    {
+      provide: ADMIN_TYPES.applications.GetAdminTemplatesOverviewHandler,
+      useClass: GetAdminTemplatesOverviewHandler,
+    },
+    {
+      provide: ADMIN_TYPES.applications.ListAdminTemplatesHandler,
+      useClass: ListAdminTemplatesHandler,
     },
     {
       provide: ADMIN_TYPES.ports.BillingWebhookReader,
