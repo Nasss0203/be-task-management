@@ -130,7 +130,6 @@ import { UsersController } from './presentation/http/controllers/users.controlle
     },
   ],
   exports: [
-    AuthService,
     IDENTITY_TYPES.services.FindUserService,
     IDENTITY_TYPES.services.UserProfilePreferenceService,
   ],

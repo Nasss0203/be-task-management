@@ -21,7 +21,6 @@ export class GetAdminDashboardOverviewHandler {
       totalUsers: overview.totalUsers,
       activeUsers: overview.activeUsers,
       inactiveUsers: overview.inactiveUsers,
-      unverifiedUsers: overview.unverifiedUsers,
       totalWorkspaces: overview.totalWorkspaces,
       archivedWorkspaces: overview.archivedWorkspaces,
       totalTeamspaces: overview.totalTeamspaces,

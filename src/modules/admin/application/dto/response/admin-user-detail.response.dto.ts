@@ -8,7 +8,6 @@ export class AdminUserDetailResponseDto {
   systemRole: SystemRole;
   isActive: boolean;
   isEmailVerified: boolean;
-  hasPassword: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

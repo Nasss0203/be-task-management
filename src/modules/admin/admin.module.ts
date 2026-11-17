@@ -1,12 +1,9 @@
 import { Module } from '@nestjs/common';
 
-import { IdentityModule } from '../identity/identity.module';
 import { MarketplaceModule } from '../marketplace/marketplace.module';
 import { ADMIN_TYPES } from './admin.types';
 import { CreateAdminBillingPlanPriceVersionHandler } from './application/commands/create-admin-billing-plan-price-version/create-admin-billing-plan-price-version.handler';
 import { UpdateAdminBillingPlanHandler } from './application/commands/update-admin-billing-plan/update-admin-billing-plan.handler';
-import { SendAdminUserPasswordResetEmailHandler } from './application/commands/send-admin-user-password-reset-email/send-admin-user-password-reset-email.handler';
-import { SendAdminUserVerificationEmailHandler } from './application/commands/send-admin-user-verification-email/send-admin-user-verification-email.handler';
 import { UpdateAdminUserRoleHandler } from './application/commands/update-admin-user-role/update-admin-user-role.handler';
 import { UpdateAdminUserStatusHandler } from './application/commands/update-admin-user-status/update-admin-user-status.handler';
 import { GetAdminAccessHandler } from './application/queries/get-admin-access/get-admin-access.handler';
@@ -48,7 +45,7 @@ import { TypeOrmAdminMarketplaceSalesReader } from './infrastructure/persistence
 import { GetAdminMarketplaceSalesOverviewHandler } from './application/queries/get-admin-marketplace-sales-overview/get-admin-marketplace-sales-overview.handler';
 import { ListAdminMarketplaceSalesHandler } from './application/queries/list-admin-marketplace-sales/list-admin-marketplace-sales.handler';
 @Module({
-  imports: [MarketplaceModule, IdentityModule],
+  imports: [MarketplaceModule],
   controllers: [
     AdminAccessController,
     AdminUsersController,
@@ -124,14 +121,6 @@ import { ListAdminMarketplaceSalesHandler } from './application/queries/list-adm
     {
       provide: ADMIN_TYPES.applications.UpdateAdminUserStatusHandler,
       useClass: UpdateAdminUserStatusHandler,
-    },
-    {
-      provide: ADMIN_TYPES.applications.SendAdminUserVerificationEmailHandler,
-      useClass: SendAdminUserVerificationEmailHandler,
-    },
-    {
-      provide: ADMIN_TYPES.applications.SendAdminUserPasswordResetEmailHandler,
-      useClass: SendAdminUserPasswordResetEmailHandler,
     },
     {
       provide: ADMIN_TYPES.applications.ListAdminWorkspacesHandler,
