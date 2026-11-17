@@ -15,6 +15,7 @@ export class AdminWorkspaceSummaryResponseDto {
   memberCount: number;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 }
 
 export class AdminWorkspaceListResponseDto {

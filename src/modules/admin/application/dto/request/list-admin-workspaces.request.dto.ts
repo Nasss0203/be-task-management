@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsEnum,
   IsInt,
   IsOptional,
   IsString,
@@ -7,6 +8,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { AdminWorkspaceStatusFilter } from '../../ports/admin-workspace-reader.port';
 
 export class ListAdminWorkspacesRequestDto {
   @Type(() => Number)
@@ -24,4 +26,8 @@ export class ListAdminWorkspacesRequestDto {
   @IsString()
   @MaxLength(100)
   search?: string;
+
+  @IsOptional()
+  @IsEnum(AdminWorkspaceStatusFilter)
+  status?: AdminWorkspaceStatusFilter;
 }

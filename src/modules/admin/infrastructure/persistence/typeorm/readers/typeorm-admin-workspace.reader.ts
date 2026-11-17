@@ -16,6 +16,39 @@ import type {
   ListAdminWorkspacePagesResult,
 } from '../../../../application/ports/admin-workspace-reader.port';
 
+const WORKSPACE_OWNER_JOIN = `
+  LEFT JOIN LATERAL (
+    SELECT
+      u.id,
+      u.email,
+      u.username
+    FROM workspace_members owner_member
+    INNER JOIN users u
+      ON u.id = owner_member.user_id
+    WHERE owner_member.workspace_id = w.id
+      AND owner_member.membership_type = 'MEMBER'
+      AND owner_member.role_name = 'OWNER'
+      AND u.deleted_at IS NULL
+    ORDER BY owner_member.joined_at ASC
+    LIMIT 1
+  ) owner ON TRUE
+`;
+
+const WORKSPACE_LIST_FILTER = `
+  WHERE (
+      $2::text = 'ALL'
+      OR ($2::text = 'ACTIVE' AND w.deleted_at IS NULL)
+      OR ($2::text = 'TRASHED' AND w.deleted_at IS NOT NULL)
+    )
+    AND (
+      $1::text IS NULL
+      OR w.name ILIKE '%' || $1 || '%'
+      OR w.slug ILIKE '%' || $1 || '%'
+      OR owner.email ILIKE '%' || $1 || '%'
+      OR owner.username ILIKE '%' || $1 || '%'
+    )
+`;
+
 interface AdminWorkspaceRawRow {
   id: string;
   name: string;
@@ -27,6 +60,7 @@ interface AdminWorkspaceRawRow {
   memberCount: number | string;
   createdAt: Date | string;
   updatedAt: Date | string;
+  deletedAt: Date | string | null;
 }
 
 interface AdminWorkspaceMemberRawRow {
@@ -43,6 +77,9 @@ interface AdminWorkspaceMemberRawRow {
 interface AdminWorkspaceDetailRawRow extends AdminWorkspaceRawRow {
   createdBy: string | null;
   teamspaceCount: number | string;
+  deletedById: string | null;
+  deletedByEmail: string | null;
+  deletedByUsername: string | null;
 }
 
 interface AdminWorkspaceTeamspaceRawRow {
@@ -92,8 +129,14 @@ export class TypeOrmAdminWorkspaceReader implements AdminWorkspaceReader {
         COALESCE(member_counts.member_count, 0) AS "memberCount",
         COALESCE(teamspace_counts.teamspace_count, 0) AS "teamspaceCount",
         w.created_at AS "createdAt",
-        w.updated_at AS "updatedAt"
+        w.updated_at AS "updatedAt",
+        w.deleted_at AS "deletedAt",
+        deleter.id AS "deletedById",
+        deleter.email AS "deletedByEmail",
+        deleter.username AS "deletedByUsername"
       FROM workspaces w
+      LEFT JOIN users deleter
+        ON deleter.id = w.deleted_by
       LEFT JOIN LATERAL (
         SELECT
           u.id,
@@ -122,7 +165,6 @@ export class TypeOrmAdminWorkspaceReader implements AdminWorkspaceReader {
           AND teamspace.deleted_at IS NULL
       ) teamspace_counts ON TRUE
       WHERE w.id = $1
-        AND w.deleted_at IS NULL
       LIMIT 1
     `,
       [workspaceId],
@@ -151,6 +193,14 @@ export class TypeOrmAdminWorkspaceReader implements AdminWorkspaceReader {
       teamspaceCount: Number(row.teamspaceCount),
       createdAt: new Date(row.createdAt),
       updatedAt: new Date(row.updatedAt),
+      deletedAt: row.deletedAt ? new Date(row.deletedAt) : null,
+      deletedBy: row.deletedById
+        ? {
+            id: row.deletedById,
+            email: row.deletedByEmail ?? '',
+            username: row.deletedByUsername ?? '',
+          }
+        : null,
     };
   }
 
@@ -180,54 +230,32 @@ export class TypeOrmAdminWorkspaceReader implements AdminWorkspaceReader {
           owner.username AS "ownerUsername",
           COALESCE(member_counts.member_count, 0) AS "memberCount",
           w.created_at AS "createdAt",
-          w.updated_at AS "updatedAt"
+          w.updated_at AS "updatedAt",
+          w.deleted_at AS "deletedAt"
         FROM workspaces w
-        LEFT JOIN LATERAL (
-          SELECT
-            u.id,
-            u.email,
-            u.username
-          FROM workspace_members owner_member
-          INNER JOIN users u
-            ON u.id = owner_member.user_id
-          WHERE owner_member.workspace_id = w.id
-            AND owner_member.membership_type = 'MEMBER'
-            AND owner_member.role_name = 'OWNER'
-            AND u.deleted_at IS NULL
-          ORDER BY owner_member.joined_at ASC
-          LIMIT 1
-        ) owner ON TRUE
+        ${WORKSPACE_OWNER_JOIN}
         LEFT JOIN LATERAL (
           SELECT COUNT(*)::int AS member_count
           FROM workspace_members member
           WHERE member.workspace_id = w.id
             AND member.membership_type = 'MEMBER'
         ) member_counts ON TRUE
-        WHERE w.deleted_at IS NULL
-          AND (
-            $1::text IS NULL
-            OR w.name ILIKE '%' || $1 || '%'
-            OR w.slug ILIKE '%' || $1 || '%'
-          )
+        ${WORKSPACE_LIST_FILTER}
         ORDER BY w.created_at DESC
-        LIMIT $2
-        OFFSET $3
+        LIMIT $3
+        OFFSET $4
       `,
-      [search, limit, offset],
+      [search, input.status, limit, offset],
     );
 
     const countRows = await this.dataSource.query<Array<{ total: string }>>(
       `
         SELECT COUNT(*) AS total
         FROM workspaces w
-        WHERE w.deleted_at IS NULL
-          AND (
-            $1::text IS NULL
-            OR w.name ILIKE '%' || $1 || '%'
-            OR w.slug ILIKE '%' || $1 || '%'
-          )
+        ${WORKSPACE_OWNER_JOIN}
+        ${WORKSPACE_LIST_FILTER}
       `,
-      [search],
+      [search, input.status],
     );
 
     return {
@@ -246,6 +274,7 @@ export class TypeOrmAdminWorkspaceReader implements AdminWorkspaceReader {
         memberCount: Number(row.memberCount),
         createdAt: new Date(row.createdAt),
         updatedAt: new Date(row.updatedAt),
+        deletedAt: row.deletedAt ? new Date(row.deletedAt) : null,
       })),
       total: Number(countRows[0]?.total ?? 0),
       page,

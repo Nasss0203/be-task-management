@@ -12,4 +12,6 @@ export class AdminWorkspaceDetailResponseDto {
   teamspaceCount: number;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
+  deletedBy: AdminWorkspaceOwnerResponseDto | null;
 }

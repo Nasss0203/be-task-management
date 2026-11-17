@@ -1,7 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ADMIN_TYPES } from '../../../admin.types';
 import { AdminWorkspaceListResponseDto } from '../../dto/response/admin-workspace-list.response.dto';
-import type { AdminWorkspaceReader } from '../../ports/admin-workspace-reader.port';
+import {
+  AdminWorkspaceStatusFilter,
+  type AdminWorkspaceReader,
+} from '../../ports/admin-workspace-reader.port';
 import { ListAdminWorkspacesQuery } from './list-admin-workspaces.query';
 
 @Injectable()
@@ -18,6 +21,7 @@ export class ListAdminWorkspacesHandler {
       page: query.page,
       limit: query.limit,
       search: query.search,
+      status: query.status ?? AdminWorkspaceStatusFilter.ACTIVE,
     });
 
     return {

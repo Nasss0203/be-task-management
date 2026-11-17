@@ -10,6 +10,7 @@ import {
 import { AdminRateLimit } from 'src/common/decorator/rate-limit.decorator';
 import { RequireSystemRoles } from 'src/common/decorator/require-system-roles.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import type { WorkspaceEntitlementsResponseDto } from 'src/modules/billing/application/dto/response/workspace-entitlements.response.dto';
 import { SystemRole } from 'src/modules/identity/identity.types';
 import { ADMIN_TYPES } from '../../../admin.types';
 import { ListAdminWorkspaceMembersRequestDto } from '../../../application/dto/request/list-admin-workspace-members.request.dto';
@@ -23,6 +24,8 @@ import { AdminWorkspacePageListResponseDto } from '../../../application/dto/resp
 import { AdminWorkspaceTeamspaceListResponseDto } from '../../../application/dto/response/admin-workspace-teamspace-list.response.dto';
 import { GetAdminWorkspaceHandler } from '../../../application/queries/get-admin-workspace/get-admin-workspace.handler';
 import { GetAdminWorkspaceQuery } from '../../../application/queries/get-admin-workspace/get-admin-workspace.query';
+import { GetAdminWorkspaceUsageHandler } from '../../../application/queries/get-admin-workspace-usage/get-admin-workspace-usage.handler';
+import { GetAdminWorkspaceUsageQuery } from '../../../application/queries/get-admin-workspace-usage/get-admin-workspace-usage.query';
 import { ListAdminWorkspaceMembersHandler } from '../../../application/queries/list-admin-workspace-members/list-admin-workspace-members.handler';
 import { ListAdminWorkspaceMembersQuery } from '../../../application/queries/list-admin-workspace-members/list-admin-workspace-members.query';
 import { ListAdminWorkspacePagesHandler } from '../../../application/queries/list-admin-workspace-pages/list-admin-workspace-pages.handler';
@@ -45,6 +48,9 @@ export class AdminWorkspacesController {
     @Inject(ADMIN_TYPES.applications.GetAdminWorkspaceHandler)
     private readonly getAdminWorkspaceHandler: GetAdminWorkspaceHandler,
 
+    @Inject(ADMIN_TYPES.applications.GetAdminWorkspaceUsageHandler)
+    private readonly getAdminWorkspaceUsageHandler: GetAdminWorkspaceUsageHandler,
+
     @Inject(ADMIN_TYPES.applications.ListAdminWorkspaceMembersHandler)
     private readonly listAdminWorkspaceMembersHandler: ListAdminWorkspaceMembersHandler,
 
@@ -64,7 +70,12 @@ export class AdminWorkspacesController {
     @Query() query: ListAdminWorkspacesRequestDto,
   ): Promise<AdminWorkspaceListResponseDto> {
     return this.listAdminWorkspacesHandler.execute(
-      new ListAdminWorkspacesQuery(query.page, query.limit, query.search),
+      new ListAdminWorkspacesQuery(
+        query.page,
+        query.limit,
+        query.search,
+        query.status,
+      ),
     );
   }
 
@@ -98,6 +109,19 @@ export class AdminWorkspacesController {
   ): Promise<AdminWorkspaceDetailResponseDto> {
     return this.getAdminWorkspaceHandler.execute(
       new GetAdminWorkspaceQuery(workspaceId),
+    );
+  }
+
+  @Get(':workspaceId/usage')
+  @AdminRateLimit()
+  @RequireSystemRoles(SystemRole.SYSTEM_ADMIN, SystemRole.SUPER_ADMIN)
+  @RequireAdminPermissions(ADMIN_PERMISSIONS.WORKSPACES_READ)
+  @ResponseMessage('Get admin workspace usage successfully')
+  getWorkspaceUsage(
+    @Param('workspaceId', ParseUUIDPipe) workspaceId: string,
+  ): Promise<WorkspaceEntitlementsResponseDto> {
+    return this.getAdminWorkspaceUsageHandler.execute(
+      new GetAdminWorkspaceUsageQuery(workspaceId),
     );
   }
 

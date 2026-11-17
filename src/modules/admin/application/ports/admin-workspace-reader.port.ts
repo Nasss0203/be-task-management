@@ -1,9 +1,16 @@
 import type { WorkspaceLayoutMode } from 'src/modules/workspace/domain/enums/workspace-layout-mode.enum';
 
+export enum AdminWorkspaceStatusFilter {
+  ACTIVE = 'ACTIVE',
+  TRASHED = 'TRASHED',
+  ALL = 'ALL',
+}
+
 export interface ListAdminWorkspacesInput {
   page: number;
   limit: number;
   search?: string;
+  status: AdminWorkspaceStatusFilter;
 }
 
 export interface AdminWorkspaceOwnerSummary {
@@ -21,6 +28,7 @@ export interface AdminWorkspaceSummary {
   memberCount: number;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 }
 
 export interface ListAdminWorkspacesResult {
@@ -30,9 +38,16 @@ export interface ListAdminWorkspacesResult {
   limit: number;
 }
 
+export interface AdminWorkspaceDeletedBy {
+  id: string;
+  email: string;
+  username: string;
+}
+
 export interface AdminWorkspaceDetail extends AdminWorkspaceSummary {
   createdBy: string | null;
   teamspaceCount: number;
+  deletedBy: AdminWorkspaceDeletedBy | null;
 }
 
 export interface ListAdminWorkspaceMembersInput {

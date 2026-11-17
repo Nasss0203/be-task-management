@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
+import { AttachmentStatus } from 'src/modules/attachment/domain/enums/attachment-status.enum';
+
 import type {
   AdminDashboardOverview,
   AdminDashboardReader,
@@ -77,8 +79,10 @@ export class TypeOrmAdminDashboardReader implements AdminDashboardReader {
             (
               SELECT COALESCE(SUM(size), 0)
               FROM attachments
+              WHERE status = $1
             ) AS "storageBytes"
         `,
+      [AttachmentStatus.READY],
     );
 
     const row = rows[0];

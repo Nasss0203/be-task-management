@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { BillingModule } from '../billing/billing.module';
 import { MarketplaceModule } from '../marketplace/marketplace.module';
 import { ADMIN_TYPES } from './admin.types';
 import { CreateAdminBillingPlanPriceVersionHandler } from './application/commands/create-admin-billing-plan-price-version/create-admin-billing-plan-price-version.handler';
@@ -12,6 +13,7 @@ import { GetAdminBillingPlanHandler } from './application/queries/get-admin-bill
 import { GetAdminDashboardOverviewHandler } from './application/queries/get-admin-dashboard-overview/get-admin-dashboard-overview.handler';
 import { GetAdminUserHandler } from './application/queries/get-admin-user/get-admin-user.handler';
 import { GetAdminWorkspaceHandler } from './application/queries/get-admin-workspace/get-admin-workspace.handler';
+import { GetAdminWorkspaceUsageHandler } from './application/queries/get-admin-workspace-usage/get-admin-workspace-usage.handler';
 import { ListAdminBillingPaymentOrdersHandler } from './application/queries/list-admin-billing-payment-orders/list-admin-billing-payment-orders.handler';
 import { ListAdminBillingPlansHandler } from './application/queries/list-admin-billing-plans/list-admin-billing-plans.handler';
 import { ListAdminBillingSubscriptionsHandler } from './application/queries/list-admin-billing-subscriptions/list-admin-billing-subscriptions.handler';
@@ -45,7 +47,7 @@ import { TypeOrmAdminMarketplaceSalesReader } from './infrastructure/persistence
 import { GetAdminMarketplaceSalesOverviewHandler } from './application/queries/get-admin-marketplace-sales-overview/get-admin-marketplace-sales-overview.handler';
 import { ListAdminMarketplaceSalesHandler } from './application/queries/list-admin-marketplace-sales/list-admin-marketplace-sales.handler';
 @Module({
-  imports: [MarketplaceModule],
+  imports: [MarketplaceModule, BillingModule],
   controllers: [
     AdminAccessController,
     AdminUsersController,
@@ -129,6 +131,10 @@ import { ListAdminMarketplaceSalesHandler } from './application/queries/list-adm
     {
       provide: ADMIN_TYPES.applications.GetAdminWorkspaceHandler,
       useClass: GetAdminWorkspaceHandler,
+    },
+    {
+      provide: ADMIN_TYPES.applications.GetAdminWorkspaceUsageHandler,
+      useClass: GetAdminWorkspaceUsageHandler,
     },
     {
       provide: ADMIN_TYPES.applications.ListAdminWorkspaceMembersHandler,

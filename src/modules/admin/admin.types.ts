@@ -22,6 +22,7 @@ export const ADMIN_TYPES = {
     UpdateAdminUserRoleHandler: Symbol('AdminUpdateAdminUserRoleHandler'),
     ListAdminWorkspacesHandler: Symbol('AdminListAdminWorkspacesHandler'),
     GetAdminWorkspaceHandler: Symbol('AdminGetAdminWorkspaceHandler'),
+    GetAdminWorkspaceUsageHandler: Symbol('AdminGetAdminWorkspaceUsageHandler'),
     ListAdminWorkspaceMembersHandler: Symbol(
       'AdminListAdminWorkspaceMembersHandler',
     ),
