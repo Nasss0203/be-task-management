@@ -8,6 +8,18 @@ import type {
   UpdateAdminUserStatusResult,
 } from '../../../../application/ports/admin-user-writer.port';
 
+function readReturningRows<T>(result: unknown): T[] {
+  if (!Array.isArray(result)) {
+    return [];
+  }
+
+  if (Array.isArray(result[0])) {
+    return result[0] as T[];
+  }
+
+  return result as T[];
+}
+
 @Injectable()
 export class TypeOrmAdminUserWriter implements AdminUserWriter {
   constructor(private readonly dataSource: DataSource) {}
@@ -15,7 +27,7 @@ export class TypeOrmAdminUserWriter implements AdminUserWriter {
   async updateUserStatus(
     input: UpdateAdminUserStatusInput,
   ): Promise<UpdateAdminUserStatusResult | null> {
-    const rows = await this.dataSource.query<UpdateAdminUserStatusResult[]>(
+    const result: unknown = await this.dataSource.query(
       `
         UPDATE users
         SET
@@ -31,7 +43,7 @@ export class TypeOrmAdminUserWriter implements AdminUserWriter {
       [input.isActive, input.userId],
     );
 
-    const row = rows[0];
+    const row = readReturningRows<UpdateAdminUserStatusResult>(result)[0];
 
     if (!row) {
       return null;
@@ -47,7 +59,7 @@ export class TypeOrmAdminUserWriter implements AdminUserWriter {
   async updateUserRole(
     input: UpdateAdminUserRoleInput,
   ): Promise<UpdateAdminUserRoleResult | null> {
-    const rows = await this.dataSource.query<UpdateAdminUserRoleResult[]>(
+    const result: unknown = await this.dataSource.query(
       `
         UPDATE users
         SET
@@ -63,7 +75,7 @@ export class TypeOrmAdminUserWriter implements AdminUserWriter {
       [input.systemRole, input.userId],
     );
 
-    const row = rows[0];
+    const row = readReturningRows<UpdateAdminUserRoleResult>(result)[0];
 
     if (!row) {
       return null;

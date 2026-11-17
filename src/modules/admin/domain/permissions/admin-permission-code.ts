@@ -5,6 +5,8 @@ export const ADMIN_PERMISSIONS = {
   USERS_READ: 'admin.users.read',
   USERS_STATUS_UPDATE: 'admin.users.status.update',
   USERS_ROLE_UPDATE: 'admin.users.role.update',
+  USERS_VERIFICATION_EMAIL_SEND: 'admin.users.verification_email.send',
+  USERS_PASSWORD_RESET_SEND: 'admin.users.password_reset.send',
 
   // Workspaces
   WORKSPACES_READ: 'admin.workspaces.read',

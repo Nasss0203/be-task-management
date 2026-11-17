@@ -7,6 +7,7 @@ export class AdminUserSummaryResponseDto {
   systemRole: SystemRole;
   isActive: boolean;
   isEmailVerified: boolean;
+  hasPassword: boolean;
   createdAt: Date;
 }
 

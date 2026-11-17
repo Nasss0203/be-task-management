@@ -20,6 +20,12 @@ export const ADMIN_TYPES = {
     GetAdminUserHandler: Symbol('AdminGetAdminUserHandler'),
     UpdateAdminUserStatusHandler: Symbol('AdminUpdateAdminUserStatusHandler'),
     UpdateAdminUserRoleHandler: Symbol('AdminUpdateAdminUserRoleHandler'),
+    SendAdminUserVerificationEmailHandler: Symbol(
+      'AdminSendAdminUserVerificationEmailHandler',
+    ),
+    SendAdminUserPasswordResetEmailHandler: Symbol(
+      'AdminSendAdminUserPasswordResetEmailHandler',
+    ),
     ListAdminWorkspacesHandler: Symbol('AdminListAdminWorkspacesHandler'),
     GetAdminWorkspaceHandler: Symbol('AdminGetAdminWorkspaceHandler'),
     ListAdminWorkspaceMembersHandler: Symbol(

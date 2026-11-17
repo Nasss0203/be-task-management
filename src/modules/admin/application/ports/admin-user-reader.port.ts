@@ -13,6 +13,7 @@ export interface AdminUserSummary {
   systemRole: SystemRole;
   isActive: boolean;
   isEmailVerified: boolean;
+  hasPassword: boolean;
   createdAt: Date;
 }
 

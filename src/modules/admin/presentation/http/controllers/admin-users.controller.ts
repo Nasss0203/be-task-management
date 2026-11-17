@@ -6,6 +6,7 @@ import {
   Param,
   ParseUUIDPipe,
   Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -19,6 +20,10 @@ import { ResponseMessage } from 'src/common/decorator/response-message.decorator
 import type { IUserJwtPayload } from 'src/modules/identity/identity-jwt.types';
 import { SystemRole } from 'src/modules/identity/identity.types';
 import { ADMIN_TYPES } from '../../../admin.types';
+import { SendAdminUserPasswordResetEmailCommand } from '../../../application/commands/send-admin-user-password-reset-email/send-admin-user-password-reset-email.command';
+import { SendAdminUserPasswordResetEmailHandler } from '../../../application/commands/send-admin-user-password-reset-email/send-admin-user-password-reset-email.handler';
+import { SendAdminUserVerificationEmailCommand } from '../../../application/commands/send-admin-user-verification-email/send-admin-user-verification-email.command';
+import { SendAdminUserVerificationEmailHandler } from '../../../application/commands/send-admin-user-verification-email/send-admin-user-verification-email.handler';
 import { UpdateAdminUserRoleCommand } from '../../../application/commands/update-admin-user-role/update-admin-user-role.command';
 import { UpdateAdminUserRoleHandler } from '../../../application/commands/update-admin-user-role/update-admin-user-role.handler';
 import { UpdateAdminUserStatusCommand } from '../../../application/commands/update-admin-user-status/update-admin-user-status.command';
@@ -26,6 +31,7 @@ import { UpdateAdminUserStatusHandler } from '../../../application/commands/upda
 import { ListAdminUsersRequestDto } from '../../../application/dto/request/list-admin-users.request.dto';
 import { UpdateAdminUserRoleRequestDto } from '../../../application/dto/request/update-admin-user-role.request.dto';
 import { UpdateAdminUserStatusRequestDto } from '../../../application/dto/request/update-admin-user-status.request.dto';
+import { AdminUserEmailSentResponseDto } from '../../../application/dto/response/admin-user-email-sent.response.dto';
 import { AdminUserDetailResponseDto } from '../../../application/dto/response/admin-user-detail.response.dto';
 import { AdminUserListResponseDto } from '../../../application/dto/response/admin-user-list.response.dto';
 import { AdminUserRoleResponseDto } from '../../../application/dto/response/admin-user-role.response.dto';
@@ -52,6 +58,10 @@ export class AdminUsersController {
     private readonly updateAdminUserStatusHandler: UpdateAdminUserStatusHandler,
     @Inject(ADMIN_TYPES.applications.UpdateAdminUserRoleHandler)
     private readonly updateAdminUserRoleHandler: UpdateAdminUserRoleHandler,
+    @Inject(ADMIN_TYPES.applications.SendAdminUserVerificationEmailHandler)
+    private readonly sendAdminUserVerificationEmailHandler: SendAdminUserVerificationEmailHandler,
+    @Inject(ADMIN_TYPES.applications.SendAdminUserPasswordResetEmailHandler)
+    private readonly sendAdminUserPasswordResetEmailHandler: SendAdminUserPasswordResetEmailHandler,
   ) {}
 
   @Get()
@@ -105,6 +115,32 @@ export class AdminUsersController {
   ): Promise<AdminUserRoleResponseDto> {
     return this.updateAdminUserRoleHandler.execute(
       new UpdateAdminUserRoleCommand(actor.id, userId, dto.systemRole),
+    );
+  }
+
+  @Post(':userId/verification-email')
+  @StrictWriteRateLimit()
+  @RequireSystemRoles(SystemRole.SYSTEM_ADMIN, SystemRole.SUPER_ADMIN)
+  @RequireAdminPermissions(ADMIN_PERMISSIONS.USERS_VERIFICATION_EMAIL_SEND)
+  @ResponseMessage('Send verification email successfully')
+  sendVerificationEmail(
+    @Param('userId', ParseUUIDPipe) userId: string,
+  ): Promise<AdminUserEmailSentResponseDto> {
+    return this.sendAdminUserVerificationEmailHandler.execute(
+      new SendAdminUserVerificationEmailCommand(userId),
+    );
+  }
+
+  @Post(':userId/password-reset-email')
+  @StrictWriteRateLimit()
+  @RequireSystemRoles(SystemRole.SYSTEM_ADMIN, SystemRole.SUPER_ADMIN)
+  @RequireAdminPermissions(ADMIN_PERMISSIONS.USERS_PASSWORD_RESET_SEND)
+  @ResponseMessage('Send password reset email successfully')
+  sendPasswordResetEmail(
+    @Param('userId', ParseUUIDPipe) userId: string,
+  ): Promise<AdminUserEmailSentResponseDto> {
+    return this.sendAdminUserPasswordResetEmailHandler.execute(
+      new SendAdminUserPasswordResetEmailCommand(userId),
     );
   }
 }

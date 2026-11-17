@@ -10,6 +10,7 @@ interface AdminDashboardOverviewRawRow {
   totalUsers: number | string;
   activeUsers: number | string;
   inactiveUsers: number | string;
+  unverifiedUsers: number | string;
   totalWorkspaces: number | string;
   archivedWorkspaces: number | string;
   totalTeamspaces: number | string;
@@ -45,6 +46,14 @@ export class TypeOrmAdminDashboardReader implements AdminDashboardReader {
               WHERE deleted_at IS NULL
                 AND is_active = FALSE
             ) AS "inactiveUsers",
+
+            (
+              SELECT COUNT(*)::int
+              FROM users
+              WHERE deleted_at IS NULL
+                AND is_active = TRUE
+                AND is_email_verified = FALSE
+            ) AS "unverifiedUsers",
 
             (
               SELECT COUNT(*)::int
@@ -87,6 +96,7 @@ export class TypeOrmAdminDashboardReader implements AdminDashboardReader {
       totalUsers: Number(row?.totalUsers ?? 0),
       activeUsers: Number(row?.activeUsers ?? 0),
       inactiveUsers: Number(row?.inactiveUsers ?? 0),
+      unverifiedUsers: Number(row?.unverifiedUsers ?? 0),
       totalWorkspaces: Number(row?.totalWorkspaces ?? 0),
       archivedWorkspaces: Number(row?.archivedWorkspaces ?? 0),
       totalTeamspaces: Number(row?.totalTeamspaces ?? 0),

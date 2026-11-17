@@ -46,6 +46,7 @@ export class TypeOrmAdminUserReader implements AdminUserReader {
         'u.system_role AS "systemRole"',
         'u.is_active AS "isActive"',
         'u.is_email_verified AS "isEmailVerified"',
+        '(u.password_hash IS NOT NULL) AS "hasPassword"',
         'u.created_at AS "createdAt"',
       ])
       .orderBy('u.created_at', 'DESC')
@@ -81,6 +82,7 @@ export class TypeOrmAdminUserReader implements AdminUserReader {
         'u.system_role AS "systemRole"',
         'u.is_active AS "isActive"',
         'u.is_email_verified AS "isEmailVerified"',
+        '(u.password_hash IS NOT NULL) AS "hasPassword"',
         'u.created_at AS "createdAt"',
         'u.updated_at AS "updatedAt"',
       ])
