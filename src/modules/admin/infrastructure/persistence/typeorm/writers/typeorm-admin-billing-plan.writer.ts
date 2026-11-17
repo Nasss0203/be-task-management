@@ -6,6 +6,7 @@ import type {
   CreateAdminBillingPlanPriceVersionInput,
   UpdateAdminBillingPlanInput,
 } from '../../../../application/ports/admin-billing-plan-writer.port';
+import { readReturningRows } from '../read-returning-rows';
 
 interface ActiveBillingPlanPriceRow {
   id: string;
@@ -21,7 +22,7 @@ export class TypeOrmAdminBillingPlanWriter implements AdminBillingPlanWriter {
 
   async updatePlan(input: UpdateAdminBillingPlanInput): Promise<boolean> {
     return this.dataSource.transaction(async (manager) => {
-      const updatedPlans = await manager.query<Array<{ id: string }>>(
+      const updateResult: unknown = await manager.query(
         `
           UPDATE billing_plans
           SET
@@ -42,7 +43,7 @@ export class TypeOrmAdminBillingPlanWriter implements AdminBillingPlanWriter {
         ],
       );
 
-      if (!updatedPlans[0]) {
+      if (readReturningRows<{ id: string }>(updateResult).length === 0) {
         return false;
       }
 

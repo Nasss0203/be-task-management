@@ -7,18 +7,7 @@ import type {
   UpdateAdminUserStatusInput,
   UpdateAdminUserStatusResult,
 } from '../../../../application/ports/admin-user-writer.port';
-
-function readReturningRows<T>(result: unknown): T[] {
-  if (!Array.isArray(result)) {
-    return [];
-  }
-
-  if (Array.isArray(result[0])) {
-    return result[0] as T[];
-  }
-
-  return result as T[];
-}
+import { readReturningRows } from '../read-returning-rows';
 
 @Injectable()
 export class TypeOrmAdminUserWriter implements AdminUserWriter {
