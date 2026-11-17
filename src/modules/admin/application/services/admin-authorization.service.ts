@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { SystemRole } from 'src/modules/identity/domain/enums/system-role.enum';
 import type { AdminPermissionCode } from '../../domain/permissions/admin-permission-code';
 import { AdminAccessPolicy } from '../../domain/policies/admin-access.policy';
 import { AdminActor } from '../../domain/value-objects/admin-actor.vo';
@@ -11,5 +12,9 @@ export class AdminAuthorizationService {
 
   getPermissions(actor: AdminActor): readonly AdminPermissionCode[] {
     return AdminAccessPolicy.getPermissions(actor);
+  }
+
+  getRolePermissions(systemRole: SystemRole): readonly AdminPermissionCode[] {
+    return AdminAccessPolicy.getRolePermissions(systemRole);
   }
 }

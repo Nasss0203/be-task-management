@@ -26,11 +26,17 @@ export class AdminAccessPolicy {
   }
 
   static getPermissions(actor: AdminActor): readonly AdminPermissionCode[] {
-    if (actor.systemRole === SystemRole.SUPER_ADMIN) {
+    return AdminAccessPolicy.getRolePermissions(actor.systemRole);
+  }
+
+  static getRolePermissions(
+    systemRole: SystemRole,
+  ): readonly AdminPermissionCode[] {
+    if (systemRole === SystemRole.SUPER_ADMIN) {
       return SUPER_ADMIN_PERMISSIONS;
     }
 
-    if (actor.systemRole === SystemRole.SYSTEM_ADMIN) {
+    if (systemRole === SystemRole.SYSTEM_ADMIN) {
       return SYSTEM_ADMIN_PERMISSIONS;
     }
 

@@ -6,3 +6,8 @@ export class AdminAccessResponseDto {
   systemRole: SystemRole;
   permissions: readonly AdminPermissionCode[];
 }
+
+export class AdminAccessRoleResponseDto {
+  systemRole: SystemRole;
+  permissions: readonly AdminPermissionCode[];
+}

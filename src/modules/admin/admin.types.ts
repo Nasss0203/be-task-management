@@ -13,6 +13,7 @@ export const ADMIN_TYPES = {
   },
   applications: {
     GetAdminAccessHandler: Symbol('AdminGetAdminAccessHandler'),
+    ListAdminAccessRolesHandler: Symbol('AdminListAdminAccessRolesHandler'),
     GetAdminDashboardOverviewHandler: Symbol(
       'AdminGetAdminDashboardOverviewHandler',
     ),

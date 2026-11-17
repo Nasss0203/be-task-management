@@ -8,6 +8,7 @@ import { UpdateAdminBillingPlanHandler } from './application/commands/update-adm
 import { UpdateAdminUserRoleHandler } from './application/commands/update-admin-user-role/update-admin-user-role.handler';
 import { UpdateAdminUserStatusHandler } from './application/commands/update-admin-user-status/update-admin-user-status.handler';
 import { GetAdminAccessHandler } from './application/queries/get-admin-access/get-admin-access.handler';
+import { ListAdminAccessRolesHandler } from './application/queries/list-admin-access-roles/list-admin-access-roles.handler';
 import { GetAdminBillingOverviewHandler } from './application/queries/get-admin-billing-overview/get-admin-billing-overview.handler';
 import { GetAdminBillingPlanHandler } from './application/queries/get-admin-billing-plan/get-admin-billing-plan.handler';
 import { GetAdminDashboardOverviewHandler } from './application/queries/get-admin-dashboard-overview/get-admin-dashboard-overview.handler';
@@ -107,6 +108,10 @@ import { ListAdminMarketplaceSalesHandler } from './application/queries/list-adm
     {
       provide: ADMIN_TYPES.applications.GetAdminAccessHandler,
       useClass: GetAdminAccessHandler,
+    },
+    {
+      provide: ADMIN_TYPES.applications.ListAdminAccessRolesHandler,
+      useClass: ListAdminAccessRolesHandler,
     },
     {
       provide: ADMIN_TYPES.applications.GetAdminUserHandler,
