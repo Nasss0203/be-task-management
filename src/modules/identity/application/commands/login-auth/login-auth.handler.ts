@@ -43,6 +43,6 @@ export class LoginAuthHandler {
       );
     }
 
-    return this.issueAuthTokenService.issueTokens(user);
+    return this.issueAuthTokenService.issueTokens(user, command.client);
   }
 }

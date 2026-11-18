@@ -25,6 +25,16 @@ import {
   REFRESH_TOKEN_COOKIE_PATH,
 } from 'src/common/constants/refresh-token-cookie.constant';
 
+const clientRequest = {
+  ip: '203.0.113.5',
+  headers: { 'user-agent': 'Jest browser' },
+};
+
+const expectedClient = {
+  ipAddress: '203.0.113.5',
+  userAgent: 'Jest browser',
+};
+
 describe('AuthController', () => {
   let controller: AuthController;
 
@@ -160,9 +170,13 @@ describe('AuthController', () => {
     const result = await controller.login(
       { email: 'user@example.com', password: 'password' },
       { id: 'user-id' } as never,
+      clientRequest as never,
       mockResponse,
     );
 
+    expect(mockLoginHandler.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ client: expectedClient }),
+    );
     expect(result).toEqual({ access_token: 'access-token' });
     expect(mockResponse.cookie).toHaveBeenCalledWith(
       'refresh_token',
@@ -187,13 +201,19 @@ describe('AuthController', () => {
 
     it('prefers the cookie, rotates it, and returns only the access token', async () => {
       const result = await controller.refresh(
-        { cookies: { refresh_token: 'cookie-token' } } as never,
+        {
+          ...clientRequest,
+          cookies: { refresh_token: 'cookie-token' },
+        } as never,
         { refresh_token: 'body-token' },
         mockResponse,
       );
 
       expect(mockRefreshHandler.execute).toHaveBeenCalledWith(
-        expect.objectContaining({ refreshToken: 'cookie-token' }),
+        expect.objectContaining({
+          refreshToken: 'cookie-token',
+          client: expectedClient,
+        }),
       );
       expect(mockResponse.cookie).toHaveBeenCalledWith(
         'refresh_token',
@@ -209,7 +229,7 @@ describe('AuthController', () => {
 
     it('keeps the body token as a compatibility fallback', async () => {
       await controller.refresh(
-        { cookies: {} } as never,
+        { ...clientRequest, cookies: {} } as never,
         { refresh_token: 'body-token' },
         mockResponse,
       );
@@ -274,7 +294,12 @@ describe('AuthController', () => {
         email: 'user@example.com',
         emailVerified: true,
       },
+      clientRequest as never,
       mockResponse,
+    );
+
+    expect(mockGoogleHandler.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ client: expectedClient }),
     );
 
     expect(mockResponse.cookie).toHaveBeenCalledWith(
@@ -301,9 +326,16 @@ describe('AuthController', () => {
       };
       mockAuthService.verifyEmail.mockResolvedValue(serviceResult);
 
-      const result = await controller.verifyEmail(dto, mockResponse);
+      const result = await controller.verifyEmail(
+        dto,
+        clientRequest as never,
+        mockResponse,
+      );
 
-      expect(mockAuthService.verifyEmail).toHaveBeenCalledWith('valid-token');
+      expect(mockAuthService.verifyEmail).toHaveBeenCalledWith(
+        'valid-token',
+        expectedClient,
+      );
       expect(mockResponse.cookie).toHaveBeenCalledWith(
         'refresh_token',
         'mock-refresh',
@@ -328,7 +360,14 @@ describe('AuthController', () => {
 
     const result = await controller.activateAdmin(
       { token: 'activation-token', password: 'password' },
+      clientRequest as never,
       mockResponse,
+    );
+
+    expect(mockAuthService.activateAdmin).toHaveBeenCalledWith(
+      'activation-token',
+      'password',
+      expectedClient,
     );
 
     expect(mockResponse.cookie).toHaveBeenCalledWith(

@@ -40,6 +40,7 @@ import {
 } from 'src/modules/identity/application/dto/user/create-user.dto';
 import { IUserJwtPayload } from 'src/modules/identity/identity-jwt.types';
 import { AuthService } from 'src/modules/identity/application/services/auth.service';
+import { type AuthClientInfo } from 'src/modules/identity/application/services/issue-auth-token.service';
 import { GetProfileAuthHandler } from 'src/modules/identity/application/queries/get-profile-auth/get-profile-auth.handler';
 import { GetProfileAuthQuery } from 'src/modules/identity/application/queries/get-profile-auth/get-profile-auth.query';
 import { GoogleAuthCommand } from 'src/modules/identity/application/commands/google-auth/google-auth.command';
@@ -74,6 +75,17 @@ type RefreshTokenBody = {
   refresh_token?: string;
 };
 
+const MAX_USER_AGENT_LENGTH = 255;
+
+function authClientOf(req: Pick<Request, 'ip' | 'headers'>): AuthClientInfo {
+  const userAgent = req.headers['user-agent'];
+
+  return {
+    ipAddress: req.ip ?? null,
+    userAgent: userAgent ? userAgent.slice(0, MAX_USER_AGENT_LENGTH) : null,
+  };
+}
+
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -105,10 +117,11 @@ export class AuthController {
   async login(
     @Body() loginUserDto: LoginUserDto,
     @Auth() auth: IAuth,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
     const { access_token, refresh_token } = await this.loginAuthHandler.execute(
-      new LoginAuthCommand(auth),
+      new LoginAuthCommand(auth, authClientOf(req)),
     );
 
     setRefreshTokenCookie(res, refresh_token, this.configService);
@@ -131,7 +144,7 @@ export class AuthController {
       req.cookies?.[REFRESH_TOKEN_COOKIE_NAME] || body?.refresh_token;
     const { access_token, refresh_token } =
       await this.refreshAuthHandler.execute(
-        new RefreshAuthCommand(currentRefreshToken),
+        new RefreshAuthCommand(currentRefreshToken, authClientOf(req)),
       );
 
     setRefreshTokenCookie(res, refresh_token, this.configService);
@@ -180,10 +193,11 @@ export class AuthController {
   @UseFilters(GoogleAuthCallbackExceptionFilter)
   async googleAuthCallback(
     @Auth() googleUser: GoogleUserPayload,
+    @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
     const { refresh_token } = await this.googleAuthHandler.execute(
-      new GoogleAuthCommand(googleUser),
+      new GoogleAuthCommand(googleUser, authClientOf(req)),
     );
 
     setRefreshTokenCookie(res, refresh_token, this.configService);
@@ -218,10 +232,11 @@ export class AuthController {
   @ResponseMessage('Email verified successfully')
   async verifyEmail(
     @Body() dto: VerifyEmailDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
     const { success, access_token, refresh_token } =
-      await this.authService.verifyEmail(dto.token);
+      await this.authService.verifyEmail(dto.token, authClientOf(req));
 
     setRefreshTokenCookie(res, refresh_token, this.configService);
 
@@ -261,10 +276,15 @@ export class AuthController {
   @ResponseMessage('Admin account activated successfully')
   async activateAdmin(
     @Body() dto: ActivateAdminDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
     const { success, access_token, refresh_token } =
-      await this.authService.activateAdmin(dto.token, dto.password);
+      await this.authService.activateAdmin(
+        dto.token,
+        dto.password,
+        authClientOf(req),
+      );
 
     setRefreshTokenCookie(res, refresh_token, this.configService);
 

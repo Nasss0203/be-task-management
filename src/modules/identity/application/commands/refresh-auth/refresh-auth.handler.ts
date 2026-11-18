@@ -60,6 +60,6 @@ export class RefreshAuthHandler {
     stored.revoked_at = new Date();
     await this.refreshTokenRepository.save(stored);
 
-    return this.issueAuthTokenService.issueTokens(stored.user);
+    return this.issueAuthTokenService.issueTokens(stored.user, command.client);
   }
 }

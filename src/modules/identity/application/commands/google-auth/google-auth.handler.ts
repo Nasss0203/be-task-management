@@ -21,7 +21,10 @@ import { CreateDefaultWorkspaceHandler } from 'src/modules/workspace/application
 import { type PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
 import { type UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
-import { IssueAuthTokenServiceImpl } from '../../services/issue-auth-token.service';
+import {
+  type AuthClientInfo,
+  IssueAuthTokenServiceImpl,
+} from '../../services/issue-auth-token.service';
 import { GoogleAuthCommand } from './google-auth.command';
 import { GOOGLE_OIDC_ISSUER } from './google-auth.constants';
 
@@ -64,6 +67,7 @@ export class GoogleAuthHandler {
         identity,
         normalizedEmail,
         googleUser.emailVerified,
+        command.client,
       );
     }
 
@@ -81,6 +85,7 @@ export class GoogleAuthHandler {
           racedIdentity,
           normalizedEmail,
           googleUser.emailVerified,
+          command.client,
         );
       }
 
@@ -102,10 +107,11 @@ export class GoogleAuthHandler {
           provisioned.identity,
           normalizedEmail,
           googleUser.emailVerified,
+          command.client,
         );
       }
 
-      return this.issueResult(provisioned.user);
+      return this.issueResult(provisioned.user, command.client);
     } catch (error: unknown) {
       const racedIdentity = await this.findGoogleIdentity(subject);
       if (racedIdentity) {
@@ -113,6 +119,7 @@ export class GoogleAuthHandler {
           racedIdentity,
           normalizedEmail,
           googleUser.emailVerified,
+          command.client,
         );
       }
 
@@ -145,6 +152,7 @@ export class GoogleAuthHandler {
     identity: UserAuthIdentityModel,
     providerEmail: string | null,
     emailVerified: boolean,
+    client?: AuthClientInfo,
   ): Promise<GoogleAuthResult> {
     const user = await this.userRepository.findById(identity.userId);
     this.assertActiveUser(user);
@@ -161,7 +169,7 @@ export class GoogleAuthHandler {
       throw new UnauthorizedException('Unable to authenticate with Google');
     }
 
-    return this.issueResult(user);
+    return this.issueResult(user, client);
   }
 
   private async provisionGoogleUser(
@@ -250,8 +258,11 @@ export class GoogleAuthHandler {
     }
   }
 
-  private async issueResult(user: UserRecord): Promise<GoogleAuthResult> {
-    const tokens = await this.issueAuthTokenService.issueTokens(user);
+  private async issueResult(
+    user: UserRecord,
+    client?: AuthClientInfo,
+  ): Promise<GoogleAuthResult> {
+    const tokens = await this.issueAuthTokenService.issueTokens(user, client);
 
     return {
       ...tokens,

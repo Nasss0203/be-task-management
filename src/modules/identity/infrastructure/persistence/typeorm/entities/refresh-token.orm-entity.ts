@@ -27,10 +27,10 @@ export class RefreshToken {
   token: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  user_agent: string;
+  user_agent: string | null;
 
   @Column({ type: 'inet', nullable: true })
-  ip_address: string;
+  ip_address: string | null;
 
   @Column({ type: 'timestamp' })
   expires_at: Date;

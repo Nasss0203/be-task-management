@@ -20,6 +20,8 @@ export class TypeOrmRefreshTokenRepository implements RefreshTokenRepository {
       user_id: input.userId,
       token: input.tokenHash,
       expires_at: input.expiresAt,
+      ip_address: input.ipAddress ?? null,
+      user_agent: input.userAgent ?? null,
     });
     return saved as RefreshTokenRecord;
   }

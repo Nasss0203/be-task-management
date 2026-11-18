@@ -77,7 +77,10 @@ describe('AuthService', () => {
         refresh_token: 'mock-refresh-token',
       });
 
-      const result = await service.verifyEmail(token);
+      const result = await service.verifyEmail(token, {
+        ipAddress: '203.0.113.5',
+        userAgent: 'Jest browser',
+      });
 
       expect(
         mockUserRepository.findByEmailVerificationToken,
@@ -88,6 +91,7 @@ describe('AuthService', () => {
       expect(mockUserRepository.save).toHaveBeenCalledWith(mockUser);
       expect(mockIssueAuthTokenService.issueTokens).toHaveBeenCalledWith(
         mockUser,
+        { ipAddress: '203.0.113.5', userAgent: 'Jest browser' },
       );
       expect(result).toEqual({
         success: true,

@@ -240,18 +240,24 @@ describe('Auth services', () => {
 
       await expect(
         service.execute(
-          new LoginAuthCommand({
-            id: user.id,
-            email: user.email,
-            username: user.username,
-            systemRole: user.systemRole,
-          }),
+          new LoginAuthCommand(
+            {
+              id: user.id,
+              email: user.email,
+              username: user.username,
+              systemRole: user.systemRole,
+            },
+            { ipAddress: '203.0.113.5', userAgent: 'Jest browser' },
+          ),
         ),
       ).resolves.toEqual({
         access_token: 'access-token',
         refresh_token: 'refresh-token',
       });
-      expect(issueTokenService.issueTokens).toHaveBeenCalledWith(user);
+      expect(issueTokenService.issueTokens).toHaveBeenCalledWith(user, {
+        ipAddress: '203.0.113.5',
+        userAgent: 'Jest browser',
+      });
     });
 
     it('throws when user is missing or inactive', async () => {
@@ -334,14 +340,22 @@ describe('Auth services', () => {
       });
 
       await expect(
-        service.execute(new RefreshAuthCommand('refresh-token')),
+        service.execute(
+          new RefreshAuthCommand('refresh-token', {
+            ipAddress: '198.51.100.7',
+            userAgent: 'Jest browser',
+          }),
+        ),
       ).resolves.toEqual({
         access_token: 'new-access-token',
         refresh_token: 'new-refresh-token',
       });
       expect(stored.revoked_at).toBeInstanceOf(Date);
       expect(refreshTokenRepository.save).toHaveBeenCalledWith(stored);
-      expect(issueTokenService.issueTokens).toHaveBeenCalledWith(stored.user);
+      expect(issueTokenService.issueTokens).toHaveBeenCalledWith(stored.user, {
+        ipAddress: '198.51.100.7',
+        userAgent: 'Jest browser',
+      });
     });
 
     it.each([
@@ -592,6 +606,29 @@ describe('Auth services', () => {
       expect(result.access_token).toBe('access-token');
       expect(result.refresh_token).toEqual(expect.any(String));
     });
+
+    it('stores the client ip address and user agent with the refresh token', async () => {
+      const refreshTokenRepository = createRefreshTokenRepositoryMock();
+      const jwt = {
+        sign: jest.fn().mockReturnValue('access-token'),
+      } as unknown as JwtService;
+      const service = new IssueAuthTokenServiceImpl(
+        jwt,
+        refreshTokenRepository,
+      );
+
+      await service.issueTokens(createUser(), {
+        ipAddress: '203.0.113.5',
+        userAgent: 'Jest browser',
+      });
+
+      expect(refreshTokenRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ipAddress: '203.0.113.5',
+          userAgent: 'Jest browser',
+        }),
+      );
+    });
   });
 
   describe('GoogleAuthHandler', () => {
@@ -684,7 +721,10 @@ describe('Auth services', () => {
         tenantId: null,
         lastLoginAt: expect.any(Date),
       });
-      expect(issueTokenService.issueTokens).toHaveBeenCalledWith(user);
+      expect(issueTokenService.issueTokens).toHaveBeenCalledWith(
+        user,
+        undefined,
+      );
       expect(userRepository.findByGoogleId).not.toHaveBeenCalled();
       expect(userRepository.findByEmail).not.toHaveBeenCalled();
     });

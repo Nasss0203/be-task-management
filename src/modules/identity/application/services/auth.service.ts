@@ -4,7 +4,10 @@ import { ErrorCode } from 'src/common/constants/error-code.constant';
 import { hashIdentityPassword } from 'src/modules/identity/infrastructure/security/password/password-hasher';
 import { MailService } from 'src/modules/mail/application/services/mail.service';
 import { type UserRepository } from 'src/modules/identity/domain/repositories/user.repository';
-import { IssueAuthTokenServiceImpl } from './issue-auth-token.service';
+import {
+  type AuthClientInfo,
+  IssueAuthTokenServiceImpl,
+} from './issue-auth-token.service';
 import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
 
 @Injectable()
@@ -40,7 +43,7 @@ export class AuthService {
     });
   }
 
-  async verifyEmail(token: string) {
+  async verifyEmail(token: string, client?: AuthClientInfo) {
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
     const user =
       await this.userRepository.findByEmailVerificationToken(hashedToken);
@@ -83,7 +86,7 @@ export class AuthService {
     user.emailVerificationExpires = null;
     await this.userRepository.save(user);
 
-    const tokens = await this.issueAuthTokenService.issueTokens(user);
+    const tokens = await this.issueAuthTokenService.issueTokens(user, client);
 
     return {
       success: true,
@@ -177,7 +180,11 @@ export class AuthService {
     };
   }
 
-  async activateAdmin(token: string, password: string) {
+  async activateAdmin(
+    token: string,
+    password: string,
+    client?: AuthClientInfo,
+  ) {
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
     const user =
       await this.userRepository.findByEmailVerificationToken(hashedToken);
@@ -212,7 +219,7 @@ export class AuthService {
     user.emailVerificationExpires = null;
     await this.userRepository.save(user);
 
-    const tokens = await this.issueAuthTokenService.issueTokens(user);
+    const tokens = await this.issueAuthTokenService.issueTokens(user, client);
 
     return {
       success: true,

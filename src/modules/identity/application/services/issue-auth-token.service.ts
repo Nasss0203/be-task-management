@@ -7,6 +7,11 @@ import { type RefreshTokenRepository } from 'src/modules/identity/domain/reposit
 import { type UserRecord } from 'src/modules/identity/domain/repositories/user.repository';
 import { IDENTITY_TYPES } from 'src/modules/identity/identity.types';
 
+export interface AuthClientInfo {
+  ipAddress?: string | null;
+  userAgent?: string | null;
+}
+
 export interface AuthTokenPair {
   access_token: string;
   refresh_token: string;
@@ -20,7 +25,10 @@ export class IssueAuthTokenServiceImpl {
     private readonly refreshTokenRepository: RefreshTokenRepository,
   ) {}
 
-  async issueTokens(user: UserRecord): Promise<AuthTokenPair> {
+  async issueTokens(
+    user: UserRecord,
+    client?: AuthClientInfo,
+  ): Promise<AuthTokenPair> {
     const payload: IUserJwtPayload = {
       sub: user.id,
       id: user.id,
@@ -36,6 +44,8 @@ export class IssueAuthTokenServiceImpl {
       userId: user.id,
       tokenHash: hashIdentityToken(refresh_token),
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      ipAddress: client?.ipAddress,
+      userAgent: client?.userAgent,
     });
 
     return {

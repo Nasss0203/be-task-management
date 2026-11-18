@@ -4,6 +4,8 @@ export interface CreateRefreshTokenInput {
   userId: string;
   tokenHash: string;
   expiresAt: Date;
+  ipAddress?: string | null;
+  userAgent?: string | null;
 }
 
 export interface RefreshTokenRecord {

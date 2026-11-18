@@ -59,6 +59,10 @@ import { GetAdminPublishedSiteHandler } from './application/queries/get-admin-pu
 import { AdminActivitiesController } from './presentation/http/controllers/admin-activities.controller';
 import { TypeOrmAdminActivityReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-activity.reader';
 import { ListAdminActivitiesHandler } from './application/queries/list-admin-activities/list-admin-activities.handler';
+import { AdminSessionsController } from './presentation/http/controllers/admin-sessions.controller';
+import { TypeOrmAdminSessionReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-session.reader';
+import { GetAdminSessionsOverviewHandler } from './application/queries/get-admin-sessions-overview/get-admin-sessions-overview.handler';
+import { ListAdminSessionsHandler } from './application/queries/list-admin-sessions/list-admin-sessions.handler';
 import { ContentModule } from 'src/modules/content/content.module';
 @Module({
   imports: [MarketplaceModule, BillingModule, ContentModule],
@@ -75,6 +79,7 @@ import { ContentModule } from 'src/modules/content/content.module';
     AdminTemplatesController,
     AdminPublishedSitesController,
     AdminActivitiesController,
+    AdminSessionsController,
   ],
   providers: [
     {
@@ -144,6 +149,18 @@ import { ContentModule } from 'src/modules/content/content.module';
     {
       provide: ADMIN_TYPES.applications.ListAdminActivitiesHandler,
       useClass: ListAdminActivitiesHandler,
+    },
+    {
+      provide: ADMIN_TYPES.ports.SessionReader,
+      useClass: TypeOrmAdminSessionReader,
+    },
+    {
+      provide: ADMIN_TYPES.applications.GetAdminSessionsOverviewHandler,
+      useClass: GetAdminSessionsOverviewHandler,
+    },
+    {
+      provide: ADMIN_TYPES.applications.ListAdminSessionsHandler,
+      useClass: ListAdminSessionsHandler,
     },
     {
       provide: ADMIN_TYPES.ports.BillingWebhookReader,
