@@ -56,6 +56,9 @@ import { TypeOrmAdminPublishedSiteReader } from './infrastructure/persistence/ty
 import { GetAdminPublishedSitesOverviewHandler } from './application/queries/get-admin-published-sites-overview/get-admin-published-sites-overview.handler';
 import { ListAdminPublishedSitesHandler } from './application/queries/list-admin-published-sites/list-admin-published-sites.handler';
 import { GetAdminPublishedSiteHandler } from './application/queries/get-admin-published-site/get-admin-published-site.handler';
+import { AdminActivitiesController } from './presentation/http/controllers/admin-activities.controller';
+import { TypeOrmAdminActivityReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-activity.reader';
+import { ListAdminActivitiesHandler } from './application/queries/list-admin-activities/list-admin-activities.handler';
 import { ContentModule } from 'src/modules/content/content.module';
 @Module({
   imports: [MarketplaceModule, BillingModule, ContentModule],
@@ -71,6 +74,7 @@ import { ContentModule } from 'src/modules/content/content.module';
     AdminMarketplaceSalesController,
     AdminTemplatesController,
     AdminPublishedSitesController,
+    AdminActivitiesController,
   ],
   providers: [
     {
@@ -132,6 +136,14 @@ import { ContentModule } from 'src/modules/content/content.module';
     {
       provide: ADMIN_TYPES.applications.GetAdminPublishedSiteHandler,
       useClass: GetAdminPublishedSiteHandler,
+    },
+    {
+      provide: ADMIN_TYPES.ports.ActivityReader,
+      useClass: TypeOrmAdminActivityReader,
+    },
+    {
+      provide: ADMIN_TYPES.applications.ListAdminActivitiesHandler,
+      useClass: ListAdminActivitiesHandler,
     },
     {
       provide: ADMIN_TYPES.ports.BillingWebhookReader,

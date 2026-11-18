@@ -19,6 +19,9 @@ export const ADMIN_PERMISSIONS = {
   // Published sites
   SITES_READ: 'admin.sites.read',
 
+  // Audit
+  AUDIT_READ: 'admin.audit.read',
+
   // Templates
   TEMPLATES_READ: 'admin.templates.read',
 
