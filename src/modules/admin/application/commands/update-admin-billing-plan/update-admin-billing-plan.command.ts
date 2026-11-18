@@ -1,3 +1,5 @@
+import type { AdminActionActor } from '../../../domain/audit/admin-action';
+
 export type UpdateAdminBillingPlanFeatureValue = boolean | number | string;
 
 export interface UpdateAdminBillingPlanFeatureCommandItem {
@@ -15,5 +17,6 @@ export class UpdateAdminBillingPlanCommand {
     public readonly features:
       | UpdateAdminBillingPlanFeatureCommandItem[]
       | undefined,
+    public readonly actor: AdminActionActor,
   ) {}
 }

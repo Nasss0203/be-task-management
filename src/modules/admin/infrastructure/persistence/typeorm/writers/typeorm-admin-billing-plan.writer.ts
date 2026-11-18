@@ -6,6 +6,7 @@ import type {
   CreateAdminBillingPlanPriceVersionInput,
   UpdateAdminBillingPlanInput,
 } from '../../../../application/ports/admin-billing-plan-writer.port';
+import { insertAdminAction } from './typeorm-admin-action.recorder';
 
 interface ActiveBillingPlanPriceRow {
   id: string;
@@ -13,6 +14,7 @@ interface ActiveBillingPlanPriceRow {
   billingInterval: string;
   currency: string;
   provider: string;
+  amount: string;
 }
 
 @Injectable()
@@ -21,7 +23,9 @@ export class TypeOrmAdminBillingPlanWriter implements AdminBillingPlanWriter {
 
   async updatePlan(input: UpdateAdminBillingPlanInput): Promise<boolean> {
     return this.dataSource.transaction(async (manager) => {
-      const updatedPlans = await manager.query<Array<{ id: string }>>(
+      const [updatedPlans] = await manager.query<
+        [Array<{ id: string }>, number]
+      >(
         `
           UPDATE billing_plans
           SET
@@ -74,6 +78,14 @@ export class TypeOrmAdminBillingPlanWriter implements AdminBillingPlanWriter {
         );
       }
 
+      await insertAdminAction(manager, {
+        actor: input.actor,
+        action: 'BILLING_PLAN_UPDATED',
+        targetType: 'BILLING_PLAN',
+        targetId: input.planId,
+        changes: input.changes,
+      });
+
       return true;
     });
   }
@@ -89,7 +101,8 @@ export class TypeOrmAdminBillingPlanWriter implements AdminBillingPlanWriter {
             price.plan_id AS "planId",
             price.billing_interval AS "billingInterval",
             price.currency AS "currency",
-            price.provider AS "provider"
+            price.provider AS "provider",
+            price.amount AS "amount"
           FROM billing_plan_prices price
           WHERE price.id = $2
             AND price.plan_id = $1
@@ -178,6 +191,20 @@ export class TypeOrmAdminBillingPlanWriter implements AdminBillingPlanWriter {
         `,
         [currentPrice.planId],
       );
+
+      await insertAdminAction(manager, {
+        actor: input.actor,
+        action: 'BILLING_PRICE_VERSION_CREATED',
+        targetType: 'BILLING_PLAN',
+        targetId: currentPrice.planId,
+        changes: {
+          priceId: currentPrice.id,
+          newPriceId: insertedPrices[0].id,
+          billingInterval: currentPrice.billingInterval,
+          currency: currentPrice.currency,
+          amount: { from: Number(currentPrice.amount), to: input.amount },
+        },
+      });
 
       return true;
     });

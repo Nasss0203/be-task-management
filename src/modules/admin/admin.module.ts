@@ -63,6 +63,10 @@ import { AdminSessionsController } from './presentation/http/controllers/admin-s
 import { TypeOrmAdminSessionReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-session.reader';
 import { GetAdminSessionsOverviewHandler } from './application/queries/get-admin-sessions-overview/get-admin-sessions-overview.handler';
 import { ListAdminSessionsHandler } from './application/queries/list-admin-sessions/list-admin-sessions.handler';
+import { AdminActionsController } from './presentation/http/controllers/admin-actions.controller';
+import { TypeOrmAdminActionReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-action.reader';
+import { TypeOrmAdminActionRecorder } from './infrastructure/persistence/typeorm/writers/typeorm-admin-action.recorder';
+import { ListAdminActionsHandler } from './application/queries/list-admin-actions/list-admin-actions.handler';
 import { ContentModule } from 'src/modules/content/content.module';
 @Module({
   imports: [MarketplaceModule, BillingModule, ContentModule],
@@ -80,6 +84,7 @@ import { ContentModule } from 'src/modules/content/content.module';
     AdminPublishedSitesController,
     AdminActivitiesController,
     AdminSessionsController,
+    AdminActionsController,
   ],
   providers: [
     {
@@ -161,6 +166,18 @@ import { ContentModule } from 'src/modules/content/content.module';
     {
       provide: ADMIN_TYPES.applications.ListAdminSessionsHandler,
       useClass: ListAdminSessionsHandler,
+    },
+    {
+      provide: ADMIN_TYPES.ports.ActionRecorder,
+      useClass: TypeOrmAdminActionRecorder,
+    },
+    {
+      provide: ADMIN_TYPES.ports.ActionReader,
+      useClass: TypeOrmAdminActionReader,
+    },
+    {
+      provide: ADMIN_TYPES.applications.ListAdminActionsHandler,
+      useClass: ListAdminActionsHandler,
     },
     {
       provide: ADMIN_TYPES.ports.BillingWebhookReader,

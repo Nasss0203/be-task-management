@@ -8,8 +8,10 @@ import {
 import { BillingFeatureValueType } from 'src/modules/billing/domain/constants/billing-feature-value-type.constant';
 
 import { ADMIN_TYPES } from '../../../admin.types';
+import type { AdminActionChanges } from '../../../domain/audit/admin-action';
 import { AdminBillingPlanDetailResponseDto } from '../../dto/response/admin-billing-plan-detail.response.dto';
 import type {
+  AdminBillingPlanDetail,
   AdminBillingPlanFeatureSummary,
   AdminBillingPlanReader,
 } from '../../ports/admin-billing-plan-reader.port';
@@ -62,13 +64,19 @@ export class UpdateAdminBillingPlanHandler {
       currentPlan.features,
     );
 
-    const updated = await this.billingPlanWriter.updatePlan({
-      planId: currentPlan.id,
+    const next = {
       name,
       description,
       isActive: command.isActive ?? currentPlan.isActive,
       isPublic: command.isPublic ?? currentPlan.isPublic,
+    };
+
+    const updated = await this.billingPlanWriter.updatePlan({
+      planId: currentPlan.id,
+      ...next,
       features,
+      actor: command.actor,
+      changes: this.describeChanges(currentPlan, next, features),
     });
 
     if (!updated) {
@@ -84,6 +92,50 @@ export class UpdateAdminBillingPlanHandler {
     }
 
     return new AdminBillingPlanDetailResponseDto(updatedPlan);
+  }
+
+  private describeChanges(
+    currentPlan: AdminBillingPlanDetail,
+    next: Pick<
+      AdminBillingPlanDetail,
+      'name' | 'description' | 'isActive' | 'isPublic'
+    >,
+    features: readonly UpdateAdminBillingPlanFeatureInput[],
+  ): AdminActionChanges {
+    const changes: AdminActionChanges = {};
+
+    for (const field of [
+      'name',
+      'description',
+      'isActive',
+      'isPublic',
+    ] as const) {
+      if (currentPlan[field] !== next[field]) {
+        changes[field] = { from: currentPlan[field], to: next[field] };
+      }
+    }
+
+    const definitionsById = new Map(
+      currentPlan.features.map((feature) => [feature.id, feature]),
+    );
+
+    const featureChanges = features.flatMap((feature) => {
+      const definition = definitionsById.get(feature.featureId);
+
+      if (!definition || definition.value === feature.value) {
+        return [];
+      }
+
+      return [
+        { code: definition.code, from: definition.value, to: feature.value },
+      ];
+    });
+
+    if (featureChanges.length > 0) {
+      changes.features = featureChanges;
+    }
+
+    return changes;
   }
 
   private ensureRequestHasChanges(

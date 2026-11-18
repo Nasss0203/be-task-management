@@ -8,8 +8,12 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
+import { Auth } from 'src/common/decorator/auth.decorator';
+import type { IUserJwtPayload } from 'src/modules/identity/identity-jwt.types';
 
 import {
   AdminRateLimit,
@@ -39,6 +43,9 @@ import { ChangeTemplateCategoryStatusHandler } from 'src/modules/marketplace/app
 import { ListTemplateCategoriesHandler } from 'src/modules/marketplace/application/queries/template-category/list-template-categories/list-template-categories.handler';
 import { ListTemplateCategoriesQuery } from 'src/modules/marketplace/application/queries/template-category/list-template-categories/list-template-categories.query';
 import { AdminPermissionGuard } from '../guards/admin-permission.guard';
+import { ADMIN_TYPES } from '../../../admin.types';
+import type { AdminActionRecorder } from '../../../application/ports/admin-action-recorder.port';
+import { adminRequestClientOf } from '../admin-request-client';
 import { CreateTemplateCategoryRequest } from '../template-category/create-template-category.request';
 
 @Controller('admin/template-categories')
@@ -55,6 +62,9 @@ export class AdminTemplateCategoryController {
     private readonly updateTemplateCategoryHandler: UpdateTemplateCategoryHandler,
     @Inject(MARKETPLACE_TYPES.applications.ChangeTemplateCategoryStatusHandler)
     private readonly changeTemplateCategoryStatusHandler: ChangeTemplateCategoryStatusHandler,
+
+    @Inject(ADMIN_TYPES.ports.ActionRecorder)
+    private readonly actionRecorder: AdminActionRecorder,
   ) {}
 
   @Post()
@@ -64,8 +74,10 @@ export class AdminTemplateCategoryController {
   @ResponseMessage('Create template category successfully')
   async create(
     @Body() dto: CreateTemplateCategoryRequest,
+    @Auth() actor: IUserJwtPayload,
+    @Req() req: Request,
   ): Promise<TemplateCategoryResponseDto> {
-    return await this.createTemplateCategoryHandler.execute(
+    const category = await this.createTemplateCategoryHandler.execute(
       new CreateTemplateCategoryCommand(
         dto.name,
         dto.slug,
@@ -73,6 +85,21 @@ export class AdminTemplateCategoryController {
         dto.sort_order,
       ),
     );
+
+    await this.actionRecorder.record({
+      actor: { userId: actor.id, ...adminRequestClientOf(req) },
+      action: 'TEMPLATE_CATEGORY_CREATED',
+      targetType: 'TEMPLATE_CATEGORY',
+      targetId: category.id,
+      changes: {
+        name: dto.name,
+        slug: dto.slug,
+        description: dto.description,
+        sortOrder: dto.sort_order,
+      },
+    });
+
+    return category;
   }
 
   @Get()
@@ -91,11 +118,13 @@ export class AdminTemplateCategoryController {
   @RequireSystemRoles(SystemRole.SUPER_ADMIN)
   @RequireAdminPermissions(ADMIN_PERMISSIONS.TEMPLATE_CATEGORIES_UPDATE)
   @ResponseMessage('Update template category successfully')
-  updateCategory(
+  async updateCategory(
     @Param('categoryId', ParseUUIDPipe) categoryId: string,
     @Body() dto: UpdateTemplateCategoryRequestDto,
+    @Auth() actor: IUserJwtPayload,
+    @Req() req: Request,
   ): Promise<TemplateCategoryResponseDto> {
-    return this.updateTemplateCategoryHandler.execute(
+    const category = await this.updateTemplateCategoryHandler.execute(
       new UpdateTemplateCategoryCommand(
         categoryId,
         dto.name,
@@ -104,6 +133,21 @@ export class AdminTemplateCategoryController {
         dto.sort_order,
       ),
     );
+
+    await this.actionRecorder.record({
+      actor: { userId: actor.id, ...adminRequestClientOf(req) },
+      action: 'TEMPLATE_CATEGORY_UPDATED',
+      targetType: 'TEMPLATE_CATEGORY',
+      targetId: categoryId,
+      changes: {
+        name: dto.name,
+        slug: dto.slug,
+        description: dto.description,
+        sortOrder: dto.sort_order,
+      },
+    });
+
+    return category;
   }
 
   @Patch(':categoryId/status')
@@ -111,12 +155,24 @@ export class AdminTemplateCategoryController {
   @RequireSystemRoles(SystemRole.SUPER_ADMIN)
   @RequireAdminPermissions(ADMIN_PERMISSIONS.TEMPLATE_CATEGORIES_UPDATE)
   @ResponseMessage('Template category status updated successfully')
-  changeStatus(
+  async changeStatus(
     @Param('categoryId', ParseUUIDPipe) categoryId: string,
     @Body() dto: ChangeTemplateCategoryStatusRequestDto,
+    @Auth() actor: IUserJwtPayload,
+    @Req() req: Request,
   ): Promise<TemplateCategoryResponseDto> {
-    return this.changeTemplateCategoryStatusHandler.execute(
+    const category = await this.changeTemplateCategoryStatusHandler.execute(
       new ChangeTemplateCategoryStatusCommand(categoryId, dto.is_active),
     );
+
+    await this.actionRecorder.record({
+      actor: { userId: actor.id, ...adminRequestClientOf(req) },
+      action: 'TEMPLATE_CATEGORY_STATUS_CHANGED',
+      targetType: 'TEMPLATE_CATEGORY',
+      targetId: categoryId,
+      changes: { isActive: { to: dto.is_active } },
+    });
+
+    return category;
   }
 }

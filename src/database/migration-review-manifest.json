@@ -284,6 +284,10 @@
     {
       "file": "1794652858296-UpdateSchema.ts",
       "sha256": "9838af3448962624223171c7728e2410c1db49d4fe6691fde5f0563a9714188d"
+    },
+    {
+      "file": "1794989351256-CreateAdminActions.ts",
+      "sha256": "8716bcc3deebb0699bb3b538d731db9e484850eafd415072dc8e136146351247"
     }
   ]
 }

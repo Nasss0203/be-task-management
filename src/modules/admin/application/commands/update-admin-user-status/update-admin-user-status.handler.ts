@@ -26,6 +26,7 @@ export class UpdateAdminUserStatusHandler {
     const result = await this.adminUserWriter.updateUserStatus({
       userId: command.targetUserId,
       isActive: command.isActive,
+      actor: { userId: command.actorUserId, ...command.client },
     });
 
     if (!result) {

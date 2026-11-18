@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { Activity } from 'src/modules/activity/infrastructure/persistence/typeorm/entities/activity.orm-entity';
+import { AdminActionOrmEntity } from 'src/modules/admin/infrastructure/persistence/typeorm/entities/admin-action.orm-entity';
 import { AiAskEventOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-ask-event.orm-entity';
 import { AiConversationOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-conversation.orm-entity';
 import { AiGenerationOrmEntity } from 'src/modules/ai_assistant/infrastructure/persistence/typeorm/entities/ai-generation.orm-entity';
@@ -170,4 +171,5 @@ export const DATABASE_ENTITIES = [
   GoogleCalendarConnectionOrmEntity,
   GoogleCalendarSyncOrmEntity,
   SlackConnectionOrmEntity,
+  AdminActionOrmEntity,
 ];

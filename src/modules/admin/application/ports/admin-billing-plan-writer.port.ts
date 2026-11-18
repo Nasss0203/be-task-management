@@ -1,3 +1,8 @@
+import type {
+  AdminActionActor,
+  AdminActionChanges,
+} from '../../domain/audit/admin-action';
+
 export type AdminBillingPlanFeatureValue = boolean | number | string;
 
 export interface UpdateAdminBillingPlanFeatureInput {
@@ -12,12 +17,15 @@ export interface UpdateAdminBillingPlanInput {
   isActive: boolean;
   isPublic: boolean;
   features: readonly UpdateAdminBillingPlanFeatureInput[];
+  actor: AdminActionActor;
+  changes: AdminActionChanges;
 }
 
 export interface CreateAdminBillingPlanPriceVersionInput {
   planId: string;
   priceId: string;
   amount: number;
+  actor: AdminActionActor;
 }
 
 export interface AdminBillingPlanWriter {

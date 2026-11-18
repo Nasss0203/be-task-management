@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Inject, Put, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Put,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import type { Request } from 'express';
 
 import { Auth } from 'src/common/decorator/auth.decorator';
 import {
@@ -23,6 +32,9 @@ import { MARKETPLACE_TYPES } from 'src/modules/marketplace/marketplace.types';
 import { ADMIN_PERMISSIONS } from '../../../domain/permissions/admin-permission-code';
 import { RequireAdminPermissions } from '../decorators/require-admin-permissions.decorator';
 import { AdminPermissionGuard } from '../guards/admin-permission.guard';
+import { ADMIN_TYPES } from '../../../admin.types';
+import type { AdminActionRecorder } from '../../../application/ports/admin-action-recorder.port';
+import { adminRequestClientOf } from '../admin-request-client';
 
 @Controller('admin/marketplace/commission-rate')
 @UseGuards(AdminPermissionGuard)
@@ -35,6 +47,9 @@ export class AdminMarketplaceCommissionController {
       MARKETPLACE_TYPES.applications.UpdateMarketplaceCommissionRateHandler,
     )
     private readonly updateCommissionRateHandler: UpdateMarketplaceCommissionRateHandler,
+
+    @Inject(ADMIN_TYPES.ports.ActionRecorder)
+    private readonly actionRecorder: AdminActionRecorder,
   ) {}
 
   @Get()
@@ -53,12 +68,23 @@ export class AdminMarketplaceCommissionController {
   @RequireSystemRoles(SystemRole.SUPER_ADMIN)
   @RequireAdminPermissions(ADMIN_PERMISSIONS.BILLING_UPDATE)
   @ResponseMessage('Update marketplace commission rate successfully')
-  update(
+  async update(
     @Body() dto: UpdateMarketplaceCommissionRateRequestDto,
     @Auth() actor: IUserJwtPayload,
+    @Req() req: Request,
   ): Promise<MarketplaceCommissionRateResponseDto> {
-    return this.updateCommissionRateHandler.execute(
+    const rate = await this.updateCommissionRateHandler.execute(
       new UpdateMarketplaceCommissionRateCommand(dto.rateBps, actor.id),
     );
+
+    await this.actionRecorder.record({
+      actor: { userId: actor.id, ...adminRequestClientOf(req) },
+      action: 'MARKETPLACE_COMMISSION_UPDATED',
+      targetType: 'MARKETPLACE_COMMISSION',
+      targetId: null,
+      changes: { rateBps: { to: rate.rateBps } },
+    });
+
+    return rate;
   }
 }

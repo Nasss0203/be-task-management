@@ -7,8 +7,10 @@ import {
   ParseUUIDPipe,
   Patch,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import {
   AdminRateLimit,
@@ -37,6 +39,7 @@ import { ListAdminUsersQuery } from '../../../application/queries/list-admin-use
 import { ADMIN_PERMISSIONS } from '../../../domain/permissions/admin-permission-code';
 import { RequireAdminPermissions } from '../decorators/require-admin-permissions.decorator';
 import { AdminPermissionGuard } from '../guards/admin-permission.guard';
+import { adminRequestClientOf } from '../admin-request-client';
 
 @Controller('admin/users')
 @UseGuards(AdminPermissionGuard)
@@ -93,9 +96,15 @@ export class AdminUsersController {
     @Auth() actor: IUserJwtPayload,
     @Param('userId', ParseUUIDPipe) userId: string,
     @Body() dto: UpdateAdminUserStatusRequestDto,
+    @Req() req: Request,
   ): Promise<AdminUserStatusResponseDto> {
     return this.updateAdminUserStatusHandler.execute(
-      new UpdateAdminUserStatusCommand(actor.id, userId, dto.isActive),
+      new UpdateAdminUserStatusCommand(
+        actor.id,
+        userId,
+        dto.isActive,
+        adminRequestClientOf(req),
+      ),
     );
   }
 
@@ -108,9 +117,15 @@ export class AdminUsersController {
     @Auth() actor: IUserJwtPayload,
     @Param('userId', ParseUUIDPipe) userId: string,
     @Body() dto: UpdateAdminUserRoleRequestDto,
+    @Req() req: Request,
   ): Promise<AdminUserRoleResponseDto> {
     return this.updateAdminUserRoleHandler.execute(
-      new UpdateAdminUserRoleCommand(actor.id, userId, dto.systemRole),
+      new UpdateAdminUserRoleCommand(
+        actor.id,
+        userId,
+        dto.systemRole,
+        adminRequestClientOf(req),
+      ),
     );
   }
 }

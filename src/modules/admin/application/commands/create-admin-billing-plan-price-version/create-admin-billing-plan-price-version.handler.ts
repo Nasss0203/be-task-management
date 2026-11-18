@@ -63,6 +63,7 @@ export class CreateAdminBillingPlanPriceVersionHandler {
       planId: currentPlan.id,
       priceId: currentPrice.id,
       amount: command.amount,
+      actor: command.actor,
     });
 
     if (!created) {

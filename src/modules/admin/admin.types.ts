@@ -14,6 +14,8 @@ export const ADMIN_TYPES = {
     PublishedSiteReader: Symbol('AdminPublishedSiteReader'),
     ActivityReader: Symbol('AdminActivityReader'),
     SessionReader: Symbol('AdminSessionReader'),
+    ActionRecorder: Symbol('AdminActionRecorder'),
+    ActionReader: Symbol('AdminActionReader'),
   },
   applications: {
     GetAdminAccessHandler: Symbol('AdminGetAdminAccessHandler'),
@@ -74,6 +76,7 @@ export const ADMIN_TYPES = {
       'AdminGetAdminSessionsOverviewHandler',
     ),
     ListAdminSessionsHandler: Symbol('AdminListAdminSessionsHandler'),
+    ListAdminActionsHandler: Symbol('AdminListAdminActionsHandler'),
     ListAdminMarketplaceSalesHandler: Symbol(
       'AdminListAdminMarketplaceSalesHandler',
     ),

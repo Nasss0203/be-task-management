@@ -8,12 +8,16 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
+import { Auth } from 'src/common/decorator/auth.decorator';
 
 import { AdminRateLimit } from 'src/common/decorator/rate-limit.decorator';
 import { RequireSystemRoles } from 'src/common/decorator/require-system-roles.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
+import type { IUserJwtPayload } from 'src/modules/identity/identity-jwt.types';
 import { SystemRole } from 'src/modules/identity/identity.types';
 
 import { ADMIN_TYPES } from '../../../admin.types';
@@ -48,6 +52,7 @@ import { ListAdminBillingWebhookEventsQuery } from '../../../application/queries
 import { ADMIN_PERMISSIONS } from '../../../domain/permissions/admin-permission-code';
 import { RequireAdminPermissions } from '../decorators/require-admin-permissions.decorator';
 import { AdminPermissionGuard } from '../guards/admin-permission.guard';
+import { adminRequestClientOf } from '../admin-request-client';
 
 @Controller('admin/billing')
 @UseGuards(AdminPermissionGuard)
@@ -196,6 +201,8 @@ export class AdminBillingController {
     @Param('planId', new ParseUUIDPipe())
     planId: string,
     @Body() request: UpdateAdminBillingPlanRequestDto,
+    @Auth() actor: IUserJwtPayload,
+    @Req() req: Request,
   ): Promise<AdminBillingPlanDetailResponseDto> {
     return this.updateAdminBillingPlanHandler.execute(
       new UpdateAdminBillingPlanCommand(
@@ -208,6 +215,7 @@ export class AdminBillingController {
           featureId: feature.featureId,
           value: feature.value,
         })),
+        { userId: actor.id, ...adminRequestClientOf(req) },
       ),
     );
   }
@@ -224,12 +232,15 @@ export class AdminBillingController {
     priceId: string,
     @Body()
     request: CreateAdminBillingPlanPriceVersionRequestDto,
+    @Auth() actor: IUserJwtPayload,
+    @Req() req: Request,
   ): Promise<AdminBillingPlanDetailResponseDto> {
     return this.createAdminBillingPlanPriceVersionHandler.execute(
       new CreateAdminBillingPlanPriceVersionCommand(
         planId,
         priceId,
         request.amount,
+        { userId: actor.id, ...adminRequestClientOf(req) },
       ),
     );
   }

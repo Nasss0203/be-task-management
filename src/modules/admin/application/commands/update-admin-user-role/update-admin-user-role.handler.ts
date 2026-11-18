@@ -26,6 +26,7 @@ export class UpdateAdminUserRoleHandler {
     const result = await this.adminUserWriter.updateUserRole({
       userId: command.targetUserId,
       systemRole: command.systemRole,
+      actor: { userId: command.actorUserId, ...command.client },
     });
 
     if (!result) {
