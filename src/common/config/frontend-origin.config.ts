@@ -80,7 +80,7 @@ const isDevelopmentPublicSiteOrigin = (origin: URL): boolean => {
   return isValidPublicSiteSubdomain(subdomain);
 };
 
-const resolvePublicSiteDomain = (
+export const resolvePublicSiteDomain = (
   configService: ConfigService,
 ): string | null => {
   const value = configService.get<string>('PUBLIC_SITE_DOMAIN');

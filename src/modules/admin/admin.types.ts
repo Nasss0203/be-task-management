@@ -11,6 +11,7 @@ export const ADMIN_TYPES = {
     BillingPlanWriter: Symbol('AdminBillingPlanWriter'),
     MarketplaceSalesReader: Symbol('AdminMarketplaceSalesReader'),
     TemplateReader: Symbol('AdminTemplateReader'),
+    PublishedSiteReader: Symbol('AdminPublishedSiteReader'),
   },
   applications: {
     GetAdminAccessHandler: Symbol('AdminGetAdminAccessHandler'),
@@ -59,6 +60,13 @@ export const ADMIN_TYPES = {
       'AdminGetAdminTemplatesOverviewHandler',
     ),
     ListAdminTemplatesHandler: Symbol('AdminListAdminTemplatesHandler'),
+    GetAdminPublishedSitesOverviewHandler: Symbol(
+      'AdminGetAdminPublishedSitesOverviewHandler',
+    ),
+    ListAdminPublishedSitesHandler: Symbol(
+      'AdminListAdminPublishedSitesHandler',
+    ),
+    GetAdminPublishedSiteHandler: Symbol('AdminGetAdminPublishedSiteHandler'),
     ListAdminMarketplaceSalesHandler: Symbol(
       'AdminListAdminMarketplaceSalesHandler',
     ),

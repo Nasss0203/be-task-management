@@ -589,6 +589,9 @@ const ports = [
     CONTENT_TYPES.ports.PageSnapshotReader,
     CONTENT_TYPES.repositories.PageRepository,
     CONTENT_TYPES.repositories.PageBlockRepository,
+    CONTENT_TYPES.repositories.PublishedSiteRepository,
+    CONTENT_TYPES.repositories.PagePublicationRepository,
+    PublicationAvailabilityService,
 
     CONTENT_TYPES.applications.CreatePageHandler,
     CONTENT_TYPES.applications.CreatePageBlockHandler,

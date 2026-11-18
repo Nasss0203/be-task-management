@@ -28,7 +28,7 @@ describe('ListAdminAccessRolesHandler', () => {
     const [superAdmin, systemAdmin] = handler.execute();
 
     expect(superAdmin.permissions).toEqual(Object.values(ADMIN_PERMISSIONS));
-    expect(systemAdmin.permissions).toHaveLength(6);
+    expect(systemAdmin.permissions).toHaveLength(7);
     expect(systemAdmin.permissions).not.toContain(
       ADMIN_PERMISSIONS.USERS_ROLE_UPDATE,
     );

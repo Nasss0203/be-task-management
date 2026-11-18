@@ -51,8 +51,14 @@ import { AdminTemplatesController } from './presentation/http/controllers/admin-
 import { TypeOrmAdminTemplateReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-template.reader';
 import { GetAdminTemplatesOverviewHandler } from './application/queries/get-admin-templates-overview/get-admin-templates-overview.handler';
 import { ListAdminTemplatesHandler } from './application/queries/list-admin-templates/list-admin-templates.handler';
+import { AdminPublishedSitesController } from './presentation/http/controllers/admin-published-sites.controller';
+import { TypeOrmAdminPublishedSiteReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-published-site.reader';
+import { GetAdminPublishedSitesOverviewHandler } from './application/queries/get-admin-published-sites-overview/get-admin-published-sites-overview.handler';
+import { ListAdminPublishedSitesHandler } from './application/queries/list-admin-published-sites/list-admin-published-sites.handler';
+import { GetAdminPublishedSiteHandler } from './application/queries/get-admin-published-site/get-admin-published-site.handler';
+import { ContentModule } from 'src/modules/content/content.module';
 @Module({
-  imports: [MarketplaceModule, BillingModule],
+  imports: [MarketplaceModule, BillingModule, ContentModule],
   controllers: [
     AdminAccessController,
     AdminUsersController,
@@ -64,6 +70,7 @@ import { ListAdminTemplatesHandler } from './application/queries/list-admin-temp
     AdminMarketplaceCommissionController,
     AdminMarketplaceSalesController,
     AdminTemplatesController,
+    AdminPublishedSitesController,
   ],
   providers: [
     {
@@ -109,6 +116,22 @@ import { ListAdminTemplatesHandler } from './application/queries/list-admin-temp
     {
       provide: ADMIN_TYPES.applications.ListAdminTemplatesHandler,
       useClass: ListAdminTemplatesHandler,
+    },
+    {
+      provide: ADMIN_TYPES.ports.PublishedSiteReader,
+      useClass: TypeOrmAdminPublishedSiteReader,
+    },
+    {
+      provide: ADMIN_TYPES.applications.GetAdminPublishedSitesOverviewHandler,
+      useClass: GetAdminPublishedSitesOverviewHandler,
+    },
+    {
+      provide: ADMIN_TYPES.applications.ListAdminPublishedSitesHandler,
+      useClass: ListAdminPublishedSitesHandler,
+    },
+    {
+      provide: ADMIN_TYPES.applications.GetAdminPublishedSiteHandler,
+      useClass: GetAdminPublishedSiteHandler,
     },
     {
       provide: ADMIN_TYPES.ports.BillingWebhookReader,
