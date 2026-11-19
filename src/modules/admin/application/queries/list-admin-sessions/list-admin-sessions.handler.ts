@@ -20,6 +20,7 @@ export class ListAdminSessionsHandler {
       limit: query.limit,
       search: query.search,
       systemRole: query.systemRole,
+      userId: query.userId,
     });
 
     return {

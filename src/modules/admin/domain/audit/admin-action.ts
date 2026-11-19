@@ -10,6 +10,8 @@ export const ADMIN_ACTIONS = [
   'TEMPLATE_PURCHASE_RECONCILED',
   'PUBLISHED_SITE_DISABLED',
   'PUBLISHED_SITE_RESTORED',
+  'SESSION_REVOKED',
+  'USER_SESSIONS_REVOKED',
 ] as const;
 
 export type AdminAction = (typeof ADMIN_ACTIONS)[number];

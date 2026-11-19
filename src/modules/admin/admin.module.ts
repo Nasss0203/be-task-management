@@ -66,6 +66,12 @@ import { AdminSessionsController } from './presentation/http/controllers/admin-s
 import { TypeOrmAdminSessionReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-session.reader';
 import { GetAdminSessionsOverviewHandler } from './application/queries/get-admin-sessions-overview/get-admin-sessions-overview.handler';
 import { ListAdminSessionsHandler } from './application/queries/list-admin-sessions/list-admin-sessions.handler';
+import { GetAdminUserIpHistoryHandler } from './application/queries/get-admin-user-ip-history/get-admin-user-ip-history.handler';
+import {
+  RevokeAdminSessionHandler,
+  RevokeAdminUserSessionsHandler,
+} from './application/commands/revoke-admin-session/revoke-admin-session.handler';
+import { TypeOrmAdminSessionWriter } from './infrastructure/persistence/typeorm/writers/typeorm-admin-session.writer';
 import { AdminActionsController } from './presentation/http/controllers/admin-actions.controller';
 import { TypeOrmAdminActionReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-action.reader';
 import { TypeOrmAdminActionRecorder } from './infrastructure/persistence/typeorm/writers/typeorm-admin-action.recorder';
@@ -181,6 +187,22 @@ import { ContentModule } from 'src/modules/content/content.module';
     {
       provide: ADMIN_TYPES.applications.ListAdminSessionsHandler,
       useClass: ListAdminSessionsHandler,
+    },
+    {
+      provide: ADMIN_TYPES.applications.GetAdminUserIpHistoryHandler,
+      useClass: GetAdminUserIpHistoryHandler,
+    },
+    {
+      provide: ADMIN_TYPES.ports.SessionWriter,
+      useClass: TypeOrmAdminSessionWriter,
+    },
+    {
+      provide: ADMIN_TYPES.applications.RevokeAdminSessionHandler,
+      useClass: RevokeAdminSessionHandler,
+    },
+    {
+      provide: ADMIN_TYPES.applications.RevokeAdminUserSessionsHandler,
+      useClass: RevokeAdminUserSessionsHandler,
     },
     {
       provide: ADMIN_TYPES.ports.ActionRecorder,

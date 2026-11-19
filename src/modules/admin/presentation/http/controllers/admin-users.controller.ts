@@ -6,6 +6,7 @@ import {
   Param,
   ParseUUIDPipe,
   Patch,
+  Post,
   Query,
   Req,
   UseGuards,
@@ -21,6 +22,8 @@ import { ResponseMessage } from 'src/common/decorator/response-message.decorator
 import type { IUserJwtPayload } from 'src/modules/identity/identity-jwt.types';
 import { SystemRole } from 'src/modules/identity/identity.types';
 import { ADMIN_TYPES } from '../../../admin.types';
+import { RevokeAdminUserSessionsCommand } from '../../../application/commands/revoke-admin-session/revoke-admin-session.command';
+import { RevokeAdminUserSessionsHandler } from '../../../application/commands/revoke-admin-session/revoke-admin-session.handler';
 import { UpdateAdminUserRoleCommand } from '../../../application/commands/update-admin-user-role/update-admin-user-role.command';
 import { UpdateAdminUserRoleHandler } from '../../../application/commands/update-admin-user-role/update-admin-user-role.handler';
 import { UpdateAdminUserStatusCommand } from '../../../application/commands/update-admin-user-status/update-admin-user-status.command';
@@ -32,6 +35,10 @@ import { AdminUserDetailResponseDto } from '../../../application/dto/response/ad
 import { AdminUserListResponseDto } from '../../../application/dto/response/admin-user-list.response.dto';
 import { AdminUserRoleResponseDto } from '../../../application/dto/response/admin-user-role.response.dto';
 import { AdminUserStatusResponseDto } from '../../../application/dto/response/admin-user-status.response.dto';
+import type { AdminUserIpHistory } from '../../../application/ports/admin-session-reader.port';
+import type { RevokedAdminUserSessions } from '../../../application/ports/admin-session-writer.port';
+import { GetAdminUserIpHistoryHandler } from '../../../application/queries/get-admin-user-ip-history/get-admin-user-ip-history.handler';
+import { GetAdminUserIpHistoryQuery } from '../../../application/queries/get-admin-user-ip-history/get-admin-user-ip-history.query';
 import { GetAdminUserHandler } from '../../../application/queries/get-admin-user/get-admin-user.handler';
 import { GetAdminUserQuery } from '../../../application/queries/get-admin-user/get-admin-user.query';
 import { ListAdminUsersHandler } from '../../../application/queries/list-admin-users/list-admin-users.handler';
@@ -55,6 +62,12 @@ export class AdminUsersController {
     private readonly updateAdminUserStatusHandler: UpdateAdminUserStatusHandler,
     @Inject(ADMIN_TYPES.applications.UpdateAdminUserRoleHandler)
     private readonly updateAdminUserRoleHandler: UpdateAdminUserRoleHandler,
+
+    @Inject(ADMIN_TYPES.applications.RevokeAdminUserSessionsHandler)
+    private readonly revokeUserSessionsHandler: RevokeAdminUserSessionsHandler,
+
+    @Inject(ADMIN_TYPES.applications.GetAdminUserIpHistoryHandler)
+    private readonly getUserIpHistoryHandler: GetAdminUserIpHistoryHandler,
   ) {}
 
   @Get()
@@ -85,6 +98,19 @@ export class AdminUsersController {
     @Param('userId', ParseUUIDPipe) userId: string,
   ): Promise<AdminUserDetailResponseDto> {
     return this.getAdminUserHandler.execute(new GetAdminUserQuery(userId));
+  }
+
+  @Get(':userId/ip-history')
+  @AdminRateLimit()
+  @RequireSystemRoles(SystemRole.SYSTEM_ADMIN, SystemRole.SUPER_ADMIN)
+  @RequireAdminPermissions(ADMIN_PERMISSIONS.AUDIT_READ)
+  @ResponseMessage('Get admin user IP history successfully')
+  getUserIpHistory(
+    @Param('userId', ParseUUIDPipe) userId: string,
+  ): Promise<AdminUserIpHistory> {
+    return this.getUserIpHistoryHandler.execute(
+      new GetAdminUserIpHistoryQuery(userId),
+    );
   }
 
   @Patch(':userId/status')
@@ -124,6 +150,25 @@ export class AdminUsersController {
         actor.id,
         userId,
         dto.systemRole,
+        adminRequestClientOf(req),
+      ),
+    );
+  }
+
+  @Post(':userId/sessions/revoke')
+  @StrictWriteRateLimit()
+  @RequireSystemRoles(SystemRole.SUPER_ADMIN)
+  @RequireAdminPermissions(ADMIN_PERMISSIONS.SESSIONS_REVOKE)
+  @ResponseMessage('Revoke user sessions successfully')
+  revokeUserSessions(
+    @Auth() actor: IUserJwtPayload,
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Req() req: Request,
+  ): Promise<RevokedAdminUserSessions> {
+    return this.revokeUserSessionsHandler.execute(
+      new RevokeAdminUserSessionsCommand(
+        actor.id,
+        userId,
         adminRequestClientOf(req),
       ),
     );

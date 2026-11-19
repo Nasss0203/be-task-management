@@ -22,6 +22,7 @@ export const ADMIN_PERMISSIONS = {
 
   // Audit
   AUDIT_READ: 'admin.audit.read',
+  SESSIONS_REVOKE: 'admin.sessions.revoke',
 
   // Templates
   TEMPLATES_READ: 'admin.templates.read',
