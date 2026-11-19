@@ -288,6 +288,10 @@
     {
       "file": "1794989351256-CreateAdminActions.ts",
       "sha256": "8716bcc3deebb0699bb3b538d731db9e484850eafd415072dc8e136146351247"
+    },
+    {
+      "file": "1795068464827-AddPublishedSiteModeration.ts",
+      "sha256": "dd77306d9041dcd8c2567a5f0585baaed6b0ac056fb5416c7ac8b5543eb408c4"
     }
   ]
 }

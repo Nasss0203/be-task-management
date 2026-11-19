@@ -13,6 +13,13 @@ export class PublishedSiteMapper {
       updatedAt: orm.updated_at,
       disabledAt: orm.disabled_at,
       allowUpdates: orm.allow_updates,
+      moderation: orm.moderation_disabled_at
+        ? {
+            disabledAt: orm.moderation_disabled_at,
+            disabledBy: orm.moderation_disabled_by ?? null,
+            reason: orm.moderation_reason ?? null,
+          }
+        : null,
     });
   }
 

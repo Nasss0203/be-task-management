@@ -43,6 +43,9 @@ const ACTIONS_FROM = `
   LEFT JOIN template_categories target_category
     ON admin_action.target_type = 'TEMPLATE_CATEGORY'
     AND target_category.id = admin_action.target_id
+  LEFT JOIN published_sites target_site
+    ON admin_action.target_type = 'PUBLISHED_SITE'
+    AND target_site.id = admin_action.target_id
   WHERE admin_action.created_at >= $1
     AND admin_action.created_at <= $2
     AND ($3::uuid IS NULL OR admin_action.actor_user_id = $3)
@@ -89,7 +92,8 @@ export class TypeOrmAdminActionReader implements AdminActionReader {
           COALESCE(
             target_user.email,
             target_plan.name,
-            target_category.name
+            target_category.name,
+            target_site.subdomain
           ) AS "targetLabel",
           admin_action.changes AS "changes",
           host(admin_action.ip_address) AS "ipAddress",

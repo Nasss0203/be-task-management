@@ -65,4 +65,29 @@ export class PublishedSiteOrmEntity {
 
   @Column({ name: 'disabled_at', type: 'timestamptz', nullable: true })
   disabled_at: Date | null;
+
+  @Column({
+    name: 'moderation_disabled_at',
+    type: 'timestamptz',
+    nullable: true,
+  })
+  moderation_disabled_at: Date | null;
+
+  @Column({ name: 'moderation_disabled_by', type: 'uuid', nullable: true })
+  moderation_disabled_by: string | null;
+
+  @ManyToOne(() => User, { onDelete: 'SET NULL' })
+  @JoinColumn({
+    name: 'moderation_disabled_by',
+    foreignKeyConstraintName: 'FK_published_sites_moderation_disabled_by',
+  })
+  moderationDisabledBy: User | null;
+
+  @Column({
+    name: 'moderation_reason',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
+  moderation_reason: string | null;
 }

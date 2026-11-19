@@ -20,7 +20,21 @@ type RestorePublishedSiteProps = {
   updatedAt: Date;
   disabledAt: Date | null;
   allowUpdates?: boolean;
+  moderation?: PublishedSiteModeration | null;
 };
+
+export type PublishedSiteModeration = {
+  disabledAt: Date;
+  disabledBy: string | null;
+  reason: string | null;
+};
+
+export class PublishedSiteDisabledByAdminError extends Error {
+  constructor() {
+    super('Published site was disabled by an administrator');
+    this.name = 'PublishedSiteDisabledByAdminError';
+  }
+}
 
 export class PublishedSite {
   private constructor(
@@ -33,6 +47,7 @@ export class PublishedSite {
     private updatedAt: Date,
     private disabledAt: Date | null,
     private allowUpdates: boolean,
+    private readonly moderation: PublishedSiteModeration | null = null,
   ) {}
 
   static create(props: CreatePublishedSiteProps): PublishedSite {
@@ -62,6 +77,7 @@ export class PublishedSite {
       props.updatedAt,
       props.disabledAt,
       props.allowUpdates ?? false,
+      props.moderation ?? null,
     );
   }
 
@@ -76,6 +92,7 @@ export class PublishedSite {
   }
 
   enable(): void {
+    if (this.isDisabledByAdmin()) throw new PublishedSiteDisabledByAdminError();
     this.disabledAt = null;
     this.updatedAt = new Date();
   }
@@ -111,5 +128,11 @@ export class PublishedSite {
   }
   getAllowUpdates(): boolean {
     return this.allowUpdates;
+  }
+  getModeration(): PublishedSiteModeration | null {
+    return this.moderation;
+  }
+  isDisabledByAdmin(): boolean {
+    return this.moderation !== null;
   }
 }

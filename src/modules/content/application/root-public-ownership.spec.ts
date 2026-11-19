@@ -893,6 +893,41 @@ describe('root-owned public sites', () => {
     expect(home.getPublicSubdomain()).toBe('home');
   });
 
+  it('keeps a site taken down by an administrator offline when the owner publishes again', async () => {
+    const home = await createPage('Home');
+    const siteId = (await publishRoot(home)).site_id;
+    const site = sites.get(siteId)!;
+    const disabledAt = new Date('2026-11-19T06:00:00.000Z');
+    sites.set(
+      siteId,
+      PublishedSite.restore({
+        id: site.getId(),
+        workspaceId: site.getWorkspaceId(),
+        rootPageId: site.getRootPageId(),
+        subdomain: site.getSubdomain(),
+        createdBy: site.getCreatedBy(),
+        createdAt: site.getCreatedAt(),
+        updatedAt: disabledAt,
+        disabledAt,
+        allowUpdates: site.getAllowUpdates(),
+        moderation: { disabledAt, disabledBy: 'admin', reason: 'Spam' },
+      }),
+    );
+    const republish = new RepublishSiteHandler(
+      publicationRepo,
+      siteRepo,
+      uow,
+      tree,
+      entitlements,
+    );
+
+    await expect(publishRoot(home)).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(
+      republish.execute(new RepublishSiteCommand('user', home.getId(), siteId)),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(sites.get(siteId)?.getDisabledAt()).toEqual(disabledAt);
+  });
+
   it('rolls back a failed move with a transactional repository', async () => {
     const home = await createPage('Home');
     const about = await createPage('About', home.getId());
