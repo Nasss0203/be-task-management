@@ -30,10 +30,12 @@ import { IssueAuthTokenServiceImpl } from './application/services/issue-auth-tok
 import { UserProfilePreferenceServiceImpl } from './application/services/user-profile-preference.service';
 import { ValidateUserAuthServiceImpl } from './application/services/validate-user-auth.service';
 import { IDENTITY_TYPES } from './identity.types';
+import { LoginAttemptOrmEntity } from './infrastructure/persistence/typeorm/entities/login-attempt.orm-entity';
 import { RefreshToken } from './infrastructure/persistence/typeorm/entities/refresh-token.orm-entity';
 import { UserAuthIdentityOrmEntity } from './infrastructure/persistence/typeorm/entities/user-auth-identity.orm-entity';
 import { UserProfile } from './infrastructure/persistence/typeorm/entities/user-profile.orm-entity';
 import { User } from './infrastructure/persistence/typeorm/entities/user.orm-entity';
+import { TypeOrmLoginAttemptRecorder } from './infrastructure/persistence/typeorm/recorders/typeorm-login-attempt.recorder';
 import { TypeOrmRefreshTokenRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-refresh-token.repository';
 import { TypeOrmUserAuthIdentityRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-user-auth-identity.repository';
 import { TypeOrmUserProfileRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-user-profile.repository';
@@ -51,6 +53,7 @@ import { UsersController } from './presentation/http/controllers/users.controlle
       UserProfile,
       RefreshToken,
       UserAuthIdentityOrmEntity,
+      LoginAttemptOrmEntity,
     ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -81,6 +84,10 @@ import { UsersController } from './presentation/http/controllers/users.controlle
     {
       provide: IDENTITY_TYPES.ports.AvatarStorage,
       useClass: S3AvatarStorageAdapter,
+    },
+    {
+      provide: IDENTITY_TYPES.ports.LoginAttemptRecorder,
+      useClass: TypeOrmLoginAttemptRecorder,
     },
     GetProfileAuthHandler,
     GoogleAuthHandler,

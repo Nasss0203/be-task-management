@@ -63,6 +63,8 @@ import { AdminActivitiesController } from './presentation/http/controllers/admin
 import { TypeOrmAdminActivityReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-activity.reader';
 import { ListAdminActivitiesHandler } from './application/queries/list-admin-activities/list-admin-activities.handler';
 import { AdminSessionsController } from './presentation/http/controllers/admin-sessions.controller';
+import { AdminLoginAttemptsController } from './presentation/http/controllers/admin-login-attempts.controller';
+import { ListAdminLoginAttemptsHandler } from './application/queries/list-admin-login-attempts/list-admin-login-attempts.handler';
 import { TypeOrmAdminSessionReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-session.reader';
 import { GetAdminSessionsOverviewHandler } from './application/queries/get-admin-sessions-overview/get-admin-sessions-overview.handler';
 import { ListAdminSessionsHandler } from './application/queries/list-admin-sessions/list-admin-sessions.handler';
@@ -93,6 +95,7 @@ import { ContentModule } from 'src/modules/content/content.module';
     AdminPublishedSitesController,
     AdminActivitiesController,
     AdminSessionsController,
+    AdminLoginAttemptsController,
     AdminActionsController,
   ],
   providers: [
@@ -191,6 +194,10 @@ import { ContentModule } from 'src/modules/content/content.module';
     {
       provide: ADMIN_TYPES.applications.GetAdminUserIpHistoryHandler,
       useClass: GetAdminUserIpHistoryHandler,
+    },
+    {
+      provide: ADMIN_TYPES.applications.ListAdminLoginAttemptsHandler,
+      useClass: ListAdminLoginAttemptsHandler,
     },
     {
       provide: ADMIN_TYPES.ports.SessionWriter,

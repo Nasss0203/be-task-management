@@ -130,6 +130,10 @@ const createIssueTokenServiceMock = () => ({
   issueTokens: jest.fn(),
 });
 
+const createLoginAttemptRecorderMock = () => ({
+  record: jest.fn().mockResolvedValue(undefined),
+});
+
 const createWorkspaceHandlerMock = () =>
   ({
     execute: jest.fn(),
@@ -229,7 +233,12 @@ describe('Auth services', () => {
     it('issues tokens when user is active', async () => {
       const userRepository = createUserRepositoryMock();
       const issueTokenService = createIssueTokenServiceMock();
-      const service = new LoginAuthHandler(userRepository, issueTokenService);
+      const loginAttemptRecorder = createLoginAttemptRecorderMock();
+      const service = new LoginAuthHandler(
+        userRepository,
+        issueTokenService,
+        loginAttemptRecorder,
+      );
       const user = createUser();
 
       userRepository.findByEmailAndUsername.mockResolvedValue(user);
@@ -258,12 +267,24 @@ describe('Auth services', () => {
         ipAddress: '203.0.113.5',
         userAgent: 'Jest browser',
       });
+      expect(loginAttemptRecorder.record).toHaveBeenCalledWith({
+        method: 'PASSWORD',
+        result: 'SUCCESS',
+        userId: user.id,
+        attemptedEmail: user.email,
+        client: { ipAddress: '203.0.113.5', userAgent: 'Jest browser' },
+      });
     });
 
     it('throws when user is missing or inactive', async () => {
       const userRepository = createUserRepositoryMock();
       const issueTokenService = createIssueTokenServiceMock();
-      const service = new LoginAuthHandler(userRepository, issueTokenService);
+      const loginAttemptRecorder = createLoginAttemptRecorderMock();
+      const service = new LoginAuthHandler(
+        userRepository,
+        issueTokenService,
+        loginAttemptRecorder,
+      );
 
       userRepository.findByEmailAndUsername.mockResolvedValue(null);
 
@@ -278,12 +299,55 @@ describe('Auth services', () => {
         ),
       ).rejects.toBeInstanceOf(HttpException);
       expect(issueTokenService.issueTokens).not.toHaveBeenCalled();
+      expect(loginAttemptRecorder.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          result: 'FAILED',
+          reason: 'USER_NOT_FOUND',
+          userId: null,
+        }),
+      );
+    });
+
+    it('records a locked account when the user is inactive', async () => {
+      const userRepository = createUserRepositoryMock();
+      const loginAttemptRecorder = createLoginAttemptRecorderMock();
+      const service = new LoginAuthHandler(
+        userRepository,
+        createIssueTokenServiceMock() as any,
+        loginAttemptRecorder,
+      );
+      const user = createUser({ isActive: false });
+
+      userRepository.findByEmailAndUsername.mockResolvedValue(user);
+
+      await expect(
+        service.execute(
+          new LoginAuthCommand({
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            systemRole: user.systemRole,
+          }),
+        ),
+      ).rejects.toBeInstanceOf(HttpException);
+      expect(loginAttemptRecorder.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          result: 'FAILED',
+          reason: 'ACCOUNT_LOCKED',
+          userId: user.id,
+        }),
+      );
     });
 
     it('rejects an unverified non-super-admin user', async () => {
       const userRepository = createUserRepositoryMock();
       const issueTokenService = createIssueTokenServiceMock();
-      const service = new LoginAuthHandler(userRepository, issueTokenService);
+      const loginAttemptRecorder = createLoginAttemptRecorderMock();
+      const service = new LoginAuthHandler(
+        userRepository,
+        issueTokenService,
+        loginAttemptRecorder,
+      );
       const user = createUser({ isEmailVerified: false });
 
       userRepository.findByEmailAndUsername.mockResolvedValue(user);
@@ -560,6 +624,23 @@ describe('Auth services', () => {
       );
     });
 
+    it.each([
+      ['USER_NOT_FOUND', null],
+      ['ACCOUNT_LOCKED', createUser({ isActive: false })],
+      ['PASSWORD_NOT_SET', createUser({ passwordHash: null })],
+      ['WRONG_PASSWORD', createUser()],
+    ])('reports %s as the credential failure reason', async (reason, user) => {
+      const userRepository = createUserRepositoryMock();
+      const service = new ValidateUserAuthServiceImpl(userRepository);
+
+      userRepository.findByEmail.mockResolvedValue(user);
+      jest.spyOn(service, 'comparePassword').mockReturnValue(false);
+
+      await expect(
+        service.checkCredentials('user@example.com', 'wrong-password'),
+      ).resolves.toEqual({ user, reason });
+    });
+
     it('returns null when the password is invalid', async () => {
       const userRepository = createUserRepositoryMock();
       const service = new ValidateUserAuthServiceImpl(userRepository);
@@ -638,6 +719,7 @@ describe('Auth services', () => {
       const userAuthIdentityRepository = createUserAuthIdentityRepositoryMock();
       const issueTokenService = createIssueTokenServiceMock();
       const createWorkspaceHandler = createWorkspaceHandlerMock();
+      const loginAttemptRecorder = createLoginAttemptRecorderMock();
       const transactionContext = { transaction: 'context' };
       const uow =
         uowOverride ??
@@ -651,10 +733,12 @@ describe('Auth services', () => {
         issueTokenService,
         createWorkspaceHandler,
         uow as any,
+        loginAttemptRecorder,
       );
 
       return {
         service,
+        loginAttemptRecorder,
         userRepository,
         userProfileRepository,
         userAuthIdentityRepository,
@@ -668,6 +752,7 @@ describe('Auth services', () => {
     it('loads an active user by identity, updates metadata, and issues tokens', async () => {
       const {
         service,
+        loginAttemptRecorder,
         userRepository,
         userAuthIdentityRepository,
         issueTokenService,
@@ -727,11 +812,19 @@ describe('Auth services', () => {
       );
       expect(userRepository.findByGoogleId).not.toHaveBeenCalled();
       expect(userRepository.findByEmail).not.toHaveBeenCalled();
+      expect(loginAttemptRecorder.record).toHaveBeenCalledWith({
+        method: 'GOOGLE',
+        result: 'SUCCESS',
+        userId: user.id,
+        attemptedEmail: ' Updated@Example.COM ',
+        client: undefined,
+      });
     });
 
     it('rejects an inactive identity user without updating metadata or issuing tokens', async () => {
       const {
         service,
+        loginAttemptRecorder,
         userRepository,
         userAuthIdentityRepository,
         issueTokenService,
@@ -760,6 +853,13 @@ describe('Auth services', () => {
       ).not.toHaveBeenCalled();
       expect(issueTokenService.issueTokens).not.toHaveBeenCalled();
       expect(userRepository.findByEmail).not.toHaveBeenCalled();
+      expect(loginAttemptRecorder.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          method: 'GOOGLE',
+          result: 'FAILED',
+          reason: 'ACCOUNT_LOCKED',
+        }),
+      );
     });
 
     it('rejects when the identity disappears during metadata update', async () => {
@@ -900,6 +1000,7 @@ describe('Auth services', () => {
     it('returns conflict for an existing email without linking the user', async () => {
       const {
         service,
+        loginAttemptRecorder,
         userRepository,
         userAuthIdentityRepository,
         issueTokenService,
@@ -927,6 +1028,13 @@ describe('Auth services', () => {
       expect(userAuthIdentityRepository.create).not.toHaveBeenCalled();
       expect(issueTokenService.issueTokens).not.toHaveBeenCalled();
       expect(userRepository.findByGoogleId).not.toHaveBeenCalled();
+      expect(loginAttemptRecorder.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          result: 'FAILED',
+          reason: 'GOOGLE_EMAIL_CONFLICT',
+          attemptedEmail: existingUser.email,
+        }),
+      );
     });
 
     it('rejects a new identity when Google does not provide an email', async () => {
@@ -957,6 +1065,7 @@ describe('Auth services', () => {
     it('rejects a new identity when the Google email is not verified', async () => {
       const {
         service,
+        loginAttemptRecorder,
         userRepository,
         userAuthIdentityRepository,
         issueTokenService,
@@ -977,6 +1086,12 @@ describe('Auth services', () => {
       expect(userRepository.createGoogleUser).not.toHaveBeenCalled();
       expect(userAuthIdentityRepository.create).not.toHaveBeenCalled();
       expect(issueTokenService.issueTokens).not.toHaveBeenCalled();
+      expect(loginAttemptRecorder.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          result: 'FAILED',
+          reason: 'GOOGLE_EMAIL_UNVERIFIED',
+        }),
+      );
     });
 
     it('recovers a provisioning race by re-reading the stable identity key', async () => {

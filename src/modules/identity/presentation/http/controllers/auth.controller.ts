@@ -40,7 +40,7 @@ import {
 } from 'src/modules/identity/application/dto/user/create-user.dto';
 import { IUserJwtPayload } from 'src/modules/identity/identity-jwt.types';
 import { AuthService } from 'src/modules/identity/application/services/auth.service';
-import { type AuthClientInfo } from 'src/modules/identity/application/services/issue-auth-token.service';
+import { authClientOf } from '../auth-client';
 import { GetProfileAuthHandler } from 'src/modules/identity/application/queries/get-profile-auth/get-profile-auth.handler';
 import { GetProfileAuthQuery } from 'src/modules/identity/application/queries/get-profile-auth/get-profile-auth.query';
 import { GoogleAuthCommand } from 'src/modules/identity/application/commands/google-auth/google-auth.command';
@@ -74,17 +74,6 @@ type RefreshTokenRequest = Omit<Request, 'cookies'> & {
 type RefreshTokenBody = {
   refresh_token?: string;
 };
-
-const MAX_USER_AGENT_LENGTH = 255;
-
-function authClientOf(req: Pick<Request, 'ip' | 'headers'>): AuthClientInfo {
-  const userAgent = req.headers['user-agent'];
-
-  return {
-    ipAddress: req.ip ?? null,
-    userAgent: userAgent ? userAgent.slice(0, MAX_USER_AGENT_LENGTH) : null,
-  };
-}
 
 @Controller('auth')
 export class AuthController {

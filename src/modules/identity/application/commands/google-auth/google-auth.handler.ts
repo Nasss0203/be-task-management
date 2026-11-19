@@ -25,6 +25,10 @@ import {
   type AuthClientInfo,
   IssueAuthTokenServiceImpl,
 } from '../../services/issue-auth-token.service';
+import type {
+  LoginAttemptRecorder,
+  LoginFailureReason,
+} from '../../ports/login-attempt-recorder.port';
 import { GoogleAuthCommand } from './google-auth.command';
 import { GOOGLE_OIDC_ISSUER } from './google-auth.constants';
 
@@ -49,9 +53,43 @@ export class GoogleAuthHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+
+    @Inject(IDENTITY_TYPES.ports.LoginAttemptRecorder)
+    private readonly loginAttemptRecorder: LoginAttemptRecorder,
   ) {}
 
   async execute(command: GoogleAuthCommand): Promise<GoogleAuthResult> {
+    const attempt = {
+      method: 'GOOGLE' as const,
+      attemptedEmail: command.googleUser.email,
+      client: command.client,
+    };
+
+    try {
+      const result = await this.authenticate(command);
+
+      await this.loginAttemptRecorder.record({
+        ...attempt,
+        result: 'SUCCESS',
+        userId: result.user.id,
+      });
+
+      return result;
+    } catch (error: unknown) {
+      await this.loginAttemptRecorder.record({
+        ...attempt,
+        result: 'FAILED',
+        reason: this.failureReasonOf(error),
+        userId: null,
+      });
+
+      throw error;
+    }
+  }
+
+  private async authenticate(
+    command: GoogleAuthCommand,
+  ): Promise<GoogleAuthResult> {
     const { googleUser } = command;
     const subject = googleUser.subject.trim();
     const normalizedEmail = this.normalizeEmail(googleUser.email);
@@ -268,6 +306,23 @@ export class GoogleAuthHandler {
       ...tokens,
       user,
     };
+  }
+
+  private failureReasonOf(error: unknown): LoginFailureReason {
+    if (error instanceof ConflictException) {
+      return 'GOOGLE_EMAIL_CONFLICT';
+    }
+
+    if (error instanceof ForbiddenException) {
+      const response = error.getResponse();
+      const isInactive =
+        typeof response === 'object' &&
+        (response as { code?: unknown }).code === ErrorCode.USER_INACTIVE;
+
+      return isInactive ? 'ACCOUNT_LOCKED' : 'GOOGLE_EMAIL_UNVERIFIED';
+    }
+
+    return 'GOOGLE_FAILED';
   }
 
   private normalizeEmail(email: string | null): string | null {

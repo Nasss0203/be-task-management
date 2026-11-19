@@ -14,6 +14,7 @@ export const IDENTITY_TYPES = {
   },
   ports: {
     AvatarStorage: Symbol('IdentityAvatarStorage'),
+    LoginAttemptRecorder: Symbol('IdentityLoginAttemptRecorder'),
   },
 };
 

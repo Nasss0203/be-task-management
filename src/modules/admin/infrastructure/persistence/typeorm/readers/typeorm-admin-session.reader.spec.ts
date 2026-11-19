@@ -121,3 +121,104 @@ describe('TypeOrmAdminSessionReader.getUserIpHistory', () => {
     });
   });
 });
+
+describe('TypeOrmAdminSessionReader.listLoginAttempts', () => {
+  const since = '2026-08-21T00:00:00.000Z';
+
+  it('reads the last 90 days with filters and maps the user', async () => {
+    const { reader, query } = createReader(
+      [{ exists: true, since }],
+      [
+        {
+          id: 'attempt-1',
+          method: 'PASSWORD',
+          result: 'FAILED',
+          reason: 'WRONG_PASSWORD',
+          attemptedEmail: 'user@example.com',
+          ipAddress: '203.0.113.5',
+          userAgent: 'Jest browser',
+          createdAt: '2026-11-19T08:00:00.000Z',
+          userId: 'user-1',
+          username: 'user',
+          email: 'user@example.com',
+        },
+      ],
+      [{ total: '1' }],
+    );
+
+    const result = await reader.listLoginAttempts({
+      page: 1,
+      limit: 20,
+      result: 'FAILED',
+      method: 'PASSWORD',
+      search: ' 203.0 ',
+      userId: 'user-1',
+    });
+
+    const [listSql, listParameters] = query.mock.calls[1] as [
+      string,
+      unknown[],
+    ];
+    expect(listSql).toContain('make_interval(days => $1)');
+    expect(listSql).toContain('attempt.user_id IS NULL');
+    expect(listSql).not.toContain('password_hash');
+    expect(listParameters).toEqual([
+      90,
+      'FAILED',
+      'PASSWORD',
+      '203.0',
+      'user-1',
+      20,
+      0,
+    ]);
+    expect(result).toEqual({
+      items: [
+        expect.objectContaining({
+          id: 'attempt-1',
+          reason: 'WRONG_PASSWORD',
+          createdAt: new Date('2026-11-19T08:00:00.000Z'),
+          user: { id: 'user-1', username: 'user', email: 'user@example.com' },
+        }),
+      ],
+      total: 1,
+      page: 1,
+      limit: 20,
+      since: new Date(since),
+    });
+  });
+
+  it('returns null without listing when the user does not exist', async () => {
+    const { reader, query } = createReader([{ exists: false, since }]);
+
+    await expect(
+      reader.listLoginAttempts({ page: 1, limit: 20, userId: 'missing' }),
+    ).resolves.toBeNull();
+    expect(query).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps an attempt without a matching account as user null', async () => {
+    const { reader } = createReader(
+      [{ exists: true, since }],
+      [
+        {
+          id: 'attempt-2',
+          method: 'PASSWORD',
+          result: 'FAILED',
+          reason: 'USER_NOT_FOUND',
+          attemptedEmail: 'ghost@example.com',
+          ipAddress: null,
+          userAgent: null,
+          createdAt: '2026-11-19T08:00:00.000Z',
+          userId: null,
+          username: null,
+          email: null,
+        },
+      ],
+      [{ total: 1 }],
+    );
+
+    const result = await reader.listLoginAttempts({ page: 1, limit: 20 });
+
+    expect(result?.items[0]?.user).toBeNull();
+  });
+});

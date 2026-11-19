@@ -28,9 +28,11 @@ import { UpdateAdminUserRoleCommand } from '../../../application/commands/update
 import { UpdateAdminUserRoleHandler } from '../../../application/commands/update-admin-user-role/update-admin-user-role.handler';
 import { UpdateAdminUserStatusCommand } from '../../../application/commands/update-admin-user-status/update-admin-user-status.command';
 import { UpdateAdminUserStatusHandler } from '../../../application/commands/update-admin-user-status/update-admin-user-status.handler';
+import { ListAdminLoginAttemptsRequestDto } from '../../../application/dto/request/list-admin-login-attempts.request.dto';
 import { ListAdminUsersRequestDto } from '../../../application/dto/request/list-admin-users.request.dto';
 import { UpdateAdminUserRoleRequestDto } from '../../../application/dto/request/update-admin-user-role.request.dto';
 import { UpdateAdminUserStatusRequestDto } from '../../../application/dto/request/update-admin-user-status.request.dto';
+import { AdminLoginAttemptListResponseDto } from '../../../application/dto/response/admin-login-attempt-list.response.dto';
 import { AdminUserDetailResponseDto } from '../../../application/dto/response/admin-user-detail.response.dto';
 import { AdminUserListResponseDto } from '../../../application/dto/response/admin-user-list.response.dto';
 import { AdminUserRoleResponseDto } from '../../../application/dto/response/admin-user-role.response.dto';
@@ -41,6 +43,8 @@ import { GetAdminUserIpHistoryHandler } from '../../../application/queries/get-a
 import { GetAdminUserIpHistoryQuery } from '../../../application/queries/get-admin-user-ip-history/get-admin-user-ip-history.query';
 import { GetAdminUserHandler } from '../../../application/queries/get-admin-user/get-admin-user.handler';
 import { GetAdminUserQuery } from '../../../application/queries/get-admin-user/get-admin-user.query';
+import { ListAdminLoginAttemptsHandler } from '../../../application/queries/list-admin-login-attempts/list-admin-login-attempts.handler';
+import { ListAdminLoginAttemptsQuery } from '../../../application/queries/list-admin-login-attempts/list-admin-login-attempts.query';
 import { ListAdminUsersHandler } from '../../../application/queries/list-admin-users/list-admin-users.handler';
 import { ListAdminUsersQuery } from '../../../application/queries/list-admin-users/list-admin-users.query';
 import { ADMIN_PERMISSIONS } from '../../../domain/permissions/admin-permission-code';
@@ -68,6 +72,9 @@ export class AdminUsersController {
 
     @Inject(ADMIN_TYPES.applications.GetAdminUserIpHistoryHandler)
     private readonly getUserIpHistoryHandler: GetAdminUserIpHistoryHandler,
+
+    @Inject(ADMIN_TYPES.applications.ListAdminLoginAttemptsHandler)
+    private readonly listLoginAttemptsHandler: ListAdminLoginAttemptsHandler,
   ) {}
 
   @Get()
@@ -110,6 +117,27 @@ export class AdminUsersController {
   ): Promise<AdminUserIpHistory> {
     return this.getUserIpHistoryHandler.execute(
       new GetAdminUserIpHistoryQuery(userId),
+    );
+  }
+
+  @Get(':userId/login-attempts')
+  @AdminRateLimit()
+  @RequireSystemRoles(SystemRole.SYSTEM_ADMIN, SystemRole.SUPER_ADMIN)
+  @RequireAdminPermissions(ADMIN_PERMISSIONS.AUDIT_READ)
+  @ResponseMessage('Get admin user login attempts successfully')
+  listUserLoginAttempts(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Query() request: ListAdminLoginAttemptsRequestDto,
+  ): Promise<AdminLoginAttemptListResponseDto> {
+    return this.listLoginAttemptsHandler.execute(
+      new ListAdminLoginAttemptsQuery(
+        request.page,
+        request.limit,
+        request.result,
+        request.method,
+        request.search,
+        userId,
+      ),
     );
   }
 

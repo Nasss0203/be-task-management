@@ -85,6 +85,7 @@ export const ADMIN_TYPES = {
     ),
     ListAdminSessionsHandler: Symbol('AdminListAdminSessionsHandler'),
     GetAdminUserIpHistoryHandler: Symbol('AdminGetAdminUserIpHistoryHandler'),
+    ListAdminLoginAttemptsHandler: Symbol('AdminListAdminLoginAttemptsHandler'),
     RevokeAdminSessionHandler: Symbol('AdminRevokeAdminSessionHandler'),
     RevokeAdminUserSessionsHandler: Symbol(
       'AdminRevokeAdminUserSessionsHandler',

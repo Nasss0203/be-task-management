@@ -292,6 +292,10 @@
     {
       "file": "1795068464827-AddPublishedSiteModeration.ts",
       "sha256": "dd77306d9041dcd8c2567a5f0585baaed6b0ac056fb5416c7ac8b5543eb408c4"
+    },
+    {
+      "file": "1795077236671-CreateLoginAttempts.ts",
+      "sha256": "6b3f6e9d386f853f798bb890385bbd7a6144f1890766569c2b274c6918f80a50"
     }
   ]
 }
