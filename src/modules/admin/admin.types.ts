@@ -94,6 +94,9 @@ export const ADMIN_TYPES = {
     ListAdminMarketplaceSalesHandler: Symbol(
       'AdminListAdminMarketplaceSalesHandler',
     ),
+    ListAdminReconciliationPurchasesHandler: Symbol(
+      'AdminListAdminReconciliationPurchasesHandler',
+    ),
   },
   services: {
     AdminAuthorizationService: Symbol('AdminAuthorizationService'),

@@ -47,6 +47,7 @@ import { AdminMarketplaceSalesController } from './presentation/http/controllers
 import { TypeOrmAdminMarketplaceSalesReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-marketplace-sales.reader';
 import { GetAdminMarketplaceSalesOverviewHandler } from './application/queries/get-admin-marketplace-sales-overview/get-admin-marketplace-sales-overview.handler';
 import { ListAdminMarketplaceSalesHandler } from './application/queries/list-admin-marketplace-sales/list-admin-marketplace-sales.handler';
+import { ListAdminReconciliationPurchasesHandler } from './application/queries/list-admin-reconciliation-purchases/list-admin-reconciliation-purchases.handler';
 import { AdminTemplatesController } from './presentation/http/controllers/admin-templates.controller';
 import { TypeOrmAdminTemplateReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-template.reader';
 import { GetAdminTemplatesOverviewHandler } from './application/queries/get-admin-templates-overview/get-admin-templates-overview.handler';
@@ -130,6 +131,10 @@ import { ContentModule } from 'src/modules/content/content.module';
     {
       provide: ADMIN_TYPES.applications.ListAdminMarketplaceSalesHandler,
       useClass: ListAdminMarketplaceSalesHandler,
+    },
+    {
+      provide: ADMIN_TYPES.applications.ListAdminReconciliationPurchasesHandler,
+      useClass: ListAdminReconciliationPurchasesHandler,
     },
     {
       provide: ADMIN_TYPES.ports.TemplateReader,
