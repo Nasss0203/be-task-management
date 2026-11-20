@@ -633,6 +633,14 @@ describe('kế hoạch xoá block: deleting named blocks', () => {
       'xoá trang sub man',
       { kind: 'BLOCKED_WORD', term: 'xoá trang', pageAction: true },
     ],
+    [
+      'xoá luôn trang sub man đi',
+      { kind: 'BLOCKED_WORD', term: 'xoá luôn trang', pageAction: true },
+    ],
+    [
+      'xoá hẳn trang sub man',
+      { kind: 'BLOCKED_WORD', term: 'xoá hẳn trang', pageAction: true },
+    ],
     // A verb inside the content of a supported command keeps the quote hint.
     [
       'thêm to-do sửa máy in vào trang sub man',

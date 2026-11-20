@@ -38,6 +38,7 @@ import {
   needsRuleDraft,
   type ModificationAdmission,
 } from './ai-modification-operation.policy';
+import { onlyOrderDiffers } from './ai-command-from-sentence';
 
 /** A4c: the planner kept no model draft for a sentence that needs one by rule. */
 function isRuleDraftRequired(error: unknown): boolean {
@@ -92,6 +93,8 @@ export interface PlanPageInstructionInput {
    * "dựa trên <nguồn>"; then a checklist's items may come from the source.
    */
   sourceSentence?: string;
+  /** D-87: admitted only through the command made of the sentence's words. */
+  commandFromSentence?: boolean;
 }
 
 /**
@@ -219,16 +222,25 @@ export class AiPageInstructionPlannerService {
     const admitted = scope
       ? withoutPageScope(input.instruction, scope)
       : input.instruction;
-    if (
-      !isSupportedModification(intent.instruction, [], this.admission(input)) ||
-      admitted === null ||
-      (!unresolved &&
-        !isSupportedModification(
-          admitted,
-          extractedNames,
-          this.admission(input),
-        ))
-    ) {
+    const commandSupported = isSupportedModification(
+      intent.instruction,
+      [],
+      this.admission(input),
+    );
+    const sentenceSupported =
+      admitted !== null &&
+      (unresolved ||
+        isSupportedModification(admitted, extractedNames, this.admission(input)));
+    const commandFirst =
+      commandSupported &&
+      admitted !== null &&
+      !sentenceSupported &&
+      input.sourceSentence === undefined &&
+      onlyOrderDiffers(admitted, intent.instruction, extractedNames);
+    if (commandFirst) {
+      input = { ...input, commandFromSentence: true };
+    }
+    if (!commandSupported || (!sentenceSupported && !commandFirst)) {
       return {
         status: 'UNSUPPORTED_OPERATION',
         intent,
@@ -745,9 +757,11 @@ export class AiPageInstructionPlannerService {
     }
     const sources = found?.status === 'FOUND' ? found.sources : undefined;
     const original = input.sourceSentence ?? input.instruction;
-    const requireRuleDraft = needsRuleDraft(original, [page.title], {
-      itemsFromSource: !!found,
-    });
+    const requireRuleDraft =
+      !!input.commandFromSentence ||
+      needsRuleDraft(original, [page.title], {
+        itemsFromSource: !!found,
+      });
 
     // The resolver has already checked PAGE_READ and workspace boundaries.
     // The existing planner loads fresh authorized Page Context again.

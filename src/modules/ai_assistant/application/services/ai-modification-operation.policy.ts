@@ -830,7 +830,7 @@ export type UnsupportedModificationDetail =
 const MAX_TERM_LENGTH = 30;
 
 const PAGE_OBJECT =
-  /^(?:(?:ten|toan bo_?|het|ca|noi dung|cua)\s+)*(?:trang|page)\b/u;
+  /^(?:(?:ten|toan bo_?|het|ca|noi dung|cua|luon|han|di)\s+)*(?:trang|page)\b/u;
 
 const SUPPORTED_VERB =
   /^(?:them|chen|bo sung|ghi them|add|insert|append|prepend|tich|danh dau|bo tich|bo danh dau|hoan thanh|lam xong|check|uncheck|mark|chinh sua|thay doi|doi|sua|thay|chinh|cap nhat|change|update|edit|replace|xoa|bo|go|delete|remove)\b/u;
