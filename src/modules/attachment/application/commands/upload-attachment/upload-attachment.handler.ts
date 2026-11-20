@@ -90,12 +90,18 @@ export class UploadAttachmentHandler {
     const sizeMb = command.file.size / BYTES_PER_MB;
     await this.entitlements.assertWithinLimit(
       command.workspaceId,
+      BillingFeatureCode.MAX_FILE_SIZE_MB,
+      sizeMb,
+    );
+    await this.entitlements.assertWithinLimit(
+      command.workspaceId,
       BillingFeatureCode.MAX_STORAGE_MB,
       sizeMb,
     );
 
     const storageResult = await this.storage.upload({
-      buffer: command.file.buffer,
+      filePath: command.file.path,
+      size: command.file.size,
       workspaceId: command.workspaceId,
       commentId: command.commentId,
       pageBlockId: command.pageBlockId,

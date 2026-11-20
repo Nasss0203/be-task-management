@@ -44,7 +44,7 @@ describe('UploadAttachmentHandler', () => {
     originalName: 'test.png',
     reportedMimeType: 'image/png',
     size: 1024,
-    buffer: Buffer.from('image'),
+    path: '/tmp/upload-1',
   };
 
   beforeEach(() => {
@@ -156,7 +156,8 @@ describe('UploadAttachmentHandler', () => {
     expect(validateExtension).toHaveBeenCalledWith('test.png');
     expect(validateRealFileType).toHaveBeenCalledWith(file, '.png');
     expect(upload).toHaveBeenCalledWith({
-      buffer: file.buffer,
+      filePath: '/tmp/upload-1',
+      size: 1024,
       workspaceId: 'ws-1',
       commentId: 'comment-1',
       pageBlockId: null,
@@ -194,13 +195,13 @@ describe('UploadAttachmentHandler', () => {
         new UploadAttachmentCommand(file, 'ws-1', 'comment-1', null, 'user-1'),
       );
 
-    it('checks the file size in MB before uploading and again inside the transaction', async () => {
+    it('checks the single-file limit, then storage before uploading and again inside the transaction', async () => {
       await uploadToTask();
 
       expect(assertWithinLimit).toHaveBeenNthCalledWith(
         1,
         'ws-1',
-        'MAX_STORAGE_MB',
+        'MAX_FILE_SIZE_MB',
         1024 / (1024 * 1024),
       );
       expect(assertWithinLimit).toHaveBeenNthCalledWith(
@@ -208,14 +209,38 @@ describe('UploadAttachmentHandler', () => {
         'ws-1',
         'MAX_STORAGE_MB',
         1024 / (1024 * 1024),
+      );
+      expect(assertWithinLimit).toHaveBeenNthCalledWith(
+        3,
+        'ws-1',
+        'MAX_STORAGE_MB',
+        1024 / (1024 * 1024),
         'tx',
       );
     });
 
-    it('does not upload when the workspace is already full', async () => {
+    it('does not upload or check storage when the file exceeds the plan file size', async () => {
       assertWithinLimit.mockRejectedValueOnce(
         new ForbiddenException('WORKSPACE_LIMIT_EXCEEDED'),
       );
+
+      await expect(uploadToTask()).rejects.toThrow(ForbiddenException);
+      expect(assertWithinLimit).toHaveBeenCalledTimes(1);
+      expect(assertWithinLimit).toHaveBeenCalledWith(
+        'ws-1',
+        'MAX_FILE_SIZE_MB',
+        expect.any(Number),
+      );
+      expect(upload).not.toHaveBeenCalled();
+      expect(save).not.toHaveBeenCalled();
+    });
+
+    it('does not upload when the workspace is already full', async () => {
+      assertWithinLimit
+        .mockResolvedValueOnce(undefined)
+        .mockRejectedValueOnce(
+          new ForbiddenException('WORKSPACE_LIMIT_EXCEEDED'),
+        );
 
       await expect(uploadToTask()).rejects.toThrow(ForbiddenException);
       expect(upload).not.toHaveBeenCalled();
@@ -231,6 +256,7 @@ describe('UploadAttachmentHandler', () => {
         secureUrl: null,
       });
       assertWithinLimit
+        .mockResolvedValueOnce(undefined)
         .mockResolvedValueOnce(undefined)
         .mockRejectedValueOnce(
           new ForbiddenException('WORKSPACE_LIMIT_EXCEEDED'),

@@ -1,4 +1,4 @@
-export const MAX_ATTACHMENT_SIZE = 50 * 1024 * 1024;
+export const MAX_ATTACHMENT_SIZE = 2 * 1024 * 1024 * 1024;
 
 export const ALLOWED_FILE_MIME_REGEX =
   /^(image\/(jpeg|png|gif|webp|svg\+xml)|video\/(mp4|webm|ogg)|text\/(plain|csv)|application\/(pdf|msword|x-cfb|vnd\.openxmlformats-officedocument\.wordprocessingml\.document|vnd\.ms-excel|vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet|vnd\.ms-powerpoint|vnd\.openxmlformats-officedocument\.presentationml\.presentation|zip|x-zip-compressed|octet-stream))$/i;

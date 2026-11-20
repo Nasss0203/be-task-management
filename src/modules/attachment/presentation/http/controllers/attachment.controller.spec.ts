@@ -81,7 +81,7 @@ describe('AttachmentController', () => {
       originalname: 'test.png',
       mimetype: 'image/png',
       size: 1024,
-      buffer: Buffer.from('image'),
+      path: '/tmp/upload-1',
     } as Express.Multer.File;
 
     await expect(
@@ -99,7 +99,7 @@ describe('AttachmentController', () => {
           originalName: 'test.png',
           reportedMimeType: 'image/png',
           size: 1024,
-          buffer: file.buffer,
+          path: '/tmp/upload-1',
         },
       }),
     );
@@ -112,7 +112,7 @@ describe('AttachmentController', () => {
       originalname: Buffer.from(utf8Name, 'utf8').toString('latin1'),
       mimetype: 'application/pdf',
       size: 1024,
-      buffer: Buffer.from('pdf'),
+      path: '/tmp/upload-2',
     } as Express.Multer.File;
 
     await controller.upload('ws-1', {}, file, { id: 'user-1' } as IAuth);

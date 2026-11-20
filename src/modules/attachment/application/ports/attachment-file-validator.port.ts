@@ -2,7 +2,7 @@ export type AttachmentFileInput = {
   originalName: string;
   reportedMimeType: string;
   size: number;
-  buffer: Buffer;
+  path: string;
 };
 
 export interface AttachmentFileValidatorPort {
