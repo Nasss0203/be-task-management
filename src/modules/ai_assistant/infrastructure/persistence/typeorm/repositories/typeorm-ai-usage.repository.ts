@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import type { AiUsage } from 'src/modules/ai_assistant/domain/entities/ai-usage.entity';
 import type {
+  AiUsageCountOptions,
   AiUsageRepository,
   AiUsageSummary,
   AiUsageSummaryOptions,
@@ -47,6 +48,19 @@ export class TypeOrmAiUsageRepository implements AiUsageRepository {
     }
 
     return this.executeSummary(this.applyTimeRange(query, options));
+  }
+
+  countByUser(
+    userId: string,
+    options: AiUsageCountOptions,
+    context?: PersistenceContext,
+  ): Promise<number> {
+    return this.getRepo(context)
+      .createQueryBuilder('usage')
+      .where('usage.user_id = :userId', { userId })
+      .andWhere('usage.provider = :provider', { provider: options.provider })
+      .andWhere('usage.created_at >= :from', { from: options.from })
+      .getCount();
   }
 
   async sumByWorkspace(

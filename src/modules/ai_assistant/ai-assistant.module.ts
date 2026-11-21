@@ -31,6 +31,7 @@ import { ListConversationGenerationsHandler } from './application/queries/list-c
 import { ListConversationsHandler } from './application/queries/list-conversations/list-conversations.handler';
 
 import { AiAssistantService } from './application/services/ai-assistant.service';
+import { AiUsageQuotaService } from './application/services/ai-usage-quota.service';
 import { AiSubmitAuthorizationLock } from './application/services/ai-submit-authorization-lock.port';
 import { AiSubmitAuthorizationLockService } from './infrastructure/persistence/typeorm/ai-submit-authorization-lock.service';
 import { AiAskService } from './application/services/ai-ask.service';
@@ -131,6 +132,7 @@ import { AiAskEventSqlStore } from './infrastructure/ask-log/ai-ask-event.store'
     AiAskEventRecorder,
 
     AiAssistantService,
+    AiUsageQuotaService,
     {
       provide: AiSubmitAuthorizationLock,
       useClass: AiSubmitAuthorizationLockService,

@@ -8,6 +8,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  Optional,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
@@ -37,6 +38,7 @@ import {
   OPERATIONS_OF_KIND,
 } from './ai-modification-operation.policy';
 import { AiModificationPlanValidatorService } from './ai-modification-plan-validator.service';
+import { AiUsageQuotaService } from './ai-usage-quota.service';
 import {
   fingerprintAiPageContext,
   hasCompleteAiPageContext,
@@ -94,6 +96,9 @@ export class AiModificationPlannerService {
     private readonly accessService: AiConversationAccessService,
 
     private readonly planValidator: AiModificationPlanValidatorService,
+
+    @Optional()
+    private readonly quota?: AiUsageQuotaService,
   ) {}
 
   async generate(
@@ -133,6 +138,7 @@ export class AiModificationPlannerService {
       );
     }
 
+    await this.quota?.assertWithinDailyLimit(params.userId);
     const workspaceId = pageContext.page.workspaceId;
     const historyInstruction = params.originalInstruction?.trim()
       ? params.originalInstruction
