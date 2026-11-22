@@ -270,4 +270,31 @@ export class TypeOrmWorkspaceRepository implements WorkspaceRepository {
 
     return WorkspaceMapper.toDomain(row.workspace);
   }
+
+  async findOwnedWorkspaceIds(
+    userId: string,
+    context?: PersistenceContext,
+  ): Promise<string[]> {
+    const rows = await this.getWorkspaceMemberRepo(context).find({
+      select: { workspaceId: true },
+      where: {
+        userId,
+        roleName: WorkspaceRole.OWNER,
+        workspace: { deletedAt: IsNull() },
+      },
+      relations: { workspace: true },
+    });
+
+    return rows.map((row) => row.workspaceId);
+  }
+
+  async lockOwnership(
+    userId: string,
+    context: PersistenceContext,
+  ): Promise<void> {
+    await (context as EntityManager).query(
+      'SELECT pg_advisory_xact_lock(hashtext($1))',
+      [`workspace-owner:${userId}`],
+    );
+  }
 }

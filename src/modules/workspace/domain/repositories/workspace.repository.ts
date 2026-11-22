@@ -69,4 +69,11 @@ export interface WorkspaceRepository {
     workspaceId: string,
     context?: PersistenceContext,
   ): Promise<Workspace | null>;
+
+  findOwnedWorkspaceIds(
+    userId: string,
+    context?: PersistenceContext,
+  ): Promise<string[]>;
+
+  lockOwnership(userId: string, context: PersistenceContext): Promise<void>;
 }

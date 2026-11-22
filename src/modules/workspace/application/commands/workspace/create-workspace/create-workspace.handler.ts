@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { ContentPageProvisioningPort } from 'src/modules/content/application/ports/content-page-provisioning.port';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
+import { FreeWorkspaceLimitService } from 'src/modules/workspace/application/services/free-workspace-limit.service';
 import { getWorkspaceStarter } from 'src/modules/workspace/application/services/workspace-starters';
 import { WorkspaceResponseDto } from 'src/modules/workspace/application/dto/workspace/response/workspaces.response.dto';
 import { WorkspaceMember } from 'src/modules/workspace/domain/aggregates/workspace-member/workspace-member.aggregate';
@@ -30,12 +31,15 @@ export class CreateWorkspaceHandler {
 
     @Inject(PERSISTENCE_TYPES.UnitOfWork)
     private readonly uow: UnitOfWork,
+
+    private readonly freeWorkspaceLimit: FreeWorkspaceLimitService,
   ) {}
 
   async execute(
     command: CreateWorkspaceCommand,
   ): Promise<WorkspaceResponseDto> {
     const workspace = await this.uow.runInTransaction(async (context) => {
+      await this.freeWorkspaceLimit.assertCanCreate(command.userId, context);
       const starter = getWorkspaceStarter(command.starter);
       const createdWorkspace = await this.createWorkspaceCore(
         {
