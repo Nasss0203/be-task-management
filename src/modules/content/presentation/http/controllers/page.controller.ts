@@ -13,11 +13,15 @@ import {
   Put,
   Query,
   UnauthorizedException,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import {
   ReadRateLimit,
   StrictWriteRateLimit,
+  UploadRateLimit,
   WriteRateLimit,
 } from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
@@ -40,6 +44,9 @@ import { UpdatePageHandler } from 'src/modules/content/application/commands/page
 import { ApplyPagePresetCommand } from 'src/modules/content/application/commands/page/apply-page-preset/apply-page-preset.command';
 import { ApplyPagePresetHandler } from 'src/modules/content/application/commands/page/apply-page-preset/apply-page-preset.handler';
 import { ApplyPagePresetDto } from 'src/modules/content/application/dto/page/apply-page-preset.dto';
+import { ImportMarkdownPageCommand } from 'src/modules/content/application/commands/page/import-markdown-page/import-markdown-page.command';
+import { ImportMarkdownPageHandler } from 'src/modules/content/application/commands/page/import-markdown-page/import-markdown-page.handler';
+import { MARKDOWN_IMPORT_LIMITS } from 'src/modules/content/application/commands/page/import-markdown-page/markdown-to-page-blocks';
 import { ListPagePresetsHandler } from 'src/modules/content/application/queries/page/list-page-presets/list-page-presets.handler';
 import { CreatePageDto } from 'src/modules/content/application/dto/page/create-page.dto';
 import { MovePageDto } from 'src/modules/content/application/dto/page/move-page.dto';
@@ -115,6 +122,9 @@ export class PageController {
 
     @Inject(CONTENT_TYPES.applications.ApplyPagePresetHandler)
     private readonly applyPagePresetHandler: ApplyPagePresetHandler,
+
+    @Inject(CONTENT_TYPES.applications.ImportMarkdownPageHandler)
+    private readonly importMarkdownPageHandler: ImportMarkdownPageHandler,
 
     @Inject(CONTENT_TYPES.applications.ListPagePresetsHandler)
     private readonly listPagePresetsHandler: ListPagePresetsHandler,
@@ -220,7 +230,11 @@ export class PageController {
     @Auth() auth: IAuth,
   ) {
     return this.searchPagesHandler.execute(
-      new SearchPagesQuery(workspaceId, auth.id, typeof q === 'string' ? q : ''),
+      new SearchPagesQuery(
+        workspaceId,
+        auth.id,
+        typeof q === 'string' ? q : '',
+      ),
     );
   }
 
@@ -344,6 +358,39 @@ export class PageController {
       new ApplyPagePresetCommand(pageId, dto.preset, auth.id),
     );
     return { success: true };
+  }
+
+  @Post(':pageId/import-markdown')
+  @UploadRateLimit()
+  @ResponseMessage('Import Markdown page')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: MARKDOWN_IMPORT_LIMITS.maxFileSize, files: 1 },
+    }),
+  )
+  importMarkdown(
+    @Param('pageId', ParseUUIDPipe) pageId: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Auth() auth: IAuth,
+  ) {
+    if (
+      !file ||
+      !/\.(md|markdown)$/i.test(file.originalname) ||
+      !/^(text\/markdown|text\/x-markdown|text\/plain|application\/octet-stream)$/i.test(
+        file.mimetype,
+      )
+    ) {
+      throw new BadRequestException('Upload a .md file');
+    }
+
+    return this.importMarkdownPageHandler.execute(
+      new ImportMarkdownPageCommand(
+        pageId,
+        auth.id,
+        file.originalname,
+        file.buffer,
+      ),
+    );
   }
 
   @Delete(':pageId')
