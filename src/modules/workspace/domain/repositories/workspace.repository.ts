@@ -17,6 +17,11 @@ export type WorkspaceOverview = {
   };
 };
 
+export type WorkspaceWithMembership = {
+  workspace: Workspace;
+  membershipType: WorkspaceMembershipType;
+};
+
 export interface WorkspaceRepository {
   existsBySlug(slug: string, context?: PersistenceContext): Promise<boolean>;
 
@@ -26,6 +31,11 @@ export interface WorkspaceRepository {
     userId: string,
     context?: PersistenceContext,
   ): Promise<Workspace[]>;
+
+  findWithMembershipByUserId(
+    userId: string,
+    context?: PersistenceContext,
+  ): Promise<WorkspaceWithMembership[]>;
 
   findById(
     workspaceId: string,

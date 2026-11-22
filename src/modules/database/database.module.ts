@@ -7,6 +7,7 @@ import { AddPropertyOptionHandler } from './application/commands/add-property-op
 import { AddPropertyHandler } from './application/commands/add-property/add-property.handler';
 import { ClearRowValueHandler } from './application/commands/clear-row-value/clear-row-value.handler';
 import { CreateDatabaseRowHandler } from './application/commands/create-database-row/create-database-row.handler';
+import { ImportDatabaseRowsHandler } from './application/commands/import-database-rows/import-database-rows.handler';
 import { CreateDatabaseViewHandler } from './application/commands/create-database-view/create-database-view.handler';
 import { CreateDatabaseHandler } from './application/commands/create-database/create-database.handler';
 import { DeleteDatabaseRowHandler } from './application/commands/delete-database-row/delete-database-row.handler';
@@ -96,6 +97,7 @@ import { CalendarFeedController } from './presentation/http/controllers/calendar
     AddPropertyHandler,
     AddPropertyOptionHandler,
     CreateDatabaseRowHandler,
+    ImportDatabaseRowsHandler,
     SetRowValueHandler,
     GetDatabaseRowsHandler,
     GetDatabaseHandler,

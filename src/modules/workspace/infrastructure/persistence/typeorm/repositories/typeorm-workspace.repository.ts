@@ -7,6 +7,7 @@ import {
   WorkspaceAccess,
   WorkspaceOverview,
   WorkspaceRepository,
+  WorkspaceWithMembership,
 } from 'src/modules/workspace/domain/repositories/workspace.repository';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
 import { DataSource, EntityManager, IsNull, Not, Repository } from 'typeorm';
@@ -95,6 +96,14 @@ export class TypeOrmWorkspaceRepository implements WorkspaceRepository {
     userId: string,
     context?: PersistenceContext,
   ): Promise<Workspace[]> {
+    const rows = await this.findWithMembershipByUserId(userId, context);
+    return rows.map((row) => row.workspace);
+  }
+
+  async findWithMembershipByUserId(
+    userId: string,
+    context?: PersistenceContext,
+  ): Promise<WorkspaceWithMembership[]> {
     const rows = await this.getWorkspaceMemberRepo(context).find({
       where: {
         userId,
@@ -109,7 +118,10 @@ export class TypeOrmWorkspaceRepository implements WorkspaceRepository {
 
     return rows
       .filter((row) => row.workspace && !row.workspace.deletedAt)
-      .map((row) => WorkspaceMapper.toDomain(row.workspace));
+      .map((row) => ({
+        workspace: WorkspaceMapper.toDomain(row.workspace),
+        membershipType: row.membershipType,
+      }));
   }
 
   async findByUserIdAndWorkspaceId(
