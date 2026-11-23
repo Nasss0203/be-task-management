@@ -130,6 +130,7 @@ export class TypeOrmPaymentOrderRepository implements PaymentOrderRepository {
         billing_interval: PaymentOrderHistoryItem['billingInterval'];
         provider: PaymentOrderHistoryItem['provider'];
         amount: string;
+        credit_amount: string;
         currency: string;
         status: PaymentOrderHistoryItem['status'];
         paid_at: Date | null;
@@ -137,7 +138,7 @@ export class TypeOrmPaymentOrderRepository implements PaymentOrderRepository {
       }>
     >(
       `SELECT o.id, o.order_code, p.code AS plan_code, p.name AS plan_name,
-              pp.billing_interval, o.provider, o.amount, o.currency, o.status,
+              pp.billing_interval, o.provider, o.amount, o.credit_amount, o.currency, o.status,
               o.paid_at, o.created_at
          FROM payment_orders o
          JOIN billing_plan_prices pp ON pp.id = o.plan_price_id
@@ -156,6 +157,7 @@ export class TypeOrmPaymentOrderRepository implements PaymentOrderRepository {
       billingInterval: row.billing_interval,
       provider: row.provider,
       amount: Number(row.amount),
+      creditAmount: Number(row.credit_amount),
       currency: row.currency,
       status: row.status,
       paidAt: row.paid_at,

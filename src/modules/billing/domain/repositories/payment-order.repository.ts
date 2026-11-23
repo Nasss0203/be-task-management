@@ -13,6 +13,7 @@ export interface PaymentOrderHistoryItem {
   billingInterval: BillingInterval;
   provider: BillingProvider;
   amount: number;
+  creditAmount: number;
   currency: string;
   status: PaymentOrderStatus;
   paidAt: Date | null;

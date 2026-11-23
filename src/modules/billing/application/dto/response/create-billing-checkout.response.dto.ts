@@ -7,6 +7,7 @@ export class CreateBillingCheckoutResponseDto {
   planPriceId: string;
   orderCode: string;
   amount: number;
+  creditAmount: number;
   currency: string;
   provider: BillingProvider;
   status: PaymentOrderStatus;
