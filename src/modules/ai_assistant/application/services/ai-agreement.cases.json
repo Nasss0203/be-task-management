@@ -1,6 +1,6 @@
 {
  "_note": "A7-DT (prompt 2026-11-23/02): kết quả chỉ bằng luật của FastAPI và NestJS cho cùng câu. Sinh bằng `python -m scripts.check_agreement --be ../be-task-management --write`; bản chép ở be-task-management phải giống hệt. Không sửa tay.",
- "knownBaseline": 35,
+ "knownBaseline": 34,
  "pageSets": {
   "dev": [
    {
@@ -24574,13 +24574,11 @@
     "draftLanguage": null
    },
    "nestjs": {
-    "source": false,
-    "draftSource": false
+    "source": true,
+    "draftSource": true
    },
-   "disagreements": [
-    "L3"
-   ],
-   "known": true
+   "disagreements": [],
+   "known": false
   },
   {
    "id": "draft:d20",
@@ -24696,6 +24694,160 @@
    "id": "draft:d25",
    "kind": "writing",
    "text": "viết tin nhắn hẹn cả nhóm đi cà phê lúc 8 giờ sáng chủ nhật",
+   "selectedText": null,
+   "fastapi": {
+    "intent": "WRITING",
+    "result": {
+     "intent": "WRITING",
+     "writingAction": "DRAFT",
+     "language": null,
+     "needsClarification": false
+    },
+    "draftLanguage": null
+   },
+   "nestjs": {
+    "source": true,
+    "draftSource": true
+   },
+   "disagreements": [],
+   "known": false
+  },
+  {
+   "id": "draft:d26",
+   "kind": "writing",
+   "text": "tôi muốn bạn viết lời chúc sinh nhật cho chị Lan",
+   "selectedText": null,
+   "fastapi": {
+    "intent": "WRITING",
+    "result": {
+     "intent": "WRITING",
+     "writingAction": "DRAFT",
+     "language": null,
+     "needsClarification": false
+    },
+    "draftLanguage": null
+   },
+   "nestjs": {
+    "source": true,
+    "draftSource": true
+   },
+   "disagreements": [],
+   "known": false
+  },
+  {
+   "id": "draft:d27",
+   "kind": "writing",
+   "text": "mình cần soạn email xin gia hạn hợp đồng",
+   "selectedText": null,
+   "fastapi": {
+    "intent": "WRITING",
+    "result": {
+     "intent": "WRITING",
+     "writingAction": "DRAFT",
+     "language": null,
+     "needsClarification": false
+    },
+    "draftLanguage": null
+   },
+   "nestjs": {
+    "source": true,
+    "draftSource": true
+   },
+   "disagreements": [],
+   "known": false
+  },
+  {
+   "id": "draft:d28",
+   "kind": "writing",
+   "text": "cho mình viết một đoạn giới thiệu quán cà phê",
+   "selectedText": null,
+   "fastapi": {
+    "intent": "WRITING",
+    "result": {
+     "intent": "WRITING",
+     "writingAction": "DRAFT",
+     "language": null,
+     "needsClarification": false
+    },
+    "draftLanguage": null
+   },
+   "nestjs": {
+    "source": true,
+    "draftSource": true
+   },
+   "disagreements": [],
+   "known": false
+  },
+  {
+   "id": "draft:d29",
+   "kind": "writing",
+   "text": "bạn có thể viết giúp mình lời mời dự tiệc cuối năm",
+   "selectedText": null,
+   "fastapi": {
+    "intent": "WRITING",
+    "result": {
+     "intent": "WRITING",
+     "writingAction": "DRAFT",
+     "language": null,
+     "needsClarification": false
+    },
+    "draftLanguage": null
+   },
+   "nestjs": {
+    "source": true,
+    "draftSource": true
+   },
+   "disagreements": [],
+   "known": false
+  },
+  {
+   "id": "draft:d30",
+   "kind": "writing",
+   "text": "em muốn soạn tin nhắn xin lỗi khách hàng",
+   "selectedText": null,
+   "fastapi": {
+    "intent": "WRITING",
+    "result": {
+     "intent": "WRITING",
+     "writingAction": "DRAFT",
+     "language": null,
+     "needsClarification": false
+    },
+    "draftLanguage": null
+   },
+   "nestjs": {
+    "source": true,
+    "draftSource": true
+   },
+   "disagreements": [],
+   "known": false
+  },
+  {
+   "id": "draft:d31",
+   "kind": "writing",
+   "text": "làm ơn viết thư cảm ơn thầy giáo",
+   "selectedText": null,
+   "fastapi": {
+    "intent": "WRITING",
+    "result": {
+     "intent": "WRITING",
+     "writingAction": "DRAFT",
+     "language": null,
+     "needsClarification": false
+    },
+    "draftLanguage": null
+   },
+   "nestjs": {
+    "source": true,
+    "draftSource": true
+   },
+   "disagreements": [],
+   "known": false
+  },
+  {
+   "id": "draft:d32",
+   "kind": "writing",
+   "text": "mình muốn bạn soạn thông báo nghỉ lễ cho nhân viên",
    "selectedText": null,
    "fastapi": {
     "intent": "WRITING",
@@ -24951,6 +25103,50 @@
    },
    "nestjs": {
     "source": true,
+    "draftSource": false
+   },
+   "disagreements": [],
+   "known": false
+  },
+  {
+   "id": "draft:n12",
+   "kind": "writing",
+   "text": "mình muốn viết lại đoạn này",
+   "selectedText": null,
+   "fastapi": {
+    "intent": "UNCLEAR",
+    "result": {
+     "intent": "UNCLEAR",
+     "writingAction": null,
+     "language": null,
+     "needsClarification": true
+    },
+    "draftLanguage": null
+   },
+   "nestjs": {
+    "source": false,
+    "draftSource": false
+   },
+   "disagreements": [],
+   "known": false
+  },
+  {
+   "id": "draft:n13",
+   "kind": "writing",
+   "text": "tôi cần viết vào trang Họp nhóm một đoạn tóm tắt",
+   "selectedText": null,
+   "fastapi": {
+    "intent": "MODIFY_PAGE",
+    "result": {
+     "intent": "MODIFY_PAGE",
+     "writingAction": null,
+     "language": null,
+     "needsClarification": false
+    },
+    "draftLanguage": null
+   },
+   "nestjs": {
+    "source": false,
     "draftSource": false
    },
    "disagreements": [],

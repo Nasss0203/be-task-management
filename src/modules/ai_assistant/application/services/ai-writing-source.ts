@@ -13,7 +13,7 @@ const ACTION = new RegExp(
   'u',
 );
 const DRAFT_REQUEST = new RegExp(
-  `^(?:ban\\s+)?${vocabularyPattern('write_draft_verb')}\\b(?:\\s+\\S+){0,4}?\\s+${vocabularyPattern('write_draft_kind')}\\b`,
+  `^(?:(?:${vocabularyPattern('want', 'let_me')})\\s+)*(?:(?:co the|lam on)\\s+)?(?:ban\\s+)?${vocabularyPattern('write_draft_verb')}\\b(?!\\s+lai\\b)(?:\\s+\\S+){0,4}?\\s+${vocabularyPattern('write_draft_kind')}\\b`,
   'u',
 );
 const LANGUAGE_BEFORE = vocabularyPattern('language_prep', 'language_noun');

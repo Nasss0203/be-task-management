@@ -23,8 +23,24 @@ describe('Writing DRAFT source', () => {
     ).toEqual({ text: instruction, language: 'English' });
   });
   it.each([
+    'mình muốn viết email cảm ơn đối tác sau buổi gặp',
+    'tôi muốn bạn viết lời chúc sinh nhật cho chị Lan',
+    'mình cần soạn email xin gia hạn hợp đồng',
+    'cho mình viết một đoạn giới thiệu quán cà phê',
+    'bạn có thể viết giúp mình lời mời dự tiệc cuối năm',
+    'em muốn soạn tin nhắn xin lỗi khách hàng',
+    'làm ơn viết thư cảm ơn thầy giáo',
+    'mình muốn bạn soạn thông báo nghỉ lễ cho nhân viên',
+  ])('drafts after the words leading to the verb: %s', (instruction) => {
+    expect(resolveWritingSource(instruction, null, draft)).toEqual({
+      text: instruction,
+    });
+  });
+  it.each([
     'viết vào trang Họp nhóm một đoạn mời mọi người',
     'nghĩ giúp mình vài ý cho buổi họp',
+    'mình muốn viết lại đoạn này',
+    'tôi cần viết vào trang Họp nhóm một đoạn tóm tắt',
   ])('does not draft without a draft request: %s', (instruction) => {
     expect(resolveWritingSource(instruction, null, draft)).toBeNull();
   });
