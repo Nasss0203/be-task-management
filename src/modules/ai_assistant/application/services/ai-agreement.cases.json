@@ -1,6 +1,6 @@
 {
  "_note": "A7-DT (prompt 2026-11-23/02): kết quả chỉ bằng luật của FastAPI và NestJS cho cùng câu. Sinh bằng `python -m scripts.check_agreement --be ../be-task-management --write`; bản chép ở be-task-management phải giống hệt. Không sửa tay.",
- "knownBaseline": 34,
+ "knownBaseline": 13,
  "pageSets": {
   "dev": [
    {
@@ -11823,14 +11823,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "rules",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [
@@ -11843,13 +11836,7 @@
      "kind": null,
      "why": "BLOCKED_WORD"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "BLOCKED_WORD"
-    }
+    "withPlan": null
    },
    "disagreements": [],
    "pages": "dev2",
@@ -16882,7 +16869,7 @@
     "key": "study"
    },
    "pageTitle": "Ôn thi cuối kỳ",
-   "refuse": false,
+   "refuse": true,
    "fastapi": {
     "intent": "UNCLEAR",
     "pageIntent": {
@@ -16893,14 +16880,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -16911,13 +16891,7 @@
      "kind": null,
      "why": "GENERIC"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "GENERIC"
-    }
+    "withPlan": null
    },
    "disagreements": [],
    "pages": "gen:study",
@@ -19130,14 +19104,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -19148,13 +19115,7 @@
      "kind": null,
      "why": "GENERIC"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "GENERIC"
-    }
+    "withPlan": null
    },
    "disagreements": [],
    "pages": "gen:meeting",
@@ -19181,10 +19142,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "NEED_MORE_CONTEXT",
-     "operations": []
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -19195,13 +19153,7 @@
      "kind": null,
      "why": "BLOCKED_WORD"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "BLOCKED_WORD"
-    }
+    "withPlan": null
    },
    "disagreements": [],
    "pages": "gen:meeting",
@@ -19228,14 +19180,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -19246,19 +19191,11 @@
      "kind": null,
      "why": "MIXED"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "MIXED"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse:n05",
@@ -19281,14 +19218,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -19299,19 +19229,11 @@
      "kind": null,
      "why": "BLOCKED_WORD"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "BLOCKED_WORD"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse:n06",
@@ -19334,14 +19256,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -19352,19 +19267,11 @@
      "kind": null,
      "why": "GENERIC"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "GENERIC"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse:n07",
@@ -19387,14 +19294,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -19405,19 +19305,11 @@
      "kind": null,
      "why": "GENERIC"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "GENERIC"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse:n08",
@@ -19440,14 +19332,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -19458,19 +19343,11 @@
      "kind": null,
      "why": "PUNCTUATION"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "PUNCTUATION"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse:n10",
@@ -19493,14 +19370,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -19511,19 +19381,11 @@
      "kind": null,
      "why": "GENERIC"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "GENERIC"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse:n11",
@@ -19546,14 +19408,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -19564,13 +19419,7 @@
      "kind": null,
      "why": "BLOCKED_WORD"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "BLOCKED_WORD"
-    }
+    "withPlan": null
    },
    "disagreements": [],
    "pages": "gen:meeting",
@@ -19597,14 +19446,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -19615,19 +19457,11 @@
      "kind": null,
      "why": "BLOCKED_WORD"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "BLOCKED_WORD"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse:n13",
@@ -19744,10 +19578,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "NEED_MORE_CONTEXT",
-     "operations": []
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -19758,13 +19589,7 @@
      "kind": null,
      "why": "GENERIC"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "GENERIC"
-    }
+    "withPlan": null
    },
    "disagreements": [],
    "pages": "gen:meeting",
@@ -19791,14 +19616,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -19809,19 +19627,11 @@
      "kind": null,
      "why": "BLOCKED_WORD"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "BLOCKED_WORD"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse:n17",
@@ -19967,10 +19777,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "NEED_MORE_CONTEXT",
-     "operations": []
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -19981,13 +19788,7 @@
      "kind": null,
      "why": "MIXED"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "MIXED"
-    }
+    "withPlan": null
    },
    "disagreements": [],
    "pages": "gen:meeting",
@@ -21196,14 +20997,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "rules",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [
@@ -21216,13 +21010,7 @@
      "kind": null,
      "why": "MIXED"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "MIXED"
-    }
+    "withPlan": null
    },
    "disagreements": [],
    "pages": "gen:meeting",
@@ -21249,10 +21037,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "rules",
-    "plan": {
-     "status": "NEED_MORE_CONTEXT",
-     "operations": []
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [
@@ -21265,13 +21050,7 @@
      "kind": null,
      "why": "MIXED"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "MIXED"
-    }
+    "withPlan": null
    },
    "disagreements": [],
    "pages": "gen:meeting",
@@ -21338,10 +21117,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "NEED_MORE_CONTEXT",
-     "operations": []
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -21352,13 +21128,7 @@
      "kind": null,
      "why": "BLOCKED_WORD"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "BLOCKED_WORD"
-    }
+    "withPlan": null
    },
    "disagreements": [],
    "pages": "gen:meeting",
@@ -22196,14 +21966,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -22214,19 +21977,11 @@
      "kind": null,
      "why": "BLOCKED_WORD"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "BLOCKED_WORD"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse_content:d02",
@@ -22249,14 +22004,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -22267,19 +22015,11 @@
      "kind": null,
      "why": "BLOCKED_WORD"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "BLOCKED_WORD"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse_content:d03",
@@ -22302,14 +22042,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -22320,13 +22053,7 @@
      "kind": null,
      "why": "MIXED"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "MIXED"
-    }
+    "withPlan": null
    },
    "disagreements": [],
    "pages": "gen:meeting",
@@ -22353,14 +22080,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -22371,19 +22091,11 @@
      "kind": null,
      "why": "BLOCKED_WORD"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "BLOCKED_WORD"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse_content:d05",
@@ -22406,14 +22118,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -22424,13 +22129,7 @@
      "kind": null,
      "why": "BLOCKED_WORD"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "BLOCKED_WORD"
-    }
+    "withPlan": null
    },
    "disagreements": [],
    "pages": "gen:meeting",
@@ -22457,14 +22156,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -22475,19 +22167,11 @@
      "kind": null,
      "why": "BLOCKED_WORD"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "BLOCKED_WORD"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse_content:d07",
@@ -22510,14 +22194,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -22528,19 +22205,11 @@
      "kind": null,
      "why": "GENERIC"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "GENERIC"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse_content:d08",
@@ -22563,14 +22232,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -22581,19 +22243,11 @@
      "kind": null,
      "why": "MIXED"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "MIXED"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse_content:d09",
@@ -22616,14 +22270,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -22634,19 +22281,11 @@
      "kind": null,
      "why": "GENERIC"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "GENERIC"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse_content:d10",
@@ -22669,14 +22308,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -22687,19 +22319,11 @@
      "kind": null,
      "why": "PUNCTUATION"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "PUNCTUATION"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse_content:d11",
@@ -22722,14 +22346,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -22740,19 +22357,11 @@
      "kind": null,
      "why": "PUNCTUATION"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "PUNCTUATION"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse_content:d12",
@@ -22775,14 +22384,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -22793,13 +22395,7 @@
      "kind": null,
      "why": "PUNCTUATION"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "PUNCTUATION"
-    }
+    "withPlan": null
    },
    "disagreements": [],
    "pages": "gen:meeting",
@@ -22873,10 +22469,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "NEED_MORE_CONTEXT",
-     "operations": []
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -22887,13 +22480,7 @@
      "kind": null,
      "why": "MIXED"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "MIXED"
-    }
+    "withPlan": null
    },
    "disagreements": [],
    "pages": "gen:meeting",
@@ -23739,14 +23326,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -23757,19 +23337,11 @@
      "kind": null,
      "why": "GENERIC"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "GENERIC"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse_place:q02",
@@ -23792,14 +23364,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "rules",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [
@@ -23812,13 +23377,7 @@
      "kind": null,
      "why": "MIXED"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "MIXED"
-    }
+    "withPlan": null
    },
    "disagreements": [],
    "pages": "gen:meeting",
@@ -23845,14 +23404,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "rules",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [
@@ -23865,19 +23417,11 @@
      "kind": null,
      "why": "BLOCKED_WORD"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "BLOCKED_WORD"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse_place:q04",
@@ -23900,14 +23444,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "rules",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [
@@ -23920,19 +23457,11 @@
      "kind": null,
      "why": "GENERIC"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "GENERIC"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse_place:q05",
@@ -24035,14 +23564,7 @@
      "needsClarification": false
     },
     "pageIntentSource": "assumed",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [],
@@ -24053,19 +23575,11 @@
      "kind": null,
      "why": "GENERIC"
     },
-    "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "GENERIC"
-    }
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
   },
   {
    "id": "adm:refuse_place:q08",
