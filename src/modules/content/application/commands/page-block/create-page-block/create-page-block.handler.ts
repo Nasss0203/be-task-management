@@ -21,7 +21,7 @@ import {
 } from 'src/modules/content/domain/policies/page-block-container.policy';
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 
-import { isAllowedEmbedContent } from 'src/modules/content/domain/policies/page-block-embed.policy';
+import { normalizeEmbedBlock } from 'src/modules/content/domain/policies/page-block-embed.policy';
 
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
@@ -55,22 +55,26 @@ export class CreatePageBlockHandler {
     const created = await this.uow.runInTransaction(async (context) => {
       const {
         pageId,
-        type,
+        type: requestedType,
         createdBy,
         title,
         positionX,
         positionY,
         width,
         height,
-        content,
+        content: requestedContent,
         styleConfig,
         dataConfig,
         isOpen,
       } = command.input;
 
-      if (!isAllowedEmbedContent(type, content)) {
+      const embed = normalizeEmbedBlock(requestedType, requestedContent);
+
+      if (!embed) {
         throw new BadRequestException('Unsupported embed URL');
       }
+
+      const { type, content } = embed;
 
       const parentBlockId = command.input.parentBlockId ?? null;
       const rowId = command.input.rowId ?? null;
