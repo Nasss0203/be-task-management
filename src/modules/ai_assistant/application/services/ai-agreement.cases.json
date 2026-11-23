@@ -1,6 +1,6 @@
 {
  "_note": "A7-DT (prompt 2026-11-23/02): kết quả chỉ bằng luật của FastAPI và NestJS cho cùng câu. Sinh bằng `python -m scripts.check_agreement --be ../be-task-management --write`; bản chép ở be-task-management phải giống hệt. Không sửa tay.",
- "knownBaseline": 13,
+ "knownBaseline": 12,
  "pageSets": {
   "dev": [
    {
@@ -1130,7 +1130,14 @@
      "needsClarification": false
     },
     "pageIntentSource": "rules",
-    "plan": null
+    "plan": {
+     "status": "PLAN_READY",
+     "operations": [
+      {
+       "type": "INSERT_BLOCKS"
+      }
+     ]
+    }
    },
    "nestjs": {
     "titles": [
@@ -1143,11 +1150,19 @@
      "kind": null,
      "why": "GENERIC"
     },
-    "withPlan": null
+    "withPlan": {
+     "stage": "refused",
+     "status": "UNSUPPORTED_OPERATION",
+     "reason": "INSERT_ONLY",
+     "kind": null,
+     "why": "GENERIC"
+    }
    },
-   "disagreements": [],
+   "disagreements": [
+    "L1"
+   ],
    "pages": "dev",
-   "known": false
+   "known": true
   },
   {
    "id": "dev:vm021",
@@ -1223,7 +1238,14 @@
      "needsClarification": false
     },
     "pageIntentSource": "rules",
-    "plan": null
+    "plan": {
+     "status": "PLAN_READY",
+     "operations": [
+      {
+       "type": "INSERT_BLOCKS"
+      }
+     ]
+    }
    },
    "nestjs": {
     "titles": [
@@ -1236,13 +1258,17 @@
      "pageTitle": "Hội họp tuần",
      "relaxedOnly": true
     },
-    "withPlan": null
+    "withPlan": {
+     "stage": "admitted",
+     "status": "PLAN_GENERATED",
+     "kind": "INSERT",
+     "pageTitle": "Hội họp tuần",
+     "relaxedOnly": true
+    }
    },
-   "disagreements": [
-    "L2"
-   ],
+   "disagreements": [],
    "pages": "dev",
-   "known": true
+   "known": false
   },
   {
    "id": "dev:vm023",
@@ -3707,7 +3733,14 @@
      "needsClarification": false
     },
     "pageIntentSource": "rules",
-    "plan": null
+    "plan": {
+     "status": "PLAN_READY",
+     "operations": [
+      {
+       "type": "CREATE_DATABASE_ROWS"
+      }
+     ]
+    }
    },
    "nestjs": {
     "titles": [
@@ -3720,13 +3753,17 @@
      "pageTitle": "Release 2.0",
      "relaxedOnly": true
     },
-    "withPlan": null
+    "withPlan": {
+     "stage": "admitted",
+     "status": "PLAN_GENERATED",
+     "kind": "INSERT",
+     "pageTitle": "Release 2.0",
+     "relaxedOnly": true
+    }
    },
-   "disagreements": [
-    "L2"
-   ],
+   "disagreements": [],
    "pages": "dev",
-   "known": true
+   "known": false
   },
   {
    "id": "dev:vm071",
@@ -3915,7 +3952,7 @@
      "status": "PLAN_READY",
      "operations": [
       {
-       "type": "INSERT_BLOCKS"
+       "type": "CREATE_DATABASE_ROWS"
       }
      ]
     }
