@@ -50,6 +50,8 @@
   "write_help_after_verb": ["hộ mình", "hộ tôi", "hộ", "dùm mình", "dùm tôi", "dùm", "cho mình", "cho tôi"],
   "write_soft_tail": ["một chút", "một tí", "chút", "thôi", "ngắn thôi", "lại", "thêm", "cho mình với"],
   "write_before_verb": ["đọc rồi", "đọc xong rồi"],
+  "write_draft_verb": ["viết", "soạn", "soạn thảo"],
+  "write_draft_kind": ["đoạn", "email", "thư", "lời mời", "thông báo", "tin nhắn", "lời chúc", "bài đăng", "lời cảm ơn", "lời xin lỗi"],
   "write_style_improve": ["lịch sự", "chuyên nghiệp", "hay", "mượt", "mượt mà", "trôi chảy", "dễ đọc", "tự nhiên", "trang trọng",
                           "mạch lạc", "gọn gàng", "rõ ý"],
   "write_style_shorten": ["ngắn gọn", "ngắn", "gọn"],

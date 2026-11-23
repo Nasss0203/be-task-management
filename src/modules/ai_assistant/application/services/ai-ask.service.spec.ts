@@ -274,6 +274,21 @@ describe('AiAskService', () => {
       );
     },
   );
+  it('drafts new text from the request itself', async () => {
+    const f = fixture();
+    f.intent('WRITING', 'DRAFT');
+    const instruction = 'viết email xin nghỉ phép 2 ngày';
+    await f.service.ask({ ...f.input, instruction });
+    expect(f.assistant.submit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        capability: 'writing.draft',
+        input: expect.objectContaining({ text: instruction }) as Record<
+          string,
+          unknown
+        >,
+      }),
+    );
+  });
   it('extracts quoted inline translation text and verifies original target language', async () => {
     const f = fixture();
     f.intent('WRITING', 'TRANSLATE', 'Vietnamese');

@@ -1,5 +1,43 @@
 import { resolveWritingSource } from './ai-writing-source';
 
+describe('Writing DRAFT source', () => {
+  const draft = {
+    intent: 'WRITING',
+    writingAction: 'DRAFT',
+    language: null,
+    needsClarification: false,
+  } as const;
+  it('writes from the request itself', () => {
+    expect(
+      resolveWritingSource('viết email xin nghỉ phép 2 ngày', null, draft),
+    ).toEqual({ text: 'viết email xin nghỉ phép 2 ngày' });
+  });
+  it('keeps a named language', () => {
+    const instruction =
+      'viết một đoạn ngắn bằng tiếng Anh chào mừng thành viên mới';
+    expect(
+      resolveWritingSource(instruction, null, {
+        ...draft,
+        language: 'English',
+      }),
+    ).toEqual({ text: instruction, language: 'English' });
+  });
+  it.each([
+    'viết vào trang Họp nhóm một đoạn mời mọi người',
+    'nghĩ giúp mình vài ý cho buổi họp',
+  ])('does not draft without a draft request: %s', (instruction) => {
+    expect(resolveWritingSource(instruction, null, draft)).toBeNull();
+  });
+  it('does not take a language the request does not name', () => {
+    expect(
+      resolveWritingSource('viết email xin nghỉ phép 2 ngày', null, {
+        ...draft,
+        language: 'English',
+      }),
+    ).toBeNull();
+  });
+});
+
 describe('Writing source boundary', () => {
   const translation = {
     intent: 'WRITING',
