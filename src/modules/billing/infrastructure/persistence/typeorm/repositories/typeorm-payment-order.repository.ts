@@ -138,7 +138,9 @@ export class TypeOrmPaymentOrderRepository implements PaymentOrderRepository {
       }>
     >(
       `SELECT o.id, o.order_code, p.code AS plan_code, p.name AS plan_name,
-              pp.billing_interval, o.provider, o.amount, o.credit_amount, o.currency, o.status,
+              pp.billing_interval, o.provider, o.amount, o.credit_amount, o.currency,
+              CASE WHEN o.status = 'PENDING' AND o.expires_at IS NOT NULL AND o.expires_at <= CURRENT_TIMESTAMP
+                   THEN 'EXPIRED' ELSE o.status::text END AS status,
               o.paid_at, o.created_at
          FROM payment_orders o
          JOIN billing_plan_prices pp ON pp.id = o.plan_price_id

@@ -429,7 +429,7 @@ describe('Subscription checkout and verified webhook settlement (synthetic persi
       workspaceId,
       planPriceId,
       provider: 'STRIPE',
-      status: 'PENDING',
+      status: 'EXPIRED',
       amount: 99000,
     });
   });
