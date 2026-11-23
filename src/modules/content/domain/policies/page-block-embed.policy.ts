@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import type { PageBlockJson } from 'src/shared/domain/page-block.types';
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 
@@ -103,6 +104,8 @@ export function isAllowedEmbedUrl(url: unknown): boolean {
   return resolveEmbedProvider(url) !== null;
 }
 
+export const MAX_EMBED_CAPTION_LENGTH = 500;
+
 export function normalizeEmbedBlock(
   type: PageBlockType,
   content: PageBlockJson | undefined,
@@ -113,6 +116,18 @@ export function normalizeEmbedBlock(
     content && typeof content === 'object' && !Array.isArray(content)
       ? (content as Record<string, unknown>)
       : null;
+  const caption = fields?.caption;
+
+  if (
+    caption !== undefined &&
+    caption !== null &&
+    (typeof caption !== 'string' || caption.length > MAX_EMBED_CAPTION_LENGTH)
+  ) {
+    throw new BadRequestException(
+      `caption must be text of at most ${MAX_EMBED_CAPTION_LENGTH} characters`,
+    );
+  }
+
   const url = fields?.url;
 
   // A freshly created embed block has no url until the user pastes one

@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 
 import {
@@ -111,5 +112,27 @@ describe('page-block-embed.policy', () => {
         },
       });
     });
+  });
+});
+
+describe('normalizeEmbedBlock caption', () => {
+  const url = 'https://www.figma.com/design/abc123/x';
+
+  it('keeps a caption next to the provider', () => {
+    expect(
+      normalizeEmbedBlock(PageBlockType.EMBED, { url, caption: 'Wireframe' })
+        ?.content,
+    ).toEqual({
+      url,
+      caption: 'Wireframe',
+      provider: 'FIGMA',
+      externalId: null,
+    });
+  });
+
+  it.each([42, 'x'.repeat(501)])('rejects the caption %p', (caption) => {
+    expect(() =>
+      normalizeEmbedBlock(PageBlockType.EMBED, { url, caption }),
+    ).toThrow(BadRequestException);
   });
 });
