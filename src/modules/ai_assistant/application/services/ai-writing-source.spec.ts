@@ -149,3 +149,48 @@ describe('Writing source boundary', () => {
     });
   });
 });
+
+describe('D-91 / L3a: words leading to a writing verb', () => {
+  it('takes the inline text after "mình muốn"', () => {
+    expect(
+      resolveWritingSource(
+        'mình muốn dịch câu quán phở đầu hẻm đã tăng giá thêm năm nghìn sang tiếng Anh',
+        null,
+        {
+          intent: 'WRITING',
+          writingAction: 'TRANSLATE',
+          language: 'English',
+          needsClarification: false,
+        },
+      ),
+    ).toEqual({
+      text: 'quán phở đầu hẻm đã tăng giá thêm năm nghìn',
+      language: 'English',
+    });
+  });
+});
+
+describe('D-91 / L4: continuing is not a new draft', () => {
+  const draft = {
+    intent: 'WRITING',
+    writingAction: 'DRAFT',
+    language: null,
+    needsClarification: false,
+  } as const;
+  it.each([
+    'viết tiếp đoạn này',
+    'viết nốt đoạn này',
+    'viết nối tiếp đoạn này',
+    'viết cho xong đoạn này',
+  ])('has no draft source: %s', (instruction) => {
+    expect(resolveWritingSource(instruction, null, draft)).toBeNull();
+  });
+  it.each([
+    'viết một đoạn giới thiệu dự án',
+    'mình muốn bạn viết giúp một email xin nghỉ phép',
+  ])('still drafts: %s', (instruction) => {
+    expect(resolveWritingSource(instruction, null, draft)).toEqual({
+      text: instruction,
+    });
+  });
+});

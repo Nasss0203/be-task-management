@@ -1,6 +1,6 @@
 {
  "_note": "A7-DT (prompt 2026-11-23/02): kết quả chỉ bằng luật của FastAPI và NestJS cho cùng câu. Sinh bằng `python -m scripts.check_agreement --be ../be-task-management --write`; bản chép ở be-task-management phải giống hệt. Không sửa tay.",
- "knownBaseline": 9,
+ "knownBaseline": 7,
  "pageSets": {
   "dev": [
    {
@@ -7349,12 +7349,10 @@
    },
    "nestjs": {
     "source": false,
-    "draftSource": true
+    "draftSource": false
    },
-   "disagreements": [
-    "L4"
-   ],
-   "known": true
+   "disagreements": [],
+   "known": false
   },
   {
    "id": "dev2:vm001",
@@ -13938,13 +13936,11 @@
     "draftLanguage": "English"
    },
    "nestjs": {
-    "source": false,
+    "source": true,
     "draftSource": false
    },
-   "disagreements": [
-    "L3"
-   ],
-   "known": true
+   "disagreements": [],
+   "known": false
   },
   {
    "id": "dev2:vw086",

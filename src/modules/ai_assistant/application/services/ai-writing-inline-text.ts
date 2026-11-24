@@ -8,7 +8,7 @@ import { vocabularyWords } from './ai-vi-vocabulary-words';
  * the target language, the words left are the text. Mirrors ai-taskmanly
  * `writing_source.inline_writing_text` (shared `ai-writing-inline-text.cases.json`).
  */
-const LEAD = vocabularyWords('lead', 'lead_short', 'let_me');
+const LEAD = vocabularyWords('lead', 'lead_short', 'let_me', 'want');
 const ACTIONS = vocabularyWords(
   'write_translate',
   'write_improve',

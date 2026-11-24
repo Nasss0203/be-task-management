@@ -280,6 +280,14 @@
     {
       "input": "tóm tắt Dự án chậm tiến độ một chút",
       "text": "Dự án chậm tiến độ một chút"
+    },
+    {
+      "input": "mình muốn dịch câu quán phở đầu hẻm đã tăng giá thêm năm nghìn sang tiếng Anh",
+      "text": "quán phở đầu hẻm đã tăng giá thêm năm nghìn"
+    },
+    {
+      "input": "tôi muốn dịch câu quán phở đầu hẻm đã tăng giá sang tiếng Anh",
+      "text": "quán phở đầu hẻm đã tăng giá"
     }
   ]
 }
