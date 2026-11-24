@@ -4,6 +4,7 @@ import { Page } from 'src/modules/content/domain/aggregates/page/page.aggregate'
 import type {
   PageRepository,
   PageTitle,
+  VisitedPage,
 } from 'src/modules/content/domain/repositories/page.repository';
 import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
@@ -203,6 +204,36 @@ export class TypeOrmPageRepository implements PageRepository {
   }
 
   /** Live Pages of the workspace the user may read (teamspace rules included). */
+  async findRecentlyVisited(
+    workspaceId: string,
+    userId: string,
+    limit: number,
+    context?: PersistenceContext,
+  ): Promise<VisitedPage[]> {
+    const { entities, raw } = await this.accessiblePages(
+      workspaceId,
+      userId,
+      context,
+    )
+      .innerJoin(
+        'page_visits',
+        'visit',
+        'visit.page_id = page.id AND visit.user_id = :userId',
+      )
+      .addSelect('visit.visited_at', 'visit_visited_at')
+      .orderBy('visit.visited_at', 'DESC')
+      .limit(limit)
+      .getRawAndEntities<{ page_id: string; visit_visited_at: Date }>();
+    const visitedAt = new Map(
+      raw.map((row) => [row.page_id, row.visit_visited_at]),
+    );
+
+    return entities.map((orm) => ({
+      page: PageMapper.toDomain(orm),
+      visitedAt: visitedAt.get(orm.id) as Date,
+    }));
+  }
+
   private accessiblePages(
     workspaceId: string,
     userId: string,

@@ -32,6 +32,7 @@ import { PagePublicationOrmEntity } from 'src/modules/content/infrastructure/per
 import { PageShareLinkOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-share-link.orm-entity';
 import { PageShareSettingOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-share-setting.orm-entity';
 import { PageShareOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-share.orm-entity';
+import { PageVisitOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page-visit.orm-entity';
 import { PageOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/page.orm-entity';
 import { PublishedSiteOrmEntity } from 'src/modules/content/infrastructure/persistence/typeorm/entities/published-site.orm-entity';
 import { CalendarFeedOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/calendar-feed.orm-entity';
@@ -42,8 +43,8 @@ import { DatabaseViewOrmEntity } from 'src/modules/database/infrastructure/persi
 import { DatabaseOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/database.orm-entity';
 import { PropertyOptionOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/property-option.orm-entity';
 import { RowValueOrmEntity } from 'src/modules/database/infrastructure/persistence/typeorm/entities/row-value.orm-entity';
-import { RefreshToken } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/refresh-token.orm-entity';
 import { LoginAttemptOrmEntity } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/login-attempt.orm-entity';
+import { RefreshToken } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/refresh-token.orm-entity';
 import { UserAuthIdentityOrmEntity } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user-auth-identity.orm-entity';
 import { UserProfile } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user-profile.orm-entity';
 import { User } from 'src/modules/identity/infrastructure/persistence/typeorm/entities/user.orm-entity';
@@ -174,4 +175,5 @@ export const DATABASE_ENTITIES = [
   GoogleCalendarSyncOrmEntity,
   SlackConnectionOrmEntity,
   AdminActionOrmEntity,
+  PageVisitOrmEntity,
 ];

@@ -116,6 +116,8 @@ import { GetPageAccessHandler } from './application/queries/page-access/get-page
 import { GetMyPageEditRequestsHandler } from './application/queries/page-edit-request/get-my-page-edit-requests/get-my-page-edit-requests.handler';
 import { GetPageEditRequestsHandler } from './application/queries/page-edit-request/get-page-edit-requests/get-page-edit-requests.handler';
 import { ListPageFavoritesHandler } from './application/queries/page-favorite/list-page-favorites/list-page-favorites.handler';
+import { ListRecentPageVisitsHandler } from './application/queries/page-visit/list-recent-page-visits/list-recent-page-visits.handler';
+import { RecordPageVisitHandler } from './application/commands/page-visit/record-page-visit/record-page-visit.handler';
 import { GetPagePublicationHandler } from './application/queries/page-publication/get-page-publication/get-page-publication.handler';
 import { GetPublicPageHandler } from './application/queries/page-publication/get-public-page/get-public-page.handler';
 import { GetPublicSiteNavigationHandler } from './application/queries/page-publication/get-public-site-navigation/get-public-site-navigation.handler';
@@ -129,6 +131,7 @@ import { FormQuizAttemptOrmEntity } from './infrastructure/persistence/typeorm/e
 import { PageAccessRequestOrmEntity } from './infrastructure/persistence/typeorm/entities/page-access-request.orm-entity';
 import { PageEditRequestOrmEntity } from './infrastructure/persistence/typeorm/entities/page-edit-request.orm-entity';
 import { PageFavoriteOrmEntity } from './infrastructure/persistence/typeorm/entities/page-favorite.orm-entity';
+import { PageVisitOrmEntity } from './infrastructure/persistence/typeorm/entities/page-visit.orm-entity';
 import { PageShareLinkOrmEntity } from './infrastructure/persistence/typeorm/entities/page-share-link.orm-entity';
 import { PageShareSettingOrmEntity } from './infrastructure/persistence/typeorm/entities/page-share-setting.orm-entity';
 import { PageShareOrmEntity } from './infrastructure/persistence/typeorm/entities/page-share.orm-entity';
@@ -137,6 +140,7 @@ import { TypeOrmFormQuizAttemptRepository } from './infrastructure/persistence/t
 import { TypeOrmPageAccessRequestRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-access-request.repository';
 import { TypeOrmPageEditRequestRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-edit-request.repository';
 import { TypeOrmPageFavoriteRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-favorite.repository';
+import { TypeOrmPageVisitRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-visit.repository';
 import { TypeOrmPageShareLinkRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-share-link.repository';
 import { TypeOrmPageShareSettingRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-share-setting.repository';
 import { TypeOrmPageShareRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-share.repository';
@@ -144,6 +148,7 @@ import { PageAccessRequestController } from './presentation/http/controllers/pag
 import { PageBlockController } from './presentation/http/controllers/page-block.controller';
 import { PageEditRequestController } from './presentation/http/controllers/page-edit-request.controller';
 import { PageFavoriteController } from './presentation/http/controllers/page-favorite.controller';
+import { PageVisitController } from './presentation/http/controllers/page-visit.controller';
 import { PagePublicationController } from './presentation/http/controllers/page-publication.controller';
 import { PageShareSettingsController } from './presentation/http/controllers/page-share-settings.controller';
 import { PageShareController } from './presentation/http/controllers/page-share.controller';
@@ -162,6 +167,10 @@ const repositories = [
   {
     provide: CONTENT_TYPES.repositories.PageFavoriteRepository,
     useClass: TypeOrmPageFavoriteRepository,
+  },
+  {
+    provide: CONTENT_TYPES.repositories.PageVisitRepository,
+    useClass: TypeOrmPageVisitRepository,
   },
   {
     provide: CONTENT_TYPES.repositories.PageShareRepository,
@@ -346,6 +355,14 @@ const pageFavoriteHandlers = [
   {
     provide: CONTENT_TYPES.applications.ListPageFavoritesHandler,
     useClass: ListPageFavoritesHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.RecordPageVisitHandler,
+    useClass: RecordPageVisitHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.ListRecentPageVisitsHandler,
+    useClass: ListRecentPageVisitsHandler,
   },
 ];
 
@@ -533,6 +550,7 @@ const ports = [
       PageOrmEntity,
       PageBlockOrmEntity,
       PageFavoriteOrmEntity,
+      PageVisitOrmEntity,
       PageShareOrmEntity,
       PageShareLinkOrmEntity,
       PageEditRequestOrmEntity,
@@ -555,6 +573,7 @@ const ports = [
 
   controllers: [
     PageFavoriteController,
+    PageVisitController,
     PageController,
     PageBlockController,
     PageShareController,

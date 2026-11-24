@@ -300,6 +300,10 @@
     {
       "file": "1795449790001-UpdateSchema.ts",
       "sha256": "815a7213c6f2d9b65e1117fe15a9f91ee025399e8633df52aa124010b7005bdf"
+    },
+    {
+      "file": "1795530715473-CreatePageVisits.ts",
+      "sha256": "f7413af68197fd7795bb5d9b9e1c6ea47c44264fa87a3635f0e72f4ac3ba43f6"
     }
   ]
 }
