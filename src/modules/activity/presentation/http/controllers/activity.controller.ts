@@ -49,9 +49,13 @@ export class ActivityController {
     @Param('workspaceId') workspaceId: string,
     @Param('projectId') projectId: string,
     @Query() query: FindActivityQueryDto,
+    @Auth() auth: IAuth,
   ) {
     return this.getActivitiesHandler.execute(
-      new GetActivitiesQuery(workspaceId, query, { projectId }),
+      new GetActivitiesQuery(workspaceId, query, {
+        projectId,
+        readableByUserId: auth.id,
+      }),
     );
   }
 
@@ -99,9 +103,14 @@ export class ActivityController {
     @Param('entityType') entityType: ActivityEntityType,
     @Param('entityId') entityId: string,
     @Query() query: FindActivityQueryDto,
+    @Auth() auth: IAuth,
   ) {
     return this.getActivitiesHandler.execute(
-      new GetActivitiesQuery(workspaceId, query, { entityType, entityId }),
+      new GetActivitiesQuery(workspaceId, query, {
+        entityType,
+        entityId,
+        readableByUserId: auth.id,
+      }),
     );
   }
 }
