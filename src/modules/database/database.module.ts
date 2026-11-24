@@ -167,6 +167,7 @@ import { CalendarFeedController } from './presentation/http/controllers/calendar
   ],
   exports: [
     CreateDatabaseHandler,
+    ImportDatabaseRowsHandler,
     AddPropertyHandler,
     AddPropertyOptionHandler,
     RenamePropertyHandler,

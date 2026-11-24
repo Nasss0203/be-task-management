@@ -112,11 +112,20 @@ export class ImportDatabaseRowsHandler {
     const records = readCsvRecords(command.file);
 
     if (command.dryRun) {
-      return this.run(command, records);
+      return this.run(
+        command,
+        records,
+        await this.findDatabase(command.databaseId),
+      );
     }
 
-    const result = await this.uow.runInTransaction((context) =>
-      this.run(command, records, context),
+    const result = await this.uow.runInTransaction(async (context) =>
+      this.run(
+        command,
+        records,
+        await this.findDatabase(command.databaseId, context),
+        context,
+      ),
     );
     if (result.createdRows > 0) {
       this.rowChangePublisher.publish(command.databaseId);
@@ -125,19 +134,35 @@ export class ImportDatabaseRowsHandler {
     return result;
   }
 
-  private async run(
+  importIntoDatabase(
     command: ImportDatabaseRowsCommand,
-    records: CsvRecords,
+    database: Database,
     context?: PersistenceContext,
   ): Promise<ImportDatabaseRowsResult> {
-    let database = await this.databaseRepository.findById(
-      command.databaseId,
+    return this.run(command, readCsvRecords(command.file), database, context);
+  }
+
+  private async findDatabase(
+    databaseId: string,
+    context?: PersistenceContext,
+  ): Promise<Database> {
+    const database = await this.databaseRepository.findById(
+      databaseId,
       context,
     );
     if (!database) {
       throw new NotFoundException('Database not found');
     }
+    return database;
+  }
 
+  private async run(
+    command: ImportDatabaseRowsCommand,
+    records: CsvRecords,
+    target: Database,
+    context?: PersistenceContext,
+  ): Promise<ImportDatabaseRowsResult> {
+    let database = target;
     const matched = this.matchColumns(records.headers, database);
     const suggestedTypes = matched.map((propertyId, index) =>
       propertyId === null
@@ -161,7 +186,7 @@ export class ImportDatabaseRowsHandler {
     const people = columns.some(
       (property) => property?.getType() === PropertyType.PERSON,
     )
-      ? await this.loadPeople(database.getId())
+      ? await this.loadPeople(command.membersPageId ?? database.getPageId())
       : [];
     const pendingOptions = new Map<string, PendingOption>();
     const resolveOption = this.createOptionResolver(pendingOptions);
@@ -405,13 +430,7 @@ export class ImportDatabaseRowsHandler {
       createdIds.set(column, created.id);
     }
 
-    const database = await this.databaseRepository.findById(
-      command.databaseId,
-      context,
-    );
-    if (!database) {
-      throw new NotFoundException('Database not found');
-    }
+    const database = await this.findDatabase(command.databaseId, context);
 
     const columns = mapping.map((entry, index) => {
       if (entry === null) return null;
@@ -426,8 +445,8 @@ export class ImportDatabaseRowsHandler {
     return { database, columns };
   }
 
-  private async loadPeople(databaseId: string): Promise<ImportPerson[]> {
-    const members = await this.peopleReader.findWorkspaceMembers(databaseId);
+  private async loadPeople(pageId: string): Promise<ImportPerson[]> {
+    const members = await this.peopleReader.findWorkspaceMembers(pageId);
 
     return members.map((member) => ({
       userId: member.user_id,

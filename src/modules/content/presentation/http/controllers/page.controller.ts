@@ -47,6 +47,11 @@ import { ApplyPagePresetDto } from 'src/modules/content/application/dto/page/app
 import { ImportMarkdownPageCommand } from 'src/modules/content/application/commands/page/import-markdown-page/import-markdown-page.command';
 import { ImportMarkdownPageHandler } from 'src/modules/content/application/commands/page/import-markdown-page/import-markdown-page.handler';
 import { MARKDOWN_IMPORT_LIMITS } from 'src/modules/content/application/commands/page/import-markdown-page/markdown-to-page-blocks';
+import { ImportCsvPageCommand } from 'src/modules/content/application/commands/page/import-csv-page/import-csv-page.command';
+import { ImportCsvPageHandler } from 'src/modules/content/application/commands/page/import-csv-page/import-csv-page.handler';
+import { ImportCsvPageDto } from 'src/modules/content/application/dto/page/import-csv-page.dto';
+import { CSV_IMPORT_LIMITS } from 'src/modules/database/application/commands/import-database-rows/read-csv-records';
+import { parseMapping } from 'src/modules/database/presentation/http/requests/import-database-rows.request';
 import { ListPagePresetsHandler } from 'src/modules/content/application/queries/page/list-page-presets/list-page-presets.handler';
 import { CreatePageDto } from 'src/modules/content/application/dto/page/create-page.dto';
 import { MovePageDto } from 'src/modules/content/application/dto/page/move-page.dto';
@@ -134,6 +139,9 @@ export class PageController {
 
     @Inject(CONTENT_TYPES.applications.ImportMarkdownPageHandler)
     private readonly importMarkdownPageHandler: ImportMarkdownPageHandler,
+
+    @Inject(CONTENT_TYPES.applications.ImportCsvPageHandler)
+    private readonly importCsvPageHandler: ImportCsvPageHandler,
 
     @Inject(CONTENT_TYPES.applications.ListPagePresetsHandler)
     private readonly listPagePresetsHandler: ListPagePresetsHandler,
@@ -389,6 +397,40 @@ export class PageController {
       new ApplyPagePresetCommand(pageId, dto.preset, auth.id),
     );
     return { success: true };
+  }
+
+  @Post(':pageId/import-csv')
+  @UploadRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
+  @ResponseMessage('Import CSV as a database')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: CSV_IMPORT_LIMITS.maxFileSize, files: 1 },
+    }),
+  )
+  importCsv(
+    @Param('pageId', ParseUUIDPipe) pageId: string,
+    @Body() dto: ImportCsvPageDto,
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Auth() auth: IAuth,
+  ) {
+    if (!file || !/\.csv$/i.test(file.originalname)) {
+      throw new BadRequestException('Upload a .csv file');
+    }
+
+    return this.importCsvPageHandler.execute(
+      new ImportCsvPageCommand(
+        pageId,
+        auth.id,
+        dto.target,
+        file.originalname,
+        file.buffer,
+        parseMapping(dto.mapping),
+        dto.timeZone ?? null,
+        dto.dryRun !== 'false',
+      ),
+    );
   }
 
   @Post(':pageId/import-markdown')

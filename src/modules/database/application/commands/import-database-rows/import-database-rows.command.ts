@@ -10,5 +10,6 @@ export class ImportDatabaseRowsCommand {
     public readonly mapping: ImportColumnMapping[] | null,
     public readonly timeZone: string | null,
     public readonly dryRun: boolean,
+    public readonly membersPageId: string | null = null,
   ) {}
 }

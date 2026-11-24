@@ -16,11 +16,7 @@ import { RequirePermissions } from 'src/common/decorator/require-permissions.dec
 import { WorkspaceContext } from 'src/common/decorator/workspace-context.decorator';
 import { CreateDatabaseRowCommand } from 'src/modules/database/application/commands/create-database-row/create-database-row.command';
 import { CreateDatabaseRowHandler } from 'src/modules/database/application/commands/create-database-row/create-database-row.handler';
-import {
-  ImportDatabaseRowsCommand,
-  type ImportColumnMapping,
-} from 'src/modules/database/application/commands/import-database-rows/import-database-rows.command';
-import { PropertyType } from 'src/modules/database/domain/enums/property-type.enum';
+import { ImportDatabaseRowsCommand } from 'src/modules/database/application/commands/import-database-rows/import-database-rows.command';
 import { ImportDatabaseRowsHandler } from 'src/modules/database/application/commands/import-database-rows/import-database-rows.handler';
 import { CSV_IMPORT_LIMITS } from 'src/modules/database/application/commands/import-database-rows/read-csv-records';
 import { GetDatabasePeopleHandler } from 'src/modules/database/application/queries/get-database-people/get-database-people.handler';
@@ -28,37 +24,10 @@ import { GetDatabaseRowsHandler } from 'src/modules/database/application/queries
 import { GetDatabaseRowsQuery } from 'src/modules/database/application/queries/get-database-rows/get-database-rows.query';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { CreateDatabaseRowRequest } from '../requests/create-database-row.request';
-import { ImportDatabaseRowsRequest } from '../requests/import-database-rows.request';
-
-const isColumnMapping = (item: unknown): item is ImportColumnMapping =>
-  item === null ||
-  typeof item === 'string' ||
-  (typeof item === 'object' &&
-    !Array.isArray(item) &&
-    Object.keys(item).join() === 'type' &&
-    Object.values(PropertyType).includes(
-      (item as { type: PropertyType }).type,
-    ));
-
-function parseMapping(
-  mapping: string | undefined,
-): ImportColumnMapping[] | null {
-  if (mapping === undefined) return null;
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(mapping);
-  } catch {
-    parsed = undefined;
-  }
-  if (!Array.isArray(parsed) || !parsed.every(isColumnMapping)) {
-    throw new BadRequestException(
-      'mapping must be a JSON array of property ids, null or { "type": "<property type>" }',
-    );
-  }
-
-  return parsed;
-}
+import {
+  ImportDatabaseRowsRequest,
+  parseMapping,
+} from '../requests/import-database-rows.request';
 
 @Controller('databases/:databaseId/rows')
 export class DatabaseRowController {

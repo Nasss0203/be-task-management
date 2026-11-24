@@ -31,6 +31,7 @@ export const CONTENT_TYPES = {
     DuplicatePageHandler: Symbol.for('DuplicatePageHandler'),
     ApplyPagePresetHandler: Symbol.for('ApplyPagePresetHandler'),
     ImportMarkdownPageHandler: Symbol.for('ImportMarkdownPageHandler'),
+    ImportCsvPageHandler: Symbol.for('ImportCsvPageHandler'),
     ListPagePresetsHandler: Symbol.for('ListPagePresetsHandler'),
 
     CreatePageBlockHandler: Symbol.for('CreatePageBlockHandler'),

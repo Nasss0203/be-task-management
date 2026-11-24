@@ -35,7 +35,7 @@ export class TypeOrmDatabasePeopleReader implements DatabasePeopleReader {
     );
   }
 
-  findWorkspaceMembers(databaseId: string): Promise<DatabaseWorkspaceMember[]> {
+  findWorkspaceMembers(pageId: string): Promise<DatabaseWorkspaceMember[]> {
     return this.dataSource.query<DatabaseWorkspaceMember[]>(
       `
         SELECT
@@ -43,14 +43,13 @@ export class TypeOrmDatabasePeopleReader implements DatabasePeopleReader {
           u.username AS username,
           u.email AS email,
           up.full_name AS full_name
-        FROM databases d
-        INNER JOIN pages p ON p.id = d.page_id
+        FROM pages p
         INNER JOIN workspace_members wm ON wm.workspace_id = p.workspace_id
         INNER JOIN users u ON u.id = wm.user_id AND u.deleted_at IS NULL
         LEFT JOIN user_profiles up ON up.user_id = u.id
-        WHERE d.id = $1
+        WHERE p.id = $1
       `,
-      [databaseId],
+      [pageId],
     );
   }
 }

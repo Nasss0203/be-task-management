@@ -14,5 +14,5 @@ export interface DatabaseWorkspaceMember {
 
 export interface DatabasePeopleReader {
   findByDatabaseId(databaseId: string): Promise<DatabasePerson[]>;
-  findWorkspaceMembers(databaseId: string): Promise<DatabaseWorkspaceMember[]>;
+  findWorkspaceMembers(pageId: string): Promise<DatabaseWorkspaceMember[]>;
 }
