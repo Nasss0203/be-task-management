@@ -710,3 +710,29 @@ describe('verbs in the content are data', () => {
     expect(isSupportedModification(instruction, names)).toBe(true);
   });
 });
+
+describe('D-91 / L1a: a text-edit verb inside the added content', () => {
+  it.each([
+    [
+      'cho mình thêm 2 dòng Tối ưu tốc độ tải trang và Cập nhật thư viện vào bảng Tasks ở trang Release 2.0 nhé',
+      ['Release 2.0'],
+    ],
+    [
+      'nhờ bạn thêm ba việc nạp tiền điện thoại cho mẹ, lấy áo dài ở tiệm may cô Hạnh và thay pin đồng hồ treo tường vào trang CLB nhiếp ảnh nhé',
+      ['CLB nhiếp ảnh'],
+    ],
+    ['thêm ba việc nạp tiền, lấy áo và sửa đèn', []],
+  ] as [string, string[]][])('admits %s', (instruction, names) => {
+    expect(admittedModificationKind(instruction, names)).toBe('INSERT');
+  });
+
+  it.each([
+    'thêm to-do A và đổi B thành C',
+    'thêm to-do A và sửa B bằng C',
+    'thêm to-do A và xoá to-do B',
+    'thêm việc A và đổi tên trang',
+    'thêm việc A và cập nhật trang',
+  ])('still refuses %s', (instruction) => {
+    expect(admittedModificationKind(instruction, [])).toBeNull();
+  });
+});

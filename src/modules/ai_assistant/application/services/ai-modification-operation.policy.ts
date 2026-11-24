@@ -282,6 +282,21 @@ const TEXT_EDIT =
 const SECOND_COMMAND =
   /\b(?:va|and|roi|then|sau do)\s+(?:them|chen|bo sung|ghi them|add|insert|append|prepend|tich|danh dau|bo tich|hoan thanh|lam xong|check|uncheck|mark|thay|cap nhat|change|xoa|bo|go|delete|remove|sua|doi|chinh sua|chinh|edit|update|rename|dich|translate|publish|share|chia se)\b/u;
 
+const TEXT_EDIT_VERB =
+  /^(?:chinh sua|doi|sua|thay|chinh|cap nhat|change|update|edit)$/u;
+
+const EDIT_TARGET =
+  /^(?:ten\b|(?:(?:toan bo_?|het|ca|noi dung|cua|luon)\s+)*(?:trang|page)\b)|(?<!\b(?:vao|o|trong|tai|cua)\s)\b(?:thanh|bang|to)\b/u;
+
+function hasSecondCommandInContent(body: string): boolean {
+  for (const found of body.matchAll(new RegExp(SECOND_COMMAND.source, 'gu'))) {
+    const verb = found[0].replace(/^(?:va|and|roi|then|sau do)\s+/u, '');
+    const after = body.slice(found.index + found[0].length).trim();
+    if (!TEXT_EDIT_VERB.test(verb) || EDIT_TARGET.test(after)) return true;
+  }
+  return false;
+}
+
 // Kế hoạch xoá block: "xoá / bỏ / gỡ / delete / remove X, Y và Z".
 // "bỏ tích" (untick), "bỏ qua" (override) and "bổ sung" (add) are not deletes.
 const BLOCK_DELETE =
@@ -612,7 +627,7 @@ export function admittedModificationKind(
   const body = command.replace(grammar.insert, '');
   // K1: a verb in the content is data; a second command ("rồi xoá B") and an
   // action on a Page or an instruction to the AI are not.
-  if (SECOND_COMMAND.test(body) || isDangerousData(body)) return null;
+  if (hasSecondCommandInContent(body) || isDangerousData(body)) return null;
   if (!allowFreeData && BLOCKED_VERB.test(body)) return null;
   if (allowFreeData && isInsertionAtNamedPlace(body)) return 'INSERT';
   // Every joined clause must itself name supported content or another insertion.

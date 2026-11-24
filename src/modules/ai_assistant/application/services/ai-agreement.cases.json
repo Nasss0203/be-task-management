@@ -1,6 +1,6 @@
 {
  "_note": "A7-DT (prompt 2026-11-23/02): kết quả chỉ bằng luật của FastAPI và NestJS cho cùng câu. Sinh bằng `python -m scripts.check_agreement --be ../be-task-management --write`; bản chép ở be-task-management phải giống hệt. Không sửa tay.",
- "knownBaseline": 12,
+ "knownBaseline": 10,
  "pageSets": {
   "dev": [
    {
@@ -3962,25 +3962,23 @@
      "Release 2.0"
     ],
     "admission": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "MIXED"
+     "stage": "admitted",
+     "status": "PLAN_GENERATED",
+     "kind": "INSERT",
+     "pageTitle": "Release 2.0",
+     "relaxedOnly": false
     },
     "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "MIXED"
+     "stage": "admitted",
+     "status": "PLAN_GENERATED",
+     "kind": "INSERT",
+     "pageTitle": "Release 2.0",
+     "relaxedOnly": false
     }
    },
-   "disagreements": [
-    "L1"
-   ],
+   "disagreements": [],
    "pages": "dev",
-   "known": true
+   "known": false
   },
   {
    "id": "dev:vm076",
@@ -8966,25 +8964,23 @@
      "CLB nhiếp ảnh"
     ],
     "admission": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "MIXED"
+     "stage": "admitted",
+     "status": "PLAN_GENERATED",
+     "kind": "INSERT",
+     "pageTitle": "CLB nhiếp ảnh",
+     "relaxedOnly": true
     },
     "withPlan": {
-     "stage": "refused",
-     "status": "UNSUPPORTED_OPERATION",
-     "reason": "INSERT_ONLY",
-     "kind": null,
-     "why": "MIXED"
+     "stage": "admitted",
+     "status": "PLAN_GENERATED",
+     "kind": "INSERT",
+     "pageTitle": "CLB nhiếp ảnh",
+     "relaxedOnly": true
     }
    },
-   "disagreements": [
-    "L1"
-   ],
+   "disagreements": [],
    "pages": "dev2",
-   "known": true
+   "known": false
   },
   {
    "id": "dev2:vm035",
