@@ -1,6 +1,6 @@
 {
  "_note": "A7-DT (prompt 2026-11-23/02): kết quả chỉ bằng luật của FastAPI và NestJS cho cùng câu. Sinh bằng `python -m scripts.check_agreement --be ../be-task-management --write`; bản chép ở be-task-management phải giống hệt. Không sửa tay.",
- "knownBaseline": 10,
+ "knownBaseline": 9,
  "pageSets": {
   "dev": [
    {
@@ -23671,18 +23671,11 @@
      "intent": "MODIFY_PAGE",
      "referenceType": "TITLE",
      "pageReference": "Hội họp tuần",
-     "instruction": "thêm việc A xoá B",
+     "instruction": "thêm việc A; xoá B",
      "needsClarification": false
     },
     "pageIntentSource": "rules",
-    "plan": {
-     "status": "PLAN_READY",
-     "operations": [
-      {
-       "type": "INSERT_BLOCKS"
-      }
-     ]
-    }
+    "plan": null
    },
    "nestjs": {
     "titles": [
@@ -23695,19 +23688,211 @@
      "kind": null,
      "why": "PUNCTUATION"
     },
-    "withPlan": {
+    "withPlan": null
+   },
+   "disagreements": [],
+   "pages": "gen:meeting",
+   "known": false
+  },
+  {
+   "id": "adm:refuse_place:q10",
+   "kind": "modify",
+   "text": "thêm việc A vào trang Hội họp tuần, xoá B",
+   "currentPageId": "00000000-0000-4000-8000-000000000001",
+   "context": {
+    "source": "gen",
+    "key": "meeting"
+   },
+   "pageTitle": "Hội họp tuần",
+   "refuse": true,
+   "fastapi": {
+    "intent": "MODIFY_PAGE",
+    "pageIntent": {
+     "intent": "MODIFY_PAGE",
+     "referenceType": "TITLE",
+     "pageReference": "Hội họp tuần",
+     "instruction": "thêm việc A; xoá B",
+     "needsClarification": false
+    },
+    "pageIntentSource": "rules",
+    "plan": null
+   },
+   "nestjs": {
+    "titles": [
+     "Hội họp tuần"
+    ],
+    "admission": {
+     "stage": "refused",
+     "status": "UNSUPPORTED_OPERATION",
+     "reason": "INSERT_ONLY",
+     "kind": null,
+     "why": "BLOCKED_WORD"
+    },
+    "withPlan": null
+   },
+   "disagreements": [],
+   "pages": "gen:meeting",
+   "known": false
+  },
+  {
+   "id": "adm:refuse_place:q11",
+   "kind": "modify",
+   "text": "thêm việc A vào trang Hội họp tuần. Xoá B",
+   "currentPageId": "00000000-0000-4000-8000-000000000001",
+   "context": {
+    "source": "gen",
+    "key": "meeting"
+   },
+   "pageTitle": "Hội họp tuần",
+   "refuse": true,
+   "fastapi": {
+    "intent": "MODIFY_PAGE",
+    "pageIntent": {
+     "intent": "MODIFY_PAGE",
+     "referenceType": "TITLE",
+     "pageReference": "Hội họp tuần",
+     "instruction": "thêm việc A; Xoá B",
+     "needsClarification": false
+    },
+    "pageIntentSource": "rules",
+    "plan": null
+   },
+   "nestjs": {
+    "titles": [
+     "Hội họp tuần"
+    ],
+    "admission": {
+     "stage": "refused",
+     "status": "UNSUPPORTED_OPERATION",
+     "reason": "INSERT_ONLY",
+     "kind": null,
+     "why": "BLOCKED_WORD"
+    },
+    "withPlan": null
+   },
+   "disagreements": [],
+   "pages": "gen:meeting",
+   "known": false
+  },
+  {
+   "id": "adm:refuse_place:q12",
+   "kind": "modify",
+   "text": "thêm việc A vào trang Hội họp tuần; thêm việc B",
+   "currentPageId": "00000000-0000-4000-8000-000000000001",
+   "context": {
+    "source": "gen",
+    "key": "meeting"
+   },
+   "pageTitle": "Hội họp tuần",
+   "refuse": true,
+   "fastapi": {
+    "intent": "MODIFY_PAGE",
+    "pageIntent": {
+     "intent": "MODIFY_PAGE",
+     "referenceType": "TITLE",
+     "pageReference": "Hội họp tuần",
+     "instruction": "thêm việc A; thêm việc B",
+     "needsClarification": false
+    },
+    "pageIntentSource": "rules",
+    "plan": null
+   },
+   "nestjs": {
+    "titles": [
+     "Hội họp tuần"
+    ],
+    "admission": {
      "stage": "refused",
      "status": "UNSUPPORTED_OPERATION",
      "reason": "INSERT_ONLY",
      "kind": null,
      "why": "PUNCTUATION"
-    }
+    },
+    "withPlan": null
    },
-   "disagreements": [
-    "L5"
-   ],
+   "disagreements": [],
    "pages": "gen:meeting",
-   "known": true
+   "known": false
+  },
+  {
+   "id": "adm:refuse_place:q13",
+   "kind": "modify",
+   "text": "thêm việc A vào trang Hội họp tuần, thêm việc B",
+   "currentPageId": "00000000-0000-4000-8000-000000000001",
+   "context": {
+    "source": "gen",
+    "key": "meeting"
+   },
+   "pageTitle": "Hội họp tuần",
+   "refuse": true,
+   "fastapi": {
+    "intent": "MODIFY_PAGE",
+    "pageIntent": {
+     "intent": "MODIFY_PAGE",
+     "referenceType": "TITLE",
+     "pageReference": "Hội họp tuần",
+     "instruction": "thêm việc A; thêm việc B",
+     "needsClarification": false
+    },
+    "pageIntentSource": "rules",
+    "plan": null
+   },
+   "nestjs": {
+    "titles": [
+     "Hội họp tuần"
+    ],
+    "admission": {
+     "stage": "refused",
+     "status": "UNSUPPORTED_OPERATION",
+     "reason": "INSERT_ONLY",
+     "kind": null,
+     "why": "GENERIC"
+    },
+    "withPlan": null
+   },
+   "disagreements": [],
+   "pages": "gen:meeting",
+   "known": false
+  },
+  {
+   "id": "adm:refuse_place:q14",
+   "kind": "modify",
+   "text": "thêm việc A vào trang Hội họp tuần, sửa B thành C",
+   "currentPageId": "00000000-0000-4000-8000-000000000001",
+   "context": {
+    "source": "gen",
+    "key": "meeting"
+   },
+   "pageTitle": "Hội họp tuần",
+   "refuse": true,
+   "fastapi": {
+    "intent": "MODIFY_PAGE",
+    "pageIntent": {
+     "intent": "MODIFY_PAGE",
+     "referenceType": "TITLE",
+     "pageReference": "Hội họp tuần",
+     "instruction": "thêm việc A; sửa B thành C",
+     "needsClarification": false
+    },
+    "pageIntentSource": "rules",
+    "plan": null
+   },
+   "nestjs": {
+    "titles": [
+     "Hội họp tuần"
+    ],
+    "admission": {
+     "stage": "refused",
+     "status": "UNSUPPORTED_OPERATION",
+     "reason": "INSERT_ONLY",
+     "kind": null,
+     "why": "BLOCKED_WORD"
+    },
+    "withPlan": null
+   },
+   "disagreements": [],
+   "pages": "gen:meeting",
+   "known": false
   },
   {
    "id": "draft:d01",

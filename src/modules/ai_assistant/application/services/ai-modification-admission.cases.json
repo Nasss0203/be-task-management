@@ -554,6 +554,11 @@
     { "id": "q06", "text": "thêm hai trang Báo cáo vào trang Hội họp tuần", "why": "tạo trang con không qua lối này" },
     { "id": "q07", "text": "thêm việc A vào trang Dự án khác giúp mình", "why": "tên không phải trang thật vẫn là dữ liệu" },
     { "id": "q08", "text": "xoá hết khỏi trang Hội họp tuần", "why": "xoá hàng loạt" },
-    { "id": "q09", "text": "thêm việc A vào trang Hội họp tuần; xoá B", "why": "dấu ;" }
+    { "id": "q09", "text": "thêm việc A vào trang Hội họp tuần; xoá B", "why": "dấu ;" },
+    { "id": "q10", "text": "thêm việc A vào trang Hội họp tuần, xoá B", "why": "lệnh thứ hai sau dấu , và chỗ đặt" },
+    { "id": "q11", "text": "thêm việc A vào trang Hội họp tuần. Xoá B", "why": "lệnh thứ hai sau dấu . và chỗ đặt" },
+    { "id": "q12", "text": "thêm việc A vào trang Hội họp tuần; thêm việc B", "why": "hai lệnh thêm hai bên chỗ đặt" },
+    { "id": "q13", "text": "thêm việc A vào trang Hội họp tuần, thêm việc B", "why": "hai lệnh thêm hai bên chỗ đặt, dấu ," },
+    { "id": "q14", "text": "thêm việc A vào trang Hội họp tuần, sửa B thành C", "why": "lệnh sửa sau dấu , và chỗ đặt" }
   ]
 }
