@@ -10,6 +10,9 @@ export const CONTENT_TYPES = {
     CreatePageHandler: Symbol.for('CreatePageHandler'),
     SearchPagesHandler: Symbol.for('SearchPagesHandler'),
     ListPageMentionTitlesHandler: Symbol.for('ListPageMentionTitlesHandler'),
+    ListDatabaseMentionTitlesHandler: Symbol.for(
+      'ListDatabaseMentionTitlesHandler',
+    ),
     FindPageByWorkspaceHandler: Symbol.for('FindPageByWorkspaceHandler'),
     FindDatabasesByWorkspaceHandler: Symbol.for(
       'FindDatabasesByWorkspaceHandler',

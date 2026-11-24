@@ -73,6 +73,11 @@ import {
   ListPageMentionTitlesHandler,
   PageMentionTitlesDto,
 } from 'src/modules/content/application/queries/page/list-page-mention-titles/list-page-mention-titles.handler';
+import {
+  type DatabaseMentionTitlesDto,
+  ListDatabaseMentionTitlesHandler,
+} from 'src/modules/content/application/queries/page-database/list-database-mention-titles/list-database-mention-titles.handler';
+import { ListDatabaseMentionTitlesQuery } from 'src/modules/content/application/queries/page-database/list-database-mention-titles/list-database-mention-titles.query';
 import { ListPageMentionTitlesQuery } from 'src/modules/content/application/queries/page/list-page-mention-titles/list-page-mention-titles.query';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
@@ -93,6 +98,9 @@ export class PageController {
 
     @Inject(CONTENT_TYPES.applications.ListPageMentionTitlesHandler)
     private readonly listPageMentionTitlesHandler: ListPageMentionTitlesHandler,
+
+    @Inject(CONTENT_TYPES.applications.ListDatabaseMentionTitlesHandler)
+    private readonly listDatabaseMentionTitlesHandler: ListDatabaseMentionTitlesHandler,
 
     @Inject(CONTENT_TYPES.applications.FindDatabasesByWorkspaceHandler)
     private readonly findDatabasesByWorkspaceHandler: FindDatabasesByWorkspaceHandler,
@@ -254,6 +262,24 @@ export class PageController {
   ): Promise<PageMentionTitlesDto> {
     return this.listPageMentionTitlesHandler.execute(
       new ListPageMentionTitlesQuery(
+        workspaceId,
+        auth.id,
+        typeof ids === 'string' && ids ? ids.split(',') : [],
+      ),
+    );
+  }
+
+  @ResponseMessage('List mentioned database names')
+  @Get('workspace/:workspaceId/database-mention-titles')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
+  @RequirePermissions(PERMISSIONS.PAGE_READ)
+  async listDatabaseMentionTitles(
+    @Param('workspaceId') workspaceId: string,
+    @Query('ids') ids: string | undefined,
+    @Auth() auth: IAuth,
+  ): Promise<DatabaseMentionTitlesDto> {
+    return this.listDatabaseMentionTitlesHandler.execute(
+      new ListDatabaseMentionTitlesQuery(
         workspaceId,
         auth.id,
         typeof ids === 'string' && ids ? ids.split(',') : [],

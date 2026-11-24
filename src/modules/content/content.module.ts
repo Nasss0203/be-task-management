@@ -75,6 +75,7 @@ import { TypeOrmPublishedSiteRepository } from './infrastructure/persistence/typ
 import { TypeOrmPublicSiteNavigationReader } from './infrastructure/persistence/typeorm/readers/typeorm-public-site-navigation.reader';
 import { TypeOrmPageSearchReader } from './infrastructure/persistence/typeorm/readers/typeorm-page-search.reader';
 import { SearchPagesHandler } from './application/queries/page/search-pages/search-pages.handler';
+import { ListDatabaseMentionTitlesHandler } from './application/queries/page-database/list-database-mention-titles/list-database-mention-titles.handler';
 import { ListPageMentionTitlesHandler } from './application/queries/page/list-page-mention-titles/list-page-mention-titles.handler';
 
 import { CreatePageEditRequestHandler } from './application/commands/page-edit-request/create-page-edit-request/create-page-edit-request.handler';
@@ -510,6 +511,10 @@ const ports = [
   {
     provide: CONTENT_TYPES.applications.ListPageMentionTitlesHandler,
     useClass: ListPageMentionTitlesHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.ListDatabaseMentionTitlesHandler,
+    useClass: ListDatabaseMentionTitlesHandler,
   },
   {
     provide: CONTENT_TYPES.bookmarkMetadataFetcher,
