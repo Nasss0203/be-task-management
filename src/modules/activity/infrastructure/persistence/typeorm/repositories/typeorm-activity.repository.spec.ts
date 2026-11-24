@@ -132,6 +132,27 @@ describe('TypeOrmActivityRepository', () => {
     );
   });
 
+  it('keeps only activity on pages the reader can open through membership', async () => {
+    const { activities, qb } = setup();
+
+    await activities.findMany({
+      workspaceId: 'ws-1',
+      readableByUserId: 'user-1',
+    });
+
+    const [condition, params] = qb.andWhere.mock.calls[0] as [
+      string,
+      Record<string, string>,
+    ];
+    expect(params).toEqual({ readableByUserId: 'user-1' });
+    expect(condition).toContain('p.id = activity.page_id');
+    expect(condition).toContain('p.deleted_at IS NULL');
+    expect(condition).toContain("wm.membership_type = 'MEMBER'");
+    expect(condition).toContain('p.teamspace_id IS NULL');
+    expect(condition).toContain('tm.workspace_member_id = wm.id');
+    expect(condition).toContain('t.deleted_at IS NULL');
+  });
+
   it('adds no page filter when none is asked', async () => {
     const { activities, qb } = setup();
 

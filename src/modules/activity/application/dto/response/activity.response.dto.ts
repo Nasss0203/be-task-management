@@ -18,6 +18,12 @@ export class ActivityTargetResponseDto {
   people: { id: string; username: string | null }[];
 }
 
+export class ActivityPageResponseDto {
+  id: string;
+  title: string;
+  icon: string | null;
+}
+
 export class ActivityResponseDto {
   static fromModel(model: ActivityModel): ActivityResponseDto {
     return {
@@ -48,6 +54,7 @@ export class ActivityResponseDto {
   actorId: string | null;
   actor?: ActivityActorResponseDto | null;
   target?: ActivityTargetResponseDto | null;
+  page?: ActivityPageResponseDto | null;
 
   action: ActivityAction;
   field: string | null;

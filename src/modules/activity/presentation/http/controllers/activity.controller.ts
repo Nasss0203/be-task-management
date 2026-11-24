@@ -14,6 +14,8 @@ import { GetPageActivitiesHandler } from '../../../application/queries/get-page-
 import { GetPageActivitiesQuery } from '../../../application/queries/get-page-activities/get-page-activities.query';
 import { GetPageActivitySummaryHandler } from '../../../application/queries/get-page-activity-summary/get-page-activity-summary.handler';
 import { GetPageActivitySummaryQuery } from '../../../application/queries/get-page-activity-summary/get-page-activity-summary.query';
+import { GetWorkspaceActivitiesHandler } from '../../../application/queries/get-workspace-activities/get-workspace-activities.handler';
+import { GetWorkspaceActivitiesQuery } from '../../../application/queries/get-workspace-activities/get-workspace-activities.query';
 
 @Controller('activity')
 @ReadRateLimit()
@@ -22,6 +24,7 @@ export class ActivityController {
     private readonly getActivitiesHandler: GetActivitiesHandler,
     private readonly getPageActivitiesHandler: GetPageActivitiesHandler,
     private readonly getPageActivitySummaryHandler: GetPageActivitySummaryHandler,
+    private readonly getWorkspaceActivitiesHandler: GetWorkspaceActivitiesHandler,
   ) {}
 
   @Get('workspaces/:workspaceId')
@@ -31,9 +34,10 @@ export class ActivityController {
   findByWorkspace(
     @Param('workspaceId') workspaceId: string,
     @Query() query: FindActivityQueryDto,
+    @Auth() auth: IAuth,
   ) {
-    return this.getActivitiesHandler.execute(
-      new GetActivitiesQuery(workspaceId, query),
+    return this.getWorkspaceActivitiesHandler.execute(
+      new GetWorkspaceActivitiesQuery(auth.id, workspaceId, query),
     );
   }
 

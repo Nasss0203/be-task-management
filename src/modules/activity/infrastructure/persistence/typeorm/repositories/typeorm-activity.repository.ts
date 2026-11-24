@@ -13,6 +13,28 @@ import {
 import { Activity } from '../entities/activity.orm-entity';
 import { ActivityMapper } from '../mappers/activity.mapper';
 
+const READABLE_PAGE_CONDITION = `EXISTS (
+  SELECT 1
+  FROM pages p
+  INNER JOIN workspace_members wm
+    ON wm.workspace_id = p.workspace_id
+   AND wm.user_id = :readableByUserId
+   AND wm.membership_type = 'MEMBER'
+  WHERE p.id = activity.page_id
+    AND p.deleted_at IS NULL
+    AND (
+      p.teamspace_id IS NULL
+      OR EXISTS (
+        SELECT 1
+        FROM teamspace_members tm
+        INNER JOIN teamspaces t ON t.id = tm.teamspace_id
+        WHERE tm.teamspace_id = p.teamspace_id
+          AND tm.workspace_member_id = wm.id
+          AND t.deleted_at IS NULL
+      )
+    )
+)`;
+
 @Injectable()
 export class TypeOrmActivityRepository implements ActivityRepository {
   constructor(
@@ -150,6 +172,12 @@ export class TypeOrmActivityRepository implements ActivityRepository {
     if (filters.excludeEntityTypes?.length) {
       qb.andWhere('activity.entityType NOT IN (:...excludeEntityTypes)', {
         excludeEntityTypes: filters.excludeEntityTypes,
+      });
+    }
+
+    if (filters.readableByUserId) {
+      qb.andWhere(READABLE_PAGE_CONDITION, {
+        readableByUserId: filters.readableByUserId,
       });
     }
 
