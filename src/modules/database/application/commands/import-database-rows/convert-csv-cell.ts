@@ -5,6 +5,11 @@ import type {
   RowValueData,
 } from '../../../domain/aggregates/row/row-value.type';
 import { PropertyType } from '../../../domain/enums/property-type.enum';
+import {
+  isValidEmail,
+  isValidPhone,
+  isValidUrl,
+} from '../../../domain/value-objects/contact-value-format';
 
 export interface ImportPerson {
   userId: string;
@@ -184,10 +189,22 @@ export function convertCsvCell(
   switch (property.getType()) {
     case PropertyType.TITLE:
     case PropertyType.TEXT:
-    case PropertyType.URL:
-    case PropertyType.EMAIL:
-    case PropertyType.PHONE:
       return success(text, text);
+
+    case PropertyType.URL:
+      return isValidUrl(text)
+        ? success(text, text)
+        : failure('Not a valid URL');
+
+    case PropertyType.EMAIL:
+      return isValidEmail(text)
+        ? success(text, text)
+        : failure('Not a valid email');
+
+    case PropertyType.PHONE:
+      return isValidPhone(text)
+        ? success(text, text)
+        : failure('Not a valid phone number');
 
     case PropertyType.NUMBER: {
       const number = Number(text.replace(/\s/g, ''));

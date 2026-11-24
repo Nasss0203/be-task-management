@@ -40,6 +40,31 @@ describe('convertCsvCell', () => {
     });
   });
 
+  it('keeps valid links, emails and phones and rejects wrong formats', () => {
+    expect(convert(PropertyType.URL, 'example.com/docs')).toMatchObject({
+      ok: true,
+      value: 'example.com/docs',
+    });
+    expect(convert(PropertyType.EMAIL, 'lan@test.dev')).toMatchObject({
+      ok: true,
+    });
+    expect(convert(PropertyType.PHONE, '+84 912 345 678')).toMatchObject({
+      ok: true,
+    });
+    expect(convert(PropertyType.URL, 'javascript:alert(1)')).toEqual({
+      ok: false,
+      message: 'Not a valid URL',
+    });
+    expect(convert(PropertyType.EMAIL, 'abc')).toEqual({
+      ok: false,
+      message: 'Not a valid email',
+    });
+    expect(convert(PropertyType.PHONE, '12ab')).toEqual({
+      ok: false,
+      message: 'Not a valid phone number',
+    });
+  });
+
   it('parses numbers and rejects other text', () => {
     expect(convert(PropertyType.NUMBER, '1 200.5')).toMatchObject({
       value: 1200.5,
