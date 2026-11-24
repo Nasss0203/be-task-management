@@ -67,6 +67,7 @@ import { PermanentlyDeletePageDatabaseHandler } from 'src/modules/content/applic
 import { RestorePageDatabaseCommand } from 'src/modules/content/application/commands/page-database/restore-page-database/restore-page-database.command';
 import { RestorePageDatabaseHandler } from 'src/modules/content/application/commands/page-database/restore-page-database/restore-page-database.handler';
 import { SearchPagesHandler } from 'src/modules/content/application/queries/page/search-pages/search-pages.handler';
+import { parsePageSearchFilters } from 'src/modules/content/application/queries/page/search-pages/page-search-filters';
 import { SearchPagesQuery } from 'src/modules/content/application/queries/page/search-pages/search-pages.query';
 import {
   ListPageMentionTitlesHandler,
@@ -227,6 +228,9 @@ export class PageController {
   async search(
     @Param('workspaceId') workspaceId: string,
     @Query('q') q: string | undefined,
+    @Query('createdBy') createdBy: unknown,
+    @Query('teamspaceId') teamspaceId: unknown,
+    @Query('editedWithin') editedWithin: unknown,
     @Auth() auth: IAuth,
   ) {
     return this.searchPagesHandler.execute(
@@ -234,6 +238,7 @@ export class PageController {
         workspaceId,
         auth.id,
         typeof q === 'string' ? q : '',
+        parsePageSearchFilters({ createdBy, teamspaceId, editedWithin }),
       ),
     );
   }

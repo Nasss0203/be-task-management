@@ -42,6 +42,7 @@ export class SearchPagesHandler {
       userId: query.userId,
       normalizedQuery,
       limit: SEARCH_CANDIDATE_LIMIT,
+      filters: query.filters,
     });
 
     const allowed = await Promise.all(

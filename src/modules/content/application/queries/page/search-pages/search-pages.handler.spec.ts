@@ -3,7 +3,10 @@ import {
   escapeLikePattern,
   normalizeSearchText,
 } from '../../../services/search-text';
-import { SearchPagesHandler, SEARCH_RESULT_LIMIT } from './search-pages.handler';
+import {
+  SearchPagesHandler,
+  SEARCH_RESULT_LIMIT,
+} from './search-pages.handler';
 import { SearchPagesQuery } from './search-pages.query';
 
 const row = (pageId: string, overrides: Record<string, unknown> = {}) => ({
@@ -59,11 +62,18 @@ describe('SearchPagesHandler', () => {
     );
 
     expect(reader.search).toHaveBeenCalledWith(
-      expect.objectContaining({ workspaceId: 'ws', userId: 'user', normalizedQuery: 'ke hoach' }),
+      expect.objectContaining({
+        workspaceId: 'ws',
+        userId: 'user',
+        normalizedQuery: 'ke hoach',
+      }),
     );
     expect(result.map((item) => item.pageId)).toEqual(['a', 'b']);
     expect(result[0].matchedIn).toBe('title');
-    expect(result[1]).toMatchObject({ matchedIn: 'content', snippet: 'Lên kế hoạch' });
+    expect(result[1]).toMatchObject({
+      matchedIn: 'content',
+      snippet: 'Lên kế hoạch',
+    });
     expect(JSON.stringify(result)).not.toContain('mật khẩu');
   });
 
@@ -71,9 +81,32 @@ describe('SearchPagesHandler', () => {
     reader.search.mockResolvedValue([row('a')]);
     authorization.authorize.mockResolvedValue(true);
 
-    const [item] = await handler.execute(new SearchPagesQuery('ws', 'user', '   '));
+    const [item] = await handler.execute(
+      new SearchPagesQuery('ws', 'user', '   '),
+    );
 
     expect(item).toMatchObject({ matchedIn: null, snippet: null });
+  });
+
+  it('passes filters to the reader and none by default', async () => {
+    reader.search.mockResolvedValue([]);
+    const filters = {
+      createdBy: 'user-a',
+      teamspaceId: null,
+      editedWithinDays: 7,
+    };
+
+    await handler.execute(new SearchPagesQuery('ws', 'user', '', filters));
+    await handler.execute(new SearchPagesQuery('ws', 'user', 'plan'));
+
+    expect(reader.search).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ filters }),
+    );
+    expect(reader.search).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ filters: {} }),
+    );
   });
 
   it('caps the number of results', async () => {
@@ -82,7 +115,9 @@ describe('SearchPagesHandler', () => {
     );
     authorization.authorize.mockResolvedValue(true);
 
-    const result = await handler.execute(new SearchPagesQuery('ws', 'user', 'page'));
+    const result = await handler.execute(
+      new SearchPagesQuery('ws', 'user', 'page'),
+    );
 
     expect(result).toHaveLength(SEARCH_RESULT_LIMIT);
   });

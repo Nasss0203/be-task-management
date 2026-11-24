@@ -9,11 +9,18 @@ export interface PageSearchRow {
   snippet: string | null;
 }
 
+export interface PageSearchFilters {
+  createdBy?: string;
+  teamspaceId?: string | null;
+  editedWithinDays?: number;
+}
+
 export interface PageSearchReader {
   search(input: {
     workspaceId: string;
     userId: string;
     normalizedQuery: string;
     limit: number;
+    filters?: PageSearchFilters;
   }): Promise<PageSearchRow[]>;
 }
