@@ -13,6 +13,11 @@ export class PublishedSiteMapper {
       updatedAt: orm.updated_at,
       disabledAt: orm.disabled_at,
       allowUpdates: orm.allow_updates,
+      seo: {
+        title: orm.seo_title ?? null,
+        description: orm.seo_description ?? null,
+        indexing: orm.search_indexing ?? false,
+      },
       moderation: orm.moderation_disabled_at
         ? {
             disabledAt: orm.moderation_disabled_at,
@@ -30,6 +35,9 @@ export class PublishedSiteMapper {
     orm.root_page_id = domain.getRootPageId();
     orm.subdomain = domain.getSubdomain();
     orm.allow_updates = domain.getAllowUpdates();
+    orm.seo_title = domain.getSeo().title;
+    orm.seo_description = domain.getSeo().description;
+    orm.search_indexing = domain.getSeo().indexing;
     orm.created_by = domain.getCreatedBy();
     orm.created_at = domain.getCreatedAt();
     orm.updated_at = domain.getUpdatedAt();

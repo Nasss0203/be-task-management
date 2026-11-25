@@ -20,6 +20,8 @@ export class PublicPageResponseDto {
 
   blocks: PublicPageBlockResponseDto[];
 
+  seo: { title: string | null; description: string | null; indexing: boolean };
+
   capabilities: {
     updates_enabled: boolean;
     authenticated: boolean;

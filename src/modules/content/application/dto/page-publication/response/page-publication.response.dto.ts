@@ -12,6 +12,7 @@ export class PagePublicationResponseDto {
   publication_type: PagePublicationType;
   include_descendants: boolean;
   allow_updates: boolean;
+  seo: { title: string | null; description: string | null; indexing: boolean };
   published: boolean;
   published_at: Date;
   unpublished_at: Date | null;
@@ -32,6 +33,7 @@ export class PagePublicationResponseDto {
       publication_type: publication.getPublicationType(),
       include_descendants: publication.getIncludeDescendants(),
       allow_updates: site.getAllowUpdates(),
+      seo: site.getSeo(),
       published,
       published_at: publication.getPublishedAt(),
       unpublished_at: publication.getUnpublishedAt(),

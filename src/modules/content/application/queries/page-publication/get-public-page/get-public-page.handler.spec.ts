@@ -24,6 +24,7 @@ describe('GetPublicPageHandler capabilities', () => {
     getId: () => 'site-id',
     getSubdomain: () => 'asss',
     getAllowUpdates: () => true,
+    getSeo: () => ({ title: 'Docs', description: 'Guides', indexing: true }),
   };
   const publication = { getPath: () => '/about' };
 
@@ -64,6 +65,20 @@ describe('GetPublicPageHandler capabilities', () => {
       can_update: false,
     });
     expect(authorize).not.toHaveBeenCalled();
+  });
+
+  it('returns the site SEO settings with the page', async () => {
+    const { handler } = createHandler(false);
+
+    const result = await handler.execute(
+      new GetPublicPageQuery('asss', '/about'),
+    );
+
+    expect(result.seo).toEqual({
+      title: 'Docs',
+      description: 'Guides',
+      indexing: true,
+    });
   });
 
   it.each([
@@ -176,6 +191,7 @@ describe('GetPublicPageHandler database views', () => {
           getId: () => 'site-id',
           getSubdomain: () => 'acme',
           getAllowUpdates: () => false,
+          getSeo: () => ({ title: null, description: null, indexing: false }),
         }),
       } as unknown as PublishedSiteRepository,
       {

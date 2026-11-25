@@ -37,4 +37,29 @@ describe('PublishedSite', () => {
     expect(() => site.enable()).toThrow(PublishedSiteDisabledByAdminError);
     expect(site.getDisabledAt()).not.toBeNull();
   });
+
+  it('starts without SEO text and with search indexing off', () => {
+    expect(restoreSite(false).getSeo()).toEqual({
+      title: null,
+      description: null,
+      indexing: false,
+    });
+  });
+
+  it('trims SEO text, stores blank text as null and keeps fields that were not sent', () => {
+    const site = restoreSite(false);
+
+    site.updateSeo({
+      title: '  Docs  ',
+      description: 'Guides',
+      indexing: true,
+    });
+    site.updateSeo({ description: '   ' });
+
+    expect(site.getSeo()).toEqual({
+      title: 'Docs',
+      description: null,
+      indexing: true,
+    });
+  });
 });

@@ -1,10 +1,10 @@
 import {
-    BadRequestException,
-    ConflictException,
-    ForbiddenException,
-    Inject,
-    Injectable,
-    NotFoundException,
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
@@ -38,10 +38,12 @@ export class UpdatePagePublicationSettingsHandler {
   async execute(
     command: UpdatePagePublicationSettingsCommand,
   ): Promise<PagePublicationResponseDto> {
-    if (
-      command.includeDescendants === undefined &&
-      command.allowUpdates === undefined
-    )
+    const changesSeo = Object.values(command.seo).some(
+      (value) => value !== undefined,
+    );
+    const changesSite = command.allowUpdates !== undefined || changesSeo;
+
+    if (command.includeDescendants === undefined && !changesSite)
       throw new BadRequestException(
         'At least one publication setting is required',
       );
@@ -81,7 +83,7 @@ export class UpdatePagePublicationSettingsHandler {
         if (!site) throw new NotFoundException('Published site not found');
 
         if (
-          command.allowUpdates !== undefined &&
+          changesSite &&
           !(await this.authorization.authorize({
             userId: command.actorId,
             permissions: [PERMISSIONS.PAGE_PUBLISH],
@@ -114,8 +116,10 @@ export class UpdatePagePublicationSettingsHandler {
         )
           throw new BadRequestException('Page publication is unpublished');
 
-        if (command.allowUpdates !== undefined) {
-          site.setAllowUpdates(command.allowUpdates);
+        if (changesSite) {
+          if (command.allowUpdates !== undefined)
+            site.setAllowUpdates(command.allowUpdates);
+          if (changesSeo) site.updateSeo(command.seo);
           await this.sites.save(site, manager);
         }
 

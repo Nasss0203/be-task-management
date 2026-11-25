@@ -82,6 +82,7 @@ export class GetPublicPageHandler {
       }
 
       result.breadcrumbs = resolved.breadcrumbs;
+      result.seo = site.getSeo();
 
       const updatesEnabled = site.getAllowUpdates();
       const authenticated = Boolean(query.userId);

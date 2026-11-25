@@ -20,8 +20,27 @@ type RestorePublishedSiteProps = {
   updatedAt: Date;
   disabledAt: Date | null;
   allowUpdates?: boolean;
+  seo?: PublishedSiteSeo;
   moderation?: PublishedSiteModeration | null;
 };
+
+export type PublishedSiteSeo = {
+  title: string | null;
+  description: string | null;
+  indexing: boolean;
+};
+
+export type PublishedSiteSeoChanges = Partial<PublishedSiteSeo>;
+
+const EMPTY_SEO: PublishedSiteSeo = {
+  title: null,
+  description: null,
+  indexing: false,
+};
+
+function cleanText(value: string | null): string | null {
+  return value?.trim() || null;
+}
 
 export type PublishedSiteModeration = {
   disabledAt: Date;
@@ -47,6 +66,7 @@ export class PublishedSite {
     private updatedAt: Date,
     private disabledAt: Date | null,
     private allowUpdates: boolean,
+    private seo: PublishedSiteSeo,
     private readonly moderation: PublishedSiteModeration | null = null,
   ) {}
 
@@ -63,6 +83,7 @@ export class PublishedSite {
       now,
       null,
       props.allowUpdates ?? false,
+      EMPTY_SEO,
     );
   }
 
@@ -77,6 +98,7 @@ export class PublishedSite {
       props.updatedAt,
       props.disabledAt,
       props.allowUpdates ?? false,
+      props.seo ?? EMPTY_SEO,
       props.moderation ?? null,
     );
   }
@@ -99,6 +121,19 @@ export class PublishedSite {
 
   setAllowUpdates(allowUpdates: boolean): void {
     this.allowUpdates = allowUpdates;
+    this.updatedAt = new Date();
+  }
+
+  updateSeo(changes: PublishedSiteSeoChanges): void {
+    this.seo = {
+      title:
+        changes.title === undefined ? this.seo.title : cleanText(changes.title),
+      description:
+        changes.description === undefined
+          ? this.seo.description
+          : cleanText(changes.description),
+      indexing: changes.indexing ?? this.seo.indexing,
+    };
     this.updatedAt = new Date();
   }
 
@@ -128,6 +163,9 @@ export class PublishedSite {
   }
   getAllowUpdates(): boolean {
     return this.allowUpdates;
+  }
+  getSeo(): PublishedSiteSeo {
+    return this.seo;
   }
   getModeration(): PublishedSiteModeration | null {
     return this.moderation;

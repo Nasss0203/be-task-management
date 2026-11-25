@@ -47,6 +47,20 @@ export class PublishedSiteOrmEntity {
   @Column({ name: 'allow_updates', type: 'boolean', default: false })
   allow_updates: boolean;
 
+  @Column({ name: 'seo_title', type: 'varchar', length: 70, nullable: true })
+  seo_title: string | null;
+
+  @Column({
+    name: 'seo_description',
+    type: 'varchar',
+    length: 200,
+    nullable: true,
+  })
+  seo_description: string | null;
+
+  @Column({ name: 'search_indexing', type: 'boolean', default: false })
+  search_indexing: boolean;
+
   @Column('uuid')
   created_by: string;
 

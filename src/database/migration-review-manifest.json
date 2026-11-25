@@ -304,6 +304,10 @@
     {
       "file": "1795530715473-CreatePageVisits.ts",
       "sha256": "f7413af68197fd7795bb5d9b9e1c6ea47c44264fa87a3635f0e72f4ac3ba43f6"
+    },
+    {
+      "file": "1795532344342-UpdateSchema.ts",
+      "sha256": "68773348c2cc679aefc4c7c6272f4c997bec9ef4a4b49d4f0fec09844faa6ad6"
     }
   ]
 }

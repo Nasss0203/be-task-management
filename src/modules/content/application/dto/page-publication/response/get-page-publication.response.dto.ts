@@ -6,6 +6,7 @@ export class GetPagePublicationResponseDto {
   subdomain?: string;
   site_active?: boolean;
   allow_updates?: boolean;
+  seo?: { title: string | null; description: string | null; indexing: boolean };
   path?: string;
 
   published_at?: Date;
