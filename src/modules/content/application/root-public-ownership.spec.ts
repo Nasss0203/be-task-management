@@ -11,6 +11,7 @@ import { AuthorizationService } from 'src/modules/permission/application/service
 import type { WorkspaceRepository } from 'src/modules/workspace/domain/repositories/workspace.repository';
 import type { WorkspaceEntitlementPort } from 'src/modules/billing/application/ports/workspace-entitlement.port';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
+import type { DatabaseSnapshotReaderPort } from 'src/modules/database/application/ports/database-snapshot-reader.port';
 import { Page } from '../domain/aggregates/page/page.aggregate';
 import { PageBlock } from '../domain/entities/page-block.entity';
 import { PagePublication } from '../domain/entities/page-publication.entity';
@@ -480,6 +481,8 @@ describe('root-owned public sites', () => {
       publicationRepo,
       { findByPageId: async () => [] } as unknown as PageBlockRepository,
       availability,
+      auth,
+      {} as DatabaseSnapshotReaderPort,
     );
     expect(
       (await publicPage.execute(new GetPublicPageQuery('home', '/about'))).page
@@ -670,6 +673,8 @@ describe('root-owned public sites', () => {
       publicationRepo,
       { findByPageId: async () => [] } as unknown as PageBlockRepository,
       availability,
+      auth,
+      {} as DatabaseSnapshotReaderPort,
     );
     await expect(
       publicPage.execute(new GetPublicPageQuery('home', '/docs')),

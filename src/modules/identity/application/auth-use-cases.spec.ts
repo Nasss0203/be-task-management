@@ -126,9 +126,10 @@ const createRefreshTokenRepositoryMock =
     save: jest.fn(),
   });
 
-const createIssueTokenServiceMock = () => ({
-  issueTokens: jest.fn(),
-});
+const createIssueTokenServiceMock = () =>
+  ({
+    issueTokens: jest.fn(),
+  }) as unknown as jest.Mocked<IssueAuthTokenServiceImpl>;
 
 const createLoginAttemptRecorderMock = () => ({
   record: jest.fn().mockResolvedValue(undefined),

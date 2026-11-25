@@ -13,7 +13,10 @@ const createKey = (tenantId: string | null): UserAuthIdentityKey => ({
 
 const createRepositoryMock = () => {
   const findOne = jest
-    .fn<Repository<UserAuthIdentityOrmEntity>['findOne']>()
+    .fn<
+      Promise<UserAuthIdentityOrmEntity | null>,
+      Parameters<Repository<UserAuthIdentityOrmEntity>['findOne']>
+    >()
     .mockResolvedValue(null);
   const repository = {
     findOne,

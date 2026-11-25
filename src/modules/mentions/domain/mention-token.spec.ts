@@ -19,4 +19,22 @@ describe('mention tokens', () => {
   it('turns tokens into readable text for notifications', () => {
     expect(mentionTokensToText(`Ping @[Lan](user:${LAN})!`)).toBe('Ping @Lan!');
   });
+
+  it('shows page and database mentions without leaking their tokens', () => {
+    const body = `@[Lan](user:${LAN}) see @[page](page:${MINH}) and @[database](database:${LAN})`;
+
+    expect(mentionTokensToText(body)).toBe('@Lan see @page and @database');
+  });
+
+  it('does not reveal a label written into a page or database token', () => {
+    expect(mentionTokensToText(`@[Secret plan](page:${MINH})`)).toBe('@page');
+  });
+
+  it('still notifies only mentioned users', () => {
+    expect(
+      parseMentionedUserIds(
+        `@[page](page:${MINH}) @[database](database:${MINH}) @[Lan](user:${LAN})`,
+      ),
+    ).toEqual([LAN]);
+  });
 });
