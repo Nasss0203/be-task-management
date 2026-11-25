@@ -1,4 +1,6 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { CONTENT_TYPES } from 'src/modules/content/content.types';
+import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
 import { WorkspaceOverviewResponseDto } from 'src/modules/workspace/application/dto/workspace/response/workspace-overview.response.dto';
 import type { WorkspaceRepository } from 'src/modules/workspace/domain/repositories/workspace.repository';
 import { WORKSPACE_TYPES } from 'src/modules/workspace/workspace.types';
@@ -9,6 +11,8 @@ export class GetWorkspaceOverviewHandler {
   constructor(
     @Inject(WORKSPACE_TYPES.repositories.WorkspaceRepository)
     private readonly workspaceRepository: WorkspaceRepository,
+    @Inject(CONTENT_TYPES.repositories.PageRepository)
+    private readonly pageRepository: PageRepository,
   ) {}
 
   async execute(
@@ -23,6 +27,17 @@ export class GetWorkspaceOverviewHandler {
       throw new HttpException('Workspace not found', HttpStatus.NOT_FOUND);
     }
 
-    return this.workspaceRepository.findOverview(query.workspaceId);
+    const [overview, pageCounts] = await Promise.all([
+      this.workspaceRepository.findOverview(query.workspaceId),
+      this.pageRepository.countAccessibleByWorkspace(
+        query.workspaceId,
+        query.userId,
+      ),
+    ]);
+
+    return {
+      workspaceId: overview.workspaceId,
+      metrics: { ...overview.metrics, ...pageCounts },
+    };
   }
 }

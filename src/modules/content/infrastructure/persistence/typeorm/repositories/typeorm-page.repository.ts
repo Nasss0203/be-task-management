@@ -2,6 +2,7 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Page } from 'src/modules/content/domain/aggregates/page/page.aggregate';
 import type {
+  AccessiblePageCounts,
   PageRepository,
   PageTitle,
   VisitedPage,
@@ -232,6 +233,41 @@ export class TypeOrmPageRepository implements PageRepository {
       page: PageMapper.toDomain(orm),
       visitedAt: visitedAt.get(orm.id) as Date,
     }));
+  }
+
+  async countAccessibleByWorkspace(
+    workspaceId: string,
+    userId: string,
+    context?: PersistenceContext,
+  ): Promise<AccessiblePageCounts> {
+    const counts = await this.accessiblePages(workspaceId, userId, context)
+      .select('COUNT(page.id)::int', 'pages')
+      .addSelect(
+        `COUNT(page.id) FILTER (WHERE page.updated_at >= now() - interval '7 days')::int`,
+        'updatedLast7Days',
+      )
+      .addSelect(
+        `COALESCE(SUM((
+          SELECT COUNT(*)
+          FROM databases page_database
+          WHERE page_database.page_id = page.id
+            AND EXISTS (
+              SELECT 1 FROM page_blocks block
+              WHERE block.page_id = page.id
+                AND block.type = 'DATABASE_VIEW'
+                AND block.deleted_at IS NULL
+                AND block.data_config ->> 'database_id' = page_database.id::text
+            )
+        )), 0)::int`,
+        'databases',
+      )
+      .getRawOne<AccessiblePageCounts>();
+
+    return {
+      pages: counts?.pages ?? 0,
+      databases: counts?.databases ?? 0,
+      updatedLast7Days: counts?.updatedLast7Days ?? 0,
+    };
   }
 
   private accessiblePages(
