@@ -159,6 +159,46 @@ describe('AttachmentFileValidatorAdapter', () => {
     ).resolves.toBe('application/octet-stream');
   });
 
+  it.each([
+    ['song.mp3', '.mp3', 'audio/mpeg'],
+    ['voice.m4a', '.m4a', 'audio/x-m4a'],
+    ['take.wav', '.wav', 'audio/wav'],
+    ['clip.ogg', '.ogg', 'audio/ogg'],
+    ['memo.ogg', '.ogg', 'audio/ogg; codecs=opus'],
+  ])('accepts audio %s', async (originalName, extension, mime) => {
+    mockFileTypeFromFile.mockResolvedValue({ ext: extension.slice(1), mime });
+
+    expect(adapter.validateExtension(originalName)).toBe(extension);
+    await expect(
+      adapter.validateRealFileType(createFile({ originalName }), extension),
+    ).resolves.toBe(mime);
+  });
+
+  it('rejects an executable renamed to .mp3', async () => {
+    mockFileTypeFromFile.mockResolvedValue({
+      ext: 'exe',
+      mime: 'application/x-msdownload',
+    });
+
+    await expect(
+      adapter.validateRealFileType(
+        createFile({ originalName: 'song.mp3' }),
+        '.mp3',
+      ),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('rejects a video saved with an .mp3 extension', async () => {
+    mockFileTypeFromFile.mockResolvedValue({ ext: 'mp4', mime: 'video/mp4' });
+
+    await expect(
+      adapter.validateRealFileType(
+        createFile({ originalName: 'song.mp3' }),
+        '.mp3',
+      ),
+    ).rejects.toThrow(BadRequestException);
+  });
+
   it('rejects content that does not match its extension', async () => {
     mockFileTypeFromFile.mockResolvedValue({
       ext: 'pdf',

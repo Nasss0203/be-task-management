@@ -308,6 +308,10 @@
     {
       "file": "1795532344342-UpdateSchema.ts",
       "sha256": "68773348c2cc679aefc4c7c6272f4c997bec9ef4a4b49d4f0fec09844faa6ad6"
+    },
+    {
+      "file": "1795540000000-add-audio-block-type.ts",
+      "sha256": "9f73b2edd99effc2c86138aa9856a0454912b20222ead86df05ce5445b631689"
     }
   ]
 }
