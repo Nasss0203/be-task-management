@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import {
   ActivityAction,
   ActivityEntityType,
@@ -94,13 +90,15 @@ describe('UploadAttachmentHandler', () => {
     );
   });
 
-  it('rejects upload without a comment or page block target', async () => {
-    await expect(
-      handler.execute(
-        new UploadAttachmentCommand(file, 'ws-1', null, null, 'user-1'),
-      ),
-    ).rejects.toThrow(BadRequestException);
-    expect(upload).not.toHaveBeenCalled();
+  it('uploads a workspace file without a comment or page block target', async () => {
+    const result = await handler.execute(
+      new UploadAttachmentCommand(file, 'ws-1', null, null, 'user-1'),
+    );
+
+    expect(upload).toHaveBeenCalledWith(
+      expect.objectContaining({ commentId: null, pageBlockId: null }),
+    );
+    expect(result).toMatchObject({ commentId: null, pageBlockId: null });
   });
 
   describe('with a page block target', () => {

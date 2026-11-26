@@ -61,6 +61,15 @@ export class PublishedSiteOrmEntity {
   @Column({ name: 'search_indexing', type: 'boolean', default: false })
   search_indexing: boolean;
 
+  @Column({ name: 'logo_attachment_id', type: 'uuid', nullable: true })
+  logo_attachment_id: string | null;
+
+  @Column({ name: 'favicon_attachment_id', type: 'uuid', nullable: true })
+  favicon_attachment_id: string | null;
+
+  @Column({ name: 'accent_color', type: 'varchar', length: 7, nullable: true })
+  accent_color: string | null;
+
   @Column('uuid')
   created_by: string;
 

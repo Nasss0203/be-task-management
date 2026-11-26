@@ -127,6 +127,11 @@ export class PagePublicationController {
           description: dto.seo_description,
           indexing: dto.search_indexing,
         },
+        {
+          logoAttachmentId: dto.logo_attachment_id,
+          faviconAttachmentId: dto.favicon_attachment_id,
+          accentColor: dto.accent_color,
+        },
       ),
     );
   }

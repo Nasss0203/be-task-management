@@ -21,6 +21,7 @@ type RestorePublishedSiteProps = {
   disabledAt: Date | null;
   allowUpdates?: boolean;
   seo?: PublishedSiteSeo;
+  theme?: PublishedSiteTheme;
   moderation?: PublishedSiteModeration | null;
 };
 
@@ -36,6 +37,20 @@ const EMPTY_SEO: PublishedSiteSeo = {
   title: null,
   description: null,
   indexing: false,
+};
+
+export type PublishedSiteTheme = {
+  logoAttachmentId: string | null;
+  faviconAttachmentId: string | null;
+  accentColor: string | null;
+};
+
+export type PublishedSiteThemeChanges = Partial<PublishedSiteTheme>;
+
+const EMPTY_THEME: PublishedSiteTheme = {
+  logoAttachmentId: null,
+  faviconAttachmentId: null,
+  accentColor: null,
 };
 
 function cleanText(value: string | null): string | null {
@@ -67,6 +82,7 @@ export class PublishedSite {
     private disabledAt: Date | null,
     private allowUpdates: boolean,
     private seo: PublishedSiteSeo,
+    private theme: PublishedSiteTheme,
     private readonly moderation: PublishedSiteModeration | null = null,
   ) {}
 
@@ -84,6 +100,7 @@ export class PublishedSite {
       null,
       props.allowUpdates ?? false,
       EMPTY_SEO,
+      EMPTY_THEME,
     );
   }
 
@@ -99,6 +116,7 @@ export class PublishedSite {
       props.disabledAt,
       props.allowUpdates ?? false,
       props.seo ?? EMPTY_SEO,
+      props.theme ?? EMPTY_THEME,
       props.moderation ?? null,
     );
   }
@@ -137,6 +155,24 @@ export class PublishedSite {
     this.updatedAt = new Date();
   }
 
+  updateTheme(changes: PublishedSiteThemeChanges): void {
+    this.theme = {
+      logoAttachmentId:
+        changes.logoAttachmentId === undefined
+          ? this.theme.logoAttachmentId
+          : changes.logoAttachmentId,
+      faviconAttachmentId:
+        changes.faviconAttachmentId === undefined
+          ? this.theme.faviconAttachmentId
+          : changes.faviconAttachmentId,
+      accentColor:
+        changes.accentColor === undefined
+          ? this.theme.accentColor
+          : changes.accentColor?.toLowerCase() || null,
+    };
+    this.updatedAt = new Date();
+  }
+
   getId(): string {
     return this.id;
   }
@@ -166,6 +202,9 @@ export class PublishedSite {
   }
   getSeo(): PublishedSiteSeo {
     return this.seo;
+  }
+  getTheme(): PublishedSiteTheme {
+    return this.theme;
   }
   getModeration(): PublishedSiteModeration | null {
     return this.moderation;

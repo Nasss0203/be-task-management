@@ -312,6 +312,10 @@
     {
       "file": "1795540000000-add-audio-block-type.ts",
       "sha256": "9f73b2edd99effc2c86138aa9856a0454912b20222ead86df05ce5445b631689"
+    },
+    {
+      "file": "1795545000000-add-published-site-theme.ts",
+      "sha256": "9dd06bc7eef24cb586d11050cf5e3f7cc5cf01d7674dcfc844a8f6b0033b46a9"
     }
   ]
 }

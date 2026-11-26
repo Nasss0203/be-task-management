@@ -18,6 +18,7 @@ import type { PublishedSiteRepository } from '../../../../domain/repositories/pu
 import { PagePublicationResponseDto } from '../../../dto/page-publication/response/page-publication.response.dto';
 import { PagePublicationTreeService } from '../../../services/page-publication-tree.service';
 import { PublicationAvailabilityService } from '../../../services/publication-availability.service';
+import { PublishedSiteThemeService } from '../../../services/published-site-theme.service';
 import { resolvePagePublication } from '../../../services/resolve-page-publication';
 import { UpdatePagePublicationSettingsCommand } from './update-page-publication-settings.command';
 
@@ -33,6 +34,7 @@ export class UpdatePagePublicationSettingsHandler {
     private readonly tree: PagePublicationTreeService,
     private readonly availability: PublicationAvailabilityService,
     private readonly authorization: AuthorizationService,
+    private readonly siteTheme: PublishedSiteThemeService,
   ) {}
 
   async execute(
@@ -41,7 +43,11 @@ export class UpdatePagePublicationSettingsHandler {
     const changesSeo = Object.values(command.seo).some(
       (value) => value !== undefined,
     );
-    const changesSite = command.allowUpdates !== undefined || changesSeo;
+    const changesTheme = Object.values(command.theme).some(
+      (value) => value !== undefined,
+    );
+    const changesSite =
+      command.allowUpdates !== undefined || changesSeo || changesTheme;
 
     if (command.includeDescendants === undefined && !changesSite)
       throw new BadRequestException(
@@ -120,6 +126,13 @@ export class UpdatePagePublicationSettingsHandler {
           if (command.allowUpdates !== undefined)
             site.setAllowUpdates(command.allowUpdates);
           if (changesSeo) site.updateSeo(command.seo);
+          if (changesTheme) {
+            await this.siteTheme.assertUsableImages(
+              site.getWorkspaceId(),
+              command.theme,
+            );
+            site.updateTheme(command.theme);
+          }
           await this.sites.save(site, manager);
         }
 
@@ -158,6 +171,7 @@ export class UpdatePagePublicationSettingsHandler {
       publication,
       site,
       await this.availability.isAvailable(site, publication),
+      await this.siteTheme.describe(site),
     );
   }
 }

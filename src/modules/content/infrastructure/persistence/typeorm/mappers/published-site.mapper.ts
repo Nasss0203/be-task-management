@@ -18,6 +18,11 @@ export class PublishedSiteMapper {
         description: orm.seo_description ?? null,
         indexing: orm.search_indexing ?? false,
       },
+      theme: {
+        logoAttachmentId: orm.logo_attachment_id ?? null,
+        faviconAttachmentId: orm.favicon_attachment_id ?? null,
+        accentColor: orm.accent_color ?? null,
+      },
       moderation: orm.moderation_disabled_at
         ? {
             disabledAt: orm.moderation_disabled_at,
@@ -38,6 +43,9 @@ export class PublishedSiteMapper {
     orm.seo_title = domain.getSeo().title;
     orm.seo_description = domain.getSeo().description;
     orm.search_indexing = domain.getSeo().indexing;
+    orm.logo_attachment_id = domain.getTheme().logoAttachmentId;
+    orm.favicon_attachment_id = domain.getTheme().faviconAttachmentId;
+    orm.accent_color = domain.getTheme().accentColor;
     orm.created_by = domain.getCreatedBy();
     orm.created_at = domain.getCreatedAt();
     orm.updated_at = domain.getUpdatedAt();

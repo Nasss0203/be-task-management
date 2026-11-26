@@ -1,4 +1,7 @@
-import type { PublishedSiteSeoChanges } from '../../../../domain/entities/published-site.entity';
+import type {
+  PublishedSiteSeoChanges,
+  PublishedSiteThemeChanges,
+} from '../../../../domain/entities/published-site.entity';
 
 export class UpdatePagePublicationSettingsCommand {
   constructor(
@@ -8,5 +11,6 @@ export class UpdatePagePublicationSettingsCommand {
     public readonly includeDescendants?: boolean,
     public readonly allowUpdates?: boolean,
     public readonly seo: PublishedSiteSeoChanges = {},
+    public readonly theme: PublishedSiteThemeChanges = {},
   ) {}
 }

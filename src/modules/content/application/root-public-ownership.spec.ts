@@ -46,6 +46,11 @@ import { PagePublicationTreeService } from './services/page-publication-tree.ser
 import { PublicSubdomainAllocatorService } from './services/public-subdomain-allocator.service';
 import { PublicationAvailabilityService } from './services/publication-availability.service';
 import { PublicationHierarchySynchronizerService } from './services/publication-hierarchy-synchronizer.service';
+import { PublishedSiteThemeService } from './services/published-site-theme.service';
+
+const siteTheme = new PublishedSiteThemeService({
+  findReadyImages: () => Promise.resolve([]),
+});
 
 describe('root-owned public sites', () => {
   const workspace = 'workspace-a';
@@ -483,6 +488,7 @@ describe('root-owned public sites', () => {
       availability,
       auth,
       {} as DatabaseSnapshotReaderPort,
+      siteTheme,
     );
     expect(
       (await publicPage.execute(new GetPublicPageQuery('home', '/about'))).page
@@ -522,6 +528,7 @@ describe('root-owned public sites', () => {
       tree,
       availability,
       auth,
+      siteTheme,
     );
     await settings.execute(
       new UpdatePagePublicationSettingsCommand(
@@ -623,6 +630,7 @@ describe('root-owned public sites', () => {
       siteRepo,
       pageRepo,
       availability,
+      siteTheme,
     );
     expect(
       await detail.execute(new GetPagePublicationQuery(about.getId())),
@@ -675,6 +683,7 @@ describe('root-owned public sites', () => {
       availability,
       auth,
       {} as DatabaseSnapshotReaderPort,
+      siteTheme,
     );
     await expect(
       publicPage.execute(new GetPublicPageQuery('home', '/docs')),
@@ -712,6 +721,7 @@ describe('root-owned public sites', () => {
       tree,
       availability,
       auth,
+      siteTheme,
     );
     authorize.mockClear();
     await handler.execute(
@@ -761,6 +771,7 @@ describe('root-owned public sites', () => {
       tree,
       availability,
       auth,
+      siteTheme,
     );
 
     expect(sites.get(siteAId)?.getAllowUpdates()).toBe(false);
@@ -834,6 +845,7 @@ describe('root-owned public sites', () => {
       {
         authorize: authorizeSiteManagement,
       } as unknown as AuthorizationService,
+      siteTheme,
     );
 
     await expect(

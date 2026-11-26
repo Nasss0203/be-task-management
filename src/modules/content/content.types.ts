@@ -5,6 +5,7 @@ export const CONTENT_TYPES = {
     PublicSiteNavigationReader: Symbol.for('PublicSiteNavigationReader'),
     PageSearchReader: Symbol.for('PageSearchReader'),
     PageActivityRecorder: Symbol.for('PageActivityRecorder'),
+    SiteThemeImageReader: Symbol.for('SiteThemeImageReader'),
   },
   applications: {
     CreatePageHandler: Symbol.for('CreatePageHandler'),

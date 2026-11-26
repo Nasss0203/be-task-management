@@ -22,6 +22,12 @@ export class PublicPageResponseDto {
 
   seo: { title: string | null; description: string | null; indexing: boolean };
 
+  theme: {
+    logo_url: string | null;
+    favicon_url: string | null;
+    accent_color: string | null;
+  };
+
   capabilities: {
     updates_enabled: boolean;
     authenticated: boolean;

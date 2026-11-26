@@ -62,4 +62,23 @@ describe('PublishedSite', () => {
       indexing: true,
     });
   });
+
+  it('starts without a theme and updates only the theme fields that were sent', () => {
+    const site = restoreSite(false);
+    expect(site.getTheme()).toEqual({
+      logoAttachmentId: null,
+      faviconAttachmentId: null,
+      accentColor: null,
+    });
+
+    site.updateTheme({ logoAttachmentId: 'logo-1', accentColor: '#AABBCC' });
+    site.updateTheme({ faviconAttachmentId: 'icon-1' });
+    site.updateTheme({ accentColor: '' });
+
+    expect(site.getTheme()).toEqual({
+      logoAttachmentId: 'logo-1',
+      faviconAttachmentId: 'icon-1',
+      accentColor: null,
+    });
+  });
 });

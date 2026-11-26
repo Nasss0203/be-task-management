@@ -74,6 +74,8 @@ import { TypeOrmPagePublicationRepository } from './infrastructure/persistence/t
 import { TypeOrmPageRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page.repository';
 import { TypeOrmPublishedSiteRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-published-site.repository';
 import { TypeOrmPublicSiteNavigationReader } from './infrastructure/persistence/typeorm/readers/typeorm-public-site-navigation.reader';
+import { TypeOrmSiteThemeImageReader } from './infrastructure/persistence/typeorm/readers/typeorm-site-theme-image.reader';
+import { PublishedSiteThemeService } from './application/services/published-site-theme.service';
 import { TypeOrmPageSearchReader } from './infrastructure/persistence/typeorm/readers/typeorm-page-search.reader';
 import { SearchPagesHandler } from './application/queries/page/search-pages/search-pages.handler';
 import { ListDatabaseMentionTitlesHandler } from './application/queries/page-database/list-database-mention-titles/list-database-mention-titles.handler';
@@ -493,6 +495,7 @@ const bookmarkHandlers = [ResolveBookmarkMetadataHandler];
 
 const applicationServices = [
   PublicationAvailabilityService,
+  PublishedSiteThemeService,
   PagePublicationTreeService,
   PublicSubdomainAllocatorService,
   PublicationHierarchySynchronizerService,
@@ -521,6 +524,10 @@ const ports = [
   {
     provide: CONTENT_TYPES.ports.PublicSiteNavigationReader,
     useClass: TypeOrmPublicSiteNavigationReader,
+  },
+  {
+    provide: CONTENT_TYPES.ports.SiteThemeImageReader,
+    useClass: TypeOrmSiteThemeImageReader,
   },
   {
     provide: CONTENT_TYPES.ports.PageSearchReader,

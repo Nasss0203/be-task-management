@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
 import {
   ActivityAction,
@@ -71,10 +66,6 @@ export class UploadAttachmentHandler {
   ) {}
 
   async execute(command: UploadAttachmentCommand): Promise<AttachmentDto> {
-    if (!command.commentId && !command.pageBlockId) {
-      throw new BadRequestException('commentId or pageBlockId is required');
-    }
-
     await this.assertCanAttachToPageBlock(command);
     await this.assertCommentInWorkspace(command);
 
