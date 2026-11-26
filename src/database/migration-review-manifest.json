@@ -316,6 +316,10 @@
     {
       "file": "1795545000000-add-published-site-theme.ts",
       "sha256": "9dd06bc7eef24cb586d11050cf5e3f7cc5cf01d7674dcfc844a8f6b0033b46a9"
+    },
+    {
+      "file": "1795550000000-create-slack-deliveries.ts",
+      "sha256": "1e8deebd6dfd8f0d9ec181482a8773d15ce08abd7c840811e3820fd82383a903"
     }
   ]
 }

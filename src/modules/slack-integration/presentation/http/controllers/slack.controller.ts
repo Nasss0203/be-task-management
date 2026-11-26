@@ -44,11 +44,14 @@ import { GetSlackAuthorizeUrlHandler } from '../../../application/queries/get-sl
 import { GetSlackAuthorizeUrlQuery } from '../../../application/queries/get-slack-authorize-url/get-slack-authorize-url.query';
 import { GetSlackStatusHandler } from '../../../application/queries/get-slack-status/get-slack-status.handler';
 import { GetSlackStatusQuery } from '../../../application/queries/get-slack-status/get-slack-status.query';
+import { ListSlackDeliveriesHandler } from '../../../application/queries/list-slack-deliveries/list-slack-deliveries.handler';
+import { ListSlackDeliveriesQuery } from '../../../application/queries/list-slack-deliveries/list-slack-deliveries.query';
 import { SearchSlackPagesHandler } from '../../../application/queries/search-slack-pages/search-slack-pages.handler';
 import { SearchSlackPagesQuery } from '../../../application/queries/search-slack-pages/search-slack-pages.query';
 import { SLACK_INTEGRATION_TYPES } from '../../../slack-integration.types';
 import { SlackRequestVerifier } from '../../../infrastructure/slack/slack-request-verifier';
 import { GetSlackAuthorizeUrlRequest } from '../requests/get-slack-authorize-url.request';
+import { ListSlackDeliveriesRequest } from '../requests/list-slack-deliveries.request';
 import { parseSlackEvent } from '../requests/slack-event';
 import { parseSlackInteraction } from '../requests/slack-interaction';
 
@@ -76,6 +79,9 @@ export class SlackController {
 
     @Inject(SLACK_INTEGRATION_TYPES.applications.GetSlackStatusHandler)
     private readonly getStatusHandler: GetSlackStatusHandler,
+
+    @Inject(SLACK_INTEGRATION_TYPES.applications.ListSlackDeliveriesHandler)
+    private readonly listDeliveriesHandler: ListSlackDeliveriesHandler,
 
     @Inject(SLACK_INTEGRATION_TYPES.applications.ConnectSlackHandler)
     private readonly connectHandler: ConnectSlackHandler,
@@ -275,6 +281,17 @@ export class SlackController {
   @ReadRateLimit()
   getStatus(@Auth() auth: IAuth) {
     return this.getStatusHandler.execute(new GetSlackStatusQuery(auth.id));
+  }
+
+  @Get('deliveries')
+  @ReadRateLimit()
+  listDeliveries(
+    @Query() query: ListSlackDeliveriesRequest,
+    @Auth() auth: IAuth,
+  ) {
+    return this.listDeliveriesHandler.execute(
+      new ListSlackDeliveriesQuery(auth.id, query.cursor ?? null, query.limit),
+    );
   }
 
   @Delete()

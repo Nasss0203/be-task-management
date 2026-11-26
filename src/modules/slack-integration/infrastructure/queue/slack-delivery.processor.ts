@@ -7,10 +7,12 @@ import type { NotificationCreatedEvent } from 'src/modules/notifications/applica
 import { DeliverSlackNotificationCommand } from '../../application/commands/deliver-slack-notification/deliver-slack-notification.command';
 import { DeliverSlackNotificationHandler } from '../../application/commands/deliver-slack-notification/deliver-slack-notification.handler';
 import { SlackRateLimitedError } from '../../application/ports/slack-client.port';
+import { SlackDeliveryRecorder } from '../../application/services/slack-delivery-recorder.service';
 import {
   SlackDeliveryError,
   type SlackConnectionRepository,
 } from '../../domain/repositories/slack-connection.repository';
+import { SlackDeliveryStatus } from '../../domain/repositories/slack-delivery-log.repository';
 import { SLACK_INTEGRATION_TYPES } from '../../slack-integration.types';
 import { SLACK_DELIVERY_QUEUE } from './slack-delivery-queue.constants';
 
@@ -32,6 +34,8 @@ export class SlackDeliveryProcessor extends WorkerHost {
 
     @Inject(SLACK_INTEGRATION_TYPES.repositories.SlackConnectionRepository)
     private readonly connectionRepository: SlackConnectionRepository,
+
+    private readonly deliveries: SlackDeliveryRecorder,
   ) {
     super();
   }
@@ -39,7 +43,7 @@ export class SlackDeliveryProcessor extends WorkerHost {
   async process(job: SlackDeliveryJob, token?: string): Promise<void> {
     try {
       await this.deliverHandler.execute(
-        new DeliverSlackNotificationCommand(job.data),
+        new DeliverSlackNotificationCommand(job.data, job.attemptsMade + 1),
       );
     } catch (error) {
       const delays = job.data.rateLimitedDelays ?? 0;
@@ -69,13 +73,20 @@ export class SlackDeliveryProcessor extends WorkerHost {
       );
 
       if (connection) {
+        const deliveryError =
+          error instanceof SlackRateLimitedError
+            ? SlackDeliveryError.RATE_LIMITED
+            : SlackDeliveryError.DELIVERY_FAILED;
         await this.connectionRepository.markDeliveryFailed(
           connection.id,
           new Date(),
-          error instanceof SlackRateLimitedError
-            ? SlackDeliveryError.RATE_LIMITED
-            : SlackDeliveryError.DELIVERY_FAILED,
+          deliveryError,
         );
+        await this.deliveries.record(job.data, {
+          status: SlackDeliveryStatus.FAILED,
+          error: deliveryError,
+          attempts: job.attemptsMade,
+        });
       }
     } catch (statusError) {
       this.logger.warn(
