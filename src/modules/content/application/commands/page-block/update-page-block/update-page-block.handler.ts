@@ -9,7 +9,7 @@ import { PageBlockResponseDto } from 'src/modules/content/application/dto/page/r
 
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 
-import { isAllowedEmbedContent } from 'src/modules/content/domain/policies/page-block-embed.policy';
+import { normalizeEmbedBlock } from 'src/modules/content/domain/policies/page-block-embed.policy';
 
 import type { PageBlockRepository } from 'src/modules/content/domain/repositories/page-block.repository';
 import type { PageRepository } from 'src/modules/content/domain/repositories/page.repository';
@@ -53,16 +53,22 @@ export class UpdatePageBlockHandler {
         throw new NotFoundException('Page block not found');
       }
 
-      const nextType = command.updates.type ?? block.getType();
       // content: null clears the field, so only undefined keeps the current value
       const nextContent =
         command.updates.content !== undefined
           ? command.updates.content
           : block.getContent();
 
-      if (!isAllowedEmbedContent(nextType, nextContent)) {
+      const embed = normalizeEmbedBlock(
+        command.updates.type ?? block.getType(),
+        nextContent,
+      );
+
+      if (!embed) {
         throw new BadRequestException('Unsupported embed URL');
       }
+
+      const nextType = embed.type;
 
       // Columns are built with POST /pageBlock/columns, never by "Turn into"
       if (nextType !== block.getType()) {
@@ -150,13 +156,14 @@ export class UpdatePageBlockHandler {
         }
       }
 
-      if (command.updates.type !== undefined) {
-        block.changeType(command.updates.type);
+      if (command.updates.type !== undefined || nextType !== block.getType()) {
+        block.changeType(nextType);
       }
 
       block.update({
         title: command.updates.title,
-        content: command.updates.content,
+        content:
+          command.updates.content !== undefined ? embed.content : undefined,
         styleConfig: command.updates.styleConfig,
         dataConfig: command.updates.dataConfig,
         positionX: command.updates.positionX,

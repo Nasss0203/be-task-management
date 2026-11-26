@@ -310,7 +310,8 @@ describe('AuthController', () => {
     expect(mockResponse.redirect).toHaveBeenCalledWith(
       'https://app.example.com/callback',
     );
-    const redirectUrl = mockResponse.redirect.mock.calls[0]?.[0] as string;
+    const redirectUrl = (mockResponse.redirect as jest.Mock).mock
+      .calls[0]?.[0] as string;
     expect(redirectUrl).not.toContain('access_token');
     expect(redirectUrl).not.toContain('refresh_token');
     expect(redirectUrl).not.toContain('user@example.com');

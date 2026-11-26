@@ -15,7 +15,11 @@
 import 'reflect-metadata';
 
 import { readFileSync, writeFileSync } from 'node:fs';
-import { AiModificationPlannerService } from '../src/modules/ai_assistant/application/services/ai-modification-planner.service';
+import { UnprocessableEntityException } from '@nestjs/common';
+import {
+  AiModificationPlannerService,
+  RULE_PROVIDER,
+} from '../src/modules/ai_assistant/application/services/ai-modification-planner.service';
 import {
   admittedModificationKind,
   OPERATIONS_OF_KIND,
@@ -45,6 +49,8 @@ interface ProbeCase {
   currentPageId?: string;
   pageIntent: Record<string, unknown>;
   plan?: { status: string; operations?: { type: string }[] };
+  /** A4c: who made the FastAPI draft ("rules" or a model provider). */
+  planProvider?: string;
 }
 
 interface ProbeWritingCase {
@@ -66,8 +72,10 @@ interface ProbeResult {
   stage: 'admitted' | 'refused' | 'clarify' | 'error';
   status: string;
   reason?: string;
+  why?: string;
   kind?: string | null;
   pageTitle?: string;
+  relaxedOnly?: boolean;
 }
 
 const PAGE_ID = '00000000-0000-4000-8000-000000000001';
@@ -102,6 +110,7 @@ export async function probe(item: ProbeCase): Promise<ProbeResult> {
   let refusal: ProbeResult | null = null;
   let kind: string | null = null;
   let plannedPageId: string | null = null;
+  let relaxedOnly = false;
   const pages = item.pages ?? [{ id: PAGE_ID, title: item.pageTitle }];
   const page = (known: ProbePage) => ({
     pageId: known.id,
@@ -166,8 +175,10 @@ export async function probe(item: ProbeCase): Promise<ProbeResult> {
       pageId: string;
       instruction: string;
       references?: unknown[];
+      requireRuleDraft?: boolean;
     }): Promise<Record<string, unknown>> => {
       plannedPageId = params.pageId;
+      relaxedOnly = !!params.requireRuleDraft;
       kind = admittedModificationKind(params.instruction, [], {
         itemsFromSource: !!params.references?.length,
       });
@@ -181,6 +192,17 @@ export async function probe(item: ProbeCase): Promise<ProbeResult> {
       if (operations.some((operation) => !allowed.includes(operation.type))) {
         refusal = { stage: 'refused', status: 'OPERATION_KIND', kind };
         throw new PlannerRefused();
+      }
+      if (
+        params.requireRuleDraft &&
+        item.plan &&
+        item.plan.status !== 'NEED_MORE_CONTEXT' &&
+        item.planProvider !== RULE_PROVIDER
+      ) {
+        throw new UnprocessableEntityException({
+          status: 'NEEDS_CLARIFICATION',
+          reason: 'RULE_DRAFT_REQUIRED',
+        });
       }
       return Promise.resolve({
         pageId: params.pageId,
@@ -222,9 +244,22 @@ export async function probe(item: ProbeCase): Promise<ProbeResult> {
         pageTitle:
           pages.find((known) => known.id === plannedPageId)?.title ??
           EDITED_PAGE,
+        relaxedOnly,
       };
-    if (status === 'UNSUPPORTED_OPERATION')
-      return { stage: 'refused', status, reason, kind };
+    if (status === 'UNSUPPORTED_OPERATION') {
+      const detail =
+        'detail' in result
+          ? (result.detail as { kind?: unknown } | undefined)
+          : undefined;
+      const why = typeof detail?.kind === 'string' ? detail.kind : '';
+      return {
+        stage: 'refused',
+        status,
+        reason,
+        kind,
+        ...(why ? { why } : {}),
+      };
+    }
     return { stage: 'clarify', status, reason, kind };
   } catch (error) {
     if (error instanceof PlannerRefused && refusal) return refusal;

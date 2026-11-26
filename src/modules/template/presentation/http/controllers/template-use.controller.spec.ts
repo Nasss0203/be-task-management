@@ -24,6 +24,7 @@ describe('TemplateController useTemplate endpoint Regression Tests', () => {
       null as unknown as any, // listPageTemplatesHandler
       null as unknown as any, // getPageTemplateHandler
       null as unknown as any, // listTemplateVersionsHandler
+      null as unknown as any,
       null as unknown as any, // updatePageTemplateHandler
       null as unknown as any, // archivePageTemplateHandler
       null as unknown as any, // restorePageTemplateHandler

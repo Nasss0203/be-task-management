@@ -47,6 +47,7 @@ import { AdminMarketplaceSalesController } from './presentation/http/controllers
 import { TypeOrmAdminMarketplaceSalesReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-marketplace-sales.reader';
 import { GetAdminMarketplaceSalesOverviewHandler } from './application/queries/get-admin-marketplace-sales-overview/get-admin-marketplace-sales-overview.handler';
 import { ListAdminMarketplaceSalesHandler } from './application/queries/list-admin-marketplace-sales/list-admin-marketplace-sales.handler';
+import { ListAdminReconciliationPurchasesHandler } from './application/queries/list-admin-reconciliation-purchases/list-admin-reconciliation-purchases.handler';
 import { AdminTemplatesController } from './presentation/http/controllers/admin-templates.controller';
 import { TypeOrmAdminTemplateReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-template.reader';
 import { GetAdminTemplatesOverviewHandler } from './application/queries/get-admin-templates-overview/get-admin-templates-overview.handler';
@@ -56,13 +57,24 @@ import { TypeOrmAdminPublishedSiteReader } from './infrastructure/persistence/ty
 import { GetAdminPublishedSitesOverviewHandler } from './application/queries/get-admin-published-sites-overview/get-admin-published-sites-overview.handler';
 import { ListAdminPublishedSitesHandler } from './application/queries/list-admin-published-sites/list-admin-published-sites.handler';
 import { GetAdminPublishedSiteHandler } from './application/queries/get-admin-published-site/get-admin-published-site.handler';
+import { DisableAdminPublishedSiteHandler } from './application/commands/disable-admin-published-site/disable-admin-published-site.handler';
+import { RestoreAdminPublishedSiteHandler } from './application/commands/restore-admin-published-site/restore-admin-published-site.handler';
+import { TypeOrmAdminPublishedSiteWriter } from './infrastructure/persistence/typeorm/writers/typeorm-admin-published-site.writer';
 import { AdminActivitiesController } from './presentation/http/controllers/admin-activities.controller';
 import { TypeOrmAdminActivityReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-activity.reader';
 import { ListAdminActivitiesHandler } from './application/queries/list-admin-activities/list-admin-activities.handler';
 import { AdminSessionsController } from './presentation/http/controllers/admin-sessions.controller';
+import { AdminLoginAttemptsController } from './presentation/http/controllers/admin-login-attempts.controller';
+import { ListAdminLoginAttemptsHandler } from './application/queries/list-admin-login-attempts/list-admin-login-attempts.handler';
 import { TypeOrmAdminSessionReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-session.reader';
 import { GetAdminSessionsOverviewHandler } from './application/queries/get-admin-sessions-overview/get-admin-sessions-overview.handler';
 import { ListAdminSessionsHandler } from './application/queries/list-admin-sessions/list-admin-sessions.handler';
+import { GetAdminUserIpHistoryHandler } from './application/queries/get-admin-user-ip-history/get-admin-user-ip-history.handler';
+import {
+  RevokeAdminSessionHandler,
+  RevokeAdminUserSessionsHandler,
+} from './application/commands/revoke-admin-session/revoke-admin-session.handler';
+import { TypeOrmAdminSessionWriter } from './infrastructure/persistence/typeorm/writers/typeorm-admin-session.writer';
 import { AdminActionsController } from './presentation/http/controllers/admin-actions.controller';
 import { TypeOrmAdminActionReader } from './infrastructure/persistence/typeorm/readers/typeorm-admin-action.reader';
 import { TypeOrmAdminActionRecorder } from './infrastructure/persistence/typeorm/writers/typeorm-admin-action.recorder';
@@ -84,6 +96,7 @@ import { ContentModule } from 'src/modules/content/content.module';
     AdminPublishedSitesController,
     AdminActivitiesController,
     AdminSessionsController,
+    AdminLoginAttemptsController,
     AdminActionsController,
   ],
   providers: [
@@ -120,6 +133,10 @@ import { ContentModule } from 'src/modules/content/content.module';
       useClass: ListAdminMarketplaceSalesHandler,
     },
     {
+      provide: ADMIN_TYPES.applications.ListAdminReconciliationPurchasesHandler,
+      useClass: ListAdminReconciliationPurchasesHandler,
+    },
+    {
       provide: ADMIN_TYPES.ports.TemplateReader,
       useClass: TypeOrmAdminTemplateReader,
     },
@@ -148,6 +165,18 @@ import { ContentModule } from 'src/modules/content/content.module';
       useClass: GetAdminPublishedSiteHandler,
     },
     {
+      provide: ADMIN_TYPES.ports.PublishedSiteWriter,
+      useClass: TypeOrmAdminPublishedSiteWriter,
+    },
+    {
+      provide: ADMIN_TYPES.applications.DisableAdminPublishedSiteHandler,
+      useClass: DisableAdminPublishedSiteHandler,
+    },
+    {
+      provide: ADMIN_TYPES.applications.RestoreAdminPublishedSiteHandler,
+      useClass: RestoreAdminPublishedSiteHandler,
+    },
+    {
       provide: ADMIN_TYPES.ports.ActivityReader,
       useClass: TypeOrmAdminActivityReader,
     },
@@ -166,6 +195,26 @@ import { ContentModule } from 'src/modules/content/content.module';
     {
       provide: ADMIN_TYPES.applications.ListAdminSessionsHandler,
       useClass: ListAdminSessionsHandler,
+    },
+    {
+      provide: ADMIN_TYPES.applications.GetAdminUserIpHistoryHandler,
+      useClass: GetAdminUserIpHistoryHandler,
+    },
+    {
+      provide: ADMIN_TYPES.applications.ListAdminLoginAttemptsHandler,
+      useClass: ListAdminLoginAttemptsHandler,
+    },
+    {
+      provide: ADMIN_TYPES.ports.SessionWriter,
+      useClass: TypeOrmAdminSessionWriter,
+    },
+    {
+      provide: ADMIN_TYPES.applications.RevokeAdminSessionHandler,
+      useClass: RevokeAdminSessionHandler,
+    },
+    {
+      provide: ADMIN_TYPES.applications.RevokeAdminUserSessionsHandler,
+      useClass: RevokeAdminUserSessionsHandler,
     },
     {
       provide: ADMIN_TYPES.ports.ActionRecorder,

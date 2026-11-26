@@ -13,7 +13,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
+import { diskStorage } from 'multer';
+import { tmpdir } from 'os';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import {
   ReadRateLimit,
@@ -46,6 +47,7 @@ import { ListWorkspaceStorageFilesQuery } from '../../../application/queries/lis
 import { BulkDeleteWorkspaceFilesRequest } from '../requests/bulk-delete-workspace-files.request';
 import { ListWorkspaceStorageFilesRequest } from '../requests/list-workspace-storage-files.request';
 import { UpdateAttachmentRequest } from '../requests/update-attachment.request';
+import { RemoveUploadedTempFileInterceptor } from '../interceptors/remove-uploaded-temp-file.interceptor';
 import { UploadAttachmentRequest } from '../requests/upload-attachment.request';
 
 @Controller('attachment')
@@ -67,9 +69,10 @@ export class AttachmentController {
   @ResponseMessage('Upload file')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: memoryStorage(),
+      storage: diskStorage({ destination: tmpdir() }),
       limits: { fileSize: MAX_ATTACHMENT_SIZE },
     }),
+    RemoveUploadedTempFileInterceptor,
   )
   upload(
     @Param('workspaceId') workspaceId: string,
@@ -97,7 +100,7 @@ export class AttachmentController {
           ),
           reportedMimeType: file.mimetype,
           size: file.size,
-          buffer: file.buffer,
+          path: file.path,
         },
         workspaceId,
         body.commentId ?? null,

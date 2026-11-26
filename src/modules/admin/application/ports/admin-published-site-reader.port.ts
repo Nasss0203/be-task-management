@@ -3,6 +3,7 @@ import type { PagePublicationType } from 'src/modules/content/domain/enums/page-
 export enum AdminPublishedSiteStatusFilter {
   ACTIVE = 'ACTIVE',
   DISABLED = 'DISABLED',
+  MODERATED = 'MODERATED',
   ALL = 'ALL',
 }
 
@@ -32,6 +33,13 @@ export interface AdminPublishedSiteSummary {
   lastPublishedAt: Date | null;
   createdAt: Date;
   disabledAt: Date | null;
+  moderation: AdminPublishedSiteModeration | null;
+}
+
+export interface AdminPublishedSiteModeration {
+  disabledAt: Date;
+  disabledBy: { id: string; email: string; username: string } | null;
+  reason: string | null;
 }
 
 export interface AdminPublishedSitePageRow {

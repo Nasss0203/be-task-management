@@ -12,8 +12,10 @@ export const ADMIN_TYPES = {
     MarketplaceSalesReader: Symbol('AdminMarketplaceSalesReader'),
     TemplateReader: Symbol('AdminTemplateReader'),
     PublishedSiteReader: Symbol('AdminPublishedSiteReader'),
+    PublishedSiteWriter: Symbol('AdminPublishedSiteWriter'),
     ActivityReader: Symbol('AdminActivityReader'),
     SessionReader: Symbol('AdminSessionReader'),
+    SessionWriter: Symbol('AdminSessionWriter'),
     ActionRecorder: Symbol('AdminActionRecorder'),
     ActionReader: Symbol('AdminActionReader'),
   },
@@ -71,14 +73,29 @@ export const ADMIN_TYPES = {
       'AdminListAdminPublishedSitesHandler',
     ),
     GetAdminPublishedSiteHandler: Symbol('AdminGetAdminPublishedSiteHandler'),
+    DisableAdminPublishedSiteHandler: Symbol(
+      'AdminDisableAdminPublishedSiteHandler',
+    ),
+    RestoreAdminPublishedSiteHandler: Symbol(
+      'AdminRestoreAdminPublishedSiteHandler',
+    ),
     ListAdminActivitiesHandler: Symbol('AdminListAdminActivitiesHandler'),
     GetAdminSessionsOverviewHandler: Symbol(
       'AdminGetAdminSessionsOverviewHandler',
     ),
     ListAdminSessionsHandler: Symbol('AdminListAdminSessionsHandler'),
+    GetAdminUserIpHistoryHandler: Symbol('AdminGetAdminUserIpHistoryHandler'),
+    ListAdminLoginAttemptsHandler: Symbol('AdminListAdminLoginAttemptsHandler'),
+    RevokeAdminSessionHandler: Symbol('AdminRevokeAdminSessionHandler'),
+    RevokeAdminUserSessionsHandler: Symbol(
+      'AdminRevokeAdminUserSessionsHandler',
+    ),
     ListAdminActionsHandler: Symbol('AdminListAdminActionsHandler'),
     ListAdminMarketplaceSalesHandler: Symbol(
       'AdminListAdminMarketplaceSalesHandler',
+    ),
+    ListAdminReconciliationPurchasesHandler: Symbol(
+      'AdminListAdminReconciliationPurchasesHandler',
     ),
   },
   services: {

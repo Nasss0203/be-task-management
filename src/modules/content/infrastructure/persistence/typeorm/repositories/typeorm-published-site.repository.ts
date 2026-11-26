@@ -45,7 +45,8 @@ export class TypeOrmPublishedSiteRepository implements PublishedSiteRepository {
     subdomain: string,
     context?: PersistenceContext,
   ): Promise<PublishedSite | null> {
-    const normalized = PublishedSiteSubdomain.create(subdomain).getValue();
+    const normalized = PublishedSiteSubdomain.tryCreate(subdomain)?.getValue();
+    if (!normalized) return null;
     const orm = await this.resolveRepo(context).findOne({
       where: { subdomain: normalized },
     });
@@ -56,7 +57,8 @@ export class TypeOrmPublishedSiteRepository implements PublishedSiteRepository {
     subdomain: string,
     context?: PersistenceContext,
   ): Promise<PublishedSite | null> {
-    const normalized = PublishedSiteSubdomain.create(subdomain).getValue();
+    const normalized = PublishedSiteSubdomain.tryCreate(subdomain)?.getValue();
+    if (!normalized) return null;
     const orm = await this.resolveRepo(context).findOne({
       where: { subdomain: normalized, disabled_at: IsNull() },
     });

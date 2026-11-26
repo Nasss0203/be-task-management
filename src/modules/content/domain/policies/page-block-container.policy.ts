@@ -22,6 +22,43 @@ export const MAX_COLUMNS = 5;
 const MIN_COLUMN_WIDTH_RATIO = 0.1;
 const MAX_COLUMN_WIDTH_RATIO = 0.9;
 
+export const EMBED_WIDTHS = [50, 75, 100] as const;
+export const EMBED_ALIGNS = ['left', 'center'] as const;
+export const EMBED_ASPECTS = ['auto', '16:9', '4:3', '1:1', 'custom'] as const;
+export const MIN_EMBED_HEIGHT = 120;
+export const MAX_EMBED_HEIGHT = 1200;
+
+function assertOneOf(
+  key: string,
+  value: unknown,
+  allowed: readonly (string | number)[],
+): void {
+  if (value !== undefined && !allowed.includes(value as string | number)) {
+    throw new BadRequestException(
+      `${key} must be one of ${allowed.join(', ')}`,
+    );
+  }
+}
+
+function assertValidEmbedStyle(styleConfig: Record<string, unknown>): void {
+  assertOneOf('width', styleConfig.width, EMBED_WIDTHS);
+  assertOneOf('align', styleConfig.align, EMBED_ALIGNS);
+  assertOneOf('aspect', styleConfig.aspect, EMBED_ASPECTS);
+
+  const height = styleConfig.height;
+
+  if (
+    height !== undefined &&
+    (!Number.isInteger(height) ||
+      (height as number) < MIN_EMBED_HEIGHT ||
+      (height as number) > MAX_EMBED_HEIGHT)
+  ) {
+    throw new BadRequestException(
+      `height must be an integer between ${MIN_EMBED_HEIGHT} and ${MAX_EMBED_HEIGHT}`,
+    );
+  }
+}
+
 export function canContainChildren(type: PageBlockType): boolean {
   return PAGE_BLOCK_CONTAINER_TYPES.has(type);
 }
@@ -94,6 +131,11 @@ export function assertValidLayoutStyle(
       );
     }
 
+    return;
+  }
+
+  if (type === PageBlockType.EMBED) {
+    assertValidEmbedStyle(styleConfig);
     return;
   }
 

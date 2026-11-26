@@ -1,8 +1,10 @@
+import { BadRequestException } from '@nestjs/common';
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 
 import {
-  isAllowedEmbedContent,
   isAllowedEmbedUrl,
+  normalizeEmbedBlock,
+  resolveEmbedProvider,
 } from './page-block-embed.policy';
 
 describe('page-block-embed.policy', () => {
@@ -40,32 +42,97 @@ describe('page-block-embed.policy', () => {
     });
   });
 
-  describe('isAllowedEmbedContent', () => {
-    it('ignores non-embed blocks', () => {
-      expect(
-        isAllowedEmbedContent(PageBlockType.TEXT, { url: 'https://evil.com' }),
-      ).toBe(true);
+  describe('resolveEmbedProvider', () => {
+    it.each([
+      ['https://www.figma.com/design/abc123/x', 'FIGMA', null],
+      ['https://www.google.com/maps/place/Hanoi', 'GOOGLE_MAPS', null],
+      ['https://maps.google.com/?q=Hanoi', 'GOOGLE_MAPS', null],
+      [
+        'https://gist.github.com/octocat/6cad326836d38bd3a7ae',
+        'GITHUB_GIST',
+        '6cad326836d38bd3a7ae',
+      ],
+      ['https://twitter.com/jack/status/20', 'X', '20'],
+      ['https://x.com/jack', 'X', null],
+      ['https://vimeo.com/76979871', 'VIMEO', '76979871'],
+      ['https://player.vimeo.com/video/76979871', 'VIMEO', '76979871'],
+      ['https://www.loom.com/share/0281766fa2d0', 'LOOM', '0281766fa2d0'],
+      [
+        'https://open.spotify.com/intl-vi/track/4uLU6hMCjMI75M1A2tKUQC?si=x',
+        'SPOTIFY',
+        'track/4uLU6hMCjMI75M1A2tKUQC',
+      ],
+    ])('maps %s', (url, provider, externalId) => {
+      expect(resolveEmbedProvider(url)).toEqual({ provider, externalId });
     });
 
-    it.each([{}, null, { url: '' }, { url: null }])(
-      'allows an embed block without url: %p',
+    it('returns null for a host outside the list', () => {
+      expect(resolveEmbedProvider('https://evil.com/x')).toBeNull();
+    });
+  });
+
+  describe('normalizeEmbedBlock', () => {
+    it('leaves non-embed blocks alone', () => {
+      const content = { url: 'https://evil.com' };
+
+      expect(normalizeEmbedBlock(PageBlockType.TEXT, content)).toEqual({
+        type: PageBlockType.TEXT,
+        content,
+      });
+    });
+
+    it.each([undefined, {}, null, { url: '' }, { url: null }])(
+      'keeps an embed block without url: %p',
       (content) => {
-        expect(isAllowedEmbedContent(PageBlockType.EMBED, content)).toBe(true);
+        expect(normalizeEmbedBlock(PageBlockType.FIGMA, content)).toEqual({
+          type: PageBlockType.EMBED,
+          content,
+        });
       },
     );
 
     it('rejects an embed block with a foreign url', () => {
       expect(
-        isAllowedEmbedContent(PageBlockType.FIGMA, { url: 'https://evil.com' }),
-      ).toBe(false);
+        normalizeEmbedBlock(PageBlockType.EMBED, { url: 'https://evil.com' }),
+      ).toBeNull();
     });
 
-    it('accepts an embed block with an allowed url', () => {
+    it('stores the provider computed from the url as EMBED', () => {
       expect(
-        isAllowedEmbedContent(PageBlockType.TWEET, {
+        normalizeEmbedBlock(PageBlockType.TWEET, {
           url: 'https://x.com/user/status/1',
+          provider: 'LOOM',
         }),
-      ).toBe(true);
+      ).toEqual({
+        type: PageBlockType.EMBED,
+        content: {
+          url: 'https://x.com/user/status/1',
+          provider: 'X',
+          externalId: '1',
+        },
+      });
     });
+  });
+});
+
+describe('normalizeEmbedBlock caption', () => {
+  const url = 'https://www.figma.com/design/abc123/x';
+
+  it('keeps a caption next to the provider', () => {
+    expect(
+      normalizeEmbedBlock(PageBlockType.EMBED, { url, caption: 'Wireframe' })
+        ?.content,
+    ).toEqual({
+      url,
+      caption: 'Wireframe',
+      provider: 'FIGMA',
+      externalId: null,
+    });
+  });
+
+  it.each([42, 'x'.repeat(501)])('rejects the caption %p', (caption) => {
+    expect(() =>
+      normalizeEmbedBlock(PageBlockType.EMBED, { url, caption }),
+    ).toThrow(BadRequestException);
   });
 });

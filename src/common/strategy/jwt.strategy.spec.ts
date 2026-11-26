@@ -28,6 +28,11 @@ describe('JwtStrategy', () => {
       createLocalUser: jest.fn(),
       createGoogleUser: jest.fn(),
       save: jest.fn(),
+      findUserByUsername: jest.fn(),
+      findUserByEmail: jest.fn(),
+      findUserById: jest.fn(),
+      searchUsers: jest.fn(),
+      searchInviteUsers: jest.fn(),
     };
 
     strategy = new JwtStrategy(configService, userRepository);

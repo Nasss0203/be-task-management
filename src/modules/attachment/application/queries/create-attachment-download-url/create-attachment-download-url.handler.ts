@@ -3,10 +3,10 @@ import { AuthorizationService } from 'src/modules/permission/application/service
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
 import { ATTACHMENT_TOKENS } from '../../../attachment.tokens';
 import type { AttachmentAggregate } from '../../../domain/aggregates/attachment.aggregate';
-import { AttachmentProvider } from '../../../domain/enums/attachment-provider.enum';
 import type { AttachmentRepository } from '../../../domain/repositories/attachment.repository';
 import { AttachmentDownloadUrlDto } from '../../dto/attachment-download-url.dto';
 import type { AttachmentStoragePort } from '../../ports/attachment-storage.port';
+import { createAttachmentDownloadUrl } from '../../services/create-attachment-download-url';
 import { CreateAttachmentDownloadUrlQuery } from './create-attachment-download-url.query';
 
 @Injectable()
@@ -30,44 +30,7 @@ export class CreateAttachmentDownloadUrlHandler {
       throw new NotFoundException('Attachment not found');
     }
 
-    if (attachment.getProvider() === AttachmentProvider.CLOUDINARY) {
-      const secureUrl = attachment.getSecureUrl();
-
-      if (!secureUrl) {
-        throw new NotFoundException('Cloudinary URL not found');
-      }
-
-      return new AttachmentDownloadUrlDto(
-        attachment.getId(),
-        attachment.getFileName(),
-        attachment.getMimeType(),
-        attachment.getSize(),
-        secureUrl,
-        31536000,
-      );
-    }
-
-    const storageKey = attachment.getStorageKey();
-
-    if (!storageKey) {
-      throw new NotFoundException('Attachment storage key not found');
-    }
-
-    const result = await this.storage.createDownloadUrl({
-      provider: attachment.getProvider(),
-      key: storageKey,
-      fileName: attachment.getFileName(),
-      contentType: attachment.getMimeType(),
-    });
-
-    return new AttachmentDownloadUrlDto(
-      attachment.getId(),
-      attachment.getFileName(),
-      attachment.getMimeType(),
-      attachment.getSize(),
-      result.downloadUrl,
-      result.expiresIn,
-    );
+    return createAttachmentDownloadUrl(attachment, this.storage);
   }
 
   private async canRead(

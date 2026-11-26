@@ -11,6 +11,7 @@ import { PermissionModule } from '../permission/permission.module';
 import { GetPageActivitiesHandler } from './application/queries/get-page-activities/get-page-activities.handler';
 import { GetPageActivitySummaryHandler } from './application/queries/get-page-activity-summary/get-page-activity-summary.handler';
 import { TypeOrmPageActivityDetailsReader } from './infrastructure/persistence/typeorm/readers/typeorm-page-activity-details.reader';
+import { GetWorkspaceActivitiesHandler } from './application/queries/get-workspace-activities/get-workspace-activities.handler';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { TypeOrmPageActivityDetailsReader } from './infrastructure/persistence/t
     GetActivitiesHandler,
     GetPageActivitiesHandler,
     GetPageActivitySummaryHandler,
+    GetWorkspaceActivitiesHandler,
     {
       provide: ACTIVITY_TYPES.ports.PageActivityDetailsReader,
       useClass: TypeOrmPageActivityDetailsReader,

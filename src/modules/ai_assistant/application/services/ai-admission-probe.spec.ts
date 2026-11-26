@@ -88,6 +88,79 @@ describe('ai-admission-probe', () => {
     expect(result.stage).toBe('refused');
   });
 
+  it.each([
+    ['ollama', { stage: 'clarify', reason: 'RULE_DRAFT_REQUIRED' }],
+    ['rules', { stage: 'admitted' }],
+  ])(
+    'takes a %s draft of a sentence only the A4 additions admit (A4c)',
+    async (planProvider, expected) => {
+      const result = await probe({
+        id: 'g',
+        instruction: 'ghi việc gọi khách vào trang Hội họp tuần',
+        pageTitle: 'Hội họp tuần',
+        pages: PAGES,
+        pageIntent: {
+          ...intent('TITLE', 'Hội họp tuần'),
+          instruction: 'ghi việc gọi khách',
+        },
+        plan: { status: 'PLAN_READY', operations: [{ type: 'INSERT_BLOCKS' }] },
+        planProvider,
+      });
+      expect(result).toMatchObject(expected);
+    },
+  );
+
+  it('admits such a sentence before any draft is made (A4c)', async () => {
+    const result = await probe({
+      id: 'g0',
+      instruction: 'ghi việc gọi khách vào trang Hội họp tuần',
+      pageTitle: 'Hội họp tuần',
+      pages: PAGES,
+      pageIntent: {
+        ...intent('TITLE', 'Hội họp tuần'),
+        instruction: 'ghi việc gọi khách',
+      },
+    });
+    expect(result).toMatchObject({ stage: 'admitted' });
+  });
+
+  it.each([
+    ['ghi việc gọi khách vào trang Hội họp tuần', 'ghi việc gọi khách', true],
+    ['thêm việc gọi thợ vào trang Hội họp tuần', 'thêm việc gọi thợ', false],
+  ])(
+    'tells whether "%s" is admitted only by the A4 additions (A4d)',
+    async (instruction, command, relaxedOnly) => {
+      const result = await probe({
+        id: 'r',
+        instruction,
+        pageTitle: 'Hội họp tuần',
+        pages: PAGES,
+        pageIntent: {
+          ...intent('TITLE', 'Hội họp tuần'),
+          instruction: command,
+        },
+      });
+      expect(result).toMatchObject({ stage: 'admitted', relaxedOnly });
+    },
+  );
+
+  it('says why a sentence was refused (A4)', async () => {
+    const result = await probe({
+      id: 'f',
+      instruction: 'chia sẻ trang Hội họp tuần cho cả nhóm',
+      pageTitle: 'Hội họp tuần',
+      pages: PAGES,
+      pageIntent: {
+        ...intent('TITLE', 'Hội họp tuần'),
+        instruction: 'chia sẻ trang Hội họp tuần cho cả nhóm',
+      },
+    });
+    expect(result).toMatchObject({
+      status: 'UNSUPPORTED_OPERATION',
+      why: 'BLOCKED_WORD',
+    });
+  });
+
   const writing = {
     intent: 'WRITING',
     writingAction: 'SUMMARIZE',

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type {
+  ActivityPageSummary,
   ActivityTargetNames,
   ActivityTargetRequest,
   PageActivityDetailsReader,
@@ -82,6 +83,17 @@ export class TypeOrmPageActivityDetailsReader implements PageActivityDetailsRead
     return page
       ? { createdBy: page.created_by, createdAt: page.created_at }
       : null;
+  }
+
+  async findPages(
+    pageIds: string[],
+  ): Promise<Map<string, ActivityPageSummary>> {
+    const pages = await this.select<ActivityPageSummary>(
+      'SELECT id, title, icon FROM pages WHERE id = ANY($1::uuid[])',
+      pageIds,
+    );
+
+    return new Map(pages.map((page) => [page.id, page]));
   }
 
   private async select<T>(sql: string, ids: string[]): Promise<T[]> {

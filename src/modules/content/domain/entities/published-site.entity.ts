@@ -20,7 +20,55 @@ type RestorePublishedSiteProps = {
   updatedAt: Date;
   disabledAt: Date | null;
   allowUpdates?: boolean;
+  seo?: PublishedSiteSeo;
+  theme?: PublishedSiteTheme;
+  moderation?: PublishedSiteModeration | null;
 };
+
+export type PublishedSiteSeo = {
+  title: string | null;
+  description: string | null;
+  indexing: boolean;
+};
+
+export type PublishedSiteSeoChanges = Partial<PublishedSiteSeo>;
+
+const EMPTY_SEO: PublishedSiteSeo = {
+  title: null,
+  description: null,
+  indexing: false,
+};
+
+export type PublishedSiteTheme = {
+  logoAttachmentId: string | null;
+  faviconAttachmentId: string | null;
+  accentColor: string | null;
+};
+
+export type PublishedSiteThemeChanges = Partial<PublishedSiteTheme>;
+
+const EMPTY_THEME: PublishedSiteTheme = {
+  logoAttachmentId: null,
+  faviconAttachmentId: null,
+  accentColor: null,
+};
+
+function cleanText(value: string | null): string | null {
+  return value?.trim() || null;
+}
+
+export type PublishedSiteModeration = {
+  disabledAt: Date;
+  disabledBy: string | null;
+  reason: string | null;
+};
+
+export class PublishedSiteDisabledByAdminError extends Error {
+  constructor() {
+    super('Published site was disabled by an administrator');
+    this.name = 'PublishedSiteDisabledByAdminError';
+  }
+}
 
 export class PublishedSite {
   private constructor(
@@ -33,6 +81,9 @@ export class PublishedSite {
     private updatedAt: Date,
     private disabledAt: Date | null,
     private allowUpdates: boolean,
+    private seo: PublishedSiteSeo,
+    private theme: PublishedSiteTheme,
+    private readonly moderation: PublishedSiteModeration | null = null,
   ) {}
 
   static create(props: CreatePublishedSiteProps): PublishedSite {
@@ -48,6 +99,8 @@ export class PublishedSite {
       now,
       null,
       props.allowUpdates ?? false,
+      EMPTY_SEO,
+      EMPTY_THEME,
     );
   }
 
@@ -62,6 +115,9 @@ export class PublishedSite {
       props.updatedAt,
       props.disabledAt,
       props.allowUpdates ?? false,
+      props.seo ?? EMPTY_SEO,
+      props.theme ?? EMPTY_THEME,
+      props.moderation ?? null,
     );
   }
 
@@ -76,12 +132,44 @@ export class PublishedSite {
   }
 
   enable(): void {
+    if (this.isDisabledByAdmin()) throw new PublishedSiteDisabledByAdminError();
     this.disabledAt = null;
     this.updatedAt = new Date();
   }
 
   setAllowUpdates(allowUpdates: boolean): void {
     this.allowUpdates = allowUpdates;
+    this.updatedAt = new Date();
+  }
+
+  updateSeo(changes: PublishedSiteSeoChanges): void {
+    this.seo = {
+      title:
+        changes.title === undefined ? this.seo.title : cleanText(changes.title),
+      description:
+        changes.description === undefined
+          ? this.seo.description
+          : cleanText(changes.description),
+      indexing: changes.indexing ?? this.seo.indexing,
+    };
+    this.updatedAt = new Date();
+  }
+
+  updateTheme(changes: PublishedSiteThemeChanges): void {
+    this.theme = {
+      logoAttachmentId:
+        changes.logoAttachmentId === undefined
+          ? this.theme.logoAttachmentId
+          : changes.logoAttachmentId,
+      faviconAttachmentId:
+        changes.faviconAttachmentId === undefined
+          ? this.theme.faviconAttachmentId
+          : changes.faviconAttachmentId,
+      accentColor:
+        changes.accentColor === undefined
+          ? this.theme.accentColor
+          : changes.accentColor?.toLowerCase() || null,
+    };
     this.updatedAt = new Date();
   }
 
@@ -111,5 +199,17 @@ export class PublishedSite {
   }
   getAllowUpdates(): boolean {
     return this.allowUpdates;
+  }
+  getSeo(): PublishedSiteSeo {
+    return this.seo;
+  }
+  getTheme(): PublishedSiteTheme {
+    return this.theme;
+  }
+  getModeration(): PublishedSiteModeration | null {
+    return this.moderation;
+  }
+  isDisabledByAdmin(): boolean {
+    return this.moderation !== null;
   }
 }

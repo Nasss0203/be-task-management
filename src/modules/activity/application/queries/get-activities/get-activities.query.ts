@@ -18,6 +18,7 @@ export class GetActivitiesQuery {
       entityId?: string;
       pageId?: string;
       excludeEntityTypes?: ActivityEntityType[];
+      readableByUserId?: string;
     } = {},
   ) {}
 }

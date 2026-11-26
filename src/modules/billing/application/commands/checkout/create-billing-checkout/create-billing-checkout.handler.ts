@@ -19,6 +19,7 @@ import { PaymentOrder } from '../../../../domain/entities/payment-order.entity';
 import type { BillingPlanPriceRepository } from '../../../../domain/repositories/billing-plan-price.repository';
 import type { PaymentOrderRepository } from '../../../../domain/repositories/payment-order.repository';
 import { CreateBillingCheckoutResponseDto } from '../../../dto/response/create-billing-checkout.response.dto';
+import { PlanChangeQuoteService } from '../../../services/plan-change-quote.service';
 import { WorkspaceSubscriptionProvisioningService } from '../../../services/workspace-subscription-provisioning.service';
 import { CreateBillingCheckoutCommand } from './create-billing-checkout.command';
 
@@ -35,6 +36,9 @@ export class CreateBillingCheckoutHandler {
 
     @Inject(BILLING_TYPES.services.WorkspaceSubscriptionProvisioningService)
     private readonly subscriptionProvisioningService: WorkspaceSubscriptionProvisioningService,
+
+    @Inject(BILLING_TYPES.services.PlanChangeQuoteService)
+    private readonly planChangeQuoteService: PlanChangeQuoteService,
 
     @Inject(PAYMENT_TYPES.providers.SepayPgCheckoutService)
     private readonly sepayPgCheckoutService: SepayPgCheckoutPort,
@@ -130,13 +134,22 @@ export class CreateBillingCheckoutHandler {
       return existingPaymentOrder;
     }
 
+    const quote = await this.planChangeQuoteService.quote(
+      subscription,
+      planPrice,
+      now,
+      context,
+    );
+    this.planChangeQuoteService.assertAllowed(quote);
+
     const paymentOrder = PaymentOrder.create({
       workspaceId: command.workspaceId,
       subscriptionId: subscription.getId(),
       planPriceId: planPrice.getId(),
       provider,
       orderCode: this.generateOrderCode(),
-      amount: planPrice.getAmount(),
+      amount: quote.amount,
+      creditAmount: quote.creditAmount,
       currency: planPrice.getCurrency(),
       expiresAt: new Date(now.getTime() + CHECKOUT_EXPIRATION_MS),
       createdBy: command.actorId,
@@ -201,6 +214,7 @@ export class CreateBillingCheckoutHandler {
       planPriceId: paymentOrder.getPlanPriceId(),
       orderCode: paymentOrder.getOrderCode(),
       amount: paymentOrder.getAmount(),
+      creditAmount: paymentOrder.getCreditAmount(),
       currency: paymentOrder.getCurrency(),
       provider,
       status: paymentOrder.getStatus(),

@@ -41,7 +41,9 @@ export type PageInstructionPlanningResult =
         // gp02: "thêm checklist" with neither items nor a topic.
         | 'MISSING_CHECKLIST_ITEMS'
         // M8: nothing readable was found in the source the user named.
-        | 'MISSING_SOURCE';
+        | 'MISSING_SOURCE'
+        // A4c: the sentence needs a draft by rule and the rules made none.
+        | 'RULE_DRAFT_REQUIRED';
       intent: PageIntentExtraction;
       /** MISSING_CHECKLIST_ITEMS: the one real, readable Page title found. */
       pageTitle?: string;

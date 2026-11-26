@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, EntityManager } from 'typeorm';
 import type { SystemRole } from 'src/modules/identity/domain/enums/system-role.enum';
+import { DataSource, EntityManager } from 'typeorm';
 import type {
   AdminUserWriter,
   UpdateAdminUserRoleInput,

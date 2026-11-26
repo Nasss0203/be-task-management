@@ -1,7 +1,7 @@
 import { ACTIVITY_TYPES } from 'src/modules/activity/activity.types';
 import { NOTIFICATION_TYPES } from 'src/modules/notifications/notifications.types';
 import { BILLING_TYPES } from 'src/modules/billing/billing.types';
-import { type Provider } from '@nestjs/common';
+import { type ClassProvider, type Provider } from '@nestjs/common';
 import {
   MODULE_METADATA,
   SELF_DECLARED_DEPS_METADATA,
@@ -25,10 +25,7 @@ import { TeamspaceController } from './presentation/http/controllers/teamspace.c
 import { TeamspaceModule } from './teamspace.module';
 import { TEAMSPACE_TYPES } from './teamspace.types';
 
-type ApplicationProvider = {
-  provide: symbol;
-  useClass: abstract new (...args: never[]) => unknown;
-};
+type ApplicationProvider = ClassProvider & { provide: symbol };
 
 const TEAMSPACE_ENTITIES = [
   TeamspaceOrmEntity,

@@ -7,7 +7,9 @@ import { AddPropertyOptionHandler } from './application/commands/add-property-op
 import { AddPropertyHandler } from './application/commands/add-property/add-property.handler';
 import { ClearRowValueHandler } from './application/commands/clear-row-value/clear-row-value.handler';
 import { CreateDatabaseRowHandler } from './application/commands/create-database-row/create-database-row.handler';
+import { ImportDatabaseRowsHandler } from './application/commands/import-database-rows/import-database-rows.handler';
 import { CreateDatabaseViewHandler } from './application/commands/create-database-view/create-database-view.handler';
+import { DuplicateDatabaseViewHandler } from './application/commands/duplicate-database-view/duplicate-database-view.handler';
 import { CreateDatabaseHandler } from './application/commands/create-database/create-database.handler';
 import { DeleteDatabaseRowHandler } from './application/commands/delete-database-row/delete-database-row.handler';
 import { DeleteDatabaseViewHandler } from './application/commands/delete-database-view/delete-database-view.handler';
@@ -96,6 +98,7 @@ import { CalendarFeedController } from './presentation/http/controllers/calendar
     AddPropertyHandler,
     AddPropertyOptionHandler,
     CreateDatabaseRowHandler,
+    ImportDatabaseRowsHandler,
     SetRowValueHandler,
     GetDatabaseRowsHandler,
     GetDatabaseHandler,
@@ -106,6 +109,7 @@ import { CalendarFeedController } from './presentation/http/controllers/calendar
     UpdatePropertyOptionHandler,
     DeletePropertyOptionHandler,
     CreateDatabaseViewHandler,
+    DuplicateDatabaseViewHandler,
     GetDatabaseViewsHandler,
     RenameDatabaseViewHandler,
     DeleteDatabaseViewHandler,
@@ -165,6 +169,7 @@ import { CalendarFeedController } from './presentation/http/controllers/calendar
   ],
   exports: [
     CreateDatabaseHandler,
+    ImportDatabaseRowsHandler,
     AddPropertyHandler,
     AddPropertyOptionHandler,
     RenamePropertyHandler,

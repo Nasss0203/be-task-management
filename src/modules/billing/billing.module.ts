@@ -17,10 +17,12 @@ import { ProcessStripeWebhookHandler } from './application/commands/webhook/proc
 import { GetWorkspaceEntitlementsHandler } from './application/queries/entitlement/get-workspace-entitlements/get-workspace-entitlements.handler';
 import { GetBillingPaymentStatusHandler } from './application/queries/payment/get-billing-payment-status/get-billing-payment-status.handler';
 import { ListWorkspacePaymentOrdersHandler } from './application/queries/payment/list-workspace-payment-orders/list-workspace-payment-orders.handler';
+import { GetCheckoutQuoteHandler } from './application/queries/plan/get-checkout-quote/get-checkout-quote.handler';
 import { ListBillingPlansHandler } from './application/queries/plan/list-billing-plans/list-billing-plans.handler';
 import { GetWorkspaceSubscriptionHandler } from './application/queries/subscription/get-workspace-subscription/get-workspace-subscription.handler';
 import { BillingEntitlementService } from './application/services/billing-entitlement.service';
 import { BillingPaymentSettlementService } from './application/services/billing-payment-settlement.service';
+import { PlanChangeQuoteService } from './application/services/plan-change-quote.service';
 import { WorkspaceSubscriptionProvisioningService } from './application/services/workspace-subscription-provisioning.service';
 import { BILLING_TYPES } from './billing.types';
 import { SqlWorkspaceUsageReader } from './infrastructure/persistence/typeorm/adapters/sql-workspace-usage-reader.adapter';
@@ -57,10 +59,7 @@ import { SepayWebhookController } from './presentation/controllers/sepay-webhook
     ]),
   ],
 
-  controllers: [
-    BillingController,
-    SepayWebhookController,
-  ],
+  controllers: [BillingController, SepayWebhookController],
 
   providers: [
     {
@@ -94,6 +93,14 @@ import { SepayWebhookController } from './presentation/controllers/sepay-webhook
     {
       provide: BILLING_TYPES.applications.ListBillingPlansHandler,
       useClass: ListBillingPlansHandler,
+    },
+    {
+      provide: BILLING_TYPES.services.PlanChangeQuoteService,
+      useClass: PlanChangeQuoteService,
+    },
+    {
+      provide: BILLING_TYPES.applications.GetCheckoutQuoteHandler,
+      useClass: GetCheckoutQuoteHandler,
     },
     {
       provide: BILLING_TYPES.applications.CreateBillingCheckoutHandler,

@@ -1,10 +1,10 @@
 import {
-    BadRequestException,
-    ConflictException,
-    ForbiddenException,
-    Inject,
-    Injectable,
-    NotFoundException,
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { AuthorizationService } from 'src/modules/permission/application/services/authorization.service';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
@@ -18,6 +18,7 @@ import type { PublishedSiteRepository } from '../../../../domain/repositories/pu
 import { PagePublicationResponseDto } from '../../../dto/page-publication/response/page-publication.response.dto';
 import { PagePublicationTreeService } from '../../../services/page-publication-tree.service';
 import { PublicationAvailabilityService } from '../../../services/publication-availability.service';
+import { PublishedSiteThemeService } from '../../../services/published-site-theme.service';
 import { resolvePagePublication } from '../../../services/resolve-page-publication';
 import { UpdatePagePublicationSettingsCommand } from './update-page-publication-settings.command';
 
@@ -33,15 +34,22 @@ export class UpdatePagePublicationSettingsHandler {
     private readonly tree: PagePublicationTreeService,
     private readonly availability: PublicationAvailabilityService,
     private readonly authorization: AuthorizationService,
+    private readonly siteTheme: PublishedSiteThemeService,
   ) {}
 
   async execute(
     command: UpdatePagePublicationSettingsCommand,
   ): Promise<PagePublicationResponseDto> {
-    if (
-      command.includeDescendants === undefined &&
-      command.allowUpdates === undefined
-    )
+    const changesSeo = Object.values(command.seo).some(
+      (value) => value !== undefined,
+    );
+    const changesTheme = Object.values(command.theme).some(
+      (value) => value !== undefined,
+    );
+    const changesSite =
+      command.allowUpdates !== undefined || changesSeo || changesTheme;
+
+    if (command.includeDescendants === undefined && !changesSite)
       throw new BadRequestException(
         'At least one publication setting is required',
       );
@@ -81,7 +89,7 @@ export class UpdatePagePublicationSettingsHandler {
         if (!site) throw new NotFoundException('Published site not found');
 
         if (
-          command.allowUpdates !== undefined &&
+          changesSite &&
           !(await this.authorization.authorize({
             userId: command.actorId,
             permissions: [PERMISSIONS.PAGE_PUBLISH],
@@ -114,8 +122,17 @@ export class UpdatePagePublicationSettingsHandler {
         )
           throw new BadRequestException('Page publication is unpublished');
 
-        if (command.allowUpdates !== undefined) {
-          site.setAllowUpdates(command.allowUpdates);
+        if (changesSite) {
+          if (command.allowUpdates !== undefined)
+            site.setAllowUpdates(command.allowUpdates);
+          if (changesSeo) site.updateSeo(command.seo);
+          if (changesTheme) {
+            await this.siteTheme.assertUsableImages(
+              site.getWorkspaceId(),
+              command.theme,
+            );
+            site.updateTheme(command.theme);
+          }
           await this.sites.save(site, manager);
         }
 
@@ -154,6 +171,7 @@ export class UpdatePagePublicationSettingsHandler {
       publication,
       site,
       await this.availability.isAvailable(site, publication),
+      await this.siteTheme.describe(site),
     );
   }
 }

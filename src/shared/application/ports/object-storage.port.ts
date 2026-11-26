@@ -1,8 +1,9 @@
+import type { Readable } from 'stream';
+
 export type UploadObjectInput = {
   key: string;
-  body: Buffer;
   contentType: string;
-};
+} & ({ body: Buffer } | { body: Readable; contentLength: number });
 
 export type StoredObject = {
   key: string;

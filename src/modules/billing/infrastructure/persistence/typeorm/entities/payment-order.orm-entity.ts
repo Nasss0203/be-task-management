@@ -55,6 +55,12 @@ export class PaymentOrderOrmEntity {
   amount: string;
 
   @Column({
+    type: 'bigint',
+    default: 0,
+  })
+  credit_amount: string;
+
+  @Column({
     type: 'varchar',
     length: 3,
   })

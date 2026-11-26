@@ -1,4 +1,7 @@
-import type { CreatePageBlockSnapshotInput } from 'src/modules/content/application/ports/content-page-provisioning.port';
+import type {
+  CreatePageBlockSnapshotInput,
+  PresetDatabaseDefinition,
+} from 'src/modules/content/application/ports/content-page-provisioning.port';
 import { getPagePreset } from 'src/modules/content/application/services/page-presets';
 import { PagePreset } from 'src/modules/content/domain/enums/page-preset.enum';
 import { WorkspaceStarter } from 'src/modules/workspace/domain/enums/workspace-starter.enum';
@@ -7,6 +10,7 @@ export interface WorkspaceStarterPage {
   title: string;
   icon: string;
   blocks: CreatePageBlockSnapshotInput[];
+  database: PresetDatabaseDefinition | null;
 }
 
 export interface WorkspaceStarterDefinition {
@@ -20,8 +24,8 @@ export interface WorkspaceStarterDefinition {
 
 function toPages(presets: PagePreset[]): WorkspaceStarterPage[] {
   return presets.map((preset) => {
-    const { title, icon, blocks } = getPagePreset(preset);
-    return { title, icon, blocks };
+    const { title, icon, blocks, database } = getPagePreset(preset);
+    return { title, icon, blocks, database };
   });
 }
 

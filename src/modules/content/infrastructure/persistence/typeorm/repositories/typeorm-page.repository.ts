@@ -2,8 +2,10 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Page } from 'src/modules/content/domain/aggregates/page/page.aggregate';
 import type {
+  AccessiblePageCounts,
   PageRepository,
   PageTitle,
+  VisitedPage,
 } from 'src/modules/content/domain/repositories/page.repository';
 import { WorkspaceMembershipType } from 'src/modules/workspace/domain/enums/workspace-membership-type.enum';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
@@ -203,6 +205,71 @@ export class TypeOrmPageRepository implements PageRepository {
   }
 
   /** Live Pages of the workspace the user may read (teamspace rules included). */
+  async findRecentlyVisited(
+    workspaceId: string,
+    userId: string,
+    limit: number,
+    context?: PersistenceContext,
+  ): Promise<VisitedPage[]> {
+    const { entities, raw } = await this.accessiblePages(
+      workspaceId,
+      userId,
+      context,
+    )
+      .innerJoin(
+        'page_visits',
+        'visit',
+        'visit.page_id = page.id AND visit.user_id = :userId',
+      )
+      .addSelect('visit.visited_at', 'visit_visited_at')
+      .orderBy('visit.visited_at', 'DESC')
+      .limit(limit)
+      .getRawAndEntities<{ page_id: string; visit_visited_at: Date }>();
+    const visitedAt = new Map(
+      raw.map((row) => [row.page_id, row.visit_visited_at]),
+    );
+
+    return entities.map((orm) => ({
+      page: PageMapper.toDomain(orm),
+      visitedAt: visitedAt.get(orm.id) as Date,
+    }));
+  }
+
+  async countAccessibleByWorkspace(
+    workspaceId: string,
+    userId: string,
+    context?: PersistenceContext,
+  ): Promise<AccessiblePageCounts> {
+    const counts = await this.accessiblePages(workspaceId, userId, context)
+      .select('COUNT(page.id)::int', 'pages')
+      .addSelect(
+        `COUNT(page.id) FILTER (WHERE page.updated_at >= now() - interval '7 days')::int`,
+        'updatedLast7Days',
+      )
+      .addSelect(
+        `COALESCE(SUM((
+          SELECT COUNT(*)
+          FROM databases page_database
+          WHERE page_database.page_id = page.id
+            AND EXISTS (
+              SELECT 1 FROM page_blocks block
+              WHERE block.page_id = page.id
+                AND block.type = 'DATABASE_VIEW'
+                AND block.deleted_at IS NULL
+                AND block.data_config ->> 'database_id' = page_database.id::text
+            )
+        )), 0)::int`,
+        'databases',
+      )
+      .getRawOne<AccessiblePageCounts>();
+
+    return {
+      pages: counts?.pages ?? 0,
+      databases: counts?.databases ?? 0,
+      updatedLast7Days: counts?.updatedLast7Days ?? 0,
+    };
+  }
+
   private accessiblePages(
     workspaceId: string,
     userId: string,

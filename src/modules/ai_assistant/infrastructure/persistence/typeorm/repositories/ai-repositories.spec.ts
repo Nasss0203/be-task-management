@@ -284,4 +284,32 @@ describe('AI Assistant TypeORM repositories', () => {
       estimatedCost: '0.01000000',
     });
   });
+
+  it('counts usage rows of one user and provider since a moment', async () => {
+    const getCount = jest.fn().mockResolvedValue(4);
+    const andWhere = jest.fn().mockReturnThis();
+    const where = jest.fn().mockReturnValue({ andWhere, getCount });
+    const createQueryBuilder = jest.fn().mockReturnValue({ where });
+    const repository = new TypeOrmAiUsageRepository(
+      dataSourceWithRepository<AiUsageOrmEntity>({ createQueryBuilder }),
+    );
+    const from = new Date('2026-11-20T17:00:00.000Z');
+
+    const result = await repository.countByUser('user-1', {
+      provider: 'gemini',
+      from,
+    });
+
+    expect(createQueryBuilder).toHaveBeenCalledWith('usage');
+    expect(where).toHaveBeenCalledWith('usage.user_id = :userId', {
+      userId: 'user-1',
+    });
+    expect(andWhere).toHaveBeenCalledWith('usage.provider = :provider', {
+      provider: 'gemini',
+    });
+    expect(andWhere).toHaveBeenCalledWith('usage.created_at >= :from', {
+      from,
+    });
+    expect(result).toBe(4);
+  });
 });

@@ -50,7 +50,8 @@ type WritingAction =
   | 'EXPAND'
   | 'SUMMARIZE'
   | 'TRANSLATE'
-  | 'CONTINUE';
+  | 'CONTINUE'
+  | 'DRAFT';
 
 interface FastApiUsage {
   prompt_tokens: number;
@@ -104,6 +105,7 @@ const WRITING_CAPABILITIES: Record<string, WritingAction> = {
   'writing.summarize': 'SUMMARIZE',
   'writing.translate': 'TRANSLATE',
   'writing.continue': 'CONTINUE',
+  'writing.draft': 'DRAFT',
 };
 
 const ACTIVITY_RELATIVES = new Set([
@@ -283,7 +285,11 @@ export class FastApiAiRuntimeAdapter
     if (result.intent === 'WRITING') {
       if (!WRITING_ACTIONS.some((value) => value === result.writingAction))
         throw invalid();
-      if (result.writingAction !== 'TRANSLATE' && result.language !== null)
+      if (
+        result.writingAction !== 'TRANSLATE' &&
+        result.writingAction !== 'DRAFT' &&
+        result.language !== null
+      )
         throw invalid();
       if (
         result.language !== null &&

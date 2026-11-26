@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Get,
   Inject,
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -12,7 +14,10 @@ import type { Request } from 'express';
 import { IsEnum } from 'class-validator';
 
 import { Auth } from 'src/common/decorator/auth.decorator';
-import { StrictWriteRateLimit } from 'src/common/decorator/rate-limit.decorator';
+import {
+  AdminRateLimit,
+  StrictWriteRateLimit,
+} from 'src/common/decorator/rate-limit.decorator';
 import { RequireSystemRoles } from 'src/common/decorator/require-system-roles.decorator';
 import { ResponseMessage } from 'src/common/decorator/response-message.decorator';
 import {
@@ -31,7 +36,11 @@ import { ADMIN_PERMISSIONS } from '../../../domain/permissions/admin-permission-
 import { RequireAdminPermissions } from '../decorators/require-admin-permissions.decorator';
 import { AdminPermissionGuard } from '../guards/admin-permission.guard';
 import { ADMIN_TYPES } from '../../../admin.types';
+import { ListAdminReconciliationPurchasesRequestDto } from '../../../application/dto/request/list-admin-reconciliation-purchases.request.dto';
+import { AdminReconciliationPurchaseListResponseDto } from '../../../application/dto/response/admin-reconciliation-purchase-list.response.dto';
 import type { AdminActionRecorder } from '../../../application/ports/admin-action-recorder.port';
+import { ListAdminReconciliationPurchasesHandler } from '../../../application/queries/list-admin-reconciliation-purchases/list-admin-reconciliation-purchases.handler';
+import { ListAdminReconciliationPurchasesQuery } from '../../../application/queries/list-admin-reconciliation-purchases/list-admin-reconciliation-purchases.query';
 import { adminRequestClientOf } from '../admin-request-client';
 
 export class ResolveTemplatePurchaseReconciliationRequest {
@@ -51,7 +60,28 @@ export class AdminTemplatePurchaseController {
 
     @Inject(ADMIN_TYPES.ports.ActionRecorder)
     private readonly actionRecorder: AdminActionRecorder,
+
+    @Inject(ADMIN_TYPES.applications.ListAdminReconciliationPurchasesHandler)
+    private readonly listReconciliationHandler: ListAdminReconciliationPurchasesHandler,
   ) {}
+
+  @Get()
+  @AdminRateLimit()
+  @RequireSystemRoles(SystemRole.SYSTEM_ADMIN, SystemRole.SUPER_ADMIN)
+  @RequireAdminPermissions(ADMIN_PERMISSIONS.BILLING_READ)
+  @ResponseMessage('Get purchases to reconcile successfully')
+  list(
+    @Query() request: ListAdminReconciliationPurchasesRequestDto,
+  ): Promise<AdminReconciliationPurchaseListResponseDto> {
+    return this.listReconciliationHandler.execute(
+      new ListAdminReconciliationPurchasesQuery(
+        request.page,
+        request.limit,
+        request.status,
+        request.search,
+      ),
+    );
+  }
 
   @Post(':purchaseId/reconciliation')
   @StrictWriteRateLimit()

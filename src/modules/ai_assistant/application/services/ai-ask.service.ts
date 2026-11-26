@@ -237,6 +237,8 @@ function pageResolutionMessage(
           intent?.intent === 'MODIFY_PAGE' ? (intent.basedOn ?? '') : '';
         return `Không tìm thấy nội dung nào về "${source}" mà bạn có quyền xem. Hãy ghi tên trang nguồn, ví dụ: … dựa trên trang "Bug tracker".`;
       }
+      if (planning.reason === 'RULE_DRAFT_REQUIRED')
+        return `Mình chưa chắc nội dung cần thêm. Bạn ghi rõ loại và nội dung, ví dụ: thêm to-do Gọi khách vào trang "${planning.pageTitle || name || 'Kế hoạch Q4'}".`;
       if (planning.reason === 'MISSING_CHECKLIST_ITEMS')
         return `Checklist gồm những mục nào? Gửi lại cả câu kèm các mục, ví dụ: thêm checklist gồm in tài liệu, đặt phòng vào trang "${planning.pageTitle || name || 'Kế hoạch Q4'}".`;
       return planning.reason === 'UNCLEAR_INTENT'

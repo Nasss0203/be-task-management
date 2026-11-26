@@ -11,6 +11,7 @@ import {
   SlackRetryableError,
 } from '../../application/ports/slack-client.port';
 import { SlackDeliveryError } from '../../domain/repositories/slack-connection.repository';
+import { SlackDeliveryStatus } from '../../domain/repositories/slack-delivery-log.repository';
 import {
   MAX_RATE_LIMITED_DELAYS,
   SlackDeliveryProcessor,
@@ -22,9 +23,11 @@ describe('SlackDeliveryProcessor', () => {
     findByUserId: jest.fn(),
     markDeliveryFailed: jest.fn(),
   };
+  const deliveries = { record: jest.fn() };
   const processor = new SlackDeliveryProcessor(
     deliverHandler as never,
     connectionRepository as never,
+    deliveries as never,
   );
   const createJob = (data = {}, attemptsMade = 0) => ({
     data: { recipientUserId: 'user-1', notification: { id: 'n-1' }, ...data },
@@ -85,6 +88,37 @@ describe('SlackDeliveryProcessor', () => {
     await processor.onFailed(createJob({}, 4) as never, new Error('503'));
 
     expect(connectionRepository.markDeliveryFailed).not.toHaveBeenCalled();
+    expect(deliveries.record).not.toHaveBeenCalled();
+  });
+
+  it('tells the handler which attempt is running', async () => {
+    deliverHandler.execute.mockResolvedValue(undefined);
+
+    await processor.process(createJob({}, 2) as never, 'token-1');
+
+    expect(deliverHandler.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ attempt: 3 }),
+    );
+  });
+
+  it('logs the delivery as failed with every attempt counted', async () => {
+    const job = createJob({}, 5);
+
+    await processor.onFailed(job as never, new SlackRetryableError('503'));
+
+    expect(deliveries.record).toHaveBeenCalledWith(job.data, {
+      status: SlackDeliveryStatus.FAILED,
+      error: SlackDeliveryError.DELIVERY_FAILED,
+      attempts: 5,
+    });
+  });
+
+  it('logs nothing after the user disconnected Slack', async () => {
+    connectionRepository.findByUserId.mockResolvedValue(null);
+
+    await processor.onFailed(createJob({}, 5) as never, new Error('503'));
+
+    expect(deliveries.record).not.toHaveBeenCalled();
   });
 
   it.each([

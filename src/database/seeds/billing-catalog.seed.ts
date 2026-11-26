@@ -11,6 +11,7 @@ type FeatureCode =
   | 'MAX_MEMBERS'
   | 'MAX_TEAMSPACES'
   | 'MAX_STORAGE_MB'
+  | 'MAX_FILE_SIZE_MB'
   | 'PUBLIC_PAGE'
   | 'AI_REQUESTS_MONTHLY';
 
@@ -62,6 +63,12 @@ const features = [
     valueType: 'NUMBER',
   },
   {
+    code: 'MAX_FILE_SIZE_MB',
+    name: 'Maximum file size',
+    description: 'Maximum size of a single uploaded file in megabytes.',
+    valueType: 'NUMBER',
+  },
+  {
     code: 'PUBLIC_PAGE',
     name: 'Public page',
     description: 'Allows workspace pages to be published publicly.',
@@ -95,7 +102,12 @@ const planFeatures = [
   {
     planCode: 'FREE',
     featureCode: 'MAX_STORAGE_MB',
-    value: 500,
+    value: 2048,
+  },
+  {
+    planCode: 'FREE',
+    featureCode: 'MAX_FILE_SIZE_MB',
+    value: 200,
   },
   {
     planCode: 'FREE',
@@ -121,7 +133,12 @@ const planFeatures = [
   {
     planCode: 'PLUS',
     featureCode: 'MAX_STORAGE_MB',
-    value: 10240,
+    value: 51200,
+  },
+  {
+    planCode: 'PLUS',
+    featureCode: 'MAX_FILE_SIZE_MB',
+    value: 1024,
   },
   {
     planCode: 'PLUS',
@@ -147,7 +164,12 @@ const planFeatures = [
   {
     planCode: 'BUSINESS',
     featureCode: 'MAX_STORAGE_MB',
-    value: 102400,
+    value: 204800,
+  },
+  {
+    planCode: 'BUSINESS',
+    featureCode: 'MAX_FILE_SIZE_MB',
+    value: 2048,
   },
   {
     planCode: 'BUSINESS',

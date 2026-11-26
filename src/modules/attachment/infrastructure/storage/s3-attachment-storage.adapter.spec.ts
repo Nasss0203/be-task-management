@@ -1,4 +1,8 @@
 import { ConfigService } from '@nestjs/config';
+import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import type { Readable } from 'stream';
 import type { ObjectStoragePort } from 'src/shared/application/ports/object-storage.port';
 import { StorageService } from 'src/shared/infrastructure/storage/storage.service';
 import { AttachmentProvider } from '../../domain/enums/attachment-provider.enum';
@@ -20,8 +24,12 @@ describe('S3AttachmentStorageAdapter', () => {
   );
   const imageKey = 'workspaces/ws-1/page-blocks/block-1/uuid-anh-bia.png';
   const imageUrl = `https://cdn.example.com/public/${imageKey}`;
+  const tempDir = mkdtempSync(join(tmpdir(), 's3-attachment-'));
+  const filePath = join(tempDir, 'upload');
+  writeFileSync(filePath, 'file');
   const input = {
-    buffer: Buffer.from('file'),
+    filePath,
+    size: 4,
     workspaceId: 'ws-1',
     commentId: null,
     pageBlockId: 'block-1',
@@ -35,7 +43,21 @@ describe('S3AttachmentStorageAdapter', () => {
     buildStorageKey.mockReturnValue(imageKey);
   });
 
+  afterEach(() => {
+    for (const [call] of objectStorage.upload.mock.calls as [
+      { body: Readable },
+    ][]) {
+      call.body.destroy();
+    }
+  });
+
+  afterAll(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
   it('stores displayable images under public/ with a public URL', async () => {
+    const expectedBody: unknown = expect.objectContaining({ path: filePath });
+
     await expect(adapter.upload(input)).resolves.toEqual({
       provider: AttachmentProvider.S3,
       storageKey: `public/${imageKey}`,
@@ -51,7 +73,8 @@ describe('S3AttachmentStorageAdapter', () => {
     });
     expect(objectStorage.upload).toHaveBeenCalledWith({
       key: `public/${imageKey}`,
-      body: input.buffer,
+      body: expectedBody,
+      contentLength: 4,
       contentType: 'image/png',
     });
   });

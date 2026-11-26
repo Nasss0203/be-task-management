@@ -116,12 +116,12 @@ describePostgres('Teamspace role PostgreSQL concurrency', () => {
         actorUserId,
         tx.manager,
       );
-      const [current] = await tx.query<Array<{ role_name: string }>>(
+      const [current]: Array<{ role_name: string }> = await tx.query(
         `SELECT role_name FROM teamspace_members WHERE teamspace_id = $1 AND workspace_member_id = $2`,
         [teamspaceId, target.memberId],
       );
       if (current.role_name === 'OWNER' && nextRole === 'MEMBER') {
-        const [row] = await tx.query<Array<{ count: number }>>(
+        const [row]: Array<{ count: number }> = await tx.query(
           `SELECT COUNT(*)::int AS count FROM teamspace_members WHERE teamspace_id = $1 AND role_name = 'OWNER'`,
           [teamspaceId],
         );

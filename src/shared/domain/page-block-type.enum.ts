@@ -12,6 +12,7 @@ export enum PageBlockType {
 
   IMAGE = 'IMAGE',
   VIDEO = 'VIDEO',
+  AUDIO = 'AUDIO',
   FILE = 'FILE',
   BOOKMARK = 'BOOKMARK',
 

@@ -122,6 +122,16 @@ export class PagePublicationController {
         siteId,
         dto.include_descendants,
         dto.allow_updates,
+        {
+          title: dto.seo_title,
+          description: dto.seo_description,
+          indexing: dto.search_indexing,
+        },
+        {
+          logoAttachmentId: dto.logo_attachment_id,
+          faviconAttachmentId: dto.favicon_attachment_id,
+          accentColor: dto.accent_color,
+        },
       ),
     );
   }

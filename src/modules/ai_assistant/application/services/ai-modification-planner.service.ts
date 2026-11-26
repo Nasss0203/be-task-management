@@ -8,6 +8,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  Optional,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
@@ -37,6 +38,7 @@ import {
   OPERATIONS_OF_KIND,
 } from './ai-modification-operation.policy';
 import { AiModificationPlanValidatorService } from './ai-modification-plan-validator.service';
+import { AiUsageQuotaService } from './ai-usage-quota.service';
 import {
   fingerprintAiPageContext,
   hasCompleteAiPageContext,
@@ -56,7 +58,11 @@ export interface GenerateAiModificationPlanParams {
   references?: PlanReference[];
   /** M8 (I7): the Pages they came from, kept with the draft. */
   sources?: PlanSource[];
+  /** A4c: only a draft the AI service made by rule may be kept. */
+  requireRuleDraft?: boolean;
 }
+
+export const RULE_PROVIDER = 'rules';
 
 export type GenerateAiModificationPlanResult = AiModificationPlan & {
   conversationId: string;
@@ -90,6 +96,9 @@ export class AiModificationPlannerService {
     private readonly accessService: AiConversationAccessService,
 
     private readonly planValidator: AiModificationPlanValidatorService,
+
+    @Optional()
+    private readonly quota?: AiUsageQuotaService,
   ) {}
 
   async generate(
@@ -129,6 +138,7 @@ export class AiModificationPlannerService {
       );
     }
 
+    await this.quota?.assertWithinDailyLimit(params.userId);
     const workspaceId = pageContext.page.workspaceId;
     const historyInstruction = params.originalInstruction?.trim()
       ? params.originalInstruction
@@ -236,6 +246,17 @@ export class AiModificationPlannerService {
         throw new UnprocessableEntityException({
           status: 'UNSUPPORTED_OPERATION',
           message: 'The draft does another kind of work than the request',
+        });
+      }
+      if (
+        params.requireRuleDraft &&
+        validatedPlan.status === 'PLAN_READY' &&
+        runtimeResult.provider !== RULE_PROVIDER
+      ) {
+        throw new UnprocessableEntityException({
+          status: 'NEEDS_CLARIFICATION',
+          reason: 'RULE_DRAFT_REQUIRED',
+          message: 'Only a draft made by rule may be kept for this sentence',
         });
       }
 

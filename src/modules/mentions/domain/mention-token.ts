@@ -12,7 +12,14 @@ export function parseMentionedUserIds(body: string): string[] {
   return [...new Set(ids)];
 }
 
+const ANY_MENTION_TOKEN =
+  /@\[([^\]\n]{1,100})\]\((user|page|database):([0-9a-f-]{36})\)/gi;
+
 /** Nội dung dạng chữ thường (`@Tên`) để đặt vào thông báo. */
 export function mentionTokensToText(body: string): string {
-  return body.replace(MENTION_TOKEN, (_, label: string) => `@${label}`);
+  return body.replace(
+    ANY_MENTION_TOKEN,
+    (_, label: string, kind: string) =>
+      `@${kind.toLowerCase() === 'user' ? label : kind.toLowerCase()}`,
+  );
 }

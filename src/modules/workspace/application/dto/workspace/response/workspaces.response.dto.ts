@@ -23,6 +23,8 @@ export class WorkspaceResponseDto {
 
   createdBy: string | null;
 
+  membershipType?: WorkspaceMembershipType;
+
   static fromDomain(workspace: Workspace): WorkspaceResponseDto {
     return {
       id: workspace.getId(),

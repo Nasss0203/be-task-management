@@ -37,6 +37,7 @@ describe('GetTemplatePreviewHandler Security & Access Control', () => {
   const createMockTemplate = (visibility = TemplateVisibility.PUBLIC) =>
     PageTemplate.create({
       id: templateId,
+      sourcePageId: null,
       workspaceId,
       name: 'Test Template',
       createdBy: creatorId,

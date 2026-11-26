@@ -5,6 +5,7 @@ import type { PublishedSiteRepository } from '../../../../domain/repositories/pu
 import type { PageRepository } from '../../../../domain/repositories/page.repository';
 import { PagePublicationResponseDto } from '../../../dto/page-publication/response/page-publication.response.dto';
 import { PublicationAvailabilityService } from '../../../services/publication-availability.service';
+import { PublishedSiteThemeService } from '../../../services/published-site-theme.service';
 
 @Injectable()
 export class ListPagePublicationsHandler {
@@ -16,6 +17,7 @@ export class ListPagePublicationsHandler {
     @Inject(CONTENT_TYPES.repositories.PageRepository)
     private readonly pages: PageRepository,
     private readonly availability: PublicationAvailabilityService,
+    private readonly siteTheme: PublishedSiteThemeService,
   ) {}
 
   async execute(pageId: string): Promise<PagePublicationResponseDto[]> {
@@ -40,6 +42,7 @@ export class ListPagePublicationsHandler {
             publication,
             site,
             await this.availability.isAvailable(site, publication),
+            await this.siteTheme.describe(site),
           ),
         );
     }

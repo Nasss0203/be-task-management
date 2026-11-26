@@ -48,10 +48,50 @@ export interface ListAdminMarketplaceSalesResult {
   limit: number;
 }
 
+export const ADMIN_RECONCILIATION_STATUSES = [
+  'RECONCILIATION_REQUIRED',
+  'REFUNDED',
+] as const;
+
+export type AdminReconciliationStatus =
+  (typeof ADMIN_RECONCILIATION_STATUSES)[number];
+
+export interface ListAdminReconciliationPurchasesInput {
+  page: number;
+  limit: number;
+  status: AdminReconciliationStatus;
+  search?: string;
+}
+
+export interface AdminReconciliationPurchase {
+  id: string;
+  orderCode: string;
+  provider: TemplatePurchaseProvider | null;
+  status: AdminReconciliationStatus;
+  amount: number;
+  currency: string;
+  template: { id: string; name: string };
+  buyer: AdminMarketplaceSaleUser;
+  buyerOwnsTemplate: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ListAdminReconciliationPurchasesResult {
+  items: AdminReconciliationPurchase[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export interface AdminMarketplaceSalesReader {
   getOverview(timeZone: string): Promise<AdminMarketplaceSalesOverview>;
 
   listSales(
     input: ListAdminMarketplaceSalesInput,
   ): Promise<ListAdminMarketplaceSalesResult>;
+
+  listReconciliationPurchases(
+    input: ListAdminReconciliationPurchasesInput,
+  ): Promise<ListAdminReconciliationPurchasesResult>;
 }

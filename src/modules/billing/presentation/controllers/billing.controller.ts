@@ -33,6 +33,8 @@ import { CreateBillingCheckoutCommand } from '../../application/commands/checkou
 import { CreateBillingCheckoutHandler } from '../../application/commands/checkout/create-billing-checkout/create-billing-checkout.handler';
 import { CreateBillingCheckoutRequestDto } from '../../application/dto/request/create-billing-checkout.request.dto';
 import { GetBillingPaymentStatusRequestDto } from '../../application/dto/request/get-billing-payment-status.request.dto';
+import { GetCheckoutQuoteRequestDto } from '../../application/dto/request/get-checkout-quote.request.dto';
+import { CheckoutQuoteResponseDto } from '../../application/dto/response/checkout-quote.response.dto';
 import { BillingPlanListResponseDto } from '../../application/dto/response/billing-plan-list.response.dto';
 import type { WorkspaceEntitlementsResponseDto } from '../../application/dto/response/workspace-entitlements.response.dto';
 import { CreateBillingCheckoutResponseDto } from '../../application/dto/response/create-billing-checkout.response.dto';
@@ -41,6 +43,8 @@ import { GetWorkspaceEntitlementsHandler } from '../../application/queries/entit
 import { GetWorkspaceEntitlementsQuery } from '../../application/queries/entitlement/get-workspace-entitlements/get-workspace-entitlements.query';
 import { GetBillingPaymentStatusHandler } from '../../application/queries/payment/get-billing-payment-status/get-billing-payment-status.handler';
 import { GetBillingPaymentStatusQuery } from '../../application/queries/payment/get-billing-payment-status/get-billing-payment-status.query';
+import { GetCheckoutQuoteHandler } from '../../application/queries/plan/get-checkout-quote/get-checkout-quote.handler';
+import { GetCheckoutQuoteQuery } from '../../application/queries/plan/get-checkout-quote/get-checkout-quote.query';
 import { ListBillingPlansHandler } from '../../application/queries/plan/list-billing-plans/list-billing-plans.handler';
 import { ListBillingPlansQuery } from '../../application/queries/plan/list-billing-plans/list-billing-plans.query';
 import { GetWorkspaceSubscriptionHandler } from '../../application/queries/subscription/get-workspace-subscription/get-workspace-subscription.handler';
@@ -76,6 +80,9 @@ export class BillingController {
 
     @Inject(BILLING_TYPES.applications.GetWorkspaceEntitlementsHandler)
     private readonly getWorkspaceEntitlementsHandler: GetWorkspaceEntitlementsHandler,
+
+    @Inject(BILLING_TYPES.applications.GetCheckoutQuoteHandler)
+    private readonly getCheckoutQuoteHandler: GetCheckoutQuoteHandler,
 
     private readonly configService: ConfigService,
   ) {}
@@ -174,6 +181,23 @@ export class BillingController {
   ): Promise<PaymentOrderHistoryItem[]> {
     return this.listWorkspacePaymentOrdersHandler.execute(
       new ListWorkspacePaymentOrdersQuery(workspaceId),
+    );
+  }
+
+  @Get('workspaces/:workspaceId/checkout-quote')
+  @ReadRateLimit()
+  @WorkspaceContext({
+    source: 'param',
+    key: 'workspaceId',
+  })
+  @RequirePermissions(PERMISSIONS.WORKSPACE_UPDATE)
+  @ResponseMessage('Get checkout quote successfully')
+  getCheckoutQuote(
+    @Param('workspaceId') workspaceId: string,
+    @Query() dto: GetCheckoutQuoteRequestDto,
+  ): Promise<CheckoutQuoteResponseDto> {
+    return this.getCheckoutQuoteHandler.execute(
+      new GetCheckoutQuoteQuery(workspaceId, dto.planPriceId),
     );
   }
 

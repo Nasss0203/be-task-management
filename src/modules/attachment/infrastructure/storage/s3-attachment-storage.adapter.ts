@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { createReadStream } from 'fs';
 import type { ObjectStoragePort } from 'src/shared/application/ports/object-storage.port';
 import { StorageService } from 'src/shared/infrastructure/storage/storage.service';
 import { STORAGE_TYPES } from 'src/shared/infrastructure/storage/storage.types';
@@ -47,7 +48,8 @@ export class S3AttachmentStorageAdapter {
 
     await this.objectStorage.upload({
       key: storageKey,
-      body: input.buffer,
+      body: createReadStream(input.filePath),
+      contentLength: input.size,
       contentType: input.mimeType,
     });
 

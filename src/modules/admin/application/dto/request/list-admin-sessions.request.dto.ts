@@ -4,6 +4,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  IsUUID,
   Max,
   MaxLength,
   Min,
@@ -31,4 +32,8 @@ export class ListAdminSessionsRequestDto {
   @IsOptional()
   @IsEnum(SystemRole)
   systemRole?: SystemRole;
+
+  @IsOptional()
+  @IsUUID()
+  userId?: string;
 }

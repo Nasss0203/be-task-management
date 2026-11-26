@@ -16,6 +16,7 @@ import type { PublishedSiteRepository } from '../../../../domain/repositories/pu
 import type { PublicDatabaseDto } from '../../../dto/page-publication/response/public-page-block.response.dto';
 import { PublicPageResponseDto } from '../../../dto/page-publication/response/public-page.response.dto';
 import { PublicationAvailabilityService } from '../../../services/publication-availability.service';
+import { PublishedSiteThemeService } from '../../../services/published-site-theme.service';
 import { GetPublicPageQuery } from './get-public-page.query';
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 
@@ -37,6 +38,8 @@ export class GetPublicPageHandler {
 
     @Inject(DATABASE_TYPES.ports.DatabaseSnapshotReader)
     private readonly databaseSnapshots: DatabaseSnapshotReaderPort,
+
+    private readonly siteTheme: PublishedSiteThemeService,
   ) {}
 
   async execute(query: GetPublicPageQuery): Promise<PublicPageResponseDto> {
@@ -82,6 +85,13 @@ export class GetPublicPageHandler {
       }
 
       result.breadcrumbs = resolved.breadcrumbs;
+      result.seo = site.getSeo();
+      const theme = await this.siteTheme.describe(site);
+      result.theme = {
+        logo_url: theme.logo_url,
+        favicon_url: theme.favicon_url,
+        accent_color: theme.accent_color,
+      };
 
       const updatesEnabled = site.getAllowUpdates();
       const authenticated = Boolean(query.userId);

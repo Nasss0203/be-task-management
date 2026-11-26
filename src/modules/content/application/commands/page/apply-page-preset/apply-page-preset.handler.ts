@@ -40,6 +40,7 @@ export class ApplyPagePresetHandler {
           pageId: command.pageId,
           createdBy: command.userId,
           blocks: preset.blocks,
+          database: preset.database,
         },
         context,
       );

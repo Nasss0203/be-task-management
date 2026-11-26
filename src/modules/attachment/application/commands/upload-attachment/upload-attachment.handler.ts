@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
 import {
   ActivityAction,
@@ -71,10 +66,6 @@ export class UploadAttachmentHandler {
   ) {}
 
   async execute(command: UploadAttachmentCommand): Promise<AttachmentDto> {
-    if (!command.commentId && !command.pageBlockId) {
-      throw new BadRequestException('commentId or pageBlockId is required');
-    }
-
     await this.assertCanAttachToPageBlock(command);
     await this.assertCommentInWorkspace(command);
 
@@ -90,12 +81,18 @@ export class UploadAttachmentHandler {
     const sizeMb = command.file.size / BYTES_PER_MB;
     await this.entitlements.assertWithinLimit(
       command.workspaceId,
+      BillingFeatureCode.MAX_FILE_SIZE_MB,
+      sizeMb,
+    );
+    await this.entitlements.assertWithinLimit(
+      command.workspaceId,
       BillingFeatureCode.MAX_STORAGE_MB,
       sizeMb,
     );
 
     const storageResult = await this.storage.upload({
-      buffer: command.file.buffer,
+      filePath: command.file.path,
+      size: command.file.size,
       workspaceId: command.workspaceId,
       commentId: command.commentId,
       pageBlockId: command.pageBlockId,

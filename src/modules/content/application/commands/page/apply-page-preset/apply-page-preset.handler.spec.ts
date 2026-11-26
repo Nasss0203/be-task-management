@@ -45,6 +45,17 @@ describe('ApplyPagePresetHandler', () => {
     expect(input.blocks.length).toBeGreaterThan(0);
   });
 
+  it('passes the preset database along with the blocks', async () => {
+    await handler.execute(
+      new ApplyPagePresetCommand('page-1', PagePreset.TASKS, 'user-1'),
+    );
+
+    const [input, usedContext] =
+      pageProvisioning.createBlocksFromSnapshot.mock.calls[0];
+    expect(usedContext).toBe(context);
+    expect(input.database?.name).toBe('Tasks');
+  });
+
   it('only clears blocks for the empty preset', async () => {
     await handler.execute(
       new ApplyPagePresetCommand('page-1', PagePreset.EMPTY, 'user-1'),

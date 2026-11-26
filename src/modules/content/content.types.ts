@@ -5,11 +5,15 @@ export const CONTENT_TYPES = {
     PublicSiteNavigationReader: Symbol.for('PublicSiteNavigationReader'),
     PageSearchReader: Symbol.for('PageSearchReader'),
     PageActivityRecorder: Symbol.for('PageActivityRecorder'),
+    SiteThemeImageReader: Symbol.for('SiteThemeImageReader'),
   },
   applications: {
     CreatePageHandler: Symbol.for('CreatePageHandler'),
     SearchPagesHandler: Symbol.for('SearchPagesHandler'),
     ListPageMentionTitlesHandler: Symbol.for('ListPageMentionTitlesHandler'),
+    ListDatabaseMentionTitlesHandler: Symbol.for(
+      'ListDatabaseMentionTitlesHandler',
+    ),
     FindPageByWorkspaceHandler: Symbol.for('FindPageByWorkspaceHandler'),
     FindDatabasesByWorkspaceHandler: Symbol.for(
       'FindDatabasesByWorkspaceHandler',
@@ -27,6 +31,8 @@ export const CONTENT_TYPES = {
     MovePageHandler: Symbol.for('MovePageHandler'),
     DuplicatePageHandler: Symbol.for('DuplicatePageHandler'),
     ApplyPagePresetHandler: Symbol.for('ApplyPagePresetHandler'),
+    ImportMarkdownPageHandler: Symbol.for('ImportMarkdownPageHandler'),
+    ImportCsvPageHandler: Symbol.for('ImportCsvPageHandler'),
     ListPagePresetsHandler: Symbol.for('ListPagePresetsHandler'),
 
     CreatePageBlockHandler: Symbol.for('CreatePageBlockHandler'),
@@ -45,6 +51,8 @@ export const CONTENT_TYPES = {
     AddPageFavoriteHandler: Symbol.for('AddPageFavoriteHandler'),
     RemovePageFavoriteHandler: Symbol.for('RemovePageFavoriteHandler'),
     ListPageFavoritesHandler: Symbol.for('ListPageFavoritesHandler'),
+    RecordPageVisitHandler: Symbol.for('RecordPageVisitHandler'),
+    ListRecentPageVisitsHandler: Symbol.for('ListRecentPageVisitsHandler'),
     SharePageHandler: Symbol.for('SharePageHandler'),
     CreatePageShareLinkHandler: Symbol.for('CreatePageShareLinkHandler'),
     AcceptPageShareLinkHandler: Symbol('AcceptPageShareLinkHandler'),
@@ -81,6 +89,7 @@ export const CONTENT_TYPES = {
     PageRepository: Symbol.for('PageRepository'),
     PageBlockRepository: Symbol.for('PageBlockRepository'),
     PageFavoriteRepository: Symbol.for('PageFavoriteRepository'),
+    PageVisitRepository: Symbol.for('PageVisitRepository'),
     PageShareRepository: Symbol.for('PageShareRepository'),
     PageShareLinkRepository: Symbol.for('PageShareLinkRepository'),
     PageEditRequestRepository: Symbol('PageEditRequestRepository'),

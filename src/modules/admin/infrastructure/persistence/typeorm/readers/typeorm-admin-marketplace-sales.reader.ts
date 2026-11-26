@@ -7,8 +7,11 @@ import type {
   AdminMarketplaceSalesOverview,
   AdminMarketplaceSalesReader,
   AdminMarketplaceSalesTotals,
+  AdminReconciliationStatus,
   ListAdminMarketplaceSalesInput,
   ListAdminMarketplaceSalesResult,
+  ListAdminReconciliationPurchasesInput,
+  ListAdminReconciliationPurchasesResult,
 } from '../../../../application/ports/admin-marketplace-sales-reader.port';
 
 interface TotalsRawRow {
@@ -50,6 +53,37 @@ const SALES_FROM = `
       OR buyer.username ILIKE '%' || $1 || '%'
       OR creator.email ILIKE '%' || $1 || '%'
       OR creator.username ILIKE '%' || $1 || '%'
+    )
+`;
+
+interface ReconciliationRawRow {
+  id: string;
+  orderCode: string;
+  provider: TemplatePurchaseProvider | null;
+  status: AdminReconciliationStatus;
+  amount: string;
+  currency: string;
+  templateId: string;
+  templateName: string;
+  buyerId: string;
+  buyerEmail: string;
+  buyerUsername: string;
+  buyerOwnsTemplate: boolean;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+const RECONCILIATION_FROM = `
+  FROM template_purchases purchase
+  INNER JOIN page_templates template ON template.id = purchase.template_id
+  INNER JOIN users buyer ON buyer.id = purchase.buyer_id
+  WHERE purchase.status = $1
+    AND (
+      $2::text IS NULL
+      OR purchase.order_code ILIKE '%' || $2 || '%'
+      OR template.name ILIKE '%' || $2 || '%'
+      OR buyer.email ILIKE '%' || $2 || '%'
+      OR buyer.username ILIKE '%' || $2 || '%'
     )
 `;
 
@@ -178,6 +212,76 @@ export class TypeOrmAdminMarketplaceSalesReader implements AdminMarketplaceSales
           paidAt: new Date(row.paidAt),
         };
       }),
+      total: Number(countRows[0]?.total ?? 0),
+      page,
+      limit,
+    };
+  }
+
+  async listReconciliationPurchases(
+    input: ListAdminReconciliationPurchasesInput,
+  ): Promise<ListAdminReconciliationPurchasesResult> {
+    const page = Number.isFinite(input.page)
+      ? Math.max(1, Math.floor(input.page))
+      : 1;
+    const limit = Number.isFinite(input.limit)
+      ? Math.min(100, Math.max(1, Math.floor(input.limit)))
+      : 20;
+    const filters = [input.status, input.search?.trim() || null];
+
+    const rows = await this.dataSource.query<ReconciliationRawRow[]>(
+      `
+        SELECT
+          purchase.id AS "id",
+          purchase.order_code AS "orderCode",
+          purchase.provider AS "provider",
+          purchase.status AS "status",
+          purchase.amount::text AS "amount",
+          purchase.currency AS "currency",
+          template.id AS "templateId",
+          template.name AS "templateName",
+          buyer.id AS "buyerId",
+          buyer.email AS "buyerEmail",
+          buyer.username AS "buyerUsername",
+          EXISTS (
+            SELECT 1
+            FROM template_entitlements entitlement
+            WHERE entitlement.template_id = purchase.template_id
+              AND entitlement.user_id = purchase.buyer_id
+              AND entitlement.source::text = 'PAID_PURCHASE'
+          ) AS "buyerOwnsTemplate",
+          purchase.created_at AS "createdAt",
+          purchase.updated_at AS "updatedAt"
+        ${RECONCILIATION_FROM}
+        ORDER BY purchase.updated_at DESC, purchase.id
+        LIMIT $3
+        OFFSET $4
+      `,
+      [...filters, limit, (page - 1) * limit],
+    );
+
+    const countRows = await this.dataSource.query<
+      Array<{ total: number | string }>
+    >(`SELECT COUNT(*) AS total ${RECONCILIATION_FROM}`, filters);
+
+    return {
+      items: rows.map((row) => ({
+        id: row.id,
+        orderCode: row.orderCode,
+        provider: row.provider,
+        status: row.status,
+        amount: Number(row.amount),
+        currency: row.currency,
+        template: { id: row.templateId, name: row.templateName },
+        buyer: {
+          id: row.buyerId,
+          email: row.buyerEmail,
+          username: row.buyerUsername,
+        },
+        buyerOwnsTemplate: row.buyerOwnsTemplate === true,
+        createdAt: new Date(row.createdAt),
+        updatedAt: new Date(row.updatedAt),
+      })),
       total: Number(countRows[0]?.total ?? 0),
       page,
       limit,

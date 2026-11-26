@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { open } from 'fs/promises';
 import { loadEsm } from 'load-esm';
 import { extname } from 'path';
 import { pathToFileURL } from 'url';
@@ -39,14 +40,25 @@ export class AttachmentFileValidatorAdapter implements AttachmentFileValidatorPo
     }
   }
 
-  private isLikelyTextBuffer(buffer: Buffer): boolean {
-    if (buffer.length === 0) return true;
+  private async isLikelyTextFile(path: string): Promise<boolean> {
+    const handle = await open(path, 'r');
 
-    const sample = buffer.subarray(0, Math.min(buffer.length, 4096));
+    try {
+      const { buffer, bytesRead } = await handle.read(
+        Buffer.alloc(4096),
+        0,
+        4096,
+        0,
+      );
 
-    return sample.every(
-      (byte) => byte === 9 || byte === 10 || byte === 13 || byte >= 32,
-    );
+      return buffer
+        .subarray(0, bytesRead)
+        .every(
+          (byte) => byte === 9 || byte === 10 || byte === 13 || byte >= 32,
+        );
+    } finally {
+      await handle.close();
+    }
   }
 
   validateExtension(fileName: string): string {
@@ -65,8 +77,8 @@ export class AttachmentFileValidatorAdapter implements AttachmentFileValidatorPo
     file: AttachmentFileInput,
     extension: string,
   ): Promise<string> {
-    const { fileTypeFromBuffer } = await this.loadFileTypeModule();
-    const detected = await fileTypeFromBuffer(file.buffer);
+    const { fileTypeFromFile } = await this.loadFileTypeModule();
+    const detected = await fileTypeFromFile(file.path);
 
     if (!detected) {
       if (
@@ -74,7 +86,7 @@ export class AttachmentFileValidatorAdapter implements AttachmentFileValidatorPo
         ['text/plain', 'application/octet-stream'].includes(
           file.reportedMimeType,
         ) &&
-        this.isLikelyTextBuffer(file.buffer)
+        (await this.isLikelyTextFile(file.path))
       ) {
         return 'text/plain';
       }
@@ -84,7 +96,7 @@ export class AttachmentFileValidatorAdapter implements AttachmentFileValidatorPo
         ['text/csv', 'text/plain', 'application/octet-stream'].includes(
           file.reportedMimeType,
         ) &&
-        this.isLikelyTextBuffer(file.buffer)
+        (await this.isLikelyTextFile(file.path))
       ) {
         return 'text/csv';
       }
@@ -125,6 +137,9 @@ export class AttachmentFileValidatorAdapter implements AttachmentFileValidatorPo
       '.webp': ['image/webp'],
       '.svg': ['image/svg+xml'],
       '.pdf': ['application/pdf'],
+      '.mp3': ['audio/mpeg'],
+      '.m4a': ['audio/x-m4a', 'audio/mp4', 'video/mp4'],
+      '.wav': ['audio/wav'],
       '.zip': ['application/zip', 'application/x-zip-compressed'],
       '.doc': ['application/msword', 'application/x-cfb'],
       '.xls': ['application/vnd.ms-excel', 'application/x-cfb'],

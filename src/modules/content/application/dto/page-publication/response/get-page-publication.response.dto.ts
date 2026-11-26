@@ -1,3 +1,5 @@
+import type { PublishedSiteThemeView } from '../../../services/published-site-theme.service';
+
 export class GetPagePublicationResponseDto {
   published: boolean;
 
@@ -6,6 +8,8 @@ export class GetPagePublicationResponseDto {
   subdomain?: string;
   site_active?: boolean;
   allow_updates?: boolean;
+  seo?: { title: string | null; description: string | null; indexing: boolean };
+  theme?: PublishedSiteThemeView;
   path?: string;
 
   published_at?: Date;
