@@ -1,7 +1,12 @@
 import { PropertyType } from '../../enums/property-type.enum';
+import {
+  isValidEmail,
+  isValidPhone,
+  isValidUrl,
+} from '../../value-objects/contact-value-format';
 import { DatabaseProperty } from '../database/database-property.entity';
 
-import { DATE_TIME_KEY, isTimeZone } from './date-row-value';
+import { DATE_KEY, DATE_TIME_KEY, isTimeZone } from './date-row-value';
 import { RowValue } from './row-value.entity';
 import { RowValueData } from './row-value.type';
 
@@ -135,6 +140,7 @@ export class DatabaseRow {
             `Property type ${property.getType()} requires a string value`,
           );
         }
+        this.validateContactFormat(property.getType(), value);
         return;
 
       case PropertyType.NUMBER:
@@ -181,6 +187,24 @@ export class DatabaseRow {
 
       default:
         throw new Error(`Unsupported property type ${property.getType()}`);
+    }
+  }
+
+  private validateContactFormat(type: PropertyType, value: string): void {
+    const text = value.trim();
+
+    if (!text) return;
+
+    if (type === PropertyType.URL && !isValidUrl(text)) {
+      throw new Error('URL property requires a valid http or https link');
+    }
+
+    if (type === PropertyType.EMAIL && !isValidEmail(text)) {
+      throw new Error('EMAIL property requires a valid email address');
+    }
+
+    if (type === PropertyType.PHONE && !isValidPhone(text)) {
+      throw new Error('PHONE property requires a valid phone number');
     }
   }
 
@@ -236,8 +260,21 @@ export class DatabaseRow {
       throw new Error('DATE property requires a date value');
     }
 
-    if (!DATE_TIME_KEY.test(value.start)) {
+    if (DATE_KEY.test(value.start)) {
+      if (
+        value.end !== undefined &&
+        value.end !== null &&
+        !DATE_KEY.test(value.end)
+      ) {
+        throw new Error('DATE property end date must be a YYYY-MM-DD date');
+      }
       return;
+    }
+
+    if (!DATE_TIME_KEY.test(value.start)) {
+      throw new Error(
+        'DATE property requires a YYYY-MM-DD date or a YYYY-MM-DDTHH:mm time',
+      );
     }
 
     if (!isTimeZone(value.timeZone)) {

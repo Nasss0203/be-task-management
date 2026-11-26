@@ -1,6 +1,7 @@
 export const SLACK_INTEGRATION_TYPES = {
   repositories: {
     SlackConnectionRepository: Symbol('SlackConnectionRepository'),
+    SlackDeliveryLog: Symbol('SlackDeliveryLog'),
   },
   ports: {
     SlackClient: Symbol('SlackClient'),
@@ -11,6 +12,7 @@ export const SLACK_INTEGRATION_TYPES = {
   applications: {
     GetSlackAuthorizeUrlHandler: Symbol('GetSlackAuthorizeUrlHandler'),
     GetSlackStatusHandler: Symbol('GetSlackStatusHandler'),
+    ListSlackDeliveriesHandler: Symbol('ListSlackDeliveriesHandler'),
     ConnectSlackHandler: Symbol('ConnectSlackHandler'),
     DisconnectSlackHandler: Symbol('DisconnectSlackHandler'),
     DeliverSlackNotificationHandler: Symbol('DeliverSlackNotificationHandler'),

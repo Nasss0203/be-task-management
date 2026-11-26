@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -79,6 +80,12 @@ export class RepublishSiteHandler {
 
       if (!site) {
         throw new NotFoundException('Published site not found');
+      }
+
+      if (site.isDisabledByAdmin()) {
+        throw new ForbiddenException(
+          'Published site was disabled by an administrator',
+        );
       }
 
       await this.entitlements.assertWithinLimit(

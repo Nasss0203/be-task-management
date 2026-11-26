@@ -8,6 +8,7 @@ import type { PagePublicationType } from 'src/modules/content/domain/enums/page-
 import {
   AdminPublishedSiteStatusFilter,
   type AdminPublishedSiteDetail,
+  type AdminPublishedSiteModeration,
   type AdminPublishedSiteReader,
   type AdminPublishedSitesOverview,
   type AdminPublishedSiteSummary,
@@ -37,6 +38,11 @@ interface SiteRawRow {
   lastPublishedAt: Date | string | null;
   createdAt: Date | string;
   disabledAt: Date | string | null;
+  moderationDisabledAt: Date | string | null;
+  moderationReason: string | null;
+  moderatorId: string | null;
+  moderatorEmail: string | null;
+  moderatorUsername: string | null;
 }
 
 interface PageRawRow {
@@ -84,7 +90,12 @@ const SITE_COLUMNS = `
     WHERE publication.site_id = site.id
   ) AS "lastPublishedAt",
   site.created_at AS "createdAt",
-  site.disabled_at AS "disabledAt"
+  site.disabled_at AS "disabledAt",
+  site.moderation_disabled_at AS "moderationDisabledAt",
+  site.moderation_reason AS "moderationReason",
+  moderator.id AS "moderatorId",
+  moderator.email AS "moderatorEmail",
+  moderator.username AS "moderatorUsername"
 `;
 
 const SITE_JOINS = `
@@ -92,6 +103,7 @@ const SITE_JOINS = `
   INNER JOIN pages root_page ON root_page.id = site.root_page_id
   INNER JOIN workspaces workspace ON workspace.id = site.workspace_id
   INNER JOIN users creator ON creator.id = site.created_by
+  LEFT JOIN users moderator ON moderator.id = site.moderation_disabled_by
 `;
 
 const SITES_FROM = `
@@ -108,6 +120,7 @@ const SITES_FROM = `
       $2::text IS NULL
       OR ($2 = 'ACTIVE' AND site.disabled_at IS NULL)
       OR ($2 = 'DISABLED' AND site.disabled_at IS NOT NULL)
+      OR ($2 = 'MODERATED' AND site.moderation_disabled_at IS NOT NULL)
     )
 `;
 
@@ -267,6 +280,27 @@ export class TypeOrmAdminPublishedSiteReader implements AdminPublishedSiteReader
       lastPublishedAt: toDate(row.lastPublishedAt),
       createdAt: new Date(row.createdAt),
       disabledAt: toDate(row.disabledAt),
+      moderation: this.toModeration(row),
+    };
+  }
+
+  private toModeration(row: SiteRawRow): AdminPublishedSiteModeration | null {
+    const disabledAt = toDate(row.moderationDisabledAt);
+
+    if (!disabledAt) {
+      return null;
+    }
+
+    return {
+      disabledAt,
+      disabledBy: row.moderatorId
+        ? {
+            id: row.moderatorId,
+            email: row.moderatorEmail ?? '',
+            username: row.moderatorUsername ?? '',
+          }
+        : null,
+      reason: row.moderationReason,
     };
   }
 }

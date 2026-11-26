@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
 import type {
+  PageSearchFilters,
   PageSearchReader,
   PageSearchRow,
 } from '../../../../application/ports/page-search-reader.port';
@@ -34,7 +35,9 @@ export class TypeOrmPageSearchReader implements PageSearchReader {
     userId: string;
     normalizedQuery: string;
     limit: number;
+    filters?: PageSearchFilters;
   }): Promise<PageSearchRow[]> {
+    const filters = input.filters ?? {};
     const pattern = `%${escapeLikePattern(input.normalizedQuery)}%`;
 
     const rows = await this.dataSource.query<PageSearchRawRow[]>(
@@ -56,6 +59,9 @@ export class TypeOrmPageSearchReader implements PageSearchReader {
               SELECT 1 FROM teamspaces t
               WHERE t.id = p.teamspace_id AND t.deleted_at IS NOT NULL
             )
+            AND ($7::uuid IS NULL OR p.created_by = $7::uuid)
+            AND (NOT $8::boolean OR p.teamspace_id IS NOT DISTINCT FROM $9::uuid)
+            AND ($10::int IS NULL OR p.updated_at >= now() - make_interval(days => $10::int))
         )
         SELECT
           a.id AS "pageId",
@@ -90,6 +96,10 @@ export class TypeOrmPageSearchReader implements PageSearchReader {
         VIETNAMESE_ACCENTED,
         VIETNAMESE_PLAIN,
         input.limit,
+        filters.createdBy ?? null,
+        filters.teamspaceId !== undefined,
+        filters.teamspaceId ?? null,
+        filters.editedWithinDays ?? null,
       ],
     );
 

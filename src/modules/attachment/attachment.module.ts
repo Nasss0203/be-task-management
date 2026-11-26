@@ -14,6 +14,7 @@ import { DeleteAttachmentHandler } from './application/commands/delete-attachmen
 import { UpdateAttachmentHandler } from './application/commands/update-attachment/update-attachment.handler';
 import { UploadAttachmentHandler } from './application/commands/upload-attachment/upload-attachment.handler';
 import { CreateAttachmentDownloadUrlHandler } from './application/queries/create-attachment-download-url/create-attachment-download-url.handler';
+import { CreatePublicSiteAttachmentDownloadUrlHandler } from './application/queries/create-public-site-attachment-download-url/create-public-site-attachment-download-url.handler';
 import { GetWorkspaceStorageHandler } from './application/queries/get-workspace-storage/get-workspace-storage.handler';
 import { ListWorkspaceStorageFilesHandler } from './application/queries/list-workspace-storage-files/list-workspace-storage-files.handler';
 import { ATTACHMENT_TOKENS } from './attachment.tokens';
@@ -25,10 +26,12 @@ import { R2AttachmentStorageAdapter } from './infrastructure/storage/r2-attachme
 import { S3AttachmentStorageAdapter } from './infrastructure/storage/s3-attachment-storage.adapter';
 import { AttachmentFileValidatorAdapter } from './infrastructure/validation/attachment-file-validator.adapter';
 import { AttachmentController } from './presentation/http/controllers/attachment.controller';
+import { PublicSiteAttachmentController } from './presentation/http/controllers/public-site-attachment.controller';
 
 const handlers = [
   UploadAttachmentHandler,
   CreateAttachmentDownloadUrlHandler,
+  CreatePublicSiteAttachmentDownloadUrlHandler,
   UpdateAttachmentHandler,
   DeleteAttachmentHandler,
   GetWorkspaceStorageHandler,
@@ -48,7 +51,7 @@ const handlers = [
     DatabaseModule,
     BillingModule,
   ],
-  controllers: [AttachmentController],
+  controllers: [AttachmentController, PublicSiteAttachmentController],
   providers: [
     {
       provide: ATTACHMENT_TOKENS.repository,

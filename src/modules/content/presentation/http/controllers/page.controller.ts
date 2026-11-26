@@ -13,11 +13,15 @@ import {
   Put,
   Query,
   UnauthorizedException,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Auth } from 'src/common/decorator/auth.decorator';
 import {
   ReadRateLimit,
   StrictWriteRateLimit,
+  UploadRateLimit,
   WriteRateLimit,
 } from 'src/common/decorator/rate-limit.decorator';
 import { RequirePermissions } from 'src/common/decorator/require-permissions.decorator';
@@ -40,6 +44,14 @@ import { UpdatePageHandler } from 'src/modules/content/application/commands/page
 import { ApplyPagePresetCommand } from 'src/modules/content/application/commands/page/apply-page-preset/apply-page-preset.command';
 import { ApplyPagePresetHandler } from 'src/modules/content/application/commands/page/apply-page-preset/apply-page-preset.handler';
 import { ApplyPagePresetDto } from 'src/modules/content/application/dto/page/apply-page-preset.dto';
+import { ImportMarkdownPageCommand } from 'src/modules/content/application/commands/page/import-markdown-page/import-markdown-page.command';
+import { ImportMarkdownPageHandler } from 'src/modules/content/application/commands/page/import-markdown-page/import-markdown-page.handler';
+import { MARKDOWN_IMPORT_LIMITS } from 'src/modules/content/application/commands/page/import-markdown-page/markdown-to-page-blocks';
+import { ImportCsvPageCommand } from 'src/modules/content/application/commands/page/import-csv-page/import-csv-page.command';
+import { ImportCsvPageHandler } from 'src/modules/content/application/commands/page/import-csv-page/import-csv-page.handler';
+import { ImportCsvPageDto } from 'src/modules/content/application/dto/page/import-csv-page.dto';
+import { CSV_IMPORT_LIMITS } from 'src/modules/database/application/commands/import-database-rows/read-csv-records';
+import { parseMapping } from 'src/modules/database/presentation/http/requests/import-database-rows.request';
 import { ListPagePresetsHandler } from 'src/modules/content/application/queries/page/list-page-presets/list-page-presets.handler';
 import { CreatePageDto } from 'src/modules/content/application/dto/page/create-page.dto';
 import { MovePageDto } from 'src/modules/content/application/dto/page/move-page.dto';
@@ -60,11 +72,17 @@ import { PermanentlyDeletePageDatabaseHandler } from 'src/modules/content/applic
 import { RestorePageDatabaseCommand } from 'src/modules/content/application/commands/page-database/restore-page-database/restore-page-database.command';
 import { RestorePageDatabaseHandler } from 'src/modules/content/application/commands/page-database/restore-page-database/restore-page-database.handler';
 import { SearchPagesHandler } from 'src/modules/content/application/queries/page/search-pages/search-pages.handler';
+import { parsePageSearchFilters } from 'src/modules/content/application/queries/page/search-pages/page-search-filters';
 import { SearchPagesQuery } from 'src/modules/content/application/queries/page/search-pages/search-pages.query';
 import {
   ListPageMentionTitlesHandler,
   PageMentionTitlesDto,
 } from 'src/modules/content/application/queries/page/list-page-mention-titles/list-page-mention-titles.handler';
+import {
+  type DatabaseMentionTitlesDto,
+  ListDatabaseMentionTitlesHandler,
+} from 'src/modules/content/application/queries/page-database/list-database-mention-titles/list-database-mention-titles.handler';
+import { ListDatabaseMentionTitlesQuery } from 'src/modules/content/application/queries/page-database/list-database-mention-titles/list-database-mention-titles.query';
 import { ListPageMentionTitlesQuery } from 'src/modules/content/application/queries/page/list-page-mention-titles/list-page-mention-titles.query';
 import { CONTENT_TYPES } from 'src/modules/content/content.types';
 import { PERMISSIONS } from 'src/modules/permission/constants/permission.constant';
@@ -85,6 +103,9 @@ export class PageController {
 
     @Inject(CONTENT_TYPES.applications.ListPageMentionTitlesHandler)
     private readonly listPageMentionTitlesHandler: ListPageMentionTitlesHandler,
+
+    @Inject(CONTENT_TYPES.applications.ListDatabaseMentionTitlesHandler)
+    private readonly listDatabaseMentionTitlesHandler: ListDatabaseMentionTitlesHandler,
 
     @Inject(CONTENT_TYPES.applications.FindDatabasesByWorkspaceHandler)
     private readonly findDatabasesByWorkspaceHandler: FindDatabasesByWorkspaceHandler,
@@ -115,6 +136,12 @@ export class PageController {
 
     @Inject(CONTENT_TYPES.applications.ApplyPagePresetHandler)
     private readonly applyPagePresetHandler: ApplyPagePresetHandler,
+
+    @Inject(CONTENT_TYPES.applications.ImportMarkdownPageHandler)
+    private readonly importMarkdownPageHandler: ImportMarkdownPageHandler,
+
+    @Inject(CONTENT_TYPES.applications.ImportCsvPageHandler)
+    private readonly importCsvPageHandler: ImportCsvPageHandler,
 
     @Inject(CONTENT_TYPES.applications.ListPagePresetsHandler)
     private readonly listPagePresetsHandler: ListPagePresetsHandler,
@@ -217,10 +244,18 @@ export class PageController {
   async search(
     @Param('workspaceId') workspaceId: string,
     @Query('q') q: string | undefined,
+    @Query('createdBy') createdBy: unknown,
+    @Query('teamspaceId') teamspaceId: unknown,
+    @Query('editedWithin') editedWithin: unknown,
     @Auth() auth: IAuth,
   ) {
     return this.searchPagesHandler.execute(
-      new SearchPagesQuery(workspaceId, auth.id, typeof q === 'string' ? q : ''),
+      new SearchPagesQuery(
+        workspaceId,
+        auth.id,
+        typeof q === 'string' ? q : '',
+        parsePageSearchFilters({ createdBy, teamspaceId, editedWithin }),
+      ),
     );
   }
 
@@ -235,6 +270,24 @@ export class PageController {
   ): Promise<PageMentionTitlesDto> {
     return this.listPageMentionTitlesHandler.execute(
       new ListPageMentionTitlesQuery(
+        workspaceId,
+        auth.id,
+        typeof ids === 'string' && ids ? ids.split(',') : [],
+      ),
+    );
+  }
+
+  @ResponseMessage('List mentioned database names')
+  @Get('workspace/:workspaceId/database-mention-titles')
+  @WorkspaceContext({ source: 'param', key: 'workspaceId' })
+  @RequirePermissions(PERMISSIONS.PAGE_READ)
+  async listDatabaseMentionTitles(
+    @Param('workspaceId') workspaceId: string,
+    @Query('ids') ids: string | undefined,
+    @Auth() auth: IAuth,
+  ): Promise<DatabaseMentionTitlesDto> {
+    return this.listDatabaseMentionTitlesHandler.execute(
+      new ListDatabaseMentionTitlesQuery(
         workspaceId,
         auth.id,
         typeof ids === 'string' && ids ? ids.split(',') : [],
@@ -344,6 +397,73 @@ export class PageController {
       new ApplyPagePresetCommand(pageId, dto.preset, auth.id),
     );
     return { success: true };
+  }
+
+  @Post(':pageId/import-csv')
+  @UploadRateLimit()
+  @WorkspaceContext({ source: 'resource', type: 'page', key: 'pageId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
+  @ResponseMessage('Import CSV as a database')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: CSV_IMPORT_LIMITS.maxFileSize, files: 1 },
+    }),
+  )
+  importCsv(
+    @Param('pageId', ParseUUIDPipe) pageId: string,
+    @Body() dto: ImportCsvPageDto,
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Auth() auth: IAuth,
+  ) {
+    if (!file || !/\.csv$/i.test(file.originalname)) {
+      throw new BadRequestException('Upload a .csv file');
+    }
+
+    return this.importCsvPageHandler.execute(
+      new ImportCsvPageCommand(
+        pageId,
+        auth.id,
+        dto.target,
+        file.originalname,
+        file.buffer,
+        parseMapping(dto.mapping),
+        dto.timeZone ?? null,
+        dto.dryRun !== 'false',
+      ),
+    );
+  }
+
+  @Post(':pageId/import-markdown')
+  @UploadRateLimit()
+  @ResponseMessage('Import Markdown page')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: MARKDOWN_IMPORT_LIMITS.maxFileSize, files: 1 },
+    }),
+  )
+  importMarkdown(
+    @Param('pageId', ParseUUIDPipe) pageId: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Auth() auth: IAuth,
+  ) {
+    if (
+      !file ||
+      !/\.(md|markdown)$/i.test(file.originalname) ||
+      !/^(text\/markdown|text\/x-markdown|text\/plain|application\/octet-stream)$/i.test(
+        file.mimetype,
+      )
+    ) {
+      throw new BadRequestException('Upload a .md file');
+    }
+
+    return this.importMarkdownPageHandler.execute(
+      new ImportMarkdownPageCommand(
+        pageId,
+        auth.id,
+        file.originalname,
+        file.buffer,
+      ),
+    );
   }
 
   @Delete(':pageId')

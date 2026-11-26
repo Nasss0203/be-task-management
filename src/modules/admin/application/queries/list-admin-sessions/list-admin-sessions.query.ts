@@ -6,5 +6,6 @@ export class ListAdminSessionsQuery {
     public readonly limit: number,
     public readonly search?: string,
     public readonly systemRole?: SystemRole,
+    public readonly userId?: string,
   ) {}
 }

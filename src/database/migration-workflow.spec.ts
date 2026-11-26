@@ -14,7 +14,10 @@ import {
   postgresTool,
   loadBaseline,
 } from './baseline';
-import { GENERAL_VERIFIED_POLICY } from './automatic-checkpoint';
+import {
+  type AutomaticCheckpoint,
+  GENERAL_VERIFIED_POLICY,
+} from './automatic-checkpoint';
 import { readOnlyDataSource } from './migration-safety';
 import { AddTemplateListingPreviewMode1792050000000 } from './migrations/1792050000000-AddTemplateListingPreviewMode';
 import { runMigrationPrepare } from '../../scripts/migration-prepare';
@@ -67,7 +70,7 @@ describe('Migration Workflow & Safety Architecture', () => {
       const baseline = loadBaseline();
       const previewModeCheckpoint = baseline.checkpoints.find((cp) =>
         cp.applied.includes('AddTemplateListingPreviewMode1792050000000'),
-      );
+      ) as AutomaticCheckpoint | undefined;
 
       expect(previewModeCheckpoint).toBeDefined();
       expect(previewModeCheckpoint?.approval?.policy).toBe(GENERAL_VERIFIED_POLICY);

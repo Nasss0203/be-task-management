@@ -1,4 +1,5 @@
 import { SlackConnectionError } from '../../../domain/repositories/slack-connection.repository';
+import { SlackDeliveryStatus } from '../../../domain/repositories/slack-delivery-log.repository';
 import {
   SlackAuthError,
   SlackRetryableError,
@@ -29,6 +30,7 @@ describe('DeliverSlackNotificationHandler', () => {
   const configService = { get: jest.fn(() => undefined) };
   const workspaces = { findById: jest.fn() };
   const pages = { findById: jest.fn() };
+  const deliveries = { record: jest.fn() };
   const handler = new DeliverSlackNotificationHandler(
     connectionRepository as never,
     client as never,
@@ -36,24 +38,28 @@ describe('DeliverSlackNotificationHandler', () => {
     configService as never,
     workspaces as never,
     pages as never,
+    deliveries as never,
   );
-  const deliver = (notification = {}) =>
+  const deliver = (notification = {}, attempt = 1) =>
     handler.execute(
-      new DeliverSlackNotificationCommand({
-        recipientUserId: 'user-1',
-        notification: {
-          id: 'notification-1',
-          type: 'comment.mentioned',
-          title: 'Nam mentioned you',
-          message: null,
-          actionUrl: '/page/page-1',
-          workspaceId: 'workspace-1',
-          sourceType: 'comment',
-          sourceId: 'comment-1',
-          metadata: { pageId: 'page-1' },
-          ...notification,
+      new DeliverSlackNotificationCommand(
+        {
+          recipientUserId: 'user-1',
+          notification: {
+            id: 'notification-1',
+            type: 'comment.mentioned',
+            title: 'Nam mentioned you',
+            message: null,
+            actionUrl: '/page/page-1',
+            workspaceId: 'workspace-1',
+            sourceType: 'comment',
+            sourceId: 'comment-1',
+            metadata: { pageId: 'page-1' },
+            ...notification,
+          },
         },
-      }),
+        attempt,
+      ),
     );
 
   beforeEach(() => {
@@ -176,6 +182,7 @@ describe('DeliverSlackNotificationHandler', () => {
     await deliver();
 
     expect(client.postDirectMessage).not.toHaveBeenCalled();
+    expect(deliveries.record).not.toHaveBeenCalled();
   });
 
   it('marks the connection revoked instead of retrying', async () => {
@@ -190,6 +197,31 @@ describe('DeliverSlackNotificationHandler', () => {
     );
   });
 
+  it('logs the message as sent with the attempt that reached Slack', async () => {
+    client.postDirectMessage.mockResolvedValue(undefined);
+
+    await deliver({}, 3);
+
+    expect(deliveries.record).toHaveBeenCalledWith(
+      expect.objectContaining({ recipientUserId: 'user-1' }),
+      { status: SlackDeliveryStatus.SENT, error: null, attempts: 3 },
+    );
+  });
+
+  it('logs a revoked token as a failed delivery', async () => {
+    client.postDirectMessage.mockRejectedValue(
+      new SlackAuthError('token_revoked'),
+    );
+
+    await deliver();
+
+    expect(deliveries.record).toHaveBeenCalledWith(expect.anything(), {
+      status: SlackDeliveryStatus.FAILED,
+      error: SlackConnectionError.ACCESS_REVOKED,
+      attempts: 1,
+    });
+  });
+
   it('lets the job retry when Slack fails for a while', async () => {
     client.postDirectMessage.mockRejectedValue(
       new SlackRetryableError('ratelimited'),
@@ -198,5 +230,6 @@ describe('DeliverSlackNotificationHandler', () => {
     await expect(deliver()).rejects.toBeInstanceOf(SlackRetryableError);
     expect(connectionRepository.markError).not.toHaveBeenCalled();
     expect(connectionRepository.markDelivered).not.toHaveBeenCalled();
+    expect(deliveries.record).not.toHaveBeenCalled();
   });
 });

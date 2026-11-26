@@ -55,18 +55,22 @@ export class AwsS3StorageService implements ObjectStoragePort {
   }
 
   async upload(input: UploadObjectInput): Promise<StoredObject> {
+    const size =
+      'contentLength' in input ? input.contentLength : input.body.length;
+
     await this.client.send(
       new PutObjectCommand({
         Bucket: this.bucket,
         Key: input.key,
         Body: input.body,
+        ContentLength: size,
         ContentType: input.contentType,
       }),
     );
 
     return {
       key: input.key,
-      size: input.body.length,
+      size,
       contentType: input.contentType,
     };
   }

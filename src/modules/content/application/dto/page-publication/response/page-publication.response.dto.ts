@@ -1,6 +1,7 @@
 import { PagePublication } from '../../../../domain/entities/page-publication.entity';
 import { PublishedSite } from '../../../../domain/entities/published-site.entity';
 import { PagePublicationType } from '../../../../domain/enums/page-publication-type.enum';
+import type { PublishedSiteThemeView } from '../../../services/published-site-theme.service';
 
 export class PagePublicationResponseDto {
   id: string;
@@ -12,6 +13,8 @@ export class PagePublicationResponseDto {
   publication_type: PagePublicationType;
   include_descendants: boolean;
   allow_updates: boolean;
+  seo: { title: string | null; description: string | null; indexing: boolean };
+  theme?: PublishedSiteThemeView;
   published: boolean;
   published_at: Date;
   unpublished_at: Date | null;
@@ -21,6 +24,7 @@ export class PagePublicationResponseDto {
     publication: PagePublication,
     site: PublishedSite,
     published: boolean,
+    theme?: PublishedSiteThemeView,
   ): PagePublicationResponseDto {
     return Object.assign(new PagePublicationResponseDto(), {
       id: publication.getId(),
@@ -32,6 +36,8 @@ export class PagePublicationResponseDto {
       publication_type: publication.getPublicationType(),
       include_descendants: publication.getIncludeDescendants(),
       allow_updates: site.getAllowUpdates(),
+      seo: site.getSeo(),
+      theme,
       published,
       published_at: publication.getPublishedAt(),
       unpublished_at: publication.getUnpublishedAt(),

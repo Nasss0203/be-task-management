@@ -9,6 +9,7 @@ const attachment = AttachmentAggregate.reconstitute({
   id: 'att-1',
   workspaceId: 'ws-1',
   commentId: null,
+  pageBlockId: null,
   uploadedBy: 'user-1',
   fileName: 'file.pdf',
   mimeType: 'application/pdf',

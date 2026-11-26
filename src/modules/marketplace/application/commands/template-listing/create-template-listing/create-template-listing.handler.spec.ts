@@ -19,6 +19,7 @@ describe('CreateTemplateListingHandler previewMode', () => {
 
   const mockTemplate = PageTemplate.create({
     id: templateId,
+    sourcePageId: null,
     workspaceId: '44444444-4444-4444-4444-444444444444',
     name: 'Sample Template',
     createdBy: creatorId,

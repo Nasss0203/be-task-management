@@ -1,3 +1,5 @@
+import type { DatabaseViewType } from 'src/modules/database/domain/enums/database-view-type.enum';
+import type { PropertyType } from 'src/modules/database/domain/enums/property-type.enum';
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import {
   PageBlockJson,
@@ -37,10 +39,32 @@ export interface CreatePageShellInput {
   coverUrl?: string | null;
 }
 
+export type PresetDatabaseValue =
+  | string
+  | number
+  | boolean
+  | string[]
+  | { daysFromToday: number };
+
+export interface PresetDatabaseProperty {
+  key: string;
+  name: string;
+  type: PropertyType;
+  options?: { name: string; color: string }[];
+}
+
+export interface PresetDatabaseDefinition {
+  name: string;
+  properties: PresetDatabaseProperty[];
+  views: { name: string; type: DatabaseViewType }[];
+  rows: Record<string, PresetDatabaseValue>[];
+}
+
 export interface CreatePageBlocksFromSnapshotInput {
   pageId: string;
   createdBy: string;
   blocks: CreatePageBlockSnapshotInput[];
+  database?: PresetDatabaseDefinition | null;
 }
 
 export interface CreatePageFromSnapshotInput {
@@ -54,6 +78,7 @@ export interface CreatePageFromSnapshotInput {
   coverUrl?: string | null;
 
   blocks: CreatePageBlockSnapshotInput[];
+  database?: PresetDatabaseDefinition | null;
 }
 
 export interface ProvisionedPageResult {

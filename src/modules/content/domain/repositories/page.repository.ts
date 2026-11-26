@@ -7,6 +7,17 @@ export interface PageTitle {
   title: string;
 }
 
+export interface VisitedPage {
+  page: Page;
+  visitedAt: Date;
+}
+
+export interface AccessiblePageCounts {
+  pages: number;
+  databases: number;
+  updatedLast7Days: number;
+}
+
 export interface PageRepository {
   lockWorkspaceHierarchy(
     workspaceId: string,
@@ -65,6 +76,17 @@ export interface PageRepository {
     userId: string,
     context?: PersistenceContext,
   ): Promise<PageTitle[]>;
+  findRecentlyVisited(
+    workspaceId: string,
+    userId: string,
+    limit: number,
+    context?: PersistenceContext,
+  ): Promise<VisitedPage[]>;
+  countAccessibleByWorkspace(
+    workspaceId: string,
+    userId: string,
+    context?: PersistenceContext,
+  ): Promise<AccessiblePageCounts>;
   findAccessibleDeletedByWorkspace(
     workspaceId: string,
     userId: string,

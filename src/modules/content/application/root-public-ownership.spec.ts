@@ -11,6 +11,7 @@ import { AuthorizationService } from 'src/modules/permission/application/service
 import type { WorkspaceRepository } from 'src/modules/workspace/domain/repositories/workspace.repository';
 import type { WorkspaceEntitlementPort } from 'src/modules/billing/application/ports/workspace-entitlement.port';
 import type { UnitOfWork } from 'src/shared/infrastructure/persistence/unit-of-work.interface';
+import type { DatabaseSnapshotReaderPort } from 'src/modules/database/application/ports/database-snapshot-reader.port';
 import { Page } from '../domain/aggregates/page/page.aggregate';
 import { PageBlock } from '../domain/entities/page-block.entity';
 import { PagePublication } from '../domain/entities/page-publication.entity';
@@ -45,6 +46,11 @@ import { PagePublicationTreeService } from './services/page-publication-tree.ser
 import { PublicSubdomainAllocatorService } from './services/public-subdomain-allocator.service';
 import { PublicationAvailabilityService } from './services/publication-availability.service';
 import { PublicationHierarchySynchronizerService } from './services/publication-hierarchy-synchronizer.service';
+import { PublishedSiteThemeService } from './services/published-site-theme.service';
+
+const siteTheme = new PublishedSiteThemeService({
+  findReadyImages: () => Promise.resolve([]),
+});
 
 describe('root-owned public sites', () => {
   const workspace = 'workspace-a';
@@ -480,6 +486,9 @@ describe('root-owned public sites', () => {
       publicationRepo,
       { findByPageId: async () => [] } as unknown as PageBlockRepository,
       availability,
+      auth,
+      {} as DatabaseSnapshotReaderPort,
+      siteTheme,
     );
     expect(
       (await publicPage.execute(new GetPublicPageQuery('home', '/about'))).page
@@ -519,6 +528,7 @@ describe('root-owned public sites', () => {
       tree,
       availability,
       auth,
+      siteTheme,
     );
     await settings.execute(
       new UpdatePagePublicationSettingsCommand(
@@ -620,6 +630,7 @@ describe('root-owned public sites', () => {
       siteRepo,
       pageRepo,
       availability,
+      siteTheme,
     );
     expect(
       await detail.execute(new GetPagePublicationQuery(about.getId())),
@@ -670,6 +681,9 @@ describe('root-owned public sites', () => {
       publicationRepo,
       { findByPageId: async () => [] } as unknown as PageBlockRepository,
       availability,
+      auth,
+      {} as DatabaseSnapshotReaderPort,
+      siteTheme,
     );
     await expect(
       publicPage.execute(new GetPublicPageQuery('home', '/docs')),
@@ -707,6 +721,7 @@ describe('root-owned public sites', () => {
       tree,
       availability,
       auth,
+      siteTheme,
     );
     authorize.mockClear();
     await handler.execute(
@@ -756,6 +771,7 @@ describe('root-owned public sites', () => {
       tree,
       availability,
       auth,
+      siteTheme,
     );
 
     expect(sites.get(siteAId)?.getAllowUpdates()).toBe(false);
@@ -829,6 +845,7 @@ describe('root-owned public sites', () => {
       {
         authorize: authorizeSiteManagement,
       } as unknown as AuthorizationService,
+      siteTheme,
     );
 
     await expect(
@@ -891,6 +908,41 @@ describe('root-owned public sites', () => {
     ).execute(new RepublishSiteCommand('user', home.getId(), siteId));
     expect(sites.get(siteId)?.getDisabledAt()).toBeNull();
     expect(home.getPublicSubdomain()).toBe('home');
+  });
+
+  it('keeps a site taken down by an administrator offline when the owner publishes again', async () => {
+    const home = await createPage('Home');
+    const siteId = (await publishRoot(home)).site_id;
+    const site = sites.get(siteId)!;
+    const disabledAt = new Date('2026-11-19T06:00:00.000Z');
+    sites.set(
+      siteId,
+      PublishedSite.restore({
+        id: site.getId(),
+        workspaceId: site.getWorkspaceId(),
+        rootPageId: site.getRootPageId(),
+        subdomain: site.getSubdomain(),
+        createdBy: site.getCreatedBy(),
+        createdAt: site.getCreatedAt(),
+        updatedAt: disabledAt,
+        disabledAt,
+        allowUpdates: site.getAllowUpdates(),
+        moderation: { disabledAt, disabledBy: 'admin', reason: 'Spam' },
+      }),
+    );
+    const republish = new RepublishSiteHandler(
+      publicationRepo,
+      siteRepo,
+      uow,
+      tree,
+      entitlements,
+    );
+
+    await expect(publishRoot(home)).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(
+      republish.execute(new RepublishSiteCommand('user', home.getId(), siteId)),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(sites.get(siteId)?.getDisabledAt()).toEqual(disabledAt);
   });
 
   it('rolls back a failed move with a transactional repository', async () => {

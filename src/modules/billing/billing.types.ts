@@ -17,6 +17,7 @@ export const BILLING_TYPES = {
     ProcessStripeWebhookHandler: Symbol('BillingProcessStripeWebhookHandler'),
     GetBillingPaymentStatusHandler: Symbol('GetBillingPaymentStatusHandler'),
     GetWorkspaceSubscriptionHandler: Symbol('GetWorkspaceSubscriptionHandler'),
+    GetCheckoutQuoteHandler: Symbol('BillingGetCheckoutQuoteHandler'),
     ListWorkspacePaymentOrdersHandler: Symbol(
       'ListWorkspacePaymentOrdersHandler',
     ),
@@ -33,6 +34,7 @@ export const BILLING_TYPES = {
       'WorkspaceSubscriptionProvisioningService',
     ),
     BillingPaymentSettlementService: Symbol('BillingPaymentSettlementService'),
+    PlanChangeQuoteService: Symbol('BillingPlanChangeQuoteService'),
     BillingEntitlementService: Symbol('BillingEntitlementService'),
     WorkspaceUsageReader: Symbol('BillingWorkspaceUsageReader'),
     WorkspaceEntitlementPort: Symbol('WorkspaceEntitlementPort'),

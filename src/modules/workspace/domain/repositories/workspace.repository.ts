@@ -17,6 +17,11 @@ export type WorkspaceOverview = {
   };
 };
 
+export type WorkspaceWithMembership = {
+  workspace: Workspace;
+  membershipType: WorkspaceMembershipType;
+};
+
 export interface WorkspaceRepository {
   existsBySlug(slug: string, context?: PersistenceContext): Promise<boolean>;
 
@@ -26,6 +31,11 @@ export interface WorkspaceRepository {
     userId: string,
     context?: PersistenceContext,
   ): Promise<Workspace[]>;
+
+  findWithMembershipByUserId(
+    userId: string,
+    context?: PersistenceContext,
+  ): Promise<WorkspaceWithMembership[]>;
 
   findById(
     workspaceId: string,
@@ -59,4 +69,11 @@ export interface WorkspaceRepository {
     workspaceId: string,
     context?: PersistenceContext,
   ): Promise<Workspace | null>;
+
+  findOwnedWorkspaceIds(
+    userId: string,
+    context?: PersistenceContext,
+  ): Promise<string[]>;
+
+  lockOwnership(userId: string, context: PersistenceContext): Promise<void>;
 }

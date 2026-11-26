@@ -19,7 +19,8 @@ describe('AttachmentStorageRouterAdapter', () => {
     } as unknown as R2AttachmentStorageAdapter,
   );
   const input = {
-    buffer: Buffer.from('file'),
+    filePath: '/tmp/upload',
+    size: 4,
     workspaceId: 'ws-1',
     commentId: null,
     pageBlockId: null,

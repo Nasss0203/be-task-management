@@ -1,6 +1,7 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
 import { BILLING_TYPES } from '../../../../billing.types';
+import { PaymentOrderStatus } from '../../../../domain/constants/payment-order-status.constant';
 import type { PaymentOrderRepository } from '../../../../domain/repositories/payment-order.repository';
 import { GetBillingPaymentStatusQuery } from './get-billing-payment-status.query';
 
@@ -29,7 +30,10 @@ export class GetBillingPaymentStatusHandler {
       provider: paymentOrder.getProvider(),
       amount: paymentOrder.getAmount(),
       currency: paymentOrder.getCurrency(),
-      status: paymentOrder.getStatus(),
+      status:
+        paymentOrder.isPending() && paymentOrder.isExpiredAt(new Date())
+          ? PaymentOrderStatus.EXPIRED
+          : paymentOrder.getStatus(),
       expiresAt: paymentOrder.getExpiresAt(),
     };
   }

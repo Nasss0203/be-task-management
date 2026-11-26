@@ -16,11 +16,13 @@ import {
   SlackConnectionError,
   type SlackConnectionRepository,
 } from '../../../domain/repositories/slack-connection.repository';
+import { SlackDeliveryStatus } from '../../../domain/repositories/slack-delivery-log.repository';
 import { SLACK_INTEGRATION_TYPES } from '../../../slack-integration.types';
 import {
   SlackAuthError,
   type SlackClient,
 } from '../../ports/slack-client.port';
+import { SlackDeliveryRecorder } from '../../services/slack-delivery-recorder.service';
 import { DeliverSlackNotificationCommand } from './deliver-slack-notification.command';
 
 type SlackNotification =
@@ -68,6 +70,8 @@ export class DeliverSlackNotificationHandler {
 
     @Inject(CONTENT_TYPES.repositories.PageRepository)
     private readonly pages: PageRepository,
+
+    private readonly deliveries: SlackDeliveryRecorder,
   ) {}
 
   async execute(command: DeliverSlackNotificationCommand): Promise<void> {
@@ -90,10 +94,15 @@ export class DeliverSlackNotificationHandler {
       );
     } catch (error) {
       if (error instanceof SlackAuthError) {
-        return this.connectionRepository.markError(
+        await this.connectionRepository.markError(
           connection.id,
           SlackConnectionError.ACCESS_REVOKED,
         );
+        return this.deliveries.record(command.event, {
+          status: SlackDeliveryStatus.FAILED,
+          error: SlackConnectionError.ACCESS_REVOKED,
+          attempts: command.attempt,
+        });
       }
       throw error;
     }
@@ -105,6 +114,12 @@ export class DeliverSlackNotificationHandler {
         `Slack delivery status was not saved: ${(error as Error).message}`,
       );
     }
+
+    await this.deliveries.record(command.event, {
+      status: SlackDeliveryStatus.SENT,
+      error: null,
+      attempts: command.attempt,
+    });
   }
 
   private async locationOf(

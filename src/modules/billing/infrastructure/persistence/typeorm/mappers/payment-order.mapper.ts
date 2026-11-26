@@ -17,6 +17,7 @@ export class PaymentOrderMapper {
       provider: entity.provider,
       orderCode: entity.order_code,
       amount,
+      creditAmount: Number(entity.credit_amount ?? 0),
       currency: entity.currency,
       status: entity.status,
       expiresAt: entity.expires_at ?? null,
@@ -43,6 +44,7 @@ export class PaymentOrderMapper {
     entity.provider = paymentOrder.getProvider();
     entity.order_code = paymentOrder.getOrderCode();
     entity.amount = amount.toString();
+    entity.credit_amount = paymentOrder.getCreditAmount().toString();
     entity.currency = paymentOrder.getCurrency();
     entity.status = paymentOrder.getStatus();
     entity.expires_at = paymentOrder.getExpiresAt();

@@ -17,10 +17,14 @@ import { DisconnectSlackHandler } from './application/commands/disconnect-slack/
 import { SlackNotificationListener } from './application/listeners/slack-notification.listener';
 import { GetSlackAuthorizeUrlHandler } from './application/queries/get-slack-authorize-url/get-slack-authorize-url.handler';
 import { GetSlackStatusHandler } from './application/queries/get-slack-status/get-slack-status.handler';
+import { ListSlackDeliveriesHandler } from './application/queries/list-slack-deliveries/list-slack-deliveries.handler';
+import { SlackDeliveryRecorder } from './application/services/slack-delivery-recorder.service';
 import { SearchSlackPagesHandler } from './application/queries/search-slack-pages/search-slack-pages.handler';
 import { UnfurlSlackLinksHandler } from './application/commands/unfurl-slack-links/unfurl-slack-links.handler';
 import { SlackConnectionOrmEntity } from './infrastructure/persistence/typeorm/entities/slack-connection.orm-entity';
+import { SlackDeliveryOrmEntity } from './infrastructure/persistence/typeorm/entities/slack-delivery.orm-entity';
 import { TypeOrmSlackConnectionRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-slack-connection.repository';
+import { TypeOrmSlackDeliveryLogRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-slack-delivery-log.repository';
 import { BullMqSlackDeliveryQueue } from './infrastructure/queue/bullmq-slack-delivery-queue.service';
 import { BullMqSlackUnfurlQueue } from './infrastructure/queue/bullmq-slack-unfurl-queue.service';
 import {
@@ -37,7 +41,10 @@ import { SLACK_INTEGRATION_TYPES } from './slack-integration.types';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([SlackConnectionOrmEntity]),
+    TypeOrmModule.forFeature([
+      SlackConnectionOrmEntity,
+      SlackDeliveryOrmEntity,
+    ]),
     BullModule.registerQueue(
       { name: SLACK_DELIVERY_QUEUE },
       { name: SLACK_UNFURL_QUEUE },
@@ -52,6 +59,10 @@ import { SLACK_INTEGRATION_TYPES } from './slack-integration.types';
     {
       provide: SLACK_INTEGRATION_TYPES.repositories.SlackConnectionRepository,
       useClass: TypeOrmSlackConnectionRepository,
+    },
+    {
+      provide: SLACK_INTEGRATION_TYPES.repositories.SlackDeliveryLog,
+      useClass: TypeOrmSlackDeliveryLogRepository,
     },
     {
       provide: SLACK_INTEGRATION_TYPES.ports.SlackClient,
@@ -76,6 +87,10 @@ import { SLACK_INTEGRATION_TYPES } from './slack-integration.types';
     {
       provide: SLACK_INTEGRATION_TYPES.applications.GetSlackStatusHandler,
       useClass: GetSlackStatusHandler,
+    },
+    {
+      provide: SLACK_INTEGRATION_TYPES.applications.ListSlackDeliveriesHandler,
+      useClass: ListSlackDeliveriesHandler,
     },
     {
       provide: SLACK_INTEGRATION_TYPES.applications.ConnectSlackHandler,
@@ -107,6 +122,7 @@ import { SLACK_INTEGRATION_TYPES } from './slack-integration.types';
       useClass: UnfurlSlackLinksHandler,
     },
     TokenCipherService,
+    SlackDeliveryRecorder,
     SlackStateTokenService,
     SlackRequestVerifier,
     SlackNotificationListener,

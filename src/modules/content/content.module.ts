@@ -22,6 +22,8 @@ import { PermanentlyDeletePageHandler } from './application/commands/page/perman
 import { RestorePageHandler } from './application/commands/page/restore-page/restore-page.handler';
 import { UpdatePageHandler } from './application/commands/page/update-page/update-page.handler';
 import { ApplyPagePresetHandler } from './application/commands/page/apply-page-preset/apply-page-preset.handler';
+import { ImportMarkdownPageHandler } from './application/commands/page/import-markdown-page/import-markdown-page.handler';
+import { ImportCsvPageHandler } from './application/commands/page/import-csv-page/import-csv-page.handler';
 import { ListPagePresetsHandler } from './application/queries/page/list-page-presets/list-page-presets.handler';
 
 import { FindDeletedPageBlocksHandler } from './application/queries/page-block/find-deleted-page-blocks/find-deleted-page-blocks.handler';
@@ -72,8 +74,11 @@ import { TypeOrmPagePublicationRepository } from './infrastructure/persistence/t
 import { TypeOrmPageRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page.repository';
 import { TypeOrmPublishedSiteRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-published-site.repository';
 import { TypeOrmPublicSiteNavigationReader } from './infrastructure/persistence/typeorm/readers/typeorm-public-site-navigation.reader';
+import { TypeOrmSiteThemeImageReader } from './infrastructure/persistence/typeorm/readers/typeorm-site-theme-image.reader';
+import { PublishedSiteThemeService } from './application/services/published-site-theme.service';
 import { TypeOrmPageSearchReader } from './infrastructure/persistence/typeorm/readers/typeorm-page-search.reader';
 import { SearchPagesHandler } from './application/queries/page/search-pages/search-pages.handler';
+import { ListDatabaseMentionTitlesHandler } from './application/queries/page-database/list-database-mention-titles/list-database-mention-titles.handler';
 import { ListPageMentionTitlesHandler } from './application/queries/page/list-page-mention-titles/list-page-mention-titles.handler';
 
 import { CreatePageEditRequestHandler } from './application/commands/page-edit-request/create-page-edit-request/create-page-edit-request.handler';
@@ -113,6 +118,8 @@ import { GetPageAccessHandler } from './application/queries/page-access/get-page
 import { GetMyPageEditRequestsHandler } from './application/queries/page-edit-request/get-my-page-edit-requests/get-my-page-edit-requests.handler';
 import { GetPageEditRequestsHandler } from './application/queries/page-edit-request/get-page-edit-requests/get-page-edit-requests.handler';
 import { ListPageFavoritesHandler } from './application/queries/page-favorite/list-page-favorites/list-page-favorites.handler';
+import { ListRecentPageVisitsHandler } from './application/queries/page-visit/list-recent-page-visits/list-recent-page-visits.handler';
+import { RecordPageVisitHandler } from './application/commands/page-visit/record-page-visit/record-page-visit.handler';
 import { GetPagePublicationHandler } from './application/queries/page-publication/get-page-publication/get-page-publication.handler';
 import { GetPublicPageHandler } from './application/queries/page-publication/get-public-page/get-public-page.handler';
 import { GetPublicSiteNavigationHandler } from './application/queries/page-publication/get-public-site-navigation/get-public-site-navigation.handler';
@@ -126,6 +133,7 @@ import { FormQuizAttemptOrmEntity } from './infrastructure/persistence/typeorm/e
 import { PageAccessRequestOrmEntity } from './infrastructure/persistence/typeorm/entities/page-access-request.orm-entity';
 import { PageEditRequestOrmEntity } from './infrastructure/persistence/typeorm/entities/page-edit-request.orm-entity';
 import { PageFavoriteOrmEntity } from './infrastructure/persistence/typeorm/entities/page-favorite.orm-entity';
+import { PageVisitOrmEntity } from './infrastructure/persistence/typeorm/entities/page-visit.orm-entity';
 import { PageShareLinkOrmEntity } from './infrastructure/persistence/typeorm/entities/page-share-link.orm-entity';
 import { PageShareSettingOrmEntity } from './infrastructure/persistence/typeorm/entities/page-share-setting.orm-entity';
 import { PageShareOrmEntity } from './infrastructure/persistence/typeorm/entities/page-share.orm-entity';
@@ -134,6 +142,7 @@ import { TypeOrmFormQuizAttemptRepository } from './infrastructure/persistence/t
 import { TypeOrmPageAccessRequestRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-access-request.repository';
 import { TypeOrmPageEditRequestRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-edit-request.repository';
 import { TypeOrmPageFavoriteRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-favorite.repository';
+import { TypeOrmPageVisitRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-visit.repository';
 import { TypeOrmPageShareLinkRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-share-link.repository';
 import { TypeOrmPageShareSettingRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-share-setting.repository';
 import { TypeOrmPageShareRepository } from './infrastructure/persistence/typeorm/repositories/typeorm-page-share.repository';
@@ -141,6 +150,7 @@ import { PageAccessRequestController } from './presentation/http/controllers/pag
 import { PageBlockController } from './presentation/http/controllers/page-block.controller';
 import { PageEditRequestController } from './presentation/http/controllers/page-edit-request.controller';
 import { PageFavoriteController } from './presentation/http/controllers/page-favorite.controller';
+import { PageVisitController } from './presentation/http/controllers/page-visit.controller';
 import { PagePublicationController } from './presentation/http/controllers/page-publication.controller';
 import { PageShareSettingsController } from './presentation/http/controllers/page-share-settings.controller';
 import { PageShareController } from './presentation/http/controllers/page-share.controller';
@@ -159,6 +169,10 @@ const repositories = [
   {
     provide: CONTENT_TYPES.repositories.PageFavoriteRepository,
     useClass: TypeOrmPageFavoriteRepository,
+  },
+  {
+    provide: CONTENT_TYPES.repositories.PageVisitRepository,
+    useClass: TypeOrmPageVisitRepository,
   },
   {
     provide: CONTENT_TYPES.repositories.PageShareRepository,
@@ -212,6 +226,14 @@ const pageHandlers = [
   {
     provide: CONTENT_TYPES.applications.ApplyPagePresetHandler,
     useClass: ApplyPagePresetHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.ImportMarkdownPageHandler,
+    useClass: ImportMarkdownPageHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.ImportCsvPageHandler,
+    useClass: ImportCsvPageHandler,
   },
   {
     provide: CONTENT_TYPES.applications.ListPagePresetsHandler,
@@ -335,6 +357,14 @@ const pageFavoriteHandlers = [
   {
     provide: CONTENT_TYPES.applications.ListPageFavoritesHandler,
     useClass: ListPageFavoritesHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.RecordPageVisitHandler,
+    useClass: RecordPageVisitHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.ListRecentPageVisitsHandler,
+    useClass: ListRecentPageVisitsHandler,
   },
 ];
 
@@ -465,6 +495,7 @@ const bookmarkHandlers = [ResolveBookmarkMetadataHandler];
 
 const applicationServices = [
   PublicationAvailabilityService,
+  PublishedSiteThemeService,
   PagePublicationTreeService,
   PublicSubdomainAllocatorService,
   PublicationHierarchySynchronizerService,
@@ -495,6 +526,10 @@ const ports = [
     useClass: TypeOrmPublicSiteNavigationReader,
   },
   {
+    provide: CONTENT_TYPES.ports.SiteThemeImageReader,
+    useClass: TypeOrmSiteThemeImageReader,
+  },
+  {
     provide: CONTENT_TYPES.ports.PageSearchReader,
     useClass: TypeOrmPageSearchReader,
   },
@@ -505,6 +540,10 @@ const ports = [
   {
     provide: CONTENT_TYPES.applications.ListPageMentionTitlesHandler,
     useClass: ListPageMentionTitlesHandler,
+  },
+  {
+    provide: CONTENT_TYPES.applications.ListDatabaseMentionTitlesHandler,
+    useClass: ListDatabaseMentionTitlesHandler,
   },
   {
     provide: CONTENT_TYPES.bookmarkMetadataFetcher,
@@ -518,6 +557,7 @@ const ports = [
       PageOrmEntity,
       PageBlockOrmEntity,
       PageFavoriteOrmEntity,
+      PageVisitOrmEntity,
       PageShareOrmEntity,
       PageShareLinkOrmEntity,
       PageEditRequestOrmEntity,
@@ -540,6 +580,7 @@ const ports = [
 
   controllers: [
     PageFavoriteController,
+    PageVisitController,
     PageController,
     PageBlockController,
     PageShareController,

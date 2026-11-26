@@ -12,12 +12,13 @@ export class ListWorkspacesHandler {
   ) {}
 
   async execute(query: ListWorkspacesQuery): Promise<WorkspaceResponseDto[]> {
-    const workspaces = await this.workspaceRepository.findByUserId(
+    const rows = await this.workspaceRepository.findWithMembershipByUserId(
       query.userId,
     );
 
-    return workspaces.map((workspace) =>
-      WorkspaceResponseDto.fromDomain(workspace),
-    );
+    return rows.map(({ workspace, membershipType }) => ({
+      ...WorkspaceResponseDto.fromDomain(workspace),
+      membershipType,
+    }));
   }
 }

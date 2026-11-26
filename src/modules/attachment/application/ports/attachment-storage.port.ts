@@ -1,7 +1,8 @@
 import { AttachmentProvider } from '../../domain/enums/attachment-provider.enum';
 
 export type UploadAttachmentStorageInput = {
-  buffer: Buffer;
+  filePath: string;
+  size: number;
   workspaceId: string;
   commentId: string | null;
   pageBlockId: string | null;

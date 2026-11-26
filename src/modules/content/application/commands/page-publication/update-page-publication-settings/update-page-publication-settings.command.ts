@@ -1,3 +1,8 @@
+import type {
+  PublishedSiteSeoChanges,
+  PublishedSiteThemeChanges,
+} from '../../../../domain/entities/published-site.entity';
+
 export class UpdatePagePublicationSettingsCommand {
   constructor(
     public readonly actorId: string,
@@ -5,5 +10,7 @@ export class UpdatePagePublicationSettingsCommand {
     public readonly siteId: string | undefined,
     public readonly includeDescendants?: boolean,
     public readonly allowUpdates?: boolean,
+    public readonly seo: PublishedSiteSeoChanges = {},
+    public readonly theme: PublishedSiteThemeChanges = {},
   ) {}
 }

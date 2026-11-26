@@ -13,6 +13,23 @@ export class PublishedSiteMapper {
       updatedAt: orm.updated_at,
       disabledAt: orm.disabled_at,
       allowUpdates: orm.allow_updates,
+      seo: {
+        title: orm.seo_title ?? null,
+        description: orm.seo_description ?? null,
+        indexing: orm.search_indexing ?? false,
+      },
+      theme: {
+        logoAttachmentId: orm.logo_attachment_id ?? null,
+        faviconAttachmentId: orm.favicon_attachment_id ?? null,
+        accentColor: orm.accent_color ?? null,
+      },
+      moderation: orm.moderation_disabled_at
+        ? {
+            disabledAt: orm.moderation_disabled_at,
+            disabledBy: orm.moderation_disabled_by ?? null,
+            reason: orm.moderation_reason ?? null,
+          }
+        : null,
     });
   }
 
@@ -23,6 +40,12 @@ export class PublishedSiteMapper {
     orm.root_page_id = domain.getRootPageId();
     orm.subdomain = domain.getSubdomain();
     orm.allow_updates = domain.getAllowUpdates();
+    orm.seo_title = domain.getSeo().title;
+    orm.seo_description = domain.getSeo().description;
+    orm.search_indexing = domain.getSeo().indexing;
+    orm.logo_attachment_id = domain.getTheme().logoAttachmentId;
+    orm.favicon_attachment_id = domain.getTheme().faviconAttachmentId;
+    orm.accent_color = domain.getTheme().accentColor;
     orm.created_by = domain.getCreatedBy();
     orm.created_at = domain.getCreatedAt();
     orm.updated_at = domain.getUpdatedAt();

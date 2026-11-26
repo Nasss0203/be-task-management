@@ -288,6 +288,38 @@
     {
       "file": "1794989351256-CreateAdminActions.ts",
       "sha256": "8716bcc3deebb0699bb3b538d731db9e484850eafd415072dc8e136146351247"
+    },
+    {
+      "file": "1795068464827-AddPublishedSiteModeration.ts",
+      "sha256": "dd77306d9041dcd8c2567a5f0585baaed6b0ac056fb5416c7ac8b5543eb408c4"
+    },
+    {
+      "file": "1795077236671-CreateLoginAttempts.ts",
+      "sha256": "6b3f6e9d386f853f798bb890385bbd7a6144f1890766569c2b274c6918f80a50"
+    },
+    {
+      "file": "1795449790001-UpdateSchema.ts",
+      "sha256": "815a7213c6f2d9b65e1117fe15a9f91ee025399e8633df52aa124010b7005bdf"
+    },
+    {
+      "file": "1795530715473-CreatePageVisits.ts",
+      "sha256": "f7413af68197fd7795bb5d9b9e1c6ea47c44264fa87a3635f0e72f4ac3ba43f6"
+    },
+    {
+      "file": "1795532344342-UpdateSchema.ts",
+      "sha256": "68773348c2cc679aefc4c7c6272f4c997bec9ef4a4b49d4f0fec09844faa6ad6"
+    },
+    {
+      "file": "1795540000000-add-audio-block-type.ts",
+      "sha256": "9f73b2edd99effc2c86138aa9856a0454912b20222ead86df05ce5445b631689"
+    },
+    {
+      "file": "1795545000000-add-published-site-theme.ts",
+      "sha256": "9dd06bc7eef24cb586d11050cf5e3f7cc5cf01d7674dcfc844a8f6b0033b46a9"
+    },
+    {
+      "file": "1795550000000-create-slack-deliveries.ts",
+      "sha256": "1e8deebd6dfd8f0d9ec181482a8773d15ce08abd7c840811e3820fd82383a903"
     }
   ]
 }

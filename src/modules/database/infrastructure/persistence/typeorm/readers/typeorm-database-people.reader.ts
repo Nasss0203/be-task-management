@@ -4,6 +4,7 @@ import { DataSource } from 'typeorm';
 import type {
   DatabasePeopleReader,
   DatabasePerson,
+  DatabaseWorkspaceMember,
 } from 'src/modules/database/application/ports/database-people-reader.port';
 
 @Injectable()
@@ -31,6 +32,24 @@ export class TypeOrmDatabasePeopleReader implements DatabasePeopleReader {
           ON u.id::text = person.user_id
       `,
       [databaseId],
+    );
+  }
+
+  findWorkspaceMembers(pageId: string): Promise<DatabaseWorkspaceMember[]> {
+    return this.dataSource.query<DatabaseWorkspaceMember[]>(
+      `
+        SELECT
+          u.id AS user_id,
+          u.username AS username,
+          u.email AS email,
+          up.full_name AS full_name
+        FROM pages p
+        INNER JOIN workspace_members wm ON wm.workspace_id = p.workspace_id
+        INNER JOIN users u ON u.id = wm.user_id AND u.deleted_at IS NULL
+        LEFT JOIN user_profiles up ON up.user_id = u.id
+        WHERE p.id = $1
+      `,
+      [pageId],
     );
   }
 }

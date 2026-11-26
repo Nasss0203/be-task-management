@@ -8,8 +8,19 @@ import type { DatabaseSnapshotReaderPort } from 'src/modules/database/applicatio
 import { PageBlock } from 'src/modules/content/domain/entities/page-block.entity';
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import type { PublicationAvailabilityService } from '../../../services/publication-availability.service';
+import type { PublishedSiteThemeService } from '../../../services/published-site-theme.service';
 import { GetPublicPageHandler } from './get-public-page.handler';
 import { GetPublicPageQuery } from './get-public-page.query';
+
+const siteTheme = {
+  describe: jest.fn().mockResolvedValue({
+    logo_attachment_id: 'logo-1',
+    logo_url: 'https://cdn.test/public/logo.png',
+    favicon_attachment_id: null,
+    favicon_url: null,
+    accent_color: '#e11d48',
+  }),
+} as unknown as PublishedSiteThemeService;
 
 describe('GetPublicPageHandler capabilities', () => {
   const page = {
@@ -24,6 +35,7 @@ describe('GetPublicPageHandler capabilities', () => {
     getId: () => 'site-id',
     getSubdomain: () => 'asss',
     getAllowUpdates: () => true,
+    getSeo: () => ({ title: 'Docs', description: 'Guides', indexing: true }),
   };
   const publication = { getPath: () => '/about' };
 
@@ -46,6 +58,7 @@ describe('GetPublicPageHandler capabilities', () => {
       {
         getDatabaseSnapshot: jest.fn().mockResolvedValue(null),
       } as unknown as DatabaseSnapshotReaderPort,
+      siteTheme,
     );
 
     return { authorize, handler };
@@ -64,6 +77,34 @@ describe('GetPublicPageHandler capabilities', () => {
       can_update: false,
     });
     expect(authorize).not.toHaveBeenCalled();
+  });
+
+  it('returns the site SEO settings with the page', async () => {
+    const { handler } = createHandler(false);
+
+    const result = await handler.execute(
+      new GetPublicPageQuery('asss', '/about'),
+    );
+
+    expect(result.seo).toEqual({
+      title: 'Docs',
+      description: 'Guides',
+      indexing: true,
+    });
+  });
+
+  it('returns the site theme URLs and accent color without attachment ids', async () => {
+    const { handler } = createHandler(false);
+
+    const result = await handler.execute(
+      new GetPublicPageQuery('asss', '/about'),
+    );
+
+    expect(result.theme).toEqual({
+      logo_url: 'https://cdn.test/public/logo.png',
+      favicon_url: null,
+      accent_color: '#e11d48',
+    });
   });
 
   it.each([
@@ -176,6 +217,7 @@ describe('GetPublicPageHandler database views', () => {
           getId: () => 'site-id',
           getSubdomain: () => 'acme',
           getAllowUpdates: () => false,
+          getSeo: () => ({ title: null, description: null, indexing: false }),
         }),
       } as unknown as PublishedSiteRepository,
       {
@@ -195,6 +237,7 @@ describe('GetPublicPageHandler database views', () => {
           .fn()
           .mockResolvedValue(snapshot(databasePageId)),
       } as unknown as DatabaseSnapshotReaderPort,
+      siteTheme,
     );
 
     return handler.execute(new GetPublicPageQuery('acme', '/'));

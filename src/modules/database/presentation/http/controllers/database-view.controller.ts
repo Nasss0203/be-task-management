@@ -13,6 +13,8 @@ import { PERMISSIONS } from 'src/modules/permission/constants/permission.constan
 
 import { CreateDatabaseViewCommand } from '../../../application/commands/create-database-view/create-database-view.command';
 import { CreateDatabaseViewHandler } from '../../../application/commands/create-database-view/create-database-view.handler';
+import { DuplicateDatabaseViewCommand } from '../../../application/commands/duplicate-database-view/duplicate-database-view.command';
+import { DuplicateDatabaseViewHandler } from '../../../application/commands/duplicate-database-view/duplicate-database-view.handler';
 
 import { DeleteDatabaseViewCommand } from 'src/modules/database/application/commands/delete-database-view/delete-database-view.command';
 import { DeleteDatabaseViewHandler } from 'src/modules/database/application/commands/delete-database-view/delete-database-view.handler';
@@ -57,6 +59,7 @@ export class DatabaseViewController {
     private readonly setViewFiltersHandler: SetViewFiltersHandler,
     private readonly setViewGroupHandler: SetViewGroupHandler,
     private readonly reorderViewPropertiesHandler: ReorderViewPropertiesHandler,
+    private readonly duplicateDatabaseViewHandler: DuplicateDatabaseViewHandler,
   ) {}
 
   @Post()
@@ -68,6 +71,18 @@ export class DatabaseViewController {
   ) {
     return this.createDatabaseViewHandler.execute(
       new CreateDatabaseViewCommand(databaseId, request.name, request.type),
+    );
+  }
+
+  @Post(':viewId/duplicate')
+  @WorkspaceContext({ source: 'resource', type: 'database', key: 'databaseId' })
+  @RequirePermissions(PERMISSIONS.PAGE_BLOCK_CREATE)
+  async duplicateView(
+    @Param('databaseId') databaseId: string,
+    @Param('viewId') viewId: string,
+  ) {
+    return this.duplicateDatabaseViewHandler.execute(
+      new DuplicateDatabaseViewCommand(databaseId, viewId),
     );
   }
 

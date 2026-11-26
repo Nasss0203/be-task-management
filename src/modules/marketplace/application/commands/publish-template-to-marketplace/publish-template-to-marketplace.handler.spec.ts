@@ -28,6 +28,7 @@ describe('PublishTemplateToMarketplaceHandler Security & Demo Isolation', () => 
 
   const mockTemplate = PageTemplate.create({
     id: templateId,
+    sourcePageId: null,
     workspaceId: 'workspace-1',
     name: 'Test Template',
     createdBy: creatorId,

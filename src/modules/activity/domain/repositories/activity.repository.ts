@@ -43,6 +43,7 @@ export type FindActivityFilters = {
   action?: ActivityAction;
   pageId?: string;
   excludeEntityTypes?: ActivityEntityType[];
+  readableByUserId?: string;
   cursor?: string;
   limit?: number;
 };

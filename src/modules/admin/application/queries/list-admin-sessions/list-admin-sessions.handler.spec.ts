@@ -21,7 +21,13 @@ describe('ListAdminSessionsHandler', () => {
     const { handler, listSessions } = createHandler();
 
     await handler.execute(
-      new ListAdminSessionsQuery(2, 50, 'nam', SystemRole.SUPER_ADMIN),
+      new ListAdminSessionsQuery(
+        2,
+        50,
+        'nam',
+        SystemRole.SUPER_ADMIN,
+        'user-1',
+      ),
     );
 
     expect(listSessions).toHaveBeenCalledWith({
@@ -29,6 +35,7 @@ describe('ListAdminSessionsHandler', () => {
       limit: 50,
       search: 'nam',
       systemRole: SystemRole.SUPER_ADMIN,
+      userId: 'user-1',
     });
   });
 

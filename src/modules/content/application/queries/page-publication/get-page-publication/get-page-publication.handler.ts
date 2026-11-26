@@ -9,6 +9,7 @@ import type { PageRepository } from 'src/modules/content/domain/repositories/pag
 
 import { GetPagePublicationQuery } from './get-page-publication.query';
 import { PublicationAvailabilityService } from '../../../services/publication-availability.service';
+import { PublishedSiteThemeService } from '../../../services/published-site-theme.service';
 
 @Injectable()
 export class GetPagePublicationHandler {
@@ -21,6 +22,7 @@ export class GetPagePublicationHandler {
     @Inject(CONTENT_TYPES.repositories.PageRepository)
     private readonly pages: PageRepository,
     private readonly availability: PublicationAvailabilityService,
+    private readonly siteTheme: PublishedSiteThemeService,
   ) {}
 
   async execute(
@@ -57,6 +59,8 @@ export class GetPagePublicationHandler {
       subdomain: site.getSubdomain(),
       site_active: site.getDisabledAt() === null,
       allow_updates: site.getAllowUpdates(),
+      seo: site.getSeo(),
+      theme: await this.siteTheme.describe(site),
       path: publication?.getPath(),
       published_at: publication?.getPublishedAt(),
       unpublished_at: publication?.getUnpublishedAt(),

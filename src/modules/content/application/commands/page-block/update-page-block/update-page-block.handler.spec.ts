@@ -142,3 +142,86 @@ describe('UpdatePageBlockHandler mentions', () => {
     expect(mentions.afterSave).not.toHaveBeenCalled();
   });
 });
+
+describe('UpdatePageBlockHandler embeds', () => {
+  const setup = (type: PageBlockType, content: Record<string, unknown>) => {
+    const block = PageBlock.create({
+      pageId: 'page',
+      rowId: null,
+      parentBlockId: null,
+      type,
+      orderIndex: 0,
+      content,
+      createdBy: 'owner',
+    });
+    const repo = {
+      findById: jest.fn().mockResolvedValue(block),
+      save: jest.fn((saved: PageBlock) => Promise.resolve(saved)),
+    };
+    const handler = new UpdatePageBlockHandler(
+      repo as unknown as PageBlockRepository,
+      {
+        runInTransaction: (work: (context: unknown) => unknown) => work({}),
+      } as unknown as UnitOfWork,
+      { touch: jest.fn() } as never,
+      { record: jest.fn() } as never,
+      {} as PageBlockFormService,
+      { afterSave: jest.fn() } as unknown as PageBlockMentionService,
+    );
+
+    return { handler, block, repo };
+  };
+
+  it('stores a legacy embed type as EMBED with the provider from the url', async () => {
+    const { handler, block } = setup(PageBlockType.EMBED, {});
+
+    await handler.execute(
+      new UpdatePageBlockCommand(
+        block.getId(),
+        {
+          type: PageBlockType.TWEET,
+          content: {
+            url: 'https://x.com/jack/status/20',
+            provider: 'LOOM',
+            externalId: 'spoofed',
+          },
+        },
+        'owner',
+      ),
+    );
+
+    expect(block.getType()).toBe(PageBlockType.EMBED);
+    expect(block.getContent()).toEqual({
+      url: 'https://x.com/jack/status/20',
+      provider: 'X',
+      externalId: '20',
+    });
+  });
+
+  it('turns a legacy block into EMBED when it is saved again', async () => {
+    const { handler, block } = setup(PageBlockType.FIGMA, {
+      url: 'https://www.figma.com/design/abc123/x',
+    });
+
+    await handler.execute(
+      new UpdatePageBlockCommand(block.getId(), { isOpen: false }, 'owner'),
+    );
+
+    expect(block.getType()).toBe(PageBlockType.EMBED);
+  });
+
+  it('rejects a link outside the allowed hosts', async () => {
+    const { handler, block, repo } = setup(PageBlockType.EMBED, {});
+
+    await expect(
+      handler.execute(
+        new UpdatePageBlockCommand(
+          block.getId(),
+          { content: { url: 'https://evil.example.com/x' } },
+          'owner',
+        ),
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(repo.save).not.toHaveBeenCalled();
+  });
+});

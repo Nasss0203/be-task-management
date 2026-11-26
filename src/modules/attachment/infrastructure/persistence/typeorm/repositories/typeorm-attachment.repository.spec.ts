@@ -10,6 +10,7 @@ const createAggregate = () =>
     id: 'att-1',
     workspaceId: 'ws-1',
     commentId: null,
+    pageBlockId: null,
     uploadedBy: 'user-1',
     fileName: 'test.pdf',
     mimeType: 'application/pdf',

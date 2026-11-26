@@ -12,6 +12,12 @@ export type ActivityTargetNames = {
   users: Map<string, string | null>;
 };
 
+export type ActivityPageSummary = {
+  id: string;
+  title: string;
+  icon: string | null;
+};
+
 export type PageCreation = {
   createdBy: string | null;
   createdAt: Date;
@@ -21,4 +27,6 @@ export interface PageActivityDetailsReader {
   findNames(request: ActivityTargetRequest): Promise<ActivityTargetNames>;
 
   findPageCreation(pageId: string): Promise<PageCreation | null>;
+
+  findPages(pageIds: string[]): Promise<Map<string, ActivityPageSummary>>;
 }

@@ -10,6 +10,7 @@ export interface CreatePaymentOrderParams {
   provider: BillingProvider;
   orderCode: string;
   amount: number;
+  creditAmount?: number;
   currency: string;
   expiresAt?: Date | null;
   createdBy: string;
@@ -25,6 +26,7 @@ export interface ReconstitutePaymentOrderParams {
   provider: BillingProvider;
   orderCode: string;
   amount: number;
+  creditAmount: number;
   currency: string;
   status: PaymentOrderStatus;
   expiresAt: Date | null;
@@ -43,6 +45,7 @@ export class PaymentOrder {
     private readonly provider: BillingProvider,
     private readonly orderCode: string,
     private readonly amount: number,
+    private readonly creditAmount: number,
     private readonly currency: string,
     private status: PaymentOrderStatus,
     private readonly expiresAt: Date | null,
@@ -58,6 +61,7 @@ export class PaymentOrder {
     const currency = this.normalizeCurrency(params.currency);
 
     this.assertAmount(params.amount);
+    this.assertCreditAmount(params.creditAmount ?? 0);
 
     if (params.expiresAt && params.expiresAt.getTime() <= now.getTime()) {
       throw new Error('Payment order expiration must be after creation time');
@@ -71,6 +75,7 @@ export class PaymentOrder {
       params.provider,
       orderCode,
       params.amount,
+      params.creditAmount ?? 0,
       currency,
       PaymentOrderStatus.PENDING,
       params.expiresAt ?? null,
@@ -86,6 +91,7 @@ export class PaymentOrder {
     const currency = this.normalizeCurrency(params.currency);
 
     this.assertAmount(params.amount);
+    this.assertCreditAmount(params.creditAmount);
 
     if (params.status === PaymentOrderStatus.PAID && !params.paidAt) {
       throw new Error('Paid payment order must have paidAt');
@@ -99,6 +105,7 @@ export class PaymentOrder {
       params.provider,
       orderCode,
       params.amount,
+      params.creditAmount,
       currency,
       params.status,
       params.expiresAt,
@@ -187,6 +194,14 @@ export class PaymentOrder {
     }
   }
 
+  private static assertCreditAmount(creditAmount: number): void {
+    if (!Number.isSafeInteger(creditAmount) || creditAmount < 0) {
+      throw new Error(
+        'Payment order credit amount must be a non-negative safe integer',
+      );
+    }
+  }
+
   private static normalizeCurrency(currency: string): string {
     const normalized = currency.trim().toUpperCase();
 
@@ -239,6 +254,10 @@ export class PaymentOrder {
 
   getAmount(): number {
     return this.amount;
+  }
+
+  getCreditAmount(): number {
+    return this.creditAmount;
   }
 
   getCurrency(): string {

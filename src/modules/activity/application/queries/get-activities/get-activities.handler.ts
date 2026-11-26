@@ -35,6 +35,7 @@ export class GetActivitiesHandler {
       action: filters.action,
       pageId: filters.pageId,
       excludeEntityTypes: filters.excludeEntityTypes,
+      readableByUserId: filters.readableByUserId,
       cursor: filters.cursor,
       limit: filters.limit ? Number(filters.limit) : undefined,
     });

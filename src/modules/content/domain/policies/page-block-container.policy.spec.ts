@@ -68,4 +68,29 @@ describe('page block nesting', () => {
       );
     }
   });
+
+  it('checks the display settings of an embed', () => {
+    expect(() =>
+      assertValidLayoutStyle(PageBlockType.EMBED, {
+        width: 50,
+        align: 'center',
+        aspect: 'custom',
+        height: 600,
+      }),
+    ).not.toThrow();
+    expect(() => assertValidLayoutStyle(PageBlockType.EMBED, {})).not.toThrow();
+    for (const style of [
+      { width: 33 },
+      { width: '50' },
+      { align: 'right' },
+      { aspect: '21:9' },
+      { height: 5000 },
+      { height: 100 },
+      { height: 300.5 },
+    ]) {
+      expect(() => assertValidLayoutStyle(PageBlockType.EMBED, style)).toThrow(
+        BadRequestException,
+      );
+    }
+  });
 });

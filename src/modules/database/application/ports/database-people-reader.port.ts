@@ -5,6 +5,14 @@ export interface DatabasePerson {
   avatar_url: string | null;
 }
 
+export interface DatabaseWorkspaceMember {
+  user_id: string;
+  username: string;
+  email: string;
+  full_name: string | null;
+}
+
 export interface DatabasePeopleReader {
   findByDatabaseId(databaseId: string): Promise<DatabasePerson[]>;
+  findWorkspaceMembers(pageId: string): Promise<DatabaseWorkspaceMember[]>;
 }

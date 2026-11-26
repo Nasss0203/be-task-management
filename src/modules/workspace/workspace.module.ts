@@ -48,6 +48,7 @@ import { PermissionModule } from '../permission/permission.module';
 import { SelectWorkspaceHandler } from './application/commands/workspace/select-workspace/select-workspace.handler';
 import { GetPendingWorkspaceInvitesHandler } from './application/queries/workspace-invite/get-pending-workspace-invites/get-pending-workspace-invites.handler';
 import { WorkspaceSoftDeleteService } from './application/services/workspace-soft-delete.service';
+import { FreeWorkspaceLimitService } from './application/services/free-workspace-limit.service';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { WorkspaceSoftDeleteService } from './application/services/workspace-sof
   ],
   providers: [
     WorkspaceSoftDeleteService,
+    FreeWorkspaceLimitService,
     {
       provide: WORKSPACE_TYPES.applications.CreateDefaultWorkspaceHandler,
       useClass: CreateDefaultWorkspaceHandler,
