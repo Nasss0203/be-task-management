@@ -47,6 +47,24 @@ describe('DatabaseRow date values', () => {
     ).toThrow('time zone');
   });
 
+  it('rejects dates that are neither a plain date nor a local time', () => {
+    const zone = { timeZone: 'Asia/Ho_Chi_Minh' };
+    expect(() =>
+      setDue({ start: '2026-11-01T09:30:00.000Z', ...zone }),
+    ).toThrow('YYYY-MM-DDTHH:mm');
+    expect(() => setDue({ start: '26/11/2026' })).toThrow('YYYY-MM-DD');
+    expect(() => setDue({ start: '' })).toThrow('YYYY-MM-DD');
+  });
+
+  it('rejects a plain date whose end is not a plain date', () => {
+    expect(() =>
+      setDue({ start: '2026-11-20', end: '2026-11-22T10:00' }),
+    ).toThrow('end date');
+    expect(() =>
+      setDue({ start: '2026-11-20', end: '2026-11-22T00:00:00.000Z' }),
+    ).toThrow('end date');
+  });
+
   it('rejects an end time that is not after the start or not a time', () => {
     const zone = { timeZone: 'Asia/Ho_Chi_Minh' };
     expect(() =>
