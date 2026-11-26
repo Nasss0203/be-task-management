@@ -43,10 +43,18 @@ function foldCommand(text: string): string {
 
 // Positive grammar: affirmative insertion + a supported content/row object.
 // Unknown commands fail closed. This is capability admission, never permission.
-const INSERT = /^(?:them|chen|bo sung|ghi them|add|insert|append|prepend)\s+/u;
+const INSERT = new RegExp(
+  `^(?:them|chen|bo sung|ghi them|add|insert|append|prepend|${vocabularyPattern('verb_insert_loose')}(?!\\s+(?:chu|de|nho|lai|am|danh)\\b))\\s+`,
+  'u',
+);
+const COUNT_WORDS = vocabularyPattern('count_words');
+const CONTENT_EXTRA = vocabularyPattern('object_content_extra');
+const LABEL_EXTRA = vocabularyPattern('object_label_extra');
 // Kế hoạch mở ngữ pháp câu "thêm" (D1): to-do, đoạn văn, trích dẫn, dòng chữ.
-const OBJECT =
-  /^(?:(?:mot|nhung|cac|a|an|the|new|moi|another|qa|\d+)\s+)*(?:viec can lam|to-do|todo|viec|trich dan|quote|line|doan van|heading|checklist|block|blocks|task|tasks|row|rows|dong|hang|muc|phan|ghi chu|noi dung|ket luan|release note|note|notes|text|paragraph|doan|tieu de|danh sach)\b/u;
+const OBJECT = new RegExp(
+  `^(?:(?:mot|nhung|cac|a|an|the|new|moi|another|qa|\\d+|${COUNT_WORDS})\\s+)*(?:viec can lam|to-do|todo|viec|trich dan|quote|line|doan van|heading|checklist|block|blocks|task|tasks|row|rows|dong|hang|muc|phan|ghi chu|noi dung|ket luan|release note|note|notes|text|paragraph|doan|tieu de|danh sach|${LABEL_EXTRA}|${CONTENT_EXTRA})\\b`,
+  'u',
+);
 
 // Fully consume the remaining clause, rather than accepting any suffix after
 // "add heading". Free-form labels/content and titles must be quoted. This
@@ -60,17 +68,58 @@ const SAFE_TAIL = new Set(
 // Hướng A: a heading's name and the items after "checklist gồm" are data and
 // need no quotes. They still pass the whole-command verb and punctuation checks,
 // and may not mention a Page: a target must be recognized (quoted or M1b).
-const LABEL_OBJECT = /\b(?:heading|tieu de)$/u;
+const LABEL_OBJECT = new RegExp(`\\b(?:heading|tieu de|${LABEL_EXTRA})$`, 'u');
 
 // D1: the words after these name one block's content ("to-do Ôn bài 5 vào phần
 // Môn Toán"); like "checklist gồm" items they may go on after "và". They are
 // data for the AI service, which takes them by rule (explicit_content.py).
-const CONTENT_OBJECT =
-  /\b(?:to-do|todo|viec|trich dan|quote|line|doan van|doan|paragraph|text|dong|task|muc|ghi chu|note)$/u;
+const CONTENT_OBJECT = new RegExp(
+  `\\b(?:to-do|todo|viec|trich dan|quote|line|doan van|doan|paragraph|text|dong|task|muc|ghi chu|note|${CONTENT_EXTRA})$`,
+  'u',
+);
 
 // D3/D4: a checklist's name, topic or items ("checklist chuẩn bị họp gồm a, b").
 // K4: "danh sách mua sắm gồm a, b" reads the same.
 const LIST_OBJECT = /\b(?:checklist|viec can lam|danh sach)$/u;
+
+// A4c: the grammar before A4, to tell a sentence only the A4 additions admit.
+interface Grammar {
+  insert: RegExp;
+  object: RegExp;
+  label: RegExp;
+  content: RegExp;
+  endPlace: boolean;
+}
+
+const RELAXED_GRAMMAR: Grammar = {
+  insert: INSERT,
+  object: OBJECT,
+  label: LABEL_OBJECT,
+  content: CONTENT_OBJECT,
+  endPlace: true,
+};
+
+const STRICT_GRAMMAR: Grammar = {
+  insert: /^(?:them|chen|bo sung|ghi them|add|insert|append|prepend)\s+/u,
+  object:
+    /^(?:(?:mot|nhung|cac|a|an|the|new|moi|another|qa|\d+)\s+)*(?:viec can lam|to-do|todo|viec|trich dan|quote|line|doan van|heading|checklist|block|blocks|task|tasks|row|rows|dong|hang|muc|phan|ghi chu|noi dung|ket luan|release note|note|notes|text|paragraph|doan|tieu de|danh sach)\b/u,
+  label: /\b(?:heading|tieu de)$/u,
+  content:
+    /\b(?:to-do|todo|viec|trich dan|quote|line|doan van|doan|paragraph|text|dong|task|muc|ghi chu|note)$/u,
+  endPlace: false,
+};
+
+// A4: "… ở trang X luôn giúp mình", "… xuống dưới cùng trang X", "… khỏi trang
+// X": the place words and the polite words after a real Page end the sentence.
+const END_PLACE = new RegExp(
+  `(?:\\s+${vocabularyPattern('page_place_words')})+\\s+(?:trang|page)\\s+(?<ref>quoted|nay|hien tai|dang mo)` +
+    `(?:[\\s,.]+${vocabularyPattern('tail', 'loose_tail', 'help_after_verb', 'write_help_after_verb', 'place_tail_extra')})*[\\s,.]*$`,
+  'u',
+);
+
+function withEndPlace(command: string): string {
+  return command.replace(END_PLACE, ' vao trang $<ref>');
+}
 
 const TARGET_SUFFIX =
   /\s*\b(?:(?:(?:vao|trong|o|tai|cua|to|in|on|from)(?:\s+(?:cuoi|dau))?|cuoi|dau)(?:\s+the)?\s+(?:(?:trang|page)(?:\s+(?:quoted|nay|hien tai|dang mo))?|(?:quoted|this|current)\s+page)|(?:at|to)\s+the\s+(?:end|top|bottom|start|beginning)\s+of\s+(?:the\s+|this\s+)?(?:quoted\s+)?page)$/u;
@@ -119,6 +168,8 @@ type InsertionClause = 'closed' | 'items';
  */
 export interface ModificationAdmission {
   itemsFromSource?: boolean;
+  /** A4c: read with the grammar before A4. */
+  strict?: boolean;
 }
 
 function insertionClause(
@@ -126,9 +177,10 @@ function insertionClause(
   allowFreeData: boolean,
   afterItems: boolean,
   itemsFromSource = false,
+  grammar: Grammar = RELAXED_GRAMMAR,
 ): InsertionClause | null {
-  const clause = part.replace(INSERT, '').trim();
-  const object = OBJECT.exec(clause);
+  const clause = part.replace(grammar.insert, '').trim();
+  const object = grammar.object.exec(clause);
   const remainder = object
     ? clause.slice(object[0].length).replace(/[.,]/gu, ' ').trim()
     : '';
@@ -143,11 +195,11 @@ function insertionClause(
   if (!allowFreeData) return null;
   if (itemsFromSource && object && isFreeData(remainder)) return 'closed';
   const objectName = object?.[0].trim() ?? '';
-  if (object && LABEL_OBJECT.test(objectName) && isFreeData(remainder))
+  if (object && grammar.label.test(objectName) && isFreeData(remainder))
     return 'closed';
   if (
     object &&
-    (LIST_OBJECT.test(objectName) || CONTENT_OBJECT.test(objectName)) &&
+    (LIST_OBJECT.test(objectName) || grammar.content.test(objectName)) &&
     isFreeData(remainder)
   )
     return 'items';
@@ -164,11 +216,17 @@ function insertionClause(
  * a, b", "thêm 2 dòng vào bảng Tasks: a, b"); it reads as "gồm". Any other
  * colon, or a second one, stays refused.
  */
-function colonAsItems(command: string): string | null {
+function colonAsItems(
+  command: string,
+  grammar: Grammar = RELAXED_GRAMMAR,
+): string | null {
   const parts = command.split(':');
   if (parts.length !== 2) return null;
   const before = parts[0].trimEnd();
-  if (!INSERT.test(before) || !OBJECT.test(before.replace(INSERT, '').trim()))
+  if (
+    !grammar.insert.test(before) ||
+    !grammar.object.test(before.replace(grammar.insert, '').trim())
+  )
     return null;
   return `${before} gom ${parts[1].trimStart()}`;
 }
@@ -224,6 +282,21 @@ const TEXT_EDIT =
 const SECOND_COMMAND =
   /\b(?:va|and|roi|then|sau do)\s+(?:them|chen|bo sung|ghi them|add|insert|append|prepend|tich|danh dau|bo tich|hoan thanh|lam xong|check|uncheck|mark|thay|cap nhat|change|xoa|bo|go|delete|remove|sua|doi|chinh sua|chinh|edit|update|rename|dich|translate|publish|share|chia se)\b/u;
 
+const TEXT_EDIT_VERB =
+  /^(?:chinh sua|doi|sua|thay|chinh|cap nhat|change|update|edit)$/u;
+
+const EDIT_TARGET =
+  /^(?:ten\b|(?:(?:toan bo_?|het|ca|noi dung|cua|luon)\s+)*(?:trang|page)\b)|(?<!\b(?:vao|o|trong|tai|cua)\s)\b(?:thanh|bang|to)\b/u;
+
+function hasSecondCommandInContent(body: string): boolean {
+  for (const found of body.matchAll(new RegExp(SECOND_COMMAND.source, 'gu'))) {
+    const verb = found[0].replace(/^(?:va|and|roi|then|sau do)\s+/u, '');
+    const after = body.slice(found.index + found[0].length).trim();
+    if (!TEXT_EDIT_VERB.test(verb) || EDIT_TARGET.test(after)) return true;
+  }
+  return false;
+}
+
 // Kế hoạch xoá block: "xoá / bỏ / gỡ / delete / remove X, Y và Z".
 // "bỏ tích" (untick), "bỏ qua" (override) and "bổ sung" (add) are not deletes.
 const BLOCK_DELETE =
@@ -253,7 +326,7 @@ function isBlockDelete(command: string): boolean {
       isFreeData(name) &&
       !BULK.test(name) &&
       !isDangerousData(name) &&
-      !INSERT.test(`${name} `) &&
+      !STRICT_GRAMMAR.insert.test(`${name} `) &&
       !TODO_VERB.test(name)
     );
   });
@@ -291,16 +364,20 @@ function isTodoStatusChange(command: string): boolean {
     // "thêm logo xong rồi" or "tích a và thêm b" mix in another kind of work.
     return (
       isFreeData(name) &&
-      !INSERT.test(`${name} `) &&
+      !STRICT_GRAMMAR.insert.test(`${name} `) &&
       !TODO_VERB.test(name) &&
       !isDangerousData(name)
     );
   });
 }
 
-function isQuotedPayloadInsertion(source: string, command: string): boolean {
+function isQuotedPayloadInsertion(
+  source: string,
+  command: string,
+  grammar: Grammar = RELAXED_GRAMMAR,
+): boolean {
   // Keep this extension to single-line, unescaped quote pairs.
-  if (/[\\\r\n]/u.test(source) || !INSERT.test(command)) return false;
+  if (/[\\\r\n]/u.test(source) || !grammar.insert.test(command)) return false;
   // The two pairs have distinct roles: explicit Page title, then payload.
   // Inspect the original strings: masking also turns empty quotes into tokens.
   const quotes = source.match(/"[^"]*"|'[^']*'|`[^`]*`|“[^”]*”|‘[^’]*’/gu);
@@ -310,7 +387,7 @@ function isQuotedPayloadInsertion(source: string, command: string): boolean {
   )
     return false;
   return /^(?:(?:mot|a|an|the|new|moi|another|\d+)\s+)*(?:block(?:\s+van\s+ban)?|text\s+block|checklist)\s+(?:vao|trong|o(?:\s+(?:cuoi|dau))?|to|in|on)\s+(?:trang|page)\s+quoted\s+(?:voi\s+noi\s+dung|with\s+content)\s*:\s*quoted\s*\.?$/u.test(
-    command.replace(INSERT, ''),
+    command.replace(grammar.insert, ''),
   );
 }
 
@@ -385,9 +462,12 @@ function dropUnclosedQuotes(source: string): string {
  * K2: one "?" or "!" (or "?!") right before the Page target or at the end
  * ends the content; it is dropped. Any other "?", "!" or ";" stays refused.
  */
-function endMarkAsData(command: string): string {
+function endMarkAsData(
+  command: string,
+  grammar: Grammar = RELAXED_GRAMMAR,
+): string {
   // Only content takes it; "gửi email xong rồi?" asks, it does not tick.
-  if (!INSERT.test(command) && !TEXT_EDIT.test(command)) return command;
+  if (!grammar.insert.test(command) && !TEXT_EDIT.test(command)) return command;
   const mark =
     /\s*[?!]+(?=(?:\s+(?:vao|trong|o|tai|cua|to|in|on)\s+(?:cuoi\s+)?(?:the\s+)?(?:trang|page)\b.*)?[\s.]*$)/u;
   const found = mark.exec(command);
@@ -494,6 +574,7 @@ export function admittedModificationKind(
   pageNames: readonly string[] = [],
   admission: ModificationAdmission = {},
 ): ModificationKind | null {
+  const grammar = admission.strict ? STRICT_GRAMMAR : RELAXED_GRAMMAR;
   const quotesClosed = dropUnclosedQuotes(source);
   const masked = maskQuotedText(quotesClosed);
   if (masked === null) return null;
@@ -503,18 +584,19 @@ export function admittedModificationKind(
   );
   // Match the entire command before stripping any Page-first target prefix.
   // Only this explicit payload grammar admits a colon; SAFE_TAIL stays closed.
-  if (isQuotedPayloadInsertion(source, command)) return 'INSERT';
+  if (isQuotedPayloadInsertion(source, command, grammar)) return 'INSERT';
   // A Page-first prefix is only a target; require a separate insertion clause.
   command = withoutLeadingTarget(
     normalizeCommand(withoutLeadingTarget(command)),
   ).replace(TASK_LIST, '$1to-do list');
+  if (grammar.endPlace) command = withEndPlace(command);
   // K2: one "?" or "!" may end the content ("thêm đoạn văn Ai làm?").
-  command = endMarkAsData(command);
+  command = endMarkAsData(command, grammar);
   if (/[;\n?!]/u.test(command)) return null;
   // S5: a ":" inside the old or new text of an edit ("Day 1: …") is data.
   const editWithColon = quotesClosed === source && isBlockTextChange(command);
   if (command.includes(':') && !editWithColon) {
-    const listed = colonAsItems(command);
+    const listed = colonAsItems(command, grammar);
     if (listed === null) return null;
     command = listed;
   }
@@ -535,17 +617,17 @@ export function admittedModificationKind(
     isTodoStatusChange(command)
   )
     return 'SET_TODO_CHECKED';
-  if (!INSERT.test(command)) {
+  if (!grammar.insert.test(command)) {
     // Other operation verbs outside quotes cannot be disguised as data.
     if (BLOCKED_VERB.test(command)) return null;
     return allowFreeData && isTodoStatusChange(command)
       ? 'SET_TODO_CHECKED'
       : null;
   }
-  const body = command.replace(INSERT, '');
+  const body = command.replace(grammar.insert, '');
   // K1: a verb in the content is data; a second command ("rồi xoá B") and an
   // action on a Page or an instruction to the AI are not.
-  if (SECOND_COMMAND.test(body) || isDangerousData(body)) return null;
+  if (hasSecondCommandInContent(body) || isDangerousData(body)) return null;
   if (!allowFreeData && BLOCKED_VERB.test(body)) return null;
   if (allowFreeData && isInsertionAtNamedPlace(body)) return 'INSERT';
   // Every joined clause must itself name supported content or another insertion.
@@ -557,10 +639,30 @@ export function admittedModificationKind(
       allowFreeData,
       previous === 'items',
       admission.itemsFromSource,
+      grammar,
     );
     if (!previous) return null;
   }
   return 'INSERT';
+}
+
+/**
+ * A4c: admitted only thanks to the A4 additions (the place and polite words
+ * after a real Page, "ghi", counts in words, "câu", "đề mục"). Such a sentence
+ * may only get a draft the AI service made by rule.
+ */
+export function needsRuleDraft(
+  source: string,
+  pageNames: readonly string[] = [],
+  admission: ModificationAdmission = {},
+): boolean {
+  return (
+    admittedModificationKind(source, pageNames, admission) !== null &&
+    admittedModificationKind(source, pageNames, {
+      ...admission,
+      strict: true,
+    }) === null
+  );
 }
 
 // M2 (kế hoạch tìm theo hoạt động, B7): "… vào trang [gợi ý] tôi sửa hôm qua".
@@ -743,7 +845,7 @@ export type UnsupportedModificationDetail =
 const MAX_TERM_LENGTH = 30;
 
 const PAGE_OBJECT =
-  /^(?:(?:ten|toan bo_?|het|ca|noi dung|cua)\s+)*(?:trang|page)\b/u;
+  /^(?:(?:ten|toan bo_?|het|ca|noi dung|cua|luon|han|di)\s+)*(?:trang|page)\b/u;
 
 const SUPPORTED_VERB =
   /^(?:them|chen|bo sung|ghi them|add|insert|append|prepend|tich|danh dau|bo tich|bo danh dau|hoan thanh|lam xong|check|uncheck|mark|chinh sua|thay doi|doi|sua|thay|chinh|cap nhat|change|update|edit|replace|xoa|bo|go|delete|remove)\b/u;

@@ -1,4 +1,8 @@
-import { BadGatewayException, BadRequestException } from '@nestjs/common';
+import {
+  BadGatewayException,
+  BadRequestException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { AiPageInstructionPlannerService } from './ai-page-instruction-planner.service';
 import { AiModificationPlannerService } from './ai-modification-planner.service';
 import { PageIntentExtractionService } from '../resolution/page-intent-extraction.service';
@@ -73,6 +77,41 @@ describe('AiPageInstructionPlannerService', () => {
       userId: 'actor-1', requestId: 'request-1', pageId: 'page-1',
       instruction: 'Thêm checklist', originalInstruction: input.instruction,
       shareToken: 'share-token',
+    });
+  });
+
+  describe('A4c: sentences admitted only by the A4 additions', () => {
+    const natural = {
+      ...input,
+      instruction: 'ghi việc gọi khách vào page Release 2.0',
+    };
+
+    it('asks the planner for a draft by rule', async () => {
+      await service.generate(natural);
+      expect(plan).toHaveBeenCalledWith(
+        expect.objectContaining({ requireRuleDraft: true }),
+      );
+    });
+
+    it('turns a refused model draft into a question', async () => {
+      plan.mockRejectedValue(
+        new UnprocessableEntityException({
+          status: 'NEEDS_CLARIFICATION',
+          reason: 'RULE_DRAFT_REQUIRED',
+        }),
+      );
+      await expect(service.generate(natural)).resolves.toMatchObject({
+        status: 'NEEDS_CLARIFICATION',
+        reason: 'RULE_DRAFT_REQUIRED',
+        pageTitle: 'Release 2.0',
+      });
+    });
+
+    it('still fails on any other planner error', async () => {
+      plan.mockRejectedValue(new BadGatewayException('boom'));
+      await expect(service.generate(natural)).rejects.toBeInstanceOf(
+        BadGatewayException,
+      );
     });
   });
 

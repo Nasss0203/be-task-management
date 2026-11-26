@@ -335,6 +335,71 @@ describe('AiModificationPlannerService', () => {
     );
   });
 
+  describe('A4c: a draft by rule when the sentence needs one', () => {
+    const params = {
+      requestId: 'request-rule-1',
+      userId: 'user-1',
+      pageId: 'page-1',
+      instruction: 'Thêm một release note.',
+      requireRuleDraft: true,
+    };
+
+    function runtimeResultOf(
+      plan: AiModificationPlan,
+      provider: string,
+      model: string,
+    ): AiRuntimeResult {
+      return {
+        output: plan as unknown as Record<string, unknown>,
+        provider,
+        model,
+      };
+    }
+
+    it('asks again instead of keeping a model draft', async () => {
+      const { service, generationRepository } = createService();
+      const save = jest.spyOn(generationRepository, 'save');
+      await expect(service.generate(params)).rejects.toMatchObject({
+        response: {
+          status: 'NEEDS_CLARIFICATION',
+          reason: 'RULE_DRAFT_REQUIRED',
+        },
+      });
+      expect(save.mock.calls[0][0].getStatus()).toBe(AiGenerationStatus.FAILED);
+    });
+
+    it('keeps a draft made by rule', async () => {
+      const { service } = createService({
+        runtimeResult: runtimeResultOf(
+          makePlan(),
+          'rules',
+          'explicit-content-v1',
+        ),
+      });
+      await expect(service.generate(params)).resolves.toMatchObject({
+        status: 'PLAN_READY',
+      });
+    });
+
+    it('lets the planner ask for more context', async () => {
+      const plan = makeNeedMoreContextPlan();
+      const { service } = createService({
+        validatedPlan: plan,
+        runtimeResult: runtimeResultOf(plan, 'ollama', 'qwen3:4b-instruct'),
+      });
+      await expect(service.generate(params)).resolves.toMatchObject({
+        status: 'NEED_MORE_CONTEXT',
+      });
+    });
+
+    it('keeps a model draft when the sentence does not need a rule', async () => {
+      const { service } = createService();
+      await expect(
+        service.generate({ ...params, requireRuleDraft: false }),
+      ).resolves.toMatchObject({ status: 'PLAN_READY' });
+    });
+  });
+
   it('persists NEED_MORE_CONTEXT as a completed generation', async () => {
     const validatedPlan = makeNeedMoreContextPlan();
 

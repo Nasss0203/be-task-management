@@ -105,6 +105,32 @@ describe('FastApiAiRuntimeAdapter usage', () => {
     expect(result.usage?.totalTokens).toBe(400);
   });
 
+  it('sends writing.draft to FastAPI as the DRAFT action', async () => {
+    const post = jest.fn().mockReturnValue(of({ data: response }));
+    const adapter = new FastApiAiRuntimeAdapter(
+      { post } as unknown as HttpService,
+      new ConfigService({
+        AI_SERVICE_BASE_URL: 'http://ai.test',
+        AI_INTERNAL_TOKEN: 'test-token',
+      }),
+    );
+    await adapter.execute({
+      requestId: 'request-1',
+      capability: 'writing.draft',
+      content: 'viết email xin nghỉ phép 2 ngày',
+      input: { text: 'viết email xin nghỉ phép 2 ngày' },
+    });
+    expect(post).toHaveBeenCalledWith(
+      'http://ai.test/internal/v1/writing',
+      {
+        action: 'DRAFT',
+        text: 'viết email xin nghỉ phép 2 ngày',
+        language: null,
+      },
+      expect.anything(),
+    );
+  });
+
   it('accepts zero token counts', async () => {
     const result = await execute({
       ...response,

@@ -66,6 +66,7 @@ describe('FastAPI M0 intent contract', () => {
     'SUMMARIZE',
     'CONTINUE',
     'TRANSLATE',
+    'DRAFT',
   ])('accepts Writing %s', async (writingAction) => {
     post.mockReturnValue(
       of({
@@ -80,6 +81,16 @@ describe('FastAPI M0 intent contract', () => {
     await expect(
       adapter.classify({ instruction: 'source' }),
     ).resolves.toBeDefined();
+  });
+  it('accepts a Writing DRAFT in a named language', async () => {
+    const body = envelope({
+      ...result,
+      intent: 'WRITING',
+      writingAction: 'DRAFT',
+      language: 'English',
+    });
+    post.mockReturnValue(of({ data: body }));
+    expect(await adapter.classify({ instruction: 'source' })).toEqual(body);
   });
   it.each([
     { ...result, intent: 'DELETE_PAGE' },

@@ -274,6 +274,21 @@ describe('AiAskService', () => {
       );
     },
   );
+  it('drafts new text from the request itself', async () => {
+    const f = fixture();
+    f.intent('WRITING', 'DRAFT');
+    const instruction = 'viết email xin nghỉ phép 2 ngày';
+    await f.service.ask({ ...f.input, instruction });
+    expect(f.assistant.submit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        capability: 'writing.draft',
+        input: expect.objectContaining({ text: instruction }) as Record<
+          string,
+          unknown
+        >,
+      }),
+    );
+  });
   it('extracts quoted inline translation text and verifies original target language', async () => {
     const f = fixture();
     f.intent('WRITING', 'TRANSLATE', 'Vietnamese');
@@ -500,6 +515,27 @@ describe('AiAskService', () => {
     ).toMatchObject({
       status: 'NEEDS_CLARIFICATION',
       assistantMessage: message,
+    });
+  });
+
+  it('asks for the kind and content when only a rule may draft (A4c)', async () => {
+    const f = fixture();
+    f.intent('MODIFY_PAGE');
+    f.planner.generate.mockResolvedValue({
+      status: 'NEEDS_CLARIFICATION',
+      reason: 'RULE_DRAFT_REQUIRED',
+      intent: { pageReference: null },
+      pageTitle: 'sub man',
+    });
+    expect(
+      await f.service.ask({
+        ...f.input,
+        instruction: 'ghi việc gọi khách vào trang sub man',
+      }),
+    ).toMatchObject({
+      status: 'NEEDS_CLARIFICATION',
+      assistantMessage:
+        'Mình chưa chắc nội dung cần thêm. Bạn ghi rõ loại và nội dung, ví dụ: thêm to-do Gọi khách vào trang "sub man".',
     });
   });
 

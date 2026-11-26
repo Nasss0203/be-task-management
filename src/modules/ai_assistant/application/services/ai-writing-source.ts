@@ -12,6 +12,10 @@ const ACTION = new RegExp(
   `^(?:${vocabularyPattern('write_translate', 'write_improve', 'write_shorten', 'write_expand', 'write_summarize', 'write_continue')})\\b`,
   'u',
 );
+const DRAFT_REQUEST = new RegExp(
+  `^(?:(?:${vocabularyPattern('want', 'let_me')})\\s+)*(?:(?:co the|lam on)\\s+)?(?:ban\\s+)?(?!${vocabularyPattern('write_continue')}\\b)${vocabularyPattern('write_draft_verb')}\\b(?!\\s+lai\\b)(?:\\s+\\S+){0,4}?\\s+${vocabularyPattern('write_draft_kind')}\\b`,
+  'u',
+);
 const LANGUAGE_BEFORE = vocabularyPattern('language_prep', 'language_noun');
 const PAGE_WORD = /\b(?:trang(?!\s+trong(?:\s+hon\b|\s*(?:[,.!?]|$)))|page)\b/u;
 const LANGUAGES: Record<string, string[]> = {
@@ -51,6 +55,8 @@ export function resolveWritingSource(
   const directive = stripCommandPrefix(foldInstruction(masked));
   // Quoted Page titles cannot become text, including with selected data present.
   if (PAGE_WORD.test(directive)) return null;
+  if (intent.writingAction === 'DRAFT')
+    return draftSource(instruction, directive, intent.language);
   let text = selectedText ?? null;
   // V1: "bạn có thể dịch giúp tôi …" leads with the verb once polite words go.
   if (!text && ACTION.test(normalizeCommand(directive))) {
@@ -77,14 +83,43 @@ export function resolveWritingSource(
     text = inlineWritingText(instruction);
   if (!text?.trim()) return null;
   if (intent.writingAction !== 'TRANSLATE') return { text };
-  const matched = Object.entries(LANGUAGES).filter(([, aliases]) =>
-    aliases.some(
-      (alias) =>
-        new RegExp(`\\b${LANGUAGE_BEFORE}\\s+${alias}\\b`, 'u').test(
-          directive,
-        ) || new RegExp(`^${alias}\\s+please[.!?]*$`, 'u').test(directive),
-    ),
-  );
-  if (matched.length !== 1 || matched[0][0] !== intent.language) return null;
-  return { text, language: matched[0][0] };
+  const matched = namedTargets(directive);
+  if (matched.length !== 1 || matched[0] !== intent.language) return null;
+  return { text, language: matched[0] };
+}
+
+function namedTargets(directive: string): string[] {
+  return Object.entries(LANGUAGES)
+    .filter(([, aliases]) =>
+      aliases.some(
+        (alias) =>
+          new RegExp(`\\b${LANGUAGE_BEFORE}\\s+${alias}\\b`, 'u').test(
+            directive,
+          ) || new RegExp(`^${alias}\\s+please[.!?]*$`, 'u').test(directive),
+      ),
+    )
+    .map(([name]) => name);
+}
+
+function namedLanguages(directive: string): string[] {
+  return Object.entries(LANGUAGES)
+    .filter(([, aliases]) =>
+      aliases.some((alias) =>
+        new RegExp(`\\b${alias}\\b`, 'u').test(directive),
+      ),
+    )
+    .map(([name]) => name);
+}
+
+function draftSource(
+  instruction: string,
+  directive: string,
+  language: string | null,
+): { text: string; language?: string } | null {
+  if (!DRAFT_REQUEST.test(normalizeCommand(directive))) return null;
+  if (language === null) return { text: instruction };
+  const targets = namedTargets(directive);
+  const named = targets.length ? targets : namedLanguages(directive);
+  if (named.length !== 1 || named[0] !== language) return null;
+  return { text: instruction, language };
 }

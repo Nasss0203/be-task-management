@@ -6,6 +6,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  Optional,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { PERSISTENCE_TYPES } from 'src/shared/infrastructure/persistence/persistence.types';
@@ -27,6 +28,7 @@ import type { AiRuntimePort } from '../ports/ai-runtime.port';
 import { PageCompositionDraftValidator } from './page-composition-draft-validator.service';
 import { AiConversationAccessService } from './ai-conversation-access.service';
 import { AiSubmitAuthorizationLock } from './ai-submit-authorization-lock.port';
+import { AiUsageQuotaService } from './ai-usage-quota.service';
 
 export interface SubmitAiRequestParams {
   requestId: string;
@@ -59,6 +61,8 @@ export class AiAssistantService {
     private readonly accessService: AiConversationAccessService,
     private readonly pageCompositionDraftValidator: PageCompositionDraftValidator,
     private readonly authorizationLock: AiSubmitAuthorizationLock,
+    @Optional()
+    private readonly quota?: AiUsageQuotaService,
   ) {}
 
   async submit(
@@ -86,6 +90,8 @@ export class AiAssistantService {
       params.userId,
       params.shareToken,
     );
+
+    await this.quota?.assertWithinDailyLimit(params.userId);
 
     const generationId = await this.unitOfWork.runInTransaction(
       async (context) => {

@@ -14,6 +14,11 @@ export interface AiUsageSummaryOptions {
   to?: Date;
 }
 
+export interface AiUsageCountOptions {
+  provider: string;
+  from: Date;
+}
+
 export interface AiUsageRepository {
   save(usage: AiUsage, context?: PersistenceContext): Promise<AiUsage>;
 
@@ -22,6 +27,12 @@ export interface AiUsageRepository {
     options?: AiUsageSummaryOptions,
     context?: PersistenceContext,
   ): Promise<AiUsageSummary>;
+
+  countByUser(
+    userId: string,
+    options: AiUsageCountOptions,
+    context?: PersistenceContext,
+  ): Promise<number>;
 
   sumByWorkspace(
     workspaceId: string,

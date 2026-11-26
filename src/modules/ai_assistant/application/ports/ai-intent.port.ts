@@ -19,6 +19,7 @@ export const WRITING_ACTIONS = [
   'SUMMARIZE',
   'CONTINUE',
   'TRANSLATE',
+  'DRAFT',
 ] as const;
 export type AiIntent = (typeof AI_INTENTS)[number];
 export type AiWritingAction = (typeof WRITING_ACTIONS)[number];

@@ -26,6 +26,8 @@ const cases = JSON.parse(
   refuse_natural: AdmissionCase[];
   admit_content: AdmissionCase[];
   refuse_content: AdmissionCase[];
+  admit_place: AdmissionCase[];
+  refuse_place: AdmissionCase[];
 };
 
 // Kế hoạch câu tự nhiên: the Page name is a real Page (M1b).
@@ -69,6 +71,20 @@ describe('admission cases shared with the planner evaluation', () => {
 
   it.each(cases.refuse_content.map((item) => [item.id, item.text]))(
     'refuses content %s: %s',
+    (_id, text) => {
+      expect(isSupportedModification(text, PAGE_NAMES)).toBe(false);
+    },
+  );
+
+  it.each(cases.admit_place.map((item) => [item.id, item.text]))(
+    'admits place %s: %s',
+    (_id, text) => {
+      expect(isSupportedModification(text, PAGE_NAMES)).toBe(true);
+    },
+  );
+
+  it.each(cases.refuse_place.map((item) => [item.id, item.text]))(
+    'refuses place %s: %s',
     (_id, text) => {
       expect(isSupportedModification(text, PAGE_NAMES)).toBe(false);
     },
