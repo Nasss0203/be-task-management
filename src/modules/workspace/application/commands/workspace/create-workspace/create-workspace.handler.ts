@@ -69,6 +69,7 @@ export class CreateWorkspaceHandler {
             icon: page.icon,
             createdBy: command.userId,
             blocks: page.blocks,
+            database: page.database,
           },
           context,
         );

@@ -9,6 +9,8 @@ import { CreateDatabaseViewCommand } from 'src/modules/database/application/comm
 import { CreateDatabaseViewHandler } from 'src/modules/database/application/commands/create-database-view/create-database-view.handler';
 import { CreateDatabaseCommand } from 'src/modules/database/application/commands/create-database/create-database.command';
 import { CreateDatabaseHandler } from 'src/modules/database/application/commands/create-database/create-database.handler';
+import type { DatabaseProvisioningPort } from 'src/modules/database/application/ports/database-provisioning.port';
+import { DATABASE_TYPES } from 'src/modules/database/database.types';
 import { DatabaseViewType } from 'src/modules/database/domain/enums/database-view-type.enum';
 import { PageBlockType } from 'src/shared/domain/page-block-type.enum';
 import { PersistenceContext } from 'src/shared/infrastructure/persistence/persistence-context';
@@ -21,9 +23,10 @@ import {
   CreatePageBlocksFromSnapshotInput,
   CreatePageFromSnapshotInput,
   CreatePageShellInput,
+  PresetDatabaseDefinition,
   ProvisionedPageResult,
 } from '../ports/content-page-provisioning.port';
-import { getPagePreset } from './page-presets';
+import { buildPresetDatabaseSnapshot, getPagePreset } from './page-presets';
 import { PublicSubdomainAllocatorService } from './public-subdomain-allocator.service';
 
 @Injectable()
@@ -39,6 +42,8 @@ export class ContentPageProvisioningService implements ContentPageProvisioningPo
     private readonly subdomains: PublicSubdomainAllocatorService,
     private readonly createDatabase: CreateDatabaseHandler,
     private readonly createDatabaseView: CreateDatabaseViewHandler,
+    @Inject(DATABASE_TYPES.ports.DatabaseProvisioning)
+    private readonly databaseProvisioning: DatabaseProvisioningPort,
   ) {}
 
   async createDefaultPage(
@@ -126,6 +131,7 @@ export class ContentPageProvisioningService implements ContentPageProvisioningPo
           pageId: result.pageId,
           createdBy: input.createdBy,
           blocks: input.blocks,
+          database: input.database,
         },
         manager,
       );
@@ -181,7 +187,18 @@ export class ContentPageProvisioningService implements ContentPageProvisioningPo
     context?: PersistenceContext,
   ): Promise<void> {
     const create = async (manager: PersistenceContext): Promise<void> => {
-      const sortedBlocks = this.sortSnapshotBlocks(input.blocks);
+      const blocks = input.database
+        ? [
+            ...input.blocks,
+            await this.createPresetDatabaseBlock(
+              input.pageId,
+              input.database,
+              input.blocks.length,
+              manager,
+            ),
+          ]
+        : input.blocks;
+      const sortedBlocks = this.sortSnapshotBlocks(blocks);
 
       const sourceIdToPageBlockId = new Map<string, string>();
 
@@ -240,6 +257,37 @@ export class ContentPageProvisioningService implements ContentPageProvisioningPo
     }
 
     await create(context);
+  }
+
+  private async createPresetDatabaseBlock(
+    pageId: string,
+    definition: PresetDatabaseDefinition,
+    orderIndex: number,
+    manager: PersistenceContext,
+  ): Promise<CreatePageBlockSnapshotInput> {
+    const snapshot = buildPresetDatabaseSnapshot(
+      definition,
+      new Date().toISOString().slice(0, 10),
+    );
+    const result = await this.databaseProvisioning.provisionDatabases(
+      { pageId, databases: [snapshot] },
+      manager,
+    );
+
+    return {
+      sourceId: 'preset-database',
+      type: PageBlockType.DATABASE_VIEW,
+      title: definition.name,
+      positionX: 0,
+      positionY: 0,
+      width: 12,
+      height: 1,
+      orderIndex,
+      dataConfig: {
+        database_id: result.databaseIdMap.get(snapshot.sourceId),
+        view_id: result.viewIdMap.get(snapshot.views[0].sourceId),
+      },
+    };
   }
 
   private sortSnapshotBlocks(
